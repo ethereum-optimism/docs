@@ -1,3 +1,5 @@
+import { Callout, Steps } from 'nextra/components'
+
 # Bridging ERC-20 tokens with the Optimism SDK
 
 [![Discord](https://img.shields.io/discord/667044843901681675.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord-gateway.optimism.io)
@@ -13,46 +15,46 @@ Chains that aren't officially supported just take a few extra steps.
 Get the L1 contract addresses, and [provide them to the SDK](https://stack.optimism.io/docs/build/sdk/#contract-addresses).
 Once you do that, you can use the SDK normally.
 
-**Warning:** The standard bridge does *not* support certain ERC-20 configurations:
-
+<Callout type="warning"> 
+The standard bridge does *not* support certain ERC-20 configurations: 
 - [Fee on transfer tokens](https://github.com/d-xo/weird-erc20#fee-on-transfer)
 - [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
-
+</Callout>
 
 ## Setup
-
-1. Ensure your computer has:
+<Steps>
+### Step 1: Check your computer setup
    - [`git`](https://git-scm.com/downloads)
    - [`node`](https://nodejs.org/en/)
 
-1. Clone this repository and enter it.
+### Step 2: Clone this repository and enter it
 
    ```sh
    git clone https://github.com/ethereum-optimism/optimism-tutorial.git
    cd optimism-tutorial/cross-dom-bridge-erc20
    ```
 
-1. Install the necessary packages.
+### Step 3: Install the necessary packages
 
    ```sh
    yarn
    ```
 
-1. Go to [Alchemy](https://www.alchemy.com/) and create two applications:
+### Step 4: Go to [Alchemy](https://www.alchemy.com/) and create two applications
 
    - An application on Goerli
    - An application on OP Goerli
 
    Keep a copy of the two keys.
 
-1. Copy `.env.example` to `.env` and edit it:
+### Step 5: Copy `.env.example` to `.env` and edit it
 
-   1. Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
-   1. Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
-   1. Set `OP_GOERLI_ALCHEMY_KEY` to the key for the Optimistic Goerli app
+   - Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
+   - Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
+   - Set `OP_GOERLI_ALCHEMY_KEY` to the key for the Optimistic Goerli app
 
    [This faucet gives ETH on the Goerli network](https://faucet.paradigm.xyz/). [This faucet gives ETH on the OP Goerli network](https://optimismfaucet.xyz/).
-
+</Steps>
 
 ## Run the sample code
 
@@ -368,12 +370,14 @@ We can just report the balances and see that the L2 balance rose by 1 gwei.
 This function shows how to withdraw ERC-20 from OP Mainnet to Ethereum (or OP Goerli to Goerli).
 The withdrawal process has these stages:
 
-1. Submit the withdrawal transaction on OP Mainnet (or OP Goerli).
-1. Wait until the state root with the withdrawal is published (and the status changes to `optimismSDK.MessageStatus.READY_TO_PROVE`).
-1. Submit the proof on L1 using `crossChainMessenger.proveMessage()`.
-1. Wait the fault challenge period. 
-   When this period is over, the status becomes `optimismSDK.MessageStatus.READY_FOR_RELAY`
-1. Finalize to cause the actual withdrawal on L1 using `crossChainMessenger.finalizeMessage()`.
+<Steps>
+### Step 1: Submit the withdrawal transaction on OP Mainnet (or OP Goerli)
+### Step 2: Wait until the state root with the withdrawal is published (and the status changes to `optimismSDK.MessageStatus.READY_TO_PROVE`)
+### Step 3: Submit the proof on L1 using `crossChainMessenger.proveMessage()`
+### Step 4: Wait the fault challenge period
+  - When this period is over, the status becomes `optimismSDK.MessageStatus.READY_FOR_RELAY`
+### Step 5: Finalize to cause the actual withdrawal on L1 using `crossChainMessenger.finalizeMessage()`
+</Steps>
 
 [You can read more about this in the documentation](https://community.optimism.io/docs/developers/bedrock/how-is-bedrock-different/#two-phase-withdrawals).
 
