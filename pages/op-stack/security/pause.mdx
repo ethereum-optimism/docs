@@ -1,3 +1,5 @@
+import { Callout, Steps } from 'nextra/components'
+
 # Pause and Unpause the Bridge
 
 ## Why do it?
@@ -23,8 +25,8 @@ You do this using the L1 [`ProxyAdmin`](https://github.com/ethereum-optimism/opt
 
 
 ## Seeing it in action
-
-1. Set these environment variables
+<Steps>
+### Step 1: Set the environment variables.
 
    | Variable | Meaning
    | - | - |
@@ -33,20 +35,20 @@ You do this using the L1 [`ProxyAdmin`](https://github.com/ethereum-optimism/opt
    | `PORTAL_ADDR` | Portal proxy address, get from `.../optimism/packages/contracts-bedrock/deployments/getting-started/OptimismPortalProxy.json`
    | `GOERLI_RPC` | URL for an RPC to the L1 Goerli network 
 
-1.  For using Foundry, set `ETH_RPC_URL`.
+### Step 2: For using Foundry, set `ETH_RPC_URL`.
 
     ```sh
     export ETH_RPC_URL=$GOERLI_RPC
     ```
 
-1. Check the balance of the ADMIN account.
+### Step 3: Check the balance of the ADMIN account.
    If it is too low you will not be able to submit transactions.
 
    ```sh
    cast balance $ADMIN_ADDR
    ```
 
-1. Send a deposit to L2.
+### Step 4: Send a deposit to L2.
 
    ```sh
    cast send --private-key $PRIV_KEY --value 1gwei $PORTAL_ADDR
@@ -54,13 +56,13 @@ You do this using the L1 [`ProxyAdmin`](https://github.com/ethereum-optimism/opt
 
    Note the transaction hash.
 
-1. Pause the portal.
+### Step 5: Pause the portal.
 
    ```sh
    cast send --private-key $PRIV_KEY $PORTAL_ADDR "pause()"
    ```
 
-1. Send a deposit to L2.
+### Step 6: Send a deposit to L2.
 
    ```sh
    cast send --private-key $PRIV_KEY --value 1gwei $PORTAL_ADDR
@@ -68,13 +70,13 @@ You do this using the L1 [`ProxyAdmin`](https://github.com/ethereum-optimism/opt
 
    Note the transaction hash.
 
-1. Wait ten minutes and see which transaction(s) have been relayed using the [SDK](../build/sdk.md). 
+### Step 7: Wait ten minutes and see which transaction(s) have been relayed using the [SDK](../build/sdk.md). 
    Use [`getMessageStatus`](https://sdk.optimism.io/classes/crosschainmessenger#getMessageStatus) to get the information.
 
 
-
-1. Unpause the portal.
+### Step 8: Unpause the portal.
 
    ```sh
    cast send --private-key $PRIV_KEY $PORTAL_ADDR "pause()"
    ```
+</Steps>

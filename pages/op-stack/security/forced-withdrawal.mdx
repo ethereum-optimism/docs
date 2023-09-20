@@ -1,7 +1,6 @@
-import { Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 
 # Forced withdrawal from an OP Stack blockchain
-
 
 ## What is this?
 
@@ -15,8 +14,8 @@ However, that L2 endpoint can be a read-only replica.
 ## Setup 
 
 The code to go along with this article is available at [our tutorials repository](https://github.com/ethereum-optimism/optimism-tutorial/tree/main/op-stack/forced-withdrawal).
-
-1. Clone the repository, move to the correct directory, and install the required dependencies.
+<Steps>
+### Step 1: Clone the repository, move to the correct directory, and install the required dependencies.
 
    ```sh
    git clone https://github.com/ethereum-optimism/optimism-tutorial.git
@@ -24,13 +23,13 @@ The code to go along with this article is available at [our tutorials repository
    npm install
    ```
 
-1. Copy the environment setup variables.
+### Step 2: Copy the environment setup variables.
 
    ```sh
    cp .env.example .env
    ```
 
-1. Edit `.env` to set these variables:
+### Step 3: Edit `.env` to set these variables:
 
    | Variable             | Meaning |
    | -------------------- | ------- |
@@ -38,28 +37,28 @@ The code to go along with this article is available at [our tutorials repository
    | L2URL                | URL to the L2 from which you are withdrawing
    | PRIV_KEY             | Private key for an account that has ETH on L2. It also needs ETH on L1 to submit transactions
    | OPTIMISM_PORTAL_ADDR | Address of the `OptimismPortalProxy` on L1.
-
+</Steps>
 
 ## Withdrawal
 
 ### ETH withdrawals
 
 The easiest way to withdraw ETH is to send it to the bridge, or the cross domain messenger, on L2.
-
-1. Enter the Hardhat console.
+<Steps>
+### Step 1: Enter the Hardhat console.
 
    ```sh
    npx hardhat console --network l1
    ```
 
-1. Specify the amount of ETH you want to transfer.
+### Step 2: Specify the amount of ETH you want to transfer.
    This code transfers one hundred'th of an ETH.
 
    ```js
    transferAmt = BigInt(0.01 * 1e18)
    ``` 
 
-1. Create a contract object for the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol) contract.
+### Step 3: Create a contract object for the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol) contract.
 
    ```js
    optimismContracts = require("@eth-optimism/contracts-bedrock")
@@ -67,7 +66,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    optimismPortal = new ethers.Contract(process.env.OPTIMISM_PORTAL_ADDR, optimismPortalData.abi, await ethers.getSigner())
    ```
 
-1. Send the transaction.
+### Step 4: Send the transaction.
 
    ```js
    txn = await optimismPortal.depositTransaction(
@@ -78,8 +77,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    rcpt = await txn.wait()
    ```
 
-
-1. To [prove](https://sdk.optimism.io/classes/crosschainmessenger#proveMessage-2) and [finalize](https://sdk.optimism.io/classes/crosschainmessenger#finalizeMessage-2) the message we need the hash. 
+### Step 5: To [prove](https://sdk.optimism.io/classes/crosschainmessenger#proveMessage-2) and [finalize](https://sdk.optimism.io/classes/crosschainmessenger#finalizeMessage-2) the message we need the hash. 
    Optimism's [core-utils package](https://www.npmjs.com/package/@eth-optimism/core-utils) has the necessary function.
 
    ```js
@@ -99,7 +97,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    withdrawalHash = withdrawalData.hash()
    ```
 
-1. Create the object for the L1 contracts, [as explained in the documentation](../build/sdk.md).
+### Step 6: Create the object for the L1 contracts, [as explained in the documentation](../build/sdk.md).
    You will create an object similar to this one:
 
    ```js
@@ -115,7 +113,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    }
    ```
 
-1. Create the data structure for the standard bridge.
+### Step 7: Create the data structure for the standard bridge.
 
    ```js
     bridges = { 
@@ -133,7 +131,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    ```
 
 
-1. Create [a cross domain messenger](https://sdk.optimism.io/classes/crosschainmessenger).
+### Step 8: Create [a cross domain messenger](https://sdk.optimism.io/classes/crosschainmessenger).
    This step, and subsequent ETH withdrawal steps, are explained in [this tutorial](https://github.com/ethereum-optimism/optimism-tutorial/tree/main/cross-dom-bridge-eth).
 
    ```js
@@ -153,7 +151,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    })   
    ```
 
-1. Wait for the message status for the withdrawal to become `READY_TO_PROVE`.
+### Step 9: Wait for the message status for the withdrawal to become `READY_TO_PROVE`.
    By default the state root is written every four minutes, so you're likely to need to need to wait.
 
    ```js
@@ -161,13 +159,13 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
        optimismSDK.MessageStatus.READY_TO_PROVE)
    ```
       
-1. Submit the withdrawal proof.
+### Step 10: Submit the withdrawal proof.
 
    ```js
    await crossChainMessenger.proveMessage(withdrawalHash)
    ```
 
-1. Wait for the message status for the withdrawal to become `READY_FOR_RELAY`.
+### Step 11: Wait for the message status for the withdrawal to become `READY_FOR_RELAY`.
    This waits the challenge period (7 days in production, but a lot less on test networks).
 
    ```js
@@ -176,7 +174,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    ```   
 
 
-1. Finalize the withdrawal.
+### Step 12: Finalize the withdrawal.
    See that your balance changes by the withdrawal amount.
 
    ```js
@@ -187,7 +185,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    balance1 = await ethers.provider.getBalance(myAddr)
    withdrawnAmt = BigInt(balance1)-BigInt(balance0)
    ```
-
+</Steps>
 <Callout type="info"> 
 
 transferAmt > withdrawnAmt
