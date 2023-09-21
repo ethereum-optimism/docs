@@ -22,14 +22,3 @@ Currently internal documentation updates are tracked on the following private pr
 
 These are for all documentation related updates and new content. 
 
-#### How to create a documentation issue
-
-1. [Create New Issue](https://github.com/ethereum-optimism/developer-support/issues/new/choose)
-1. Click `Documentation Update` template `Get started` button
-1. Fill out title 
-    1. [Docs] short description
-1. Fill out the body. The more detail the better.
-1. Assign to @sbvegan (right hand side)
-1. Add to `Documentation` project (rhs)
-1. Click `Submit New Issue`
-1. Ping soyboy with a link :)
