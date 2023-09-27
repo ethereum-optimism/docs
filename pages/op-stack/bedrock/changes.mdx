@@ -59,7 +59,7 @@ You might also be interested in the existence of the mempool and the changes in 
 - [JSON-RPC](#json-rpc)
 - [Chain Reorganizations](#chain-reorganizations)
 
-[See here for a more detailed guide](./node-operator-guide.md) on how to run a Bedrock node.
+[See here for a more detailed guide](guides/node-operators/node-operator-guide) on how to run a Bedrock node.
 
 </details>
 
@@ -153,7 +153,7 @@ The current `safe`, `unsafe`, and `finalized` blocks can be queried via [JSON-RP
 
 ## Historical Data
 
-Bedrock nodes can serve pre-Bedrock block bodies, transactions, and receipts out of the box. However, you will need to run a Legacy Geth instance to serve historical execution traces. See the [Node Operator Guide](./node-operator-guide.md) for more information about how to do this.
+Bedrock nodes can serve pre-Bedrock block bodies, transactions, and receipts out of the box. However, you will need to run a Legacy Geth instance to serve historical execution traces. See the [Node Operator Guide](/guides/node-operators/node-operator-guide) for more information about how to do this.
 
 Note that the following legacy fields have been removed from pre-Bedrock JSON-RPC transaction responses:
 
@@ -354,7 +354,7 @@ We recommend adding a 50% buffer to whatever is returned by `estimateGas` to ens
 In order to prevent Optimism networks from being DOSed via forced L1 to L2 transactions that bypass the Sequencer, a fee adjustment schedule to all L1→L2 transactions that closely mimics EIP1559 is included with Bedrock. Like in the current network, deposit fees are paid by burning some amount of L1 gas proportional to your deposit's L2 gas limit. Unfortunately, this means that you may have cases where you estimate how much gas an L1→L2 deposit will cost, and deposit fees increase by the time your transaction gets included in a block and executed, causing your deposit to run out of gas and revert. This is why we recommend adding a 50% buffer to your `gasLimit` to ensure your deposit will not run out of gas.
 </Callout>
 
-Deposits that come from contracts still use [address aliasing](../build/differences.md#address-aliasing).
+Deposits that come from contracts still use [address aliasing](differences#address-aliasing).
 
 Deposits are faster, about a minute, because they only require five blocks for confirmation (and L1 blocks are usually 12 seconds apart).
 
@@ -370,6 +370,6 @@ This section discusses some of the changes in Optimism internals.
 
 ### The transaction trail
 
-There is no longer a CTC (canonical transaction chain) contract. Instead, L2 blocks are saved to the Ethereum blockchain using a non-contract address to minimize the L1 gas expenses. Please see the [Public Testnets](./public-testnets.md) page for more information on where to find batch submission addresses. 
+There is no longer a CTC (canonical transaction chain) contract. Instead, L2 blocks are saved to the Ethereum blockchain using a non-contract address to minimize the L1 gas expenses.
 
 [The block and transaction format is also different](https://github.com/ethereum-optimism/optimism/blob/65ec61dde94ffa93342728d324fecf474d228e1f/specs/rollup-node.md#derivation).
