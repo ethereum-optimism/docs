@@ -44,7 +44,12 @@ const config: DocsThemeConfig = {
         />
       </>
     )
-  }
+  },
+  // https://nextra.site/docs/docs-theme/theme-configuration
+  // primaryHue: {
+  //   dark: 
+  //   light: 
+  // }
 }
 
 export default config
