@@ -2,6 +2,18 @@ import React from 'react'
 import { DocsThemeConfig } from 'nextra-theme-docs'
 import { useRouter } from 'next/router'
 import { useConfig } from 'nextra-theme-docs'
+import { FeelbackReaction, PRESET_FEELING } from "@feelback/react"
+import "@feelback/react/styles/feelback.css"
+
+export function YourComponent() {
+  return (
+    <FeelbackReaction contentSetId="1190b071-9b78-4c62-8a2c-480f04df2562"
+      preset={PRESET_FEELING}
+      textQuestion="Did you find this page useful?"
+      textAnswer="Thanks for your feedback!"
+    />
+  );
+}
 
 const config: DocsThemeConfig = {
   logo: <span>OP Documentation</span>,
@@ -18,6 +30,15 @@ const config: DocsThemeConfig = {
   },
   sidebar: {
     defaultMenuCollapseLevel: 1,
+  },
+  main: ({ children }) => {
+    return (
+        <>
+            {children}
+            <hr />
+            <YourComponent />
+        </>
+    );
   },
   useNextSeoProps() {
     const { asPath } = useRouter()
