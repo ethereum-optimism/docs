@@ -1,7 +1,6 @@
----
-title: Running OP Mainnet from Source
-lang: en-US
----
+import { Callout } from 'nextra/components'
+
+# Running OP Mainnet from Source
 
 #### [Please follow these steps first if you have not done so already.](intro.md)
 
@@ -12,9 +11,9 @@ You will need 500+ GB for this part alone.
 
 1. Download the data directory snapshot. This is a large file so expect it to take some time. [Bedrock Data Directory (303GB)](https://datadirs.optimism.io/mainnet-bedrock.tar.zst)
 
-::: tip Protip
+<Callout>
 Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
-:::
+</Callout>
 
 2. Check the validity of your download. This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
 
@@ -46,9 +45,9 @@ Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your d
 
 1. Download the data directory snapshot. This is a large file so expect it to take some time. [Legacy Geth Data Directory (2.9TB)](https://datadirs.optimism.io/mainnet-legacy-archival.tar.zst)
 
-::: tip Protip
+<Callout>
 Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
-:::
+</Callout>
 
 2. Check the validity of your download. This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
 
@@ -160,11 +159,13 @@ In the root of your working directory create a new directory: `scripts`.
       --maxpeers=0
     ```
 
-::: info Archive Nodes
+<Callout type="info">
+
+Archive Nodes
 You will need to point `op-geth` at `l2geth` with `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth from before the [Bedrock upgrade](https://twitter.com/optimismFND/status/1666850591669202965). This flag is only necessary for OP Mainnet.
 
 You will also need to add `--gcmode archive`.
-:::
+</Callout>
 
 1. Run the following command to start `op-geth`:
    
@@ -199,7 +200,7 @@ You will also need to add `--gcmode archive`.
     ./bin/op-node \
         --l1=$L1URL  \
         --l1.rpckind=$L1KIND \
-        --l2=http://localhost:8551 \
+        --l2=ws://localhost:8551 \
         --l2.jwt-secret=./jwt.txt \
         --network=$NET \
         --rpc.addr=0.0.0.0 \
