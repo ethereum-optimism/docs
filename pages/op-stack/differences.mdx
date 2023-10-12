@@ -1,11 +1,11 @@
 import { Callout } from 'nextra/components'
 
-# Differences between Bedrock and L1 Ethereum
+# Differences between OP Stack and L1 Ethereum
 
 It's important to note that there are various minor discrepancies between the behavior of Optimism and Ethereum.
 You should be aware of these descrepancies when building apps on top of Optimism or the OP Stack codebase.
 
-## Opcode Differences
+## OP Code Differences
 
 
 | Opcode  | Solidity equivalent | Behavior |
@@ -66,9 +66,7 @@ Therefore, if the value of `tx.origin` is affected by the rules defined above, t
 Note that in general, [`tx.origin` should *not* be used for authorization](https://docs.soliditylang.org/en/latest/security-considerations.html#tx-origin). 
 However, that is a separate issue from address aliasing because address aliasing also affects `msg.sender`.
 
-
-
-#### Why is address aliasing an issue?
+### Why is address aliasing an issue?
 
 
 The problem with two identical source addresses (the L1 contract and the L2 contract) is that we extend trust based on the address.
@@ -106,10 +104,10 @@ But it is nearly impossible to create two that are different by a specified amou
 
 ## Blocks
 
-There are several differences in the way blocks are produced between L1 Ethereum and Optimism Bedrock.
+There are several differences in the way blocks are produced between L1 Ethereum and Optimism.
 
 
-| Parameter           | L1 Ethereum | Optimism Bedrock |
+| Parameter           | L1 Ethereum | Optimism |
 | - | - | - |
 | Time between blocks | 12 seconds(1)  | 2 seconds |
 | Block target size   | 15,000,000 gas | to be determined |
@@ -118,7 +116,7 @@ There are several differences in the way blocks are produced between L1 Ethereum
 (1) This is the ideal. 
     If any blocks are missed it could be an integer multiple such as 24 seconds, 36 seconds, etc.
 
-**Note:** The L1 Ethereum parameter values are taken from [ethereum.org](https://ethereum.org/en/developers/docs/blocks/#block-time). The Optimism Bedrock values are taken from [the Optimism specs](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/guaranteed-gas-market.md#limiting-guaranteed-gas).
+**Note:** The L1 Ethereum parameter values are taken from [ethereum.org](https://ethereum.org/en/developers/docs/blocks/#block-time). The Optimism values are taken from [the Optimism specs](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/guaranteed-gas-market.md#limiting-guaranteed-gas).
 
 
 
@@ -128,7 +126,7 @@ There are several differences in the way blocks are produced between L1 Ethereum
 
 OP Stack codebase uses the same [JSON-RPC API](https://eth.wiki/json-rpc/API) as Ethereum.
 Some additional OP Stack specific methods have been introduced.
-See the full list of [custom JSON-RPC methods](/guides/node-operators/json-rpc) for more information.
+See the full list of [custom JSON-RPC methods](/node-operators/json-rpc) for more information.
 
 
 ### Pre-EIP-155 support
@@ -139,4 +137,4 @@ This is a security risk, so pre-EIP-155 transactions are not supported on OP Sta
 
 ## Transaction costs
 
-[By default, transaction costs on OP Stack chains](/guides/transaction-fees/overview) include an [L2 execution fee](/guides/transaction-fees/overview#the-l2-execution-fee) and an [L1 data fee](/guides/transaction-fees/overview#the-l1-data-fee). 
+[By default, transaction costs on OP Stack chains](/op-stack/transaction-fees/overview) include an [L2 execution fee](/op-stack/transaction-fees/overview#the-l2-execution-fee) and an [L1 data fee](/op-stack/transaction-fees/overview#the-l1-data-fee). 
