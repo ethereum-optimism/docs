@@ -24,7 +24,7 @@ const config: DocsThemeConfig = {
     text: 'OP Documentation',
   },
   sidebar: {
-    defaultMenuCollapseLevel: 1,
+    defaultMenuCollapseLevel: 1
   },
   useNextSeoProps() {
     const { asPath } = useRouter()
