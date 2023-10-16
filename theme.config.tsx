@@ -2,6 +2,7 @@ import React from 'react'
 import { DocsThemeConfig } from 'nextra-theme-docs'
 import { useRouter } from 'next/router'
 import { useConfig } from 'nextra-theme-docs'
+import { Widget } from '@typeform/embed-react'
 
 const config: DocsThemeConfig = {
   logo: (
@@ -26,6 +27,13 @@ const config: DocsThemeConfig = {
   sidebar: {
     defaultMenuCollapseLevel: 1
   },
+  toc: {
+    extraContent: () =>
+      <>
+      <hr className="divider" />
+      <Widget id="i7xQwkwN" style={{ width: '50%' }} className="my-form" />
+      </>
+   },
   useNextSeoProps() {
     const { asPath } = useRouter()
     if (asPath !== '/') {
