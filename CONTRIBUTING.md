@@ -11,15 +11,15 @@ The Optimism Documentation team reviews pull requests and either merges, request
 
 Contributing to the Optimism documentation implies 2 steps:
 
-1. Learn how to use [Nextra](#nextra), the tool used to write and generate Optimism's documentation.
+1. Learn how to use [Nextra](#learn-how-to-use-nextra), the tool used to write and generate Optimism's documentation.
 
-2. [Submit a pull request](#pull-requests) for review.
+2. [Submit a pull request](#send-pull-request) for review.
 
-## Nextra
+## Learn How to Use Nextra
 
-Optimism's documentation is built with the React- and Markdown-based [Nextra](https://nextra.site/docs) framework. We are using the docs theme (as opposed to the blog theme), which has specialized features.
+Optimism's documentation is built with the React and Markdown-based [Nextra](https://nextra.site/docs) framework. We are using the docs theme (as opposed to the blog theme), which has specialized features.
 
-To start contributing to Optimism's documentation using Nextra, you need to understand the [files and branches architecture](#use-the-files-architecture-and-branch-names-conventions-appropriately), and use the proper [syntax to format content](#use-the-proper-formatting-and-syntax). Additionally, if you want to work locally from a repository fork, you should [set up the Nextra project](#working-locally-set-up-the-project) on your machine.
+To start contributing to Optimism's documentation using Nextra, you need to understand the [files and branches architecture](#use-the-files-architecture-and-branch-names-conventions-appropriately), and use the proper [syntax to format content](#use-the-proper-formatting-and-syntax). Additionally, if you want to work locally from a repository fork, you should [set up the Nextra project](#set-up-the-project-and-test-locally) on your machine.
 
 ### Use the files architecture and branch names conventions appropriately
 
@@ -32,7 +32,7 @@ Optimism's documentation includes 2 big sections with each section living in a d
 
 ℹ️ In the rare case of a pull request that impacts multiple parts of the repository (for instance pages + public images), please prefix your branch with `repo/`.
 
-### Use the proper formatting and syntax
+### Use the Proper Formatting and Syntax
 
 Nextra is MDX-based, meaning the content you write is [Markdown](https://daringfireball.net/projects/markdown/syntax) that accepts [React](https://reactjs.org/) components.
 
@@ -40,17 +40,18 @@ The Optimism Documentation team has created a complete style guide for you to ma
 
 👉 [Optimism Documentation Style Guide](/pages/contribute/style-guide.mdx) 
 
-### Working locally: Set up the project
+### Set Up the Project and Test Locally
 
 To set up the Nextra project on your machine, perform the following steps from a terminal instance:
 
 1. Install pnpm [install pnpm](https://pnpm.io/installation).
 2. First, run `pnpm i` to install the dependencies.
-3. Then, run `pnpm dev` to start the development server and visit localhost:3000.
+3. Then, run `pnpm dev` to start the development server and 
+4. Visit [localhost:3000](http://localhost:3000) in your browser to view the website.
 
 You can now start changing content and see the website updated live each time you save a new file. 🤓
 
-## Pull requests
+## Send Pull Request
 
 ***
 ⚠️ **Important prerequisite: Build the content locally before submitting a pull request 👇**
@@ -73,18 +74,18 @@ To submit your contribution for review:
     
     ✏️ If your pull request is not ready for review yet, choose the “[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)” in the dropdown. The Optimism documentation team will review your pull request only when you will mark it as “[Ready for review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request)”.
    
-4. _(optional — if not set, the Optimism Documentation team will set or update this for you)_:<br/>Add GitHub labels for:
-   - the type of updates introduced by the pull request: 
+5. Add GitHub labels for the type of updates introduced by the pull request: 
      - `pr: new content` for new features,
-     - `pr: updated content` for significant (20+ lines) updates to existing features,
-     - or `pr: chore` for smaller improvements (fixes, typos, chore tasks…).
+     - `pr: updated content` for significant (20+ lines) updates to existing features, or 
+     - `pr: chore` for smaller improvements (fixes, typos, chore tasks…).
+     >_(If label for type of update is not set, the Optimism Documentation team will set or update this for you)_<br/>
     
 **⚠️ Important: Add the `flag: merge pending release` if the Optimism Documentation team should wait before merging the pull request.** Approved pull requests are usually merged immediately into the `main` branch, automatically triggering a deployment on docs.optimism.io. Please use the `flag: merge pending release` label if the pull request content should only be released publicly in sync with a product release.
 
 
 That’s it! 🥳 Once the pull request is [reviewed and approved](#review-and-management-of-pull-requests), the Optimism Documentation team will merge it, and the content will be live on [docs.optimism.io](http://docs.optimism.io) a few minutes later. 🚀
 
-## Review and management of pull requests
+## Review and Management of Pull Requests
 
 The pull request review process and timeline are based on the availability of the Optimism Documentation team to handle community contributions. The workflow is as follows:
 
@@ -93,12 +94,12 @@ The pull request review process and timeline are based on the availability of th
 
    - accuracy,
    - quality,
-   - alignment with the documentation scope and roadmap.
+   - alignment with the documentation scope.
 
 3. Reviewers will either approve, ask for changes, or reject the pull request.
 4. Accepted pull requests will be merged and automatically deployed on [docs.optimism.io](https://docs.optimism.io) a few minutes later. 
 
-## Other ways to support the project
+## Other Ways to Support the Project
 All types of contributions are encouraged and valued. 
 And if you like the project, but just don't have time to contribute, that's fine too. There are other easy ways to support the project and show your appreciation, which we would also be very happy about:
 - Star the project
