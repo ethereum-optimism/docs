@@ -100,10 +100,10 @@ The pull request review process and timeline are based on the availability of th
 
 ## Other ways to support the project
 All types of contributions are encouraged and valued. 
-> And if you like the project, but just don't have time to contribute, that's fine too. There are other easy ways to support the project and show your appreciation, which we would also be very happy about:
-> - Star the project
-> - Tweet about it
-> - Refer this project in your project's readme
-> - Mention the project at local meetups and tell your friends/colleagues
+And if you like the project, but just don't have time to contribute, that's fine too. There are other easy ways to support the project and show your appreciation, which we would also be very happy about:
+- Star the project
+- Tweet about it
+- Refer this project in your project's readme
+- Mention the project at local meetups and tell your friends/colleagues
 
 The community looks forward to your contributions. 🎉
