@@ -19,7 +19,7 @@ const config: DocsThemeConfig = {
   chat: {
     link: 'https://discord.optimism.io',
   },
-  docsRepositoryBase: 'https://github.com/ethereum-optimism/docs',
+  docsRepositoryBase: 'https://github.com/ethereum-optimism/docs/blob/main/',
   footer: {
     text: 'OP Documentation',
   },
