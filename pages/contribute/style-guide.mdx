@@ -20,7 +20,7 @@ This style guide will help Optimists to write technical content in consistent vo
 
 ### Folder Structure
 
-The folder structure for the [docs.optimism.io](https://github.com/ethereum-optimism/docs) repository is organized into several high-level categories under the main `pages` folder such as `op-stack`, `op-mainnet`, `node-operators`, `dapp-developers`, `chain-operators`, `cex-wallet-developers`, `resources`, `contribute`, and `tools`.
+The folder structure for the [docs.optimism.io](https://github.com/ethereum-optimism/docs) repository is organized into several high-level categories under the main `pages` folder such as `op-stack`, `op-mainnet`, `node-operators`, `dapp-developers`, `chain-operators`, `cex-wallet-developers`, `resources`, `tools`, and `contribute`.
 
 The left sidebar (leftbar) is managed in the `_meta.json` file. You only need to edit the `_meta.json` file when you are adding a new page or deleting an existing page. Editing the `_meta.json` file too frequently can cause merge conflicts because content is being worked on daily. You will need to accept the changes from other contributors if you are committing a PR.
 
@@ -254,8 +254,13 @@ import Image from 'next/image'
 - Tutorial videos are considered educational content and should not exceed 10 minutes, based on instructional design best practices.
 - Tutorial videos must be hosted by a third party (YouTube, Vimeo, etc.) and include closed captions for accessibility.
 - Embed videos with an iframe and add/modify the `title` attribute as needed to make more meaningful `alt-text`, which improves accessibility for screen readers.
-- **Example of video with title for alt-text:** ![Embed Video with Alt-text](public/img/guides/contribute/video-title.png)
-    
+- **Example of video with title for alt-text:** 
+```
+<iframe width="560" height="315" src="https://www.youtube.com/embed/_Y6CwsYgqwI?si=7erhCEj6cz1nD0VO" 
+title="Optimism Getting Started Tutorial" frameborder="0" allow="accelerometer; autoplay; 
+clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+``` 
 
 ## Links
 
@@ -296,23 +301,20 @@ Developers trust that we will lead them to sites or pages related to their readi
 
 ## Content Types
 
-Content types help manage technical content by defining the purpose and common structure for each file type. These can also be thought of as taxonomies for technical documentation. All content types used in these technical docs have attributes or properties, as defined below.
+Content types help manage technical content by defining the purpose and common structure for each file type. All content types used in these technical docs have attributes or properties, as defined below.
 
-### Guides
-
-Guides are **learning-oriented** pages that use simple language to explain complex features, such as how a product works. They are great for on-boarding beginning or novice developers. For developer-focused guides, it is best practice to include illustrations, diagrams, and code samples whenever possible to help explain concepts.
-
-To maintain consistency, guides should include all these items: 
-
-- overview of what the guide will cover
-- guide content organized into discrete sections
-- clear headings for each section written in parallel style
-- one or more visual elements (e.g., images, screenshots, illustrations, and/or code samples)
-- next steps section: links to related tutorials, other guides, troubleshooting, etc.
+| Document type	| Purpose	| Examples |
+| ------------- | --------- | ---------- |
+| Overviews	| General introduction to a product or feature, provides a happy-path for readers | [Developer Tools Overview](/tools/overview) |
+| Guides | Explain what things are and how they work	| [Node Operator Guide](/node-operators/node-operator-guide) |
+| Tutorials | Provide task-oriented guidance with step-by-step "learn by doing" instructions | [Bridging ERC-20 tokens with the Optimism SDK](/dapp-developers/bridging/cross-dom-bridge-erc20) |
+| FAQs	| Address frequently asked questions |	[FAQ: OP Mainnet Security Model](/op-mainnet/security/faq) |
+| Troubleshooting |	List common troubleshooting scenarios and solutions	| [Troubleshooting: Run a Node](/node-operators/node-troubleshooting) |
+| Reference | Provide deep, theoretical knowledge of the internal workings of a system, such as API endpoints and specifications | [Node and RPC Providers](/tools/rpc-providers) |
 
 ### Overviews
 
-Overviews are both **information-oriented** and **task-oriented** pages that serve as the landing page for a particular group of related documentation pages; often used at the top-level of a directory, such as `/node-operators/overview`. When done well, overviews accomplish two essential tasks for users:  
+Overviews provide a general introduction to a product or service and a happy path for readers on how to navigate a particular set of docs or related features; often used at the top-level of a directory, such as `/node-operators/overview`. When done well, overviews accomplish two essential tasks for users:  
 
 1. **organize** the related set of documentation pages to keep developers from getting overloaded by too much information, and
 2. **establish a ‘happy path’** to direct developers to the right pages in the documentation set based on their user scenario or use case.
@@ -326,9 +328,21 @@ To maintain consistency, overviews should include all these items:
 - clear headings for each section written in parallel style
 - next steps section: links to related guides, tutorials, etc.
 
+### Guides
+
+Guides use simple language to explain concepts or complex features, such as what things are and how they work. They are great for on-boarding beginning or novice developers. For developer-focused guides, it is best practice to include illustrations, diagrams, and code samples whenever possible to help explain concepts.
+
+To maintain consistency, guides should include all these items: 
+
+- overview of what the guide will cover
+- guide content organized into discrete sections
+- clear headings for each section written in parallel style
+- one or more visual elements (e.g., images, screenshots, illustrations, and/or code samples)
+- next steps section: links to related tutorials, other guides, troubleshooting, etc.
+
 ### Tutorials
 
-Tutorials are **task-oriented** pages or videos that include practical steps for completing a task, activity, or objective. Tutorials are more interactive and hands-on than other technical documentation, often including practical examples, exercises, and demonstrations to help developers learn by doing.
+Tutorials are task-oriented pages or videos that include practical, step-by-step instructions for completing a task, activity, or objective. Tutorials are more interactive and hands-on than other technical documentation, often including practical examples, exercises, and demonstrations to help developers learn by doing.
 
 To maintain consistency, tutorials should include all of these items: 
 
@@ -351,7 +365,7 @@ Step 3: **Visit** the Dev Environment
 
 ### FAQs
 
-FAQs are **information-oriented** pages that answer common questions developers have/might ask about a product, feature, or service. FAQs should be written from the developer’s perspective. If there are more than two steps in the answer, use a numbered list. Place FAQs onto their own separate pages, whenever possible, and link to the FAQ from within the respective guide or tutorial. 
+FAQs address common questions developers have/might ask about a product, feature, or service. FAQs should be written from the developer’s perspective. If there are more than two steps in the answer, use a numbered list. Place FAQs onto their own separate pages, whenever possible, and link to the FAQ from within the respective guide or tutorial. 
 
 To maintain consistency, FAQs should include all of these items: 
 
@@ -382,7 +396,7 @@ Include a category heading when you need to group related FAQ content (e.g., See
 
 ### Troubleshooting Guides
 
-Troubleshooting guides are both **learning-oriented** and **task-oriented** pages that list common problems a developer might encounter while using a product or service, identifies the symptoms, and offers solutions to these problems. It is important to accurately capture symptoms produced by the system or interface (e.g., error messages, unexpected page refresh/reload, spinning wheel, etc.), so developers know if their system response aligns with one of the common problems identified in the troubleshooting guide.
+Troubleshooting guides list common problems a developer might encounter while using a product or service, identifies the symptoms, and offers solutions to these problems. It is important to accurately capture symptoms produced by the system or interface (e.g., error messages, unexpected page refresh/reload, spinning wheel, etc.), so developers know if their system response aligns with one of the common problems identified in the troubleshooting guide.
 
 A troubleshooting guide should be limited to identifying common problems for one particular product or service. 
 
@@ -397,7 +411,8 @@ To maintain consistency, troubleshooting guides should include all of these item
 
 ### Technical Reference
 
-Technical references are both **learning-oriented** and **information-oriented** pages that provide deep, theoretical knowledge of the internal workings of a system. These often come in the form of requirements or system specifications developers need to run the product efficiently. A technical reference page is usually quite long, so it is best practice to embed a table of contents (TOC) at the top of the page to help organize material for developers. From a usability perspective, this practice shows developers what will be covered in the reference in advance, and allows them to jump to a specific section, if desired.
+Technical references provide deep, theoretical knowledge of the internal workings of a system. These often come in the form of requirements or system specifications developers need to run the product efficiently, so lists and tables, such as API endpoints and error codes are commonplace. 
+A technical reference page is usually quite long, so it is best practice to embed a table of contents (TOC) at the top of the page to help organize material for developers. From a usability perspective, this practice shows developers what will be covered in the reference in advance, and allows them to jump to a specific section, if desired.
 
 To maintain consistency, technical references should include all these items: 
 
