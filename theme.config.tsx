@@ -47,7 +47,7 @@ const config: DocsThemeConfig = {
         <meta property="og:title" content={frontMatter.title || 'OP Docs'} />
         <meta
           property="og:description"
-          content={frontMatter.description || 'Build With Optimism Labs'}
+          content={frontMatter.description || 'Build With Optimism'}
         />
       </>
     )
