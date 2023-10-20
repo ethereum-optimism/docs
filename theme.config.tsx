@@ -52,6 +52,11 @@ const config: DocsThemeConfig = {
       </>
     )
   },
+  i18n: [
+    { locale: 'en', text: 'English' },
+    { locale: 'zh', text: '中文' },
+    { locale: 'de', text: 'Deutsch' }
+  ]
   // https://nextra.site/docs/docs-theme/theme-configuration
   // primaryHue: {
   //   dark: 
