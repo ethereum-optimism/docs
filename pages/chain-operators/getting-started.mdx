@@ -588,6 +588,15 @@ To use any other development stack, see the getting started tutorial, just repla
 
 ### Errors
 
+#### Error Deploying L1 Contracts
+
+If a `CREATE2` collision occurs during the L1 contract deployment step of spinning up an op-stack rollup, you might see the following error due to the environment variable:
+
+```
+ERROR apply:ext: evm::cheatcodes: non-empty stderr args=["bash", "-c", "jq -r '.transactions[] | select(.contractAddress == \"0x581f62c0901d4dce2553cb6140dBb4CeE533d834\") | select(.transactionType == \"CREATE\" or .transactionType == \"CREATE2\")' < /shared-contracts-bedrock/broadcast/Deploy.s.sol/31337/run-latest.json"] stderr="bash: line 1: /shared-contracts-bedrock/broadcast/Deploy.s.sol/31337/run-latest.json: No such file or directory\n"
+```
+The solution is to set the `IMPL_SALT` environment variable to something random. See the [`.envrc.example`](https://github.com/ethereum-optimism/optimism/blob/7591f192ddf23b55809d7a1830775f627a1d5307/packages/contracts-bedrock/.envrc.example) file in `contracts-bedrock` for more information. 
+
 #### Corrupt data directory
 
 If `op-geth` aborts (for example, because the computer it is running on crashes), you might get these errors on `op-node`:
