@@ -590,12 +590,14 @@ To use any other development stack, see the getting started tutorial, just repla
 
 #### Error Deploying L1 Contracts
 
-If a `CREATE2` collision occurs during the L1 contract deployment step of spinning up an op-stack rollup, you might see the following error due to the environment variable:
+The condition arises when deploying to shared networks like mainnet or testnet because the addresses are deterministic. 
+The deployment fails and causes a `CREATE2` collision when the address is already occupied by a different deployment, showing the following error:
 
-```
-ERROR apply:ext: evm::cheatcodes: non-empty stderr args=["bash", "-c", "jq -r '.transactions[] | select(.contractAddress == \"0x581f62c0901d4dce2553cb6140dBb4CeE533d834\") | select(.transactionType == \"CREATE\" or .transactionType == \"CREATE2\")' < /shared-contracts-bedrock/broadcast/Deploy.s.sol/31337/run-latest.json"] stderr="bash: line 1: /shared-contracts-bedrock/broadcast/Deploy.s.sol/31337/run-latest.json: No such file or directory\n"
-```
-The solution is to set the `IMPL_SALT` environment variable to something random. See the [`.envrc.example`](https://github.com/ethereum-optimism/optimism/blob/7591f192ddf23b55809d7a1830775f627a1d5307/packages/contracts-bedrock/.envrc.example) file in `contracts-bedrock` for more information. 
+`EvmError: Revert`
+
+The L1 contract implementations are deployed using `CREATE2`. The salt value determines the address that the contract is deployed to, and a default salt value is provided which can be overridden with the `IMPL_SALT` environment variable. 
+The **solution** is to use a different salt for each deployment of the implementations because the deployment fails if the contract already exists at that address. 
+See the [`.envrc.example`](https://github.com/ethereum-optimism/optimism/blob/7591f192ddf23b55809d7a1830775f627a1d5307/packages/contracts-bedrock/.envrc.example) file in `contracts-bedrock` for an example of how to do this. 
 
 #### Corrupt data directory
 
