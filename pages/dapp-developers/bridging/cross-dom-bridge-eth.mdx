@@ -1,4 +1,10 @@
-import { Steps } from 'nextra/components'
+---
+title: Bridging ETH with the Optimism SDK
+lang: en-US
+description: This tutorial teaches you how to use the Optimism SDK to transfer ETH between Layer 1 (Ethereum or Goerli) and Layer 2 (OP Mainnet or OP Goerli).
+---
+
+import { Steps, Callout } from 'nextra/components'
 
 # Bridging ETH with the Optimism SDK
 
@@ -7,46 +13,191 @@ This tutorial teaches you how to use the [Optimism SDK](https://sdk.optimism.io/
 The SDK supports multiple OP Chains: OP, Base, etc.
 To see whether a specific OP Chain is supported directly, [see the documentation](https://sdk.optimism.io/enums/l2chainid).
 Chains that aren't officially supported just take a few extra steps.
-Get the L1 contract addresses, and [provide them to the SDK](/chain-operators/sdk#getting-contract-addresses).
+Get the L1 contract addresses and [provide them to the SDK](/chain-operators/sdk#getting-contract-addresses).
 Once you do that, you can use the SDK normally.
 
-## Setup
+## Before You Begin
+You will need to setup your computer with the following: [`git`](https://git-scm.com/downloads) and [`node`](https://nodejs.org/en/).
+Please ensure these programs are installed before beginning the tutorial.
+
 <Steps>
-
-### Step 1: Setup your computer
-   - [`git`](https://git-scm.com/downloads)
-   - [`node`](https://nodejs.org/en/)
-   - [`yarn`](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable)
-
-### Step 2: Install the necessary packages
+### Step 1: Install the dependencies
 
    ```sh
-   yarn
+   pnpm add @eth-optimism/contracts-bedrock@0.15.0 @eth-optimism/contracts@0.6.0 @eth-optimism/core-utils@0.12.0 @eth-optimism/core-utils@0.12.1 @eth-optimism/sdk@^3.0.0 @ethersproject/abi@5.7.0 @ethersproject/abstract-provider@5.7.0 @ethersproject/abstract-signer@5.7.0 @ethersproject/address@5.7.0 @ethersproject/base64@5.7.0 @ethersproject/basex@5.7.0 @ethersproject/bignumber@5.7.0 @ethersproject/bytes@5.7.0 @ethersproject/constants@5.7.0 @ethersproject/contracts@5.7.0 @ethersproject/hash@5.7.0 @ethersproject/hdnode@5.7.0 @ethersproject/json-wallets@5.7.0 @ethersproject/keccak256@5.7.0 @ethersproject/logger@5.7.0 @ethersproject/networks@5.7.1 @ethersproject/pbkdf2@5.7.0 @ethersproject/properties@5.7.0 @ethersproject/providers@5.7.2 @ethersproject/random@5.7.0 @ethersproject/rlp@5.7.0 @ethersproject/sha2@5.7.0 @ethersproject/signing-key@5.7.0 @ethersproject/solidity@5.7.0 @ethersproject/strings@5.7.0 @ethersproject/transactions@5.7.0 @ethersproject/units@5.7.0 @ethersproject/wallet@5.7.0 @ethersproject/web@5.7.1 @ethersproject/wordlists@5.7.0 @openzeppelin/contracts-upgradeable@4.7.3 @openzeppelin/contracts@4.7.3 @types/bn.js@^5.1.0 @types/node@* @types/pbkdf2@^3.0.0 @types/secp256k1@^4.0.1 aes-js@3.0.0 assertion-error@^1.1.0 base-x@^3.0.2 bech32@1.1.4 bignumber.js@^9.0.1 blakejs@^1.1.0 bn.js@4.11.6 bn.js@^4.11.9 bn.js@^5.2.1 brorand@^1.1.0 browserify-aes@^1.2.0 bs58@^4.0.0 bs58check@^2.1.2 buffer-reverse@^1.0.1 buffer-xor@^1.0.3 bufio@^1.0.7 chai@^4.3.4 check-error@^1.0.2 cipher-base@^1.0.3 create-hash@^1.2.0 create-hmac@^1.1.7 crypto-js@^3.1.9-1 deep-eql@^4.1.2 dotenv@^16.0.0 elliptic@^6.5.4 ethereum-bloom-filters@^1.0.6 ethereum-cryptography@^0.1.3 ethereumjs-util@^7.1.0 ethers@^5.7.0 ethjs-unit@0.1.6 evp_bytestokey@^1.0.3 get-func-name@^2.0.0 hash-base@^3.0.0 hash.js@^1.1.7 hmac-drbg@^1.0.1 inherits@^2.0.4 is-hex-prefixed@1.0.0 js-sha3@^0.8.0 keccak@^3.0.0 lodash@^4.17.21 loupe@^2.3.1 md5.js@^1.3.4 merkletreejs@^0.2.27 minimalistic-assert@^1.0.1 minimalistic-crypto-utils@^1.0.1 node-addon-api@^2.0.0 node-gyp-build@^4.2.0 number-to-bn@1.7.0 pathval@^1.1.1 pbkdf2@^3.0.17 randombytes@^2.1.0 readable-stream@^3.6.0 ripemd160@^2.0.1 rlp@^2.2.7 safe-buffer@~5.2.0 scrypt-js@^3.0.0 secp256k1@^4.0.1 setimmediate@^1.0.5 sha.js@^2.4.8 string_decoder@^1.1.1 strip-hex-prefix@1.0.0 treeify@^1.1.0 type-detect@^4.0.5 utf8@3.0.0 util-deprecate@^1.0.1 web3-utils@^1.3.4 ws@7.4.6
    ```
 
-### Step 3: Go to [Alchemy](https://www.alchemy.com/) and create two applications
+### Step 2: Go to [Alchemy](https://www.alchemy.com/) and create two applications
 
    - An application on Goerli
    - An application on OP Goerli
 
    Keep a copy of the two keys.
 
-### Step 4: Copy `.env.example` to `.env` and edit it
+### Step 3: Create a `.env` file and edit the file
+- Copy/paste the text below to create your `.env` file.
+```js filename=".env file"
+# Put the mnemonic for an account on Optimism here
+MNEMONIC="test test test test test test test test test test test junk"
+GOERLI_ALCHEMY_KEY=  <<value goes here>>
+OP_GOERLI_ALCHEMY_KEY= <<value goes here>>
+```
+- Edit the file as follows:
+  - Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
+  - Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
+  - Set `OP_GOERLI_ALCHEMY_KEY` to the key for the Optimistic Goerli app
 
-   1. Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
-   1. Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
-   1. Set `OP_GOERLI_ALCHEMY_KEY` to the key for the OP Goerli app
+<Callout type="info">
+[Paradigm faucet](https://faucet.paradigm.xyz/) gives ETH on the Goerli network. [Optimism faucet](https://app.optimism.io/faucet) gives ETH on the OP Goerli network.
+</Callout>
 
-   [This faucet gives ETH on the Goerli network](https://faucet.paradigm.xyz/). [This faucet gives ETH on the OP Goerli network](https://optimismfaucet.xyz/).
+### Step 4: Create an `index.js` file 
+Next, we'll create an `index.js` file, which we'll need in order to execute our sample code. 
+
+```js filename="index.js"
+#! /usr/local/bin/node
+
+// Transfers between L1 and L2 using the Optimism SDK
+
+const ethers = require("ethers")
+const optimismSDK = require("@eth-optimism/sdk")
+require('dotenv').config()
+
+
+const mnemonic = process.env.MNEMONIC
+
+const words = process.env.MNEMONIC.match(/[a-zA-Z]+/g).length
+validLength = [12, 15, 18, 24]
+if (!validLength.includes(words)) {
+   console.log(`The mnemonic (${process.env.MNEMONIC}) is the wrong number of words`)
+   process.exit(-1)
+}
+
+const l1Url = `https://eth-goerli.g.alchemy.com/v2/${process.env.GOERLI_ALCHEMY_KEY}`
+const l2Url = `https://opt-goerli.g.alchemy.com/v2/${process.env.OP_GOERLI_ALCHEMY_KEY}`
+
+
+// Global variable because we need them almost everywhere
+let crossChainMessenger
+let addr    // Our address
+
+const getSigners = async () => {
+    const l1RpcProvider = new ethers.providers.JsonRpcProvider(l1Url)
+    const l2RpcProvider = new ethers.providers.JsonRpcProvider(l2Url)
+    const hdNode = ethers.utils.HDNode.fromMnemonic(mnemonic)
+    const privateKey = hdNode.derivePath(ethers.utils.defaultPath).privateKey
+    const l1Wallet = new ethers.Wallet(privateKey, l1RpcProvider)
+    const l2Wallet = new ethers.Wallet(privateKey, l2RpcProvider)
+
+    return [l1Wallet, l2Wallet]
+}   // getSigners
+
+
+const setup = async() => {
+  const [l1Signer, l2Signer] = await getSigners()
+  addr = l1Signer.address
+  crossChainMessenger = new optimismSDK.CrossChainMessenger({
+      l1ChainId: 5,    // Goerli value, 1 for mainnet
+      l2ChainId: 420,  // Goerli value, 10 for mainnet
+      l1SignerOrProvider: l1Signer,
+      l2SignerOrProvider: l2Signer,
+  })
+}    // setup
+
+
+const gwei = BigInt(1e9)
+const eth = gwei * gwei   // 10^18
+const centieth = eth/100n
+
+
+const reportBalances = async () => {
+  const l1Balance = (await crossChainMessenger.l1Signer.getBalance()).toString().slice(0,-9)
+  const l2Balance = (await crossChainMessenger.l2Signer.getBalance()).toString().slice(0,-9)
+
+  console.log(`On L1:${l1Balance} Gwei    On L2:${l2Balance} Gwei`)
+}    // reportBalances
+
+
+const depositETH = async () => {
+
+  console.log("Deposit ETH")
+  await reportBalances()
+  const start = new Date()
+
+  const response = await crossChainMessenger.depositETH(1000n * gwei)
+  console.log(`Transaction hash (on L1): ${response.hash}`)
+  await response.wait()
+  console.log("Waiting for status to change to RELAYED")
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
+  await crossChainMessenger.waitForMessageStatus(response.hash,
+                                                  optimismSDK.MessageStatus.RELAYED)
+
+  await reportBalances()
+  console.log(`depositETH took ${(new Date()-start)/1000} seconds\n\n`)
+}     // depositETH()
+
+
+const withdrawETH = async () => { 
+  
+  console.log("Withdraw ETH")
+  const start = new Date()  
+  await reportBalances()
+
+  const response = await crossChainMessenger.withdrawETH(centieth)
+  console.log(`Transaction hash (on L2): ${response.hash}`)
+  console.log(`\tFor more information: https://goerli-optimism.etherscan.io/tx/${response.hash}`)
+  await response.wait()
+
+  console.log("Waiting for status to be READY_TO_PROVE")
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
+  await crossChainMessenger.waitForMessageStatus(response.hash, 
+    optimismSDK.MessageStatus.READY_TO_PROVE)
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
+  await crossChainMessenger.proveMessage(response.hash)
+  
+
+  console.log("In the challenge period, waiting for status READY_FOR_RELAY") 
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
+  await crossChainMessenger.waitForMessageStatus(response.hash, 
+                                                optimismSDK.MessageStatus.READY_FOR_RELAY) 
+  console.log("Ready for relay, finalizing message now")
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
+  await crossChainMessenger.finalizeMessage(response.hash)
+
+  console.log("Waiting for status to change to RELAYED")
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
+  await crossChainMessenger.waitForMessageStatus(response, 
+    optimismSDK.MessageStatus.RELAYED)
+  
+  await reportBalances()   
+  console.log(`withdrawETH took ${(new Date()-start)/1000} seconds\n\n\n`)  
+}     // withdrawETH()
+
+
+const main = async () => {
+    await setup()
+    await depositETH()
+    await withdrawETH()
+    // await depositERC20()
+    // await withdrawERC20()
+}  // main
+
+main().then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error)
+    process.exit(1)
+  })
+
+```
+
+### Step 5: Run the sample code
+
+Execute the sample code in `index.js`. 
+After you execute it, wait. It is not unusual for each operation to take minutes on Goerli.
+On the production network, the withdrawals take around a week each because of the [challenge period](messaging#understanding-the-challenge-period).
 </Steps>
 
-## Run the sample code
-
-The sample code is in `index.js`, execute it.
-After you execute it, wait. It is not unusual for each operation to take minutes on Goerli.
-On the production network the withdrawals take around a week each, because of the [challenge period](messaging#understanding-the-challenge-period).
-
-### Expected output
+## Expected output
 
 When running on Goerli, the output from the script should be similar to:
 
@@ -77,10 +228,21 @@ On L1:2838777968 Gwei    On L2:737703229 Gwei
 withdrawETH took 359.783 seconds
 ```
 
+## Next Steps
 
+You should now be able to write applications that use our SDK and bridge to transfer ETH between layer 1 and layer 2. 
 
-## How does it work?
+Note that for withdrawals of ETH (or commonly used ERC-20 tokens) you would probably want to use a [third party bridge](https://www.optimism.io/apps/bridges) for higher speed and lower cost.
+Here is the API documentation for some of those bridges:
 
+* [Hop](https://docs.hop.exchange/js-sdk/getting-started)
+* [Synapse](https://docs.synapseprotocol.com/bridge-sdk/sdk-reference/bridge-synapsebridge)
+* [Across](https://docs.across.to/bridge/developers/across-sdk)
+* [Celer Bridge](https://cbridge-docs.celer.network/developer/cbridge-sdk)
+
+## Detailed Breakdown of `index.js`
+The following section provides a detailed breakdown of how everything operates under the hood. It is optional reading, of course, but 
+might be useful if debugging or troubleshooting is needed.
 
 ```js
 #! /usr/local/bin/node
@@ -323,7 +485,6 @@ Finalize the withdrawal and actually get back the 0.01 ETH.
 }     // withdrawETH()
 ```
 
-
 ### `main`
 
 A `main` to run the setup followed by both operations.
@@ -335,23 +496,9 @@ const main = async () => {
     await withdrawETH() 
 }  // main
 
-
-
 main().then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
     process.exit(1)
   })
 ```
-
-## Conclusion
-
-You should now be able to write applications that use our SDK and bridge to transfer ETH between layer 1 and layer 2. 
-
-Note that for withdrawals of ETH (or commonly used ERC-20 tokens) you would probably want to use a [third party bridge](https://www.optimism.io/apps/bridges) for higher speed and lower cost.
-Here is the API documentation for some of those bridges:
-
-* [Hop](https://docs.hop.exchange/js-sdk/getting-started)
-* [Synapse](https://docs.synapseprotocol.com/bridge-sdk/sdk-reference/bridge-synapsebridge)
-* [Across](https://docs.across.to/bridge/developers/across-sdk)
-* [Celer Bridge](https://cbridge-docs.celer.network/developer/cbridge-sdk)
