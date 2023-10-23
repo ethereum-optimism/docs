@@ -15,7 +15,11 @@ The standard bridge does *not* support certain ERC-20 configurations:
 - [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
 </Callout>
 
-## Customizing the `L2StandardERC20` implementation
+## Before You Begin
+
+This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm](https://pnpm.io/), and [yarn](https://classic.yarnpkg.com/) installed on your system. 
+
+## Customize the `L2StandardERC20` Implementation
 
 Our example here implements a custom token [`L2CustomERC20`](contracts/L2CustomERC20.sol) based on the `L2StandardERC20` but with `8` decimal points, rather than `18`.
 
@@ -30,16 +34,19 @@ Then the only thing we need to do is call the internal `_setupDecimals(8)` metho
 ## Deploying the custom token
 
 <Steps>
-### Step 1: Download the necessary packages
+### Step 1: Install the dependencies
 
    ```sh
-   yarn
+   pnpm add @eth-optimism/sdk@^3.0.0 dotenv@^10.0.0 @eth-optimism/contracts@^0.5.40 @openzeppelin/contracts^4.3.2
    ```
 
-### Step 2: Copy `.env.example` to `.env`
+### Step 2: Create the `.env` file
 
-   ```sh
-   cp .env.example .env
+   ```js
+   MNEMONIC=xxxxxx
+   L1_ALCHEMY_KEY=xxxxx
+   L2_ALCHEMY_KEY=xxxx
+   L1_TOKEN_ADDRESS=0x32B3b2281717dA83463414af4E8CfB1970E56287
    ```
 
 ### Step 4: Edit `.env` to set the deployment parameters

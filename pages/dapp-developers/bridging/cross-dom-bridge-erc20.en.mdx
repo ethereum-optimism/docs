@@ -25,25 +25,36 @@ The standard bridge does *not* support certain ERC-20 configurations:
 </Callout>
 
 ## Before You Begin
-You will need to setup your computer with the following: [`git`](https://git-scm.com/downloads) and [`node`](https://nodejs.org/en/).
+You will need to setup your computer with the following: [`pnpm`](https://pnpm.io/) and [`node`](https://nodejs.org/en/).
 Please ensure these programs are installed before beginning the tutorial.
 
 <Steps>
-### Step 1: Install the dependencies
+### Step 1: Make a Project Folder and Initialize It
+
+```sh
+mkdir project-folder-name
+pnpm init
+```
+
+### Step 2: Create Two Files for the Folder
+- Create a `.env` file
+- Create an `index.js` file 
+
+### Step 3: Install the dependencies
 
    ```sh
-  pnpm add @eth-optimism/contracts-bedrock@0.15.0 @eth-optimism/contracts@0.6.0 @eth-optimism/core-utils@0.12.0 @eth-optimism/core-utils@0.12.1 @eth-optimism/sdk@^3.0.0 @ethersproject/abi@5.7.0 @ethersproject/abstract-provider@5.7.0 @ethersproject/abstract-signer@5.7.0 @ethersproject/address@5.7.0 @ethersproject/base64@5.7.0 @ethersproject/basex@5.7.0 @ethersproject/bignumber@5.7.0 @ethersproject/bytes@5.7.0 @ethersproject/constants@5.7.0 @ethersproject/contracts@5.7.0 @ethersproject/hash@5.7.0 @ethersproject/hdnode@5.7.0 @ethersproject/json-wallets@5.7.0 @ethersproject/keccak256@5.7.0 @ethersproject/logger@5.7.0 @ethersproject/networks@5.7.1 @ethersproject/pbkdf2@5.7.0 @ethersproject/properties@5.7.0 @ethersproject/providers@5.7.2 @ethersproject/random@5.7.0 @ethersproject/rlp@5.7.0 @ethersproject/sha2@5.7.0 @ethersproject/signing-key@5.7.0 @ethersproject/solidity@5.7.0 @ethersproject/strings@5.7.0 @ethersproject/transactions@5.7.0 @ethersproject/units@5.7.0 @ethersproject/wallet@5.7.0 @ethersproject/web@5.7.1 @ethersproject/wordlists@5.7.0 @openzeppelin/contracts-upgradeable@4.7.3 @openzeppelin/contracts@4.7.3 @types/bn.js@^5.1.0 @types/node@* @types/pbkdf2@^3.0.0 @types/secp256k1@^4.0.1 assertion-error@^1.1.0 aes-js@3.0.0 base-x@^3.0.2 bech32@1.1.4 bignumber.js@^9.0.1 blakejs@^1.1.0 bn.js@4.11.6 bn.js@^4.11.9 bn.js@^5.2.1 bn.js@^5.2.0 bn.js@^5.1.2 brorand@^1.1.0 browserify-aes@^1.2.0 bs58@^4.0.0 bs58check@^2.1.2 buffer-reverse@^1.0.1 buffer-xor@^1.0.3 bufio@^1.0.7 chai@^4.3.4 check-error@^1.0.2 cipher-base@^1.0.0 cipher-base@^1.0.1 cipher-base@^1.0.3 create-hash@^1.2.0 create-hmac@^1.1.7 crypto-js@^3.1.9-1 deep-eql@^4.1.2 dotenv@^16.0.0 elliptic@^6.5.4 ethereum-bloom-filters@^1.0.6 ethereum-cryptography@^0.1.3 ethereumjs-util@^7.1.0 ethers@^5.7.0 ethjs-unit@0.1.6 evp_bytestokey@^1.0.3 get-func-name@^2.0.0 hash-base@^3.0.0 hash.js@^1.1.7 hmac-drbg@^1.0.1 inherits@^2.0.4 is-hex-prefixed@1.0.0 js-sha3@^0.8.0 keccak@^3.0.0 lodash@^4.17.21 loupe@^2.3.1 md5.js@^1.3.4 merkletreejs@^0.2.27 minimalistic-assert@^1.0.1 minimalistic-crypto-utils@^1.0.1 node-addon-api@^2.0.0 node-gyp-build@^4.2.0 number-to-bn@1.7.0 pathval@^1.1.1 pbkdf2@^3.0.17 randombytes@^2.1.0 readable-stream@^3.6.0 ripemd160@^2.0.1 rlp@^2.2.7 safe-buffer@^5.2.0 safe-buffer@~5.2.0 scrypt-js@3.0.1 secp256k1@^4.0.1 setimmediate@^1.0.5 sha.js@^2.4.8 string_decoder@^1.1.1 strip-hex-prefix@1.0.0 treeify@^1.1.0 type-detect@^4.0.5 utf8@3.0.0 util-deprecate@^1.0.1 web3-utils@^1.3.4 ws@7.4.6
+  pnpm add @eth-optimism/sdk@^3.0.0 dotenv@^16.0.0
    ```
 
-### Step 2: Go to [Alchemy](https://www.alchemy.com/) and create two applications
+### Step 4: Go to [Alchemy](https://www.alchemy.com/) and create two applications
 
    - An application on Goerli
    - An application on OP Goerli
 
    Keep a copy of the two keys.
 
-### Step 3: Create a `.env` file and edit the file
-- Copy/paste the text below to create your `.env` file.
+### Step 5: Edit the `.env` file
+- Copy/paste the text below into your `.env` file.
 ```js filename=".env file"
 # Put the mnemonic for an account on Optimism here
 MNEMONIC="test test test test test test test test test test test junk"
@@ -59,8 +70,8 @@ OP_GOERLI_ALCHEMY_KEY= <<value goes here>>
 [Paradigm faucet](https://faucet.paradigm.xyz/) gives ETH on the Goerli network. [Optimism faucet](https://app.optimism.io/faucet) gives ETH on the OP Goerli network.
 </Callout>
 
-### Step 4: Create an `index.js` file 
-Next, we'll create an `index.js` file, which we'll need in order to execute our sample code. 
+### Step 6: Edit the `index.js` file 
+Add the following content to your `index.js` file: 
 
 ```js filename="index.js"
 #! /usr/local/bin/node
@@ -252,7 +263,7 @@ main().then(() => process.exit(0))
 
 ```
 
-### Step 5: Run the sample code
+### Step 7: Run the sample code
 
 Execute the sample code in `index.js`. 
 After you execute it, wait. It is not unusual for each operation to take a few minutes on Goerli.
