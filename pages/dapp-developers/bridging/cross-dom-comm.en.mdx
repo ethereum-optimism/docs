@@ -1,5 +1,5 @@
 ---
-title: Communicating between contracts on OP Mainnet and Ethereum Using HardHat
+title: Communicating between OP Mainnet and Ethereum Using HardHat
 lang: en-US
 description: This tutorial teaches you how to use HardHat for interlayer communication between contracts on Ethereum and OP Mainnet.
 ---
@@ -111,6 +111,7 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
 
 ```sh
 mkdir project-folder-name
+cd folder-name
 pnpm init
 ```
 
@@ -178,6 +179,39 @@ OP_GOERLI_ALCHEMY_KEY= <<value goes here>>
    rcpt = await tx.wait()
    ```
 
+The contract details can be found here:
+```js filename="FromL1_ControlL2Greeter.sol"
+//SPDX-License-Identifier: Unlicense
+// This contracts runs on L1, and controls a Greeter on L2.
+// The addresses are specific to Optimistic Goerli.
+pragma solidity ^0.8.0;
+
+import { ICrossDomainMessenger } from 
+    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+    
+contract FromL1_ControlL2Greeter {
+    // Taken from https://community.optimism.io/docs/useful-tools/networks/#optimism-goerli
+
+    address crossDomainMessengerAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
+
+    address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
+
+    function setGreeting(string calldata _greeting) public {
+        bytes memory message;
+            
+        message = abi.encodeWithSignature("setGreeting(string,address)", 
+            _greeting, msg.sender);
+
+        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+            greeterL2Addr,
+            message,
+            1000000   // within the free gas limit amount
+        );
+    }      // function setGreeting 
+
+}          // contract FromL1_ControlL2Greeter
+```
+
 ### Step 5: Make a note of the address of the L1 controller
 
    ```js
@@ -228,6 +262,38 @@ There are two ways to do that:
    tx = await controller.setGreeting(`Hardhat hello from L2 ${Date()}`)
    rcpt = await tx.wait()
    ```
+The contract details can be found here:
+```js filename="FromL2_ControlL1Greeter.sol"
+//SPDX-License-Identifier: Unlicense
+// This contracts runs on L2, and controls a Greeter on L1.
+// The greeter address is specific to Goerli.
+pragma solidity ^0.8.0;
+
+import { ICrossDomainMessenger } from 
+    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+    
+contract FromL2_ControlL1Greeter {
+    // Taken from https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/goerli#layer-2-contracts
+    // Should be the same on all Optimism networks
+    address crossDomainMessengerAddr = 0x4200000000000000000000000000000000000007;
+
+    address greeterL1Addr = 0x4d0fcc1Bedd933dA4121240C2955c3Ceb68AAE84;
+
+    function setGreeting(string calldata _greeting) public {
+        bytes memory message;
+            
+        message = abi.encodeWithSignature("setGreeting(string,address)", 
+            _greeting, msg.sender);
+
+        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+            greeterL1Addr,
+            message,
+            1000000   // irrelevant here
+        );
+    }      // function setGreeting 
+
+}          // contract FromL2_ControlL1Greeter
+```
 
 ### Step 4: Make a note of the address of `FromL2_ControlL1Greeter`
 

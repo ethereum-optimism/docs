@@ -1,5 +1,5 @@
 ---
-title: Communicating between contracts on OP Mainnet and Ethereum Using Solidity
+title: Communicating between OP Mainnet and Ethereum Using Solidity
 lang: en-US
 description: This tutorial teaches you how to use Solidity for interlayer communication between contracts on Ethereum and OP Mainnet.
 ---
@@ -10,11 +10,7 @@ import { Steps, Callout } from 'nextra/components'
 
 This tutorial teaches you how to use Solidity for interlayer communication between contracts to send and receive messages. 
 We'll go over the L1 contract that controls Greeter on L2, `FromL1_ControlL2Greeter.sol`, and the contract going the other direction is identical, `FromL2_ControlL1Greeter.sol`, except for addresses.
-For more details about this process, see the [Messaging Guide](messaging).
-
-<Callout type="info">
-If you want to trace transactions, see the [tracing tutorial](/tools/javascript/sdk-view-tx).
-</Callout>
+For more details about this process, see the [Messaging Guide](messaging). 
 
 ## Before You Begin
 This tutorial assumes you already have [Node.js](https://nodejs.org/en/) and [yarn](https://classic.yarnpkg.com/) installed on your system. 
@@ -41,6 +37,39 @@ contract FromL1_ControlL2Greeter {
 This is the address of [`Proxy_OVM_L1CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts/deployments/goerli/Proxy__OVM_L1CrossDomainMessenger.json#L2) on Goerli. 
 To call L2 from L1 on mainnet, you need to [use this address](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts/deployments/mainnet/Proxy__OVM_L1CrossDomainMessenger.json#L2).
 To call L1 from L2, on either mainnet or Goerli, use the address of `L2CrossDomainMessenger`, 0x4200000000000000000000000000000000000007.
+
+The contract details can be found here:
+```js filename="FromL1_ControlL2Greeter.sol"
+//SPDX-License-Identifier: Unlicense
+// This contracts runs on L1, and controls a Greeter on L2.
+// The addresses are specific to Optimistic Goerli.
+pragma solidity ^0.8.0;
+
+import { ICrossDomainMessenger } from 
+    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+    
+contract FromL1_ControlL2Greeter {
+    // Taken from https://community.optimism.io/docs/useful-tools/networks/#optimism-goerli
+
+    address crossDomainMessengerAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
+
+    address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
+
+    function setGreeting(string calldata _greeting) public {
+        bytes memory message;
+            
+        message = abi.encodeWithSignature("setGreeting(string,address)", 
+            _greeting, msg.sender);
+
+        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+            greeterL2Addr,
+            message,
+            1000000   // within the free gas limit amount
+        );
+    }      // function setGreeting 
+
+}          // contract FromL1_ControlL2Greeter
+```
 
 ```solidity
     address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
@@ -72,8 +101,10 @@ Here we create the message, the calldata to be sent on L2.
 The Solidity [`abi.encodeWithSignature`](https://docs.soliditylang.org/en/v0.8.12/units-and-global-variables.html?highlight=abi.encodeWithSignature#abi-encoding-and-decoding-functions) function creates this calldata.
 As [specified in the ABI](https://docs.soliditylang.org/en/v0.8.12/abi-spec.html), it is four bytes of signature for the function being called followed by the parameters, in this case a string for the new greeting, and an address for the original sender.
 
-Note: We don't need the original sender for the tutorial itself.
+<Callout type="info">
+We don't need the original sender for the tutorial itself.
 We sent it here to make it easier to see how many people went through the tutorial.
+</Callout>
 
 ```solidity
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
@@ -127,7 +158,7 @@ Unless we are going to run this code thousands of times, it is more efficient to
 ```
 
 There are two possibilities for the cross domain messenger's address on L1, because the address is not determined by The Optimism Foundation.
-On L2 The Optimism Foundation has full control of the genesis block, so we can put all of our contracts on convenient addresses.
+On L2, The Optimism Foundation has full control of the genesis block, so we can put all of our contracts on convenient addresses.
 
 ```solidity
     // If this isn't a cross domain message
@@ -147,46 +178,7 @@ Just return zero.
 
 If it is the cross domain messenger, call `xDomainMessageSender()` to get the original source address.
 
-## Conclusion
-
-You should now be able to control contracts on OP Mainnet from Ethereum or the other way around.
-This is useful, for example, if you want to hold cheap DAO votes on OP Mainnet to manage an Ethereum treasury (see [rollcall](https://github.com/withtally/rollcall)) or offload a complicated calculation, which must be done in a traceable manner, to OP Mainnet where gas is cheap.
-
-## Additional Contract Information
-The following section shares contract information for `FromL1_ControlL2Greeter.sol` and `FromL2_ControlL1Greeter.sol`.
-
-```js filename="FromL1_ControlL2Greeter.sol"
-//SPDX-License-Identifier: Unlicense
-// This contracts runs on L1, and controls a Greeter on L2.
-// The addresses are specific to Optimistic Goerli.
-pragma solidity ^0.8.0;
-
-import { ICrossDomainMessenger } from 
-    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
-    
-contract FromL1_ControlL2Greeter {
-    // Taken from https://community.optimism.io/docs/useful-tools/networks/#optimism-goerli
-
-    address crossDomainMessengerAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
-
-    address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
-
-    function setGreeting(string calldata _greeting) public {
-        bytes memory message;
-            
-        message = abi.encodeWithSignature("setGreeting(string,address)", 
-            _greeting, msg.sender);
-
-        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
-            greeterL2Addr,
-            message,
-            1000000   // within the free gas limit amount
-        );
-    }      // function setGreeting 
-
-}          // contract FromL1_ControlL2Greeter
-```
-
+The contract details can be found here:
 ```js filename="FromL2_ControlL1Greeter.sol"
 //SPDX-License-Identifier: Unlicense
 // This contracts runs on L2, and controls a Greeter on L1.
@@ -218,3 +210,9 @@ contract FromL2_ControlL1Greeter {
 
 }          // contract FromL2_ControlL1Greeter
 ```
+
+
+## Conclusion
+
+You should now be able to control contracts on OP Mainnet from Ethereum or the other way around.
+This is useful, for example, if you want to hold cheap DAO votes on OP Mainnet to manage an Ethereum treasury (see [rollcall](https://github.com/withtally/rollcall)) or offload a complicated calculation, which must be done in a traceable manner, to OP Mainnet where gas is cheap.
