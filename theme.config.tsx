@@ -31,15 +31,6 @@ const config: DocsThemeConfig = {
   sidebar: {
     defaultMenuCollapseLevel: 1,
   },
-  //main: ({ children }) => {
-  //  return (
- //       <>
- //           {children}
-  //          <hr />
-  //          <YourComponent />
-  //      </>
-  //  );
- //},
  toc: {
   extraContent: () =>
     <>
