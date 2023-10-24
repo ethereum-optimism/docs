@@ -35,7 +35,7 @@ const config: DocsThemeConfig = {
             <FeelbackYesNo contentSetId="b2983747-797d-4e6e-9ea3-15d59b9c27ce"
                 preset={PRESET_LIKE_DISLIKE}
                 textQuestion="Is this page useful?"
-                textAnswer="Thank you for your feedback!"
+                textAnswer="Thanks for your feedback!"
             />
         </>
   },
