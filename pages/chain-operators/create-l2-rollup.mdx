@@ -39,7 +39,7 @@ You’ll need the following software installed to follow this tutorial:
 - [Foundry](https://github.com/foundry-rs/foundry#installation)
 - [Make](https://linux.die.net/man/1/make)
 - [jq](https://github.com/jqlang/jq)
-- [direnv](https://direnv.net)
+- [direnv](https://direnv.net/docs/installation.html)
 
 This tutorial was checked on:
 
@@ -51,6 +51,44 @@ This tutorial was checked on:
 | Node     | 16.19.0    | `curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -` <br></br> `sudo apt-get install -y nodejs npm`
 | pnpm     | 8.5.6      | `sudo npm install -g pnpm`
 | Foundry  | 0.2.0      | `yarn install:foundry`
+
+### Configuring direnv
+
+Parts of this tutorial use [`direnv`](https://direnv.net) as a way of loading environment variables from `.envrc` files into your shell. This means you won't have to manually export environment variables every time you want to use them. `direnv` only ever has access to files that you explicitly allow it to see.
+
+After [installing `direnv`](https://direnv.net/docs/installation.html), you will need to make sure that [`direnv` is hooked into your shell](https://direnv.net/docs/hook.html). Instructions for various common shells can be found below.
+
+#### Hooking direnv into BASH
+
+BASH is a shell commonly found on linux machines.
+
+To hook `direnv` into BASH, open the file `~/.bashrc` and add the following line to the bottom of the file:
+
+```sh
+eval "$(direnv hook bash)"
+```
+
+Now either close and reopen your terminal or alternatively load the updated bash configuration file:
+
+```sh
+source ~/.bashrc
+```
+
+#### Hooking direnv into ZSH
+
+ZSH is a shell commonly found on MacOS machines.
+
+To hook `direnv` into ZSH, open the file `~/.zshrc` and add the following line to the bottom of the file:
+
+```sh
+eval "$(direnv hook zsh)"
+```
+
+Now either close and reopen your terminal or alternatively load the updated bash configuration file:
+
+```sh
+source ~/.zshrc
+```
 
 ## Build the Source Code
 
@@ -220,11 +258,42 @@ Once you’ve built both repositories, you’ll need head back to the Optimism M
 
 ### Step 6: Pull the environment variables into context using `direnv`
 
+
+    <Callout>
+
+    Using `direnv`
+
+    We're about to use `direnv` to load environment variables from the `.envrc` file into our terminal.
+    Make sure that you've [installed `direnv`](https://direnv.net/docs/installation.html) and that you've properly [hooked `direnv` into your shell](#configuring-direnv).
+
+    </Callout>
+
     ```bash
     direnv allow .
     ```
 
-    If you need to install `direnv`, [make sure you also modify the shell configuration](https://direnv.net/docs/hook.html).
+    <Callout type="info">
+    
+    Make sure `direnv` worked properly
+    When you run `direnv allow .`, you should see output something like the following (may not be exact, don't worry about it):
+    ```sh
+    direnv: loading ~/Projects/optimism/packages/contracts-bedrock/.envrc
+    direnv: export +DEPLOYMENT_CONTEXT +ETHERSCAN_API_KEY +ETH_RPC_URL +IMPL_SALT +PRIVATE_KEY +TENDERLY_PROJECT +TENDERLY_USERNAME
+    ```
+    If you don't see this output, you likely haven't [properly configured `direnv`](#configuring-direnv).
+    Make sure to do that and run `direnv allow .` again.
+    </Callout> 
+
+    <Callout type="info">
+
+    Deterministic deployments
+
+    The OP Stack uses deterministic deployments by deploying smart contracts via CREATE2.
+    The address of each deployed contract is based on a 32 byte `salt` value within the configuration (`IMPL_SALT`).
+    The default `.envrc` file sets this salt to a random value via `export IMPL_SALT=$(openssl rand -hex 32)`.
+    Whenever you use `direnv allow .`, this file is reloaded and the random salt is recomputed.
+    If you want to redeploy your contracts, make sure to reload this file with `direnv allow .` so that you get new contract addresses and don't run into any deployment errors.
+    </Callout>
 
 ### Step 7: Select L1 Block to serve as Starting Point for Rollup
 Before we can create our configuration file, we’ll need to pick an L1 block to serve as the starting point for our Rollup. 
