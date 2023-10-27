@@ -163,84 +163,10 @@ make geth
 
 </Steps>
 
-## Generate and Fund Accounts
 
-You'll need four accounts and their private keys when setting up the chain:
+## Fill Out Environment variables
 
-- The `Admin` account has the ability to upgrade contracts.
-- The `Batcher` account publishes Sequencer transaction data to L1.
-- The `Proposer` account publishes L2 transaction results (state roots) to L1.
-- The `Sequencer` account signs blocks on the p2p network.
-
-<Steps>
-
-{<h3>Enter the Optimism Monorepo</h3>}
-
-```bash
-cd optimism
-```
-
-{<h3>Generate new accounts</h3>}
-
-<Callout type="error"> 
-You should **not** use the `cast wallet new` tool for production deployments.
-If you are deploying an OP Stack based chain into production, you should likely be using a combination of hardware security modules and hardware wallets.
-</Callout>
-
-```bash
-echo "Admin:"
-cast wallet new
-echo "Proposer:"
-cast wallet new
-echo "Batcher:"
-cast wallet new
-echo "Sequencer:"
-cast wallet new
-```
-
-{<h3>Check the output</h3>}
-Make sure that you see output that looks something like the following:
-
-```
-Admin:
-Successfully created new keypair.
-Address:     0x9f92bdF0db69264462FC305913960Edfcc7a7c7F
-Private key: 0x30e66956e1a12b81f0f2cfb982286b2f566eb73649833831d9f80b12f8fa183c
-Proposer:
-Successfully created new keypair.
-Address:     0x31dE9B6473fc47af36ec23878bA34824B9F4AB30
-Private key: 0x8bd1c8dfffef880f8f9ab8162f97ccd119c1aac28fe00dacf919459f88e0f37d
-Batcher:
-Successfully created new keypair.
-Address:     0x6A3DC843843139f17Fcf04C057bb536A421DC9c6
-Private key: 0x3ce44144b7fde797a28f4e47b210a4d42c3a3b642e538b54458cba2740db5ac2
-Sequencer:
-Successfully created new keypair.
-Address:     0x98C6cadB1fe77aBB7bD968fC3E9b206111e72848
-Private key: 0x3f4241229bb6f155140d98e0f5dd2aad7ae983f5af5d61555d05eb8e5d9514db
-```
-
-{<h3>Save the accounts</h3>}
-
-Make sure to save these accounts and their respective private keys somewhere, you'll need them later in this guide.
-A text file is fine since you won't be using these keys in production (seriously, don't use these in production).
-
-{<h3>Fund the accounts</h3>}
-
-**You will need to send ETH to the `Admin`, `Proposer`, and `Batcher` accounts.**
-You do not need to send any ETH to the `Sequencer` account as it does not send transactions.
-The exact amount of ETH required depends on the L1 network being used.
-We recommend funding the accounts with the following amounts when using Goerli:
-
-- `Admin` — 2 ETH
-- `Proposer` — 5 ETH
-- `Batcher` — 10 ETH
-
-</Steps>
-
-## Fill Out And Load Environment variables
-
-Now that you've generated your four accounts, you'll need to fill our your environment variable file.
+You'll need to fill out a few environment variables before we can start deploying our chain.
 
 <Steps>
 
@@ -262,16 +188,89 @@ Open up the environment variable file and fill out the following variables:
 
 | Variable Name | Description |
 | --- | --- |
-| `GS_ADMIN_ADDRESS` | Address of the `Admin` account. |
-| `GS_ADMIN_PRIVATE_KEY` | Private key of the `Admin` account. |
-| `GS_BATCHER_ADDRESS` | Address of the `Batcher` account. |
-| `GS_BATCHER_PRIVATE_KEY` | Private key of the `Batcher` account. |
-| `GS_PROPOSER_ADDRESS` | Address of the `Proposer` account. |
-| `GS_PROPOSER_PRIVATE_KEY` | Private key of the `Proposer` account. |
-| `GS_SEQUENCER_ADDRESS` | Address of the `Sequencer` account. |
-| `GS_SEQUENCER_PRIVATE_KEY` | Private key of the `Sequencer` account. |
 | `L1_RPC_URL` | URL for your L1 node. |
 | `L1_RPC_KIND` | Kind of L1 RPC you're connecting to, used to inform optimal transactions receipts fetching. Valid options: `alchemy`, `quicknode`, `infura`, `parity`, `nethermind`, `debug_geth`, `erigon`, `basic`, `any`. |
+</Steps>
+
+## Generate and Fund Accounts
+
+You'll need four accounts and their private keys when setting up the chain:
+
+- The `Admin` account has the ability to upgrade contracts.
+- The `Batcher` account publishes Sequencer transaction data to L1.
+- The `Proposer` account publishes L2 transaction results (state roots) to L1.
+- The `Sequencer` account signs blocks on the p2p network.
+
+<Steps>
+
+{<h3>Enter the Optimism Monorepo</h3>}
+
+```bash
+cd optimism
+```
+
+{<h3>Generate new accounts</h3>}
+
+<Callout type="error"> 
+You should **not** use the `getting-started-wallets.sh` tool for production deployments.
+If you are deploying an OP Stack based chain into production, you should likely be using a combination of hardware security modules and hardware wallets.
+</Callout>
+
+```bash
+./packages/contracts-bedrock/scripts/getting-started-wallets.sh
+```
+
+{<h3>Check the output</h3>}
+Make sure that you see output that looks something like the following:
+
+```
+Copy the following into your .envrc file:
+
+# Admin account
+export GS_ADMIN_ADDRESS=0x9625B9aF7C42b4Ab7f2C437dbc4ee749d52E19FC
+export GS_ADMIN_PRIVATE_KEY=0xbb93a75f64c57c6f464fd259ea37c2d4694110df57b2e293db8226a502b30a34
+
+# Batcher account
+export GS_BATCHER_ADDRESS=0xa1AEF4C07AB21E39c37F05466b872094edcf9cB1
+export GS_BATCHER_PRIVATE_KEY=0xe4d9cd91a3e53853b7ea0dad275efdb5173666720b1100866fb2d89757ca9c5a
+
+# Proposer account
+export GS_PROPOSER_ADDRESS=0x40E805e252D0Ee3D587b68736544dEfB419F351b
+export GS_PROPOSER_PRIVATE_KEY=0x2d1f265683ebe37d960c67df03a378f79a7859038c6d634a61e40776d561f8a2
+
+# Sequencer account
+export GS_SEQUENCER_ADDRESS=0xC06566E8Ec6cF81B4B26376880dB620d83d50Dfb
+export GS_SEQUENCER_PRIVATE_KEY=0x2a0290473f3838dbd083a5e17783e3cc33c905539c0121f9c76614dda8a38dca
+```
+
+{<h3>Save the accounts</h3>}
+
+Copy the output from the previous step and paste it into your `.envrc` file as directed.
+
+{<h3>Fund the accounts</h3>}
+
+**You will need to send ETH to the `Admin`, `Proposer`, and `Batcher` accounts.**
+You do not need to send any ETH to the `Sequencer` account as it does not send transactions.
+The exact amount of ETH required depends on the L1 network being used.
+We recommend funding the accounts with the following amounts when using Goerli:
+
+- `Admin` — 2 ETH
+- `Proposer` — 5 ETH
+- `Batcher` — 10 ETH
+
+</Steps>
+
+## Load Environment variables
+
+Now that we've filled out the environment variable file, we need to load those variables into our terminal.
+
+<Steps>
+
+{<h3>Enter the Optimism Monorepo</h3>}
+
+```bash
+cd ~/optimism
+```
 
 {<h3>Load the variables with direnv</h3>}
 
@@ -307,6 +306,7 @@ Once you've built both repositories, you'll need head back to the Optimism Monor
 Currently, chain configuration lives inside of the [`contracts-bedrock`](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock) package in the form of a JSON file.
 
 <Steps>
+
 {<h3>Enter the Optimism Monorepo</h3>}
 
 ```bash
@@ -339,12 +339,12 @@ We recommend keeping this file as-is for now so you don't run into any unexpecte
 Once you've configured your network, it's time to deploy the L1 contracts necessary for the functionality of the chain.
 
 <Steps>
+
 {<h3>Create the deployment directory</h3>}
 
 ```bash
 mkdir deployments/getting-started
 ```
-
 
 {<h3>Deploy the L1 contracts</h3>}
 
@@ -387,7 +387,7 @@ go run cmd/main.go genesis l2 \
     --deployment-dir ../packages/contracts-bedrock/deployments/getting-started/ \
     --outfile.l2 genesis.json \
     --outfile.rollup rollup.json \
-    --l1-rpc $ETH_RPC_URL
+    --l1-rpc $L1_RPC_URL
 ```
 
 {<h3>Create an authentication key</h3>}
