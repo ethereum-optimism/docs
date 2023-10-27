@@ -19,7 +19,7 @@ Contributing to the Optimism documentation implies 2 steps:
 
 Optimism's documentation is built with the React and Markdown-based [Nextra](https://nextra.site/docs) framework. We are using the docs theme (as opposed to the blog theme), which has specialized features.
 
-To start contributing to Optimism's documentation using Nextra, you need to understand the [files and branches architecture](#understand-file-architecture-and-branch-names) and use the proper [syntax to format content](#use-the-proper-formatting-and-syntax). Additionally, if you want to work locally from a repository fork, you should [set up the Nextra project](#set-up-the-project-and-test-locally) on your machine.
+To start contributing to Optimism's documentation using Nextra, you need to understand the [files and branches architecture](#understand-file-architecture-and-branch-names) and use the proper [syntax to format content](#use-proper-formatting-and-syntax). Additionally, if you want to work locally from a repository fork, you should [set up the Nextra project](#set-up-the-project-and-test-locally) on your machine.
 
 ### Understand File Architecture and Branch Names
 
@@ -34,7 +34,7 @@ Optimism's documentation includes two major sections with each section living in
 The `public` folder also stores the `robots.txt` and `sitemap.xml` files used for SEO. Please do not modify these pages. 
 The Optimism Documentation team will modify these pages, when necessary, after your PR is merged.
 
-### Use the Proper Formatting and Syntax
+### Use Proper Formatting and Syntax
 
 Nextra is MDX-based, meaning the content you write is [Markdown](https://daringfireball.net/projects/markdown/syntax) that accepts [React](https://reactjs.org/) components.
 
@@ -68,20 +68,20 @@ Your pull request should usually target the `main` branch, though the Optimism D
 To submit your contribution for review:
 
 1. Create a new [pull request on GitHub](https://github.com/ethereum-optimism/docs/issues/new/choose).
-2. Select the docs revision or docs request option.
-3. Give it a proper title and description.
+2. Select a PR type from the list or choose **Open a blank isssue** at the bottom of the page.
+3. Complete the form as requested. For blank PR issues, please provide a clear title and accurate description/context.
 4. Click the “Create pull request” button to create the pull request effectively.
     
 >If your pull request is not ready for review yet, choose the “[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)” in the dropdown. The Optimism documentation team will review your pull request only when you mark it as “[Ready for review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request)”.
    
 5. Add GitHub labels for the type of updates introduced by the pull request: 
-     - `pr: new content` for brand new content,
-     - `pr: updated content` for significant (20+ lines) updates to existing content, or 
-     - `pr: chore` for smaller improvements (fixes, typos, chore tasks…).
+     - `pr:new-content` for brand new content,
+     - `pr:updated-content` for significant (20+ lines) updates to existing content, or 
+     - `pr:small-edit` for smaller improvements (fixes, typos, chore tasks…).
 >If label for type of update is not set, the Optimism Documentation team will set or update this for you<br/>
     
 **Warning**
-Approved pull requests are usually merged immediately into the `main` branch, automatically triggering a deployment on docs.optimism.io. Please add the `flag: merge pending release` label if the pull request content should only be released publicly in sync with a product release.
+Approved pull requests are usually merged immediately into the `main` branch, automatically triggering a deployment on docs.optimism.io. Please add the `flag:merge-pending-release` label if the pull request content should only be released publicly in sync with a product release.
 
 That’s it! 🥳 Once the pull request is [reviewed and approved](#review-and-management-of-pull-requests), the Optimism Documentation team will merge it, and the content will be live on [docs.optimism.io](http://docs.optimism.io) a few minutes later. 🚀
 

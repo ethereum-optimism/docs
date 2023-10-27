@@ -26,6 +26,16 @@ const config: DocsThemeConfig = {
   sidebar: {
     defaultMenuCollapseLevel: 1
   },
+  toc: {
+    backToTop: true
+  },
+  feedback: {
+    content: '❤️ Share general feeeback',
+    labels: 'user-feedback'
+  },
+  editLink: {
+    text: '✏️ Edit this page on GitHub'
+  },
   useNextSeoProps() {
     const { asPath } = useRouter()
     if (asPath !== '/') {
