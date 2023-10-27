@@ -164,7 +164,7 @@ make geth
 </Steps>
 
 
-## Fill Out Environment variables
+## Fill Out Environment Variables
 
 You'll need to fill out a few environment variables before we can start deploying our chain.
 
@@ -188,7 +188,7 @@ Open up the environment variable file and fill out the following variables:
 
 | Variable Name | Description |
 | --- | --- |
-| `L1_RPC_URL` | URL for your L1 node. |
+| `L1_RPC_URL` | URL for your L1 node (a Goerli node in this case). |
 | `L1_RPC_KIND` | Kind of L1 RPC you're connecting to, used to inform optimal transactions receipts fetching. Valid options: `alchemy`, `quicknode`, `infura`, `parity`, `nethermind`, `debug_geth`, `erigon`, `basic`, `any`. |
 </Steps>
 
@@ -223,7 +223,7 @@ If you are deploying an OP Stack based chain into production, you should likely 
 {<h3>Check the output</h3>}
 Make sure that you see output that looks something like the following:
 
-```
+```text
 Copy the following into your .envrc file:
 
 # Admin account
@@ -250,8 +250,9 @@ Copy the output from the previous step and paste it into your `.envrc` file as d
 {<h3>Fund the accounts</h3>}
 
 **You will need to send ETH to the `Admin`, `Proposer`, and `Batcher` accounts.**
-You do not need to send any ETH to the `Sequencer` account as it does not send transactions.
 The exact amount of ETH required depends on the L1 network being used.
+**You do not need to send any ETH to the `Sequencer` account as it does not send transactions.**
+
 We recommend funding the accounts with the following amounts when using Goerli:
 
 - `Admin` — 2 ETH
@@ -280,24 +281,28 @@ Make sure that you've [installed `direnv`](https://direnv.net/docs/installation.
 </Callout>
 
 Next you'll need to allow `direnv` to read this file and load the variables into your terminal using the following command.
-It's very important to note that `direnv` will unload these variables if the file is changed.
-You *must* rerun the following command every time you change the `.envrc` file.
 
 ```bash
-direnv allow .
+direnv allow
 ```
 
-<Callout type="info">
-When you run `direnv allow .` you should see output something like the following (may not be exact but should be mostly the same).
-
-```bash
-direnv: loading ~/Projects/optimism/packages/contracts-bedrock/.envrc
-direnv: export +DEPLOYMENT_CONTEXT +ETHERSCAN_API_KEY +ETH_RPC_URL +IMPL_SALT +PRIVATE_KEY +TENDERLY_PROJECT +TENDERLY_USERNAME
-```
-
-If you don't see this output, you likely haven't [properly configured `direnv`](#configuring-direnv).
-Make sure you've configured `direnv` properly before running `direnv allow .` again.
+<Callout>
+WARNING: `direnv` will unload itself whenever your `.envrc` file changes.
+**You *must* rerun the following command every time you change the `.envrc` file.**
 </Callout>
+
+{<h3>Confirm that the variables were loaded</h3>}
+
+After running `direnv allow` you should see output that looks something like the following (the exact output will vary depending on the variables you've set, don't worry if it doesn't look exactly like this):
+
+```bash
+direnv: loading ~/optimism/.envrc                                                            
+direnv: export +DEPLOYMENT_CONTEXT +ETHERSCAN_API_KEY +GS_ADMIN_ADDRESS +GS_ADMIN_PRIVATE_KEY +GS_BATCHER_ADDRESS +GS_BATCHER_PRIVATE_KEY +GS_PROPOSER_ADDRESS +GS_PROPOSER_PRIVATE_KEY +GS_SEQUENCER_ADDRESS +GS_SEQUENCER_PRIVATE_KEY +IMPL_SALT +L1_RPC_KIND +L1_RPC_URL +PRIVATE_KEY +TENDERLY_PROJECT +TENDERLY_USERNAME
+```
+
+**If you don't see this output, you likely haven't [properly configured `direnv`](#configuring-direnv).**
+Make sure you've configured `direnv` properly and run `direnv allow` again so that you see the desired output.
+
 </Steps>
 
 ## Configure your network
@@ -351,6 +356,13 @@ mkdir deployments/getting-started
 ```bash
 forge script scripts/Deploy.s.sol:Deploy --private-key $GS_ADMIN_PRIVATE_KEY --broadcast --rpc-url $L1_RPC_URL
 ```
+
+<Callout>
+If you see a nondescript error that includes `EvmError: Revert` and `Script failed` then you likely need to change the `IMPL_SALT` environment variable.
+This variable determines the addresses of various smart contracts that are deployed via [CREATE2](https://eips.ethereum.org/EIPS/eip-1014).
+If the same `IMPL_SALT` is used to deploy the same contracts twice, the second deployment will fail.
+**You can generate a new `IMPL_SALT` by running `direnv allow` anywhere in the Optimism Monorepo.**
+</Callout>
 
 {<h3>Generate contract artifacts</h3>}
 
@@ -613,7 +625,7 @@ We'll need to access the address of the L2OutputOracleProxy contract for this ne
 Load the address as an environment variable with the following command.
 
 ```bash
-export L2_OUTPUT_ORACLE_PROXY_ADDRESS="cat ../packages/contracts-bedrock/deployments/getting-started/L2OutputOracleProxy.json | jq -r .address"
+export L2_OUTPUT_ORACLE_PROXY_ADDRESS=$(cat ../packages/contracts-bedrock/deployments/getting-started/L2OutputOracleProxy.json | jq -r .address)
 ```
 
 {<h3>Run op-proposer</h3>}
