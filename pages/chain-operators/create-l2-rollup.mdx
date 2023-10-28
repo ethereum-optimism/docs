@@ -61,14 +61,16 @@ We'll be using the [`op-proposer` implementation](https://github.com/ethereum-op
 
 ## Software Dependencies
 
-- [git](https://git-scm.com/)
-- [go](https://go.dev/)
-- [node](https://nodejs.org/en/)
-- [pnpm](https://pnpm.io/installation)
-- [foundry](https://github.com/foundry-rs/foundry#installation)
-- [make](https://linux.die.net/man/1/make)
-- [jq](https://github.com/jqlang/jq)
-- [direnv](https://direnv.net)
+| Dependency | Version |
+| --- | --- |
+| [git](https://git-scm.com/) | |
+| [go](https://go.dev/) | `^1.20` |
+| [node](https://nodejs.org/en/) | `^20` |
+| [pnpm](https://pnpm.io/installation) | |
+| [foundry](https://github.com/foundry-rs/foundry#installation) | |
+| [make](https://linux.die.net/man/1/make) | |
+| [jq](https://github.com/jqlang/jq) | |
+| [direnv](https://direnv.net) | |
 
 ### Notes on Specific Dependencies
 
@@ -87,18 +89,18 @@ This means you won't have to manually export environment variables every time yo
 After [installing `direnv`](https://direnv.net/docs/installation.html), you will need to **make sure that [`direnv` is hooked into your shell](https://direnv.net/docs/hook.html)**.
 Make sure you've followed [the guide on the `direnv` website](https://direnv.net/docs/hook.html), then **close your terminal and reopen it** so that the changes take effect.
 
-## Get Access to a Goerli Node
+## Get Access to a Sepolia Node
 
 We'll be deploying a OP Stack Rollup chain that uses a Layer 1 blockchain to host and order transaction data.
 The OP Stack Rollups were designed to use EVM Equivalent blockchains like Ethereum, OP Mainnet, or standard Ethereum testnets as their L1 chains.
 
-**This guide uses the Goerli testnet as an L1 chain**.
-We recommend that you also use Goerli (Sepolia should also be fine, but use Goerli if you don't want to edit any commands).
+**This guide uses the Sepolia testnet as an L1 chain**.
+We recommend that you also use Sepolia.
 You can also use use other EVM-compatible blockchains, but you may run into unexpected errors.
-If you want to use an alternative network, make sure to carefully review each command and replace any Goerli-specific values with the values for your network.
+If you want to use an alternative network, make sure to carefully review each command and replace any Sepolia-specific values with the values for your network.
 
-Since we're deploying our OP Stack chain to Goerli, you'll need to have access to a Goerli node.
-You can either use a node provider like [Alchemy](https://www.alchemy.com/) (easier) or [run your own Goerli node](https://notes.ethereum.org/@launchpad/goerli) (harder).
+Since we're deploying our OP Stack chain to Sepolia, you'll need to have access to a Sepolia node.
+You can either use a node provider like [Alchemy](https://www.alchemy.com/) (easier) or run your own Sepolia node (harder).
 
 ## Build the Source Code
 
@@ -188,11 +190,11 @@ Open up the environment variable file and fill out the following variables:
 
 | Variable Name | Description |
 | --- | --- |
-| `L1_RPC_URL` | URL for your L1 node (a Goerli node in this case). |
+| `L1_RPC_URL` | URL for your L1 node (a Sepolia node in this case). |
 | `L1_RPC_KIND` | Kind of L1 RPC you're connecting to, used to inform optimal transactions receipts fetching. Valid options: `alchemy`, `quicknode`, `infura`, `parity`, `nethermind`, `debug_geth`, `erigon`, `basic`, `any`. |
 </Steps>
 
-## Generate and Fund Accounts
+## Generate Accounts
 
 You'll need four accounts and their private keys when setting up the chain:
 
@@ -206,7 +208,7 @@ You'll need four accounts and their private keys when setting up the chain:
 {<h3>Enter the Optimism Monorepo</h3>}
 
 ```bash
-cd optimism
+cd ~/optimism
 ```
 
 {<h3>Generate new accounts</h3>}
@@ -253,11 +255,11 @@ Copy the output from the previous step and paste it into your `.envrc` file as d
 The exact amount of ETH required depends on the L1 network being used.
 **You do not need to send any ETH to the `Sequencer` account as it does not send transactions.**
 
-We recommend funding the accounts with the following amounts when using Goerli:
+We recommend funding the accounts with the following amounts when using Sepolia:
 
-- `Admin` — 2 ETH
-- `Proposer` — 5 ETH
-- `Batcher` — 10 ETH
+- `Admin` — 0.2 ETH
+- `Proposer` — 0.2 ETH
+- `Batcher` — 0.1 ETH
 
 </Steps>
 
@@ -344,12 +346,6 @@ We recommend keeping this file as-is for now so you don't run into any unexpecte
 Once you've configured your network, it's time to deploy the L1 contracts necessary for the functionality of the chain.
 
 <Steps>
-
-{<h3>Create the deployment directory</h3>}
-
-```bash
-mkdir deployments/getting-started
-```
 
 {<h3>Deploy the L1 contracts</h3>}
 
@@ -446,8 +442,6 @@ mkdir datadir
 
 {<h3>Initialize op-geth</h3>}
 
-Next we need to initialize `op-geth` with the genesis file we generated and copied earlier:
-
 ```bash
 build/bin/geth init --datadir=datadir genesis.json
 ```
@@ -520,7 +514,7 @@ cd ~/optimism/op-node
 ```bash
 ./bin/op-node \
 	--l2=http://localhost:8551 \
-	--l2.jwt-secret=./jwt.txt \    
+	--l2.jwt-secret=./jwt.txt \
 	--sequencer.enabled \
 	--sequencer.l1-confs=5 \
 	--verifier.l1-confs=4 \
@@ -567,7 +561,7 @@ The `op-batcher` takes transactions from the Sequencer and publishes those trans
 Once these Sequencer transactions are included in a finalized L1 block, they're officially part of the canonical chain.
 The `op-batcher` is critical!
 
-It's best to give the `Batcher` account at least 1 Goerli ETH to ensure that it can continue operating without running out of ETH for gas.
+It's best to give the `Batcher` account at least 1 Sepolia ETH to ensure that it can continue operating without running out of ETH for gas.
 Keep an eye on the balance of the `Batcher` account because it can expend ETH quickly if there are a lot of transactions to publish.
 
 <Steps>
@@ -619,15 +613,6 @@ Now start `op-proposer`, which proposes new state roots.
 cd ~/optimism/op-proposer
 ```
 
-{<h3>Load the address of the L2OutputOracleProxy Contract</h3>}
-
-We'll need to access the address of the L2OutputOracleProxy contract for this next step.
-Load the address as an environment variable with the following command.
-
-```bash
-export L2_OUTPUT_ORACLE_PROXY_ADDRESS=$(cat ../packages/contracts-bedrock/deployments/getting-started/L2OutputOracleProxy.json | jq -r .address)
-```
-
 {<h3>Run op-proposer</h3>}
 
 ```bash
@@ -635,16 +620,23 @@ export L2_OUTPUT_ORACLE_PROXY_ADDRESS=$(cat ../packages/contracts-bedrock/deploy
     --poll-interval=12s \
     --rpc.port=8560 \
     --rollup-rpc=http://localhost:8547 \
-    --l2oo-address=$L2_OUTPUT_ORACLE_PROXY_ADDRESS \
+    --l2oo-address=$(cat ../packages/contracts-bedrock/deployments/getting-started/L2OutputOracleProxy.json | jq -r .address) \
     --private-key=$GS_PROPOSER_PRIVATE_KEY \
     --l1-eth-rpc=$L1_RPC_URL
 ```
 
 </Steps>
 
-## Get some ETH on your Rollup
+## Connect Your Wallet to Your Chain
 
-Once you’ve connected your wallet, you’ll probably notice that you don’t have any ETH on your Rollup. You’ll need some ETH to pay for gas on your Rollup. The easiest way to deposit Goerli ETH into your chain is to send funds directly to the `L1StandardBridge` contract. You can find the address of the `L1StandardBridge` contract for your chain by looking inside the `deployments` folder in the `contracts-bedrock` package.
+You now have a fully functioning OP Stack Rollup with a Sequencer node running on `http://localhost:8545`.
+You can connect your wallet to this chain the same way you'd connect your wallet to any other EVM chain.
+If you need an easy way to connect to your chain, just [click here](https://chainid.link?network=opstack-getting-started).
+
+## Get ETH On Your Chain
+
+Once you've connected your wallet, you'll probably notice that you don't have any ETH to pay for gas on your chain.
+The easiest way to deposit Sepolia ETH into your chain is to send funds directly to the `L1StandardBridge` contract.
 
 <Steps>
 {<h3>Navigate to the contracts-bedrock directory</h3>}
@@ -659,102 +651,21 @@ cd ~/optimism/packages/contracts-bedrock
 cat deployments/getting-started/L1StandardBridgeProxy.json | jq -r .address
 ```
 
-{<h3>Send some Goerli ETH to the L1StandardBridgeProxy contract</h3>}
+{<h3>Send some Sepolia ETH to the L1StandardBridgeProxy contract</h3>}
 
-Grab the L1 bridge proxy contract address and, using the wallet that you want to have ETH on your Rollup, send that address a small amount of ETH on Goerli (0.1 or less is fine). 
+Grab the L1 bridge proxy contract address and, using the wallet that you want to have ETH on your Rollup, send that address a small amount of ETH on Sepolia (0.1 or less is fine).
+This will trigger a deposit that will mint ETH into your wallet on L2.
 It may take up to 5 minutes for that ETH to appear in your wallet on L2.
 
 </Steps>
 
-Congratulations, you made it! You now have a complete OP Stack based EVM Rollup.
-
 ## See Your Rollup in Action
-To see your rollup in action, follow these steps:
 
-<Steps>
-{<h3>Make a project folder and initialize it</h3>}
-
-```bash
-mkdir project-folder-name
-cd folder-name
-pnpm init
-```
-
-{<h3>Install the dependencies</h3>}
-
-```bash
-pnpm add @eth-optimism/contracts@^0.5.40
-```
-
-{<h3>Create a Greeter.sol file</h3>}
-
-```solidity filename="Greeter.sol"
-// SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
-
-contract Greeter {
-  string greeting;
-
-  constructor(string memory _greeting) {
-    greeting = _greeting;
-  }
-
-  function greet() public view returns (string memory) {
-    return greeting;
-  }
-
-  function setGreeting(string memory _greeting) public {
-    greeting = _greeting;
-  }
-}
-```
-
-{<h3>Create mnem.delme file & add your mnemonic to it </h3>}
-
-Your mnemonic is for the address where you have ETH, the one that sent ETH to `OptimismPortalProxy` on Goerli. 
-Take that info and put it in a file `mnem.delme`.
-
-{<h3>Provide the URL to your blockchain</h3>}
-
-```bash
-export ETH_RPC_URL=http://localhost:8545
-```
-
-{<h3>Compile and deploy the Greeter contract</h3>}
-
-```bash
-forge create --mnemonic-path ./mnem.delme Greeter --constructor-args "hello" | tee deployment.log
-```
-
-{<h3>Set the greeter to the deployed to address</h3>}
-
-```bash
-export GREETER=`cat deployment.log | awk '/Deployed to:/ {print $3}'`
-echo $GREETER
-```
-
-{<h3>See and modify the greeting</h3>}
-
-```bash
-cast call $GREETER "greet()" | cast --to-ascii
-cast send --mnemonic-path ./mnem.delme $GREETER "setGreeting(string)" "New greeting"
-cast call $GREETER "greet()" | cast --to-ascii
-```
-
-</Steps>
-
-<Callout type="info">
-To use any other development stack, just replace the Greeter address with the address of your rollup, and the Optimism Goerli URL with `http://localhost:8545`.
-</Callout>
+You can interact with your Rollup the same way you'd interact with any other EVM chain.
+Send some transactions, deploy some contracts, and see what happens!
 
 ## Next Steps
 
-- You can use this rollup the same way you’d use any other test blockchain. Once the superchain is available, this blockchain should be able to join the test version. 
-- Alternatively, you could [modify the blockchain in various ways](hacks/overview). 
+- You can use this Rollup the same way you'd use any other test blockchain.
+- You can [modify the blockchain in various ways](hacks/overview). 
 - If you run into any problems, please visit the [Chain Operators Troubleshooting Guide](chain-troubleshooting) for help.
-
-<Callout type="info">
-**Please note that OP Stack Hacks are unofficial and are not explicitly supported by the OP Stack.** 
-You will not be able to receive significant developer support for any modifications you make to the OP Stack.
-</Callout>
-
