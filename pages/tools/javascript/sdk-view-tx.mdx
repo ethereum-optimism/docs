@@ -11,33 +11,138 @@ Get the L1 contract addresses, and [provide them to the SDK](/chain-operators/sd
 Once you do that, you can use the SDK normally.
 
 
-## Prerequisites
+## Before You Begin
 
-[The node script](./index.js) makes these assumptions:
+The node script, `index.js`, makes these assumptions:
 
-1. You have [Node.js](https://nodejs.org/en/) running on your computer, as well as [yarn](https://classic.yarnpkg.com/lang/en/).
+1. You have [Node.js](https://nodejs.org/en/), [pnpm](https://pnpm.io/), and [yarn](https://classic.yarnpkg.com/) installed on your system. 
 1. Access to L1 (Ethereum mainnet) and L2 (OP Mainnet) providers.
 
 
 ## Running the script
 
 <Steps>
-### Step 1: Use `yarn` to download the packages the script needs
+### Step 1: Make a Project Folder and Initialize It
+
+```sh
+mkdir project-folder-name
+cd folder-name
+pnpm init
+```
+
+### Step 2: Create Two Files for the Folder
+- Create a `.env` file
+```js filename=".env file"
+L1URL=<<< L1 URL goes here >>>
+L2URL=<<< L2 URL goes here >>>
+```
+- Specify the URLs for L1 and L2 in `.env` file
+- Create an `view-tx.js` file 
+```js filename="view-tx.js"
+#! /usr/local/bin/node
+
+// View transfers between L1 and L2 using the Optimism SDK
+
+const ethers = require("ethers")
+const optimismSDK = require("@eth-optimism/sdk")
+require('dotenv').config()
+
+// Global variable because we need them almost everywhere
+let crossChainMessenger
+
+
+const setup = async() => {
+
+  l1SignerOrProvider = new ethers.providers.JsonRpcProvider(process.env.L1URL)
+  l2SignerOrProvider = new ethers.providers.JsonRpcProvider(process.env.L2URL)
+
+  crossChainMessenger = new optimismSDK.CrossChainMessenger({
+      l1ChainId: (await l1SignerOrProvider._networkPromise).chainId,
+      l2ChainId: (await l2SignerOrProvider._networkPromise).chainId,      
+      l1SignerOrProvider: l1SignerOrProvider,
+      l2SignerOrProvider: l2SignerOrProvider
+  })
+}    // setup
+
+
+// Only the part of the ABI we need to get the symbol
+const ERC20ABI = [
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [
+        {
+            "name": "",
+            "type": "string"
+        }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }
+]     // ERC20ABI
+
+
+
+const getSymbol = async l1Addr => {
+  if (l1Addr == '0x0000000000000000000000000000000000000000')
+    return "ETH"
+  const l1Contract = new ethers.Contract(l1Addr, ERC20ABI, crossChainMessenger.l1SignerOrProvider)
+  return await l1Contract.symbol()  
+}   // getSymbol
+
+// Describe a cross domain transaction, either deposit or withdrawal
+const describeTx = async tx => {
+  console.log(`tx:${tx.transactionHash}`)
+  // Assume all tokens have decimals = 18
+  console.log(`\tAmount: ${tx.amount/1e18} ${await getSymbol(tx.l1Token)}`)
+  console.log(`\tRelayed: ${await crossChainMessenger.getMessageStatus(tx.transactionHash)  
+                              == optimismSDK.MessageStatus.RELAYED}`)
+}  // describeTx
+
+
+const main = async () => {    
+    await setup()
+
+    // The address we trace
+    const addr = "0xBCf86Fd70a0183433763ab0c14E7a760194f3a9F"
+
+    const deposits = await crossChainMessenger.getDepositsByAddress(addr)
+    console.log(`Deposits by address ${addr}`)
+    for (var i=0; i<deposits.length; i++)
+      await describeTx(deposits[i])
+
+    const withdrawals = await crossChainMessenger.getWithdrawalsByAddress(addr)
+    console.log(`\n\n\nWithdrawals by address ${addr}`)
+    for (var i=0; i<withdrawals.length; i++)
+      await describeTx(withdrawals[i])
+      
+}  // main
+
+
+
+main().then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error)
+    process.exit(1)
+  })
+  ```
+
+### Step 3: Install the dependencies
 
    ```sh
-   yarn
+  pnpm add @eth-optimism/sdk@^3.0.0 dotenv@^16.0.0 ethers@^5.6.1
    ```
 
-### Step 2: Copy `.env.example` to `.env` and specify the URLs for L1 and L2
-
-### Step 3: Use Node to run the script
+### Step 4: Use Node to run the script
 
    ```sh
    node view-tx.js
    ```
 </Steps>
 
-### Results
+## Results
 
 Here are the expected results. 
 Note that by the time you read this there might be additional transactions reported.
@@ -58,10 +163,15 @@ tx:0xd9fd11fd12a58d9115afa2ad677745b1f7f5bbafab2142ae2cede61f80e90e8a
 	Amount: 0.001 ETH
 	Relayed: true
 ```
+## Conclusion
+
+You should now know how to identify all the deposits and/or withdrawals done by a specific address.
+There are some additional tracing functions in [`CrossChainMessenger`](https://sdk.optimism.io/classes/crosschainmessenger), but they are very similar in operation.
+Of course, if you have any problems you can ask on [our Discord](https://discord-gateway.optimism.io/).
 
 ## How does it work?
 
-In this section we go over the script line by line to learn how to use the SDK to view deposits and withdrawals.
+In this section, we go over the script line by line to learn how to use the SDK to view deposits and withdrawals.
 
 ```js
 #! /usr/local/bin/node
@@ -187,10 +297,3 @@ main().then(() => process.exit(0))
     process.exit(1)
   })
 ```
-
-
-## Conclusion
-
-You should now know how to identify all the deposits and/or withdrawals done by a specific address.
-There are some additional tracing functions in [`CrossChainMessenger`](https://sdk.optimism.io/classes/crosschainmessenger), but they are very similar in operation.
-Of course, if you have any problems you can ask on [our Discord](https://discord-gateway.optimism.io/).

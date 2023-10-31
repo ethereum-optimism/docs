@@ -1,0 +1,48 @@
+# Troubleshooting: Run L2 Rollup
+
+This page lists common troubleshooting scenarios and solutions for chain operators.
+
+## Error Deploying L1 Contracts
+
+The condition arises when deploying to shared networks like mainnet or testnet because the addresses are deterministic. 
+The deployment fails and causes a `CREATE2` collision when the address is already occupied by a different deployment, showing the following error:
+
+`EvmError: Revert`
+
+The L1 contract implementations are deployed using `CREATE2`. The salt value determines the address that the contract is deployed to, and a default salt value is provided which can be overridden with the `IMPL_SALT` environment variable. 
+The **solution** is to use a different salt for each deployment of the implementations because the deployment fails if the contract already exists at that address. 
+See the [`.envrc.example`](https://github.com/ethereum-optimism/optimism/blob/7591f192ddf23b55809d7a1830775f627a1d5307/packages/contracts-bedrock/.envrc.example) file in `contracts-bedrock` for an example of how to do this. 
+
+## Corrupt data directory
+
+If `op-geth` aborts (for example, because the computer it is running on crashes), you might get these errors on `op-node`:
+
+```
+WARN [02-16|21:22:02.868] Derivation process temporary error       attempts=14 err="stage 0 failed resetting: temp: failed to find the L2 Heads to start from: failed to fetch L2 block by hash 0x0000000000000000000000000000000000000000000000000000000000000000: failed to determine block-hash of hash 0x0000000000000000000000000000000000000000000000000000000000000000, could not get payload: not found"
+```
+
+This means that the data directory is corrupt and you need to reinitialize it:
+
+```bash
+cd ~/op-geth
+rm -rf datadir
+mkdir datadir
+echo "pwd" > datadir/password
+echo "<SEQUENCER KEY HERE>" > datadir/block-signer-key
+./build/bin/geth account import --datadir=./datadir --password=./datadir/password ./datadir/block-signer-key
+./build/bin/geth init --datadir=./datadir ./genesis.json
+```
+
+
+## Batcher out of ETH
+
+If `op-batcher` runs out of ETH, it cannot submit write new transaction batches to L1.
+You will get error messages similar to this one:
+
+```
+INFO [03-21|14:22:32.754] publishing transaction                   service=batcher txHash=2ace6d..7eb248 nonce=2516 gasTipCap=2,340,741 gasFeeCap=172,028,434,515
+ERROR[03-21|14:22:32.844] unable to publish transaction            service=batcher txHash=2ace6d..7eb248 nonce=2516 gasTipCap=2,340,741 gasFeeCap=172,028,434,515 err="insufficient funds for gas * price + value"
+```
+
+Just send more ETH and to the batcher, and the problem will be resolved.
+

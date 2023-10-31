@@ -1,3 +1,9 @@
+---
+title: Bridging ERC-20 tokens with the Optimism SDK
+lang: en-US
+description: This tutorial teaches you how to use the Optimism SDK to transfer ERC-20 tokens between Layer 1 (Ethereum or Goerli) and Layer 2 (OP Mainnet or OP Goerli).
+---
+
 import { Callout, Steps } from 'nextra/components'
 
 # Bridging ERC-20 tokens with the Optimism SDK
@@ -8,8 +14,8 @@ The SDK provides transparent safety rails to prevent that mistake.
 
 The SDK supports multiple OP Chains: OP, Base, etc.
 To see whether a specific OP Chain is supported directly, [see the documentation](https://sdk.optimism.io/enums/l2chainid).
-Chains that aren't officially supported just take a few extra steps.
-Get the L1 contract addresses, and [provide them to the SDK](/chain-operators/sdk#getting-contract-addresses).
+Chains that aren't officially supported just take a few extra steps: 
+get the L1 contract addresses and [provide them to the SDK](/chain-operators/sdk#getting-contract-addresses).
 Once you do that, you can use the SDK normally.
 
 <Callout type="warning"> 
@@ -18,41 +24,254 @@ The standard bridge does *not* support certain ERC-20 configurations:
 - [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
 </Callout>
 
-## Setup
-<Steps>
-### Step 1: Check your computer setup
-   - [`git`](https://git-scm.com/downloads)
-   - [`node`](https://nodejs.org/en/)
+## Before You Begin
+You will need to setup your computer with the following: [`pnpm`](https://pnpm.io/) and [`node`](https://nodejs.org/en/).
+Please ensure these programs are installed before beginning the tutorial.
 
-### Step 2: Install the necessary packages
+<Steps>
+### Step 1: Make a Project Folder and Initialize It
+
+```sh
+mkdir project-folder-name
+cd folder-name
+pnpm init
+```
+
+### Step 2: Create Two Files for the Folder
+- Create a `.env` file
+- Create an `index.js` file 
+
+### Step 3: Install the dependencies
 
    ```sh
-   yarn
+  pnpm add @eth-optimism/sdk@^3.0.0 dotenv@^16.0.0
    ```
 
-### Step 3: Go to [Alchemy](https://www.alchemy.com/) and create two applications
+### Step 4: Go to [Alchemy](https://www.alchemy.com/) and create two applications
 
    - An application on Goerli
    - An application on OP Goerli
 
    Keep a copy of the two keys.
 
-### Step 4: Copy `.env.example` to `.env` and edit it
+### Step 5: Edit the `.env` file
+- Copy/paste the text below into your `.env` file.
+```js filename=".env file"
+# Put the mnemonic for an account on Optimism here
+MNEMONIC="test test test test test test test test test test test junk"
+GOERLI_ALCHEMY_KEY=  <<value goes here>>
+OP_GOERLI_ALCHEMY_KEY= <<value goes here>>
+```
+- Edit the file as follows:
+  - Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
+  - Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
+  - Set `OP_GOERLI_ALCHEMY_KEY` to the key for the Optimistic Goerli app
 
-   - Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
-   - Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
-   - Set `OP_GOERLI_ALCHEMY_KEY` to the key for the Optimistic Goerli app
+<Callout type="info">
+[Paradigm faucet](https://faucet.paradigm.xyz/) gives ETH on the Goerli network. [Optimism faucet](https://app.optimism.io/faucet) gives ETH on the OP Goerli network.
+</Callout>
 
-   [Paradigm faucet](https://faucet.paradigm.xyz/) gives ETH on the Goerli network. [Optimism faucet](https://app.optimism.io/faucet) gives ETH on the OP Goerli network.
+### Step 6: Edit the `index.js` file 
+Add the following content to your `index.js` file: 
+
+```js filename="index.js"
+#! /usr/local/bin/node
+
+// ERC-20 transfers between L1 and L2 using the Optimism SDK
+
+const ethers = require("ethers")
+const optimismSDK = require("@eth-optimism/sdk")
+require('dotenv').config()
+
+
+const mnemonic = process.env.MNEMONIC
+
+const words = process.env.MNEMONIC.match(/[a-zA-Z]+/g).length
+validLength = [12, 15, 18, 24]
+if (!validLength.includes(words)) {
+   console.log(`The mnemonic (${process.env.MNEMONIC}) is the wrong number of words`)
+   process.exit(-1)
+}
+
+const l1Url = `https://eth-goerli.g.alchemy.com/v2/${process.env.GOERLI_ALCHEMY_KEY}`
+const l2Url = `https://opt-goerli.g.alchemy.com/v2/${process.env.OP_GOERLI_ALCHEMY_KEY}`
+
+
+// Contract addresses for OPTb tokens, taken
+// from https://github.com/ethereum-optimism/ethereum-optimism.github.io/blob/master/data/OUTb/data.json
+const erc20Addrs = {
+  l1Addr: "0x32B3b2281717dA83463414af4E8CfB1970E56287",
+  l2Addr: "0x3e7eF8f50246f725885102E8238CBba33F276747"
+}    // erc20Addrs
+
+// To learn how to deploy an L2 equivalent to an L1 ERC-20 contract,
+// see here: 
+// https://docs.optimism.io/dapp-developers/bridging/standard-bridge-standard-token
+
+
+// Global variable because we need them almost everywhere
+let crossChainMessenger
+let l1ERC20, l2ERC20    // OUTb contracts to show ERC-20 transfers
+let ourAddr             // The address of the signer we use.  
+
+
+// Get signers on L1 and L2 (for the same address). Note that 
+// this address needs to have ETH on it, both on Optimism and
+// Optimism Georli
+const getSigners = async () => {
+    const l1RpcProvider = new ethers.providers.JsonRpcProvider(l1Url)
+    const l2RpcProvider = new ethers.providers.JsonRpcProvider(l2Url)
+    const hdNode = ethers.utils.HDNode.fromMnemonic(mnemonic)
+    const privateKey = hdNode.derivePath(ethers.utils.defaultPath).privateKey
+    const l1Wallet = new ethers.Wallet(privateKey, l1RpcProvider)
+    const l2Wallet = new ethers.Wallet(privateKey, l2RpcProvider)
+
+    return [l1Wallet, l2Wallet]
+}   // getSigners
+
+// The ABI fragment for the contract. We only need to know how to do two things:
+// 1. Get an account's balance
+// 2. Call the faucet to get more (only works on L1). Of course, production 
+//    ERC-20 tokens tend to be a bit harder to acquire.
+const erc20ABI = [
+  // balanceOf
+  {
+    constant: true,
+    inputs: [{ name: "_owner", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "balance", type: "uint256" }],
+    type: "function",
+  },
+  // faucet
+  {
+    inputs: [],
+    name: "faucet",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  }  
+]    // erc20ABI
+
+const setup = async() => {
+  const [l1Signer, l2Signer] = await getSigners()
+  ourAddr = l1Signer.address
+  crossChainMessenger = new optimismSDK.CrossChainMessenger({
+      l1ChainId: 5,    // Goerli value, 1 for mainnet
+      l2ChainId: 420,  // Goerli value, 10 for mainnet
+      l1SignerOrProvider: l1Signer,
+      l2SignerOrProvider: l2Signer,
+  })
+  l1ERC20 = new ethers.Contract(erc20Addrs.l1Addr, erc20ABI, l1Signer)
+  l2ERC20 = new ethers.Contract(erc20Addrs.l2Addr, erc20ABI, l2Signer)
+}    // setup
+
+const reportERC20Balances = async () => {
+  const l1Balance = (await l1ERC20.balanceOf(ourAddr)).toString().slice(0,-18)
+  const l2Balance = (await l2ERC20.balanceOf(ourAddr)).toString().slice(0,-18)
+  console.log(`OUTb on L1:${l1Balance}     OUTb on L2:${l2Balance}`)
+
+  if (l1Balance != 0) {
+    return
+  }
+
+  console.log(`You don't have enough OUTb on L1. Let's call the faucet to fix that`)
+  const tx = (await l1ERC20.faucet())
+  console.log(`Faucet tx: ${tx.hash}`)
+  console.log(`\tMore info: https://goerli.etherscan.io/tx/${tx.hash}`)
+  await tx.wait()
+  const newBalance = (await l1ERC20.balanceOf(ourAddr)).toString().slice(0,-18)
+  console.log(`New L1 OUTb balance: ${newBalance}`)
+}    // reportERC20Balances
+
+const oneToken = BigInt(1e18)
+
+
+const depositERC20 = async () => {
+
+  console.log("Deposit ERC20")
+  await reportERC20Balances()
+  const start = new Date()
+
+  // Need the l2 address to know which bridge is responsible
+  const allowanceResponse = await crossChainMessenger.approveERC20(
+    erc20Addrs.l1Addr, erc20Addrs.l2Addr, oneToken)
+  await allowanceResponse.wait()
+  console.log(`Allowance given by tx ${allowanceResponse.hash}`)
+  console.log(`\tMore info: https://goerli.etherscan.io/tx/${allowanceResponse.hash}`)
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
+
+  const response = await crossChainMessenger.depositERC20(
+    erc20Addrs.l1Addr, erc20Addrs.l2Addr, oneToken)
+  console.log(`Deposit transaction hash (on L1): ${response.hash}`)
+  console.log(`\tMore info: https://goerli.etherscan.io/tx/${response.hash}`)
+  await response.wait()
+  console.log("Waiting for status to change to RELAYED")
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
+  await crossChainMessenger.waitForMessageStatus(response.hash,
+                                                  optimismSDK.MessageStatus.RELAYED)
+
+  await reportERC20Balances()
+  console.log(`depositERC20 took ${(new Date()-start)/1000} seconds\n\n`)
+}     // depositERC20()
+
+const withdrawERC20 = async () => {
+
+  console.log("Withdraw ERC20")
+  const start = new Date()
+  await reportERC20Balances()
+
+  const response = await crossChainMessenger.withdrawERC20(
+    erc20Addrs.l1Addr, erc20Addrs.l2Addr, oneToken)
+  console.log(`Transaction hash (on L2): ${response.hash}`)
+  console.log(`\tFor more information: https://goerli-optimism.etherscan.io/tx/${response.hash}`)
+  await response.wait()
+
+  console.log("Waiting for status to be READY_TO_PROVE")
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
+  await crossChainMessenger.waitForMessageStatus(response.hash, 
+    optimismSDK.MessageStatus.READY_TO_PROVE)
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
+  await crossChainMessenger.proveMessage(response.hash)
+  
+
+  console.log("In the challenge period, waiting for status READY_FOR_RELAY") 
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
+  await crossChainMessenger.waitForMessageStatus(response.hash, 
+                                                optimismSDK.MessageStatus.READY_FOR_RELAY) 
+  console.log("Ready for relay, finalizing message now")
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
+  await crossChainMessenger.finalizeMessage(response.hash)
+
+  console.log("Waiting for status to change to RELAYED")
+  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
+  await crossChainMessenger.waitForMessageStatus(response, 
+    optimismSDK.MessageStatus.RELAYED)
+  await reportERC20Balances()   
+  console.log(`withdrawERC20 took ${(new Date()-start)/1000} seconds\n\n\n`)  
+}     // withdrawERC20()
+
+const main = async () => {
+    await setup()
+    await depositERC20()
+    await withdrawERC20()
+}  // main
+
+main().then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error)
+    process.exit(1)
+  })
+
+```
+
+### Step 7: Run the sample code
+
+Execute the sample code in `index.js`. 
+After you execute it, wait. It is not unusual for each operation to take a few minutes on Goerli.
+On the production network, the withdrawals take around a week each because of the [challenge period](messaging#understanding-the-challenge-period).
 </Steps>
 
-## Run the sample code
-
-The sample code is in `index.js`, execute it.
-After you execute it, wait. It is not unusual for each operation to take minutes on Goerli.
-On the production network the withdrawals take around a week each, because of the [challenge period](messaging#understanding-the-challenge-period).
-
-### Expected output
+## Expected output
 
 The output from the script should be similar to:
 
@@ -94,9 +313,21 @@ withdrawERC20 took 351.272 seconds
 As you can see, the total running time is about six minutes.
 It could be longer.
 
+## Next Steps
 
-## How does it work?
+You should now be able to write applications that use our SDK and bridge to transfer ERC-20 assets between layer 1 and layer 2. 
 
+Note that for withdrawals of a commonly used ERC-20 token (or ETH) you would probably want to use a [third party bridge](https://www.optimism.io/apps/bridges) for higher speed and lower cost.
+Here is the API documentation for some of those bridges:
+
+* [Hop](https://docs.hop.exchange/js-sdk/getting-started)
+* [Synapse](https://docs.synapseprotocol.com/bridge-sdk/sdk-reference/bridge-synapsebridge)
+* [Across](https://docs.across.to/bridge/developers/across-sdk)
+* [Celer Bridge](https://cbridge-docs.celer.network/developer/cbridge-sdk)
+
+## Detailed Breakdown of `index.js`
+The following section provides a detailed breakdown of how everything operates under the hood. It is optional reading, of course, but 
+might be useful if debugging or troubleshooting is needed.
 
 ```js
 #! /usr/local/bin/node
@@ -360,14 +591,11 @@ We can just report the balances and see that the L2 balance rose by 1 gwei.
 This function shows how to withdraw ERC-20 from OP Mainnet to Ethereum (or OP Goerli to Goerli).
 The withdrawal process has these stages:
 
-<Steps>
-### Step 1: Submit the withdrawal transaction on OP Mainnet (or OP Goerli)
-### Step 2: Wait until the state root with the withdrawal is published (and the status changes to `optimismSDK.MessageStatus.READY_TO_PROVE`)
-### Step 3: Submit the proof on L1 using `crossChainMessenger.proveMessage()`
-### Step 4: Wait the fault challenge period
-  - When this period is over, the status becomes `optimismSDK.MessageStatus.READY_FOR_RELAY`
-### Step 5: Finalize to cause the actual withdrawal on L1 using `crossChainMessenger.finalizeMessage()`
-</Steps>
+- Submit the withdrawal transaction on OP Mainnet (or OP Goerli)
+- Wait until the state root with the withdrawal is published (and the status changes to `optimismSDK.MessageStatus.READY_TO_PROVE`)
+- Submit the proof on L1 using `crossChainMessenger.proveMessage()`
+- Wait the fault challenge period. When this period is over, the status becomes `optimismSDK.MessageStatus.READY_FOR_RELAY`
+- Finalize to cause the actual withdrawal on L1 using `crossChainMessenger.finalizeMessage()`
 
 ```js
 const withdrawERC20 = async () => {
@@ -457,14 +685,3 @@ main().then(() => process.exit(0))
   })
 ```
 
-## Conclusion
-
-You should now be able to write applications that use our SDK and bridge to transfer ERC-20 assets between layer 1 and layer 2. 
-
-Note that for withdrawals of a commonly used ERC-20 token (or ETH) you would probably want to use a [third party bridge](https://www.optimism.io/apps/bridges) for higher speed and lower cost.
-Here is the API documentation for some of those bridges:
-
-* [Hop](https://docs.hop.exchange/js-sdk/getting-started)
-* [Synapse](https://docs.synapseprotocol.com/bridge-sdk/sdk-reference/bridge-synapsebridge)
-* [Across](https://docs.across.to/bridge/developers/across-sdk)
-* [Celer Bridge](https://cbridge-docs.celer.network/developer/cbridge-sdk)

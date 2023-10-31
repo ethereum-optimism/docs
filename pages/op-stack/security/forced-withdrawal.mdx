@@ -1,35 +1,90 @@
 import { Callout, Steps } from 'nextra/components'
 
-# Forced withdrawal from an OP Stack blockchain
-
-## What is this?
+# Forcing Withdrawal from an OP Stack Blockchain
 
 Any assets you own on an OP Stack blockchain are backed by equivalent assets on the underlying L1, locked in a bridge. 
-In this article you learn how to withdraw these assets directly from L1.
+In this tutorial, you learn how to withdraw these assets directly from L1.
 
-Note that the steps here do require access to an L2 endpoint.
-However, that L2 endpoint can be a read-only replica.
-
+## Before You Begin
+- Install [Node.js](https://nodejs.org/en/), [pnpm](https://pnpm.io/), and [yarn](https://classic.yarnpkg.com/). 
+- Access to L2 (OP Mainnet) endpoint. However, that L2 endpoint can be a read-only replica.
 
 ## Setup 
 
-//update steps
 <Steps>
+### Step 1: Make a Project Folder and Initialize It
 
-//need to update with new tutorial stuff
-### Step 1: Clone the repository, move to the correct directory, and install the required dependencies.
+```sh
+mkdir project-folder-name
+cd folder-name
+pnpm init
+```
 
-   ```sh
-   git clone https://github.com/ethereum-optimism/optimism-tutorial.git
-   cd optimism-tutorial/op-stack/forced-withdrawal
-   npm install
-   ```
+### Step 2: Create Three Files for the Folder
+- Create a `.env` file
+```js filename=".env file"
+L1URL=<<< L1 URL goes here >>>
+L2URL=<<< L2 URL goes here >>>
+PRIV_KEY=<< private key goes here >>>
+OPTIMISM_PORTAL_ADDR=<< address of OptimismPortalProxy >>
+```
+- Create a `hardhat.config.js` file 
+```js filename="hardhat.config.js"
+require("@nomiclabs/hardhat-waffle");
+require('dotenv').config();
 
-### Step 2: Copy the environment setup variables.
+// This is a sample Hardhat task. To learn how to create your own go to
+// https://hardhat.org/guides/create-task.html
+task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
+  const accounts = await hre.ethers.getSigners();
 
-   ```sh
-   cp .env.example .env
-   ```
+  for (const account of accounts) {
+    console.log(account.address);
+  }
+});
+
+// You need to export an object to set up your config
+// Go to https://hardhat.org/config/ to learn more
+
+/**
+ * @type import('hardhat/config').HardhatUserConfig
+ */
+module.exports = {
+  solidity: "0.8.4",
+  networks: {
+    l1: {
+         url: process.env.L1URL,
+         accounts: [ process.env.PRIV_KEY ]
+    }
+  }
+};
+```
+- Create a `Greeter.sol` file 
+```js filename="Greeter.sol"
+//SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.0;
+
+import "hardhat/console.sol";
+
+
+contract Greeter {
+  string greeting;
+
+  constructor(string memory _greeting) {
+    console.log("Deploying a Greeter with greeting:", _greeting);
+    greeting = _greeting;
+  }
+
+  function greet() public view returns (string memory) {
+    return greeting;
+  }
+
+  function setGreeting(string memory _greeting) public {
+    console.log("Changing greeting from '%s' to '%s'", greeting, _greeting);
+    greeting = _greeting;
+  }
+}
+```
 
 ### Step 3: Edit `.env` to set these variables:
 
@@ -39,6 +94,13 @@ However, that L2 endpoint can be a read-only replica.
    | L2URL                | URL to the L2 from which you are withdrawing
    | PRIV_KEY             | Private key for an account that has ETH on L2. It also needs ETH on L1 to submit transactions
    | OPTIMISM_PORTAL_ADDR | Address of the `OptimismPortalProxy` on L1.
+
+### Step 4: Install the dependencies
+
+   ```sh
+  pnpm add @eth-optimism/sdk@^2.0.1 dotenv@^16.0.3 ethers@^5.7.2 ethereum-waffle@^3.4.4 @nomiclabs/hardhat-ethers@^2.2.2 @nomiclabs/hardhat-waffle@^2.0.5 hardhat@^2.13.0 chai@^4.3.7 @eth-optimism/contracts-bedrock@^0.13.1
+   ```
+
 </Steps>
 
 ## Withdrawal
@@ -68,7 +130,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    optimismPortal = new ethers.Contract(process.env.OPTIMISM_PORTAL_ADDR, optimismPortalData.abi, await ethers.getSigner())
    ```
 
-### Step 4: Send the transaction.
+### Step 4: Send the transaction
 
    ```js
    txn = await optimismPortal.depositTransaction(
@@ -99,7 +161,7 @@ The easiest way to withdraw ETH is to send it to the bridge, or the cross domain
    withdrawalHash = withdrawalData.hash()
    ```
 
-### Step 6: Create the object for the L1 contracts, [as explained in the documentation](/tools/javascript/sdk).
+### Step 6: Create the object for the L1 contracts, as explained in [the documentation](/tools/javascript/sdk).
    You will create an object similar to this one:
 
    ```js
@@ -194,3 +256,59 @@ transferAmt > withdrawnAmt
 
 Your L1 balance doesn't increase by the entire `transferAmt` because of the cost of `crossChainMessenger.finalizeMessage`, which submits a transaction.
 </Callout>
+
+## Additional Files
+```js filename="sample-script.js"
+// We require the Hardhat Runtime Environment explicitly here. This is optional
+// but useful for running the script in a standalone fashion through `node <script>`.
+//
+// When running the script with `npx hardhat run <script>` you'll find the Hardhat
+// Runtime Environment's members available in the global scope.
+const hre = require("hardhat");
+
+async function main() {
+  // Hardhat always runs the compile task when running scripts with its command
+  // line interface.
+  //
+  // If this script is run directly using `node` you may want to call compile
+  // manually to make sure everything is compiled
+  // await hre.run('compile');
+
+  // We get the contract to deploy
+  const Greeter = await hre.ethers.getContractFactory("Greeter");
+  const greeter = await Greeter.deploy("Hello, Hardhat!");
+
+  await greeter.deployed();
+
+  console.log("Greeter deployed to:", greeter.address);
+}
+
+// We recommend this pattern to be able to use async/await everywhere
+// and properly handle errors.
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+  ```
+```js filename="sample-test.js"
+const { expect } = require("chai");
+
+describe("Greeter", function () {
+  it("Should return the new greeting once it's changed", async function () {
+    const Greeter = await ethers.getContractFactory("Greeter");
+    const greeter = await Greeter.deploy("Hello, world!");
+    await greeter.deployed();
+
+    expect(await greeter.greet()).to.equal("Hello, world!");
+
+    const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
+
+    // wait until the transaction is mined
+    await setGreetingTx.wait();
+
+    expect(await greeter.greet()).to.equal("Hola, mundo!");
+  });
+});
+```

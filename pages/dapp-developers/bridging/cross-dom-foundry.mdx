@@ -1,0 +1,293 @@
+---
+title: Communicating between OP Mainnet and Ethereum Using Foundry
+lang: en-US
+description: This tutorial teaches you how to use Foundry for interlayer communication between contracts on Ethereum and OP Mainnet.
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Communicating between contracts on OP Mainnet and Ethereum Using Foundry
+
+This tutorial teaches you how to use Foundry for interlayer communication between contracts to send and receive messages. 
+You will also learn how to run a contract on Ethereum that runs another contract on OP Mainnet and also how to run a contract on OP Mainnet that calls a contract on Ethereum.
+For more details about this process, see the [Messaging Guide](messaging).
+
+<Callout type="info">
+If you want to trace transactions, see the [tracing tutorial](/tools/javascript/sdk-view-tx).
+</Callout>
+
+## Before You Begin
+This tutorial assumes you already have [Node.js](https://nodejs.org/en/) and [yarn](https://classic.yarnpkg.com/) installed on your system. 
+
+<Steps>
+### Step 1: Install the `@eth-optimism/sdk` library
+
+   ```sh
+   cd foundry/lib
+   yarn
+   ```
+
+### Step 2: Create environment variables for the URLs for the Goerli and OP Goerli applications
+
+   ```sh
+   cd ..
+   export GOERLI_URL= ...
+   export OP_GOERLI_URL= ...
+   ```
+
+### Step 3: Create environment variables for the Greeter contracts' addresses
+
+   ```sh
+   export GREETER_L1=0x4d0fcc1Bedd933dA4121240C2955c3Ceb68AAE84
+   export GREETER_L2=0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9
+   ```
+
+### Step 4: Put your account mnemonic in the file `mnem.delme`
+</Steps>
+
+
+## Ethereum message to OP Mainnet OR Goerli to OP Goerli (deposit)
+
+<Steps>
+### Step 1: See the current greeting
+
+   ```sh
+   cast call --rpc-url $OP_GOERLI_URL $GREETER_L2 "greet()"  | cast --to-ascii
+   ```
+
+### Step 2: Deploy the `FromL1_ControlL2Greeter` contract
+
+   ```sh
+   forge create FromL1_ControlL2Greeter --rpc-url $GOERLI_URL --mnemonic-path mnem.delme
+   ```
+The contract details can be found here:
+
+```js filename="FromL1_ControlL2Greeter.sol"
+//SPDX-License-Identifier: Unlicense
+// This contracts runs on L1, and controls a Greeter on L2.
+// The addresses are specific to Optimistic Goerli.
+pragma solidity ^0.8.0;
+
+import { ICrossDomainMessenger } from 
+    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+    
+contract FromL1_ControlL2Greeter {
+    // Taken from https://community.optimism.io/docs/useful-tools/networks/#optimism-goerli
+
+    address crossDomainMessengerAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
+
+    address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
+
+    function setGreeting(string calldata _greeting) public {
+        bytes memory message;
+            
+        message = abi.encodeWithSignature("setGreeting(string,address)", 
+            _greeting, msg.sender);
+
+        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+            greeterL2Addr,
+            message,
+            1000000   // within the free gas limit amount
+        );
+    }      // function setGreeting 
+
+}          // contract FromL1_ControlL2Greeter
+```
+### Step 3: Create an environment variable for the `Deployed to:` address
+
+   ```sh
+   export FROM_L1_CONTROLLER= << address >>
+   ```   
+
+### Step 4: Send a transaction to change the L2 greeting
+
+   ```sh
+   cast send --rpc-url $GOERLI_URL \
+      --mnemonic-path mnem.delme \
+      $FROM_L1_CONTROLLER "setGreeting(string)" '"Foundry hello from L1"'
+   ```
+
+### Step 5: See the greeting has changed. Note that the change might take a few minutes to propagate
+
+   ```sh
+   cast call --rpc-url $OP_GOERLI_URL $GREETER_L2 "greet()"  | cast --to-ascii   
+   ```
+
+### Step 6: View the [event log](https://goerli-explorer.optimism.io/address/0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9#events) in the block explorer
+   - Notice that the `xorigin` value is the controller address.
+   - The `user` value is your user's address, but that one is provided as part of the message.
+</Steps>
+
+## OP Mainnet message to Ethereum OR OP Goerli to Goerli (withdrawal)
+
+### Send the message
+
+<Steps>
+### Step 1: See the current greeting
+
+   ```sh
+   cast call --rpc-url $GOERLI_URL $GREETER_L1 "greet()"  | cast --to-ascii
+   ```
+
+### Step 2: Deploy the `FromL2_ControlL1Greeter` contract
+
+   ```sh
+   forge create FromL2_ControlL1Greeter --rpc-url $OP_GOERLI_URL --mnemonic-path mnem.delme
+   ```
+The contract details can be found here:
+
+```js filename="FromL2_ControlL1Greeter.sol"
+//SPDX-License-Identifier: Unlicense
+// This contracts runs on L2, and controls a Greeter on L1.
+// The greeter address is specific to Goerli.
+pragma solidity ^0.8.0;
+
+import { ICrossDomainMessenger } from 
+    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+    
+contract FromL2_ControlL1Greeter {
+    // Taken from https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/goerli#layer-2-contracts
+    // Should be the same on all Optimism networks
+    address crossDomainMessengerAddr = 0x4200000000000000000000000000000000000007;
+
+    address greeterL1Addr = 0x4d0fcc1Bedd933dA4121240C2955c3Ceb68AAE84;
+
+    function setGreeting(string calldata _greeting) public {
+        bytes memory message;
+            
+        message = abi.encodeWithSignature("setGreeting(string,address)", 
+            _greeting, msg.sender);
+
+        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+            greeterL1Addr,
+            message,
+            1000000   // irrelevant here
+        );
+    }      // function setGreeting 
+
+}          // contract FromL2_ControlL1Greeter
+```
+
+### Step 3: Create an environment variable for the `Deployed to:` address
+
+   ```sh
+   export FROM_L2_CONTROLLER= << address >>
+   ```   
+
+### Step 4: Send a transaction to change the L1 greeting
+
+   ```sh
+   cast send --rpc-url $OP_GOERLI_URL \
+      --mnemonic-path mnem.delme $FROM_L2_CONTROLLER \
+      "setGreeting(string)" '"Foundry hello from L2"'
+   ```
+
+### Step 5: Create an environment variable for the transaction hash
+
+   ```sh
+   export HASH= << transaction hash >>
+   ```
+</Steps>
+
+### Receive the message
+
+<Steps>
+### Step 1: Run `node`, the JavaScript command line
+ 
+   ```sh
+   cd lib
+   node
+   ```
+
+### Step 2: Get the SDK and the Ethers libraries (they are already in `node_modules`)
+
+   ```js
+   sdk = require("@eth-optimism/sdk")
+   ethers = require("ethers")
+   ```
+
+### Step 3: Configure a `CrossChainMessenger` object
+
+   ```js
+   l1Provider = new ethers.providers.JsonRpcProvider(process.env.GOERLI_URL)
+   mnemonic = fs.readFileSync("../mnem.delme").toString().replace(/\n/g, "")
+   wallet = ethers.Wallet.fromMnemonic(mnemonic)
+   l1Signer = wallet.connect(l1Provider)
+   l2Provider = new ethers.providers.JsonRpcProvider(process.env.OP_GOERLI_URL)
+   crossChainMessenger = new sdk.CrossChainMessenger({ 
+      l1ChainId: 5,
+      l2ChainId: 420,
+      l1SignerOrProvider: l1Signer,
+      l2SignerOrProvider: l2Provider
+   })
+   ```
+
+### Step 4: Check the status of the transaction
+   - If it is `false`, wait a few seconds and try again.
+   - When the state root is updated, you'll see a new transaction [on the L2OutputOracle contract](https://goerli.etherscan.io/address/0xE6Dfba0953616Bacab0c9A8ecb3a9BBa77FC15c0).
+   - This usually happens every four minutes.
+   - Once it is ready to relay, the line below will require `true` rather than `false`.
+
+   ```js
+   (await crossChainMessenger.getMessageStatus(process.env.HASH)) == sdk.MessageStatus.READY_TO_PROVE
+   ```
+
+   `await crossChainMessenger.getMessageStatus(process.env.HASH)` can return two values at this stage:
+
+   - `sdk.MessageStatus.STATE_ROOT_NOT_PUBLISHED` (2): The state root has not been published yet.
+   You need to wait until it is published.
+
+   - `sdk.MessageStatus.READY_TO_PROVE` (3): Ready for the next step
+
+### Step 5: Send the proof on L1
+   Run the code below and then wait for the hash to appear on the console.
+
+   ```js
+   txPromise = crossChainMessenger.proveMessage(process.env.HASH)
+   txPromise.then(tx => console.log(tx.hash))
+   ```
+
+### Step 6: Wait for the Fault Challenge Period
+- Now that the message has been proven, we need to wait the fault challenge period until it is ready to relay.
+- It is ready when the line below returns `true`.
+
+   ```js
+   (await crossChainMessenger.getMessageStatus(process.env.HASH)) == sdk.MessageStatus.READY_FOR_RELAY   
+   ```
+
+   `crossChainMessenger.getMessageStatus(process.env.HASH)` can return several values at this stage:
+
+   - `sdk.MessageStatus.READY_TO_PROVE` (3): The proof transaction hasn't been processed yet.
+     Go to [OP Goerli](https://goerli.etherscan.io/) and search for the hash.
+
+   - `sdk.MessageStatus.IN_CHALLENGE_PERIOD` (4): Still in the challenge period, wait a few seconds.
+
+   - `sdk.MessageStatus.READY_FOR_RELAY` (5): Ready to finalize the message.
+     Go on to the next step.
+
+
+### Step 7: Finalize the message
+- Again, wait until you see the hash on the console.
+
+   ```js
+   txPromise = crossChainMessenger.finalizeMessage(process.env.HASH)
+   txPromise.then(tx => console.log(tx.hash))
+   ```
+
+### Step 8: Exit `node`
+
+   ```js
+   .exit
+   ```
+
+### Step 9: See the greeting has changed
+
+   ```sh
+   cast call --rpc-url $GOERLI_URL $GREETER_L1 "greet()"  | cast --to-ascii
+   ```
+</Steps>
+
+## Conclusion
+You should now be able to control contracts on OP Mainnet from Ethereum or the other way around.
+This is useful, for example, if you want to hold cheap DAO votes on OP Mainnet to manage an Ethereum treasury (see [rollcall](https://github.com/withtally/rollcall)) or offload a complicated calculation, which must be done in a traceable manner, to OP Mainnet where gas is cheap.
+
