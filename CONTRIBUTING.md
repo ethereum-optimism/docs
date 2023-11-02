@@ -2,7 +2,7 @@
 
 Thanks for taking the time to contribute! ❤️
 
-Optimism's documentation is open-source, hosted on GitHub in the `ethereum-optimism/docs` repository which renders on the corresponding official website hosted at [docs.optimism.io](https://docs.optimism.io). This guide will give you an overview of the contribution workflow from opening an issue, creating a PR, reviewing, and merging the PR. Please note that contributions, pull requests, and issues should be written in English at this time. We will be running a dedicated project in the future to add language support to the technical docs, so please reach out via [discord](https://discord.com/invite/optimism) if you are interested in helping with that project.
+Optimism's documentation is open-source, hosted on GitHub in the `ethereum-optimism/docs` repository which renders on the corresponding official website hosted at [docs.optimism.io](https://docs.optimism.io). This guide will give you an overview of the contribution workflow from opening an issue, creating a PR, reviewing, and merging the PR. Please note that contributions, pull requests, and issues should be written in English at this time. We will be running a dedicated project in the future to add language support to the technical docs, so please reach out via our [developer support channel](https://github.com/ethereum-optimism/developers/) if you are interested in helping with that project.
 
 The Optimism Documentation team reviews pull requests and either merges, requests changes, or comments and closes the pull request. You can open a documentation pull request by:
 
