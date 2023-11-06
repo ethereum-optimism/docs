@@ -31,32 +31,31 @@ const config: DocsThemeConfig = {
   },
   docsRepositoryBase: 'https://github.com/ethereum-optimism/docs/blob/main/',
   footer: {
-    text: 'OP Documentation',
+    text: 'OP Documentation'
   },
   sidebar: {
     defaultMenuCollapseLevel: 1,
     autoCollapse: true
   },
   toc: {
-    backToTop: true
+    backToTop: true,
+    extraContent: () =>
+    <>
+        <hr className="divider" />
+        <FeelbackYesNo contentSetId="b2983747-797d-4e6e-9ea3-15d59b9c27ce"
+            preset={PRESET_LIKE_DISLIKE}
+            textQuestion="Is this page useful?"
+            textAnswer="Thanks for your feedback!"
+        />
+        <br />
+    </>
   },
   feedback: {
-    content: '❤️ Share general feeeback',
+    content: '❤️ Share general feedback',
     labels: 'user-feedback'
   },
   editLink: {
     text: '✏️ Edit this page on GitHub'
-  },
-  toc: {
-    extraContent: () =>
-        <>
-            <hr className="divider" />
-            <FeelbackYesNo contentSetId="b2983747-797d-4e6e-9ea3-15d59b9c27ce"
-                preset={PRESET_LIKE_DISLIKE}
-                textQuestion="Is this page useful?"
-                textAnswer="Thanks for your feedback!"
-            />
-        </>
   },
   useNextSeoProps() {
     const { asPath } = useRouter()
