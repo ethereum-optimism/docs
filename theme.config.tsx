@@ -2,6 +2,8 @@ import React from 'react'
 import { DocsThemeConfig } from 'nextra-theme-docs'
 import { useRouter } from 'next/router'
 import { useConfig } from 'nextra-theme-docs'
+import { FeelbackYesNo, PRESET_LIKE_DISLIKE } from "@feelback/react";
+import "@feelback/react/styles/feelback.css";
 
 const config: DocsThemeConfig = {
   logo: (
@@ -29,14 +31,24 @@ const config: DocsThemeConfig = {
   },
   docsRepositoryBase: 'https://github.com/ethereum-optimism/docs/blob/main/',
   footer: {
-    text: 'OP Documentation',
+    text: 'OP Documentation'
   },
   sidebar: {
     defaultMenuCollapseLevel: 1,
     autoCollapse: true
   },
   toc: {
-    backToTop: true
+    backToTop: true,
+    extraContent: () =>
+    <>
+        <hr className="divider" />
+        <FeelbackYesNo contentSetId="b2983747-797d-4e6e-9ea3-15d59b9c27ce"
+            preset={PRESET_LIKE_DISLIKE}
+            textQuestion="Is this page useful?"
+            textAnswer="Thanks for your feedback!"
+        />
+        <hr className="divider" />
+    </>
   },
   feedback: {
     content: '❤️ Share general feedback',
