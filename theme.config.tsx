@@ -39,7 +39,7 @@ const config: DocsThemeConfig = {
     backToTop: true
   },
   feedback: {
-    content: '❤️ Share general feeeback',
+    content: '❤️ Share general feedback',
     labels: 'user-feedback'
   },
   editLink: {
