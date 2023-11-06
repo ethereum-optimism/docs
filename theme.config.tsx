@@ -47,7 +47,7 @@ const config: DocsThemeConfig = {
             textQuestion="Is this page useful?"
             textAnswer="Thanks for your feedback!"
         />
-        <br />
+        <hr className="divider" />
     </>
   },
   feedback: {
