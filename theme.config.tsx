@@ -60,7 +60,7 @@ const config: DocsThemeConfig = {
   banner: {
     key: '1.0-release',
     text: (
-      <a href="https://github.com/ethereum-optimism/developers/discussions" target="_blank">
+      <a href="https://github.com/ethereum-optimism/developers/discussions/categories/feedback" target="_blank">
         🎉 BETA: Optimism Docs 1.0 is released! Your feedback will help us improve it. Read more →
       </a>
     )
