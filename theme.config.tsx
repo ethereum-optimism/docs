@@ -43,7 +43,7 @@ const config: DocsThemeConfig = {
     labels: 'user-feedback'
   },
   editLink: {
-    text: '✏️ Edit this page on GitHub'
+    text: '✏️ Edit this page on Github'
   },
   useNextSeoProps() {
     const { asPath } = useRouter()
