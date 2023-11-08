@@ -1,5 +1,5 @@
 ---
-name: General Docs Request
+name: General docs request
 about: Template for general documentation requests from the Optimism Collective
 title: "[DOCS] Add PR title"
 labels: 'community-request,documentation'
@@ -7,8 +7,6 @@ labels: 'community-request,documentation'
 ---
 
 <!-- please fill out the following the best to your ability and properly label the issue -->
-
-Please review our pending docs [issues](https://github.com/ethereum-optimism/docs/issues) and get to know our [contributor guidelines](https://docs.optimism.io/contribute/docs-contribute) before submitting this PR.
 
 ## Brief Description of the Docs Request
 Write a clear and concise description of the docs request. For example, is the request related to an existing page or are you suggesting a brand new docs page?
