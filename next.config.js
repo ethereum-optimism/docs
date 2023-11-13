@@ -1,10 +1,18 @@
-const withNextra = require('nextra')({
+import nextra from 'nextra'
+import remarkCodeImport from 'remark-code-import'
+
+const withNextra = nextra({
   theme: 'nextra-theme-docs',
   themeConfig: './theme.config.tsx',
   defaultShowCopyCode: true,
+  mdxOptions: {
+    remarkPlugins: [
+      remarkCodeImport,
+    ]
+  }
 })
 
-module.exports = {
+export default {
   ...withNextra(),
   eslint: {
     ignoreDuringBuilds: true,
