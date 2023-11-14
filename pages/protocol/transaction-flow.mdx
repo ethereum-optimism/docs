@@ -4,10 +4,10 @@
 
 The process for a rollup transaction has two requirements.
 
-*   The transaction needs to be written to L1 (Ethereum).
+-   The transaction needs to be written to L1 (Ethereum).
     This is typically performed by `op-batcher`, but any user can send an L1 transaction to submit an L2 transaction, in which case `op-batcher` is bypassed.
 
-*   The transaction needs to be executed to modify the state (by `op-geth`).
+-   The transaction needs to be executed to modify the state (by `op-geth`).
     Afterwards, `op-proposer` writes a [commitment](https://en.wikipedia.org/wiki/Commitment_scheme) to the post-transaction state to L1.
     Note that `op-proposer` does not need to write a commitment after each transaction to L1, it is OK to commit to the state after a block of transactions.
 
@@ -17,8 +17,8 @@ The process for a rollup transaction has two requirements.
 
 [`op-batcher`](https://github.com/ethereum-optimism/optimism/tree/233ede59d16cb01bdd8e7ff662a153a4c3178bdd/op-batcher) has two main jobs:
 
-*   Compress transactions into batches.
-*   Post those batches to L1 to ensure availability and integrity.
+-   Compress transactions into batches.
+-   Post those batches to L1 to ensure availability and integrity.
 
 ### Compression
 
@@ -47,13 +47,13 @@ When a channel is full it is posted, either as a single transaction or as multip
 
 Processed L2 transactions exist in one of three states:
 
-*   **unsafe** transactions are already processed, but not written to L1 yet.
+-   **unsafe** transactions are already processed, but not written to L1 yet.
     A batcher fault might cause these transactions to be dropped.
 
-*   **safe** transactions are already processed and written to L1.
+-   **safe** transactions are already processed and written to L1.
     However, they might be dropped due to a reorganization at the L1 level.
 
-*   **finalized** transactions are written to L1 in an L1 block that is old enough to be extremely unlikely to be re-organized.
+-   **finalized** transactions are written to L1 in an L1 block that is old enough to be extremely unlikely to be re-organized.
 
 ::: tip When are transactions irrevocable?
 

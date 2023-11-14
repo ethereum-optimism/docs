@@ -21,8 +21,8 @@ Once you do that, you can use the SDK normally.
 <Callout type="warning">
   The standard bridge does *not* support certain ERC-20 configurations:
 
-  *   [Fee on transfer tokens](https://github.com/d-xo/weird-erc20#fee-on-transfer)
-  *   [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
+  -   [Fee on transfer tokens](https://github.com/d-xo/weird-erc20#fee-on-transfer)
+  -   [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
 </Callout>
 
 ## Before You Begin
@@ -41,8 +41,8 @@ Please ensure these programs are installed before beginning the tutorial.
 
   ### Step 2: Create Two Files for the Folder
 
-  *   Create a `.env` file
-  *   Create an `index.js` file
+  -   Create a `.env` file
+  -   Create an `index.js` file
 
   ### Step 3: Install the dependencies
 
@@ -52,14 +52,14 @@ Please ensure these programs are installed before beginning the tutorial.
 
   ### Step 4: Go to [Alchemy](https://www.alchemy.com/) and create two applications
 
-  *   An application on Goerli
-  *   An application on OP Goerli
+  -   An application on Goerli
+  -   An application on OP Goerli
 
   Keep a copy of the two keys.
 
   ### Step 5: Edit the `.env` file
 
-  *   Copy/paste the text below into your `.env` file.
+  -   Copy/paste the text below into your `.env` file.
 
   ```js filename=".env file"
   # Put the mnemonic for an account on Optimism here
@@ -68,10 +68,10 @@ Please ensure these programs are installed before beginning the tutorial.
   OP_GOERLI_ALCHEMY_KEY= <<value goes here>>
   ```
 
-  *   Edit the file as follows:
-      *   Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
-      *   Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
-      *   Set `OP_GOERLI_ALCHEMY_KEY` to the key for the Optimistic Goerli app
+  -   Edit the file as follows:
+      -   Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
+      -   Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
+      -   Set `OP_GOERLI_ALCHEMY_KEY` to the key for the Optimistic Goerli app
 
   <Callout type="info">
     [Paradigm faucet](https://faucet.paradigm.xyz/) gives ETH on the Goerli network. [Optimism faucet](https://app.optimism.io/faucet?utm_source=docs) gives ETH on the OP Goerli network.
@@ -327,10 +327,10 @@ You should now be able to write applications that use our SDK and bridge to tran
 Note that for withdrawals of a commonly used ERC-20 token (or ETH) you would probably want to use a [third party bridge](https://www.optimism.io/apps/bridges) for higher speed and lower cost.
 Here is the API documentation for some of those bridges:
 
-*   [Hop](https://docs.hop.exchange/js-sdk/getting-started)
-*   [Synapse](https://docs.synapseprotocol.com/bridge-sdk/sdk-reference/bridge-synapsebridge)
-*   [Across](https://docs.across.to/bridge/developers/across-sdk)
-*   [Celer Bridge](https://cbridge-docs.celer.network/developer/cbridge-sdk)
+-   [Hop](https://docs.hop.exchange/js-sdk/getting-started)
+-   [Synapse](https://docs.synapseprotocol.com/bridge-sdk/sdk-reference/bridge-synapsebridge)
+-   [Across](https://docs.across.to/bridge/developers/across-sdk)
+-   [Celer Bridge](https://cbridge-docs.celer.network/developer/cbridge-sdk)
 
 ## Detailed Breakdown of `index.js`
 
@@ -577,8 +577,8 @@ The [`waitForMessageStatus`](https://sdk.optimism.io/classes/crosschainmessenger
 
 The third parameter (which is optional) is a hashed array of options:
 
-*   `pollIntervalMs`: The poll interval
-*   `timeoutMs`: Maximum time to wait
+-   `pollIntervalMs`: The poll interval
+-   `timeoutMs`: Maximum time to wait
 
 ```js
   await reportERC20Balances()
@@ -594,11 +594,11 @@ We can just report the balances and see that the L2 balance rose by 1 gwei.
 This function shows how to withdraw ERC-20 from OP Mainnet to Ethereum (or OP Goerli to Goerli).
 The withdrawal process has these stages:
 
-*   Submit the withdrawal transaction on OP Mainnet (or OP Goerli)
-*   Wait until the state root with the withdrawal is published (and the status changes to `optimismSDK.MessageStatus.READY_TO_PROVE`)
-*   Submit the proof on L1 using `crossChainMessenger.proveMessage()`
-*   Wait the fault challenge period. When this period is over, the status becomes `optimismSDK.MessageStatus.READY_FOR_RELAY`
-*   Finalize to cause the actual withdrawal on L1 using `crossChainMessenger.finalizeMessage()`
+-   Submit the withdrawal transaction on OP Mainnet (or OP Goerli)
+-   Wait until the state root with the withdrawal is published (and the status changes to `optimismSDK.MessageStatus.READY_TO_PROVE`)
+-   Submit the proof on L1 using `crossChainMessenger.proveMessage()`
+-   Wait the fault challenge period. When this period is over, the status becomes `optimismSDK.MessageStatus.READY_FOR_RELAY`
+-   Finalize to cause the actual withdrawal on L1 using `crossChainMessenger.finalizeMessage()`
 
 ```js
 const withdrawERC20 = async () => {
