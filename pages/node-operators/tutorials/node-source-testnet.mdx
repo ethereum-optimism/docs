@@ -1,19 +1,28 @@
+---
+title: Running OP Testnet from Source
+lang: en-US
+description: Learn how to run a node from source using OP Testnet.
+---
+
 import { Callout } from 'nextra/components'
 
 # Running OP Testnet from Source
 
-#### [Please follow these steps first if you have not done so already.](intro.md)
-
 <Callout type="info">
-
-Migrated vs Non-Migrated Networks
-
-Migrated Networks, *OP Mainnet* and *OP Goerli*, were running before the Bedrock upgrade. Non-Migrated Networks, *OP Sepolia*, have only existed in a post Bedrock world. The way transaction execution is handled is funadmentally different pre- vs post-bedrock. Migrated networks are required to initialize their nodes with a data directory and non-migrated networks can simply initialize from a genesis file.
+  Please complete the first tutorial on [building a node from source](intro), if you have not done so.
 </Callout>
 
-## OP Sepolia initialization
+## Before You Begin
 
-OP Sepolia is non-migrated network so it requires [initialization via genesis file](../node-operator-guide#initialization-via-genesis-file). `op-geth` uses JSON files to encode a network's genesis information. You'll need to download the genesis JSON, then run the following command to initialize the data directory:
+You need to know some prerequisite information on migrated vs. non-migrated networks shared in this section.
+
+-   Migrated Networks, *OP Mainnet* and *OP Goerli*, were running before the Bedrock upgrade.
+-   Non-Migrated Networks, *OP Sepolia*, have only existed in a post Bedrock world. The way transaction execution is handled is funadmentally different pre- vs post-bedrock.
+-   Migrated networks are required to initialize their nodes with a data directory and non-migrated networks can simply initialize from a genesis file.
+
+## OP Sepolia Initialization
+
+OP Sepolia is non-migrated network so it requires [initialization via genesis file](../node-operator-overview#initialization-via-genesis-file). `op-geth` uses JSON files to encode a network's genesis information. You'll need to download the genesis JSON, then run the following command to initialize the data directory:
 
 ```bash
 curl -o <path to genesis JSON> -sL https://networks.optimism.io/op-sepolia/genesis.json
@@ -23,14 +32,14 @@ geth init \
 	 "<path to genesis JSON>"
 ```
 
-### Create a shared secret between `op-geth` and `op-node`
+## Create a shared secret between `op-geth` and `op-node`
 
-1. Navigate into your `op-geth` directory and run these commands:
+1.  Navigate into your `op-geth` directory and run these commands:
 
-   ```sh
-   openssl rand -hex 32 > jwt.txt
-   cp jwt.txt ../optimism/op-node
-   ```
+    ```sh
+    openssl rand -hex 32 > jwt.txt
+    cp jwt.txt ../optimism/op-node
+    ```
 
 ### Scripts to start the different components
 
@@ -38,18 +47,17 @@ In the root of your working directory create a new directory: `scripts`.
 
 ### `op-geth`
 
+2.  Create a new file:
+    ```sh
+    touch run-op-geth.sh
+    ```
 
-2. Create a new file: 
-   ```sh
-   touch run-op-geth.sh
-   ```
+3.  Make it executable:
+    ```sh
+    chmod +x run-op-geth.sh
+    ```
 
-3. Make it executable: 
-   ```sh
-   chmod +x run-op-geth.sh
-   ```
-
-4. Insert this snippet of code into `run-op-geth.sh` and modify the path to the `op-geth` directory.
+4.  Insert this snippet of code into `run-op-geth.sh` and modify the path to the `op-geth` directory.
 
     ```sh
     #! /usr/bin/bash
@@ -73,28 +81,30 @@ In the root of your working directory create a new directory: `scripts`.
       --op-network=op-sepolia
     ```
 
-Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs](../../useful-tools/networks.md).
+Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs](/tools/rpc-providers).
 
-1. Run the following command to start `op-geth`:
-   
-   ```bash
-   ./run-op-geth.sh
-   ```
+1.  Run the following command to start `op-geth`:
+
+    ```bash
+    ./run-op-geth.sh
+    ```
 
 ### `op-node`
 
-1. Navigate to the `scripts` directory you created.
-   
-2. Create a new file: 
-   ```sh
-   touch run-op-node.sh
-   ```
-3. Make it executable: 
-   ```sh
-   chmod +x run-op-node.sh
-   ```
-4. Insert this snippet of code into `run-op-node.sh`:
-   
+1.  Navigate to the `scripts` directory you created.
+
+2.  Create a new file:
+    ```sh
+    touch run-op-node.sh
+    ```
+
+3.  Make it executable:
+    ```sh
+    chmod +x run-op-node.sh
+    ```
+
+4.  Insert this snippet of code into `run-op-node.sh`:
+
     ```sh
     #!/usr/bin/bash
 
@@ -113,19 +123,18 @@ Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs]
         --rpc.port=8547 \
         --network=op-sepolia \
         --rollup.load-protocol-versions=true
-    ```     
+    ```
 
+-   Change `<< L1 RPC URL >>` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://sepolia.infura.io/v3/API_KEY`.
+-   Set `L1KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
 
-- Change `<< L1 RPC URL >>` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://sepolia.infura.io/v3/API_KEY`.
-- Set `L1KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any).
+5.  Run the following command to start `op-node`:
 
-5. Run the following command to start `op-node`:
-   
     ```bash
     ./run-op-node.sh
     ```
 
-### The initial synchronization
+## The initial synchronization
 
 The datadir provided by Optimism is not updated continuously, so before you can use the node you need a to synchronize it.
 
@@ -135,7 +144,7 @@ During that process you get log messages from `op-node`, and nothing else appear
 INFO [06-26|13:31:20.389] Advancing bq origin                      origin=17171d..1bc69b:8300332 originBehind=false
 ```
 
-That is normal - it means that `op-node` is looking for a location in the batch queue. 
+That is normal - it means that `op-node` is looking for a location in the batch queue.
 After a few minutes it finds it, and then it can start synchronizing.
 
 While it is synchronizing, you can expect log messages such as these from `op-node`:
@@ -155,21 +164,21 @@ INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,
 INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
 ```
 
-#### How long will the synchronization take?
+### How long will the synchronization take?
 
 To estimate how long the synchronization will take, you need to first find out how many blocks you synchronize in a minute. You can use this [Foundry](https://book.getfoundry.sh/) script to get an estimated sync time.
 
-1. Navigate to your `scripts` directory
-2. Create a new file: 
-   ```sh
-   touch run-estimate.sh
-   ```
-3. Make it executable: 
-   ```sh
-   chmod +x run-estimate.sh
-   ```
-4. Insert this snippet of code into `run-estimate.sh`:
-  
+1.  Navigate to your `scripts` directory
+2.  Create a new file:
+    ```sh
+    touch run-estimate.sh
+    ```
+3.  Make it executable:
+    ```sh
+    chmod +x run-estimate.sh
+    ```
+4.  Insert this snippet of code into `run-estimate.sh`:
+
 ```sh
 #!/usr/bin/bash
 
@@ -218,13 +227,13 @@ if [ $HOURS -gt 24 ] ; then
    DAYS=`expr $HOURS / 24`
    echo Days until sync complete: $DAYS
 fi
-```  
+```
 
-5. Run the following command to get an estimate:
-   ```sh
-   ./run-estimate.sh
-   ```  
+5.  Run the following command to get an estimate:
+    ```sh
+    ./run-estimate.sh
+    ```
 
-### Operations
+## Operations
 
 It is best to start `op-geth` first and shut it down last.

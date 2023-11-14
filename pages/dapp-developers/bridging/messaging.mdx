@@ -6,8 +6,8 @@ Smart contracts on L1 (Ethereum) can interact with smart contracts on L2 (OP Mai
 This page explains how briging works, how to use it, and what to watch out for.
 
 <Callout type="info">
-This is a high-level overview of the bridging process.
-For a step-by-step tutorial on how to send data between L1 and L2, check out our [Cross-Domain Communication tutorial](cross-dom-comm).
+  This is a high-level overview of the bridging process.
+  For a step-by-step tutorial on how to send data between L1 and L2, check out our [Cross-Domain Communication tutorial](cross-dom-comm).
 </Callout>
 
 ## Understanding Contract Calls
@@ -70,9 +70,9 @@ function sendMessage(
 
 The `sendMessage` function has three parameters:
 
-1. The `address _target` of the contract to call on the other layer.
-2. The `bytes memory _message` calldata to send to the contract on the other layer.
-3. The `uint32 _minGasLimit` minimum gas limit that can be used when executing the message on the other layer.
+1.  The `address _target` of the contract to call on the other layer.
+2.  The `bytes memory _message` calldata to send to the contract on the other layer.
+3.  The `uint32 _minGasLimit` minimum gas limit that can be used when executing the message on the other layer.
 
 This is basically equivalent to:
 
@@ -112,8 +112,8 @@ contract MyContract {
 ```
 
 <Callout type="info">
-You can find the address of the `L1CrossDomainMessenger` for Ethereum [here](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/deployments/mainnet/L1CrossDomainMessengerProxy.json#L2) and for Goerli [here](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/deployments/goerli/L1CrossDomainMessengerProxy.json#L2).
-The `L2CrossDomainMessenger` contract is always located at the address [`0x4200000000000000000000000000000000000007`](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/src/libraries/Predeploys.sol#L11) on OP Mainnet and OP Goerli.
+  You can find the address of the `L1CrossDomainMessenger` for Ethereum [here](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/deployments/mainnet/L1CrossDomainMessengerProxy.json#L2) and for Goerli [here](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/deployments/goerli/L1CrossDomainMessengerProxy.json#L2).
+  The `L2CrossDomainMessenger` contract is always located at the address [`0x4200000000000000000000000000000000000007`](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/src/libraries/Predeploys.sol#L11) on OP Mainnet and OP Goerli.
 </Callout>
 
 ## Communication Speed
@@ -133,19 +133,19 @@ This is because the bridge contract on L1 must wait for the L2 state to be *prov
 
 The process of sending transactions from L2 to L1 involves four distinct steps:
 
-1. The L2 transaction that sends a message to L1 is sent to the Sequencer.
-   This is just like any other L2 transaction and takes just a few seconds to be confirmed by the Sequencer.
+1.  The L2 transaction that sends a message to L1 is sent to the Sequencer.
+    This is just like any other L2 transaction and takes just a few seconds to be confirmed by the Sequencer.
 
-2. The block containing the L2 transaction is proposed to the L1.
-   This typically takes approximately 20 minutes. 
+2.  The block containing the L2 transaction is proposed to the L1.
+    This typically takes approximately 20 minutes.
 
-3. A proof of the transaction is submitted to the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/111f3f3a3a2881899662e53e0f1b2f845b188a38/packages/contracts-bedrock/src/L1/OptimismPortal.sol#L209) contract on L1.
-   This can be done any time after step 2 is complete.
+3.  A proof of the transaction is submitted to the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/111f3f3a3a2881899662e53e0f1b2f845b188a38/packages/contracts-bedrock/src/L1/OptimismPortal.sol#L209) contract on L1.
+    This can be done any time after step 2 is complete.
 
-4. The transaction is finalized on L1.
-   This can *only* be done after the [fault challenge period](#understanding-the-challenge-period) has elapsed.
-   This period is 7 days on Ethereum and a few seconds on Goerli.
-   This waiting period is a core part of the security model of the OP Stack and cannot be circumvented.
+4.  The transaction is finalized on L1.
+    This can *only* be done after the [fault challenge period](#understanding-the-challenge-period) has elapsed.
+    This period is 7 days on Ethereum and a few seconds on Goerli.
+    This waiting period is a core part of the security model of the OP Stack and cannot be circumvented.
 
 ## Accessing `msg.sender`
 
@@ -186,22 +186,22 @@ The `OptimismPortal` contract charges you for this L2 execution by burning a dyn
 The amount of L1 gas charged increases when more people are sending L1 to L2 transactions (and decreases when fewer people are sending L1 to L2 transactions).
 
 <Callout>
-Since the gas amount charged is dynamic, the gas burn can change from block to block.
-You should always add a buffer of at least 20% to the gas limit for your L1 to L2 transaction to avoid running out of gas.
+  Since the gas amount charged is dynamic, the gas burn can change from block to block.
+  You should always add a buffer of at least 20% to the gas limit for your L1 to L2 transaction to avoid running out of gas.
 </Callout>
 
 ### For L2 to L1 Transactions
 
 Each message from L2 to L1 requires three transactions:
 
-1. An L2 transaction that *initiates* the transaction, which is priced the same as any other transaction made on OP Mainnet.
+1.  An L2 transaction that *initiates* the transaction, which is priced the same as any other transaction made on OP Mainnet.
 
-1. An L1 transaction that *proves* the transaction.
-   This transaction can only be submitted after L2 block including your L2 transaction is proposed on L1.
-   This transaction is expensive because it includes verifying a [Merkle trie](https://eth.wiki/fundamentals/patricia-tree) inclusion proof on L1.
+2.  An L1 transaction that *proves* the transaction.
+    This transaction can only be submitted after L2 block including your L2 transaction is proposed on L1.
+    This transaction is expensive because it includes verifying a [Merkle trie](/resources/glossary#merkle-patricia-trie) inclusion proof on L1.
 
-1. An L1 transaction that *finalizes* the transaction. 
-   This transaction can only be submitted after the transaction challenge period (7 days on mainnet) has passed. 
+3.  An L1 transaction that *finalizes* the transaction.
+    This transaction can only be submitted after the transaction challenge period (7 days on mainnet) has passed.
 
 The total cost of an L2 to L1 transaction is therefore the combined cost of the L2 initialization transaction and the two L1 transactions.
 The L1 proof and finalization transactions are typically significantly more expensive than the L2 initialization transaction.

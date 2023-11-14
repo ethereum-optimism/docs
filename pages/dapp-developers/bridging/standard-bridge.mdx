@@ -11,15 +11,15 @@ The Standard Bridge is composed of two main contracts the [`L1StandardBridge`](h
 Here we'll go over the basics of using this bridge to move ERC20 assets between Layer 1 and Layer 2.
 
 <Callout type="info">
-[See here for a step by step tutorial](cross-dom-bridge-erc20)
+  [See here for a step by step tutorial](cross-dom-bridge-erc20)
 </Callout>
 
 ## Deposits
 
 <Callout type="warning">
-We're working hard to get more smart contract wallet software deployed and tested on OP Mainnet.
-However, as a safety measure, **we currently block smart contract wallets from calling the `depositETH` and `depositERC20` functions**.
-If you want to deposit using a smart contract wallet and you know what you're doing, you can use the `depositETHTo` and `depositERC20To` functions instead.
+  We're working hard to get more smart contract wallet software deployed and tested on OP Mainnet.
+  However, as a safety measure, **we currently block smart contract wallets from calling the `depositETH` and `depositERC20` functions**.
+  If you want to deposit using a smart contract wallet and you know what you're doing, you can use the `depositETHTo` and `depositERC20To` functions instead.
 </Callout>
 
 ### Depositing ERC20s
@@ -29,63 +29,62 @@ You **must** approve the Standard Token Bridge to use the amount of tokens that 
 
 Note that the bridge does *not* support certain ERC-20 configurations:
 
-- [Fee on transfer tokens](https://github.com/d-xo/weird-erc20#fee-on-transfer)
-- [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
+-   [Fee on transfer tokens](https://github.com/d-xo/weird-erc20#fee-on-transfer)
+-   [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
 
 <Callout type="danger">
-- Be sure to use the standard bridge contract only with standard bridge tokens. 
-- The standard bridge can only be used with tokens that have a properly configured ERC-20 version on OP Mainnet.
-- If you send any other type of token to the standard bridge directly (not using the user interface or the API), it gets stuck there and you lose that value.
+  -   Be sure to use the standard bridge contract only with standard bridge tokens.
+  -   The standard bridge can only be used with tokens that have a properly configured ERC-20 version on OP Mainnet.
+  -   If you send any other type of token to the standard bridge directly (not using the user interface or the API), it gets stuck there and you lose that value.
 </Callout>
 
 Note that if you use the [OP Mainnet bridge UI](https://app.optimism.io/bridge), or the [Optimism SDK](https://sdk.optimism.io/) which automatically chooses the correct bridge contract, so this problem does not happen.
 
 There are two ways to check if a token can use the standard bridge:
 
-1. Look in [the token list](https://static.optimism.io/optimism.tokenlist.json). 
-   If a token can use the standard bridge, then the `"chainId": 10` entry will have the standard L2 bridge address, `0x4200..0010`. For example, this entry shows that on OP Mainnet `0xBTC` can use the standard bridge.
+1.  Look in [the token list](https://static.optimism.io/optimism.tokenlist.json).
+    If a token can use the standard bridge, then the `"chainId": 10` entry will have the standard L2 bridge address, `0x4200..0010`. For example, this entry shows that on OP Mainnet `0xBTC` can use the standard bridge.
 
-   ```json
-       {
-      "chainId": 10,
-      "address": "0xe0BB0D3DE8c10976511e5030cA403dBf4c25165B",
-      "name": "0xBitcoin",
-      "symbol": "0xBTC",
-      "decimals": 8,
-      "logoURI": "https://ethereum-optimism.github.io/data/0xBTC/logo.png",
-      "extensions": {
-        "optimismBridgeAddress": "0x4200000000000000000000000000000000000010"
-      }
-    },
-   ```
+    ```json
+        {
+       "chainId": 10,
+       "address": "0xe0BB0D3DE8c10976511e5030cA403dBf4c25165B",
+       "name": "0xBitcoin",
+       "symbol": "0xBTC",
+       "decimals": 8,
+       "logoURI": "https://ethereum-optimism.github.io/data/0xBTC/logo.png",
+       "extensions": {
+         "optimismBridgeAddress": "0x4200000000000000000000000000000000000010"
+       }
+     },
+    ```
 
-   If the token exists in the token list but does not use the standard bridge, the `extensions.optimismBridgeAddress` value is different. For example, this entry shows that on OP Mainnet `DAI` uses a different bridge:
+    If the token exists in the token list but does not use the standard bridge, the `extensions.optimismBridgeAddress` value is different. For example, this entry shows that on OP Mainnet `DAI` uses a different bridge:
 
-   ```json
-       {
-      "chainId": 10,
-      "address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-      "name": "Dai stable coin",
-      "symbol": "DAI",
-      "decimals": 18,
-      "logoURI": "https://ethereum-optimism.github.io/data/DAI/logo.svg",
-      "extensions": {
-        "optimismBridgeAddress": "0x467194771dAe2967Aef3ECbEDD3Bf9a310C76C65"
-      }
-    },
-   ```
+    ```json
+        {
+       "chainId": 10,
+       "address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+       "name": "Dai stable coin",
+       "symbol": "DAI",
+       "decimals": 18,
+       "logoURI": "https://ethereum-optimism.github.io/data/DAI/logo.svg",
+       "extensions": {
+         "optimismBridgeAddress": "0x467194771dAe2967Aef3ECbEDD3Bf9a310C76C65"
+       }
+     },
+    ```
 
-2. You can "ask" the L2 token contract by calling it. 
-   ERC-20 tokens that can use the standard bridge not only if they:
-   - Have an `l2Bridge` method
-   - That method returns `0x4200...0010`. 
+2.  You can "ask" the L2 token contract by calling it.
+    ERC-20 tokens that can use the standard bridge not only if they:
 
-   For example, [this link](https://optimistic.etherscan.io/address/0xe0bb0d3de8c10976511e5030ca403dbf4c25165b#readContract#F5) can be used to see that `0xBTC` uses the standard bridge.
+    -   Have an `l2Bridge` method
+    -   That method returns `0x4200...0010`.
 
-   Note that you cannot query the L1 token contract the same way.
-   L2 contracts know the identity of their L1 counterpart, but L1 contracts only need to implement the standard ERC-20 methods.
+    For example, [this link](https://optimistic.etherscan.io/address/0xe0bb0d3de8c10976511e5030ca403dbf4c25165b#readContract#F5) can be used to see that `0xBTC` uses the standard bridge.
 
-
+    Note that you cannot query the L1 token contract the same way.
+    L2 contracts know the identity of their L1 counterpart, but L1 contracts only need to implement the standard ERC-20 methods.
 
 ### Depositing ETH
 
@@ -98,7 +97,7 @@ Once your deposit is detected and finalized on OP Mainnet, your account will be 
 USDC issued by Circle will be native to OP Mainnet and can be considered the official form of USDC for the ecosystem. Over time, native USDC liquidity may grow and replace the currently circulating bridged USDC liquidity that comes from Ethereum.
 
 <Callout type="danger">
-USDC.e and USDC are different token contracts. If you're using `depositERC20` or `depositERC20To` make sure you're bridging to the correct destination address. Mixing up the mapping will result in your assets being stuck in the bridge.
+  USDC.e and USDC are different token contracts. If you're using `depositERC20` or `depositERC20To` make sure you're bridging to the correct destination address. Mixing up the mapping will result in your assets being stuck in the bridge.
 </Callout>
 
 | Token Symbol  | Description | Token Address |
@@ -121,7 +120,7 @@ Instead, you can use the `withdraw` or `withdrawTo` functions on the [`L2Standar
 ## Adding an ERC20 token to the Standard Bridge
 
 <Callout type="info">
-To add your token to the standard bridge, see the guide [Adding an ERC20 token to the Standard Bridge](standard-bridge-standard-token).
+  To add your token to the standard bridge, see the guide [Adding an ERC20 token to the Standard Bridge](standard-bridge-standard-token).
 </Callout>
 
 ## The Superchain token list
