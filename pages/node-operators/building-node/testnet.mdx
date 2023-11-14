@@ -1,17 +1,26 @@
+---
+title: Running OP Testnet from Source
+lang: en-US
+description: Learn how to run a node from source using OP Testnet.
+---
+
 import { Callout } from 'nextra/components'
 
 # Running OP Testnet from Source
 
-#### [Please follow these steps first if you have not done so already.](intro.md)
-
-<Callout type="info">
-
-Migrated vs Non-Migrated Networks
-
-Migrated Networks, *OP Mainnet* and *OP Goerli*, were running before the Bedrock upgrade. Non-Migrated Networks, *OP Sepolia*, have only existed in a post Bedrock world. The way transaction execution is handled is funadmentally different pre- vs post-bedrock. Migrated networks are required to initialize their nodes with a data directory and non-migrated networks can simply initialize from a genesis file.
+<Callout type="info"> 
+Please complete the first tutorial on [building a node from source](intro), if you have not done so.
 </Callout>
 
-## OP Sepolia initialization
+## Before You Begin
+
+You need to know some prerequisite information on migrated vs. non-migrated networks shared in this section.
+
+- Migrated Networks, *OP Mainnet* and *OP Goerli*, were running before the Bedrock upgrade. 
+- Non-Migrated Networks, *OP Sepolia*, have only existed in a post Bedrock world. The way transaction execution is handled is funadmentally different pre- vs post-bedrock. 
+- Migrated networks are required to initialize their nodes with a data directory and non-migrated networks can simply initialize from a genesis file.
+
+## OP Sepolia Initialization
 
 OP Sepolia is non-migrated network so it requires [initialization via genesis file](../node-operator-overview#initialization-via-genesis-file). `op-geth` uses JSON files to encode a network's genesis information. You'll need to download the genesis JSON, then run the following command to initialize the data directory:
 
@@ -23,7 +32,7 @@ geth init \
 	 "<path to genesis JSON>"
 ```
 
-### Create a shared secret between `op-geth` and `op-node`
+## Create a shared secret between `op-geth` and `op-node`
 
 1. Navigate into your `op-geth` directory and run these commands:
 
@@ -73,7 +82,7 @@ In the root of your working directory create a new directory: `scripts`.
       --op-network=op-sepolia
     ```
 
-Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs](../../useful-tools/networks.md).
+Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs](/tools/rpc-providers).
 
 1. Run the following command to start `op-geth`:
    
@@ -125,7 +134,7 @@ Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs]
     ./run-op-node.sh
     ```
 
-### The initial synchronization
+## The initial synchronization
 
 The datadir provided by Optimism is not updated continuously, so before you can use the node you need a to synchronize it.
 
@@ -155,7 +164,7 @@ INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,
 INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
 ```
 
-#### How long will the synchronization take?
+### How long will the synchronization take?
 
 To estimate how long the synchronization will take, you need to first find out how many blocks you synchronize in a minute. You can use this [Foundry](https://book.getfoundry.sh/) script to get an estimated sync time.
 
@@ -225,6 +234,6 @@ fi
    ./run-estimate.sh
    ```  
 
-### Operations
+## Operations
 
 It is best to start `op-geth` first and shut it down last.
