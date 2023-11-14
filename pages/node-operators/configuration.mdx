@@ -6,34 +6,29 @@ description: How to configure node and all the command line options.
 
 import { Callout } from 'nextra/components'
 
-
 # Node Configuration
 
 <Callout type="warning">
-
-Always run `op-node` and `op-geth` in a one-to-one configuration. Don't run multiple `op-geth` instances behind one `op-node`, or vice versa.
-
+  Always run `op-node` and `op-geth` in a one-to-one configuration. Don't run multiple `op-geth` instances behind one `op-node`, or vice versa.
 </Callout>
 
 To configure your node, you will need to do the following:
 
-1. Configure `op-node` to point to the correct L1, `op-geth`, and L2 network.
-2. Initialize `op-geth` with the correct network parameters.
-3. Configure `op-geth` to properly communicate with the Rollup Node.
-4. Optionally, configure Legacy Geth.
+1.  Configure `op-node` to point to the correct L1, `op-geth`, and L2 network.
+2.  Initialize `op-geth` with the correct network parameters.
+3.  Configure `op-geth` to properly communicate with the Rollup Node.
+4.  Optionally, configure Legacy Geth.
 
 ### Configuring op-geth
 
 <Callout type="info">
-
-Even though the Docker image for the Execution Engine is called `op-geth`, the actually binary is still called `geth` in order to minimize differences between `op-geth` and `go-ethereum`.
-
+  Even though the Docker image for the Execution Engine is called `op-geth`, the actually binary is still called `geth` in order to minimize differences between `op-geth` and `go-ethereum`.
 </Callout>
 
 We'll start with `op-geth`'s configuration because it is more complex. As mentioned before, `op-geth` is a minimal fork of `go-ethereum`. As a result, it stores its state in a database that requires initialization. Initialization is done one of two ways, depending on which network you're deploying:
 
-1. **With a Genesis File:** This is for OP Sepolia, and other testnets or deployments that are not migrated from a legacy network. In this case, you'll download the [genesis file](https://networks.optimism.io/op-sepolia/genesis.json) and initialize the data directory via `geth init`.
-2. **With a Data Directory:** This is used for networks that are migrated from a legacy network. This would include OP Mainnet and OP Goerli. In this case, you'll download a preconfigured data directory and extract it. No further initialization is necessary in this case, because the data directory contains the network's genesis information. 
+1.  **With a Genesis File:** This is for OP Sepolia, and other testnets or deployments that are not migrated from a legacy network. In this case, you'll download the [genesis file](https://networks.optimism.io/op-sepolia/genesis.json) and initialize the data directory via `geth init`.
+2.  **With a Data Directory:** This is used for networks that are migrated from a legacy network. This would include OP Mainnet and OP Goerli. In this case, you'll download a preconfigured data directory and extract it. No further initialization is necessary in this case, because the data directory contains the network's genesis information.
 
 Regardless of how `op-geth` is initialized, you'll need to ensure that you have sufficient disk space available to store the network's data. As of this writing, the mainnet data directory is ~100GB for a full node and ~1TB for an archival node. The OP Goerli data directory is ~40GB for a full node.
 
@@ -58,14 +53,11 @@ fi
 ```
 
 <Callout type="warning">
- 
-CLI Flag Requirements
+  CLI Flag Requirements
 
-- `op-node` requires: `--network=op-sepolia`
-- do not set: `--rollup.historicalrpc` or `rollup.historicalrpctimeout`
-- `op-geth` requires: `--op-network=op-sepolia`
-
-
+  *   `op-node` requires: `--network=op-sepolia`
+  *   do not set: `--rollup.historicalrpc` or `rollup.historicalrpctimeout`
+  *   `op-geth` requires: `--op-network=op-sepolia`
 </Callout>
 
 #### Initialization via Data Directory
@@ -81,9 +73,9 @@ tar -xvf <path to data directory>
 
 Once `op-geth` is initialized, it can be configured via CLI flags. `op-geth` accepts all the [standard `go-ethereum` flags](https://geth.ethereum.org/docs/interface/command-line-options) as well as a few extra flags that are specific to Optimism. These flags are:
 
-- `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth. This flag is only necessary for upgraded networks.
-- `--rollup.sequencerhttp`: HTTP endpoint of the sequencer. `op-geth` will route `eth_sendRawTransaction` calls to this URL. Bedrock does not currently have a public mempool, so this is required if you want your node to support transaction submission. Consult the documentation for the network you are participating in to get the correct URL.
-- `--rollup.disabletxpoolgossip`: Disables transaction pool gossiping. While not required, it's useful to set this to `true` since transaction pool gossip is currently unsupported.
+*   `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth. This flag is only necessary for upgraded networks.
+*   `--rollup.sequencerhttp`: HTTP endpoint of the sequencer. `op-geth` will route `eth_sendRawTransaction` calls to this URL. Bedrock does not currently have a public mempool, so this is required if you want your node to support transaction submission. Consult the documentation for the network you are participating in to get the correct URL.
+*   `--rollup.disabletxpoolgossip`: Disables transaction pool gossiping. While not required, it's useful to set this to `true` since transaction pool gossip is currently unsupported.
 
 To communicate with `op-node` and enable the Engine API, you'll also need to generate a JWT secret file and enable Geth's authenticated RPC endpoint.
 
@@ -95,22 +87,22 @@ openssl rand -hex 32 > jwt.txt
 
 Then, specify the following flags:
 
-- `--authrpc.addr`: Sets the address `op-geth`'s authenticated RPC should listen on.
-- `--authrpc.port`: Sets the port `op-geth`'s authenticated RPC should listen on. The default value is `8551`.
-- `--authrpc.jwtsecret`: Sets the path to a JWT secret file you generated above.
-- `--syncmode=full`: This prevents Geth from attempting to snap sync. Snap sync is currently unsupported, but will be enabled shortly after the mainnet upgrade.
-- `--maxpeers=0`: This prevents Geth from peering with other Geth nodes. Execution-layer peering is currently unsupported, but will be added as part of enabling snap sync.
-- `--nodiscover`: This disables Geth's peer discovery mechanism. Execution-layer discovery is currently unsupported, but will be added as part of enabling snap sync.
+*   `--authrpc.addr`: Sets the address `op-geth`'s authenticated RPC should listen on.
+*   `--authrpc.port`: Sets the port `op-geth`'s authenticated RPC should listen on. The default value is `8551`.
+*   `--authrpc.jwtsecret`: Sets the path to a JWT secret file you generated above.
+*   `--syncmode=full`: This prevents Geth from attempting to snap sync. Snap sync is currently unsupported, but will be enabled shortly after the mainnet upgrade.
+*   `--maxpeers=0`: This prevents Geth from peering with other Geth nodes. Execution-layer peering is currently unsupported, but will be added as part of enabling snap sync.
+*   `--nodiscover`: This disables Geth's peer discovery mechanism. Execution-layer discovery is currently unsupported, but will be added as part of enabling snap sync.
 
 #### Optional op-geth Configuration
 
 You may also want to specify the following flags based on your configuration:
 
-- `--authrpc.vhosts`: Whitelists which hosts (as defined in the `Host` header) are allowed to access the authenticated RPC endpoint. This is useful if you're running `op-geth` on containerized infrastructure. The default value is `localhost`.
-- `--http.vhosts`: Whitelists which hosts (as defined in the `Host` header) are allowed to access the unauthenticated RPC endpoint. This is useful if you're running `op-geth` on containerized infrastructure. The default value is `localhost`.
-- `--http`, `--http.addr`, and `--http.port`: Enables the unauthenticated RPC endpoint, configures its address, and configures its port. You'll almost certainly want to specify these, since they will enable Geth's JSON-RPC endpoint.
-- `--ws`, `--ws.addr`, and `--ws.port`: Enables the WebSocket API.
-- `--verbosity`: Configures Geth's log level. This is a number between 0 and 5, with 5 being the most verbose. Defaults to 3.
+*   `--authrpc.vhosts`: Whitelists which hosts (as defined in the `Host` header) are allowed to access the authenticated RPC endpoint. This is useful if you're running `op-geth` on containerized infrastructure. The default value is `localhost`.
+*   `--http.vhosts`: Whitelists which hosts (as defined in the `Host` header) are allowed to access the unauthenticated RPC endpoint. This is useful if you're running `op-geth` on containerized infrastructure. The default value is `localhost`.
+*   `--http`, `--http.addr`, and `--http.port`: Enables the unauthenticated RPC endpoint, configures its address, and configures its port. You'll almost certainly want to specify these, since they will enable Geth's JSON-RPC endpoint.
+*   `--ws`, `--ws.addr`, and `--ws.port`: Enables the WebSocket API.
+*   `--verbosity`: Configures Geth's log level. This is a number between 0 and 5, with 5 being the most verbose. Defaults to 3.
 
 #### Working Base Configuration
 
@@ -197,19 +189,18 @@ Since Legacy Geth is read-only, it is safe to run multiple Legacy Geth nodes beh
 
 #### Historical Execution vs. Historical Data Routing
 
-Only requests for historical execution will be routed to Legacy Geth. 
+Only requests for historical execution will be routed to Legacy Geth.
 Everything else will be served by `op-geth` directly.
-The term _historical execution_ refers to RPC methods that need to execute transactions prior to bedrock (not just read data from the database):
+The term *historical execution* refers to RPC methods that need to execute transactions prior to bedrock (not just read data from the database):
 
-- `eth_call`
-- `eth_estimateGas`
-- `debug_traceBlockByNumber`
-- `debug_traceBlockByHash`
-- `debug_traceCall`
-- `debug_traceTransaction`
+*   `eth_call`
+*   `eth_estimateGas`
+*   `debug_traceBlockByNumber`
+*   `debug_traceBlockByHash`
+*   `debug_traceCall`
+*   `debug_traceTransaction`
 
 If you do not need these RPC methods for historical data, then you do not need to run Legacy Geth at all.
-
 
 ## Command line options
 
@@ -220,7 +211,6 @@ The command line help listing is reproduced below for your convenience.
 ### op-node
 
 `op-node` implements most rollup-specific functionality as Consensus-Layer, similar to a L1 beacon-node. The following options are from [v1.3.1](https://github.com/ethereum-optimism/optimism/tree/op-node/v1.3.1).
-
 
 ```
 NAME:
@@ -491,7 +481,6 @@ GLOBAL OPTIONS:
     --version, -v                       (default: false)                  
           print the version
 ```
-
 
 ### `op-geth`
 
