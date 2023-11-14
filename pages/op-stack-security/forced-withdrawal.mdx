@@ -2,105 +2,111 @@ import { Callout, Steps } from 'nextra/components'
 
 # Forcing Withdrawal from an OP Stack Blockchain
 
-Any assets you own on an OP Stack blockchain are backed by equivalent assets on the underlying L1, locked in a bridge. 
+Any assets you own on an OP Stack blockchain are backed by equivalent assets on the underlying L1, locked in a bridge.
 In this tutorial, you learn how to withdraw these assets directly from L1.
 
 ## Before You Begin
-- Install [Node.js](https://nodejs.org/en/), [pnpm](https://pnpm.io/), and [yarn](https://classic.yarnpkg.com/). 
-- Access to L2 (OP Mainnet) endpoint. However, that L2 endpoint can be a read-only replica.
 
-## Setup 
+*   Install [Node.js](https://nodejs.org/en/), [pnpm](https://pnpm.io/), and [yarn](https://classic.yarnpkg.com/).
+*   Access to L2 (OP Mainnet) endpoint. However, that L2 endpoint can be a read-only replica.
+
+## Setup
 
 <Steps>
-### Step 1: Make a Project Folder and Initialize It
+  ### Step 1: Make a Project Folder and Initialize It
 
-```sh
-mkdir project-folder-name
-cd folder-name
-pnpm init
-```
+  ```sh
+  mkdir project-folder-name
+  cd folder-name
+  pnpm init
+  ```
 
-### Step 2: Create Three Files for the Folder
-- Create a `.env` file
-```js filename=".env file"
-L1URL=<<< L1 URL goes here >>>
-L2URL=<<< L2 URL goes here >>>
-PRIV_KEY=<< private key goes here >>>
-OPTIMISM_PORTAL_ADDR=<< address of OptimismPortalProxy >>
-```
-- Create a `hardhat.config.js` file 
-```js filename="hardhat.config.js"
-require("@nomiclabs/hardhat-waffle");
-require('dotenv').config();
+  ### Step 2: Create Three Files for the Folder
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
+  *   Create a `.env` file
 
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
+  ```js filename=".env file"
+  L1URL=<<< L1 URL goes here >>>
+  L2URL=<<< L2 URL goes here >>>
+  PRIV_KEY=<< private key goes here >>>
+  OPTIMISM_PORTAL_ADDR=<< address of OptimismPortalProxy >>
+  ```
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+  *   Create a `hardhat.config.js` file
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-module.exports = {
-  solidity: "0.8.4",
-  networks: {
-    l1: {
-         url: process.env.L1URL,
-         accounts: [ process.env.PRIV_KEY ]
+  ```js filename="hardhat.config.js"
+  require("@nomiclabs/hardhat-waffle");
+  require('dotenv').config();
+
+  // This is a sample Hardhat task. To learn how to create your own go to
+  // https://hardhat.org/guides/create-task.html
+  task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
+    const accounts = await hre.ethers.getSigners();
+
+    for (const account of accounts) {
+      console.log(account.address);
+    }
+  });
+
+  // You need to export an object to set up your config
+  // Go to https://hardhat.org/config/ to learn more
+
+  /**
+   * @type import('hardhat/config').HardhatUserConfig
+   */
+  module.exports = {
+    solidity: "0.8.4",
+    networks: {
+      l1: {
+           url: process.env.L1URL,
+           accounts: [ process.env.PRIV_KEY ]
+      }
+    }
+  };
+  ```
+
+  *   Create a `Greeter.sol` file
+
+  ```js filename="Greeter.sol"
+  //SPDX-License-Identifier: Unlicense
+  pragma solidity ^0.8.0;
+
+  import "hardhat/console.sol";
+
+
+  contract Greeter {
+    string greeting;
+
+    constructor(string memory _greeting) {
+      console.log("Deploying a Greeter with greeting:", _greeting);
+      greeting = _greeting;
+    }
+
+    function greet() public view returns (string memory) {
+      return greeting;
+    }
+
+    function setGreeting(string memory _greeting) public {
+      console.log("Changing greeting from '%s' to '%s'", greeting, _greeting);
+      greeting = _greeting;
     }
   }
-};
-```
-- Create a `Greeter.sol` file 
-```js filename="Greeter.sol"
-//SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+  ```
 
-import "hardhat/console.sol";
+  ### Step 3: Edit `.env` to set these variables:
 
+  | Variable             | Meaning |
+  | -------------------- | ------- |
+  | L1URL                | URL to L1 (Goerli if you followed the directions on this site)
+  | L2URL                | URL to the L2 from which you are withdrawing
+  | PRIV\_KEY             | Private key for an account that has ETH on L2. It also needs ETH on L1 to submit transactions
+  | OPTIMISM\_PORTAL\_ADDR | Address of the `OptimismPortalProxy` on L1.
 
-contract Greeter {
-  string greeting;
+  ### Step 4: Install the dependencies
 
-  constructor(string memory _greeting) {
-    console.log("Deploying a Greeter with greeting:", _greeting);
-    greeting = _greeting;
-  }
-
-  function greet() public view returns (string memory) {
-    return greeting;
-  }
-
-  function setGreeting(string memory _greeting) public {
-    console.log("Changing greeting from '%s' to '%s'", greeting, _greeting);
-    greeting = _greeting;
-  }
-}
-```
-
-### Step 3: Edit `.env` to set these variables:
-
-   | Variable             | Meaning |
-   | -------------------- | ------- |
-   | L1URL                | URL to L1 (Goerli if you followed the directions on this site)
-   | L2URL                | URL to the L2 from which you are withdrawing
-   | PRIV_KEY             | Private key for an account that has ETH on L2. It also needs ETH on L1 to submit transactions
-   | OPTIMISM_PORTAL_ADDR | Address of the `OptimismPortalProxy` on L1.
-
-### Step 4: Install the dependencies
-
-   ```sh
+  ```sh
   pnpm add @eth-optimism/sdk@^2.0.1 dotenv@^16.0.3 ethers@^5.7.2 ethereum-waffle@^3.4.4 @nomiclabs/hardhat-ethers@^2.2.2 @nomiclabs/hardhat-waffle@^2.0.5 hardhat@^2.13.0 chai@^4.3.7 @eth-optimism/contracts-bedrock@^0.13.1
-   ```
-
+  ```
 </Steps>
 
 ## Withdrawal
@@ -108,156 +114,163 @@ contract Greeter {
 ### ETH withdrawals
 
 The easiest way to withdraw ETH is to send it to the bridge, or the cross domain messenger, on L2.
+
 <Steps>
-### Step 1: Enter the Hardhat console.
+  ### Step 1: Enter the Hardhat console.
 
-   ```sh
-   npx hardhat console --network l1
-   ```
+  ```sh
+  npx hardhat console --network l1
+  ```
 
-### Step 2: Specify the amount of ETH you want to transfer.
-   This code transfers one hundred'th of an ETH.
+  ### Step 2: Specify the amount of ETH you want to transfer.
 
-   ```js
-   transferAmt = BigInt(0.01 * 1e18)
-   ``` 
+  This code transfers one hundred'th of an ETH.
 
-### Step 3: Create a contract object for the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol) contract.
+  ```js
+  transferAmt = BigInt(0.01 * 1e18)
+  ```
 
-   ```js
-   optimismContracts = require("@eth-optimism/contracts-bedrock")
-   optimismPortalData = optimismContracts.getContractDefinition("OptimismPortal")
-   optimismPortal = new ethers.Contract(process.env.OPTIMISM_PORTAL_ADDR, optimismPortalData.abi, await ethers.getSigner())
-   ```
+  ### Step 3: Create a contract object for the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol) contract.
 
-### Step 4: Send the transaction
+  ```js
+  optimismContracts = require("@eth-optimism/contracts-bedrock")
+  optimismPortalData = optimismContracts.getContractDefinition("OptimismPortal")
+  optimismPortal = new ethers.Contract(process.env.OPTIMISM_PORTAL_ADDR, optimismPortalData.abi, await ethers.getSigner())
+  ```
 
-   ```js
-   txn = await optimismPortal.depositTransaction(
-      optimismContracts.predeploys.L2StandardBridge,
-      transferAmt,
-      1e6, false, []
-   )
-   rcpt = await txn.wait()
-   ```
+  ### Step 4: Send the transaction
 
-### Step 5: To [prove](https://sdk.optimism.io/classes/crosschainmessenger#proveMessage-2) and [finalize](https://sdk.optimism.io/classes/crosschainmessenger#finalizeMessage-2) the message we need the hash. 
-   Optimism's [core-utils package](https://www.npmjs.com/package/@eth-optimism/core-utils) has the necessary function.
+  ```js
+  txn = await optimismPortal.depositTransaction(
+     optimismContracts.predeploys.L2StandardBridge,
+     transferAmt,
+     1e6, false, []
+  )
+  rcpt = await txn.wait()
+  ```
 
-   ```js
-   optimismCoreUtils = require("@eth-optimism/core-utils")
-   withdrawalData = new optimismCoreUtils.DepositTx({
-      from: (await ethers.getSigner()).address,
-      to: optimismContracts.predeploys.L2StandardBridge,
-      mint: 0,
-      value: ethers.BigNumber.from(transferAmt),
-      gas: 1e6,
-      isSystemTransaction: false,
-      data: "",
-      domain: optimismCoreUtils.SourceHashDomain.UserDeposit,
-      l1BlockHash: rcpt.blockHash,
-      logIndex: rcpt.logs[0].logIndex,
-   })
-   withdrawalHash = withdrawalData.hash()
-   ```
+  ### Step 5: To [prove](https://sdk.optimism.io/classes/crosschainmessenger#proveMessage-2) and [finalize](https://sdk.optimism.io/classes/crosschainmessenger#finalizeMessage-2) the message we need the hash.
 
-### Step 6: Create the object for the L1 contracts, as explained in [the documentation](/tools/javascript/sdk).
-   You will create an object similar to this one:
+  Optimism's [core-utils package](https://www.npmjs.com/package/@eth-optimism/core-utils) has the necessary function.
 
-   ```js
-   L1Contracts = {
-      StateCommitmentChain: '0x0000000000000000000000000000000000000000',
-      CanonicalTransactionChain: '0x0000000000000000000000000000000000000000',
-      BondManager: '0x0000000000000000000000000000000000000000',
-      AddressManager: '0x432d810484AdD7454ddb3b5311f0Ac2E95CeceA8',
-      L1CrossDomainMessenger: '0x27E8cBC25C0Aa2C831a356bbCcc91f4e7c48EeeE',
-      L1StandardBridge: '0x154EaA56f8cB658bcD5d4b9701e1483A414A14Df',
-      OptimismPortal: '0x4AD19e14C1FD57986dae669BE4ee9C904431572C',
-      L2OutputOracle: '0x65B41B7A2550140f57b603472686D743B4b940dB'
-   }
-   ```
+  ```js
+  optimismCoreUtils = require("@eth-optimism/core-utils")
+  withdrawalData = new optimismCoreUtils.DepositTx({
+     from: (await ethers.getSigner()).address,
+     to: optimismContracts.predeploys.L2StandardBridge,
+     mint: 0,
+     value: ethers.BigNumber.from(transferAmt),
+     gas: 1e6,
+     isSystemTransaction: false,
+     data: "",
+     domain: optimismCoreUtils.SourceHashDomain.UserDeposit,
+     l1BlockHash: rcpt.blockHash,
+     logIndex: rcpt.logs[0].logIndex,
+  })
+  withdrawalHash = withdrawalData.hash()
+  ```
 
-### Step 7: Create the data structure for the standard bridge.
+  ### Step 6: Create the object for the L1 contracts, as explained in [the documentation](/tools/javascript/sdk).
 
-   ```js
-    bridges = { 
-      Standard: { 
-         l1Bridge: l1Contracts.L1StandardBridge, 
-         l2Bridge: "0x4200000000000000000000000000000000000010", 
-         Adapter: optimismSDK.StandardBridgeAdapter
-      },
-      ETH: {
-         l1Bridge: l1Contracts.L1StandardBridge, 
-         l2Bridge: "0x4200000000000000000000000000000000000010", 
-         Adapter: optimismSDK.ETHBridgeAdapter
-      }
-   }
-   ```
+  You will create an object similar to this one:
 
+  ```js
+  L1Contracts = {
+     StateCommitmentChain: '0x0000000000000000000000000000000000000000',
+     CanonicalTransactionChain: '0x0000000000000000000000000000000000000000',
+     BondManager: '0x0000000000000000000000000000000000000000',
+     AddressManager: '0x432d810484AdD7454ddb3b5311f0Ac2E95CeceA8',
+     L1CrossDomainMessenger: '0x27E8cBC25C0Aa2C831a356bbCcc91f4e7c48EeeE',
+     L1StandardBridge: '0x154EaA56f8cB658bcD5d4b9701e1483A414A14Df',
+     OptimismPortal: '0x4AD19e14C1FD57986dae669BE4ee9C904431572C',
+     L2OutputOracle: '0x65B41B7A2550140f57b603472686D743B4b940dB'
+  }
+  ```
 
-### Step 8: Create [a cross domain messenger](https://sdk.optimism.io/classes/crosschainmessenger).
-   This step, and subsequent ETH withdrawal steps, are explained in [this tutorial](/dapp-developers/bridging/cross-dom-bridge-eth).
+  ### Step 7: Create the data structure for the standard bridge.
 
-   ```js
-   optimismSDK = require("@eth-optimism/sdk")
-   l2Provider = new ethers.providers.JsonRpcProvider(process.env.L2URL)
-   await l2Provider._networkPromise
-   crossChainMessenger = new optimismSDK.CrossChainMessenger({
-      l1ChainId: ethers.provider.network.chainId,
-      l2ChainId: l2Provider.network.chainId,
-      l1SignerOrProvider: await ethers.getSigner(),
-      l2SignerOrProvider: l2Provider,
-      bedrock: true,
-      contracts: {
-         l1: l1Contracts
-      },
-      bridges: bridges
-   })   
-   ```
+  ```js
+   bridges = { 
+     Standard: { 
+        l1Bridge: l1Contracts.L1StandardBridge, 
+        l2Bridge: "0x4200000000000000000000000000000000000010", 
+        Adapter: optimismSDK.StandardBridgeAdapter
+     },
+     ETH: {
+        l1Bridge: l1Contracts.L1StandardBridge, 
+        l2Bridge: "0x4200000000000000000000000000000000000010", 
+        Adapter: optimismSDK.ETHBridgeAdapter
+     }
+  }
+  ```
 
-### Step 9: Wait for the message status for the withdrawal to become `READY_TO_PROVE`.
-   By default the state root is written every four minutes, so you're likely to need to need to wait.
+  ### Step 8: Create [a cross domain messenger](https://sdk.optimism.io/classes/crosschainmessenger).
 
-   ```js
-   await crossChainMessenger.waitForMessageStatus(withdrawalHash, 
-       optimismSDK.MessageStatus.READY_TO_PROVE)
-   ```
-      
-### Step 10: Submit the withdrawal proof.
+  This step, and subsequent ETH withdrawal steps, are explained in [this tutorial](/dapp-developers/bridging/cross-dom-bridge-eth).
 
-   ```js
-   await crossChainMessenger.proveMessage(withdrawalHash)
-   ```
+  ```js
+  optimismSDK = require("@eth-optimism/sdk")
+  l2Provider = new ethers.providers.JsonRpcProvider(process.env.L2URL)
+  await l2Provider._networkPromise
+  crossChainMessenger = new optimismSDK.CrossChainMessenger({
+     l1ChainId: ethers.provider.network.chainId,
+     l2ChainId: l2Provider.network.chainId,
+     l1SignerOrProvider: await ethers.getSigner(),
+     l2SignerOrProvider: l2Provider,
+     bedrock: true,
+     contracts: {
+        l1: l1Contracts
+     },
+     bridges: bridges
+  })   
+  ```
 
-### Step 11: Wait for the message status for the withdrawal to become `READY_FOR_RELAY`.
-   This waits the challenge period (7 days in production, but a lot less on test networks).
+  ### Step 9: Wait for the message status for the withdrawal to become `READY_TO_PROVE`.
 
-   ```js
-   await crossChainMessenger.waitForMessageStatus(withdrawalHash, 
-      optimismSDK.MessageStatus.READY_FOR_RELAY)
-   ```   
+  By default the state root is written every four minutes, so you're likely to need to need to wait.
 
+  ```js
+  await crossChainMessenger.waitForMessageStatus(withdrawalHash, 
+      optimismSDK.MessageStatus.READY_TO_PROVE)
+  ```
 
-### Step 12: Finalize the withdrawal.
-   See that your balance changes by the withdrawal amount.
+  ### Step 10: Submit the withdrawal proof.
 
-   ```js
-   myAddr = (await ethers.getSigner()).address
-   balance0 = await ethers.provider.getBalance(myAddr)
-   finalTxn = await crossChainMessenger.finalizeMessage(withdrawalHash)
-   finalRcpt = await finalTxn.wait()
-   balance1 = await ethers.provider.getBalance(myAddr)
-   withdrawnAmt = BigInt(balance1)-BigInt(balance0)
-   ```
+  ```js
+  await crossChainMessenger.proveMessage(withdrawalHash)
+  ```
+
+  ### Step 11: Wait for the message status for the withdrawal to become `READY_FOR_RELAY`.
+
+  This waits the challenge period (7 days in production, but a lot less on test networks).
+
+  ```js
+  await crossChainMessenger.waitForMessageStatus(withdrawalHash, 
+     optimismSDK.MessageStatus.READY_FOR_RELAY)
+  ```
+
+  ### Step 12: Finalize the withdrawal.
+
+  See that your balance changes by the withdrawal amount.
+
+  ```js
+  myAddr = (await ethers.getSigner()).address
+  balance0 = await ethers.provider.getBalance(myAddr)
+  finalTxn = await crossChainMessenger.finalizeMessage(withdrawalHash)
+  finalRcpt = await finalTxn.wait()
+  balance1 = await ethers.provider.getBalance(myAddr)
+  withdrawnAmt = BigInt(balance1)-BigInt(balance0)
+  ```
 </Steps>
-<Callout type="info"> 
 
-transferAmt > withdrawnAmt
+<Callout type="info">
+  transferAmt > withdrawnAmt
 
-Your L1 balance doesn't increase by the entire `transferAmt` because of the cost of `crossChainMessenger.finalizeMessage`, which submits a transaction.
+  Your L1 balance doesn't increase by the entire `transferAmt` because of the cost of `crossChainMessenger.finalizeMessage`, which submits a transaction.
 </Callout>
 
 ## Additional Files
+
 ```js filename="sample-script.js"
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
@@ -291,7 +304,8 @@ main()
     console.error(error);
     process.exit(1);
   });
-  ```
+```
+
 ```js filename="sample-test.js"
 const { expect } = require("chai");
 

@@ -1,5 +1,5 @@
 import Image from 'next/image'
- 
+
 # Rollup Protocol Overview
 
 The big idea that makes Optimism possible is the Optimistic Rollup.
@@ -27,40 +27,38 @@ This is important because writing to L1 is [the major cost of OP Mainnet transac
 
 Optimism block production is primarily managed by a single party, called the "sequencer," which helps the network by providing the following services:
 
-- Providing transaction confirmations and state updates.
-- Constructing and executing L2 blocks.
-- Submitting user transactions to L1.
+*   Providing transaction confirmations and state updates.
+*   Constructing and executing L2 blocks.
+*   Submitting user transactions to L1.
 
 In Bedrock the sequencer does have a mempool, similar to L1 Ethereum, but the mempool is private to avoid opening opportunities for MEV.
 In OP Mainnet blocks are produced every two seconds, regardless of whether they are empty (no transactions), filled up to the block gas limit with transactions, or anything in between.
 
 Transactions get to the sequencer in two ways:
 
-1. Transactions submitted on L1 (called *deposits* whether they have assets attached or not) are included in the chain in the appropriate L2 block.
-   Every L2 block is identified by the "epoch" (the L1 block to which it corresponds, which typically has happened a few minutes before the L2 block) and its serial number within that epoch.
-   The first block of the epoch includes all the deposits that happened in the L1 block to which it corresponds.
-   If the sequencer attempts to ignore a legitimate L1 transaction it ends up with a state that is inconsistent with the verifiers, same as if the sequencer tried to fake the state by other means.
-   This provides OP Mainnet with L1 Ethereum level censorship resistance.
-   You can read more about this mechanism [in the protocol specifications](https://github.com/ethereum-optimism/optimism/blob/develop/specs/derivation.md#deriving-the-transaction-list).
+1.  Transactions submitted on L1 (called *deposits* whether they have assets attached or not) are included in the chain in the appropriate L2 block.
+    Every L2 block is identified by the "epoch" (the L1 block to which it corresponds, which typically has happened a few minutes before the L2 block) and its serial number within that epoch.
+    The first block of the epoch includes all the deposits that happened in the L1 block to which it corresponds.
+    If the sequencer attempts to ignore a legitimate L1 transaction it ends up with a state that is inconsistent with the verifiers, same as if the sequencer tried to fake the state by other means.
+    This provides OP Mainnet with L1 Ethereum level censorship resistance.
+    You can read more about this mechanism [in the protocol specifications](https://github.com/ethereum-optimism/optimism/blob/develop/specs/derivation.md#deriving-the-transaction-list).
 
-1. Transactions submitted directly to the sequencer. 
-   These transactions are a lot cheaper to submit (because you do not need the expense of a separate L1 transaction), but of course they cannot be made censorship resistant, because the sequencer is the only entity that knows about them.
+2.  Transactions submitted directly to the sequencer.
+    These transactions are a lot cheaper to submit (because you do not need the expense of a separate L1 transaction), but of course they cannot be made censorship resistant, because the sequencer is the only entity that knows about them.
 
 For the moment, [The Optimism Foundation](https://www.optimism.io/) runs the only block producer on OP Mainnet. Refer to [Protocol specs](overview) section for more information about how we plan to decentralize the Sequencer role in the future.
 
 ## Block execution
 
-
 The execution engine (implemented as the `op-geth` component) receive blocks using two mechanisms:
 
-1. The execution engine can update itself using peer to peer network with other execution engines.
-   This operates the same way that the L1 execution clients synchronize the state across the network.
-   You can read more about it [in the specs](https://github.com/ethereum-optimism/optimism/blob/develop/specs/exec-engine.md#happy-path-sync). 
+1.  The execution engine can update itself using peer to peer network with other execution engines.
+    This operates the same way that the L1 execution clients synchronize the state across the network.
+    You can read more about it [in the specs](https://github.com/ethereum-optimism/optimism/blob/develop/specs/exec-engine.md#happy-path-sync).
 
-1. The rollup node (implemented as the `op-node` component) derives the L2 blocks from L1.
-   This mechanism is slower, but censorship resistant.
-   You can read more about it [in the specs](https://github.com/ethereum-optimism/optimism/blob/develop/specs/exec-engine.md#worst-case-sync).
-
+2.  The rollup node (implemented as the `op-node` component) derives the L2 blocks from L1.
+    This mechanism is slower, but censorship resistant.
+    You can read more about it [in the specs](https://github.com/ethereum-optimism/optimism/blob/develop/specs/exec-engine.md#worst-case-sync).
 
 ## Bridging assets between layers
 
@@ -76,23 +74,21 @@ See the [developer documentation and examples](/dapp-developers/bridging/standar
 In Optimism terminology, transactions going from Ethereum (L1) to OP Mainnet (L2) are called *deposits*, even if they do not have any assets attached to them.
 
 You use [`L1CrossDomainMessenger`](/dapp-developers/bridging/cross-dom-comm) or [`L1StandardBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/L1/L1StandardBridge.sol).
-Deposit transactions become part of the canonical blockchain in the first L2 block of the "epoch" corresponding to the L1 block where the deposits were made. 
+Deposit transactions become part of the canonical blockchain in the first L2 block of the "epoch" corresponding to the L1 block where the deposits were made.
 This L2 block will usually be created a few minutes after the corresponding L1 block.
 You can read more about this [in the specs](https://github.com/ethereum-optimism/optimism/blob/develop/specs/deposits.md).
 
-
 ### Moving from OP Mainnet to Ethereum
-
 
 Withdrawals (the term is used for any OP Mainnet to Ethereum message, regardless of whether it has attached assets or not) have three stages:
 
-1. You initialize withdrawals with an L2 transaction.
+1.  You initialize withdrawals with an L2 transaction.
 
-1. Wait for the next output root to be submitted to L1 (you can see this on [the SDK](/tools/javascript/sdk)) and then submit the withdrawal proof using `proveWithdrawalTransaction`.
-   This new step enables offchain monitoring of the withdrawals, which makes it easier to identify incorrect withdrawals or output roots.
-   This protects OP Mainnet users against a whole class of potential bridge vulnerabilities.
+2.  Wait for the next output root to be submitted to L1 (you can see this on [the SDK](/tools/javascript/sdk)) and then submit the withdrawal proof using `proveWithdrawalTransaction`.
+    This new step enables offchain monitoring of the withdrawals, which makes it easier to identify incorrect withdrawals or output roots.
+    This protects OP Mainnet users against a whole class of potential bridge vulnerabilities.
 
-1. After the fault challenge period ends (a week on mainnet, less than that on the test network), finalize the withdrawal.
+3.  After the fault challenge period ends (a week on mainnet, less than that on the test network), finalize the withdrawal.
 
 [You can read the full withdrawal specifications here](https://github.com/ethereum-optimism/optimism/blob/develop/specs/withdrawals.md)
 

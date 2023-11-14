@@ -26,41 +26,40 @@ with
 The easiest way to run Blockscout is to use Docker.
 Download and install [Docker engine](https://docs.docker.com/engine/install/#server).
 
-
 ## Installation and configuration
 
-1. Clone the Blockscout repository.
+1.  Clone the Blockscout repository.
 
-   ```sh
-   cd ~
-   git clone https://github.com/blockscout/blockscout.git
-   cd blockscout/docker-compose
-   ```
+    ```sh
+    cd ~
+    git clone https://github.com/blockscout/blockscout.git
+    cd blockscout/docker-compose
+    ```
 
-1. Depending on the version of Docker you have, there may be an issue with the environment path.
-   Run this command to fix it:
+2.  Depending on the version of Docker you have, there may be an issue with the environment path.
+    Run this command to fix it:
 
-   ```sh
-   ln -s `pwd`/envs ..
-   ```
+    ```sh
+    ln -s `pwd`/envs ..
+    ```
 
-1. If `op-geth` in archive mode runs on a different computer or a port that isn't 8545, edit `docker-compose-no-build-geth.yml` to set `ETHEREUM_JSONRPC_HTTP_URL` to the correct URL.
+3.  If `op-geth` in archive mode runs on a different computer or a port that isn't 8545, edit `docker-compose-no-build-geth.yml` to set `ETHEREUM_JSONRPC_HTTP_URL` to the correct URL.
 
-1. Start Blockscout
+4.  Start Blockscout
 
-   ```sh
-   docker compose -f docker-compose-no-build-geth.yml up
-   ```
+    ```sh
+    docker compose -f docker-compose-no-build-geth.yml up
+    ```
 
 ## Usage
 
-After the docker containers start, browse to http:// < *computer running Blockscout* > :4000 to view the user interface. 
+After the docker containers start, browse to http:// \< *computer running Blockscout* > :4000 to view the user interface.
 
 You can also use the [API](https://docs.blockscout.com/for-users/api)
 
 ### GraphQL
 
-Blockscout's API includes [GraphQL](https://graphql.org/) support under `/graphiql`. 
+Blockscout's API includes [GraphQL](https://graphql.org/) support under `/graphiql`.
 For example, this query looks at addresses.
 
 ```
@@ -93,13 +92,12 @@ The fields above are fetched from the address table.
 We can also fetch the transactions that include the address (either as source or destination).
 The API does not let us fetch an unlimited number of transactions, so here we ask for the first 5.
 
-
 ```
       edges {
         node {
 ```
 
-Because this is a [graph](https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)), the entities that connect two types, for example addresses and transactions, are called `edges`.
+Because this is a [graph](https://en.wikipedia.org/wiki/Graph_\(discrete_mathematics\)), the entities that connect two types, for example addresses and transactions, are called `edges`.
 At the other end of each edge there is a transaction, which is a separate `node`.
 
 ```
@@ -110,7 +108,7 @@ At the other end of each edge there is a transaction, which is a separate `node`
         }
 ```
 
-These are the fields we read for each transaction. 
+These are the fields we read for each transaction.
 
 ```
       }
@@ -119,4 +117,4 @@ These are the fields we read for each transaction.
 }
 ```
 
-Finally, close all the brackets. 
+Finally, close all the brackets.
