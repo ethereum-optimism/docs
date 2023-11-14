@@ -1,0 +1,958 @@
+---
+title: Node Configuration
+lang: en-US
+description: Node configuration command line options.
+---
+
+# Node Configuration
+
+## op-node
+
+`op-node` implements most rollup-specific functionality as Consensus-Layer, similar to a L1 beacon-node. The following options are from [v1.3.1](https://github.com/ethereum-optimism/optimism/tree/op-node/v1.3.1).
+
+### Command-line options 
+
+```
+NAME:
+   op-node - Optimism Rollup Node
+
+USAGE:
+   op-node [global options] command [command options] [arguments...]
+
+VERSION:
+   v0.0.0-74ff044a-1699318761
+
+DESCRIPTION:
+   The Optimism Rollup Node derives L2 block inputs from L1 data and drives an external L2 Execution Engine to build a L2 chain.
+
+COMMANDS:
+   p2p      
+   genesis  
+   doc      
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   
+    --heartbeat.enabled                 (default: false)                   ($OP_NODE_HEARTBEAT_ENABLED)
+          Enables or disables heartbeating
+   
+    --heartbeat.moniker value                                              ($OP_NODE_HEARTBEAT_MONIKER)
+          Sets a moniker for this node
+   
+    --heartbeat.url value               (default: "https://heartbeat.optimism.io") ($OP_NODE_HEARTBEAT_URL)
+          Sets the URL to heartbeat to
+   
+    --l1 value                          (default: "http://127.0.0.1:8545") ($OP_NODE_L1_ETH_RPC)
+          Address of L1 User JSON-RPC endpoint to use (eth namespace required)
+   
+    --l1.epoch-poll-interval value      (default: 6m24s)                   ($OP_NODE_L1_EPOCH_POLL_INTERVAL)
+          Poll interval for retrieving new L1 epoch updates such as safe and finalized
+          block changes. Disabled if 0 or negative.
+   
+    --l1.http-poll-interval value       (default: 12s)                     ($OP_NODE_L1_HTTP_POLL_INTERVAL)
+          Polling interval for latest-block subscription when using an HTTP RPC provider.
+          Ignored for other types of RPC endpoints.
+   
+    --l1.rpc-max-batch-size value       (default: 20)                      ($OP_NODE_L1_RPC_MAX_BATCH_SIZE)
+          Maximum number of RPC requests to bundle, e.g. during L1 blocks receipt
+          fetching. The L1 RPC rate limit counts this as N items, but allows it to burst
+          at once.
+   
+    --l1.rpc-rate-limit value           (default: 0)                       ($OP_NODE_L1_RPC_RATE_LIMIT)
+          Optional self-imposed global rate-limit on L1 RPC requests, specified in
+          requests / second. Disabled if set to 0.
+   
+    --l1.rpckind value                  (default: standard)                ($OP_NODE_L1_RPC_KIND)
+          The kind of RPC provider, used to inform optimal transactions receipts fetching,
+          and thus reduce costs. Valid options: alchemy, quicknode, infura, parity,
+          nethermind, debug_geth, erigon, basic, any, standard
+   
+    --l1.runtime-config-reload-interval value (default: 10m0s)                   ($OP_NODE_L1_RUNTIME_CONFIG_RELOAD_INTERVAL)
+          Poll interval for reloading the runtime config, useful when config events are
+          not being picked up. Disabled if 0 or negative.
+   
+    --l1.trustrpc                       (default: false)                   ($OP_NODE_L1_TRUST_RPC)
+          Trust the L1 RPC, sync faster at risk of malicious/buggy RPC providing bad or
+          inconsistent L1 data
+   
+    --l2 value                                                             ($OP_NODE_L2_ENGINE_RPC)
+          Address of L2 Engine JSON-RPC endpoints to use (engine and eth namespace
+          required)
+   
+    --l2.backup-unsafe-sync-rpc value                                      ($OP_NODE_L2_BACKUP_UNSAFE_SYNC_RPC)
+          Set the backup L2 unsafe sync RPC endpoint.
+   
+    --l2.backup-unsafe-sync-rpc.trustrpc value                                    ($OP_NODE_L2_BACKUP_UNSAFE_SYNC_RPC_TRUST_RPC)
+          Like l1.trustrpc, configure if response data from the RPC needs to be verified,
+          e.g. blockhash computation.This does not include checks if the blockhash is part
+          of the canonical chain.
+   
+    --l2.engine-sync                    (default: false)                   ($OP_NODE_L2_ENGINE_SYNC_ENABLED)
+          Enables or disables execution engine P2P sync
+   
+    --l2.jwt-secret value                                                  ($OP_NODE_L2_ENGINE_AUTH)
+          Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will
+          be generated if left empty.
+   
+    --l2.skip-sync-start-check          (default: false)                   ($OP_NODE_L2_SKIP_SYNC_START_CHECK)
+          Skip sanity check of consistency of L1 origins of the unsafe L2 blocks when
+          determining the sync-starting point. This defers the L1-origin verification, and
+          is recommended to use in when utilizing l2.engine-sync
+   
+    --log.color                         (default: false)                   ($OP_NODE_LOG_COLOR)
+          Color the log output if in terminal mode
+   
+    --log.format value                  (default: text)                    ($OP_NODE_LOG_FORMAT)
+          Format the log output. Supported formats: 'text', 'terminal', 'logfmt', 'json',
+          'json-pretty',
+   
+    --log.level value                   (default: info)                    ($OP_NODE_LOG_LEVEL)
+          The lowest log level that will be output
+   
+    --metrics.addr value                (default: "0.0.0.0")               ($OP_NODE_METRICS_ADDR)
+          Metrics listening address
+   
+    --metrics.enabled                   (default: false)                   ($OP_NODE_METRICS_ENABLED)
+          Enable the metrics server
+   
+    --metrics.port value                (default: 7300)                    ($OP_NODE_METRICS_PORT)
+          Metrics listening port
+   
+    --network value                                                        ($OP_NODE_NETWORK)
+          Predefined network selection. Available networks: zora-sepolia, base-goerli,
+          op-labs-chaosnet-0-goerli-dev-0, pgn-mainnet, base-sepolia, pgn-sepolia,
+          op-sepolia, op-goerli, base-devnet-0-goerli-dev-0,
+          conduit-devnet-0-goerli-dev-0, op-labs-devnet-0-goerli-dev-0, base-mainnet,
+          op-mainnet, zora-mainnet
+   
+    --override.canyon value             (default: 0)                       ($OP_NODE_OVERRIDE_CANYON)
+          Manually specify the Canyon fork timestamp, overriding the bundled setting
+   
+    --p2p.advertise.ip value                                               ($OP_NODE_P2P_ADVERTISE_IP)
+          The IP address to advertise in Discv5, put into the ENR of the node. This may
+          also be a hostname / domain name to resolve to an IP.
+   
+    --p2p.advertise.tcp value           (default: 0)                       ($OP_NODE_P2P_ADVERTISE_TCP)
+          The TCP port to advertise in Discv5, put into the ENR of the node. Set to
+          p2p.listen.tcp value if 0.
+   
+    --p2p.advertise.udp value           (default: 0)                       ($OP_NODE_P2P_ADVERTISE_UDP)
+          The UDP port to advertise in Discv5 as fallback if not determined by Discv5, put
+          into the ENR of the node. Set to p2p.listen.udp value if 0.
+   
+    --p2p.ban.duration value            (default: 1h0m0s)                  ($OP_NODE_P2P_PEER_BANNING_DURATION)
+          The duration that peers are banned for.
+   
+    --p2p.ban.peers                     (default: true)                    ($OP_NODE_P2P_PEER_BANNING)
+          Enables peer banning.
+   
+    --p2p.ban.threshold value           (default: -100)                    ($OP_NODE_P2P_PEER_BANNING_THRESHOLD)
+          The minimum score below which peers are disconnected and banned.
+   
+    --p2p.bootnodes value                                                  ($OP_NODE_P2P_BOOTNODES)
+          Comma-separated base64-format ENR list. Bootnodes to start discovering other
+          node records from.
+   
+    --p2p.disable                       (default: false)                   ($OP_NODE_P2P_DISABLE)
+          Completely disable the P2P stack
+   
+    --p2p.discovery.path value          (default: "opnode_discovery_db")   ($OP_NODE_P2P_DISCOVERY_PATH)
+          Discovered ENRs are persisted in a database to recover from a restart without
+          having to bootstrap the discovery process again. Set to 'memory' to never
+          persist the peerstore.
+   
+    --p2p.listen.ip value               (default: "0.0.0.0")               ($OP_NODE_P2P_LISTEN_IP)
+          IP to bind LibP2P and Discv5 to
+   
+    --p2p.listen.tcp value              (default: 9222)                    ($OP_NODE_P2P_LISTEN_TCP_PORT)
+          TCP port to bind LibP2P to. Any available system port if set to 0.
+   
+    --p2p.listen.udp value              (default: 0)                       ($OP_NODE_P2P_LISTEN_UDP_PORT)
+          UDP port to bind Discv5 to. Same as TCP port if left 0.
+   
+    --p2p.nat                           (default: false)                   ($OP_NODE_P2P_NAT)
+          Enable NAT traversal with PMP/UPNP devices to learn external IP.
+   
+    --p2p.netrestrict value                                                ($OP_NODE_P2P_NETRESTRICT)
+          Comma-separated list of CIDR masks. P2P will only try to connect on these
+          networks
+   
+    --p2p.no-discovery                  (default: false)                   ($OP_NODE_P2P_NO_DISCOVERY)
+          Disable Discv5 (node discovery)
+   
+    --p2p.peers.grace value             (default: 30s)                     ($OP_NODE_P2P_PEERS_GRACE)
+          Grace period to keep a newly connected peer around, if it is not misbehaving.
+   
+    --p2p.peers.hi value                (default: 30)                      ($OP_NODE_P2P_PEERS_HI)
+          High-tide peer count. The node starts pruning peer connections slowly after
+          reaching this number.
+   
+    --p2p.peers.lo value                (default: 20)                      ($OP_NODE_P2P_PEERS_LO)
+          Low-tide peer count. The node actively searches for new peer connections if
+          below this amount.
+   
+    --p2p.peerstore.path value          (default: "opnode_peerstore_db")   ($OP_NODE_P2P_PEERSTORE_PATH)
+          Peerstore database location. Persisted peerstores help recover peers after
+          restarts. Set to 'memory' to never persist the peerstore. Peerstore records will
+          be pruned / expire as necessary. Warning: a copy of the priv network key of the
+          local peer will be persisted here.
+   
+    --p2p.priv.path value               (default: "opnode_p2p_priv.txt")   ($OP_NODE_P2P_PRIV_PATH)
+          Read the hex-encoded 32-byte private key for the peer ID from this txt file.
+          Created if not already exists.Important to persist to keep the same network
+          identity after restarting, maintaining the previous advertised identity.
+   
+    --p2p.scoring value                 (default: "light")                 ($OP_NODE_P2P_PEER_SCORING)
+          Sets the peer scoring strategy for the P2P stack. Can be one of: none or light.
+   
+    --p2p.sequencer.key value                                              ($OP_NODE_P2P_SEQUENCER_KEY)
+          Hex-encoded private key for signing off on p2p application messages as
+          sequencer.
+   
+    --p2p.static value                                                     ($OP_NODE_P2P_STATIC)
+          Comma-separated multiaddr-format peer list. Static connections to make and
+          maintain, these peers will be regarded as trusted.
+   
+    --p2p.sync.req-resp                 (default: true)                    ($OP_NODE_P2P_SYNC_REQ_RESP)
+          Enables P2P req-resp alternative sync method, on both server and client side.
+   
+    --pprof.addr value                  (default: "0.0.0.0")               ($OP_NODE_PPROF_ADDR)
+          pprof listening address
+   
+    --pprof.enabled                     (default: false)                   ($OP_NODE_PPROF_ENABLED)
+          Enable the pprof server
+   
+    --pprof.port value                  (default: 6060)                    ($OP_NODE_PPROF_PORT)
+          pprof listening port
+   
+    --rollup.config value                                                  ($OP_NODE_ROLLUP_CONFIG)
+          Rollup chain parameters
+   
+    --rollup.halt value                                                    ($OP_NODE_ROLLUP_HALT)
+          Opt-in option to halt on incompatible protocol version requirements of the given
+          level (major/minor/patch/none), as signaled onchain in L1
+   
+    --rollup.load-protocol-versions     (default: false)                   ($OP_NODE_ROLLUP_LOAD_PROTOCOL_VERSIONS)
+          Load protocol versions from the superchain L1 ProtocolVersions contract (if
+          available), and report in logs and metrics
+   
+    --rpc.addr value                    (default: "127.0.0.1")             ($OP_NODE_RPC_ADDR)
+          RPC listening address
+   
+    --rpc.admin-state value                                                ($OP_NODE_RPC_ADMIN_STATE)
+          File path used to persist state changes made via the admin API so they persist
+          across restarts. Disabled if not set.
+   
+    --rpc.enable-admin                  (default: false)                   ($OP_NODE_RPC_ENABLE_ADMIN)
+          Enable the admin API (experimental)
+   
+    --rpc.port value                    (default: 9545)                    ($OP_NODE_RPC_PORT)
+          RPC listening port
+   
+    --sequencer.enabled                 (default: false)                   ($OP_NODE_SEQUENCER_ENABLED)
+          Enable sequencing of new L2 blocks. A separate batch submitter has to be
+          deployed to publish the data for verifiers.
+   
+    --sequencer.l1-confs value          (default: 4)                       ($OP_NODE_SEQUENCER_L1_CONFS)
+          Number of L1 blocks to keep distance from the L1 head as a sequencer for picking
+          an L1 origin.
+   
+    --sequencer.max-safe-lag value      (default: 0)                       ($OP_NODE_SEQUENCER_MAX_SAFE_LAG)
+          Maximum number of L2 blocks for restricting the distance between L2 safe and
+          unsafe. Disabled if 0.
+   
+    --sequencer.stopped                 (default: false)                   ($OP_NODE_SEQUENCER_STOPPED)
+          Initialize the sequencer in a stopped state. The sequencer can be started using
+          the admin_startSequencer RPC
+   
+    --snapshotlog.file value                                               ($OP_NODE_SNAPSHOT_LOG)
+          Path to the snapshot log file
+   
+    --verifier.l1-confs value           (default: 0)                       ($OP_NODE_VERIFIER_L1_CONFS)
+          Number of L1 blocks to keep distance from the L1 head before deriving L2 data
+          from. Reorgs are supported, but may be slow to perform.
+
+   MISC
+
+   
+    --help, -h                          (default: false)                  
+          show help
+   
+    --version, -v                       (default: false)                  
+          print the version
+```
+
+### Recomendations
+
+## `op-geth`
+
+`op-geth` implements the Execution-Layer, with minimal changes for a secure Ethereum-equivalent application environment. The following are options from [v1.101304.1](https://github.com/ethereum-optimism/op-geth/tree/v1.101304.1)
+
+### Comand-line options
+
+Please note that the executable is still named `geth` to maintain a [minimal diff](https://op-geth.optimism.io/).
+
+```
+NAME:
+   geth - the go-ethereum command line interface
+
+USAGE:
+   geth [global options] command [command options] [arguments...]
+
+VERSION:
+   0.1.0-unstable-ed8e9f54
+
+COMMANDS:
+   account                Manage accounts
+   attach                 Start an interactive JavaScript environment (connect to node)
+   console                Start an interactive JavaScript environment
+   db                     Low level database operations
+   dump                   Dump a specific block from storage
+   dumpconfig             Export configuration values in a TOML format
+   dumpgenesis            Dumps genesis block JSON configuration to stdout
+   export                 Export blockchain into file
+   export-preimages       Export the preimage database into an RLP stream
+   import                 Import a blockchain file
+   import-preimages       Import the preimage database from an RLP stream
+   init                   Bootstrap and initialize a new genesis block
+   js                     (DEPRECATED) Execute the specified JavaScript files
+   license                Display license information
+   removedb               Remove blockchain and state databases
+   show-deprecated-flags  Show flags that have been deprecated
+   snapshot               A set of commands based on the snapshot
+   verkle                 A set of experimental verkle tree management commands
+   version                Print version numbers
+   version-check          Checks (online) for known Geth security vulnerabilities
+   wallet                 Manage Ethereum presale wallets
+   help, h                Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   ACCOUNT
+
+   
+    --allow-insecure-unlock             (default: false)                   ($GETH_ALLOW_INSECURE_UNLOCK)
+          Allow insecure account unlocking when account-related RPCs are exposed by http
+   
+    --keystore value                                                       ($GETH_KEYSTORE)
+          Directory for the keystore (default = inside the datadir)
+   
+    --lightkdf                          (default: false)                   ($GETH_LIGHTKDF)
+          Reduce key-derivation RAM & CPU usage at some expense of KDF strength
+   
+    --password value                                                       ($GETH_PASSWORD)
+          Password file to use for non-interactive password input
+   
+    --pcscdpath value                   (default: "/run/pcscd/pcscd.comm") ($GETH_PCSCDPATH)
+          Path to the smartcard daemon (pcscd) socket file
+   
+    --signer value                                                         ($GETH_SIGNER)
+          External signer (url or path to ipc file)
+   
+    --unlock value                                                         ($GETH_UNLOCK)
+          Comma separated list of accounts to unlock
+   
+    --usb                               (default: false)                   ($GETH_USB)
+          Enable monitoring and management of USB hardware wallets
+
+   ALIASED (deprecated)
+
+   
+    --cache.trie.journal value                                             ($GETH_CACHE_TRIE_JOURNAL)
+          Disk journal directory for trie cache to survive node restarts
+   
+    --cache.trie.rejournal value        (default: 0s)                      ($GETH_CACHE_TRIE_REJOURNAL)
+          Time interval to regenerate the trie cache journal
+   
+    --nousb                             (default: false)                   ($GETH_NOUSB)
+          Disables monitoring for and managing USB hardware wallets (deprecated)
+   
+    --txlookuplimit value               (default: 2350000)                 ($GETH_TXLOOKUPLIMIT)
+          Number of recent blocks to maintain transactions index for (default = about one
+          year, 0 = entire chain) (deprecated, use history.transactions instead)
+   
+    --v5disc                            (default: false)                   ($GETH_V5DISC)
+          Enables the experimental RLPx V5 (Topic Discovery) mechanism (deprecated, use
+          --discv5 instead)
+   
+    --whitelist value                                                      ($GETH_WHITELIST)
+          Comma separated block number-to-hash mappings to enforce (<number>=<hash>)
+          (deprecated in favor of --eth.requiredblocks)
+
+   API AND CONSOLE
+
+   
+    --authrpc.addr value                (default: "localhost")             ($GETH_AUTHRPC_ADDR)
+          Listening address for authenticated APIs
+   
+    --authrpc.jwtsecret value                                              ($GETH_AUTHRPC_JWTSECRET)
+          Path to a JWT secret to use for authenticated RPC endpoints
+   
+    --authrpc.port value                (default: 8551)                    ($GETH_AUTHRPC_PORT)
+          Listening port for authenticated APIs
+   
+    --authrpc.vhosts value              (default: "localhost")             ($GETH_AUTHRPC_VHOSTS)
+          Comma separated list of virtual hostnames from which to accept requests (server
+          enforced). Accepts '*' wildcard.
+   
+    --exec value                                                           ($GETH_EXEC)
+          Execute JavaScript statement
+   
+    --graphql                           (default: false)                   ($GETH_GRAPHQL)
+          Enable GraphQL on the HTTP-RPC server. Note that GraphQL can only be started if
+          an HTTP server is started as well.
+   
+    --graphql.corsdomain value                                             ($GETH_GRAPHQL_CORSDOMAIN)
+          Comma separated list of domains from which to accept cross origin requests
+          (browser enforced)
+   
+    --graphql.vhosts value              (default: "localhost")             ($GETH_GRAPHQL_VHOSTS)
+          Comma separated list of virtual hostnames from which to accept requests (server
+          enforced). Accepts '*' wildcard.
+   
+    --header value, -H value                                              
+          Pass custom headers to the RPC server when using --remotedb or the geth attach
+          console. This flag can be given multiple times.
+   
+    --http                              (default: false)                   ($GETH_HTTP)
+          Enable the HTTP-RPC server
+   
+    --http.addr value                   (default: "localhost")             ($GETH_HTTP_ADDR)
+          HTTP-RPC server listening interface
+   
+    --http.api value                                                       ($GETH_HTTP_API)
+          API's offered over the HTTP-RPC interface
+   
+    --http.corsdomain value                                                ($GETH_HTTP_CORSDOMAIN)
+          Comma separated list of domains from which to accept cross origin requests
+          (browser enforced)
+   
+    --http.port value                   (default: 8545)                    ($GETH_HTTP_PORT)
+          HTTP-RPC server listening port
+   
+    --http.rpcprefix value                                                 ($GETH_HTTP_RPCPREFIX)
+          HTTP path path prefix on which JSON-RPC is served. Use '/' to serve on all
+          paths.
+   
+    --http.vhosts value                 (default: "localhost")             ($GETH_HTTP_VHOSTS)
+          Comma separated list of virtual hostnames from which to accept requests (server
+          enforced). Accepts '*' wildcard.
+   
+    --ipcdisable                        (default: false)                   ($GETH_IPCDISABLE)
+          Disable the IPC-RPC server
+   
+    --ipcpath value                                                        ($GETH_IPCPATH)
+          Filename for IPC socket/pipe within the datadir (explicit paths escape it)
+   
+    --jspath value                      (default: .)                       ($GETH_JSPATH)
+          JavaScript root path for `loadScript`
+   
+    --preload value                                                        ($GETH_PRELOAD)
+          Comma separated list of JavaScript files to preload into the console
+   
+    --rpc.allow-unprotected-txs         (default: false)                   ($GETH_RPC_ALLOW_UNPROTECTED_TXS)
+          Allow for unprotected (non EIP155 signed) transactions to be submitted via RPC
+   
+    --rpc.batch-request-limit value     (default: 1000)                    ($GETH_RPC_BATCH_REQUEST_LIMIT)
+          Maximum number of requests in a batch
+   
+    --rpc.batch-response-max-size value (default: 25000000)                ($GETH_RPC_BATCH_RESPONSE_MAX_SIZE)
+          Maximum number of bytes returned from a batched call
+   
+    --rpc.enabledeprecatedpersonal      (default: false)                   ($GETH_RPC_ENABLEDEPRECATEDPERSONAL)
+          Enables the (deprecated) personal namespace
+   
+    --rpc.evmtimeout value              (default: 5s)                      ($GETH_RPC_EVMTIMEOUT)
+          Sets a timeout used for eth_call (0=infinite)
+   
+    --rpc.gascap value                  (default: 50000000)                ($GETH_RPC_GASCAP)
+          Sets a cap on gas that can be used in eth_call/estimateGas (0=infinite)
+   
+    --rpc.txfeecap value                (default: 1)                      
+          Sets a cap on transaction fee (in ether) that can be sent via the RPC APIs (0 =
+          no cap)
+   
+    --ws                                (default: false)                   ($GETH_WS)
+          Enable the WS-RPC server
+   
+    --ws.addr value                     (default: "localhost")             ($GETH_WS_ADDR)
+          WS-RPC server listening interface
+   
+    --ws.api value                                                         ($GETH_WS_API)
+          API's offered over the WS-RPC interface
+   
+    --ws.origins value                                                     ($GETH_WS_ORIGINS)
+          Origins from which to accept websockets requests
+   
+    --ws.port value                     (default: 8546)                    ($GETH_WS_PORT)
+          WS-RPC server listening port
+   
+    --ws.rpcprefix value                                                   ($GETH_WS_RPCPREFIX)
+          HTTP path prefix on which JSON-RPC is served. Use '/' to serve on all paths.
+
+   DEVELOPER CHAIN
+
+   
+    --dev                               (default: false)                   ($GETH_DEV)
+          Ephemeral proof-of-authority network with a pre-funded developer account, mining
+          enabled
+   
+    --dev.gaslimit value                (default: 11500000)                ($GETH_DEV_GASLIMIT)
+          Initial block gas limit
+   
+    --dev.period value                  (default: 0)                       ($GETH_DEV_PERIOD)
+          Block period to use in developer mode (0 = mine only if transaction pending)
+
+   ETHEREUM
+
+   
+    --bloomfilter.size value            (default: 2048)                    ($GETH_BLOOMFILTER_SIZE)
+          Megabytes of memory allocated to bloom-filter for pruning
+   
+    --config value                                                         ($GETH_CONFIG)
+          TOML configuration file
+   
+    --datadir value                     (default: /home/soyboy/.ethereum)  ($GETH_DATADIR)
+          Data directory for the databases and keystore
+   
+    --datadir.ancient value                                                ($GETH_DATADIR_ANCIENT)
+          Root directory for ancient data (default = inside chaindata)
+   
+    --datadir.minfreedisk value                                            ($GETH_DATADIR_MINFREEDISK)
+          Minimum free disk space in MB, once reached triggers auto shut down (default =
+          --cache.gc converted to MB, 0 = disabled)
+   
+    --db.engine value                                                      ($GETH_DB_ENGINE)
+          Backing database implementation to use ('pebble' or 'leveldb')
+   
+    --eth.requiredblocks value                                             ($GETH_ETH_REQUIREDBLOCKS)
+          Comma separated block number-to-hash mappings to require for peering
+          (<number>=<hash>)
+   
+    --exitwhensynced                    (default: false)                   ($GETH_EXITWHENSYNCED)
+          Exits after block synchronisation completes
+   
+    --goerli                            (default: false)                   ($GETH_GOERLI)
+          Görli network: pre-configured proof-of-authority test network
+   
+    --holesky                           (default: false)                   ($GETH_HOLESKY)
+          Holesky network: pre-configured proof-of-stake test network
+   
+    --mainnet                           (default: false)                   ($GETH_MAINNET)
+          Ethereum mainnet
+   
+    --networkid value                   (default: 1)                       ($GETH_NETWORKID)
+          Explicitly set network id (integer)(For testnets: use --goerli, --sepolia,
+          --holesky instead)
+   
+    --op-network value, --beta.op-network value                                    ($GETH_OP_NETWORK)
+          Select a pre-configured OP-Stack network (warning: op-mainnet and op-goerli
+          require special sync, datadir is recommended), options:
+          base-devnet-0-goerli-dev-0, base-goerli, base-mainnet, base-sepolia,
+          conduit-devnet-0-goerli-dev-0, op-goerli, op-labs-chaosnet-0-goerli-dev-0,
+          op-labs-devnet-0-goerli-dev-0, op-mainnet, op-sepolia, pgn-mainnet, pgn-sepolia,
+          zora-mainnet, zora-sepolia
+   
+    --override.cancun value             (default: 0)                       ($GETH_OVERRIDE_CANCUN)
+          Manually specify the Cancun fork timestamp, overriding the bundled setting
+   
+    --override.canyon value             (default: 0)                       ($GETH_OVERRIDE_CANYON)
+          Manually specify the Optimsim Canyon fork timestamp, overriding the bundled
+          setting
+   
+    --override.verkle value             (default: 0)                       ($GETH_OVERRIDE_VERKLE)
+          Manually specify the Verkle fork timestamp, overriding the bundled setting
+   
+    --sepolia                           (default: false)                   ($GETH_SEPOLIA)
+          Sepolia network: pre-configured proof-of-work test network
+   
+    --snapshot                          (default: true)                    ($GETH_SNAPSHOT)
+          Enables snapshot-database mode (default = enable)
+
+   GAS PRICE ORACLE
+
+   
+    --gpo.blocks value                  (default: 20)                      ($GETH_GPO_BLOCKS)
+          Number of recent blocks to check for gas prices
+   
+    --gpo.ignoreprice value             (default: 2)                      
+          Gas price below which gpo will ignore transactions
+   
+    --gpo.maxprice value                (default: 500000000000)           
+          Maximum transaction priority fee (or gasprice before London fork) to be
+          recommended by gpo
+   
+    --gpo.minsuggestedpriorityfee value (default: 1000000)                
+          Minimum transaction priority fee to suggest. Used on OP chains when blocks are
+          not full.
+   
+    --gpo.percentile value              (default: 60)                      ($GETH_GPO_PERCENTILE)
+          Suggested gas price is the given percentile of a set of recent transaction gas
+          prices
+
+   LIGHT CLIENT
+
+   
+    --light.egress value                (default: 0)                       ($GETH_LIGHT_EGRESS)
+          Outgoing bandwidth limit for serving light clients (kilobytes/sec, 0 =
+          unlimited)
+   
+    --light.ingress value               (default: 0)                       ($GETH_LIGHT_INGRESS)
+          Incoming bandwidth limit for serving light clients (kilobytes/sec, 0 =
+          unlimited)
+   
+    --light.maxpeers value              (default: 100)                     ($GETH_LIGHT_MAXPEERS)
+          Maximum number of light clients to serve, or light servers to attach to
+   
+    --light.nopruning                   (default: false)                   ($GETH_LIGHT_NOPRUNING)
+          Disable ancient light chain data pruning
+   
+    --light.nosyncserve                 (default: false)                   ($GETH_LIGHT_NOSYNCSERVE)
+          Enables serving light clients before syncing
+   
+    --light.serve value                 (default: 0)                       ($GETH_LIGHT_SERVE)
+          Maximum percentage of time allowed for serving LES requests (multi-threaded
+          processing allows values over 100)
+
+   LOGGING AND DEBUGGING
+
+   
+    --log.backtrace value                                                  ($GETH_LOG_BACKTRACE)
+          Request a stack trace at a specific logging statement (e.g. "block.go:271")
+   
+    --log.compress                      (default: false)                   ($GETH_LOG_COMPRESS)
+          Compress the log files
+   
+    --log.debug                         (default: false)                   ($GETH_LOG_DEBUG)
+          Prepends log messages with call-site location (file and line number)
+   
+    --log.file value                                                       ($GETH_LOG_FILE)
+          Write logs to a file
+   
+    --log.format value                                                     ($GETH_LOG_FORMAT)
+          Log format to use (json|logfmt|terminal)
+   
+    --log.maxage value                  (default: 30)                      ($GETH_LOG_MAXAGE)
+          Maximum number of days to retain a log file
+   
+    --log.maxbackups value              (default: 10)                      ($GETH_LOG_MAXBACKUPS)
+          Maximum number of log files to retain
+   
+    --log.maxsize value                 (default: 100)                     ($GETH_LOG_MAXSIZE)
+          Maximum size in MBs of a single log file
+   
+    --log.rotate                        (default: false)                   ($GETH_LOG_ROTATE)
+          Enables log file rotation
+   
+    --log.vmodule value                                                    ($GETH_LOG_VMODULE)
+          Per-module verbosity: comma-separated list of <pattern>=<level> (e.g.
+          eth/*=5,p2p=4)
+   
+    --nocompaction                      (default: false)                   ($GETH_NOCOMPACTION)
+          Disables db compaction after import
+   
+    --pprof                             (default: false)                   ($GETH_PPROF)
+          Enable the pprof HTTP server
+   
+    --pprof.addr value                  (default: "127.0.0.1")             ($GETH_PPROF_ADDR)
+          pprof HTTP server listening interface
+   
+    --pprof.blockprofilerate value      (default: 0)                       ($GETH_PPROF_BLOCKPROFILERATE)
+          Turn on block profiling with the given rate
+   
+    --pprof.cpuprofile value                                               ($GETH_PPROF_CPUPROFILE)
+          Write CPU profile to the given file
+   
+    --pprof.memprofilerate value        (default: 524288)                  ($GETH_PPROF_MEMPROFILERATE)
+          Turn on memory profiling with the given rate
+   
+    --pprof.port value                  (default: 6060)                    ($GETH_PPROF_PORT)
+          pprof HTTP server listening port
+   
+    --remotedb value                                                       ($GETH_REMOTEDB)
+          URL for remote database
+   
+    --trace value                                                          ($GETH_TRACE)
+          Write execution trace to the given file
+   
+    --verbosity value                   (default: 3)                       ($GETH_VERBOSITY)
+          Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail
+
+   METRICS AND STATS
+
+   
+    --ethstats value                                                       ($GETH_ETHSTATS)
+          Reporting URL of a ethstats service (nodename:secret@host:port)
+   
+    --metrics                           (default: false)                   ($GETH_METRICS)
+          Enable metrics collection and reporting
+   
+    --metrics.addr value                                                   ($GETH_METRICS_ADDR)
+          Enable stand-alone metrics HTTP server listening interface.
+   
+    --metrics.expensive                 (default: false)                   ($GETH_METRICS_EXPENSIVE)
+          Enable expensive metrics collection and reporting
+   
+    --metrics.influxdb                  (default: false)                   ($GETH_METRICS_INFLUXDB)
+          Enable metrics export/push to an external InfluxDB database
+   
+    --metrics.influxdb.bucket value     (default: "geth")                  ($GETH_METRICS_INFLUXDB_BUCKET)
+          InfluxDB bucket name to push reported metrics to (v2 only)
+   
+    --metrics.influxdb.database value   (default: "geth")                  ($GETH_METRICS_INFLUXDB_DATABASE)
+          InfluxDB database name to push reported metrics to
+   
+    --metrics.influxdb.endpoint value   (default: "http://localhost:8086") ($GETH_METRICS_INFLUXDB_ENDPOINT)
+          InfluxDB API endpoint to report metrics to
+   
+    --metrics.influxdb.organization value (default: "geth")                  ($GETH_METRICS_INFLUXDB_ORGANIZATION)
+          InfluxDB organization name (v2 only)
+   
+    --metrics.influxdb.password value   (default: "test")                  ($GETH_METRICS_INFLUXDB_PASSWORD)
+          Password to authorize access to the database
+   
+    --metrics.influxdb.tags value       (default: "host=localhost")        ($GETH_METRICS_INFLUXDB_TAGS)
+          Comma-separated InfluxDB tags (key/values) attached to all measurements
+   
+    --metrics.influxdb.token value      (default: "test")                  ($GETH_METRICS_INFLUXDB_TOKEN)
+          Token to authorize access to the database (v2 only)
+   
+    --metrics.influxdb.username value   (default: "test")                  ($GETH_METRICS_INFLUXDB_USERNAME)
+          Username to authorize access to the database
+   
+    --metrics.influxdbv2                (default: false)                   ($GETH_METRICS_INFLUXDBV2)
+          Enable metrics export/push to an external InfluxDB v2 database
+   
+    --metrics.port value                (default: 6060)                    ($GETH_METRICS_PORT)
+          Metrics HTTP server listening port.
+          Please note that --metrics.addr must be set
+          to start the server.
+
+   MINER
+
+   
+    --mine                              (default: false)                   ($GETH_MINE)
+          Enable mining
+   
+    --miner.etherbase value                                                ($GETH_MINER_ETHERBASE)
+          0x prefixed public address for block mining rewards
+   
+    --miner.extradata value                                                ($GETH_MINER_EXTRADATA)
+          Block extra data set by the miner (default = client version)
+   
+    --miner.gaslimit value              (default: 30000000)                ($GETH_MINER_GASLIMIT)
+          Target gas ceiling for mined blocks
+   
+    --miner.gasprice value              (default: 0)                       ($GETH_MINER_GASPRICE)
+          Minimum gas price for mining a transaction
+   
+    --miner.newpayload-timeout value    (default: 2s)                      ($GETH_MINER_NEWPAYLOAD_TIMEOUT)
+          Specify the maximum time allowance for creating a new payload
+   
+    --miner.recommit value              (default: 2s)                      ($GETH_MINER_RECOMMIT)
+          Time interval to recreate the block being mined
+
+   MISC
+
+   
+    --help, -h                          (default: false)                  
+          show help
+   
+    --synctarget value                                                     ($GETH_SYNCTARGET)
+          Hash of the block to full sync to (dev testing feature)
+   
+    --version, -v                       (default: false)                  
+          print the version
+
+   NETWORKING
+
+   
+    --bootnodes value                                                      ($GETH_BOOTNODES)
+          Comma separated enode URLs for P2P discovery bootstrap
+   
+    --discovery.dns value                                                  ($GETH_DISCOVERY_DNS)
+          Sets DNS discovery entry points (use "" to disable DNS)
+   
+    --discovery.port value              (default: 30303)                   ($GETH_DISCOVERY_PORT)
+          Use a custom UDP port for P2P discovery
+   
+    --discovery.v4, --discv4            (default: true)                    ($GETH_DISCOVERY_V4)
+          Enables the V4 discovery mechanism
+   
+    --discovery.v5, --discv5            (default: false)                   ($GETH_DISCOVERY_V5)
+          Enables the experimental RLPx V5 (Topic Discovery) mechanism
+   
+    --identity value                                                       ($GETH_IDENTITY)
+          Custom node name
+   
+    --maxpeers value                    (default: 50)                      ($GETH_MAXPEERS)
+          Maximum number of network peers (network disabled if set to 0)
+   
+    --maxpendpeers value                (default: 0)                       ($GETH_MAXPENDPEERS)
+          Maximum number of pending connection attempts (defaults used if set to 0)
+   
+    --nat value                         (default: "any")                   ($GETH_NAT)
+          NAT port mapping mechanism (any|none|upnp|pmp|pmp:<IP>|extip:<IP>)
+   
+    --netrestrict value                                                    ($GETH_NETRESTRICT)
+          Restricts network communication to the given IP networks (CIDR masks)
+   
+    --nodekey value                                                        ($GETH_NODEKEY)
+          P2P node key file
+   
+    --nodekeyhex value                                                     ($GETH_NODEKEYHEX)
+          P2P node key as hex (for testing)
+   
+    --nodiscover                        (default: false)                   ($GETH_NODISCOVER)
+          Disables the peer discovery mechanism (manual peer addition)
+   
+    --port value                        (default: 30303)                   ($GETH_PORT)
+          Network listening port
+
+   PERFORMANCE TUNING
+
+   
+    --cache value                       (default: 1024)                    ($GETH_CACHE)
+          Megabytes of memory allocated to internal caching (default = 4096 mainnet full
+          node, 128 light mode)
+   
+    --cache.blocklogs value             (default: 32)                      ($GETH_CACHE_BLOCKLOGS)
+          Size (in number of blocks) of the log cache for filtering
+   
+    --cache.database value              (default: 50)                      ($GETH_CACHE_DATABASE)
+          Percentage of cache memory allowance to use for database io
+   
+    --cache.gc value                    (default: 25)                      ($GETH_CACHE_GC)
+          Percentage of cache memory allowance to use for trie pruning (default = 25% full
+          mode, 0% archive mode)
+   
+    --cache.noprefetch                  (default: false)                   ($GETH_CACHE_NOPREFETCH)
+          Disable heuristic state prefetch during block import (less CPU and disk IO, more
+          time waiting for data)
+   
+    --cache.preimages                   (default: false)                   ($GETH_CACHE_PREIMAGES)
+          Enable recording the SHA3/keccak preimages of trie keys
+   
+    --cache.snapshot value              (default: 10)                      ($GETH_CACHE_SNAPSHOT)
+          Percentage of cache memory allowance to use for snapshot caching (default = 10%
+          full mode, 20% archive mode)
+   
+    --cache.trie value                  (default: 15)                      ($GETH_CACHE_TRIE)
+          Percentage of cache memory allowance to use for trie caching (default = 15% full
+          mode, 30% archive mode)
+   
+    --crypto.kzg value                  (default: "gokzg")                 ($GETH_CRYPTO_KZG)
+          KZG library implementation to use; gokzg (recommended) or ckzg
+   
+    --fdlimit value                     (default: 0)                       ($GETH_FDLIMIT)
+          Raise the open file descriptor resource limit (default = system fd limit)
+
+   ROLLUP NODE
+
+   
+    --rollup.computependingblock        (default: false)                   ($GETH_ROLLUP_COMPUTEPENDINGBLOCK)
+          By default the pending block equals the latest block to save resources and not
+          leak txs from the tx-pool, this flag enables computing of the pending block from
+          the tx-pool instead.
+   
+    --rollup.disabletxpoolgossip        (default: false)                   ($GETH_ROLLUP_DISABLETXPOOLGOSSIP)
+          Disable transaction pool gossip.
+   
+    --rollup.halt value                                                    ($GETH_ROLLUP_HALT)
+          Opt-in option to halt on incompatible protocol version requirements of the given
+          level (major/minor/patch/none), as signaled through the Engine API by the rollup
+          node
+   
+    --rollup.historicalrpc value                                           ($GETH_ROLLUP_HISTORICALRPC)
+          RPC endpoint for historical data.
+   
+    --rollup.historicalrpctimeout value (default: "5s")                    ($GETH_ROLLUP_HISTORICALRPCTIMEOUT)
+          Timeout for historical RPC requests.
+   
+    --rollup.sequencerhttp value                                           ($GETH_ROLLUP_SEQUENCERHTTP)
+          HTTP endpoint for the sequencer mempool
+   
+    --rollup.superchain-upgrades, --beta.rollup.superchain-upgrades (default: false)                   ($GETH_ROLLUP_SUPERCHAIN_UPGRADES)
+          Apply superchain-registry config changes to the local chain-configuration
+
+   STATE HISTORY MANAGEMENT
+
+   
+    --gcmode value                      (default: "full")                  ($GETH_GCMODE)
+          Blockchain garbage collection mode, only relevant in state.scheme=hash ("full",
+          "archive")
+   
+    --history.state value               (default: 90000)                   ($GETH_HISTORY_STATE)
+          Number of recent blocks to retain state history for (default = 90,000 blocks, 0
+          = entire chain)
+   
+    --history.transactions value        (default: 2350000)                 ($GETH_HISTORY_TRANSACTIONS)
+          Number of recent blocks to maintain transactions index for (default = about one
+          year, 0 = entire chain)
+   
+    --state.scheme value                                                   ($GETH_STATE_SCHEME)
+          Scheme to use for storing ethereum state ('hash' or 'path')
+   
+    --syncmode value                    (default: snap)                    ($GETH_SYNCMODE)
+          Blockchain sync mode ("snap", "full" or "light")
+
+   TRANSACTION POOL (BLOB)
+
+   
+    --blobpool.datacap value            (default: 10737418240)             ($GETH_BLOBPOOL_DATACAP)
+          Disk space to allocate for pending blob transactions (soft limit)
+   
+    --blobpool.datadir value            (default: "blobpool")              ($GETH_BLOBPOOL_DATADIR)
+          Data directory to store blob transactions in
+   
+    --blobpool.pricebump value          (default: 100)                     ($GETH_BLOBPOOL_PRICEBUMP)
+          Price bump percentage to replace an already existing blob transaction
+
+   TRANSACTION POOL (EVM)
+
+   
+    --txpool.accountqueue value         (default: 64)                      ($GETH_TXPOOL_ACCOUNTQUEUE)
+          Maximum number of non-executable transaction slots permitted per account
+   
+    --txpool.accountslots value         (default: 16)                      ($GETH_TXPOOL_ACCOUNTSLOTS)
+          Minimum number of executable transaction slots guaranteed per account
+   
+    --txpool.globalqueue value          (default: 1024)                    ($GETH_TXPOOL_GLOBALQUEUE)
+          Maximum number of non-executable transaction slots for all accounts
+   
+    --txpool.globalslots value          (default: 5120)                    ($GETH_TXPOOL_GLOBALSLOTS)
+          Maximum number of executable transaction slots for all accounts
+   
+    --txpool.journal value              (default: "transactions.rlp")      ($GETH_TXPOOL_JOURNAL)
+          Disk journal for local transaction to survive node restarts
+   
+    --txpool.journalremotes             (default: false)                   ($GETH_TXPOOL_JOURNALREMOTES)
+          Includes remote transactions in the journal
+   
+    --txpool.lifetime value             (default: 3h0m0s)                  ($GETH_TXPOOL_LIFETIME)
+          Maximum amount of time non-executable transaction are queued
+   
+    --txpool.locals value                                                  ($GETH_TXPOOL_LOCALS)
+          Comma separated accounts to treat as locals (no flush, priority inclusion)
+   
+    --txpool.nolocals                   (default: false)                   ($GETH_TXPOOL_NOLOCALS)
+          Disables price exemptions for locally submitted transactions
+   
+    --txpool.pricebump value            (default: 10)                      ($GETH_TXPOOL_PRICEBUMP)
+          Price bump percentage to replace an already existing transaction
+   
+    --txpool.pricelimit value           (default: 1)                       ($GETH_TXPOOL_PRICELIMIT)
+          Minimum gas price tip to enforce for acceptance into the pool
+   
+    --txpool.rejournal value            (default: 1h0m0s)                  ($GETH_TXPOOL_REJOURNAL)
+          Time interval to regenerate the local transaction journal
+
+   VIRTUAL MACHINE
+
+   
+    --vmdebug                           (default: false)                   ($GETH_VMDEBUG)
+          Record information useful for VM and contract debugging
+
+
+COPYRIGHT:
+   Copyright 2013-2023 The go-ethereum Authors
+```
