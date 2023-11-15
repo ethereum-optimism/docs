@@ -40,7 +40,7 @@ Nextra is MDX-based, meaning the content you write is [Markdown](https://daringf
 
 The Optimism Documentation team has created a complete style guide for you to make the best out of the various options available:
 
-[Optimism Documentation Style Guide](/pages/contribute/style-guide.mdx) 
+[Optimism Documentation Style Guide](/pages/contribute/style-guide) 
 
 ### Set Up the Project and Test Locally
 

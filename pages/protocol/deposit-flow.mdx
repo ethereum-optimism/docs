@@ -10,7 +10,7 @@ A deposit transaction may or may not have assets (ETH, tokens, etc.) attached to
 The process is somewhat similar to [the way most networking stacks work](https://en.wikipedia.org/wiki/Encapsulation_\(networking\)).
 Information is encapsulated in lower layer packets on the sending side, and then retrieved and used by those layers on the receiving side while going up the stack to the receiving application.
 
-![Deposit Flow Diagram](public/img/op-stack/protocol/deposit-flow.svg)
+![Deposit Flow Diagram](/img/op-stack/protocol/deposit-flow.svg)
 
 ## L1 Processing
 
@@ -21,8 +21,6 @@ Information is encapsulated in lower layer packets on the sending side, and then
     -   `_message`, the L2 transaction's calldata, formatted as per the [ABI](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html) of the target account.
     -   `_minGasLimit`, the minimum gas limit allowed for the transaction on L2. Note that this is a *minimum* and the actual amount provided on L2 may be higher (but never lower) than the specified gas limit.
         Note that the actual amount provided on L2 will be higher, because the portal contract on L2 needs to do some processing before submitting the call to `_target`.
-
-    You can see code that implements this call inside [FromL1\_ControlL2Greeter.sol](/dapp-developers/bridging/cross-dom-comm#step-4-deploy-and-call-the-froml1_controll2greeter-contracts).
 
 2.  The L1 cross domain messenger calls [its own `_send` function](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/L1CrossDomainMessenger.sol#L42-L52).
     It uses these parameters:
