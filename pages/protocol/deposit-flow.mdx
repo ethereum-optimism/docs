@@ -1,14 +1,19 @@
+---
+title: Deposit Flow
+lang: en-US
+description: Learn the deposit flow process for L2 deposit transactions, triggered by events on L1.
+---
+
 import Image from 'next/image'
+import { Callout } from 'nextra/components'
 
 # Deposit Flow
 
-## Introduction
-
-In Optimism terminology, "*deposit transaction*" refers to any L2 transaction that is triggered by a transaction or event on L1.
+This guide explains the deposit flow process for L2 deposit transactions, triggered by transactions or events on L1. In Optimism terminology, "*deposit transaction*" refers to any L2 transaction that is triggered by a transaction or event on L1.
 A deposit transaction may or may not have assets (ETH, tokens, etc.) attached to it.
 
-The process is somewhat similar to [the way most networking stacks work](https://en.wikipedia.org/wiki/Encapsulation_\(networking\)).
-Information is encapsulated in lower layer packets on the sending side, and then retrieved and used by those layers on the receiving side while going up the stack to the receiving application.
+The process is somewhat similar to the way [most networking stacks work](https://en.wikipedia.org/wiki/Encapsulation_\(networking\)).
+Information is encapsulated in lower layer packets on the sending side and then retrieved and used by those layers on the receiving side while going up the stack to the receiving application.
 
 ![Deposit Flow Diagram](/img/op-stack/protocol/deposit-flow.svg)
 
@@ -138,11 +143,12 @@ To see how replays work, you can use [this contract on OP Goerli](https://goerli
     cast send --private-key $PRIV_KEY $GREETER "startChanges()"
     ```
 
-    ::: warning Don't do this prematurely
+    <Callout type="warning"> 
+    Don't do this prematurely
 
     If you call `startChanges()` too early, it will happen from the message is relayed to L2, and then the initial deposit will be successful and there will be no need to replay it.
 
-    :::
+    </Callout>
 
 8.  Verify that `getStatus()` returns true, meaning changes are not allowed, and see the value of `greet()`.
     Foundry returns true as one.
@@ -157,7 +163,8 @@ To see how replays work, you can use [this contract on OP Goerli](https://goerli
     cast send --private-key $PRIV_KEY --gas-limit 10000000 $L2XDM_ADDRESS $REPLAY_DATA 
     ```
 
-    ::: details Why do we need to specify the gas limit?
+    <Callout type="info"> 
+    Why do we need to specify the gas limit?
 
     The gas estimation mechanism tries to find the minimum gas limit at which the transaction would be successful.
     However, `L2CrossDomainMessenger` does not revert when a replay fails due to low gas limit, it just emits a failure message.
@@ -171,7 +178,7 @@ To see how replays work, you can use [this contract on OP Goerli](https://goerli
 
     That address is a special case in which the contract does revert.
 
-    :::
+    </Callout>
 
 10. Verify the greeting has changed:
 

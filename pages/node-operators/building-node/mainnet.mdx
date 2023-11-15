@@ -4,7 +4,7 @@ lang: en-US
 description: Learn how to run a node from source using OP Mainnet.
 ---
 
-import { Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 
 # Running OP Mainnet from Source
 
@@ -16,14 +16,16 @@ import { Callout } from 'nextra/components'
 
 The next step is to download the data directory for `op-geth`.
 You will need 500+ GB for this part alone.
-
-1.  Download the data directory snapshot. This is a large file so expect it to take some time. [Bedrock Data Directory (303GB)](https://datadirs.optimism.io/mainnet-bedrock.tar.zst)
+<Steps>
+### Download the data directory snapshot
+This is a large file so expect it to take some time. [Bedrock Data Directory (303GB)](https://datadirs.optimism.io/mainnet-bedrock.tar.zst)
 
 <Callout>
   Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
 </Callout>
 
-2.  Check the validity of your download. This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
+### Check the validity of your download
+This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
 
     ```bash
     sha256sum mainnet-bedrock.tar.zst
@@ -39,7 +41,8 @@ You will need 500+ GB for this part alone.
     c17067b7bc39a6daa14f71d448c6fa0477834c3e68a25e96f26fe849c12a09bffe510e96f7eacdef19e93e3167d15250f807d252dd6f6f9053d0e4457c73d5fb mainnet-bedrock.tar.zst
     ```
 
-3.  Create the data directory in `op-geth` and fill it. This will take time.
+### Create the data directory in `op-geth` and fill it
+This will take time.
 
     Navigate into your `op-geth` directory and run these commands:
 
@@ -48,16 +51,19 @@ You will need 500+ GB for this part alone.
     cd datadir
     tar xvf <<PATH_TO_DATA_DIR>>
     ```
+</Steps>
 
-### (Optional - OP Mainnet Archive Node) Get the data directory for `l2geth`
-
-1.  Download the data directory snapshot. This is a large file so expect it to take some time. [Legacy Geth Data Directory (2.9TB)](https://datadirs.optimism.io/mainnet-legacy-archival.tar.zst)
+## (Optional - OP Mainnet Archive Node) Get the data directory for `l2geth`
+<Steps>
+### Download the data directory snapshot 
+This is a large file so expect it to take some time. [Legacy Geth Data Directory (2.9TB)](https://datadirs.optimism.io/mainnet-legacy-archival.tar.zst)
 
 <Callout>
   Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
 </Callout>
 
-2.  Check the validity of your download. This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
+### Check the validity of your download
+This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
 
     ```sh
     sha256sum mainnet-legacy-archival.tar.zst
@@ -73,7 +79,8 @@ You will need 500+ GB for this part alone.
     e348488c458baa755510f23bbc8601619bc66bea78a89354c949ba7be3c6b39ed7dd2c50516621e38df6120299407da0d24445b96bf94a50364ed07bb8234b26 mainnet-legacy-archival.tar.zst
     ```
 
-3.  Create the data directory in `l2geth` and fill it. This will take time.
+### Create the data directory in `l2geth` and fill it
+This will take time.
 
     Navigate into your `l2geth` directory and run these commands:
 
@@ -82,35 +89,36 @@ You will need 500+ GB for this part alone.
     cd datadir
     tar xvf <<PATH_TO_DATA_DIR>>
     ```
+</Steps>
 
 ## Create a shared secret between `op-geth` and `op-node`
-
-1.  Navigate into your `op-geth` directory and run these commands:
+<Steps>
+### Navigate into your `op-geth` directory and run these commands:
 
     ```sh
     openssl rand -hex 32 > jwt.txt
     cp jwt.txt ../optimism/op-node
     ```
 
-### Scripts to start the different components
+### Create a new directory `scripts`
+Place in the root of your working directory. These scripts will be used to start the different components.
+</Steps>
 
-In the root of your working directory create a new directory: `scripts`.
+## (Optional - Archive Node) `l2geth`
+<Steps>
+### Navigate into your `scripts` directory:
 
-### (Optional - Archive Node) `l2geth`
-
-1.  Navigate into your `scripts` directory:
-
-2.  Create a new file:
+### Create a new file:
     ```sh
     touch run-l2geth.sh
     ```
 
-3.  Make it executable:
+### Make it executable:
     ```sh
     chmod +x run-l2geth.sh
     ```
 
-4.  Insert this snippet of code into `run-l2geth.sh` and modify the path to the `l2geth` directory.
+### Insert this snippet of code into `run-l2geth.sh` and modify the path to the `l2geth` directory
 
     ```sh
     #!/usr/bin/bash
@@ -125,27 +133,28 @@ In the root of your working directory create a new directory: `scripts`.
       ./build/bin/geth --datadir ./datadir
     ```
 
-5.  Run the following command to start `l2geth`:
+### Run the following command to start `l2geth`:
 
     ```sh
     ./run-l2geth.sh
     ```
+</Steps>
 
-### `op-geth`
+## `op-geth`
+<Steps>
+### Navigate into your `scripts` directory:
 
-1.  Navigate into your `scripts` directory:
-
-2.  Create a new file:
+### Create a new file:
     ```sh
     touch run-op-geth.sh
     ```
 
-3.  Make it executable:
+### Make it executable:
     ```sh
     chmod +x run-op-geth.sh
     ```
 
-4.  Insert this snippet of code into `run-op-geth.sh` and modify the path to the `op-geth` directory.
+### Insert this snippet of code into `run-op-geth.sh` and modify the path to the `op-geth` directory.
 
     ```sh
     #! /usr/bin/bash
@@ -177,27 +186,28 @@ In the root of your working directory create a new directory: `scripts`.
   You will also need to add `--gcmode archive`.
 </Callout>
 
-1.  Run the following command to start `op-geth`:
+### Run the following command to start `op-geth`:
 
     ```bash
     ./run-op-geth.sh
     ```
+</Steps>
 
-### `op-node`
+## `op-node`
+<Steps>
+### Navigate to the `scripts` directory you created
 
-1.  Navigate to the `scripts` directory you created.
-
-2.  Create a new file:
+### Create a new file:
     ```sh
     touch run-op-node.sh
     ```
 
-3.  Make it executable:
+### Make it executable:
     ```sh
     chmod +x run-op-node.sh
     ```
 
-4.  Insert this snippet of code into `run-op-node.sh`:
+### Insert this snippet of code into `run-op-node.sh`:
 
     ```sh
     #!/usr/bin/bash
@@ -222,13 +232,14 @@ In the root of your working directory create a new directory: `scripts`.
 -   Change `<< L1 RPC URL >>` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
 -   Set `L1KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
 
-5.  Run the following command to start `op-node`:
+### Run the following command to start `op-node`:
 
     ```bash
     ./run-op-node.sh
     ```
+</Steps>
 
-### The initial synchronization
+## The initial synchronization
 
 The datadir provided by Optimism is not updated continuously, so before you can use the node you need a to synchronize it.
 
@@ -258,20 +269,20 @@ INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,
 INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
 ```
 
-#### How long will the synchronization take?
+## Estimate the synchronization time
 
 To estimate how long the synchronization will take, you need to first find out how many blocks you synchronize in a minute. You can use this [Foundry](https://book.getfoundry.sh/) script to get an estimated sync time.
-
-1.  Navigate to your `scripts` directory
-2.  Create a new file:
+<Steps>
+### Navigate to your `scripts` directory
+### Create a new file:
     ```sh
     touch run-estimate.sh
     ```
-3.  Make it executable:
+### Make it executable:
     ```sh
     chmod +x run-estimate.sh
     ```
-4.  Insert this snippet of code into `run-estimate.sh`:
+### Insert this snippet of code into `run-estimate.sh`:
 
 ```sh
 #!/usr/bin/bash
@@ -323,11 +334,11 @@ if [ $HOURS -gt 24 ] ; then
 fi
 ```
 
-5.  Run the following command to get an estimate:
+### Run the following command to get an estimate:
     ```sh
     ./run-estimate.sh
     ```
-
-### Operations
+</Steps>
+## Operations
 
 It is best to start `op-geth` first and shut it down last.

@@ -1,10 +1,19 @@
-# Rollup Operations
+---
+title: Rollup Operations
+lang: en-US
+description: Learn basics of rollup operations, such as how to start and stop your rollup and how to add nodes.
+---
 
-## Stopping your Rollup
+import { Callout, Steps } from 'nextra/components'
+
+# Rollup Operations
+This guide reviews the basics of rollup operations, such as how to start your rollup, stop your rollup, and add nodes.
+
+## Stopping Your Rollup
 
 An orderly shutdown is done in the reverse order to the order in which components were started:
-
-1.  To stop the batcher, use this command:
+<Steps>
+### To stop the batcher, use this command:
 
     ```sh
     curl -d '{"id":0,"jsonrpc":"2.0","method":"admin_stopBatcher","params":[]}' \
@@ -14,19 +23,20 @@ An orderly shutdown is done in the reverse order to the order in which component
     This way the batcher knows to save any data it has cached to L1.
     Wait until you see `Batch Submitter stopped` in batcher's output before you stop the process.
 
-2.  Stop `op-node`.
+### Stop `op-node`
     This component is stateless, so you can just stop the process.
 
-3.  Stop `op-geth`.
+### Stop `op-geth`
     Make sure you use **CTRL-C** to avoid database corruption.
+</Steps>
 
-## Starting your Rollup
+## Starting Your Rollup
 
 To restart the blockchain, use the same order of components you did when you initialized it.
-
-1.  `op-geth`
-2.  `op-node`
-3.  `op-batcher`
+<Steps>
+### Start `op-geth`
+### Start `op-node`
+### Start `op-batcher`
 
     If `op-batcher` is still running and you just stopped it using RPC, you can start it with this command:
 
@@ -34,8 +44,9 @@ To restart the blockchain, use the same order of components you did when you ini
     curl -d '{"id":0,"jsonrpc":"2.0","method":"admin_startBatcher","params":[]}' \
         -H "Content-Type: application/json" http://localhost:8548 | jq   
     ```
-
-::: tip Synchronization takes time
+</Steps>
+<Callout type="info">
+Synchronization takes time
 
 `op-batcher` might have warning messages similar to:
 
@@ -47,25 +58,25 @@ WARN [03-21|14:13:57.328] Error calculating L2 block range         err="failed t
 This means that `op-node` is not yet synchronized up to the present time.
 Just wait until it is.
 
-:::
+</Callout>
 
-## Adding nodes
+## Adding Nodes
 
 To add nodes to the rollup, you need to initialize `op-node` and `op-geth`, similar to what you did for the first node.
-You should *not* add an `op-bathcer`, there should be only one.
+You should *not* add an `op-bathcer` because there should be only one.
+<Steps>
+### Configure the OS and prerequisites as you did for the first node
 
-1.  Configure the OS and prerequisites as you did for the first node.
+### Build the Optimism monorepo and `op-geth` as you did for the first node
 
-2.  Build the Optimism monorepo and `op-geth` as you did for the first node.
-
-3.  Copy from the first node these files:
+### Copy from the first node these files:
 
     ```bash
     ~/op-geth/genesis.json
     ~/optimism/op-node/rollup.json
     ```
 
-4.  Create a new `jwt.txt` file as a shared secret:
+### Create a new `jwt.txt` file as a shared secret:
 
     ```bash
     cd ~/op-geth
@@ -73,16 +84,17 @@ You should *not* add an `op-bathcer`, there should be only one.
     cp jwt.txt ~/optimism/op-node
     ```
 
-5.  Initialize the new op-geth:
+### Initialize the new op-geth:
 
     ```bash
     cd ~/op-geth
     ./build/bin/geth init --datadir=./datadir ./genesis.json
     ```
 
-6.  To enable L2 nodes to synchronize directly, rather than wait until the transactions are written to L1, turn on peer to peer synchronization.
+### Turn on peer to peer synchronization to enable L2 nodes to synchronize directly
+If you do it this way, you won't have to wait until the transactions are written to L1.
     If you already have peer to peer synchronization, add the new node to the `--p2p.static` list so it can synchronize.
 
-7.  Start `op-geth` (using the same command line you used on the initial node)
+### Start `op-geth` (using the same command line you used on the initial node)
 
-8.  Start `op-node` (using the same command line you used on the initial node)
+### Start `op-node` (using the same command line you used on the initial node)

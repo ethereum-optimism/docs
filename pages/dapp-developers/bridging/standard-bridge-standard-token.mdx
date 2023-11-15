@@ -1,6 +1,12 @@
+---
+title: Bridging your Standard ERC-20 token to OP Mainnet using the Standard Bridge
+lang: en-US
+description: Learn how to bridge your standard ERC-20 token to OP Mainnet using the standard bridge.
+---
+
 import { Callout, Steps } from 'nextra/components'
 
-# Bridging your Standard ERC20 token to OP Mainnet using the Standard Bridge
+# Bridging your Standard ERC-20 token to OP Mainnet using the Standard Bridge
 
 For an L1/L2 token pair to work on the Standard Bridge the L2 token contract must implement
 [`IOptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol) interface.
@@ -21,7 +27,7 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
 ## Deploying the token
 
 <Steps>
-  ### Step 1: Make a Project Folder and Initialize It
+  ### Make a Project Folder and Initialize It
 
   ```sh
   mkdir project-folder-name
@@ -29,7 +35,7 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
   pnpm init
   ```
 
-  ### Step 2: Create Two Files for the Folder
+  ### Create Two Files for the Folder
 
   -   Create a `.env` file
 
@@ -74,13 +80,13 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
   }
   ```
 
-  ### Step 3: Install the dependencies
+  ### Install the dependencies
 
   ```sh
   pnpm add @eth-optimism/sdk dotenv @openzeppelin/contracts
   ```
 
-  ### Step 4: Edit `.env` file to set the deployment parameters
+  ### Edit `.env` file to set the deployment parameters
 
   -   `MNEMONIC`, the mnemonic for an account that has enough ETH for the deployment.
   -   `L1_ALCHEMY_KEY`, the key for the alchemy application for a Goerli endpoint.
@@ -88,13 +94,13 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
   -   `L1_TOKEN_ADDRESS`, the address of the L1 ERC20 which you want to bridge.
       The default value, [`0x32B3b2281717dA83463414af4E8CfB1970E56287`](https://goerli.etherscan.io/address/0x32B3b2281717dA83463414af4E8CfB1970E56287) is a test ERC-20 contract on Goerli that lets you call `faucet` to give yourself test tokens.
 
-  ### Step 5: Open the hardhat console
+  ### Open the hardhat console
 
   ```sh
   yarn hardhat console --network optimism-goerli
   ```
 
-  ### Step 6: Connect to `OptimismMintableERC20Factory`
+  ### Connect to `OptimismMintableERC20Factory`
 
   ```js
   fname = "node_modules/@eth-optimism/contracts-bedrock/forge-artifacts/OptimismMintableERC20Factory.sol/OptimismMintableERC20Factory.json"
@@ -106,7 +112,7 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
      await ethers.getSigner())
   ```
 
-  ### Step 7: Deploy the contract
+  ### Deploy the contract
 
   ```js
   deployTx = await optimismMintableERC20Factory.createOptimismMintableERC20(
@@ -121,7 +127,7 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
 ## Transferring tokens
 
 <Steps>
-  ### Step 1: Get the token addresses
+  ### Get the token addresses
 
   ```js
   l1Addr = process.env.L1_TOKEN_ADDRESS
@@ -129,7 +135,7 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
   l2Addr = event.args.localToken
   ```
 
-  ### Step 2: Get the data for `OptimismMintableERC20`
+  ### Get the data for `OptimismMintableERC20`
 
   ```js
   fname = "node_modules/@eth-optimism/contracts-bedrock/forge-artifacts/OptimismMintableERC20.sol/OptimismMintableERC20.json"
@@ -137,7 +143,7 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
   optimismMintableERC20Data = JSON.parse(ftext)
   ```
 
-  ### Step 3: Get the L2 contract
+  ### Get the L2 contract
 
   ```js
   l2Contract = new ethers.Contract(l2Addr, optimismMintableERC20Data.abi, await ethers.getSigner())   
@@ -147,7 +153,7 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
 ### Get setup for L1 (provider, wallet, tokens, etc)
 
 <Steps>
-  ### Step 1: Get the L1 wallet
+  ### Get the L1 wallet
 
   ```js
   l1Url = `https://eth-goerli.g.alchemy.com/v2/${process.env.L1_ALCHEMY_KEY}`
@@ -157,14 +163,14 @@ This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm]
   l1Wallet = new ethers.Wallet(privateKey, l1RpcProvider)
   ```
 
-  ### Step 2: Get the L1 contract
+  ### Get the L1 contract
 
   ```js
   l1Factory = await ethers.getContractFactory("OptimismUselessToken")
   l1Contract = new ethers.Contract(process.env.L1_TOKEN_ADDRESS, l1Factory.interface, l1Wallet)
   ```
 
-  ### Step 3: Get tokens on L1 (and verify the balance)
+  ### Get tokens on L1 (and verify the balance)
 
   ```js
   faucetTx = await l1Contract.faucet()
@@ -183,13 +189,13 @@ Get the L1 contract addresses, and [provide them to the SDK](/chain-operators/sd
 Once you do that, you can use the SDK normally.
 
 <Steps>
-  ### Step 1: Import the Optimism SDK
+  ### Import the Optimism SDK
 
   ```js
   optimismSDK = require("@eth-optimism/sdk")
   ```
 
-  ### Step 2: Create the cross domain messenger
+  ### Create the cross domain messenger
 
   ```js
   l1ChainId = (await l1RpcProvider.getNetwork()).chainId
@@ -207,7 +213,7 @@ Once you do that, you can use the SDK normally.
 #### Deposit (from Ethereum to OP Mainnet, or Goerli to OP Goerli)
 
 <Steps>
-  ### Step 1: Give the L1 bridge an allowance to use the user's token
+  ### Give the L1 bridge an allowance to use the user's token
 
   The L2 address is necessary to know which bridge is responsible and needs the allowance.
 
@@ -216,7 +222,7 @@ Once you do that, you can use the SDK normally.
   await depositTx1.wait()
   ```
 
-  ### Step 2: Check your balances on L1 and L2
+  ### Check your balances on L1 and L2
 
   Note that `l1Wallet` and `l2Wallet` have the same address, so it doesn't matter which one we use.
 
@@ -225,20 +231,20 @@ Once you do that, you can use the SDK normally.
   await l2Contract.balanceOf(l1Wallet.address)
   ```
 
-  ### Step 3: Complete the actual deposit
+  ### Complete the actual deposit
 
   ```js
   depositTx2 = await crossChainMessenger.depositERC20(l1Addr, l2Addr, 1e9)
   await depositTx2.wait()
   ```
 
-  ### Step 4: Wait for the deposit to be relayed
+  ### Wait for the deposit to be relayed
 
   ```js
   await crossChainMessenger.waitForMessageStatus(depositTx2.hash, optimismSDK.MessageStatus.RELAYED)
   ```
 
-  ### Step 5: Check your balances on L1 and L2
+  ### Check your balances on L1 and L2
 
   ```js
   await l1Contract.balanceOf(l1Wallet.address) 
@@ -249,14 +255,14 @@ Once you do that, you can use the SDK normally.
 #### Withdrawal (from OP Mainnet to Ethereum or OP Goerli to Goerli)
 
 <Steps>
-  ### Step 1: Initiate the withdrawal on L2
+  ### Initiate the withdrawal on L2
 
   ```js
   withdrawalTx1 = await crossChainMessenger.withdrawERC20(l1Addr, l2Addr, 1e9)
   await withdrawalTx1.wait()
   ```
 
-  ### Step 2: Prove the withdrawal after root state is published
+  ### Prove the withdrawal after root state is published
 
   -   Wait until the root state is published on L1.
   -   This is likely to take less than 240 seconds.
@@ -268,7 +274,7 @@ Once you do that, you can use the SDK normally.
       await withdrawalTx2.wait()
       ```
 
-  ### Step 3: Finish the withdrawal after the fault challenge period
+  ### Finish the withdrawal after the fault challenge period
 
   -   Wait the fault challenge period, which is a short period on Goerl or seven days on the production network
   -   Finish the withdrawal.
@@ -279,7 +285,7 @@ Once you do that, you can use the SDK normally.
       await withdrawalTx3.wait()   
       ```
 
-  ### Step 4: Check your balances on L1 and L2
+  ### Check your balances on L1 and L2
 
   The balance on L2 should be back to zero.
 
