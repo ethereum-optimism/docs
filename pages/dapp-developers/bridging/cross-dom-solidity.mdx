@@ -1,216 +1,244 @@
 ---
 title: Communicating between OP Mainnet and Ethereum Using Solidity
 lang: en-US
-description: This tutorial teaches you how to use Solidity for interlayer communication between contracts on Ethereum and OP Mainnet.
+description: Learn how to use Solidity for interlayer communication between contracts on Ethereum and OP Mainnet.
 ---
 
-import { Steps, Callout } from 'nextra/components'
+import { Steps, Callout, Tabs } from 'nextra/components'
 
 # Communicating between contracts on OP Mainnet and Ethereum Using Solidity
 
-This tutorial teaches you how to use Solidity for interlayer communication between contracts to send and receive messages. 
+This tutorial teaches you how to use Solidity for interlayer communication between contracts to send and receive messages.
 We'll go over the L1 contract that controls Greeter on L2, `FromL1_ControlL2Greeter.sol`, and the contract going the other direction is identical, `FromL2_ControlL1Greeter.sol`, except for addresses.
-For more details about this process, see the [Messaging Guide](messaging). 
+For more details about this process, see the [Messaging Guide](messaging).
 
 ## Before You Begin
-This tutorial assumes you already have [Node.js](https://nodejs.org/en/) and [yarn](https://classic.yarnpkg.com/) installed on your system. 
 
-## How Greeters Work on Solidity 
+To complete this tutorial, you'll need the contract details for `FromL1_ControlL2Greeter.sol` and `FromL2_ControlL1Greeter.sol`, which can be found below.
 
-```solidity
-//SPDX-License-Identifier: Unlicense
-// This contracts runs on L1, and controls a Greeter on L2.
-pragma solidity ^0.8.0;
+<Tabs items={['FromL1_ControlL2Greeter.sol', 'FromL2_ControlL1Greeter.sol']} defaultIndex="0">
+  <Tabs.Tab>
+    ```js filename="FromL1_ControlL2Greeter.sol"
+    //SPDX-License-Identifier: Unlicense
+    // This contracts runs on L1, and controls a Greeter on L2.
+    // The addresses are specific to Optimistic Goerli.
+    pragma solidity ^0.8.0;
 
-import { ICrossDomainMessenger } from 
-    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
-```
+    import { ICrossDomainMessenger } from 
+      "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+      
+    contract FromL1_ControlL2Greeter {
+      // Taken from https://community.optimism.io/docs/useful-tools/networks/#optimism-goerli
 
-This line imports the interface to send messages, [`ICrossDomainMessenger.sol`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts/contracts/libraries/bridge/ICrossDomainMessenger.sol).
+      address crossDomainMessengerAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
 
+      address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
 
-```solidity
-contract FromL1_ControlL2Greeter {
-    address crossDomainMessengerAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
-```
+      function setGreeting(string calldata _greeting) public {
+          bytes memory message;
+              
+          message = abi.encodeWithSignature("setGreeting(string,address)", 
+              _greeting, msg.sender);
 
-This is the address of [`Proxy_OVM_L1CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts/deployments/goerli/Proxy__OVM_L1CrossDomainMessenger.json#L2) on Goerli. 
-To call L2 from L1 on mainnet, you need to [use this address](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts/deployments/mainnet/Proxy__OVM_L1CrossDomainMessenger.json#L2).
-To call L1 from L2, on either mainnet or Goerli, use the address of `L2CrossDomainMessenger`, 0x4200000000000000000000000000000000000007.
+          ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+              greeterL2Addr,
+              message,
+              1000000   // within the free gas limit amount
+          );
+      }      // function setGreeting 
 
-The contract details can be found here:
-```js filename="FromL1_ControlL2Greeter.sol"
-//SPDX-License-Identifier: Unlicense
-// This contracts runs on L1, and controls a Greeter on L2.
-// The addresses are specific to Optimistic Goerli.
-pragma solidity ^0.8.0;
+    }          // contract FromL1_ControlL2Greeter
+    ```
+  </Tabs.Tab>
 
-import { ICrossDomainMessenger } from 
-    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
-    
-contract FromL1_ControlL2Greeter {
-    // Taken from https://community.optimism.io/docs/useful-tools/networks/#optimism-goerli
+  <Tabs.Tab>
+    ```js filename="FromL2_ControlL1Greeter.sol"
+    //SPDX-License-Identifier: Unlicense
+    // This contracts runs on L2, and controls a Greeter on L1.
+    // The greeter address is specific to Goerli.
+    pragma solidity ^0.8.0;
 
-    address crossDomainMessengerAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
+    import { ICrossDomainMessenger } from 
+        "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+        
+    contract FromL2_ControlL1Greeter {
+        // Taken from https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/goerli#layer-2-contracts
+        // Should be the same on all Optimism networks
+        address crossDomainMessengerAddr = 0x4200000000000000000000000000000000000007;
 
-    address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
+        address greeterL1Addr = 0x4d0fcc1Bedd933dA4121240C2955c3Ceb68AAE84;
 
-    function setGreeting(string calldata _greeting) public {
-        bytes memory message;
-            
-        message = abi.encodeWithSignature("setGreeting(string,address)", 
-            _greeting, msg.sender);
+        function setGreeting(string calldata _greeting) public {
+            bytes memory message;
+                
+            message = abi.encodeWithSignature("setGreeting(string,address)", 
+                _greeting, msg.sender);
 
-        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
-            greeterL2Addr,
-            message,
-            1000000   // within the free gas limit amount
-        );
-    }      // function setGreeting 
+            ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+                greeterL1Addr,
+                message,
+                1000000   // irrelevant here
+            );
+        }      // function setGreeting 
 
-}          // contract FromL1_ControlL2Greeter
-```
+    }          // contract FromL2_ControlL1Greeter
+    ```
+  </Tabs.Tab>
+</Tabs>
 
-```solidity
-    address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
-```    
+## Working with Greeters on Solidity
 
-This is the address on which `Greeter` is installed on Optimistic Goerli.
+<Steps>
+  ### Import Interface to Send Messages
 
+  ```solidity
+  //SPDX-License-Identifier: Unlicense
+  // This contracts runs on L1, and controls a Greeter on L2.
+  pragma solidity ^0.8.0;
 
-```solidity
-    function setGreeting(string calldata _greeting) public {
-```
+  import { ICrossDomainMessenger } from 
+      "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+  ```
 
-This function sets the new greeting. Note that the string is stored in `calldata`. 
-This saves us some gas, because when we are called from an externally owned account or a different contract there is no need to copy the input string to memory.
-The downside is that we cannot call `setGreeting` from within this contract, because contracts cannot modify their own calldata.
+  This line imports the interface to send messages, [`ICrossDomainMessenger.sol`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts/contracts/libraries/bridge/ICrossDomainMessenger.sol).
 
-```solidity
-        bytes memory message;
-```
+  ### Set Cross Domain Messenger Address
 
-This is where we'll store the message to send to L2.
+  ```solidity
+  contract FromL1_ControlL2Greeter {
+      address crossDomainMessengerAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
+  ```
 
-```solidity 
-        message = abi.encodeWithSignature("setGreeting(string,address)", 
-            _greeting, msg.sender);
-```
+  This is the address of [`Proxy_OVM_L1CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts/deployments/goerli/Proxy__OVM_L1CrossDomainMessenger.json#L2) on Goerli.
+  To call L2 from L1 on mainnet, you need to [use this address](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts/deployments/mainnet/Proxy__OVM_L1CrossDomainMessenger.json#L2).
+  To call L1 from L2, on either mainnet or Goerli, use the address of `L2CrossDomainMessenger`, 0x4200000000000000000000000000000000000007.
 
-Here we create the message, the calldata to be sent on L2.
-The Solidity [`abi.encodeWithSignature`](https://docs.soliditylang.org/en/v0.8.12/units-and-global-variables.html?highlight=abi.encodeWithSignature#abi-encoding-and-decoding-functions) function creates this calldata.
-As [specified in the ABI](https://docs.soliditylang.org/en/v0.8.12/abi-spec.html), it is four bytes of signature for the function being called followed by the parameters, in this case a string for the new greeting, and an address for the original sender.
+  ### Install `Greeter` on Optimism Goerli
 
-<Callout type="info">
-We don't need the original sender for the tutorial itself.
-We sent it here to make it easier to see how many people went through the tutorial.
-</Callout>
+  ```solidity
+      address greeterL2Addr = 0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9;
+  ```
 
-```solidity
-        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
-            greeterL2Addr,
-            message,
-            1000000   // within the free gas limit amount
-        );
-```
+  This is the address on which `Greeter` is installed on Optimistic Goerli.
 
-This call actually sends the message. It gets three parameters:
+  ### Set the New Greeting
 
-- The address on L2 of the contract being contacted
-- The calldata to send that contract
-- The gas limit.
-   As long as the gas limit is below the [`enqueueL2GasPrepaid`](https://etherscan.io/address/0x5E4e65926BA27467555EB562121fac00D24E9dD2#readContract) value, there is no extra cost.
-   Note that this parameter is also required on messages from L2 to L1, but there it does not affect anything.
+  ```solidity
+      function setGreeting(string calldata _greeting) public {
+  ```
 
-```solidity
-    }      // function setGreeting 
-}          // contract FromL1_ControlL2Greeter
-```
+  This function sets the new greeting. Note that the string is stored in `calldata`.
+  This saves us some gas, because when we are called from an externally owned account or a different contract there is no need to copy the input string to memory.
+  The downside is that we cannot call `setGreeting` from within this contract, because contracts cannot modify their own calldata.
 
+  ### Store the Message
 
-## Getting the source address
+  ```solidity
+          bytes memory message;
+  ```
+
+  This is where we'll store the message to send to L2.
+
+  ### Create the Message
+
+  ```solidity
+          message = abi.encodeWithSignature("setGreeting(string,address)", 
+              _greeting, msg.sender);
+  ```
+
+  Here we create the message, the calldata to be sent on L2.
+  The Solidity [`abi.encodeWithSignature`](https://docs.soliditylang.org/en/v0.8.12/units-and-global-variables.html?highlight=abi.encodeWithSignature#abi-encoding-and-decoding-functions) function creates this calldata.
+  As [specified in the ABI](https://docs.soliditylang.org/en/v0.8.12/abi-spec.html), it is four bytes of signature for the function being called followed by the parameters, in this case a string for the new greeting, and an address for the original sender.
+
+  <Callout type="info">
+    We don't need the original sender for the tutorial itself.
+    We sent it here to make it easier to see how many people went through the tutorial.
+  </Callout>
+
+  ### Send the Message
+
+  ```solidity
+          ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+              greeterL2Addr,
+              message,
+              1000000   // within the free gas limit amount
+          );
+  ```
+
+  This call actually sends the message. It gets three parameters:
+
+  *   The address on L2 of the contract being contacted.
+  *   The calldata to send that contract.
+  *   The gas limit.
+      As long as the gas limit is below the [`enqueueL2GasPrepaid`](https://etherscan.io/address/0x5E4e65926BA27467555EB562121fac00D24E9dD2#readContract) value, there is no extra cost.
+      Note that this parameter is also required on messages from L2 to L1, but there it does not affect anything.
+
+  ### Close the Functions
+
+  ```solidity
+      }      // function setGreeting 
+  }          // contract FromL1_ControlL2Greeter
+  ```
+</Steps>
+
+## Getting the Source Address
 
 If you look at Etherscan, for either the [L1 Greeter](https://goerli.etherscan.io/address/0x4d0fcc1Bedd933dA4121240C2955c3Ceb68AAE84#events) or the [L2 Greeter](https://goerli-explorer.optimism.io/address/0xE8B462EEF7Cbd4C855Ea4B65De65a5c5Bab650A9#events), you will see events with the source address on the other layer.
 The way this works is that the cross domain messenger that calls the target contract has a method, `xDomainMessageSender()`, that returns the source address. It is used by the `getXsource` function in `Greeter`.
 
-```solidity
-  // Get the cross domain origin, if any
-  function getXorig() private view returns (address) {
-    address cdmAddr = address(0);    
-```
+<Steps>
+  ### Get Cross Domain Origin
 
-It might look like it would be more efficient to calculate the address of the cross domain messenger just once, but that would involve changing the state, which is an expensive operation. 
-Unless we are going to run this code thousands of times, it is more efficient to just have a few `if` statements.
+  ```solidity
+    // Get the cross domain origin, if any
+    function getXorig() private view returns (address) {
+      address cdmAddr = address(0);    
+  ```
 
-```solidity
-    // Mainnet
-    if (block.chainid == 1)
-      cdmAddr = 0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1;
+  ### Calculate Address of Cross Domain Messenger
 
-    // Goerli
-    if (block.chainid == 5)
-      cdmAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
+  It might look like it would be more efficient to calculate the address of the cross domain messenger just once, but that would involve changing the state, which is an expensive operation.
+  Unless we are going to run this code thousands of times, it is more efficient to just have a few `if` statements.
 
-    // L2 (same address on every network)
-    if (block.chainid == 10 || block.chainid == 420)
-      cdmAddr = 0x4200000000000000000000000000000000000007;
-      
-```
+  ```solidity
+      // Mainnet
+      if (block.chainid == 1)
+        cdmAddr = 0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1;
 
-There are two possibilities for the cross domain messenger's address on L1, because the address is not determined by The Optimism Foundation.
-On L2, The Optimism Foundation has full control of the genesis block, so we can put all of our contracts on convenient addresses.
+      // Goerli
+      if (block.chainid == 5)
+        cdmAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
 
-```solidity
-    // If this isn't a cross domain message
-    if (msg.sender != cdmAddr)
-      return address(0);
-```
+      // L2 (same address on every network)
+      if (block.chainid == 10 || block.chainid == 420)
+        cdmAddr = 0x4200000000000000000000000000000000000007;
+        
+  ```
 
-If the sender isn't the cross domain messenger, then this isn't a cross domain message.
-Just return zero.
+  There are two possibilities for the cross domain messenger's address on L1 because the address is not determined by The Optimism Foundation.
+  On L2, The Optimism Foundation has full control of the genesis block, so we can put all of our contracts on convenient addresses.
 
+  ### Check Sender of Cross Domain Message
 
-```solidity
-    // If it is a cross domain message, find out where it is from
-    return ICrossDomainMessenger(cdmAddr).xDomainMessageSender();
-  }    // getXorig()
-```
+  ```solidity
+      // If this isn't a cross domain message
+      if (msg.sender != cdmAddr)
+        return address(0);
+  ```
 
-If it is the cross domain messenger, call `xDomainMessageSender()` to get the original source address.
+  If the sender isn't the cross domain messenger, then this isn't a cross domain message.
+  Just return zero.
 
-The contract details can be found here:
-```js filename="FromL2_ControlL1Greeter.sol"
-//SPDX-License-Identifier: Unlicense
-// This contracts runs on L2, and controls a Greeter on L1.
-// The greeter address is specific to Goerli.
-pragma solidity ^0.8.0;
+  ### Get Original Source Address for Cross Domain Messenger
 
-import { ICrossDomainMessenger } from 
-    "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
-    
-contract FromL2_ControlL1Greeter {
-    // Taken from https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/goerli#layer-2-contracts
-    // Should be the same on all Optimism networks
-    address crossDomainMessengerAddr = 0x4200000000000000000000000000000000000007;
+  ```solidity
+      // If it is a cross domain message, find out where it is from
+      return ICrossDomainMessenger(cdmAddr).xDomainMessageSender();
+    }    // getXorig()
+  ```
 
-    address greeterL1Addr = 0x4d0fcc1Bedd933dA4121240C2955c3Ceb68AAE84;
-
-    function setGreeting(string calldata _greeting) public {
-        bytes memory message;
-            
-        message = abi.encodeWithSignature("setGreeting(string,address)", 
-            _greeting, msg.sender);
-
-        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
-            greeterL1Addr,
-            message,
-            1000000   // irrelevant here
-        );
-    }      // function setGreeting 
-
-}          // contract FromL2_ControlL1Greeter
-```
-
+  If it is the cross domain messenger, call `xDomainMessageSender()` to get the original source address.
+</Steps>
 
 ## Conclusion
 

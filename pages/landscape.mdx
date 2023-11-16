@@ -1,28 +1,28 @@
+---
+title: The OP Stack Landscape
+lang: en-US
+description: Learn about the OP Stack landscape including the different layers and modules available for development.
+---
+
 import { Callout } from 'nextra/components'
 
 # The OP Stack Landscape
-
 
 **The OP Stack is a common development stack for building L2 blockchain ecosystems, built by the Optimism Collective to power Optimism.**
 
 The OP Stack is best thought of as a collection of software components maintained by the Optimism Collective that either help to define new layers of the stack or fit in as modules within the stack.
 
-Because the OP Stack is a work in progress, the landscape of the different layers and modules is still evolving. 
-This page sketches out the different conceptual layers of the stack as they exist today and introduces some of the modules that fit into those layers. 
+Because the OP Stack is a work in progress, the landscape of the different layers and modules is still evolving.
+This page sketches out the different conceptual layers of the stack as they exist today and introduces some of the modules that fit into those layers.
 This doesn't include all of the modules or layers that may exist in the future, but gives a good overview of the landscape of the OP Stack today.
 
-If you’re interested in learning more about the latest *production* release of the OP Stack, the components of the stack that are highly tested and ready for real-world action, check out the page about the [Bedrock Release](bedrock/overview).
-
 <Callout type="warning">
-
-Please note that not all of the modules described on this page already exist in a production state — these are explicitly marked as either “**in development**” or “**proposed**”
-
+  Please note that not all of the modules described on this page already exist in a production state — these are explicitly marked as either “**in development**” or “**proposed**”
 </Callout>
-
 
 ## Existing Landscape
 
-![The OP Stack layers](public/img/op-stack/protocol/landscape.png)
+![The OP Stack layers](/img/op-stack/protocol/landscape.png)
 
 ## Layers
 
@@ -34,8 +34,8 @@ The Data Availability Layer defines where the raw inputs to an OP Stack based ch
 
 Ethereum DA is currently the most widely used Data Availability module for the OP Stack. When using the Ethereum DA module, source data can be derived from any piece of information accessible on the Ethereum blockchain. This includes Ethereum calldata, events, and 4844 data blobs.
 
-- [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/derivation.md#batch-submission-wire-format)
-- [Source code](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/op-batcher)
+*   [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/derivation.md#batch-submission-wire-format)
+*   [Source code](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/op-batcher)
 
 ### Sequencing
 
@@ -57,8 +57,8 @@ The Derivation Layer defines how the raw data in the Data Availability Layer is 
 
 The Rollup module derives Engine API inputs from Ethereum block data, Sequencer transaction batches, Deposited transaction events, and more.
 
-- [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/derivation.md#l2-chain-derivation-pipeline)
-- [Source code](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/op-node)
+*   [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/derivation.md#l2-chain-derivation-pipeline)
+*   [Source code](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/op-node)
 
 #### Indexer (proposed)
 
@@ -72,8 +72,8 @@ The Execution Layer defines the structure of state within an OP Stack system and
 
 The EVM is an Execution Layer module that uses the same state representation and state transition function as the Ethereum Virtual Machine. The EVM module in the Ethereum Rollup configuration of the OP Stack is a [lightly modified](https://op-geth.optimism.io/) version of the EVM that adds support for L2 transactions initiated on Ethereum and adds an extra L1 Data Fee to each transaction to account for the cost of publishing transactions to Ethereum.
 
-- [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/exec-engine.md) (where it differs from [geth](https://geth.ethereum.org/))
-- [Source code](https://github.com/ethereum-optimism/op-geth/tree/09ade3df6d1d3a4f8f308553825348be132bc960)
+*   [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/exec-engine.md) (where it differs from [geth](https://geth.ethereum.org/))
+*   [Source code](https://github.com/ethereum-optimism/op-geth/tree/09ade3df6d1d3a4f8f308553825348be132bc960)
 
 ### Settlement Layer
 
@@ -83,17 +83,16 @@ The term “Settlement Layer” has its origins in the fact that Settlement Laye
 
 Once a transaction is published and finalized on the corresponding Data Availability layer, the transaction is also finalized on the OP Stack chain. Short of breaking the underlying Data Availability layer, it can no longer be modified or removed. It may not be accepted by the Settlement Layer yet because the Settlement Layer needs to be able to verify transaction *results*, but the transaction itself is already immutable.
 
-
 #### Attestation-based Fault Proof
 
 An Attestation-based Fault Proof mechanism uses an optimistic protocol to establish a view of an OP Stack chain. In optimistic settlement mechanisms generally, **Proposer** entities can propose what they believe to be the current valid state of the OP Stack chain. If these proposals are not invalidated within a certain period of time (the “challenge period”), then the proposals are assumed by the mechanism to be correct. In the Attestation Proof mechanism in particular, a proposal can be invalidated if some threshold of pre-defined parties provide attestations to a valid state that is different than the state in the proposal. This places a trust assumption on the honesty of at least a threshold number of the pre-defined participants.
 
-- [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/withdrawals.md) (called [withdrawal transactions](/dapp-developers/bridging/messaging))
-- [Source code](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock/contracts)
+*   [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/withdrawals.md) (called [withdrawal transactions](/dapp-developers/bridging/messaging))
+*   [Source code](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock/contracts)
 
 #### Fault Proof Optimistic Settlement (proposed)
 
-A Fault Proof Optimistic Settlement mechanism is mostly identical to the Attestation-based Fault Proof mechanism used today but it replaces the MultiSig challenger with a permissionless fault proving process. A correctly constructed fault proof should be able to invalidate any incorrect proposals during the allocated challenge period. This places a trust assumption on the correctness of the fault proof construction. At this time, work on the development of a Fault Proof  mechanism is well underway. 
+A Fault Proof Optimistic Settlement mechanism is mostly identical to the Attestation-based Fault Proof mechanism used today but it replaces the MultiSig challenger with a permissionless fault proving process. A correctly constructed fault proof should be able to invalidate any incorrect proposals during the allocated challenge period. This places a trust assumption on the correctness of the fault proof construction. At this time, work on the development of a Fault Proof  mechanism is well underway.
 
 #### Validity Proof Settlement (proposed)
 
