@@ -56,9 +56,9 @@ fi
 <Callout type="warning">
   CLI Flag Requirements
 
-  -   `op-node` requires: `--network=op-sepolia`
-  -   do not set: `--rollup.historicalrpc` or `rollup.historicalrpctimeout`
-  -   `op-geth` requires: `--op-network=op-sepolia`
+  *   `op-node` requires: `--network=op-sepolia`
+  *   do not set: `--rollup.historicalrpc` or `rollup.historicalrpctimeout`
+  *   `op-geth` requires: `--op-network=op-sepolia`
 </Callout>
 
 #### Initialization via Data Directory
@@ -74,9 +74,9 @@ tar -xvf <path to data directory>
 
 Once `op-geth` is initialized, it can be configured via CLI flags. `op-geth` accepts all the [standard `go-ethereum` flags](https://geth.ethereum.org/docs/interface/command-line-options) as well as a few extra flags that are specific to Optimism. These flags are:
 
--   `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth. This flag is only necessary for upgraded networks.
--   `--rollup.sequencerhttp`: HTTP endpoint of the sequencer. `op-geth` will route `eth_sendRawTransaction` calls to this URL. Bedrock does not currently have a public mempool, so this is required if you want your node to support transaction submission. Consult the documentation for the network you are participating in to get the correct URL.
--   `--rollup.disabletxpoolgossip`: Disables transaction pool gossiping. While not required, it's useful to set this to `true` since transaction pool gossip is currently unsupported.
+*   `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth. This flag is only necessary for upgraded networks.
+*   `--rollup.sequencerhttp`: HTTP endpoint of the sequencer. `op-geth` will route `eth_sendRawTransaction` calls to this URL. Bedrock does not currently have a public mempool, so this is required if you want your node to support transaction submission. Consult the documentation for the network you are participating in to get the correct URL.
+*   `--rollup.disabletxpoolgossip`: Disables transaction pool gossiping. While not required, it's useful to set this to `true` since transaction pool gossip is currently unsupported.
 
 To communicate with `op-node` and enable the Engine API, you'll also need to generate a JWT secret file and enable Geth's authenticated RPC endpoint.
 
@@ -88,22 +88,22 @@ openssl rand -hex 32 > jwt.txt
 
 Then, specify the following flags:
 
--   `--authrpc.addr`: Sets the address `op-geth`'s authenticated RPC should listen on.
--   `--authrpc.port`: Sets the port `op-geth`'s authenticated RPC should listen on. The default value is `8551`.
--   `--authrpc.jwtsecret`: Sets the path to a JWT secret file you generated above.
--   `--syncmode=full`: This prevents Geth from attempting to snap sync. Snap sync is currently unsupported, but will be enabled shortly after the mainnet upgrade.
--   `--maxpeers=0`: This prevents Geth from peering with other Geth nodes. Execution-layer peering is currently unsupported, but will be added as part of enabling snap sync.
--   `--nodiscover`: This disables Geth's peer discovery mechanism. Execution-layer discovery is currently unsupported, but will be added as part of enabling snap sync.
+*   `--authrpc.addr`: Sets the address `op-geth`'s authenticated RPC should listen on.
+*   `--authrpc.port`: Sets the port `op-geth`'s authenticated RPC should listen on. The default value is `8551`.
+*   `--authrpc.jwtsecret`: Sets the path to a JWT secret file you generated above.
+*   `--syncmode=full`: This prevents Geth from attempting to snap sync. Snap sync is currently unsupported, but will be enabled shortly after the mainnet upgrade.
+*   `--maxpeers=0`: This prevents Geth from peering with other Geth nodes. Execution-layer peering is currently unsupported, but will be added as part of enabling snap sync.
+*   `--nodiscover`: This disables Geth's peer discovery mechanism. Execution-layer discovery is currently unsupported, but will be added as part of enabling snap sync.
 
 #### Optional op-geth Configuration
 
 You may also want to specify the following flags based on your configuration:
 
--   `--authrpc.vhosts`: Whitelists which hosts (as defined in the `Host` header) are allowed to access the authenticated RPC endpoint. This is useful if you're running `op-geth` on containerized infrastructure. The default value is `localhost`.
--   `--http.vhosts`: Whitelists which hosts (as defined in the `Host` header) are allowed to access the unauthenticated RPC endpoint. This is useful if you're running `op-geth` on containerized infrastructure. The default value is `localhost`.
--   `--http`, `--http.addr`, and `--http.port`: Enables the unauthenticated RPC endpoint, configures its address, and configures its port. You'll almost certainly want to specify these, since they will enable Geth's JSON-RPC endpoint.
--   `--ws`, `--ws.addr`, and `--ws.port`: Enables the WebSocket API.
--   `--verbosity`: Configures Geth's log level. This is a number between 0 and 5, with 5 being the most verbose. Defaults to 3.
+*   `--authrpc.vhosts`: Whitelists which hosts (as defined in the `Host` header) are allowed to access the authenticated RPC endpoint. This is useful if you're running `op-geth` on containerized infrastructure. The default value is `localhost`.
+*   `--http.vhosts`: Whitelists which hosts (as defined in the `Host` header) are allowed to access the unauthenticated RPC endpoint. This is useful if you're running `op-geth` on containerized infrastructure. The default value is `localhost`.
+*   `--http`, `--http.addr`, and `--http.port`: Enables the unauthenticated RPC endpoint, configures its address, and configures its port. You'll almost certainly want to specify these, since they will enable Geth's JSON-RPC endpoint.
+*   `--ws`, `--ws.addr`, and `--ws.port`: Enables the WebSocket API.
+*   `--verbosity`: Configures Geth's log level. This is a number between 0 and 5, with 5 being the most verbose. Defaults to 3.
 
 #### Working Base Configuration
 
@@ -167,7 +167,7 @@ The default port for the peer-to-peer network is `9003`. You will need to open t
 If you are running a node for an upgraded network like OP Mainnet or OP Goerli (but not OP Sepolia), you will also need to run Legacy Geth in order to serve historical execution traces. Fundamentally, Legacy Geth is our old `l2geth` binary running against a preconfigured data directory. To configure Legacy Geth, follow the instructions above for using a preconfigured data directory, then execute the following command:
 
 <Callout type="danger">
-It is imperative that you specify the `USING_OVM=true` environment variable in the command below. Failing to specify this will cause `l2geth` to return invalid execution traces, or panic at startup.
+  It is imperative that you specify the `USING_OVM=true` environment variable in the command below. Failing to specify this will cause `l2geth` to return invalid execution traces, or panic at startup.
 </Callout>
 
 ```bash
@@ -194,12 +194,12 @@ Only requests for historical execution will be routed to Legacy Geth.
 Everything else will be served by `op-geth` directly.
 The term *historical execution* refers to RPC methods that need to execute transactions prior to bedrock (not just read data from the database):
 
--   `eth_call`
--   `eth_estimateGas`
--   `debug_traceBlockByNumber`
--   `debug_traceBlockByHash`
--   `debug_traceCall`
--   `debug_traceTransaction`
+*   `eth_call`
+*   `eth_estimateGas`
+*   `debug_traceBlockByNumber`
+*   `debug_traceBlockByHash`
+*   `debug_traceCall`
+*   `debug_traceTransaction`
 
 If you do not need these RPC methods for historical data, then you do not need to run Legacy Geth at all.
 
@@ -215,7 +215,7 @@ The command line help listing is reproduced below for your convenience.
 
 #### GLOBAL OPTIONS
 
-###### heartbeat.enabled 
+###### heartbeat.enabled
 
 Enables or disables heartbeating. The default value is `false`.
 
@@ -225,7 +225,7 @@ Enables or disables heartbeating. The default value is `false`.
   <Tabs.Tab>`OP_NODE_HEARTBEAT_ENABLED=false`</Tabs.Tab>
 </Tabs>
 
-###### heartbeat.moniker 
+###### heartbeat.moniker
 
 Sets a moniker for this node.
 
@@ -235,8 +235,7 @@ Sets a moniker for this node.
   <Tabs.Tab>`OP_NODE_HEARTBEAT_MONIKER=soyboy`</Tabs.Tab>
 </Tabs>
 
-
-###### heartbeat.url 
+###### heartbeat.url
 
 Sets the URL to heartbeat to. The default value is `"https://heartbeat.optimism.io"`.
 
@@ -246,7 +245,7 @@ Sets the URL to heartbeat to. The default value is `"https://heartbeat.optimism.
   <Tabs.Tab>`OP_NODE_HEARTBEAT_URL="https://heartbeat.optimism.io"`</Tabs.Tab>
 </Tabs>
 
-###### l1 
+###### l1
 
 Address of L1 User JSON-RPC endpoint to use (eth namespace required). The default value is `"http://127.0.0.1:8545"`.
 
@@ -256,7 +255,7 @@ Address of L1 User JSON-RPC endpoint to use (eth namespace required). The defaul
   <Tabs.Tab>`OP_NODE_L1_ETH_RPC="http://127.0.0.1:8545"`</Tabs.Tab>
 </Tabs>
 
-###### l1.epoch-poll-interval 
+###### l1.epoch-poll-interval
 
 Poll interval for retrieving new L1 epoch updates such as safe and finalized block changes. Disabled if 0 or negative. The default value is `6m24s`.
 
@@ -266,7 +265,7 @@ Poll interval for retrieving new L1 epoch updates such as safe and finalized blo
   <Tabs.Tab>`OP_NODE_L1_EPOCH_POLL_INTERVAL=6m24s`</Tabs.Tab>
 </Tabs>
 
-###### l1.http-poll-interval 
+###### l1.http-poll-interval
 
 Polling interval for latest-block subscription when using an HTTP RPC provider. Ignored for other types of RPC endpoints. The default value is `12s`.
 
@@ -276,7 +275,7 @@ Polling interval for latest-block subscription when using an HTTP RPC provider. 
   <Tabs.Tab>`OP_NODE_L1_HTTP_POLL_INTERVAL=12s`</Tabs.Tab>
 </Tabs>
 
-###### l1.rpc-max-batch-size 
+###### l1.rpc-max-batch-size
 
 Maximum number of RPC requests to bundle, e.g., during L1 blocks receipt fetching. The L1 RPC rate limit counts this as N items, but allows it to burst at once. The default value is `20`.
 
@@ -286,7 +285,7 @@ Maximum number of RPC requests to bundle, e.g., during L1 blocks receipt fetchin
   <Tabs.Tab>`OP_NODE_L1_RPC_MAX_BATCH_SIZE=20`</Tabs.Tab>
 </Tabs>
 
-###### l1.rpc-rate-limit 
+###### l1.rpc-rate-limit
 
 Optional self-imposed global rate-limit on L1 RPC requests, specified in requests / second. Disabled if set to 0. The default value is `0`.
 
@@ -296,9 +295,9 @@ Optional self-imposed global rate-limit on L1 RPC requests, specified in request
   <Tabs.Tab>`OP_NODE_L1_RPC_RATE_LIMIT=0`</Tabs.Tab>
 </Tabs>
 
-###### l1.rpckind 
+###### l1.rpckind
 
-The kind of RPC provider, used to inform optimal transactions receipts fetching, and thus reduce costs. Valid options: alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any, standard. The default value is `standard`.
+The kind of RPC provider, used to inform optimal transactions receipts fetching, and thus reduce costs. Valid options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any, standard. The default value is `standard`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--l1.rpckind=<value>`</Tabs.Tab>
@@ -306,7 +305,7 @@ The kind of RPC provider, used to inform optimal transactions receipts fetching,
   <Tabs.Tab>`OP_NODE_L1_RPC_KIND=standard`</Tabs.Tab>
 </Tabs>
 
-###### l1.runtime-config-reload-interval 
+###### l1.runtime-config-reload-interval
 
 Poll interval for reloading the runtime config, useful when config events are not being picked up. Disabled if 0 or negative. The default value is `10m0s`.
 
@@ -316,7 +315,7 @@ Poll interval for reloading the runtime config, useful when config events are no
   <Tabs.Tab>`OP_NODE_L1_RUNTIME_CONFIG_RELOAD_INTERVAL=10m0s`</Tabs.Tab>
 </Tabs>
 
-###### l1.trustrpc 
+###### l1.trustrpc
 
 Trust the L1 RPC, sync faster at risk of malicious/buggy RPC providing bad or inconsistent L1 data. The default value is `false`.
 
@@ -326,7 +325,7 @@ Trust the L1 RPC, sync faster at risk of malicious/buggy RPC providing bad or in
   <Tabs.Tab>`OP_NODE_L1_TRUST_RPC=false`</Tabs.Tab>
 </Tabs>
 
-###### l2 
+###### l2
 
 Address of L2 Engine JSON-RPC endpoints to use (engine and eth namespace required).
 
@@ -336,7 +335,7 @@ Address of L2 Engine JSON-RPC endpoints to use (engine and eth namespace require
   <Tabs.Tab>`OP_NODE_L2_ENGINE_RPC=http://127.0.0.1:8751`</Tabs.Tab>
 </Tabs>
 
-###### l2.backup-unsafe-sync-rpc 
+###### l2.backup-unsafe-sync-rpc
 
 Set the backup L2 unsafe sync RPC endpoint.
 
@@ -346,7 +345,7 @@ Set the backup L2 unsafe sync RPC endpoint.
   <Tabs.Tab>`OP_NODE_L2_BACKUP_UNSAFE_SYNC_RPC=http://127.0.0.1:8752`</Tabs.Tab>
 </Tabs>
 
-###### l2.backup-unsafe-sync-rpc.trustrpc 
+###### l2.backup-unsafe-sync-rpc.trustrpc
 
 Like l1.trustrpc, configure if response data from the RPC needs to be verified, e.g., blockhash computation. This does not include checks if the blockhash is part of the canonical chain.
 
@@ -356,7 +355,7 @@ Like l1.trustrpc, configure if response data from the RPC needs to be verified, 
   <Tabs.Tab>`OP_NODE_L2_BACKUP_UNSAFE_SYNC_RPC_TRUST_RPC=false`</Tabs.Tab>
 </Tabs>
 
-###### l2.engine-sync 
+###### l2.engine-sync
 
 Enables or disables execution engine P2P sync. The default value is `false`.
 
@@ -366,7 +365,7 @@ Enables or disables execution engine P2P sync. The default value is `false`.
   <Tabs.Tab>`OP_NODE_L2_ENGINE_SYNC_ENABLED=false`</Tabs.Tab>
 </Tabs>
 
-###### l2.jwt-secret 
+###### l2.jwt-secret
 
 Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will be generated if left empty.
 
@@ -376,7 +375,7 @@ Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will
   <Tabs.Tab>`OP_NODE_L2_ENGINE_AUTH=/path/to/jwt/secret`</Tabs.Tab>
 </Tabs>
 
-###### l2.skip-sync-start-check 
+###### l2.skip-sync-start-check
 
 Skip sanity check of consistency of L1 origins of the unsafe L2 blocks when determining the sync-starting point. This defers the L1-origin verification, and is recommended to use in when utilizing l2.engine-sync. The default value is `false`.
 
@@ -386,7 +385,7 @@ Skip sanity check of consistency of L1 origins of the unsafe L2 blocks when dete
   <Tabs.Tab>`OP_NODE_L2_SKIP_SYNC_START_CHECK=false`</Tabs.Tab>
 </Tabs>
 
-###### log.color 
+###### log.color
 
 Color the log output if in terminal mode. The default value is `false`.
 
@@ -396,7 +395,7 @@ Color the log output if in terminal mode. The default value is `false`.
   <Tabs.Tab>`OP_NODE_LOG_COLOR=false`</Tabs.Tab>
 </Tabs>
 
-###### log.format 
+###### log.format
 
 Format the log output. Supported formats: 'text', 'terminal', 'logfmt', 'json', 'json-pretty'. The default value is `text`.
 
@@ -406,7 +405,7 @@ Format the log output. Supported formats: 'text', 'terminal', 'logfmt', 'json', 
   <Tabs.Tab>`OP_NODE_LOG_FORMAT=text`</Tabs.Tab>
 </Tabs>
 
-###### log.level 
+###### log.level
 
 The lowest log level that will be output. The default value is `info`.
 
@@ -416,7 +415,7 @@ The lowest log level that will be output. The default value is `info`.
   <Tabs.Tab>`OP_NODE_LOG_LEVEL=info`</Tabs.Tab>
 </Tabs>
 
-###### metrics.addr 
+###### metrics.addr
 
 Metrics listening address. The default value is `"0.0.0.0"`.
 
@@ -426,7 +425,7 @@ Metrics listening address. The default value is `"0.0.0.0"`.
   <Tabs.Tab>`OP_NODE_METRICS_ADDR="0.0.0.0"`</Tabs.Tab>
 </Tabs>
 
-###### metrics.enabled 
+###### metrics.enabled
 
 Enable the metrics server. The default value is `false`.
 
@@ -436,7 +435,7 @@ Enable the metrics server. The default value is `false`.
   <Tabs.Tab>`OP_NODE_METRICS_ENABLED=false`</Tabs.Tab>
 </Tabs>
 
-###### metrics.port 
+###### metrics.port
 
 Metrics listening port. The default value is `7300`.
 
@@ -446,7 +445,7 @@ Metrics listening port. The default value is `7300`.
   <Tabs.Tab>`OP_NODE_METRICS_PORT=7300`</Tabs.Tab>
 </Tabs>
 
-###### network 
+###### network
 
 Predefined network selection. Available networks: zora-sepolia, base-goerli, op-labs-chaosnet-0-goerli-dev-0, pgn-mainnet, base-sepolia, pgn-sepolia, op-sepolia, op-goerli, base-devnet-0-goerli-dev-0, conduit-devnet-0-goerli-dev-0, op-labs-devnet-0-goerli-dev-0, base-mainnet, op-mainnet, zora-mainnet.
 
@@ -456,7 +455,7 @@ Predefined network selection. Available networks: zora-sepolia, base-goerli, op-
   <Tabs.Tab>`OP_NODE_NETWORK=op-mainnet`</Tabs.Tab>
 </Tabs>
 
-###### override.canyon 
+###### override.canyon
 
 Manually specify the Canyon fork timestamp, overriding the bundled setting. The default value is `0`.
 
@@ -466,7 +465,7 @@ Manually specify the Canyon fork timestamp, overriding the bundled setting. The 
   <Tabs.Tab>`OP_NODE_OVERRIDE_CANYON=1699981200`</Tabs.Tab>
 </Tabs>
 
-###### p2p.advertise.ip 
+###### p2p.advertise.ip
 
 The IP address to advertise in Discv5, put into the ENR of the node. This may also be a hostname/domain name to resolve to an IP.
 
@@ -476,7 +475,7 @@ The IP address to advertise in Discv5, put into the ENR of the node. This may al
   <Tabs.Tab>`OP_NODE_P2P_ADVERTISE_IP=YourIPAddressOrHostnameHere`</Tabs.Tab>
 </Tabs>
 
-###### p2p.advertise.tcp 
+###### p2p.advertise.tcp
 
 The TCP port to advertise in Discv5, put into the ENR of the node. Set to p2p.listen.tcp value if 0. The default value is `0`.
 
@@ -486,7 +485,7 @@ The TCP port to advertise in Discv5, put into the ENR of the node. Set to p2p.li
   <Tabs.Tab>`OP_NODE_P2P_ADVERTISE_TCP=3456`</Tabs.Tab>
 </Tabs>
 
-###### p2p.advertise.udp 
+###### p2p.advertise.udp
 
 The UDP port to advertise in Discv5 as a fallback if not determined by Discv5, put into the ENR of the node. Set to p2p.listen.udp value if 0. The default value is `0`.
 
@@ -496,7 +495,7 @@ The UDP port to advertise in Discv5 as a fallback if not determined by Discv5, p
   <Tabs.Tab>`OP_NODE_P2P_ADVERTISE_UDP=3457`</Tabs.Tab>
 </Tabs>
 
-###### p2p.ban.duration 
+###### p2p.ban.duration
 
 The duration that peers are banned for. The default value is `1h0m0s`.
 
@@ -506,7 +505,7 @@ The duration that peers are banned for. The default value is `1h0m0s`.
   <Tabs.Tab>`OP_NODE_P2P_PEER_BANNING_DURATION=1h0m0s`</Tabs.Tab>
 </Tabs>
 
-###### p2p.ban.peers 
+###### p2p.ban.peers
 
 Enables peer banning. The default value is `true`.
 
@@ -516,7 +515,7 @@ Enables peer banning. The default value is `true`.
   <Tabs.Tab>`OP_NODE_P2P_PEER_BANNING=true`</Tabs.Tab>
 </Tabs>
 
-###### p2p.ban.threshold 
+###### p2p.ban.threshold
 
 The minimum score below which peers are disconnected and banned. The default value is `-100`.
 
@@ -526,7 +525,7 @@ The minimum score below which peers are disconnected and banned. The default val
   <Tabs.Tab>`OP_NODE_P2P_PEER_BANNING_THRESHOLD=-100`</Tabs.Tab>
 </Tabs>
 
-###### p2p.bootnodes 
+###### p2p.bootnodes
 
 Comma-separated base64-format ENR list. Bootnodes to start discovering other node records from.
 
@@ -536,7 +535,7 @@ Comma-separated base64-format ENR list. Bootnodes to start discovering other nod
   <Tabs.Tab>`OP_NODE_P2P_BOOTNODES=YourBootnodesListHere`</Tabs.Tab>
 </Tabs>
 
-###### p2p.disable 
+###### p2p.disable
 
 Completely disable the P2P stack. The default value is `false`.
 
@@ -656,7 +655,7 @@ Specifies the Peerstore database location. Persisted peerstores help recover pee
   <Tabs.Tab>`OP_NODE_P2P_PEERSTORE_PATH=opnode_peerstore_db`</Tabs.Tab>
 </Tabs>
 
-###### p2p.priv.path 
+###### p2p.priv.path
 
 Defines the file path for reading the hex-encoded 32-byte private key for the peer ID. Created if not already exists. Important for maintaining the same network identity after restarting. The default value is `"opnode_p2p_priv.txt"`.
 
@@ -838,7 +837,7 @@ Maximum number of L2 blocks for restricting the distance between L2 safe and uns
 
 ###### sequencer.stopped
 
-Initialize the sequencer in a stopped state. The sequencer can be started using the admin_startSequencer RPC. Default is `false`.
+Initialize the sequencer in a stopped state. The sequencer can be started using the admin\_startSequencer RPC. Default is `false`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--sequencer.stopped=[true|false]`</Tabs.Tab>
@@ -866,7 +865,7 @@ Number of L1 blocks to keep distance from the L1 head before deriving L2 data fr
   <Tabs.Tab>`OP_NODE_VERIFIER_L1_CONFS=0`</Tabs.Tab>
 </Tabs>
 
-#### MISC 
+#### MISC
 
 ###### --help, -h
 
@@ -894,7 +893,7 @@ Please note that the executable is still named `geth` to maintain a [minimal dif
 
 #### GLOBAL OPTIONS
 
-##### ACCOUNT 
+##### ACCOUNT
 
 ###### `allow-insecure-unlock`
 
@@ -976,7 +975,7 @@ Enable monitoring and management of USB hardware wallets. The default value is `
   <Tabs.Tab>`GETH_USB=false`</Tabs.Tab>
 </Tabs>
 
-##### API AND CONSOLE 
+##### API AND CONSOLE
 
 ###### `authrpc.addr`
 
@@ -1010,7 +1009,7 @@ Listening port for authenticated APIs. The default value is `8551`.
 
 ###### `authrpc.vhosts`
 
-Comma separated list of virtual hostnames from which to accept requests (server enforced). The default value is `"localhost"`. Accepts '*' wildcard.
+Comma separated list of virtual hostnames from which to accept requests (server enforced). The default value is `"localhost"`. Accepts '\*' wildcard.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--authrpc.vhosts <value>`</Tabs.Tab>
@@ -1050,7 +1049,7 @@ Comma separated list of domains from which to accept cross origin requests (brow
 
 ###### `graphql.vhosts`
 
-Comma separated list of virtual hostnames from which to accept requests (server enforced). The default value is `"localhost"`. Accepts '*' wildcard.
+Comma separated list of virtual hostnames from which to accept requests (server enforced). The default value is `"localhost"`. Accepts '\*' wildcard.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--graphql.vhosts <value>`</Tabs.Tab>
@@ -1130,7 +1129,7 @@ HTTP path prefix on which JSON-RPC is served. Use '/' to serve on all paths.
 
 ###### `http.vhosts`
 
-Comma separated list of virtual hostnames from which to accept requests (server enforced). The default value is `"localhost"`. Accepts '*' wildcard.
+Comma separated list of virtual hostnames from which to accept requests (server enforced). The default value is `"localhost"`. Accepts '\*' wildcard.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--http.vhosts <value>`</Tabs.Tab>
@@ -1220,7 +1219,7 @@ Enables the (deprecated) personal namespace. The default value is `false`.
 
 ###### `rpc.evmtimeout`
 
-Sets a timeout used for eth_call (0=infinite). The default value is `5s`.
+Sets a timeout used for eth\_call (0=infinite). The default value is `5s`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--rpc.evmtimeout <value>`</Tabs.Tab>
@@ -1230,7 +1229,7 @@ Sets a timeout used for eth_call (0=infinite). The default value is `5s`.
 
 ###### `rpc.gascap`
 
-Sets a cap on gas that can be used in eth_call/estimateGas (0=infinite). The default value is `50000000`.
+Sets a cap on gas that can be used in eth\_call/estimateGas (0=infinite). The default value is `50000000`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--rpc.gascap=<value>`</Tabs.Tab>
@@ -1308,7 +1307,7 @@ HTTP path prefix on which JSON-RPC is served over WS. Use '/' to serve on all pa
   <Tabs.Tab>`GETH_WS_RPCPREFIX="/"`</Tabs.Tab>
 </Tabs>
 
-##### DEVELOPER CHAIN 
+##### DEVELOPER CHAIN
 
 ###### `dev`
 
@@ -1340,7 +1339,7 @@ Block period to use in developer mode (0 = mine only if transaction pending). Th
   <Tabs.Tab>`GETH_DEV_PERIOD=0`</Tabs.Tab>
 </Tabs>
 
-##### ETHEREUM 
+##### ETHEREUM
 
 ###### `bloomfilter.size`
 
@@ -1522,7 +1521,7 @@ Enables snapshot-database mode. The default value is `true`.
   <Tabs.Tab>`GETH_SNAPSHOT=true`</Tabs.Tab>
 </Tabs>
 
-##### GAS PRICE ORACLE 
+##### GAS PRICE ORACLE
 
 ###### `gpo.blocks`
 
@@ -1571,8 +1570,7 @@ Suggested gas price is the given percentile of a set of recent transaction gas p
   <Tabs.Tab>`GETH_GPO_PERCENTILE=60`</Tabs.Tab>
 </Tabs>
 
-
-##### LIGHT CLIENT 
+##### LIGHT CLIENT
 
 ###### `light.egress`
 
@@ -1633,7 +1631,6 @@ Maximum percentage of time allowed for serving LES requests (multi-threaded proc
   <Tabs.Tab>`--light.serve=0`</Tabs.Tab>
   <Tabs.Tab>`GETH_LIGHT_SERVE=0`</Tabs.Tab>
 </Tabs>
-
 
 ##### LOGGING AND DEBUGGING
 
@@ -1729,7 +1726,7 @@ Enables log file rotation. The default value is `false`.
 
 ###### `log.vmodule`
 
-Per-module verbosity: comma-separated list of `<pattern>=<level>` (e.g. eth/*=5,p2p=4).
+Per-module verbosity: comma-separated list of `<pattern>=<level>` (e.g. eth/\*=5,p2p=4).
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--log.vmodule=<value>`</Tabs.Tab>
@@ -1988,7 +1985,7 @@ Metrics HTTP server listening port. The default value is `6060`. Please note tha
   <Tabs.Tab>`GETH_METRICS_PORT=6060`</Tabs.Tab>
 </Tabs>
 
-##### MINER 
+##### MINER
 
 ###### `mine`
 
@@ -2060,8 +2057,7 @@ Time interval to recreate the block being mined. The default value is `2s`.
   <Tabs.Tab>`GETH_MINER_RECOMMIT=2s`</Tabs.Tab>
 </Tabs>
 
-
-##### MISC 
+##### MISC
 
 ###### `help`
 
@@ -2233,8 +2229,7 @@ Network listening port. The default value is `30303`.
   <Tabs.Tab>`GETH_PORT=30303`</Tabs.Tab>
 </Tabs>
 
-
-##### PERFORMANCE TUNING 
+##### PERFORMANCE TUNING
 
 ###### `cache`
 
@@ -2336,7 +2331,7 @@ Raise the open file descriptor resource limit. The default is the system fd limi
   <Tabs.Tab>`GETH_FDLIMIT=0`</Tabs.Tab>
 </Tabs>
 
-##### ROLLUP NODE 
+##### ROLLUP NODE
 
 ###### `rollup.computependingblock`
 
@@ -2408,7 +2403,7 @@ Apply superchain-registry config changes to the local chain-configuration. The d
   <Tabs.Tab>`GETH_ROLLUP_SUPERCHAIN_UPGRADES=false`</Tabs.Tab>
 </Tabs>
 
-##### STATE HISTORY MANAGEMENT 
+##### STATE HISTORY MANAGEMENT
 
 ###### `gcmode`
 
@@ -2491,7 +2486,6 @@ Price bump percentage to replace an already existing blob transaction. The defau
   <Tabs.Tab>`--blobpool.pricebump=100`</Tabs.Tab>
   <Tabs.Tab>`GETH_BLOBPOOL_PRICEBUMP=100`</Tabs.Tab>
 </Tabs>
-
 
 ##### TRANSACTION POOL (EVM)
 
@@ -2615,8 +2609,7 @@ Time interval to regenerate the local transaction journal. The default value is 
   <Tabs.Tab>`GETH_TXPOOL_REJOURNAL=1h0m0s`</Tabs.Tab>
 </Tabs>
 
-
-##### VIRTUAL MACHINE 
+##### VIRTUAL MACHINE
 
 ###### `vmdebug`
 

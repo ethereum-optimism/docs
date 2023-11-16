@@ -18,7 +18,7 @@ Withdrawals require the user to submit three transactions:
 3.  **Withdrawal finalizing transaction**, which the user submits on L1 after the fault challenge period has passed, to actually run the transaction on L1, claim any assets attached, etc.
 
 <Callout type="info">
-You can see an example of how to do this [in the tutorials](/dapp-developers/bridging/cross-dom-bridge-erc20).
+  You can see an example of how to do this [in the tutorials](/dapp-developers/bridging/cross-dom-bridge-erc20).
 </Callout>
 
 ## Withdrawal initiating transaction
@@ -27,9 +27,9 @@ You can see an example of how to do this [in the tutorials](/dapp-developers/bri
 
     This function accepts three parameters:
 
-    -   `_target`, target address on L1.
-    -   `_message`, the L1 transaction's calldata, formatted as per the [ABI](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html) of the target account.
-    -   `_minGasLimit`, The minimum amount of gas that the withdrawal finalizing transaction can provide to the withdrawal transaction. This is enforced by the `SafeCall` library, and if the minimum amount of gas cannot be met at the time of the external call from the `OptimismPortal` -> `L1CrossDomainMessenger`, the finalization transaction will revert to allow for re-attempting with a higher gas limit. In order to account for the gas consumed in the `L1CrossDomainMessenger.relayMessage` function's execution, extra gas will be added on top of the `_minGasLimit` value by the `CrossDomainMessenger.baseGas` function when `sendMessage` is called on L2.
+    *   `_target`, target address on L1.
+    *   `_message`, the L1 transaction's calldata, formatted as per the [ABI](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html) of the target account.
+    *   `_minGasLimit`, The minimum amount of gas that the withdrawal finalizing transaction can provide to the withdrawal transaction. This is enforced by the `SafeCall` library, and if the minimum amount of gas cannot be met at the time of the external call from the `OptimismPortal` -> `L1CrossDomainMessenger`, the finalization transaction will revert to allow for re-attempting with a higher gas limit. In order to account for the gas consumed in the `L1CrossDomainMessenger.relayMessage` function's execution, extra gas will be added on top of the `_minGasLimit` value by the `CrossDomainMessenger.baseGas` function when `sendMessage` is called on L2.
 
 2.  `sendMessage` is a generic function that is used in both cross domain messengers.
     It calls [`_sendMessage`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L2/L2CrossDomainMessenger.sol#L48-L60), which is specific to [`L2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L2/L2CrossDomainMessenger.sol).
@@ -40,13 +40,13 @@ You can see an example of how to do this [in the tutorials](/dapp-developers/bri
 
     The raw withdrawal fields are:
 
-    -   `nonce` - A single use value to prevent two otherwise identical withdrawals from hashing to the same value
-    -   `sender` - The L2 address that initiated the transfer, typically [`L2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L2/L2CrossDomainMessenger.sol)
-    -   `target` - The L1 target address
-    -   `value` - The amount of WEI transferred by this transaction
-    -   `gasLimit` - Gas limit for the transaction, the system guarantees that at least this amount of gas will be available to the transaction on L1.
+    *   `nonce` - A single use value to prevent two otherwise identical withdrawals from hashing to the same value
+    *   `sender` - The L2 address that initiated the transfer, typically [`L2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L2/L2CrossDomainMessenger.sol)
+    *   `target` - The L1 target address
+    *   `value` - The amount of WEI transferred by this transaction
+    *   `gasLimit` - Gas limit for the transaction, the system guarantees that at least this amount of gas will be available to the transaction on L1.
         Note that if the gas limit is not enough, or if the L1 finalizing transaction does not have enough gas to provide that gas limit, the finalizing transaction returns a failure, it does not revert.
-    -   `data` - The calldata for the withdrawal transaction
+    *   `data` - The calldata for the withdrawal transaction
 
 4.  When `op-proposer` [proposes a new output](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/op-proposer/proposer/l2_output_submitter.go#L312-L320), the output proposal includes [the output root](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/op-proposer/proposer/l2_output_submitter.go#L316), provided as part of the block by `op-node`.
     This new output root commits to the state of the `sentMessages` mapping in the `L2ToL1MessagePasser` contract's storage on L2, and it can be used to prove the presence of a pending withdrawal within it.
@@ -94,11 +94,11 @@ Finally, once the fault challenge period passes, the withdrawal can be finalized
 
 1.  [`OptimismPortal.finalizeWithdrawalTransaction()`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L320-L420) runs several checks. The interesting ones are:
 
-    -   [Verify the proof has already been submitted](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L341-L347).
-    -   [Verify the proof has been submitted long enough ago that the fault challenge period has already passed](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L357-L364).
-    -   [Verify that the proof applies to the current output root for that block (the output root for a block can be changed by the fault challenge process)](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L366-L378).
-    -   [Verify that the current output root for that block was proposed long enough ago that the fault challenge period has passed](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L380-L384).
-    -   [Verify that the transaction has not been finalized before to prevent replay attacks](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L386-L390).
+    *   [Verify the proof has already been submitted](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L341-L347).
+    *   [Verify the proof has been submitted long enough ago that the fault challenge period has already passed](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L357-L364).
+    *   [Verify that the proof applies to the current output root for that block (the output root for a block can be changed by the fault challenge process)](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L366-L378).
+    *   [Verify that the current output root for that block was proposed long enough ago that the fault challenge period has passed](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L380-L384).
+    *   [Verify that the transaction has not been finalized before to prevent replay attacks](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L386-L390).
 
     If any of these checks fail, the transaction reverts.
 
