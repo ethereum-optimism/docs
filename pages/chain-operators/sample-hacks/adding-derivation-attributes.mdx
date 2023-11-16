@@ -1,16 +1,22 @@
-import { Callout } from 'nextra/components'
+---
+title: Adding Attributes to the Derivation Function
+lang: en-US
+description: Learn how to modify the derivation function for an OP Stack chain to track the amount of ETH being burned on L1.
+---
+
+import { Callout, Steps } from 'nextra/components'
 
 # Adding Attributes to the Derivation Function
 
 <Callout type="warning">
-  OP Stack Hacks are explicitly things that you can do with the OP Stack that are *not* currently intended for production use
+  OP Stack Hacks are explicitly things that you can do with the OP Stack that are *not* currently intended for production use.
 
   OP Stack Hacks are not for the faint of heart. You will not be able to receive significant developer support for OP Stack Hacks — be prepared to get your hands dirty and to work without support.
 </Callout>
 
 ## Overview
 
-In this guide, we’ll modify the Bedrock Rollup. Although there are many ways to modify the OP Stack, we’re going to spend this tutorial modifying the Derivation function. Specifically, we’re going to update the Derivation function to track the amount of ETH being burned on L1! Who’s gonna tell [ultrasound.money](http://ultrasound.money) that they should replace their backend with an OP Stack chain?
+In this tutorial, we’ll modify the Bedrock Rollup. Although there are many ways to modify the OP Stack, we’re going to spend this tutorial modifying the Derivation function. Specifically, we’re going to update the Derivation function to track the amount of ETH being burned on L1! Who’s gonna tell [ultrasound.money](http://ultrasound.money) that they should replace their backend with an OP Stack chain?
 
 ## Getting the idea
 
@@ -75,20 +81,21 @@ Deploy this smart contract to your L2 (using any tool you find convenient). Make
 ## Add the burn transaction
 
 Now we need to add logic to the `op-node` to automatically submit a burn report whenever an L1 block is produced. Since this transaction is very similar to the system transaction that reports other L1 block info (found in [l1\_block\_info.go](https://github.com/ethereum-optimism/optimism/blob/c9cd1215b76111888e25ee27a49a0bc0c4eeb0f8/op-node/rollup/derive/l1_block_info.go)), we’ll use that transaction as a jumping-off point.
+<Steps>
 
-1.  Navigate to the `op-node` package:
+### Navigate to the `op-node` package:
 
     ```bash
     cd ~/optimism/op-node
     ```
 
-2.  Inside of the folder `rollup/derive`, create a new file called `l1_burn_info.go`:
+### Inside of the folder `rollup/derive`, create a new file called `l1_burn_info.go`:
 
     ```bash
     touch rollup/derive/l1_burn_info.go
     ```
 
-3.  Paste the following into `l1_burn_info.go`, and make sure to replace `YOUR_BURN_CONTRACT_HERE` with the address of the `L1Burn` contract you just deployed.
+### Paste the following into `l1_burn_info.go`, and make sure to replace `YOUR_BURN_CONTRACT_HERE` with the address of the `L1Burn` contract you just deployed.
 
     ```go
     package derive
@@ -197,12 +204,13 @@ Now we need to add logic to the `op-node` to automatically submit a burn report 
     ```
 
     Feel free to take a look at this file if you’re interested. It’s relatively simple, mainly just defining a new transaction type and describing how the transaction should be encoded.
+</Steps>
 
 ## Insert the burn transactions
 
 Finally, we’ll need to update `~/optimism/op-node/rollup/derive/attributes.go` to insert the new burn transaction into every block. You’ll need to make the following changes:
-
-1.  Find these lines:
+<Steps>
+### Find these lines:
 
     ```go
     l1InfoTx, err := L1InfoDepositBytes(seqNumber, l1Info, sysConfig)
@@ -211,7 +219,7 @@ Finally, we’ll need to update `~/optimism/op-node/rollup/derive/attributes.go`
     }
     ```
 
-2.  After those lines, add this code fragment:
+### After those lines, add this code fragment:
 
     ```go
     l1BurnTx, err := L1BurnDepositBytes(seqNumber, l1Info, sysConfig)
@@ -220,7 +228,7 @@ Finally, we’ll need to update `~/optimism/op-node/rollup/derive/attributes.go`
     }
     ```
 
-3.  Immediately following, change these lines:
+### Immediately following, change these lines:
 
     ```go
     txs := make([]hexutil.Bytes, 0, 1+len(depositTxs))
@@ -236,6 +244,7 @@ Finally, we’ll need to update `~/optimism/op-node/rollup/derive/attributes.go`
     ```
 
 All we’re doing here is creating a new burn transaction after every `l1InfoTx` and inserting it into every block.
+</Steps>
 
 ## Rebuild your op-node
 
