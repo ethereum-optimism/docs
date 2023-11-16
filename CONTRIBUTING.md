@@ -40,7 +40,7 @@ Nextra is MDX-based, meaning the content you write is [Markdown](https://daringf
 
 The Optimism Documentation team has created a complete style guide for you to make the best out of the various options available:
 
-[Optimism Documentation Style Guide](/pages/contribute/style-guide) 
+[Optimism Documentation Style Guide](/pages/contribute/style-guide.mdx) 
 
 ### Set Up the Project and Test Locally
 
@@ -60,7 +60,8 @@ You can now start changing content and see the website updated live each time yo
 To prevent building issues upstream, you should build the content locally before submitting a pull request: stop or delete the terminal server if it's running, then run `pnpm dev`.
 
 - If no issues are reported (”client” and “server compiled successfully”), go ahead and submit the pull request. 
-- If some issues are reported (e.g., broken links), please use information reported by the terminal to fix issues, then try another `pnpm dev`, and repeat until no issues are reported.
+- If some issues are reported (e.g., broken links), please use information reported by the terminal to fix issues. You can run `pnpm fix` to automatically fix most linting issues.
+- Try another `pnpm dev` and repeat until no issues are reported.
 
 
 Your pull request should usually target the `main` branch, though the Optimism Documentation team might sometimes ask you to target another branch.
