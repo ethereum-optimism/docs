@@ -16,227 +16,246 @@ import { Callout, Steps } from 'nextra/components'
 
 The next step is to download the data directory for `op-geth`.
 You will need 500+ GB for this part alone.
+
 <Steps>
-### Download the data directory snapshot
-This is a large file so expect it to take some time. [Bedrock Data Directory (303GB)](https://datadirs.optimism.io/mainnet-bedrock.tar.zst)
+  ### Download the data directory snapshot
 
-<Callout>
-  Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
-</Callout>
+  This is a large file so expect it to take some time. [Bedrock Data Directory (303GB)](https://datadirs.optimism.io/mainnet-bedrock.tar.zst)
 
-### Check the validity of your download
-This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
+  <Callout>
+    Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
+  </Callout>
 
-    ```bash
-    sha256sum mainnet-bedrock.tar.zst
-    # expected output
-    ec4baf47e309a14ffbd586dc85376833de640c0f2a8d7355cb8a9e64c38bfcd1  mainnet-bedrock.tar.zst
-    ```
+  ### Check the validity of your download
 
-    OR
+  This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
 
-    ```bash
-    sha512sum mainnet-bedrock.tar.zst
-    # expected output
-    c17067b7bc39a6daa14f71d448c6fa0477834c3e68a25e96f26fe849c12a09bffe510e96f7eacdef19e93e3167d15250f807d252dd6f6f9053d0e4457c73d5fb mainnet-bedrock.tar.zst
-    ```
+  ```bash
+  sha256sum mainnet-bedrock.tar.zst
+  # expected output
+  ec4baf47e309a14ffbd586dc85376833de640c0f2a8d7355cb8a9e64c38bfcd1  mainnet-bedrock.tar.zst
+  ```
 
-### Create the data directory in `op-geth` and fill it
-This will take time.
+  OR
 
-    Navigate into your `op-geth` directory and run these commands:
+  ```bash
+  sha512sum mainnet-bedrock.tar.zst
+  # expected output
+  c17067b7bc39a6daa14f71d448c6fa0477834c3e68a25e96f26fe849c12a09bffe510e96f7eacdef19e93e3167d15250f807d252dd6f6f9053d0e4457c73d5fb mainnet-bedrock.tar.zst
+  ```
 
-    ```sh
-    mkdir datadir
-    cd datadir
-    tar xvf <<PATH_TO_DATA_DIR>>
-    ```
+  ### Create the data directory in `op-geth` and fill it
+
+  This will take time.
+
+  Navigate into your `op-geth` directory and run these commands:
+
+  ```sh
+  mkdir datadir
+  cd datadir
+  tar xvf <<PATH_TO_DATA_DIR>>
+  ```
 </Steps>
 
 ## (Optional - OP Mainnet Archive Node) Get the data directory for `l2geth`
+
 <Steps>
-### Download the data directory snapshot 
-This is a large file so expect it to take some time. [Legacy Geth Data Directory (2.9TB)](https://datadirs.optimism.io/mainnet-legacy-archival.tar.zst)
+  ### Download the data directory snapshot
 
-<Callout>
-  Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
-</Callout>
+  This is a large file so expect it to take some time. [Legacy Geth Data Directory (2.9TB)](https://datadirs.optimism.io/mainnet-legacy-archival.tar.zst)
 
-### Check the validity of your download
-This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
+  <Callout>
+    Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
+  </Callout>
 
-    ```sh
-    sha256sum mainnet-legacy-archival.tar.zst
-    # expected output
-    4adedb61125b81b55f9bdccc2e85092050c65ef2253c86e2b79569732b772829  mainnet-legacy-archival.tar.zst
-    ```
+  ### Check the validity of your download
 
-    OR
+  This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
 
-    ```sh
-    sha512sum mainnet-legacy-archival.tar.zst
-    # expected output
-    e348488c458baa755510f23bbc8601619bc66bea78a89354c949ba7be3c6b39ed7dd2c50516621e38df6120299407da0d24445b96bf94a50364ed07bb8234b26 mainnet-legacy-archival.tar.zst
-    ```
+  ```sh
+  sha256sum mainnet-legacy-archival.tar.zst
+  # expected output
+  4adedb61125b81b55f9bdccc2e85092050c65ef2253c86e2b79569732b772829  mainnet-legacy-archival.tar.zst
+  ```
 
-### Create the data directory in `l2geth` and fill it
-This will take time.
+  OR
 
-    Navigate into your `l2geth` directory and run these commands:
+  ```sh
+  sha512sum mainnet-legacy-archival.tar.zst
+  # expected output
+  e348488c458baa755510f23bbc8601619bc66bea78a89354c949ba7be3c6b39ed7dd2c50516621e38df6120299407da0d24445b96bf94a50364ed07bb8234b26 mainnet-legacy-archival.tar.zst
+  ```
 
-    ```sh
-    mkdir datadir
-    cd datadir
-    tar xvf <<PATH_TO_DATA_DIR>>
-    ```
+  ### Create the data directory in `l2geth` and fill it
+
+  This will take time.
+
+  Navigate into your `l2geth` directory and run these commands:
+
+  ```sh
+  mkdir datadir
+  cd datadir
+  tar xvf <<PATH_TO_DATA_DIR>>
+  ```
 </Steps>
 
 ## Create a shared secret between `op-geth` and `op-node`
+
 <Steps>
-### Navigate into your `op-geth` directory and run these commands:
+  ### Navigate into your `op-geth` directory and run these commands:
 
-    ```sh
-    openssl rand -hex 32 > jwt.txt
-    cp jwt.txt ../optimism/op-node
-    ```
+  ```sh
+  openssl rand -hex 32 > jwt.txt
+  cp jwt.txt ../optimism/op-node
+  ```
 
-### Create a new directory `scripts`
-Place in the root of your working directory. These scripts will be used to start the different components.
+  ### Create a new directory `scripts`
+
+  Place in the root of your working directory. These scripts will be used to start the different components.
 </Steps>
 
 ## (Optional - Archive Node) `l2geth`
+
 <Steps>
-### Navigate into your `scripts` directory:
+  ### Navigate into your `scripts` directory:
 
-### Create a new file:
-    ```sh
-    touch run-l2geth.sh
-    ```
+  ### Create a new file:
 
-### Make it executable:
-    ```sh
-    chmod +x run-l2geth.sh
-    ```
+  ```sh
+  touch run-l2geth.sh
+  ```
 
-### Insert this snippet of code into `run-l2geth.sh` and modify the path to the `l2geth` directory
+  ### Make it executable:
 
-    ```sh
-    #!/usr/bin/bash
+  ```sh
+  chmod +x run-l2geth.sh
+  ```
 
-    cd ../optimism-legacy/l2geth
+  ### Insert this snippet of code into `run-l2geth.sh` and modify the path to the `l2geth` directory
 
-    USING_OVM=true \
-      ETH1_SYNC_SERVICE_ENABLE=false \
-      RPC_API=eth,rollup,net,web3,debug \
-      RPC_ENABLE=true \
-      RPC_PORT=8546 \ # need to rebind port because op-geth uses the same default port
-      ./build/bin/geth --datadir ./datadir
-    ```
+  ```sh
+  #!/usr/bin/bash
 
-### Run the following command to start `l2geth`:
+  cd ../optimism-legacy/l2geth
 
-    ```sh
-    ./run-l2geth.sh
-    ```
+  USING_OVM=true \
+    ETH1_SYNC_SERVICE_ENABLE=false \
+    RPC_API=eth,rollup,net,web3,debug \
+    RPC_ENABLE=true \
+    RPC_PORT=8546 \ # need to rebind port because op-geth uses the same default port
+    ./build/bin/geth --datadir ./datadir
+  ```
+
+  ### Run the following command to start `l2geth`:
+
+  ```sh
+  ./run-l2geth.sh
+  ```
 </Steps>
 
 ## `op-geth`
+
 <Steps>
-### Navigate into your `scripts` directory:
+  ### Navigate into your `scripts` directory:
 
-### Create a new file:
-    ```sh
-    touch run-op-geth.sh
-    ```
+  ### Create a new file:
 
-### Make it executable:
-    ```sh
-    chmod +x run-op-geth.sh
-    ```
+  ```sh
+  touch run-op-geth.sh
+  ```
 
-### Insert this snippet of code into `run-op-geth.sh` and modify the path to the `op-geth` directory.
+  ### Make it executable:
 
-    ```sh
-    #! /usr/bin/bash
+  ```sh
+  chmod +x run-op-geth.sh
+  ```
 
-    SEQUENCER_URL=https://mainnet-sequencer.optimism.io/
-    NET=op-mainnet
+  ### Insert this snippet of code into `run-op-geth.sh` and modify the path to the `op-geth` directory.
 
-    cd <<Path to op-geth directory>>
+  ```sh
+  #! /usr/bin/bash
 
-    ./build/bin/geth \
-      --datadir=./datadir \
-      --http \
-      --http.port=8545 \
-      --http.addr=0.0.0.0 \
-      --authrpc.addr=localhost \
-      --authrpc.jwtsecret=./jwt.txt \
-      --verbosity=3 \
-      --rollup.sequencerhttp=$SEQUENCER_URL \
-      --nodiscover \
-      --syncmode=full \
-      --maxpeers=0 \
-      --op-network=$NET
-    ```
+  SEQUENCER_URL=https://mainnet-sequencer.optimism.io/
+  NET=op-mainnet
 
-<Callout type="info">
-  Archive Nodes
-  You will need to point `op-geth` at `l2geth` with `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth from before the [Bedrock upgrade](https://twitter.com/optimismFND/status/1666850591669202965). This flag is only necessary for OP Mainnet.
+  cd <<Path to op-geth directory>>
 
-  You will also need to add `--gcmode archive`.
-</Callout>
+  ./build/bin/geth \
+    --datadir=./datadir \
+    --http \
+    --http.port=8545 \
+    --http.addr=0.0.0.0 \
+    --authrpc.addr=localhost \
+    --authrpc.jwtsecret=./jwt.txt \
+    --verbosity=3 \
+    --rollup.sequencerhttp=$SEQUENCER_URL \
+    --nodiscover \
+    --syncmode=full \
+    --maxpeers=0 \
+    --op-network=$NET
+  ```
 
-### Run the following command to start `op-geth`:
+  <Callout type="info">
+    Archive Nodes
+    You will need to point `op-geth` at `l2geth` with `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth from before the [Bedrock upgrade](https://twitter.com/optimismFND/status/1666850591669202965). This flag is only necessary for OP Mainnet.
 
-    ```bash
-    ./run-op-geth.sh
-    ```
+    You will also need to add `--gcmode archive`.
+  </Callout>
+
+  ### Run the following command to start `op-geth`:
+
+  ```bash
+  ./run-op-geth.sh
+  ```
 </Steps>
 
 ## `op-node`
+
 <Steps>
-### Navigate to the `scripts` directory you created
+  ### Navigate to the `scripts` directory you created
 
-### Create a new file:
-    ```sh
-    touch run-op-node.sh
-    ```
+  ### Create a new file:
 
-### Make it executable:
-    ```sh
-    chmod +x run-op-node.sh
-    ```
+  ```sh
+  touch run-op-node.sh
+  ```
 
-### Insert this snippet of code into `run-op-node.sh`:
+  ### Make it executable:
 
-    ```sh
-    #!/usr/bin/bash
+  ```sh
+  chmod +x run-op-node.sh
+  ```
 
-    L1URL=<< L1 RPC URL >>
-    L1KIND=basic
-    NET=op-mainnet
+  ### Insert this snippet of code into `run-op-node.sh`:
 
-    cd <<Path to op-node directory>>
+  ```sh
+  #!/usr/bin/bash
+
+  L1URL=<< L1 RPC URL >>
+  L1KIND=basic
+  NET=op-mainnet
+
+  cd <<Path to op-node directory>>
 
 
-    ./bin/op-node \
-        --l1=$L1URL  \
-        --l1.rpckind=$L1KIND \
-        --l2=ws://localhost:8551 \
-        --l2.jwt-secret=./jwt.txt \
-        --network=$NET \
-        --rpc.addr=0.0.0.0 \
-        --rpc.port=8547
-    ```
+  ./bin/op-node \
+      --l1=$L1URL  \
+      --l1.rpckind=$L1KIND \
+      --l2=ws://localhost:8551 \
+      --l2.jwt-secret=./jwt.txt \
+      --network=$NET \
+      --rpc.addr=0.0.0.0 \
+      --rpc.port=8547
+  ```
 
--   Change `<< L1 RPC URL >>` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
--   Set `L1KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
+  *   Change `<< L1 RPC URL >>` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
+  *   Set `L1KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
 
-### Run the following command to start `op-node`:
+  ### Run the following command to start `op-node`:
 
-    ```bash
-    ./run-op-node.sh
-    ```
+  ```bash
+  ./run-op-node.sh
+  ```
 </Steps>
 
 ## The initial synchronization
@@ -272,73 +291,81 @@ INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d
 ## Estimate the synchronization time
 
 To estimate how long the synchronization will take, you need to first find out how many blocks you synchronize in a minute. You can use this [Foundry](https://book.getfoundry.sh/) script to get an estimated sync time.
+
 <Steps>
-### Navigate to your `scripts` directory
-### Create a new file:
-    ```sh
-    touch run-estimate.sh
-    ```
-### Make it executable:
-    ```sh
-    chmod +x run-estimate.sh
-    ```
-### Insert this snippet of code into `run-estimate.sh`:
+  ### Navigate to your `scripts` directory
 
-```sh
-#!/usr/bin/bash
+  ### Create a new file:
 
-export ETH_RPC_URL=http://localhost:8545
-CHAIN_ID=`cast chain-id`
-echo Chain ID: $CHAIN_ID
-echo Please wait
+  ```sh
+  touch run-estimate.sh
+  ```
 
-if [ $CHAIN_ID -eq 10 ]; then
-  L2_URL=https://mainnet.optimism.io
-fi
+  ### Make it executable:
 
+  ```sh
+  chmod +x run-estimate.sh
+  ```
 
-if [ $CHAIN_ID -eq 420 ]; then
-  L2_URL=https://goerli.optimism.io
-fi
+  ### Insert this snippet of code into `run-estimate.sh`:
 
+  ```sh
+  #!/usr/bin/bash
 
-if [ $CHAIN_ID -eq 11155420 ]; then
-  L2_URL=https://sepolia.optimism.io
-fi
+  export ETH_RPC_URL=http://localhost:8545
+  CHAIN_ID=`cast chain-id`
+  echo Chain ID: $CHAIN_ID
+  echo Please wait
 
-T0=`cast block-number --rpc-url $ETH_RPC_URL` ; sleep 60 ; T1=`cast block-number --rpc-url $ETH_RPC_URL`
-PER_MIN=`expr $T1 - $T0`
-echo Blocks per minute: $PER_MIN
+  if [ $CHAIN_ID -eq 10 ]; then
+    L2_URL=https://mainnet.optimism.io
+  fi
 
 
-if [ $PER_MIN -eq 0 ]; then
-    echo Not synching
-    exit;
-fi
-
-# During that minute the head of the chain progressed by thirty blocks
-PROGRESS_PER_MIN=`expr $PER_MIN - 30`
-echo Progress per minute: $PROGRESS_PER_MIN
+  if [ $CHAIN_ID -eq 420 ]; then
+    L2_URL=https://goerli.optimism.io
+  fi
 
 
-# How many more blocks do we need?
-HEAD=`cast block-number --rpc-url $L2_URL`
-BEHIND=`expr $HEAD - $T1`
-MINUTES=`expr $BEHIND / $PROGRESS_PER_MIN`
-HOURS=`expr $MINUTES / 60`
-echo Hours until sync completed: $HOURS
+  if [ $CHAIN_ID -eq 11155420 ]; then
+    L2_URL=https://sepolia.optimism.io
+  fi
 
-if [ $HOURS -gt 24 ] ; then
-   DAYS=`expr $HOURS / 24`
-   echo Days until sync complete: $DAYS
-fi
-```
+  T0=`cast block-number --rpc-url $ETH_RPC_URL` ; sleep 60 ; T1=`cast block-number --rpc-url $ETH_RPC_URL`
+  PER_MIN=`expr $T1 - $T0`
+  echo Blocks per minute: $PER_MIN
 
-### Run the following command to get an estimate:
-    ```sh
-    ./run-estimate.sh
-    ```
+
+  if [ $PER_MIN -eq 0 ]; then
+      echo Not synching
+      exit;
+  fi
+
+  # During that minute the head of the chain progressed by thirty blocks
+  PROGRESS_PER_MIN=`expr $PER_MIN - 30`
+  echo Progress per minute: $PROGRESS_PER_MIN
+
+
+  # How many more blocks do we need?
+  HEAD=`cast block-number --rpc-url $L2_URL`
+  BEHIND=`expr $HEAD - $T1`
+  MINUTES=`expr $BEHIND / $PROGRESS_PER_MIN`
+  HOURS=`expr $MINUTES / 60`
+  echo Hours until sync completed: $HOURS
+
+  if [ $HOURS -gt 24 ] ; then
+     DAYS=`expr $HOURS / 24`
+     echo Days until sync complete: $DAYS
+  fi
+  ```
+
+  ### Run the following command to get an estimate:
+
+  ```sh
+  ./run-estimate.sh
+  ```
 </Steps>
+
 ## Operations
 
 It is best to start `op-geth` first and shut it down last.
