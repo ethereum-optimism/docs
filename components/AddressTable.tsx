@@ -5,6 +5,8 @@ const explorers = {
   '5': 'https://goerli.etherscan.io',
   '10': 'https://optimistic.etherscan.io',
   '420': 'https://goerli-optimism.etherscan.io',
+  '11155111': 'https://sepolia.etherscan.io/',
+  '11155420': 'https://sepolia-optimism.etherscan.io/',
 }
 
 export function AddressTable({
