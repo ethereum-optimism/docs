@@ -35,51 +35,36 @@ geth init \
 ## Create a shared secret between `op-geth` and `op-node`
 
 <Steps>
-  ### Navigate into your `op-geth` directory and run these commands:
+  ### Navigate into your `op-geth` directory
+
+  ### Create a random number 
+
+  This will be the shared secret for `op-geth` and `op-node` to communicate over the engine API authrpc.
 
   ```sh
   openssl rand -hex 32 > jwt.txt
-  cp jwt.txt ../optimism/op-node
   ```
-
-  ### Create a new directory: `scripts`
-
-  Place it in the root of your working directory. These scripts will be used to start the different components.
 </Steps>
 
-## `op-geth`
+## Start `op-geth`
 
 <Steps>
-  ### Create a new file:
+  ### Navigate into your `op-geth` directory 
+
+  ### Start `op-geth` with the following command 
+
+  *   Make sure you update your path to your data directory 
 
   ```sh
-  touch run-op-geth.sh
-  ```
-
-  ### Make it executable:
-
-  ```sh
-  chmod +x run-op-geth.sh
-  ```
-
-  ### Insert this snippet of code into `run-op-geth.sh` and modify the path to the `op-geth` directory.
-
-  ```sh
-  #! /usr/bin/bash
-
-  SEQUENCER_URL=https://sepolia-sequencer.optimism.io/
-
-  cd <<Path to op-geth directory>>
-
   ./build/bin/geth \
-    --datadir=./datadir \
+    --datadir=<</path/to/op-geth-datadir>> \
     --http \
     --http.port=8545 \
     --http.addr=0.0.0.0 \
     --authrpc.addr=localhost \
     --authrpc.jwtsecret=./jwt.txt \
     --verbosity=3 \
-    --rollup.sequencerhttp=$SEQUENCER_URL \
+    --rollup.sequencerhttp=https://sepolia-sequencer.optimism.io/ \
     --nodiscover \
     --syncmode=full \
     --maxpeers=0 \
@@ -87,60 +72,29 @@ geth init \
   ```
 
   Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs](/tools/rpc-providers).
-
-  ### Run the following command to start `op-geth`:
-
-  ```bash
-  ./run-op-geth.sh
-  ```
 </Steps>
 
-## `op-node`
+## Start `op-node`
 
 <Steps>
-  ### Navigate to the `scripts` directory you created
+  ### Navigate to the `op-node` directory
 
-  ### Create a new file:
+  ### Start `op-node` with the following command
 
-  ```sh
-  touch run-op-node.sh
-  ```
-
-  ### Make it executable:
+  *   Change `L1 RPC URL` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
+  *   Set `L1 RPC KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
+  *   Set the `/path/to/op-geth/jwt.txt` to the path of the shared secret you generated in a previous step
 
   ```sh
-  chmod +x run-op-node.sh
-  ```
-
-  ### Insert this snippet of code into `run-op-node.sh`:
-
-  ```sh
-  #!/usr/bin/bash
-
-  L1URL=<< L1 RPC URL >>
-  L1KIND=basic
-
-  cd <<Path to op-node directory>>
-
-
   ./bin/op-node \
-      --l1=$L1URL  \
-      --l1.rpckind=$L1KIND \
+      --l1=<< L1 RPC URL >>  \
+      --l1.rpckind=<< L1 RPC KIND >> \
       --l2=ws://localhost:8551 \
-      --l2.jwt-secret=./jwt.txt \
+      --l2.jwt-secret=<< /path/to/op-geth/jwt.txt >> \
       --rpc.addr=0.0.0.0 \
       --rpc.port=8547 \
       --network=op-sepolia \
       --rollup.load-protocol-versions=true
-  ```
-
-  *   Change `<< L1 RPC URL >>` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://sepolia.infura.io/v3/API_KEY`.
-  *   Set `L1KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
-
-  ### Run the following command to start `op-node`:
-
-  ```bash
-  ./run-op-node.sh
   ```
 </Steps>
 
