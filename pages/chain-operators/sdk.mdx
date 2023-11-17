@@ -1,18 +1,22 @@
+---
+title: Using the OP Stack Client SDK
+lang: en-US
+description: Learn how to use the OP Stack Client SDK when working with native and non-native supported chains.
+---
+
+import { Steps } from 'nextra/components'
+
 # Using the OP Stack Client SDK
 
-## Natively supported chains
+This tutorial explains how to use the OP Stack Client SDK when working with native and non-native supported chains.
 
-[The OP Stack Client SDK](https://sdk.optimism.io/) natively supports multiple OP Chains: OP, Base, etc.
-To see whether a specific OP Chain is supported directly, [see the documentation](https://sdk.optimism.io/enums/l2chainid).
+* [The OP Stack Client SDK](https://sdk.optimism.io/) *natively* supports multiple OP Chains: OP, Base, etc. To see whether a specific OP Chain is supported directly, [see the documentation](https://sdk.optimism.io/enums/l2chainid).
+* If you are using a chain that is *not* natively supported, for example an OP Stack chain [you just created](/getting-started-op-stack), you can continue to use [the OP Stack Client SDK](https://sdk.optimism.io/).
+You just need to provide some contract addresses to the `CrossDomainMessenger` because they aren't preconfigured. This tutorial walks you through that process.
 
-## Not natively supported chains
-
-If you are using a chain that is *not* natively supported, for example an OP Stack chain [you just created](/getting-started-op-stack), you can continue to use [the OP Stack Client SDK](https://sdk.optimism.io/).
-You just need to provide some contract addresses to the `CrossDomainMessenger` because they aren't preconfigured.
-
-### Getting contract addresses
-
-#### L1 contract addresses
+## Get Contract Addresses
+<Steps>
+### Locate the L1 contract addresses
 
 If you followed the directions in [Getting Started](/getting-started-op-stack), the contract addresses are in `.../optimism/packages/contracts-bedrock/deployments/getting-started`, which you created when you deployed the L1 contracts.
 
@@ -24,7 +28,7 @@ If you followed the directions in [Getting Started](/getting-started-op-stack), 
 | `OptimismPortal`         | `OptimismPortalProxy.json`
 | `L2OutputOracle`         | `L2OutputOracleProxy.json`
 
-#### Unneeded contract addresses
+### Specify zero address for SDK contract addresses
 
 Some contracts are required by the SDK as a sanity check, but are not actually used.
 For these contracts you can just specify the zero address:
@@ -34,19 +38,20 @@ For these contracts you can just specify the zero address:
 *   `BondManager`
 
 In JavaScript you can create the zero address using the expression `"0x".padEnd(42, "0")`.
+</Steps>
 
-### The CrossChainMessenger object
+## Create the `CrossChainMessenger` Object
 
 These directions assume you are inside the [Hardhat console](https://hardhat.org/hardhat-runner/docs/guides/hardhat-console).
 They further assume that your project already includes the Optimism SDK [`@eth-optimism/sdk`](https://www.npmjs.com/package/@eth-optimism/sdk).
-
-1.  Import the SDK
+<Steps>
+### Import the SDK
 
     ```js
     optimismSDK = require("@eth-optimism/sdk")
     ```
 
-2.  Set the configuration parameters.
+### Set the configuration parameters
 
     | Variable name | Value |
     | - | - |
@@ -54,7 +59,7 @@ They further assume that your project already includes the Optimism SDK [`@eth-o
     | `l2Url` | URL to your OP Stack. If running on the same computer, it is `http://localhost:8545`
     | `privKey` | The private key for an account that has some ETH on the L1
 
-3.  Create the [providers](https://docs.ethers.org/v5/api/providers/) and [signers](https://docs.ethers.org/v5/api/signer/).
+### Create the [providers](https://docs.ethers.org/v5/api/providers/) and [signers](https://docs.ethers.org/v5/api/signer/)
 
     ```js
     l1Provider = new ethers.providers.JsonRpcProvider(l1Url)
@@ -63,7 +68,7 @@ They further assume that your project already includes the Optimism SDK [`@eth-o
     l2Signer = new ethers.Wallet(privKey).connect(l2Provider)
     ```
 
-4.  Create the L1 contracts structure.
+### Create the L1 contracts structure
 
     ```js
     zeroAddr = "0x".padEnd(42, "0")
@@ -80,7 +85,7 @@ They further assume that your project already includes the Optimism SDK [`@eth-o
     }                       
     ```
 
-5.  Create the data structure for the standard bridge.
+### Create the data structure for the standard bridge
 
     ```js
      bridges = { 
@@ -97,7 +102,7 @@ They further assume that your project already includes the Optimism SDK [`@eth-o
     }
     ```
 
-6.  Create the [`CrossChainMessenger`](https://sdk.optimism.io/classes/crosschainmessenger) object.
+### Create the [`CrossChainMessenger`](https://sdk.optimism.io/classes/crosschainmessenger) object
 
     ```js
     crossChainMessenger = new optimismSDK.CrossChainMessenger({
@@ -112,12 +117,13 @@ They further assume that your project already includes the Optimism SDK [`@eth-o
        l2SignerOrProvider: l2Signer,    
     })
     ```
+</Steps>
 
-### Verify SDK functionality
+## Verify SDK Functionality
 
 To verify the SDK's functionality, transfer some ETH from L1 to L2.
-
-1.  Get the current balances.
+<Steps>
+### Get the current balances
 
     ```js
     balances0 = [
@@ -126,14 +132,14 @@ To verify the SDK's functionality, transfer some ETH from L1 to L2.
     ]
     ```
 
-2.  Transfer 1 gwei.
+### Transfer 1 gwei
 
     ```js
     tx = await crossChainMessenger.depositETH(1e9)
     rcpt = await tx.wait()
     ```
 
-3.  Get the balances after the transfer.
+### Get the balances after the transfer
 
     ```js
     balances1 = [
@@ -142,14 +148,18 @@ To verify the SDK's functionality, transfer some ETH from L1 to L2.
     ]
     ```
 
-4.  See that the L1 balance changed (probably by a lot more than 1 gwei because of the cost of the transaction).
+### See that the L1 balance changed 
+It probably changed by a lot more than 1 gwei because of the cost of the transaction.
 
     ```js
     (balances0[0]-balances1[0])/1e9
     ```
 
-5.  See that the L2 balance changed (it might take a few minutes).
+### See that the L2 balance changed 
+This process might take a few minutes.
 
     ```js
     ((await l2Provider.getBalance(l1Signer.address))-balances0[1])/1e9
     ```
+</Steps>
+That's it! You're all set! 🎉
