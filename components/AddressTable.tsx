@@ -1,13 +1,5 @@
 import type { ReactElement } from 'react'
-
-const explorers = {
-  '1': 'https://etherscan.io',
-  '5': 'https://goerli.etherscan.io',
-  '10': 'https://optimistic.etherscan.io',
-  '420': 'https://goerli-optimism.etherscan.io',
-  '11155111': 'https://sepolia.etherscan.io/',
-  '11155420': 'https://sepolia-optimism.etherscan.io/',
-}
+import { CHAIN_CONSTANTS } from '@/utils/constants'
 
 export function AddressTable({
   chain,
@@ -38,7 +30,7 @@ export function AddressTable({
                     </code>
                   </td>
                   <td className="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 dark:nx-border-gray-600 nx-text-center">
-                    <a href={`${explorers[explorer]}/address/${address}`} target="_blank" rel="noreferrer" className="nx-text-primary-600 nx-underline nx-decoration-from-font [text-underline-position:from-font]">
+                    <a href={`${CHAIN_CONSTANTS[parseInt(explorer)].explorer}/address/${address}`} target="_blank" rel="noreferrer" className="nx-text-primary-600 nx-underline nx-decoration-from-font [text-underline-position:from-font]">
                       <code className="nx-border-black nx-border-opacity-[0.04] nx-bg-opacity-[0.03] nx-bg-black nx-break-words nx-rounded-md nx-border nx-py-0.5 nx-px-[.25em] nx-text-[.9em] dark:nx-border-white/10 dark:nx-bg-white/10">
                         {address}
                       </code>
