@@ -14,32 +14,32 @@ This tutorial explains how to use the OP Stack Client SDK when working with nati
 *   If you are using a chain that is *not* natively supported, for example an OP Stack chain [you just created](/getting-started-op-stack), you can continue to use [the OP Stack Client SDK](https://sdk.optimism.io/).
     You just need to provide some contract addresses to the `CrossDomainMessenger` because they aren't preconfigured. This tutorial walks you through that process.
 
-## Get Contract Addresses
+## Before You Begin
 
-<Steps>
-  ### Locate the L1 contract addresses
+To configure the `CrossDomainMessenger`, you'll first need to locate the L1 contract addresses and specify the zero address for unused SDK contracts.
 
-  If you followed the directions in [Getting Started](/getting-started-op-stack), the contract addresses are in `.../optimism/packages/contracts-bedrock/deployments/getting-started`, which you created when you deployed the L1 contracts.
+### L1 contract addresses
 
-  | Contract name when creating `CrossDomainMessenger` | File with address |
-  | - | - |
-  | `AddressManager`         | `Lib_AddressManager.json`
-  | `L1CrossDomainMessenger` | `Proxy__OVM_L1CrossDomainMessenger.json`
-  | `L1StandardBridge`       | `Proxy__OVM_L1StandardBridge.json`
-  | `OptimismPortal`         | `OptimismPortalProxy.json`
-  | `L2OutputOracle`         | `L2OutputOracleProxy.json`
+If you followed the directions in [Getting Started](/getting-started-op-stack), the contract addresses are in `.../optimism/packages/contracts-bedrock/deployments`, which you created when you deployed the L1 contracts.
 
-  ### Specify zero address for SDK contract addresses
+| Contract name when creating `CrossDomainMessenger` | File with address |
+| - | - |
+| `AddressManager`         | `Lib_AddressManager.json`
+| `L1CrossDomainMessenger` | `Proxy__OVM_L1CrossDomainMessenger.json`
+| `L1StandardBridge`       | `Proxy__OVM_L1StandardBridge.json`
+| `OptimismPortal`         | `OptimismPortalProxy.json`
+| `L2OutputOracle`         | `L2OutputOracleProxy.json`
 
-  Some contracts are required by the SDK as a sanity check, but are not actually used.
-  For these contracts you can just specify the zero address:
+### SDK contract addresses
 
-  *   `StateCommitmentChain`
-  *   `CanonicalTransactionChain`
-  *   `BondManager`
+Some contracts are required by the SDK as a sanity check, but are not actually used.
+For these contracts you can just specify the zero address:
 
-  In JavaScript you can create the zero address using the expression `"0x".padEnd(42, "0")`.
-</Steps>
+*   `StateCommitmentChain`
+*   `CanonicalTransactionChain`
+*   `BondManager`
+
+In JavaScript you can create the zero address using the expression `"0x".padEnd(42, "0")`.
 
 ## Create the `CrossChainMessenger` Object
 
