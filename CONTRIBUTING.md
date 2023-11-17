@@ -75,10 +75,11 @@ To submit your contribution for review:
     
 >If your pull request is not ready for review yet, choose the “[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)” in the dropdown. The Optimism documentation team will review your pull request only when you mark it as “[Ready for review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request)”.
    
-5. Add GitHub labels for the type of updates introduced by the pull request: 
-     - `pr:new-content` for brand new content,
-     - `pr:updated-content` for significant (20+ lines) updates to existing content, or 
-     - `pr:small-edit` for smaller improvements (fixes, typos, chore tasks…).
+5. Add GitHub labels for the pull request. Add `documentation` to all pull requests in this repo **AND** additional labels based on the type of update or request.
+     - `tutorial`, `faq`, or `troubleshooting` for specific content types, 
+     - `oracle`, `rpc-provider`, `faucet`, or `attestation` for ecosystem offerings,
+     - `user feedback` for general feedback about one or more pages, or 
+     - `bug` if something isn't working as expected. 
 >If label for type of update is not set, the Optimism Documentation team will set or update this for you<br/>
     
 **Warning**
