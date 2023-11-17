@@ -1,4 +1,7 @@
 module.exports = {
+  parserOptions: {
+    ecmaVersion: 'latest',
+  },
   extends: [
     'plugin:mdx/recommended',
   ],
