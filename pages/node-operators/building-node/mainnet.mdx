@@ -44,15 +44,15 @@ You will need 500+ GB for this part alone.
   c17067b7bc39a6daa14f71d448c6fa0477834c3e68a25e96f26fe849c12a09bffe510e96f7eacdef19e93e3167d15250f807d252dd6f6f9053d0e4457c73d5fb mainnet-bedrock.tar.zst
   ```
 
-  ### Create the data directory in `op-geth` and fill it
+  ### Create the `op-geth` data directory and fill it
 
   This will take time.
 
-  Navigate into your `op-geth` directory and run these commands:
+  Navigate to location you want to put your `op-geth` directory and unpack the compressed data directory
 
   ```sh
-  mkdir datadir
-  cd datadir
+  mkdir op-geth-datadir
+  cd op-geth-datadir
   tar xvf <<PATH_TO_DATA_DIR>>
   ```
 </Steps>
@@ -90,11 +90,11 @@ You will need 500+ GB for this part alone.
 
   This will take time.
 
-  Navigate into your `l2geth` directory and run these commands:
+  Navigate to location you want to put your `l2geth` directory and run these commands:
 
   ```sh
-  mkdir datadir
-  cd datadir
+  mkdir l2geth-datadir
+  cd l2geth-datadir
   tar xvf <<PATH_TO_DATA_DIR>>
   ```
 </Steps>
@@ -102,97 +102,57 @@ You will need 500+ GB for this part alone.
 ## Create a shared secret between `op-geth` and `op-node`
 
 <Steps>
-  ### Navigate into your `op-geth` directory and run these commands:
+  ### Navigate into your `op-geth` directory
+
+  ### Create a random number 
+
+  This will be the shared secret for `op-geth` and `op-node` to communicate over the engine API authrpc.
 
   ```sh
   openssl rand -hex 32 > jwt.txt
-  cp jwt.txt ../optimism/op-node
   ```
-
-  ### Create a new directory `scripts`
-
-  Place in the root of your working directory. These scripts will be used to start the different components.
 </Steps>
 
-## (Optional - Archive Node) `l2geth`
+## (Optional - Archive Node) Start `l2geth`
 
 <Steps>
-  ### Navigate into your `scripts` directory:
+  ### Navigate into your `l2geth` directory
 
-  ### Create a new file:
-
-  ```sh
-  touch run-l2geth.sh
-  ```
-
-  ### Make it executable:
+  ### Start `l2geth` with the following command
 
   ```sh
-  chmod +x run-l2geth.sh
-  ```
-
-  ### Insert this snippet of code into `run-l2geth.sh` and modify the path to the `l2geth` directory
-
-  ```sh
-  #!/usr/bin/bash
-
-  cd ../optimism-legacy/l2geth
-
   USING_OVM=true \
     ETH1_SYNC_SERVICE_ENABLE=false \
     RPC_API=eth,rollup,net,web3,debug \
     RPC_ENABLE=true \
     RPC_PORT=8546 \ # need to rebind port because op-geth uses the same default port
-    ./build/bin/geth --datadir ./datadir
-  ```
-
-  ### Run the following command to start `l2geth`:
-
-  ```sh
-  ./run-l2geth.sh
+    ./build/bin/geth --datadir << /path/to/l2geth-datadir>>
   ```
 </Steps>
 
-## `op-geth`
+## Start `op-geth`
 
 <Steps>
-  ### Navigate into your `scripts` directory:
+  ### Navigate into your `op-geth` directory
 
-  ### Create a new file:
+  ### Start `op-geth` with the following command 
 
-  ```sh
-  touch run-op-geth.sh
-  ```
-
-  ### Make it executable:
+  *   Make sure you update your path to your data directory 
 
   ```sh
-  chmod +x run-op-geth.sh
-  ```
-
-  ### Insert this snippet of code into `run-op-geth.sh` and modify the path to the `op-geth` directory.
-
-  ```sh
-  #! /usr/bin/bash
-
-  SEQUENCER_URL=https://mainnet-sequencer.optimism.io/
-  NET=op-mainnet
-
-  cd <<Path to op-geth directory>>
-
   ./build/bin/geth \
-    --datadir=./datadir \
+    --datadir=<</path/to/op-geth-datadir>> \
     --http \
     --http.port=8545 \
     --http.addr=0.0.0.0 \
     --authrpc.addr=localhost \
     --authrpc.jwtsecret=./jwt.txt \
     --verbosity=3 \
-    --rollup.sequencerhttp=$SEQUENCER_URL \
+    --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
     --nodiscover \
     --syncmode=full \
     --maxpeers=0 \
-    --op-network=$NET
+    --op-network=op-mainnet
   ```
 
   <Callout type="info">
@@ -201,60 +161,28 @@ You will need 500+ GB for this part alone.
 
     You will also need to add `--gcmode archive`.
   </Callout>
-
-  ### Run the following command to start `op-geth`:
-
-  ```bash
-  ./run-op-geth.sh
-  ```
 </Steps>
 
-## `op-node`
+## Start `op-node`
 
 <Steps>
-  ### Navigate to the `scripts` directory you created
+  ### Navigate to the `op-node` directory
 
-  ### Create a new file:
+  ### Start `op-node` with the following command
 
-  ```sh
-  touch run-op-node.sh
-  ```
-
-  ### Make it executable:
+  *   Change `L1 RPC URL` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
+  *   Set `L1 RPC KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
+  *   Set the `/path/to/op-geth/jwt.txt` to the path of the shared secret you generated in a previous step
 
   ```sh
-  chmod +x run-op-node.sh
-  ```
-
-  ### Insert this snippet of code into `run-op-node.sh`:
-
-  ```sh
-  #!/usr/bin/bash
-
-  L1URL=<< L1 RPC URL >>
-  L1KIND=basic
-  NET=op-mainnet
-
-  cd <<Path to op-node directory>>
-
-
   ./bin/op-node \
-      --l1=$L1URL  \
-      --l1.rpckind=$L1KIND \
+      --l1=<< L1 RPC URL >>  \
+      --l1.rpckind=<< L1 RPC KIND >> \
       --l2=ws://localhost:8551 \
-      --l2.jwt-secret=./jwt.txt \
-      --network=$NET \
+      --l2.jwt-secret=<< /path/to/op-geth/jwt.txt >> \
+      --network=op-mainnet \
       --rpc.addr=0.0.0.0 \
       --rpc.port=8547
-  ```
-
-  *   Change `<< L1 RPC URL >>` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
-  *   Set `L1KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
-
-  ### Run the following command to start `op-node`:
-
-  ```bash
-  ./run-op-node.sh
   ```
 </Steps>
 
