@@ -1,36 +1,103 @@
 ---
-title: Running OP Testnet from Source
+title: Running OP Mainnet from Source
 lang: en-US
-description: Learn how to run a node from source using OP Testnet.
+description: Learn how to run a node from source using OP Mainnet.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Running OP Testnet from Source
+# Running OP Mainnet from Source
 
 <Callout type="info">
-  Please complete the first tutorial on [building a node from source](intro), if you have not done so.
+  Please complete the first tutorial on [building a node from source](node-from-source), if you have not done so.
 </Callout>
 
-## Before You Begin
+## Get the data directory
 
-You need to know some prerequisite information on migrated vs. non-migrated networks shared in this section.
+The next step is to download the data directory for `op-geth`.
+You will need 500+ GB for this part alone.
 
-*   Migrated Networks, *OP Mainnet* and *OP Goerli*, were running before the Bedrock upgrade.
-*   Non-Migrated Networks, *OP Sepolia*, have only existed in a post Bedrock world. The way transaction execution is handled is fundamentally different pre- vs post-bedrock.
-*   Migrated networks are required to initialize their nodes with a data directory and non-migrated networks can simply initialize from a genesis file.
+<Steps>
+  ### Download the data directory snapshot
 
-## OP Sepolia Initialization
+  This is a large file so expect it to take some time. [Bedrock Data Directory (303GB)](https://datadirs.optimism.io/mainnet-bedrock.tar.zst)
 
-OP Sepolia is non-migrated network so it requires [initialization via genesis file](../node-operator-overview#initialization-via-genesis-file). `op-geth` uses JSON files to encode a network's genesis information. You'll need to download the genesis JSON, then run the following command to initialize the data directory:
+  <Callout>
+    Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
+  </Callout>
 
-```bash
-curl -o <path to genesis JSON> -sL https://networks.optimism.io/op-sepolia/genesis.json
+  ### Check the validity of your download
 
-geth init \
-	 --datadir="<your data directory>" \
-	 "<path to genesis JSON>"
-```
+  This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
+
+  ```bash
+  sha256sum mainnet-bedrock.tar.zst
+  # expected output
+  ec4baf47e309a14ffbd586dc85376833de640c0f2a8d7355cb8a9e64c38bfcd1  mainnet-bedrock.tar.zst
+  ```
+
+  OR
+
+  ```bash
+  sha512sum mainnet-bedrock.tar.zst
+  # expected output
+  c17067b7bc39a6daa14f71d448c6fa0477834c3e68a25e96f26fe849c12a09bffe510e96f7eacdef19e93e3167d15250f807d252dd6f6f9053d0e4457c73d5fb mainnet-bedrock.tar.zst
+  ```
+
+  ### Create the `op-geth` data directory and fill it
+
+  This will take time.
+
+  Navigate to location you want to put your `op-geth` directory and unpack the compressed data directory
+
+  ```sh
+  mkdir op-geth-datadir
+  cd op-geth-datadir
+  tar xvf <<PATH_TO_DATA_DIR>>
+  ```
+</Steps>
+
+## (Optional - OP Mainnet Archive Node) Get the data directory for `l2geth`
+
+<Steps>
+  ### Download the data directory snapshot
+
+  This is a large file so expect it to take some time. [Legacy Geth Data Directory (2.9TB)](https://datadirs.optimism.io/mainnet-legacy-archival.tar.zst)
+
+  <Callout>
+    Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
+  </Callout>
+
+  ### Check the validity of your download
+
+  This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
+
+  ```sh
+  sha256sum mainnet-legacy-archival.tar.zst
+  # expected output
+  4adedb61125b81b55f9bdccc2e85092050c65ef2253c86e2b79569732b772829  mainnet-legacy-archival.tar.zst
+  ```
+
+  OR
+
+  ```sh
+  sha512sum mainnet-legacy-archival.tar.zst
+  # expected output
+  e348488c458baa755510f23bbc8601619bc66bea78a89354c949ba7be3c6b39ed7dd2c50516621e38df6120299407da0d24445b96bf94a50364ed07bb8234b26 mainnet-legacy-archival.tar.zst
+  ```
+
+  ### Create the data directory in `l2geth` and fill it
+
+  This will take time.
+
+  Navigate to location you want to put your `l2geth` directory and run these commands:
+
+  ```sh
+  mkdir l2geth-datadir
+  cd l2geth-datadir
+  tar xvf <<PATH_TO_DATA_DIR>>
+  ```
+</Steps>
 
 ## Create a shared secret between `op-geth` and `op-node`
 
@@ -46,10 +113,27 @@ geth init \
   ```
 </Steps>
 
+## (Optional - Archive Node) Start `l2geth`
+
+<Steps>
+  ### Navigate into your `l2geth` directory
+
+  ### Start `l2geth` with the following command
+
+  ```sh
+  USING_OVM=true \
+    ETH1_SYNC_SERVICE_ENABLE=false \
+    RPC_API=eth,rollup,net,web3,debug \
+    RPC_ENABLE=true \
+    RPC_PORT=8546 \ # need to rebind port because op-geth uses the same default port
+    ./build/bin/geth --datadir << /path/to/l2geth-datadir>>
+  ```
+</Steps>
+
 ## Start `op-geth`
 
 <Steps>
-  ### Navigate into your `op-geth` directory 
+  ### Navigate into your `op-geth` directory
 
   ### Start `op-geth` with the following command 
 
@@ -64,14 +148,19 @@ geth init \
     --authrpc.addr=localhost \
     --authrpc.jwtsecret=./jwt.txt \
     --verbosity=3 \
-    --rollup.sequencerhttp=https://sepolia-sequencer.optimism.io/ \
+    --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
     --nodiscover \
     --syncmode=full \
     --maxpeers=0 \
-    --op-network=op-sepolia
+    --op-network=op-mainnet
   ```
 
-  Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs](/tools/rpc-providers).
+  <Callout type="info">
+    Archive Nodes
+    You will need to point `op-geth` at `l2geth` with `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth from before the [Bedrock upgrade](https://twitter.com/optimismFND/status/1666850591669202965). This flag is only necessary for OP Mainnet.
+
+    You will also need to add `--gcmode archive`.
+  </Callout>
 </Steps>
 
 ## Start `op-node`
@@ -91,10 +180,9 @@ geth init \
       --l1.rpckind=<< L1 RPC KIND >> \
       --l2=ws://localhost:8551 \
       --l2.jwt-secret=<< /path/to/op-geth/jwt.txt >> \
+      --network=op-mainnet \
       --rpc.addr=0.0.0.0 \
-      --rpc.port=8547 \
-      --network=op-sepolia \
-      --rollup.load-protocol-versions=true
+      --rpc.port=8547
   ```
 </Steps>
 
@@ -209,3 +297,8 @@ To estimate how long the synchronization will take, you need to first find out h
 ## Operations
 
 It is best to start `op-geth` first and shut it down last.
+
+## Next Steps
+
+*   Now that you've got your node up and running, check out the [Node Metrics and Monitoring Guide](../metrics) for health monitoring.
+*   If you run into any problems, please visit the [Node Troubleshooting Guide](../node-troubleshooting) for help.
