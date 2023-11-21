@@ -1,0 +1,65 @@
+---
+title: Getting Started Developing for OP Mainnet
+lang: en-US
+description: Learn the basics of OP Mainnet development.
+---
+
+import { Steps } from 'nextra/components'
+
+# Getting Started Developing for OP Mainnet
+
+This guide explains the basics of OP Mainnet development.
+OP Mainnet is [EVM equivalent](https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306), meaning we run a slightly modified version of the same `geth` you run on mainnet.
+Therefore, the differences between OP Mainnet development and Ethereum development are minor.
+But a few differences [do exist](/chain/differences).
+
+## OP Mainnet and OP Goerli Endpoint URLs
+
+To access any Ethereum type network you need an endpoint. [These providers](/builders/tools/rpc-providers) support our networks.
+
+### Network Choice
+
+For development purposes we recommend you use either a local development node or [Optimism Goerli](https://goerli-explorer.optimism.io/).
+That way you don't need to spend real money.
+If you need ETH on OP Goerli for testing purposes, [you can use this faucet](https://app.optimism.io/faucet?utm_source=docs).
+
+## Interacting with Contracts on OP Mainnet or OP Goerli
+
+We have Hardhat's Greeter contract on OP Goerli at address [0x575E9B4f2c3945d7CF07cb76628d29DF471692B8](https://goerli-explorer.optimism.io/address/0x575E9B4f2c3945d7CF07cb76628d29DF471692B8).
+You can verify your development stack configuration by interacting with it.
+
+## Development Stacks
+
+As you can see in the different development stacks below, the way you deploy contracts and interact with them on OP Mainnet or OP Goerli is almost identical to the way you do it with L1 Ethereum.
+The most visible difference is that you have to specify a different endpoint (of course).
+The list of other differences is [here](differences).
+
+*   [Apeworx](https://www.apeworx.io/)
+*   [Brownie](https://eth-brownie.readthedocs.io/en/stable/install.html)
+*   [Foundry](https://getfoundry.sh/)
+*   [Hardhat](https://hardhat.org/)
+*   [Remix](https://remix.ethereum.org)
+*   [Truffle](https://trufflesuite.com/)
+*   [Waffle](https://getwaffle.io/)
+
+## Best Practices
+
+### Use Provided EVM
+
+It is best to start development with the EVM provided by the development stack.
+Not only is it faster, but such EVMs often have extra features, such as the [ability to log messages from Solidity](https://hardhat.org/tutorial/debugging-with-hardhat-network.html) or a [graphical user interface](https://trufflesuite.com/ganache/).
+
+### Debug Before Deploying
+
+After you are done with that development, debug your decentralized application using either a [development node](/chain/testing/dev-node) or the [Goerli test network](/chain/op-networks).
+This lets you debug parts that are OP Mainnet specific such as calls to bridges to transfer assets between layers.
+
+Only when you have a version that works well on a test network should you deploy to the production network, where every transaction has a cost.
+
+### Contract Source Verification
+
+You don't have to upload your source code to [block explorers](/builders/tools/block-explorers), but it is a good idea.
+On the test network, it lets you issue queries and transactions from the explorer's user interface.
+On the production network, it lets users know exactly what your contract does, which is conducive to trust.
+
+Just remember, if you use [the Etherscan API](https://explorer.optimism.io/apis), you need one API key for OP Mainnet and a separate one for OP Goerli.
