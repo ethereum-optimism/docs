@@ -4,6 +4,8 @@ lang: en-US
 description: Learn how to operate an OP chain.
 ---
 
+import { Callout } from 'nextra/components'
+
 # Chain Operator Overview
 
 This document provides an overview of how to operate an OP Stack chain, including rollup and chain deployment basics. If you want to skip ahead to deploying and monitoring your chain, you can start with the [chain operator tutorials](#chain-operator-tutorials).
@@ -13,16 +15,18 @@ The OP Stack gives you the ability to deploy your own Rollup chains that use a L
 Specifically, OP Stack Rollups take advantage of the consensus mechanism (like PoW or PoS) of their parent chain instead of providing their own. For OP Stack chains, this parent blockchain is Ethereum. For more information on the rollup protocol, see [Rollup Protocol Guide](/protocol/overview).
 
 ## Deployment Basics
-OP Stack chains require four different components for deployment. It's useful to understand what each of these components does before you deploy your chain.
+OP Stack chains require four different components for deployment. It's useful to understand each component before you deploy your chain.
 
 1. **Smart Contracts**: OP Stack chains use several smart contracts on the L1 blockchain to manage aspects of the Rollup. Each OP Stack chain has its own set of L1 smart contracts that are deployed when the chain is created. For more information on smart contracts, see [Smart Contract Overview](/protocol/smart-contracts).
-2. **Sequencer Nodes**: OP Stack chains use Sequencer nodes to gather transactions from users and publish them to the L1 blockchain. Vanilla (unmodified) OP Stack chains rely on at least one of these Sequencer nodes, but you can also run additional non-Sequencer nodes if you'd like.
-    *   Consensus Client: OP Stack nodes, like Ethereum nodes, have a consensus client responsible for determining the list and ordering of blocks and transactions that are part of your blockchain.
-    Several implementations of the OP Stack consensus client exist, including `op-node` (maintained by OP Labs) and [`magi`](https://github.com/a16z/magi) (maintained by a16z).
-    *   Execution Client: OP Stack nodes, like Ethereum nodes, also have an execution client responsible for executing transactions and storing/updating the state of the blockchain.
-Various implementations of the OP Stack execution client exist, including `op-geth` (maintained by OP Labs), [`op-erigon`](https://github.com/testinprod-io/op-erigon) (maintained by Test in Prod), and `op-nethermind` (coming soon).
+2. **Sequencer Nodes**: OP Stack chains use Sequencer nodes to gather transactions from users and publish them to the L1 blockchain. OP Stack nodes, like Ethereum nodes, have a **consensus client** to determine the list and ordering of blocks and transactions that are part of your blockchain and **execution client** to execute transactions and storing/updating the state of the blockchain.
 3. **Batcher**: The Batcher is an entity for publishing transactions from the Sequencer to the L1 blockchain. The Batcher runs continuously alongside the Sequencer and publishes transactions in batches (hence the name) on a regular basis.
 4. **Proposer**: The Proposer is an entity responsible for publishing transactions *results* (in the form of L2 state roots) to the L1 blockchain. This allows smart contracts on L1 to read the state of the L2, which is necessary for cross-chain communication and user withdrawals.
+
+<Callout type="info">
+    Sequencer Node Implementations
+    *   Consensus clients: `op-node` (maintained by OP Labs) and [`magi`](https://github.com/a16z/magi) (maintained by a16z)
+    *   Execution clients: `op-geth` (maintained by OP Labs), [`op-erigon`](https://github.com/testinprod-io/op-erigon) (maintained by Test in Prod), and `op-nethermind` (coming soon)
+</Callout>
 
 ## Chain Operator Tutorials
 
