@@ -1,0 +1,216 @@
+---
+title: Running OP Testnet from Source
+lang: en-US
+description: Learn how to run a node from source using OP Testnet.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Running OP Testnet from Source
+
+<Callout type="info">
+  Please complete the first tutorial on [building a node from source](node-from-source), if you have not done so.
+</Callout>
+
+## Before You Begin
+
+You need to know some prerequisite information on migrated vs. non-migrated networks shared in this section.
+
+*   Migrated Networks, *OP Mainnet* and *OP Goerli*, were running before the Bedrock upgrade.
+*   Non-Migrated Networks, *OP Sepolia*, have only existed in a post Bedrock world. The way transaction execution is handled is fundamentally different pre- vs post-bedrock.
+*   Migrated networks are required to initialize their nodes with a data directory and non-migrated networks can simply initialize from a genesis file.
+
+## OP Sepolia Initialization
+
+OP Sepolia is non-migrated network so it requires [initialization via genesis file](../node-operator-overview#initialization-via-genesis-file). `op-geth` uses JSON files to encode a network's genesis information. You'll need to download the genesis JSON, then run the following command to initialize the data directory:
+
+```bash
+curl -o <path to genesis JSON> -sL https://networks.optimism.io/op-sepolia/genesis.json
+
+geth init \
+	 --datadir="<your data directory>" \
+	 "<path to genesis JSON>"
+```
+
+## Create a shared secret between `op-geth` and `op-node`
+
+<Steps>
+  ### Navigate into your `op-geth` directory
+
+  ### Create a random number 
+
+  This will be the shared secret for `op-geth` and `op-node` to communicate over the engine API authrpc.
+
+  ```sh
+  openssl rand -hex 32 > jwt.txt
+  ```
+</Steps>
+
+## Start `op-geth`
+
+<Steps>
+  ### Navigate into your `op-geth` directory 
+
+  ### Start `op-geth` with the following command 
+
+  *   Make sure you update your path to your data directory 
+
+  ```sh
+  ./build/bin/geth \
+    --datadir=<</path/to/op-geth-datadir>> \
+    --http \
+    --http.port=8545 \
+    --http.addr=0.0.0.0 \
+    --authrpc.addr=localhost \
+    --authrpc.jwtsecret=./jwt.txt \
+    --verbosity=3 \
+    --rollup.sequencerhttp=https://sepolia-sequencer.optimism.io/ \
+    --nodiscover \
+    --syncmode=full \
+    --maxpeers=0 \
+    --op-network=op-sepolia
+  ```
+
+  Other Sequencer URLs can be found here: [Networks, Public RPC Endpoints, & APIs](/builders/tools/rpc-providers).
+</Steps>
+
+## Start `op-node`
+
+<Steps>
+  ### Navigate to the `op-node` directory
+
+  ### Start `op-node` with the following command
+
+  *   Change `L1 RPC URL` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
+  *   Set `L1 RPC KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
+  *   Set the `/path/to/op-geth/jwt.txt` to the path of the shared secret you generated in a previous step
+
+  ```sh
+  ./bin/op-node \
+      --l1=<< L1 RPC URL >>  \
+      --l1.rpckind=<< L1 RPC KIND >> \
+      --l2=ws://localhost:8551 \
+      --l2.jwt-secret=<< /path/to/op-geth/jwt.txt >> \
+      --rpc.addr=0.0.0.0 \
+      --rpc.port=8547 \
+      --network=op-sepolia \
+      --rollup.load-protocol-versions=true
+  ```
+</Steps>
+
+## The initial synchronization
+
+The datadir provided by Optimism is not updated continuously, so before you can use the node you need a to synchronize it.
+
+During that process you get log messages from `op-node`, and nothing else appears to happen.
+
+```
+INFO [06-26|13:31:20.389] Advancing bq origin                      origin=17171d..1bc69b:8300332 originBehind=false
+```
+
+That is normal - it means that `op-node` is looking for a location in the batch queue.
+After a few minutes it finds it, and then it can start synchronizing.
+
+While it is synchronizing, you can expect log messages such as these from `op-node`:
+
+```
+INFO [06-26|14:00:59.460] Sync progress                            reason="processed safe block derived from L1" l2_finalized=ef93e6..e0f367:4067805 l2_safe=7fe3f6..900127:4068014 l2_unsafe=7fe3f6..900127:4068014 l2_time=1,673,564,096 l1_derived=6079cd..be4231:8301091
+INFO [06-26|14:00:59.460] Found next batch                         epoch=8e8a03..11a6de:8301087 batch_epoch=8301087 batch_timestamp=1,673,564,098
+INFO [06-26|14:00:59.461] generated attributes in payload queue    txs=1  timestamp=1,673,564,098
+INFO [06-26|14:00:59.463] inserted block                           hash=e80dc4..72a759 number=4,068,015 state_root=660ced..043025 timestamp=1,673,564,098 parent=7fe3f6..900127 prev_randao=78e43d..36f07a fee_recipient=0x4200000000000000000000000000000000000011 txs=1  update_safe=true
+```
+
+And log messages such as these from `op-geth`:
+
+```
+INFO [06-26|14:02:12.974] Imported new potential chain segment     number=4,068,194 hash=a334a0..609a83 blocks=1         txs=1         mgas=0.000  elapsed=1.482ms     mgasps=0.000   age=5mo2w20h dirty=2.31MiB
+INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,194 hash=a334a0..609a83 root=e80f5e..dd06f9 elapsed="188.373µs" age=5mo2w20h
+INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
+```
+
+## Estimate the synchronization time
+
+To estimate how long the synchronization will take, you need to first find out how many blocks you synchronize in a minute. You can use this [Foundry](https://book.getfoundry.sh/) script to get an estimated sync time.
+
+<Steps>
+  ### Navigate to your `scripts` directory
+
+  ### Create a new file:
+
+  ```sh
+  touch run-estimate.sh
+  ```
+
+  ### Make it executable:
+
+  ```sh
+  chmod +x run-estimate.sh
+  ```
+
+  ### Insert this snippet of code into `run-estimate.sh`:
+
+  ```sh
+  #!/usr/bin/bash
+
+  export ETH_RPC_URL=http://localhost:8545
+  CHAIN_ID=`cast chain-id`
+  echo Chain ID: $CHAIN_ID
+  echo Please wait
+
+  if [ $CHAIN_ID -eq 10 ]; then
+    L2_URL=https://mainnet.optimism.io
+  fi
+
+
+  if [ $CHAIN_ID -eq 420 ]; then
+    L2_URL=https://goerli.optimism.io
+  fi
+
+
+  if [ $CHAIN_ID -eq 11155420 ]; then
+    L2_URL=https://sepolia.optimism.io
+  fi
+
+  T0=`cast block-number --rpc-url $ETH_RPC_URL` ; sleep 60 ; T1=`cast block-number --rpc-url $ETH_RPC_URL`
+  PER_MIN=`expr $T1 - $T0`
+  echo Blocks per minute: $PER_MIN
+
+
+  if [ $PER_MIN -eq 0 ]; then
+      echo Not synching
+      exit;
+  fi
+
+  # During that minute the head of the chain progressed by thirty blocks
+  PROGRESS_PER_MIN=`expr $PER_MIN - 30`
+  echo Progress per minute: $PROGRESS_PER_MIN
+
+
+  # How many more blocks do we need?
+  HEAD=`cast block-number --rpc-url $L2_URL`
+  BEHIND=`expr $HEAD - $T1`
+  MINUTES=`expr $BEHIND / $PROGRESS_PER_MIN`
+  HOURS=`expr $MINUTES / 60`
+  echo Hours until sync completed: $HOURS
+
+  if [ $HOURS -gt 24 ] ; then
+     DAYS=`expr $HOURS / 24`
+     echo Days until sync complete: $DAYS
+  fi
+  ```
+
+  ### Run the following command to get an estimate:
+
+  ```sh
+  ./run-estimate.sh
+  ```
+</Steps>
+
+## Operations
+
+It is best to start `op-geth` first and shut it down last.
+
+## Next Steps
+
+*   Now that you've got your node up and running, check out the [Node Metrics and Monitoring Guide](../metrics) for health monitoring.
+*   If you run into any problems, please visit the [Node Troubleshooting Guide](../node-troubleshooting) for help.
