@@ -1,296 +1,108 @@
 ---
-title: Bridging your Standard ERC-20 token to OP Mainnet using the Standard Bridge
+title: Bridging Your Standard ERC-20 Token to OP Mainnet Using the Standard Bridge
 lang: en-US
 description: Learn how to bridge your standard ERC-20 token to OP Mainnet using the standard bridge.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Bridging your Standard ERC-20 token to OP Mainnet using the Standard Bridge
+# Bridging Your Standard ERC-20 Token to OP Mainnet Using the Standard Bridge
 
-For an L1/L2 token pair to work on the Standard Bridge the L2 token contract must implement
-[`IOptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol) interface.
-
-If you do not need any special processing on L2, just the ability to deposit, transfer, and withdraw tokens, you can use [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol).
-
-<Callout type="warning">
-  The standard bridge does *not* support certain ERC-20 configurations:
-
-  *   [Fee on transfer tokens](https://github.com/d-xo/weird-erc20#fee-on-transfer)
-  *   [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
+<Callout type="info">
+**This tutorial is for developers who want to bridge a new ERC-20 token to OP Mainnet.**
+If you want to bridge existing tokens, you can skip to the tutorial on [Bridging ERC-20 tokens with the Optimism SDK](./cross-dom-bridge-erc20).
 </Callout>
 
-## Before You Begin
+In this tutorial you'll learn how to bridge a standard ERC-20 token from Ethereum to OP Mainnet using the Standard Bridge system.
+This tutorial is meant for developers who already have an existing ERC-20 token on Ethereum and want to create a bridged representation of that token on OP Mainnet.
 
-This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm](https://pnpm.io/), and [yarn](https://classic.yarnpkg.com/) installed on your system.
+This tutorial explains how to use the [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol) to deploy a standardized ERC-20 token on OP Mainnet.
+Tokens created by this factory contract are compatible with the Standard Bridge system and include basic logic for deposits, transfers, and withdrawals.
+If you want to include specialized logic within your L2 token, see the tutorial on [Bridging Your Custom ERC-20 Token to OP Mainnet Using the Standard Bridge](./standard-bridge-custom-token) instead.
 
-## Deploying the token
+<Callout type="error">
+The Standard Bridge **does not** support [**fee on transfer tokens**](https://github.com/d-xo/weird-erc20#fee-on-transfer) or [**rebasing tokens**](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops) because they can cause bridge accounting errors.
+</Callout>
 
-<Steps>
-  ### Make a Project Folder and Initialize It
+## About OptimismMintableERC20s
 
-  ```sh
-  mkdir project-folder-name
-  cd folder-name
-  pnpm init
-  ```
+The Standard Bridge system requires that L2 representations of L1 tokens implement the [`IOptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol) interface.
+This interface is a superset of the standard ERC-20 interface and includes functions that allow the bridge to properly verify deposits/withdrawals and mint/burn tokens as needed.
+Your L2 token contract must implement this interface in order to be bridged using the Standard Bridge system.
+This tutorial will show you how to use the [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol) to create a basic standardized ERC-20 token on OP Mainnet.
 
-  ### Create Two Files for the Folder
+## Dependencies
 
-  *   Create a `.env` file
+*   [cast](https://book.getfoundry.sh/getting-started/installation)
 
-  ```js filename=".env file"
-  MNEMONIC=xxxx
-  L1_ALCHEMY_KEY=xxxx
-  L2_ALCHEMY_KEY=xxxx
-  L1_TOKEN_ADDRESS=0x32B3b2281717dA83463414af4E8CfB1970E56287
-  ```
+## Get ETH on Goerli and OP Goerli
 
-  *   Create a `hardhat.config.js` file
+This tutorial explains how to create a bridged ERC-20 token on OP Goerli.
+You will need to get some ETH on both of these testnets.
 
-  ```js filename="hardhat.config.js"
-  // Plugins
-  require('@nomiclabs/hardhat-ethers')
+<Callout type="info">
+You can use the [Paradigm Faucet](https://faucet.paradigm.xyz/) to get ETH on Goerli.
+You can use the [Superchain Faucet](https://app.optimism.io/faucet) to get ETH on OP Goerli.
+</Callout>
 
-  // Load environment variables from .env
-  require('dotenv').config();
+## Get an L1 ERC-20 Token Address
 
+You will need an L1 ERC-20 token for this tutorial.
+If you already have an L1 ERC-20 token deployed on Goerli, you can skip this step.
+Otherwise, you can use the testing token located at [`0x32B3b2281717dA83463414af4E8CfB1970E56287`](https://goerli.etherscan.io/address/0x32B3b2281717dA83463414af4E8CfB1970E56287) that includes a `faucet()` function that can be used to mint tokens.
 
-  const words = process.env.MNEMONIC.match(/[a-zA-Z]+/g).length
-  validLength = [12, 15, 18, 24]
-  if (!validLength.includes(words)) {
-     console.log(`The mnemonic (${process.env.MNEMONIC}) is the wrong number of words`)
-     process.exit(-1)
-  }
+## Create an L2 ERC-20 Token
 
-  module.exports = {
-    networks: {
-      'optimism-goerli': {
-        chainId: 420,
-        url: `https://opt-goerli.g.alchemy.com/v2/${process.env.L2_ALCHEMY_KEY}`,
-        accounts: { mnemonic: process.env.MNEMONIC }
-      },
-      'optimism-mainnet': {
-        chainId: 10,
-        url: `https://opt-mainnet.g.alchemy.com/v2/${process.env.L2_ALCHEMY_KEY}`,
-        accounts: { mnemonic: process.env.MNEMONIC }
-      }
-    },
-    solidity: '0.8.13',
-  }
-  ```
-
-  ### Install the dependencies
-
-  ```sh
-  pnpm add @eth-optimism/sdk dotenv @openzeppelin/contracts
-  ```
-
-  ### Edit `.env` file to set the deployment parameters
-
-  *   `MNEMONIC`, the mnemonic for an account that has enough ETH for the deployment.
-  *   `L1_ALCHEMY_KEY`, the key for the alchemy application for a Goerli endpoint.
-  *   `L2_ALCHEMY_KEY`, the key for the alchemy application for an OP Goerli endpoint.
-  *   `L1_TOKEN_ADDRESS`, the address of the L1 ERC20 which you want to bridge.
-      The default value, [`0x32B3b2281717dA83463414af4E8CfB1970E56287`](https://goerli.etherscan.io/address/0x32B3b2281717dA83463414af4E8CfB1970E56287) is a test ERC-20 contract on Goerli that lets you call `faucet` to give yourself test tokens.
-
-  ### Open the hardhat console
-
-  ```sh
-  yarn hardhat console --network optimism-goerli
-  ```
-
-  ### Connect to `OptimismMintableERC20Factory`
-
-  ```js
-  fname = "node_modules/@eth-optimism/contracts-bedrock/forge-artifacts/OptimismMintableERC20Factory.sol/OptimismMintableERC20Factory.json"
-  ftext = fs.readFileSync(fname).toString().replace(/\n/g, "")
-  optimismMintableERC20FactoryData = JSON.parse(ftext)
-  optimismMintableERC20Factory = new ethers.Contract(
-     "0x4200000000000000000000000000000000000012", 
-     optimismMintableERC20FactoryData.abi, 
-     await ethers.getSigner())
-  ```
-
-  ### Deploy the contract
-
-  ```js
-  deployTx = await optimismMintableERC20Factory.createOptimismMintableERC20(
-     process.env.L1_TOKEN_ADDRESS,
-     "Token Name on L2",
-     "L2-SYMBOL"
-  )
-  deployRcpt = await deployTx.wait()
-  ```
-</Steps>
-
-## Transferring tokens
+Once you have an L1 ERC-20 token, you can use the [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol) to create a corresponding L2 ERC-20 token on OP Goerli.
+All tokens created by the factory implement the `IOptimismMintableERC20` interface and are compatible with the Standard Bridge system.
 
 <Steps>
-  ### Get the token addresses
 
-  ```js
-  l1Addr = process.env.L1_TOKEN_ADDRESS
-  event = deployRcpt.events.filter(x => x.event == "OptimismMintableERC20Created")[0]
-  l2Addr = event.args.localToken
-  ```
+{<h3>Add a private key to your environment</h3>}
 
-  ### Get the data for `OptimismMintableERC20`
+You'll need a private key in order to sign transactions.
+Set your private key as an environment variable with the `export` command.
+Make sure this private key corresponds to an address that has ETH on OP Goerli.
 
-  ```js
-  fname = "node_modules/@eth-optimism/contracts-bedrock/forge-artifacts/OptimismMintableERC20.sol/OptimismMintableERC20.json"
-  ftext = fs.readFileSync(fname).toString().replace(/\n/g, "")
-  optimismMintableERC20Data = JSON.parse(ftext)
-  ```
+```bash
+export TUTORIAL_PRIVATE_KEY=0x...
+```
 
-  ### Get the L2 contract
+{<h3>Add an OP Goerli RPC URL to your environment</h3>}
 
-  ```js
-  l2Contract = new ethers.Contract(l2Addr, optimismMintableERC20Data.abi, await ethers.getSigner())   
-  ```
+You'll need an RPC URL in order to connect to OP Goerli.
+Set your RPC URL as an environment variable with the `export` command.
+
+```bash file=<rootDir>/public/tutorials/standard-bridge-standard-token.sh#L1 hash=89ea82af22924b4ef63c8b80d126d895
+```
+
+{<h3>Add your L1 ERC-20 token address to your environment</h3>}
+
+You'll need to know the address of your L1 ERC-20 token in order to create a bridged representation of it on OP Goerli.
+Set your L1 ERC-20 token address as an environment variable with the `export` command.
+
+```bash file=<rootDir>/public/tutorials/standard-bridge-standard-token.sh#L3-L4 hash=4a3583a77d966c2b75d95ea700f25472
+```
+
+{<h3>Deploy your L2 ERC-20 token</h3>}
+
+You can now deploy our L2 ERC-20 token using the [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol).
+Use the `cast` command to trigger the deployment function on the factory contract.
+This example command creates a token with the name "My Standard Demo Token" and the symbol "L2TKN".
+The resulting L2 ERC-20 token address is printed to the console.
+
+```bash file=<rootDir>/public/tutorials/standard-bridge-standard-token.sh#L6 hash=3050258730403cff7c30196a534b42d5
+```
+
 </Steps>
 
-### Get setup for L1 (provider, wallet, tokens, etc)
+## Bridge Some Tokens
 
-<Steps>
-  ### Get the L1 wallet
+Now that you have an L2 ERC-20 token, you can bridge some tokens from L1 to L2.
+Check out the tutorial on [Bridging ERC-20 tokens with the Optimism SDK](./cross-dom-bridge-erc20) to learn how to bridge your L1 ERC-20 to L2s using the Optimism SDK.
 
-  ```js
-  l1Url = `https://eth-goerli.g.alchemy.com/v2/${process.env.L1_ALCHEMY_KEY}`
-  l1RpcProvider = new ethers.providers.JsonRpcProvider(l1Url)
-  hdNode = ethers.utils.HDNode.fromMnemonic(process.env.MNEMONIC)
-  privateKey = hdNode.derivePath(ethers.utils.defaultPath).privateKey
-  l1Wallet = new ethers.Wallet(privateKey, l1RpcProvider)
-  ```
+## Add to the Superchain Token List
 
-  ### Get the L1 contract
-
-  ```js
-  l1Factory = await ethers.getContractFactory("OptimismUselessToken")
-  l1Contract = new ethers.Contract(process.env.L1_TOKEN_ADDRESS, l1Factory.interface, l1Wallet)
-  ```
-
-  ### Get tokens on L1 (and verify the balance)
-
-  ```js
-  faucetTx = await l1Contract.faucet()
-  faucetRcpt = await faucetTx.wait()
-  await l1Contract.balanceOf(l1Wallet.address)
-  ```
-</Steps>
-
-### Transfer tokens
-
-Create and use [`CrossDomainMessenger`](https://sdk.optimism.io/classes/crosschainmessenger) (the Optimism SDK object used to bridge assets).
-The SDK supports multiple OP Chains: OP, Base, etc.
-To see whether a specific OP Chain is supported directly, [see the documentation](https://sdk.optimism.io/enums/l2chainid).
-Chains that aren't officially supported just take a few extra steps.
-Get the L1 contract addresses, and [provide them to the SDK](/builders/chain-operators/tutorials/sdk#getting-contract-addresses).
-Once you do that, you can use the SDK normally.
-
-<Steps>
-  ### Import the Optimism SDK
-
-  ```js
-  optimismSDK = require("@eth-optimism/sdk")
-  ```
-
-  ### Create the cross domain messenger
-
-  ```js
-  l1ChainId = (await l1RpcProvider.getNetwork()).chainId
-  l2ChainId = (await ethers.provider.getNetwork()).chainId
-  l2Wallet = await ethers.provider.getSigner()
-  crossChainMessenger = new optimismSDK.CrossChainMessenger({
-     l1ChainId: l1ChainId,
-     l2ChainId: l2ChainId,
-     l1SignerOrProvider: l1Wallet,
-     l2SignerOrProvider: l2Wallet
-  })
-  ```
-</Steps>
-
-#### Deposit (from Ethereum to OP Mainnet, or Goerli to OP Goerli)
-
-<Steps>
-  ### Give the L1 bridge an allowance to use the user's token
-
-  The L2 address is necessary to know which bridge is responsible and needs the allowance.
-
-  ```js
-  depositTx1 = await crossChainMessenger.approveERC20(l1Contract.address, l2Addr, 1e9)
-  await depositTx1.wait()
-  ```
-
-  ### Check your balances on L1 and L2
-
-  Note that `l1Wallet` and `l2Wallet` have the same address, so it doesn't matter which one we use.
-
-  ```js
-  await l1Contract.balanceOf(l1Wallet.address) 
-  await l2Contract.balanceOf(l1Wallet.address)
-  ```
-
-  ### Complete the actual deposit
-
-  ```js
-  depositTx2 = await crossChainMessenger.depositERC20(l1Addr, l2Addr, 1e9)
-  await depositTx2.wait()
-  ```
-
-  ### Wait for the deposit to be relayed
-
-  ```js
-  await crossChainMessenger.waitForMessageStatus(depositTx2.hash, optimismSDK.MessageStatus.RELAYED)
-  ```
-
-  ### Check your balances on L1 and L2
-
-  ```js
-  await l1Contract.balanceOf(l1Wallet.address) 
-  await l2Contract.balanceOf(l1Wallet.address)
-  ```
-</Steps>
-
-#### Withdrawal (from OP Mainnet to Ethereum or OP Goerli to Goerli)
-
-<Steps>
-  ### Initiate the withdrawal on L2
-
-  ```js
-  withdrawalTx1 = await crossChainMessenger.withdrawERC20(l1Addr, l2Addr, 1e9)
-  await withdrawalTx1.wait()
-  ```
-
-  ### Prove the withdrawal after root state is published
-
-  *   Wait until the root state is published on L1.
-  *   This is likely to take less than 240 seconds.
-  *   Prove the withdrawal.
-
-      ```js
-      await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, optimismSDK.MessageStatus.READY_TO_PROVE)
-      withdrawalTx2 = await crossChainMessenger.proveMessage(withdrawalTx1.hash)
-      await withdrawalTx2.wait()
-      ```
-
-  ### Finish the withdrawal after the fault challenge period
-
-  *   Wait the fault challenge period, which is a short period on Goerl or seven days on the production network
-  *   Finish the withdrawal.
-
-      ```js
-      await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, optimismSDK.MessageStatus.READY_FOR_RELAY)
-      withdrawalTx3 = await crossChainMessenger.finalizeMessage(withdrawalTx1.hash)
-      await withdrawalTx3.wait()   
-      ```
-
-  ### Check your balances on L1 and L2
-
-  The balance on L2 should be back to zero.
-
-  ```js
-  await l1Contract.balanceOf(l1Wallet.address) 
-  await l2Contract.balanceOf(l1Wallet.address)
-  ```
-</Steps>
+The [Superchain Token List](https://github.com/ethereum-optimism/ethereum-optimism.github.io#readme) is a common list of tokens deployed on chains within the Optimism Superchain.
+This list is used by services like the [Optimism Bridge UI](https://app.optimism.io/bridge).
+If you want your OP Mainnet token to be included in this list, take a look at the [review process and merge criteria](https://github.com/ethereum-optimism/ethereum-optimism.github.io#review-process-and-merge-criteria).
