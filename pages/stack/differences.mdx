@@ -13,14 +13,14 @@ You should be aware of these descrepancies when building apps on top of Optimism
 
 ## OP Code Differences
 
-| Opcode  | Solidity equivalent | Behavior |
-| - | - | - |
-| `COINBASE`	| `block.coinbase`   | Undefined |
-| `DIFFICULTY` | `block.difficulty` | Random value. As this value is set by the sequencer, it is not as reliably random as the L1 equivalent. |
-| `NUMBER`     | `block.number`     | L2 block number
-| `TIMESTAMP`  | `block.timestamp`  | Timestamp of the L2 block
-| `ORIGIN`     | `tx.origin`        | If the transaction is an L1 ⇒ L2 transaction, then `tx.origin` is set to the [aliased address](#address-aliasing) of the address that triggered the L1 ⇒ L2 transaction. Otherwise, this opcode behaves normally. |
-| `CALLER`     | `msg.sender`      | If the transaction is an L1 ⇒ L2 transaction, and this is the initial call (rather than an internal transaction from one contract to another), the same [address aliasing](#address-aliasing) behavior applies.
+| Opcode       | Solidity equivalent | Behavior                                                                                                                                                                                                          |
+| ------------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `COINBASE`   | `block.coinbase`    | Undefined                                                                                                                                                                                                         |
+| `DIFFICULTY` | `block.difficulty`  | Random value. As this value is set by the sequencer, it is not as reliably random as the L1 equivalent.                                                                                                           |
+| `NUMBER`     | `block.number`      | L2 block number                                                                                                                                                                                                   |
+| `TIMESTAMP`  | `block.timestamp`   | Timestamp of the L2 block                                                                                                                                                                                         |
+| `ORIGIN`     | `tx.origin`         | If the transaction is an L1 ⇒ L2 transaction, then `tx.origin` is set to the [aliased address](#address-aliasing) of the address that triggered the L1 ⇒ L2 transaction. Otherwise, this opcode behaves normally. |
+| `CALLER`     | `msg.sender`        | If the transaction is an L1 ⇒ L2 transaction, and this is the initial call (rather than an internal transaction from one contract to another), the same [address aliasing](#address-aliasing) behavior applies.   |
 
 <Callout type="info">
   `tx.origin == msg.sender`
@@ -54,10 +54,10 @@ You can use [the getter functions](https://docs.soliditylang.org/en/v0.8.12/cont
 
   The value of `tx.origin` is determined as follows:
 
-  | Call source                        | `tx.origin`                                |
-  | ---------------------------------- | ------------------------------------------ |
-  | L2 user (Externally Owned Account) | The user's address (same as in Ethereum)   |
-  | L1 user (Externally Owned Account) | The user's address (same as in Ethereum)   |
+  | Call source                                             | `tx.origin`                                                        |
+  | ------------------------------------------------------- | ------------------------------------------------------------------ |
+  | L2 user (Externally Owned Account)                      | The user's address (same as in Ethereum)                           |
+  | L1 user (Externally Owned Account)                      | The user's address (same as in Ethereum)                           |
   | L1 contract (using `CanonicalTransactionChain.enqueue`) | `L1_contract_address + 0x1111000000000000000000000000000000001111` |
 
   The value of `msg.sender` at the top-level (the very first contract being called) is always equal to `tx.origin`.
@@ -102,9 +102,9 @@ You can use [the getter functions](https://docs.soliditylang.org/en/v0.8.12/cont
 
 There are several differences in the way blocks are produced between L1 Ethereum and Optimism.
 
-| Parameter           | L1 Ethereum | Optimism |
-| - | - | - |
-| Time between blocks | 12 seconds(1)  | 2 seconds |
+| Parameter           | L1 Ethereum    | Optimism         |
+| ------------------- | -------------- | ---------------- |
+| Time between blocks | 12 seconds(1)  | 2 seconds        |
 | Block target size   | 15,000,000 gas | to be determined |
 | Block maximum size  | 30,000,000 gas | to be determined |
 

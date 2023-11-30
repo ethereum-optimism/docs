@@ -13,15 +13,15 @@ You should be aware of these discrepancies when building apps on top of OP Mainn
 
 ## Opcode Differences
 
-| Opcode  | Solidity equivalent | Behavior |
-| - | - | - |
-| `COINBASE`	| `block.coinbase`   | Undefined |
-| `DIFFICULTY` | `block.difficulty` | Random value. As this value is set by the sequencer, it is not as reliably random as the L1 equivalent. [You can use an oracle for randomness](/builders/tools/oracles#verifiable-randomness-function-vrf). |
-| `NUMBER`     | `block.number`     | L2 block number
-| `TIMESTAMP`  | `block.timestamp`  | Timestamp of the L2 block
-| `ORIGIN`     | `tx.origin`        | If the transaction is an L1 ⇒ L2 transaction, then `tx.origin` is set to the [aliased address](#address-aliasing) of the address that triggered the L1 ⇒ L2 transaction. Otherwise, this opcode behaves normally. |
-| `CALLER`     | `msg.sender`      | If the transaction is an L1 ⇒ L2 transaction, and this is the initial call (rather than an internal transaction from one contract to another), the same [address aliasing](#address-aliasing) behavior applies.
-| [`PUSH0`](https://www.evm.codes/#5f?fork=shanghai)      | N/A               | Opcode not supported yet (will be added in a hardfork)
+| Opcode                                             | Solidity equivalent | Behavior                                                                                                                                                                                                          |
+| -------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `COINBASE`                                         | `block.coinbase`    | Undefined                                                                                                                                                                                                         |
+| `DIFFICULTY`                                       | `block.difficulty`  | Random value. As this value is set by the sequencer, it is not as reliably random as the L1 equivalent. [You can use an oracle for randomness](/builders/tools/oracles#verifiable-randomness-function-vrf).       |
+| `NUMBER`                                           | `block.number`      | L2 block number                                                                                                                                                                                                   |
+| `TIMESTAMP`                                        | `block.timestamp`   | Timestamp of the L2 block                                                                                                                                                                                         |
+| `ORIGIN`                                           | `tx.origin`         | If the transaction is an L1 ⇒ L2 transaction, then `tx.origin` is set to the [aliased address](#address-aliasing) of the address that triggered the L1 ⇒ L2 transaction. Otherwise, this opcode behaves normally. |
+| `CALLER`                                           | `msg.sender`        | If the transaction is an L1 ⇒ L2 transaction, and this is the initial call (rather than an internal transaction from one contract to another), the same [address aliasing](#address-aliasing) behavior applies.   |
+| [`PUSH0`](https://www.evm.codes/#5f?fork=shanghai) | N/A                 | Opcode not supported yet (will be added in a hardfork)                                                                                                                                                            |
 
 <Callout type="info">
   `tx.origin == msg.sender`:
@@ -54,10 +54,10 @@ You can use [the getter functions](https://docs.soliditylang.org/en/v0.8.12/cont
 
   The value of `tx.origin` is determined as follows:
 
-  | Call source                        | `tx.origin`                                |
-  | ---------------------------------- | ------------------------------------------ |
-  | L2 user (Externally Owned Account) | The user's address (same as in Ethereum)   |
-  | L1 user (Externally Owned Account) | The user's address (same as in Ethereum)   |
+  | Call source                                             | `tx.origin`                                                        |
+  | ------------------------------------------------------- | ------------------------------------------------------------------ |
+  | L2 user (Externally Owned Account)                      | The user's address (same as in Ethereum)                           |
+  | L1 user (Externally Owned Account)                      | The user's address (same as in Ethereum)                           |
   | L1 contract (using `CanonicalTransactionChain.enqueue`) | `L1_contract_address + 0x1111000000000000000000000000000000001111` |
 
   The value of `msg.sender` at the top-level (the very first contract being called) is always equal to `tx.origin`.
@@ -113,15 +113,15 @@ The L2 execution fee is calculated using [EIP-1559](https://notes.ethereum.org/@
 
 The EIP-1559 parameters are different:
 
-| Parameter | OP Mainnet value | Ethereum value (for reference) |
-| - | -: | -: |
-| Block gas limit | 30,000,000 gas | 30,000,000 gas
-| Block gas target | 5,000,000 gas | 15,000,000 gas
-| EIP-1559 elasticity multiplier | 6 | 2
-| EIP-1559 denominator | 50 | 8
-| Maximum base fee increase (per block) | 10% | 12.5%
-| Maximum base fee decrease (per block) | 2% | 12.5%
-| Block time in seconds | 2 | 12
+| Parameter                             | OP Mainnet value | Ethereum value (for reference) |
+| ------------------------------------- | ---------------: | -----------------------------: |
+| Block gas limit                       |   30,000,000 gas |                 30,000,000 gas |
+| Block gas target                      |    5,000,000 gas |                 15,000,000 gas |
+| EIP-1559 elasticity multiplier        |                6 |                              2 |
+| EIP-1559 denominator                  |               50 |                              8 |
+| Maximum base fee increase (per block) |              10% |                          12.5% |
+| Maximum base fee decrease (per block) |               2% |                          12.5% |
+| Block time in seconds                 |                2 |                             12 |
 
 ### Transaction pool (a.k.a. mempool)
 
@@ -135,11 +135,11 @@ The sequencer processes transactions in the mempool in order of their base and p
 
 There are several differences in the way blocks are produced between L1 Ethereum and OP Mainnet.
 
-| Parameter           | L1 Ethereum | Optimism Bedrock |
-| - | -: | -: |
-| Time between blocks | 12 seconds<sup>1</sup>  | 2 seconds |
-| Block target size   | 15,000,000 gas | 5,000,000 gas |
-| Block maximum size  | 30,000,000 gas | 30,000,000 gas |
+| Parameter           |            L1 Ethereum | Optimism Bedrock |
+| ------------------- | ---------------------: | ---------------: |
+| Time between blocks | 12 seconds<sup>1</sup> |        2 seconds |
+| Block target size   |         15,000,000 gas |    5,000,000 gas |
+| Block maximum size  |         30,000,000 gas |   30,000,000 gas |
 
 (1) This is the ideal.
 If any blocks are missed, it could be an integer multiple such as 24 seconds, 36 seconds, etc.
