@@ -28,8 +28,8 @@ If you want to use a network that isn't included by default you can simply [inst
 
 ## Create a Demo Project
 
-We're going to use the Optimism SDK for this tutorial.
-Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, we'll need to create a Node.js project to use it.
+You're going to use the Optimism SDK for this tutorial.
+Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
 {<h3>Make a Project Folder</h3>}
@@ -75,7 +75,7 @@ You can use the [Paradigm Faucet](https://faucet.paradigm.xyz/) to get ETH on Go
 
 ## Add a Private Key to Your Environment
 
-We need a private key in order to sign transactions.
+You need a private key in order to sign transactions.
 Set your private key as an environment variable with the `export` command.
 Make sure this private key corresponds to an address that has ETH on Goerli.
 
@@ -85,7 +85,7 @@ export TUTORIAL_PRIVATE_KEY=0x...
 
 ## Start the Node REPL
 
-We're going to use the Node REPL to interact with the Optimism SDK.
+You're going to use the Node REPL to interact with the Optimism SDK.
 To start the Node REPL run the following command in your terminal:
 
 ```bash
@@ -96,7 +96,7 @@ This will bring up a Node REPL prompt that allows you to run javascript code.
 
 ## Import Dependencies
 
-We need to import some dependencies into our Node REPL session.
+You need to import some dependencies into your Node REPL session.
 
 <Steps>
 
@@ -119,6 +119,11 @@ Let's set those up node.
 
 <Steps>
 
+{<h3>Load your private key</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.cjs#L6 hash=755b77a7ffc7dfdc186f36c37d3d847a
+```
+
 {<h3>Create the RPC providers and wallets</h3>}
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L8-L11 hash=4f453e218fe6079f35e4e12c5768acaa
@@ -128,7 +133,7 @@ Let's set those up node.
 
 ## Get ETH
 
-We're going to need some ETH on L1 that we can bridge to L2.
+You're going to need some ETH on L1 that you can bridge to L2.
 You can get some Goerli ETH from [this faucet](https://faucet.paradigm.xyz/).
 
 ## Deposit ETH
@@ -142,7 +147,6 @@ You'll then receive the same number of ETH on L2 in return.
 
 See how much ETH you have on L1 so you can confirm that the deposit worked later on.
 
-
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L14 hash=3be1dd9a6019e9f59ad6fab38e168e99
 ```
 
@@ -154,19 +158,17 @@ Create an instance of the `CrossChainMessenger` class:
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L16-L21 hash=3648c5f76a6ad1042083c54be8acd960
 ```
-
 {<h3>Deposit your ETH</h3>}
 
-Now we can deposit our ETH into the Standard Bridge contract.
-We'll deposit a small amount of ETH just to demonstrate the process.
+Now you can deposit your ETH into the Standard Bridge contract.
+You'll deposit a small amount of ETH just to demonstrate the process.
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L24-L25 hash=ce11a2dabfed5f70016f2c82eae9262c
 ```
 
 {<h3>Wait for the deposit to be relayed</h3>}
 
-We can use the `waitForMessageStatus` function to wait for the deposit to be relayed to L2.
-
+You can use the `waitForMessageStatus` function to wait for the deposit to be relayed to L2.
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L28 hash=659971675ab8d53bc2bd5196f72c873b
 ```
@@ -175,14 +177,12 @@ We can use the `waitForMessageStatus` function to wait for the deposit to be rel
 
 You should now have less ETH on L1.
 
-
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L31 hash=3be1dd9a6019e9f59ad6fab38e168e99
 ```
 
 {<h3>Check your balance on L2</h3>}
 
 You should now have more ETH on L2.
-
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L34 hash=7884641849eab1590b148118d709f0fd
 ```
@@ -193,7 +193,7 @@ You should now have more ETH on L2.
 
 You just bridged some ETH from L1 to L2.
 Nice!
-Now we're going to repeat the process in reverse to bridge some ETH from L2 to L1.
+Now you're going to repeat the process in reverse to bridge some ETH from L2 to L1.
 
 <Steps>
 
@@ -208,23 +208,25 @@ The first step to withdrawing ETH from L2 to L1 is to start the withdrawal on L2
 
 You should now have less ETH on L2, but your balance on L1 will not have changed yet.
 
-
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L41 hash=7884641849eab1590b148118d709f0fd
 ```
 
 {<h3>Wait until the withdrawal is ready to prove</h3>}
 
 The second step to withdrawing ETH from L2 to L1 is to prove to the bridge on L1 that the withdrawal happened on L2.
-We first need to wait until the withdrawal is ready to prove.
-
+You first need to wait until the withdrawal is ready to prove.
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L44 hash=e8b55ec0f16f90ba4d4197cf47ff8e6d
 ```
 
+<Callout type="info">
+This step can take a few minutes.
+Feel free to take a quick break while you wait.
+</Callout>
+
 {<h3>Prove the withdrawal on L1</h3>}
 
-Once the withdrawal is ready to be proven, we'll send an L1 transaction to prove that the withdrawal happened on L2.
-
+Once the withdrawal is ready to be proven, you'll send an L1 transaction to prove that the withdrawal happened on L2.
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L47 hash=fee5f5e924472ee9daceb681ccae1cb9
 ```
@@ -236,22 +238,19 @@ This can only happen after the fault proof period has elapsed.
 On OP Goerli, this is only a few seconds.
 On OP Mainnet, this takes 7 days.
 
-
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L50 hash=55a41ac5586b8a688ffd6dfbb20f2d15
 ```
 
 {<h3>Relay the withdrawal on L1</h3>}
 
-Once the withdrawal is ready to be relayed we can finally complete the withdrawal process.
-
+Once the withdrawal is ready to be relayed you can finally complete the withdrawal process.
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L53 hash=f8d30944dad1664d82b9fdf14da59f9e
 ```
 
 {<h3>Wait until the withdrawal is relayed</h3>}
 
-Now we simply wait until the message is relayed.
-
+Now you simply wait until the message is relayed.
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L56 hash=c2c14a739c44011a058e9848a0019f15
 ```
@@ -259,7 +258,6 @@ Now we simply wait until the message is relayed.
 {<h3>Check your balance on L1</h3>}
 
 You should now have more ETH on L1.
-
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.cjs#L59 hash=3be1dd9a6019e9f59ad6fab38e168e99
 ```
