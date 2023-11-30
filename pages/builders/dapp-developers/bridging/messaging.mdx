@@ -5,10 +5,11 @@ description: Learn how briging works between L1 and L2, how to use it, and what 
 ---
 
 import { Callout } from 'nextra/components'
+import { network } from '@/utils/networks'
 
 # Sending Data Between L1 and L2
 
-Smart contracts on L1 (Ethereum) can interact with smart contracts on L2 (OP Mainnet) through a process called "bridging".
+Smart contracts on L1 ({network.mainnet.l1.name}) can interact with smart contracts on L2 ({network.mainnet.l2.name}) through a process called "bridging".
 This page explains how briging works, how to use it, and what to watch out for.
 
 <Callout type="info">
@@ -18,10 +19,10 @@ This page explains how briging works, how to use it, and what to watch out for.
 
 ## Understanding Contract Calls
 
-It can be easier to understand bridging if you first have a basic understanding of how contracts on EVM-based blockchains like OP Mainnet and Ethereum communicate within the *same* network.
-The interface for sending messages *between* Ethereum and OP Mainnet is designed to mimic the standard contract communication interface as much as possible.
+It can be easier to understand bridging if you first have a basic understanding of how contracts on EVM-based blockchains like {network.mainnet.l2.name} and {network.mainnet.l1.name} communicate within the *same* network.
+The interface for sending messages *between* {network.mainnet.l1.name} and {network.mainnet.l2.name} is designed to mimic the standard contract communication interface as much as possible.
 
-Here's how a contract on Ethereum might trigger a function within another contract on Ethereum:
+Here's how a contract on {network.mainnet.l1.name} might trigger a function within another contract on {network.mainnet.l1.name}:
 
 ```solidity
 contract MyContract {
@@ -59,7 +60,7 @@ Because of limitations of Solidity, **the OP Stack's bridging interface is desig
 
 ## Basics of Communication Between Layers
 
-At a high level, the process for sending data between L1 and L2 is pretty similar to the process for sending data between two contracts on Ethereum (with a few caveats).
+At a high level, the process for sending data between L1 and L2 is pretty similar to the process for sending data between two contracts on {network.mainnet.l1.name} (with a few caveats).
 Communication between L1 and L2 is made possible by a pair of special smart contracts called the "messenger" contracts.
 Each layer has its own messenger contract which serves to abstract away some lower-level communication details, a lot like how HTTP libraries abstract away physical network connections.
 
@@ -89,7 +90,7 @@ address(_target).call{gas: _gasLimit}(_message);
 Except, of course, that we're calling a contract on a completely different network.
 
 We're glossing over a lot of the technical details that make this whole thing work under the hood, but this should be enough to get you started.
-Want to call a contract on OP Mainnet from a contract on Ethereum?
+Want to call a contract on {network.mainnet.l2.name} from a contract on {network.mainnet.l1.name}?
 It's dead simple:
 
 ```solidity
@@ -118,23 +119,22 @@ contract MyContract {
 ```
 
 <Callout type="info">
-  You can find the address of the `L1CrossDomainMessenger` for Ethereum [here](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/deployments/mainnet/L1CrossDomainMessengerProxy.json#L2) and for Goerli [here](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/deployments/goerli/L1CrossDomainMessengerProxy.json#L2).
-  The `L2CrossDomainMessenger` contract is always located at the address [`0x4200000000000000000000000000000000000007`](https://github.com/ethereum-optimism/optimism/blob/5c5b58e800de1171ca5ea5cf695f5183a1c358b2/packages/contracts-bedrock/src/libraries/Predeploys.sol#L11) on OP Mainnet and OP Goerli.
+  You can find the addresses of the `L1CrossDomainMessenger` and `L2CrossDomainMessenger` contracts for each network on the [Contract Addresses](/chain/addresse) page.
 </Callout>
 
 ## Communication Speed
 
-Unlike calls between contracts on the same blockchain, calls between Ethereum and OP Mainnet are *not* instantaneous.
+Unlike calls between contracts on the same blockchain, calls between {network.mainnet.l1.name} and {network.mainnet.l2.name} are *not* instantaneous.
 The speed of a cross-chain transaction depends on the direction in which the transaction is sent.
 
 ### For L1 to L2 Transactions
 
-Transactions sent from L1 to L2 take **approximately 1-3 minutes** to get from Ethereum to OP Mainnet, or from Goerli to OP Goerli.
+Transactions sent from L1 to L2 take **approximately 1-3 minutes** to get from {network.mainnet.l1.name} to {network.mainnet.l2.name}, or from {network.testnet.l1.name} to {network.testnet.l2.name}.
 This is because the Sequencer waits for a certain number of L1 blocks to be created before including L1 to L2 transactions in order to avoid potentially annoying [reorgs](https://www.alchemy.com/overviews/what-is-a-reorg).
 
 ### For L2 to L1 Transactions
 
-Transactions sent from L2 to L1 take **approximately 7 days** to get from OP Mainnet to Ethereum, or from OP Goerli to Goerli.
+Transactions sent from L2 to L1 take **approximately 7 days** to get from {network.mainnet.l2.name} to {network.mainnet.l1.name}, or from {network.testnet.l2.name} to {network.testnet.l1.name}.
 This is because the bridge contract on L1 must wait for the L2 state to be *proven* to the L1 chain before it can relay the message.
 
 The process of sending transactions from L2 to L1 involves four distinct steps:
@@ -150,7 +150,7 @@ The process of sending transactions from L2 to L1 involves four distinct steps:
 
 4.  The transaction is finalized on L1.
     This can *only* be done after the [fault challenge period](#understanding-the-challenge-period) has elapsed.
-    This period is 7 days on Ethereum and a few seconds on Goerli.
+    This period is 7 days on {network.mainnet.l1.name} and a few seconds on {network.testnet.l1.name}.
     This waiting period is a core part of the security model of the OP Stack and cannot be circumvented.
 
 ## Accessing `msg.sender`
@@ -185,7 +185,7 @@ modifier onlyOwner() {
 The majority of the cost of an L1 to L2 transaction comes from the smart contract execution on L1.
 When sending an L1 to L2 transaction, you send to the [`L1CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/111f3f3a3a2881899662e53e0f1b2f845b188a38/packages/contracts-bedrock/src/L1/L1CrossDomainMessenger.sol) contract, which then sends a call to the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/111f3f3a3a2881899662e53e0f1b2f845b188a38/packages/contracts-bedrock/src/L1/OptimismPortal.sol) contract.
 This involves some execution on L1, which costs gas.
-The total cost is ultimately determined by gas prices on Ethereum when you're sending the cross-chain transaction.
+The total cost is ultimately determined by gas prices on {network.mainnet.l1.name} when you're sending the cross-chain transaction.
 
 L1 to L2 execution also triggers contract execution on L2.
 The `OptimismPortal` contract charges you for this L2 execution by burning a dynamic amount of L1 gas during your L1 to L2 transaction, depending on the gas limit you requested on L2.
@@ -200,7 +200,7 @@ The amount of L1 gas charged increases when more people are sending L1 to L2 tra
 
 Each message from L2 to L1 requires three transactions:
 
-1.  An L2 transaction that *initiates* the transaction, which is priced the same as any other transaction made on OP Mainnet.
+1.  An L2 transaction that *initiates* the transaction, which is priced the same as any other transaction made on {network.mainnet.l2.name}.
 
 2.  An L1 transaction that *proves* the transaction.
     This transaction can only be submitted after L2 block including your L2 transaction is proposed on L1.
@@ -218,13 +218,13 @@ One of the most important things to understand about L1 ⇔ L2 interaction is th
 This means that any messages you send from Layer 2 will only be received on Layer 1 after this one week period has elapsed.
 We call this period of time the "challenge period" because it is the time during which a transaction can be challenged with a [fault proof](/stack/protocol/overview#fault-proofs).
 
-Optimistic Rollups are "optimistic" because they're based around the idea of publishing the *result* of a transaction to Ethereum without actually executing the transaction on Ethereum.
-In the "optimistic" case, this transaction result is correct and we can completely avoid the need to perform complicated (and expensive) logic on Ethereum.
+Optimistic Rollups are "optimistic" because they're based around the idea of publishing the *result* of a transaction to {network.mainnet.l1.name} without actually executing the transaction on {network.mainnet.l1.name}.
+In the "optimistic" case, this transaction result is correct and we can completely avoid the need to perform complicated (and expensive) logic on {network.mainnet.l1.name}.
 
 However, we still need some way to prevent incorrect transaction results from being published in place of correct ones.
 Here's where the "fault proof" comes into play.
 Whenever a transaction result is published, it's considered "pending" for a period of time known as the challenge period.
-During this period of time, anyone may re-execute the transaction *on Ethereum* in an attempt to demonstrate that the published result was incorrect.
+During this period of time, anyone may re-execute the transaction *on {network.mainnet.l1.name}* in an attempt to demonstrate that the published result was incorrect.
 
 If someone is able prove that a transaction result is faulty, then the result is scrubbed from existence and anyone can publish another result in its place (hopefully the correct one this time, financial punishments make faulty results *very* costly for their publishers).
 Once the window for a given transaction result has fully passed without a challenge the result can be considered fully valid (or else someone would've challenged it).

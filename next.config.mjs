@@ -1,5 +1,6 @@
 import nextra from 'nextra'
 import remarkCodeImport from 'remark-code-import'
+import remarkNetworkTemplate from './utils/plugins/remark/remark-network-template.mjs'
 
 const withNextra = nextra({
   theme: 'nextra-theme-docs',
@@ -8,6 +9,7 @@ const withNextra = nextra({
   mdxOptions: {
     remarkPlugins: [
       remarkCodeImport,
+      remarkNetworkTemplate,
     ]
   }
 })

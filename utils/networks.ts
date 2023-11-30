@@ -1,8 +1,4 @@
-interface Chain {
-  name: string
-  id: number
-  explorer: string
-}
+import * as addresses from 'superchain-registry/superchain/extra/addresses/addresses.json'
 
 interface Network {
   mainnet: {
@@ -15,32 +11,62 @@ interface Network {
   }
 }
 
-const chains: {
+class Chain {
+  public name: string
+  public id: number
+  public explorer: string
+  public connect: string
+
+  constructor(opts: {
+    name: string
+    id: number
+    explorer: string
+    connect: string
+  }) {
+    this.name = opts.name
+    this.id = opts.id
+    this.explorer = opts.explorer
+    this.connect = opts.connect
+  }
+
+  public address(name: string) {
+    return Object.entries(addresses)
+      .find(([chainid, ]) => {
+        return parseInt(chainid, 10) === this.id
+      })[1][name]
+  }
+}
+
+export const chains: {
   [name: string]: Chain
 } = {
-  ethereum: {
+  ethereum: new Chain({
     name: 'Ethereum',
     id: 1,
     explorer: 'https://etherscan.io',
-  },
-  opmainnet: {
+    connect: 'https://chainid.link?network=ethereum',
+  }),
+  opmainnet: new Chain({
     name: 'OP Mainnet',
     id: 10,
     explorer: 'https://optimistic.etherscan.io',
-  },
-  sepolia: {
+    connect: 'https://chainid.link?network=op-mainnet',
+  }),
+  sepolia: new Chain({
     name: 'Sepolia',
     id: 11155111,
     explorer: 'https://sepolia.etherscan.io',
-  },
-  opsepolia: {
+    connect: 'https://chainid.link?network=sepolia',
+  }),
+  opsepolia: new Chain({
     name: 'OP Sepolia',
     id: 11155420,
     explorer: 'https://sepolia-optimistic.etherscan.io/',
-  },
+    connect: 'https://chainid.link?network=op-sepolia',
+  }),
 }
 
-const networks: {
+export const networks: {
   [name: string]: Network
 } = {
   op: {
