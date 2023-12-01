@@ -1,14 +1,14 @@
 ---
 title: Bridging ERC-20 tokens with the Optimism SDK
 lang: en-US
-description: Learn how to use the Optimism SDK to transfer ERC-20 tokens between Layer 1 (Ethereum or Goerli) and Layer 2 (OP Mainnet or OP Goerli).
+description: Learn how to use the Optimism SDK to transfer ERC-20 tokens between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
 # Bridging ERC-20 Tokens to OP Mainnet With the Optimism SDK
 
-This tutorial explains how you can use the [Optimism SDK](https://sdk.optimism.io) to bridge ERC-20 tokens from L1 (Ethereum or Goerli) to L2 (OP Mainnet or OP Goerli).
+This tutorial explains how you can use the [Optimism SDK](https://sdk.optimism.io) to bridge ERC-20 tokens from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
 The Optimism SDK is an easy way to add bridging functionality to your javascript-based application.
 It also provides some safety rails to prevent common mistakes that could cause tokens to be made inaccessible.
 
@@ -68,21 +68,21 @@ Want to create a new wallet for this tutorial?
 If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
 </Callout>
 
-## Get ETH on Goerli and OP Goerli
+## Get ETH on Sepolia and OP Sepolia
 
-This tutorial explains how to bridge assets from Goerli to OP Goerli.
+This tutorial explains how to bridge assets from Sepolia to OP Sepolia.
 You will need to get some ETH on both of these testnets.
 
 <Callout type="info">
-You can use the [Paradigm Faucet](https://faucet.paradigm.xyz/) to get ETH on Goerli.
-You can use the [Superchain Faucet](https://app.optimism.io/faucet) to get ETH on OP Goerli.
+You can use [this faucet](https://www.sepoliafaucet.io) to get ETH on Sepolia.
+You can use the [Superchain Faucet](https://app.optimism.io/faucet) to get ETH on OP Sepolia.
 </Callout>
 
 ## Add a Private Key to Your Environment
 
 You need a private key in order to sign transactions.
 Set your private key as an environment variable with the `export` command.
-Make sure this private key corresponds to an address that has ETH on both Goerli and OP Goerli.
+Make sure this private key corresponds to an address that has ETH on both Sepolia and OP Sepolia.
 
 ```bash
 export TUTORIAL_PRIVATE_KEY=0x...
@@ -131,15 +131,15 @@ Let's set those up node.
 
 {<h3>Create the RPC providers and wallets</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L8-L11 hash=4f453e218fe6079f35e4e12c5768acaa
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L8-L11 hash=9afdce50665ae93bce602068071ffaa1
 ```
 
 {<h3>Set the L1 and L2 ERC-20 addresses</h3>}
 
-This tutorial uses existing ERC-20 tokens that have been deployed on Goerli and OP Goerli.
+This tutorial uses existing ERC-20 tokens that have been deployed on Sepolia and OP Sepolia.
 These tokens are designed for testing the briging process.
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L13-L14 hash=dacaa14d0b15ced12e41c87668811d04
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L13-L14 hash=d8f0d4c8124782a6cd36097ff31010e5
 ```
 
 <Callout>
@@ -151,7 +151,7 @@ If you're coming from the [Bridging Your Standard ERC-20 Token to OP Mainnet Usi
 ## Get L1 Tokens
 
 You're going to need some tokens on L1 that you can bridge to L2.
-The L1 testing token located at [`0x32B3b2281717dA83463414af4E8CfB1970E56287`](https://goerli.etherscan.io/address/0x32B3b2281717dA83463414af4E8CfB1970E56287) has a `faucet` function that makes it easy to get tokens.
+The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](https://sepolia.etherscan.io/address/0x5589BB8228C07c4e15558875fAf2B859f678d129) has a `faucet` function that makes it easy to get tokens.
 
 <Steps>
 
@@ -197,7 +197,7 @@ The Optimism SDK exports a `CrossChainMessenger` class that makes it easy to int
 
 Create an instance of the `CrossChainMessenger` class:
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L29-L34 hash=3648c5f76a6ad1042083c54be8acd960
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L29-L34 hash=997b9c4cdd5fb1f9d4e0882a683ae016
 ```
 
 {<h3>Allow the Standard Bridge to access your tokens</h3>}
@@ -289,7 +289,7 @@ Once the withdrawal is ready to be proven, you'll send an L1 transaction to prov
 
 The final step to withdrawing tokens from L2 to L1 is to relay the withdrawal on L1.
 This can only happen after the fault proof period has elapsed.
-On OP Goerli, this is only a few seconds.
+On OP Sepolia, this is only a few seconds.
 On OP Mainnet, this takes 7 days.
 
 ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L69 hash=55a41ac5586b8a688ffd6dfbb20f2d15
@@ -323,4 +323,4 @@ You should now have one more token on L1.
 Congrats!
 You've just deposited and withdrawn tokens using the Optimism SDK.
 You should now be able to write applications that use the Optimism SDK to transfer ERC-20 assets between L1 and L2.
-Although this tutorial used Goerli and OP Goerli, the same process works for Ethereum and OP Mainnet.
+Although this tutorial used Sepolia and OP Sepolia, the same process works for Ethereum and OP Mainnet.
