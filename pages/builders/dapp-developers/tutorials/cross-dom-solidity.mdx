@@ -34,21 +34,21 @@ Read more about message passing in the guide to [Sending Data Between L1 and L2]
 *   [node](https://nodejs.org/en/)
 *   [pnpm](https://pnpm.io/installation)
 
-## Get ETH on Goerli and OP Goerli
+## Get ETH on Sepolia and OP Sepolia
 
-This tutorial explains how to bridge assets from Goerli to OP Goerli.
+This tutorial explains how to bridge assets from Sepolia to OP Sepolia.
 You will need to get some ETH on both of these testnets.
 
 <Callout type="info">
-You can use the [Paradigm Faucet](https://faucet.paradigm.xyz/) to get ETH on Goerli.
-You can use the [Superchain Faucet](https://app.optimism.io/faucet) to get ETH on OP Goerli.
+You can use [this faucet](https://sepoliafaucet.com/) to get ETH on Sepolia.
+You can use the [Superchain Faucet](https://app.optimism.io/faucet) to get ETH on OP Sepolia.
 </Callout>
 
 ## Review the Contracts
-
-You're about to use two contracts that have already been deployed to Goerli and OP Goerli, the `Greeter` contracts.
-You can review the source code for the L1 `Greeter` contract [here on Etherscan](https://goerli.etherscan.io/address/0xA1518896BA922cCD9fB83adb1fF549406FcF261C#code).
-You can review the source code for the L2 `Greeter` contract [here on Etherscan](https://goerli-optimism.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#code).
+s
+You're about to use two contracts that have already been deployed to Sepolia and OP Sepolia, the `Greeter` contracts.
+You can review the source code for the L1 `Greeter` contract [here on Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#code).
+You can review the source code for the L2 `Greeter` contract [here on Etherscan](https://sepolia-optimism.etherscan.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#code).
 Both contracts have exactly the same source code.
 
 Feel free to review the source code for these two contracts now if you'd like.
@@ -66,7 +66,7 @@ After just a few minutes, you'll see the corresponding greeting set on the L2 `G
 
 Sending a message to the L2 `Greeter` contract via the L1 `Greeter` contract requires that you call the `sendGreeting` function.
 For simplicity, you'll interact with the contract directly on Etherscan.
-Open up the [L1 `Greeter` contract on Goerli Etherscan](https://goerli.etherscan.io/address/0xA1518896BA922cCD9fB83adb1fF549406FcF261C#writeContract) and click the "Connect to Web3" button.
+Open up the [L1 `Greeter` contract on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#writeContract) and click the "Connect to Web3" button.
 
 {<h3>Send your greeting</h3>}
 
@@ -87,13 +87,14 @@ This same function can be used to wait for a message to be relayed from L1 to L2
 {<h3>Check the L2 Greeter</h3>}
 
 After a few minutes, you should see the greeting on the L2 `Greeter` contract change to the greeting you set.
-Open up the [L2 `Greeter` contract on OP Goerli Etherscan](https://goerli-optimism.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#readContract) and click the "Read Contract" button.
+Open up the [L2 `Greeter` contract on OP Sepolia Etherscan](https://sepolia-optimism.etherscan.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#readContract) and click the "Read Contract" button.
 Paste your address into the field next to the "greeting" function and click the "Query" button.
 You should see the message you sent from L1.
 
 <Callout>
 Don't see your message yet?
 You might need to wait a little longer.
+L2 transactions triggered on L1 are typically processed within one minute but can occasionally be slightly delayed.
 </Callout>
 
 </Steps>
@@ -103,14 +104,14 @@ You might need to wait a little longer.
 Now you're going to use the L2 `Greeter` contract to set the greeting on the L1 `Greeter` contract.
 You'll send a transaction directly to the L2 `Greeter` contract which will ask the `L2CrossDomainMessenger` to send a message to the L1 `Greeter` contract.
 Unlike the previous step, you'll need to relay the message from L2 to L1 yourself!
-You'll do this by sending two transactions on Goerli, one proving transaction and one relaying transaction.
+You'll do this by sending two transactions on Sepolia, one proving transaction and one relaying transaction.
 
 <Steps>
 
 {<h3>Connect to Etherscan</h3>}
 
 Just like before, sending a message to the L1 `Greeter` contract via the L2 `Greeter` contract requires that you call the `sendGreeting` function.
-Open up the [L2 `Greeter` contract on OP Goerli Etherscan](https://goerli-optimism.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#writeContract) and click the "Connect to Web3" button.
+Open up the [L2 `Greeter` contract on OP Sepolia Etherscan](https://sepolia-optimism.etherscan.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#writeContract) and click the "Connect to Web3" button.
 
 {<h3>Send your greeting</h3>}
 
@@ -120,6 +121,7 @@ You can use any greeting you'd like.
 <Callout>
 Copy the transaction hash from the transaction you just sent.
 You'll need this for the next few steps.
+Feel free to keep this tab open so you can easily copy the transaction hash later.
 </Callout>
 
 {<h3>Create a demo project folder</h3>}
@@ -206,7 +208,7 @@ node
 
 {<h3>Create the RPC providers and wallets</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L10-L13 hash=4f453e218fe6079f35e4e12c5768acaa
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L10-L13 hash=9afdce50665ae93bce602068071ffaa1
 ```
 
 {<h3>Create a CrossChainMessenger instance</h3>}
@@ -215,7 +217,7 @@ The Optimism SDK exports a `CrossChainMessenger` class that makes it easy to pro
 
 Create an instance of the `CrossChainMessenger` class:
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L15-L20 hash=3648c5f76a6ad1042083c54be8acd960
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L15-L20 hash=997b9c4cdd5fb1f9d4e0882a683ae016
 ```
 
 {<h3>Wait until the message is ready to prove</h3>}
@@ -242,7 +244,7 @@ Once the message is ready to be proven, you'll send an L1 transaction to prove t
 
 The final step to sending messages from L2 to L1 is to relay the messages on L1.
 This can only happen after the fault proof period has elapsed.
-On OP Goerli, this is only a few seconds.
+On OP Sepolia, this is only a few seconds.
 On OP Mainnet, this takes 7 days.
 
 ```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L29 hash=45d995aab47ec29afee4bb4577ae9303
@@ -265,7 +267,7 @@ Now you simply wait until the message is relayed.
 {<h3>Check the L1 Greeter</h3>}
 
 Now that you've relayed the message, you should see the greeting on the L1 `Greeter` contract change to the greeting you set.
-Open up the [L1 `Greeter` contract on Goerli Etherscan](https://goerli.etherscan.io/address/0xA1518896BA922cCD9fB83adb1fF549406FcF261C#readContract) and click the "Read Contract" button.
+Open up the [L1 `Greeter` contract on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#readContract) and click the "Read Contract" button.
 Paste your address into the field next to the "greeting" function and click the "Query" button.
 You should see the message you sent from L2.
 
@@ -341,10 +343,11 @@ You can follow a similar pattern in your own smart contracts.
 
 ## Conclusion
 
-You just learned how you can write Solidity contracts on Goerli and OP Goerli that can talk to each other.
+You just learned how you can write Solidity contracts on Sepolia and OP Sepolia that can talk to each other.
 You can follow the same pattern to write contracts that can talk to each other on Ethereum and OP Mainnet.
 
 This sort of cross-chain communication is useful for a variety of reasons.
 For example, the [Standard Bridge](/builders/dapp-developers/bridging/standard-bridge) contracts use this same system to bridge ETH and ERC-20 tokens between Ethereum and OP Mainnet.
+
 One cool way to take advantage of cross-chain communication is to do most of your heavy lifting on OP Mainnet and then send a message to Ethereum only when you have important results to share.
 This way you can take advantage of the low gas costs on OP Mainnet while still being able to use Ethereum when you need it.
