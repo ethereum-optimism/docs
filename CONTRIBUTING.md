@@ -59,7 +59,7 @@ You can now start changing content and see the website updated live each time yo
 
 To prevent building issues upstream, you should build the content locally before submitting a pull request: stop or delete the terminal server if it's running, then run `pnpm dev`.
 
-- If no issues are reported (”client” and “server compiled successfully”), go ahead and submit the pull request. 
+- If no issues are reported ("client"and "server compiled successfully"), go ahead and submit the pull request. 
 - If some issues are reported (e.g., broken links), please use information reported by the terminal to fix issues. You can run `pnpm fix` to automatically fix most linting issues.
 - Try another `pnpm dev` and repeat until no issues are reported.
 
@@ -71,9 +71,9 @@ To submit your contribution for review:
 1. Create a new [pull request on GitHub](https://github.com/ethereum-optimism/docs/issues/new/choose).
 2. Select a PR type from the list or choose **Open a blank isssue** at the bottom of the page.
 3. Complete the form as requested. For blank PR issues, please provide a clear title and accurate description/context.
-4. Click the “Create pull request” button to create the pull request effectively.
+4. Click the "Create pull request"button to create the pull request effectively.
     
->If your pull request is not ready for review yet, choose the “[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)” in the dropdown. The Optimism documentation team will review your pull request only when you mark it as “[Ready for review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request)”.
+>If your pull request is not ready for review yet, choose the "[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)"in the dropdown. The Optimism documentation team will review your pull request only when you mark it as "[Ready for review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request)".
    
 5. Add GitHub labels for the pull request. Add `documentation` to all pull requests in this repo **AND** additional labels based on the type of update or request.
      - `tutorial`, `faq`, or `troubleshooting` for specific content types, 
@@ -85,7 +85,7 @@ To submit your contribution for review:
 **Warning**
 Approved pull requests are usually merged immediately into the `main` branch, automatically triggering a deployment on docs.optimism.io. Please add the `flag:merge-pending-release` label if the pull request content should only be released publicly in sync with a product release.
 
-That’s it! 🥳 Once the pull request is [reviewed and approved](#review-and-management-of-pull-requests), the Optimism Documentation team will merge it, and the content will be live on [docs.optimism.io](http://docs.optimism.io) a few minutes later. 🚀
+That's it! 🥳 Once the pull request is [reviewed and approved](#review-and-management-of-pull-requests), the Optimism Documentation team will merge it, and the content will be live on [docs.optimism.io](http://docs.optimism.io) a few minutes later. 🚀
 
 ## Review and Management of Pull Requests
 

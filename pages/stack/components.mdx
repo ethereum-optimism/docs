@@ -17,7 +17,7 @@ This page sketches out the different conceptual layers of the stack as they exis
 This doesn't include all of the modules or layers that may exist in the future, but it gives a good overview of the major OP Stack components.
 
 <Callout type="warning">
-  Please note that not all of the modules described on this page already exist in a production state — these are explicitly marked as either “**in development**” or “**proposed**.”
+  Please note that not all of the modules described on this page already exist in a production state — these are explicitly marked as either "**in development**"or "**proposed**."
 </Callout>
 
 ## Major Components
@@ -39,7 +39,7 @@ Ethereum DA is currently the most widely used Data Availability module for the O
 
 ### Sequencing
 
-The Sequencing Layer determines how user transactions on an OP Stack chain are collected and published to the Data Availability Layer module(s) in use. In the default Rollup configuration of the OP Stack, Sequencing is typically handled by a single dedicated Sequencer. Rules defined in the Derivation Layer generally restrict the Sequencer’s ability to withhold transactions for more than a specific period of time. In the proposed future, Sequencing will be modular such that chains can easily select and change the mechanism that controls their current Sequencer.
+The Sequencing Layer determines how user transactions on an OP Stack chain are collected and published to the Data Availability Layer module(s) in use. In the default Rollup configuration of the OP Stack, Sequencing is typically handled by a single dedicated Sequencer. Rules defined in the Derivation Layer generally restrict the Sequencer's ability to withhold transactions for more than a specific period of time. In the proposed future, Sequencing will be modular such that chains can easily select and change the mechanism that controls their current Sequencer.
 
 #### Single Sequencer
 
@@ -79,13 +79,13 @@ The EVM is an Execution Layer module that uses the same state representation and
 
 The Settlement Layer is a mechanism on external blockchains that establish a **view** of the state of an OP Stack chain on those external chains (including other OP Stack chains). For each OP Stack chain, there may be one or more Settlement mechanisms on one or more external chains. Settlement Layer mechanisms are **read-only** and allow parties external to the blockchain to make decisions based on the state of an OP Stack chain.
 
-The term “Settlement Layer” has its origins in the fact that Settlement Layer mechanisms are often used to handle withdrawals of assets out of a blockchain. This sort of withdrawal system first involves proving the state of the target blockchain to some third-party chain and then processing a withdrawal based on that state. However, the Settlement Layer is not strictly (or even predominantly) financial and, at its core, simply allows a third-party chain to become aware of the state of the target chain.
+The term "Settlement Layer"has its origins in the fact that Settlement Layer mechanisms are often used to handle withdrawals of assets out of a blockchain. This sort of withdrawal system first involves proving the state of the target blockchain to some third-party chain and then processing a withdrawal based on that state. However, the Settlement Layer is not strictly (or even predominantly) financial and, at its core, simply allows a third-party chain to become aware of the state of the target chain.
 
 Once a transaction is published and finalized on the corresponding Data Availability layer, the transaction is also finalized on the OP Stack chain. Short of breaking the underlying Data Availability layer, it can no longer be modified or removed. It may not be accepted by the Settlement Layer yet because the Settlement Layer needs to be able to verify transaction *results*, but the transaction itself is already immutable.
 
 #### Attestation-based Fault Proof
 
-An Attestation-based Fault Proof mechanism uses an optimistic protocol to establish a view of an OP Stack chain. In optimistic settlement mechanisms generally, **Proposer** entities can propose what they believe to be the current valid state of the OP Stack chain. If these proposals are not invalidated within a certain period of time (the “challenge period”), then the proposals are assumed by the mechanism to be correct. In the Attestation Proof mechanism in particular, a proposal can be invalidated if some threshold of pre-defined parties provide attestations to a valid state that is different than the state in the proposal. This places a trust assumption on the honesty of at least a threshold number of the pre-defined participants.
+An Attestation-based Fault Proof mechanism uses an optimistic protocol to establish a view of an OP Stack chain. In optimistic settlement mechanisms generally, **Proposer** entities can propose what they believe to be the current valid state of the OP Stack chain. If these proposals are not invalidated within a certain period of time (the "challenge period"), then the proposals are assumed by the mechanism to be correct. In the Attestation Proof mechanism in particular, a proposal can be invalidated if some threshold of pre-defined parties provide attestations to a valid state that is different than the state in the proposal. This places a trust assumption on the honesty of at least a threshold number of the pre-defined participants.
 
 *   [Specifications](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/specs/withdrawals.md) (called [withdrawal transactions](/builders/dapp-developers/bridging/messaging))
 *   [Source code](https://github.com/ethereum-optimism/optimism/tree/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock/contracts)
