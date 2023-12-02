@@ -6,6 +6,7 @@ module.exports = {
     'plugin:mdx/recommended',
   ],
   rules: {
+    'semi': ['error', 'never']
   },
   overrides: [
     {
@@ -17,7 +18,8 @@ module.exports = {
         'mdx/code-blocks': true
       },
       rules: {
-        'no-unused-expressions': 'off'
+        'no-unused-expressions': 'off',
+        'semi': ['error', 'never']
       }
     }
   ]
