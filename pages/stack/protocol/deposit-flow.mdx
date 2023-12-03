@@ -31,7 +31,7 @@ Information is encapsulated in lower layer packets on the sending side and then 
     It uses these parameters:
 
     *   `_to`, the destination address, is the messenger on the other side.
-        In the case of deposits, this is always [`0x4200000000000000000000000000000000000007`](https://goerli-optimism.etherscan.io/address/0x4200000000000000000000000000000000000007).
+        In the case of deposits, this is always [`0x4200000000000000000000000000000000000007`](https://sepolia-optimism.etherscan.io/address/0x4200000000000000000000000000000000000007).
     *   `_gasLimit`, the gas limit.
         This value is calculated using [the `baseGas` function](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol#L442-L471).
     *   `_value`, the ETH that is sent with the message.
@@ -79,14 +79,14 @@ It is possible to replay a failed deposit, possibly with more gas,
 
 ### Replays in action
 
-To see how replays work, you can use [this contract on OP Goerli](https://goerli-optimism.etherscan.io/address/0x26A145eccDf258688C763726a8Ab2aced898ADe1#code).
+To see how replays work, you can use [this contract on OP Sepolia](https://sepolia-optimism.etherscan.io/address/0xEF60cF6C6D0C1c755be104843bb72CDa3D778630#code).
 
 1.  Call `stopChanges`, using this Foundry command:
 
     ```sh
     PRIV_KEY=<your private key here>
-    export ETH_RPC_URL=<url to OP Goerli>
-    GREETER=0x26A145eccDf258688C763726a8Ab2aced898ADe1
+    export ETH_RPC_URL=https://sepolia.optimism.io
+    GREETER=0xEF60cF6C6D0C1c755be104843bb72CDa3D778630
     cast send --private-key $PRIV_KEY $GREETER "stopChanges()"
     ```
 
@@ -114,7 +114,7 @@ To see how replays work, you can use [this contract on OP Goerli](https://goerli
     Use these commands:
 
     ```sh
-    L1_RPC=<URL to Goerli>
+    L1_RPC=https://sepolia.optimism.io
     L1XDM_ADDRESS=0x5086d1eef304eb5284a0f6720f79403b4e9be294
     FUNC="sendMessage(address,bytes,uint32)"
     CALLDATA=`cast calldata "setGreeting(string)" "testing"`
@@ -124,7 +124,7 @@ To see how replays work, you can use [this contract on OP Goerli](https://goerli
     The transaction will be successful on L1, but then emit a fail event on L2.
 
 5.  The next step is to find the hash of the failed relay.
-    The easiest way to do this is to look in [the internal transactions of the destination contract](https://goerli-optimism.etherscan.io/address/0x26A145eccDf258688C763726a8Ab2aced898ADe1#internaltx), and select the latest one that appears as a failure.
+    The easiest way to do this is to look in [the internal transactions of the destination contract](https://sepolia-optimism.etherscan.io/address/0xEF60cF6C6D0C1c755be104843bb72CDa3D778630#internaltx), and select the latest one that appears as a failure.
     It should be a call to L2CrossDomainMessenger at address `0x420...007`. This is the call you need to replay.
 
     If the latest internal transaction is a success, it probably means your transaction hasn't relayed yet. Wait until it is, that may take a few minutes.

@@ -1,233 +1,128 @@
 ---
-title: Bridging your Custom ERC-20 token to OP Mainnet using the Standard Bridge
+title: Bridging Your Custom ERC-20 Token to OP Mainnet Using the Standard Bridge
 lang: en-US
 description: Learn how to bridge your custom ERC-20 token to OP Mainnet using the standard bridge.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Bridging your Custom ERC-20 token to OP Mainnet using the Standard Bridge
+# Bridging Your Custom ERC-20 Token to OP Mainnet Using the Standard Bridge
 
-For an L1/L2 token pair to work on the Standard Bridge, there has to be a layer of original mint (where the minting and burning of tokens is controlled by the business logic), and a bridged layer where the Standard Bridge controls minting and burning.
-The most common configuration is to have L1 as the layer of original mint, and L2 as the bridged layer, which allows for ERC-20 contracts that were written with no knowledge of OP Mainnet to be bridged.
-The contract on the bridged layer has to implement either the legacy [`IL2StandardERC20`](https://github.com/ethereum-optimism/optimism/blob/8b392e9b613ea4ca0270c2dca24d3485b7454954/packages/contracts/contracts/standards/IL2StandardERC20.sol) interface (only if the bridged layer is L2) or the new [`IOptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol) interface.
-
-For this to be done securely, the *only* entity that is allowed to mint and burn tokens on the bridged layer has to be the Standard Bridge, to ensure that the tokens on the bridged layer are backed up by real tokens on the layer of original mint.
-It is also necessary that the ERC-20 token contract on the layer of original mint *not* implement either of the interfaces, to make sure the bridge contracts don't get confused and think it is the bridged layer.
-
-<Callout type="warning">
-  The standard bridge does *not* support certain ERC-20 configurations:
-
-  *   [Fee on transfer tokens](https://github.com/d-xo/weird-erc20#fee-on-transfer)
-  *   [Tokens that modify balances without emitting a Transfer event](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops)
+<Callout type="info">
+**This tutorial is for developers who want to bridge a new ERC-20 token to OP Mainnet.**
+If you want to bridge existing tokens, you can skip to the tutorial on [Bridging ERC-20 tokens with the Optimism SDK](./cross-dom-bridge-erc20).
 </Callout>
 
-## Before You Begin
+In this tutorial you'll learn how to bridge a custom ERC-20 token from Ethereum to OP Mainnet using the Standard Bridge system.
+This tutorial is meant for developers who already have an existing ERC-20 token on Ethereum and want to create a bridged representation of that token on OP Mainnet.
 
-This tutorial assumes you already have [Node.js](https://nodejs.org/en/), [pnpm](https://pnpm.io/), and [yarn](https://classic.yarnpkg.com/) installed on your system.
+This tutorial explains how you can create a custom token that conforms to the [`IOptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol) interface so that it can be used with the Standard Bridge system.
+A custom token allows you to do things like trigger extra logic whenever a token is deposited.
+If you don't need extra functionality like this, consider following the tutorial on [Bridging Your Standard ERC-20 Token to OP Mainnet Using the Standard Bridge](./standard-bridge-standard-token) instead.
 
-## Customize the `L2StandardERC20` Implementation
+<Callout type="error">
+The Standard Bridge **does not** support [**fee on transfer tokens**](https://github.com/d-xo/weird-erc20#fee-on-transfer) or [**rebasing tokens**](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops) because they can cause bridge accounting errors.
+</Callout>
 
-Our example here implements a custom token `L2CustomERC20` based on the `L2StandardERC20` but with `8` decimal points, rather than `18`.
+## About OptimismMintableERC20s
 
-For the purpose we import the `L2StandardERC20` from the `@eth-optimism/contracts` package. This standard token implementation is based on the OpenZeppelin ERC20 contract and implements the required `IL2StandardERC20` interface.
+The Standard Bridge system requires that L2 representations of L1 tokens implement the [`IOptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol) interface.
+This interface is a superset of the standard ERC-20 interface and includes functions that allow the bridge to properly verify deposits/withdrawals and mint/burn tokens as needed.
+Your L2 token contract must implement this interface in order to be bridged using the Standard Bridge system.
+This tutorial will show you how to create a custom token that implements this interface.
 
+## Dependencies
+
+*   [node](https://nodejs.org/en/)
+*   [pnpm](https://pnpm.io/installation)
+
+## Get ETH on Sepolia and OP Sepolia
+
+This tutorial explains how to create a bridged ERC-20 token on OP Sepolia.
+You will need to get some ETH on both of these testnets.
+
+<Callout type="info">
+You can use [this faucet](https://sepoliafaucet.com/) to get ETH on Sepolia.
+You can use the [Superchain Faucet](https://app.optimism.io/faucet) to get ETH on OP Sepolia.
+</Callout>
+
+## Add OP Sepolia to Your Wallet
+
+This tutorial uses [Remix](https://remix.ethereum.org) to deploy contracts.
+You will need to add the OP Sepolia network to your wallet in order to follow this tutorial.
+You can use [this website](https://chainid.link?network=op-sepolia) to connect your wallet to OP Sepolia.
+
+## Get an L1 ERC-20 Token Address
+
+You will need an L1 ERC-20 token for this tutorial.
+If you already have an L1 ERC-20 token deployed on Sepolia, you can skip this step.
+Otherwise, you can use the testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](https://sepolia.etherscan.io/address/0x5589BB8228C07c4e15558875fAf2B859f678d129) that includes a `faucet()` function that can be used to mint tokens.
+
+## Create an L2 ERC-20 Token
+
+Once you have an L1 ERC-20 token, you can create a corresponding L2 ERC-20 token on OP Sepolia.
+This tutorial will use [Remix](https://remix.ethereum.org) so you can easily deploy a token without a framework like [Hardhat](https://hardhat.org) or [Foundry](https://getfoundry.sh).
+You can follow the same general process within your favorite framework if you prefer.
+
+In this section, you'll be creating an ERC-20 token that can be deposited but cannot be withdrawn.
+This is just one example of the endless ways in which you could customize your L2 token.
+
+<Steps>
+
+{<h3>Open Remix</h3>}
+
+Navigate to [Remix](https://remix.ethereum.org) in your browser.
+
+{<h3>Create a new file</h3>}
+
+Click the 📄 ("Create new file") button to create a new empty Solidity file.
+You can name this file whatever you'd like.
+
+{<h3>Copy the example contract</h3>}
+
+Copy the following example contract into your new file:
+
+```solidity file=<rootDir>/public/tutorials/standard-bridge-custom-token.sol#L1-L97 hash=a0b97f33ab7bff9ceb8271b8fa4fd726
 ```
-import { L2StandardERC20 } from "@eth-optimism/contracts/standards/L2StandardERC20.sol";
+
+{<h3>Review the example contract</h3>}
+
+Take a moment to review the example contract.
+It's almost the same as the standard [`OptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/universal/OptimismMintableERC20.sol) contract except that the `_burn` function has been made to always revert.
+Since the bridge needs to burn tokens when users want to withdraw them to L1, this means that users will not be able to withdraw tokens from this contract.
+
+```solidity file=<rootDir>/public/tutorials/standard-bridge-custom-token.sol#L85-L96 hash=7c8cdadf1bec4c76dafb5552d1a593fe
 ```
 
-Then the only thing we need to do is call the internal `_setupDecimals(8)` method to alter the token `decimals` property from the default `18` to `8`.
+{<h3>Compile the contract</h3>}
 
-## Deploying the custom token
+Save the file to automatically compile the contract.
+If you've disabled auto-compile, you'll need to manually compile the contract by clicking the "Solidity Compiler" tab (this looks like the letter "S") and press the blue "Compile" button.
 
-<Steps>
-  ### Install the dependencies
+{<h3>Deploy the contract</h3>}
 
-  ```sh
-  pnpm add @eth-optimism/sdk@^3.0.0 dotenv@^10.0.0 @eth-optimism/contracts@^0.5.40 @openzeppelin/contracts^4.3.2
-  ```
+Open the deployment tab (this looks like an Ethereum logo with an arrow pointing left).
+Make sure that your environment is set to "Injected Provider", your wallet is connected to OP Sepolia, and Remix has access to your wallet.
+Then, select the `MyCustomL2Token` contract from the deployment dropdown and deploy it with the following parameters:
 
-  ### Create the `.env` file
+```text
+_BRIDGE:      "0x4200000000000000000000000000000000000007"
+_REMOTETOKEN: "<L1 ERC-20 address>"
+_NAME:        "My Custom L2 Token"
+_SYMBOL:      "MCL2T"
+```
 
-  ```js
-  MNEMONIC=xxxxxx
-  L1_ALCHEMY_KEY=xxxxx
-  L2_ALCHEMY_KEY=xxxx
-  L1_TOKEN_ADDRESS=0x32B3b2281717dA83463414af4E8CfB1970E56287
-  ```
-
-  ### Edit `.env` to set the deployment parameters
-
-  *   `MNEMONIC`, the mnemonic for an account that has enough ETH for the deployment.
-  *   `L1_ALCHEMY_KEY`, the key for the alchemy application for a Goerli endpoint.
-  *   `L2_ALCHEMY_KEY`, the key for the alchemy application for an OP Goerli endpoint.
-  *   `L1_TOKEN_ADDRESS`, the address of the L1 ERC20 which you want to bridge.
-      The default value, [`0x32B3b2281717dA83463414af4E8CfB1970E56287`](https://goerli.etherscan.io/address/0x32B3b2281717dA83463414af4E8CfB1970E56287) is a test ERC-20 contract on Goerli that lets you call `faucet` to give yourself test tokens.
-
-  ### Open the hardhat console
-
-  ```sh
-  yarn hardhat console --network optimism-goerli
-  ```
-
-  ### Deploy the contract
-
-  ```sh
-  l2CustomERC20Factory = await ethers.getContractFactory("L2CustomERC20")   
-  l2CustomERC20 = await l2CustomERC20Factory.deploy(
-     "0x4200000000000000000000000000000000000010",
-     process.env.L1_TOKEN_ADDRESS)
-  ```
 </Steps>
 
-## Transferring tokens
+## Bridge Some Tokens
 
-<Steps>
-  ### Get the token addresses
+Now that you have an L2 ERC-20 token, you can bridge some tokens from L1 to L2.
+Check out the tutorial on [Bridging ERC-20 tokens with the Optimism SDK](./cross-dom-bridge-erc20) to learn how to bridge your L1 ERC-20 to L2s using the Optimism SDK.
+Remember that the withdrawal step will *not* work for the token you just created!
+This is exactly what we wanted.
 
-  ```js
-  l1Addr = process.env.L1_TOKEN_ADDRESS
-  l2Addr = l2CustomERC20.address
-  ```
-</Steps>
+## Add to the Superchain Token List
 
-### Get setup for L1 (provider, wallet, tokens, etc)
-
-<Steps>
-  ### Get the L1 wallet
-
-  ```js
-  l1Url = `https://eth-goerli.g.alchemy.com/v2/${process.env.L1_ALCHEMY_KEY}`
-  l1RpcProvider = new ethers.providers.JsonRpcProvider(l1Url)
-  hdNode = ethers.utils.HDNode.fromMnemonic(process.env.MNEMONIC)
-  privateKey = hdNode.derivePath(ethers.utils.defaultPath).privateKey
-  l1Wallet = new ethers.Wallet(privateKey, l1RpcProvider)
-  ```
-
-  ### Get the L1 contract
-
-  ```js
-  l1Factory = await ethers.getContractFactory("OptimismUselessToken")
-  l1Contract = new ethers.Contract(process.env.L1_TOKEN_ADDRESS, l1Factory.interface, l1Wallet)
-  ```
-
-  ### Get tokens on L1 (and verify the balance)
-
-  ```js
-  tx = await l1Contract.faucet()
-  rcpt = await tx.wait()
-  await l1Contract.balanceOf(l1Wallet.address)
-  ```
-</Steps>
-
-### Transfer tokens
-
-Create and use [`CrossDomainMessenger`](https://sdk.optimism.io/classes/crosschainmessenger) (the Optimism SDK object used to bridge assets).
-The SDK supports multiple OP Chains: OP, Base, etc.
-To see whether a specific OP Chain is supported directly, [see the documentation](https://sdk.optimism.io/enums/l2chainid).
-Chains that aren't officially supported just take a few extra steps.
-Get the L1 contract addresses, and [provide them to the SDK](/builders/chain-operators/tutorials/sdk#getting-contract-addresses).
-Once you do that, you can use the SDK normally.
-
-<Steps>
-  ### Import the Optimism SDK
-
-  ```js
-  const optimismSDK = require("@eth-optimism/sdk")
-  ```
-
-  ### Create the cross domain messenger
-
-  ```js
-  l1ChainId = (await l1RpcProvider.getNetwork()).chainId
-  l2ChainId = (await ethers.provider.getNetwork()).chainId
-  l2Wallet = await ethers.provider.getSigner()
-  crossChainMessenger = new optimismSDK.CrossChainMessenger({
-     l1ChainId: l1ChainId,
-     l2ChainId: l2ChainId,
-     l1SignerOrProvider: l1Wallet,
-     l2SignerOrProvider: l2Wallet,
-  })
-  ```
-</Steps>
-
-#### Deposit (from Goerli to OP Goerli, or Ethereum or OP Mainnet)
-
-<Steps>
-  ### Give the L2 bridge an allowance to use the user's token
-
-  The L2 address is necessary to know which bridge is responsible and needs the allowance.
-
-  ```js
-  depositTx1 = await crossChainMessenger.approveERC20(l1Contract.address, l2Addr, 1e9)
-  await depositTx1.wait()
-  ```
-
-  ### Check your balances on L1 and L2
-
-  ```js
-  await l1Contract.balanceOf(l1Wallet.address) 
-  await l2CustomERC20.balanceOf(l1Wallet.address)
-  ```
-
-  ### Do the actual deposit
-
-  ```js
-  depositTx2 = await crossChainMessenger.depositERC20(l1Contract.address, l2Addr, 1e9)
-  await depositTx2.wait()
-  ```
-
-  ### Wait for the deposit to be relayed
-
-  ```js
-  await crossChainMessenger.waitForMessageStatus(depositTx2.hash, optimismSDK.MessageStatus.RELAYED)
-  ```
-
-  ### Check your balances on L1 and L2
-
-  ```js
-  await l1Contract.balanceOf(l1Wallet.address) 
-  await l2CustomERC20.balanceOf(l1Wallet.address)
-  ```
-</Steps>
-
-#### Withdrawal (from OP Mainnet to Ethereum, or OP Goerli to Goerli)
-
-<Steps>
-  ### Initiate the withdrawal on L2
-
-  ```js
-  withdrawalTx1 = await crossChainMessenger.withdrawERC20(l1Contract.address, l2Addr, 1e9)
-  await withdrawalTx1.wait()
-  ```
-
-  ### Prove the withdrawal after root state is published
-
-  *   Wait until the root state is published on L1.
-  *   This is likely to take less than 240 seconds.
-
-  ```js
-  await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, optimismSDK.MessageStatus.READY_TO_PROVE)
-  withdrawalTx2 = await crossChainMessenger.proveMessage(withdrawalTx1.hash)
-  await withdrawalTx2.wait()
-  ```
-
-  ### Wait the fault challenge period and finish the withdrawal
-
-  *   The fault challenge period is a short period on Goerli, but seven days on the production network.
-
-      ```js
-      await crossChainMessenger.waitForMessageStatus(withdrawalTx1.hash, optimismSDK.MessageStatus.READY_FOR_RELAY)
-      withdrawalTx3 = await crossChainMessenger.finalizeMessage(withdrawalTx1.hash)
-      await withdrawalTx3.wait()   
-      ```
-
-  ### Check your balances on L1 and L2
-
-  The balance on L2 should be back to zero.
-
-  ```js
-  await l1Contract.balanceOf(l1Wallet.address) 
-  await l2CustomERC20.balanceOf(l1Wallet.address)
-  ```
-</Steps>
+The [Superchain Token List](https://github.com/ethereum-optimism/ethereum-optimism.github.io#readme) is a common list of tokens deployed on chains within the Optimism Superchain.
+This list is used by services like the [Optimism Bridge UI](https://app.optimism.io/bridge).
+If you want your OP Mainnet token to be included in this list, take a look at the [review process and merge criteria](https://github.com/ethereum-optimism/ethereum-optimism.github.io#review-process-and-merge-criteria).

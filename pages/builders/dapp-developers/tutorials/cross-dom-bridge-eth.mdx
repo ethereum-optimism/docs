@@ -1,517 +1,272 @@
 ---
 title: Bridging ETH with the Optimism SDK
 lang: en-US
-description: Learn how to use the Optimism SDK to transfer ETH between Layer 1 (Ethereum or Goerli) and Layer 2 (OP Mainnet or OP Goerli).
+description: Learn how to use the Optimism SDK to transfer ETH between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
 ---
 
-import { Steps, Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 
-# Bridging ETH with the Optimism SDK
+# Bridging ETH to OP Mainnet With the Optimism SDK
 
-This tutorial teaches you how to use the [Optimism SDK](https://sdk.optimism.io/) to transfer ETH between Layer 1 (Ethereum or Goerli) and Layer 2 (OP Mainnet or OP Goerli).
+This tutorial explains how you can use the [Optimism SDK](https://sdk.optimism.io) to bridge ETH from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
+The Optimism SDK is an easy way to add bridging functionality to your javascript-based application.
+It also provides some safety rails to prevent common mistakes that could cause ETH or ERC-20 tokens to be made inaccessible.
 
-The SDK supports multiple OP Chains: OP, Base, etc.
-To see whether a specific OP Chain is supported directly, [see the documentation](https://sdk.optimism.io/enums/l2chainid).
-Chains that aren't officially supported just take a few extra steps.
-Get the L1 contract addresses and [provide them to the SDK](/builders/chain-operators/tutorials/sdk#getting-contract-addresses).
-Once you do that, you can use the SDK normally.
+Behind the scenes, the Optimism SDK uses the [Standard Bridge](/builders/dapp-developers/bridging/standard-bridge) contracts to transfer ETH and ERC-20 tokens.
+Make sure to check out the [Standard Bridge guide](/builders/dapp-developers/bridging/standard-bridge) if you want to learn more about how the bridge works under the hood.
 
-## Before You Begin
+## Supported Networks
 
-You will need to setup your computer with the following: [`pnpm`](https://pnpm.io/) and [`node`](https://nodejs.org/en/).
-Please ensure these programs are installed before beginning the tutorial.
+The Optimism SDK supports any of the [Superchain networks](/chain/networks).
+[Some Superchain networks](https://sdk.optimism.io/enums/l2chainid) are already included in the SDK by default.
+If you want to use a network that isn't included by default you can simply [instantiate the SDK with the appropriate contract addresses](/builders/chain-operators/tutorials/sdk).
+
+## Dependencies
+
+*   [node](https://nodejs.org/en/)
+*   [pnpm](https://pnpm.io/installation)
+
+## Create a Demo Project
+
+You're going to use the Optimism SDK for this tutorial.
+Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
-  ### Make a Project Folder and Initialize It
+{<h3>Make a Project Folder</h3>}
 
-  ```sh
-  mkdir project-folder-name
-  cd folder-name
-  pnpm init
-  ```
+```bash
+mkdir op-sdk-sample-project
+cd op-sdk-sample-project
+```
 
-  ### Create Two Files for the Folder
+{<h3>Initialize the Project</h3>}
 
-  *   Create a `.env` file
-  *   Create an `index.js` file
+```bash
+pnpm init
+```
 
-  ### Install the dependencies
+{<h3>Install the Optimism SDK</h3>}
 
-  ```sh
-  pnpm add @eth-optimism/sdk@^3.0.0 dotenv@^16.0.0
-  ```
+```bash
+pnpm add @eth-optimism/sdk
+```
 
-  ### Go to [Alchemy](https://www.alchemy.com/) and create two applications
+{<h3>Install ethers.js</h3>}
 
-  *   An application on Goerli
-  *   An application on OP Goerli
+```bash
+pnpm add ethers@^5
+```
 
-  Keep a copy of the two keys.
-
-  ### Edit the `.env` file
-
-  *   Copy/paste the text below into your `.env` file.
-
-  ```js filename=".env file"
-  # Put the mnemonic for an account on Optimism here
-  MNEMONIC="test test test test test test test test test test test junk"
-  GOERLI_ALCHEMY_KEY=  <<value goes here>>
-  OP_GOERLI_ALCHEMY_KEY= <<value goes here>>
-  ```
-
-  *   Edit the file as follows:
-      *   Set `MNEMONIC` to point to an account that has ETH on the Goerli test network and the OP Goerli test network.
-      *   Set `GOERLI_ALCHEMY_KEY` to the key for the Goerli app.
-      *   Set `OP_GOERLI_ALCHEMY_KEY` to the key for the Optimistic Goerli app
-
-  <Callout type="info">
-    [Paradigm faucet](https://faucet.paradigm.xyz/) gives ETH on the Goerli network. [Optimism faucet](https://app.optimism.io/faucet?utm_source=docs) gives ETH on the OP Goerli network.
-  </Callout>
-
-  ### Edit the `index.js` file
-
-  Add the following content to your `index.js` file:
-
-  ```js filename="index.js"
-  #! /usr/local/bin/node
-
-  // Transfers between L1 and L2 using the Optimism SDK
-
-  const ethers = require("ethers")
-  const optimismSDK = require("@eth-optimism/sdk")
-  require('dotenv').config()
-
-
-  const mnemonic = process.env.MNEMONIC
-
-  const words = process.env.MNEMONIC.match(/[a-zA-Z]+/g).length
-  validLength = [12, 15, 18, 24]
-  if (!validLength.includes(words)) {
-     console.log(`The mnemonic (${process.env.MNEMONIC}) is the wrong number of words`)
-     process.exit(-1)
-  }
-
-  const l1Url = `https://eth-goerli.g.alchemy.com/v2/${process.env.GOERLI_ALCHEMY_KEY}`
-  const l2Url = `https://opt-goerli.g.alchemy.com/v2/${process.env.OP_GOERLI_ALCHEMY_KEY}`
-
-
-  // Global variable because we need them almost everywhere
-  let crossChainMessenger
-  let addr    // Our address
-
-  const getSigners = async () => {
-      const l1RpcProvider = new ethers.providers.JsonRpcProvider(l1Url)
-      const l2RpcProvider = new ethers.providers.JsonRpcProvider(l2Url)
-      const hdNode = ethers.utils.HDNode.fromMnemonic(mnemonic)
-      const privateKey = hdNode.derivePath(ethers.utils.defaultPath).privateKey
-      const l1Wallet = new ethers.Wallet(privateKey, l1RpcProvider)
-      const l2Wallet = new ethers.Wallet(privateKey, l2RpcProvider)
-
-      return [l1Wallet, l2Wallet]
-  }   // getSigners
-
-
-  const setup = async() => {
-    const [l1Signer, l2Signer] = await getSigners()
-    addr = l1Signer.address
-    crossChainMessenger = new optimismSDK.CrossChainMessenger({
-        l1ChainId: 5,    // Goerli value, 1 for mainnet
-        l2ChainId: 420,  // Goerli value, 10 for mainnet
-        l1SignerOrProvider: l1Signer,
-        l2SignerOrProvider: l2Signer,
-    })
-  }    // setup
-
-
-  const gwei = BigInt(1e9)
-  const eth = gwei * gwei   // 10^18
-  const centieth = eth/100n
-
-
-  const reportBalances = async () => {
-    const l1Balance = (await crossChainMessenger.l1Signer.getBalance()).toString().slice(0,-9)
-    const l2Balance = (await crossChainMessenger.l2Signer.getBalance()).toString().slice(0,-9)
-
-    console.log(`On L1:${l1Balance} Gwei    On L2:${l2Balance} Gwei`)
-  }    // reportBalances
-
-
-  const depositETH = async () => {
-
-    console.log("Deposit ETH")
-    await reportBalances()
-    const start = new Date()
-
-    const response = await crossChainMessenger.depositETH(1000n * gwei)
-    console.log(`Transaction hash (on L1): ${response.hash}`)
-    await response.wait()
-    console.log("Waiting for status to change to RELAYED")
-    console.log(`Time so far ${(new Date()-start)/1000} seconds`)
-    await crossChainMessenger.waitForMessageStatus(response.hash,
-                                                    optimismSDK.MessageStatus.RELAYED)
-
-    await reportBalances()
-    console.log(`depositETH took ${(new Date()-start)/1000} seconds\n\n`)
-  }     // depositETH()
-
-
-  const withdrawETH = async () => { 
-    
-    console.log("Withdraw ETH")
-    const start = new Date()  
-    await reportBalances()
-
-    const response = await crossChainMessenger.withdrawETH(centieth)
-    console.log(`Transaction hash (on L2): ${response.hash}`)
-    console.log(`\tFor more information: https://goerli-optimism.etherscan.io/tx/${response.hash}`)
-    await response.wait()
-
-    console.log("Waiting for status to be READY_TO_PROVE")
-    console.log(`Time so far ${(new Date()-start)/1000} seconds`)
-    await crossChainMessenger.waitForMessageStatus(response.hash, 
-      optimismSDK.MessageStatus.READY_TO_PROVE)
-    console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
-    await crossChainMessenger.proveMessage(response.hash)
-    
-
-    console.log("In the challenge period, waiting for status READY_FOR_RELAY") 
-    console.log(`Time so far ${(new Date()-start)/1000} seconds`)
-    await crossChainMessenger.waitForMessageStatus(response.hash, 
-                                                  optimismSDK.MessageStatus.READY_FOR_RELAY) 
-    console.log("Ready for relay, finalizing message now")
-    console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
-    await crossChainMessenger.finalizeMessage(response.hash)
-
-    console.log("Waiting for status to change to RELAYED")
-    console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
-    await crossChainMessenger.waitForMessageStatus(response, 
-      optimismSDK.MessageStatus.RELAYED)
-    
-    await reportBalances()   
-    console.log(`withdrawETH took ${(new Date()-start)/1000} seconds\n\n\n`)  
-  }     // withdrawETH()
-
-
-  const main = async () => {
-      await setup()
-      await depositETH()
-      await withdrawETH()
-      // await depositERC20()
-      // await withdrawERC20()
-  }  // main
-
-  main().then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error)
-      process.exit(1)
-    })
-
-  ```
-
-  ### Run the sample code
-
-  Execute the sample code in `index.js`.
-  After you execute it, wait. It is not unusual for each operation to take minutes on Goerli.
-  On the production network, the withdrawals take around a week each because of the [challenge period](/builders/dapp-developers/bridging/messaging#understanding-the-challenge-period).
 </Steps>
 
-## Expected output
+<Callout type="info">
+Want to create a new wallet for this tutorial?
+If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
+</Callout>
 
-When running on Goerli, the output from the script should be similar to:
+## Get ETH on Sepolia
 
+This tutorial explains how to bridge ETH from Sepolia to OP Sepolia.
+You will need to get some ETH on Sepolia to follow along.
+
+<Callout type="info">
+You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
+</Callout>
+
+## Add a Private Key to Your Environment
+
+You need a private key in order to sign transactions.
+Set your private key as an environment variable with the `export` command.
+Make sure this private key corresponds to an address that has ETH on Sepolia.
+
+```bash
+export TUTORIAL_PRIVATE_KEY=0x...
 ```
-Deposit ETH
-On L1:2830420748 Gwei    On L2:747877782 Gwei
-Transaction hash (on L1): 0xc02a57d71d6d3b3352128ae4f55c7373d089a0267430fd596b348360622142a1
-Waiting for status to change to RELAYED
-Time so far 18.334 seconds
-On L1:2829540262 Gwei    On L2:747878782 Gwei
-depositETH took 79.996 seconds
 
+## Start the Node REPL
 
-Withdraw ETH
-On L1:2829540262 Gwei    On L2:747878782 Gwei
-Transaction hash (on L2): 0xf5215570a7921fb12022f7cab3ca0db53462e7b10a437b23fb2796100c8f907f
-	For more information: https://goerli-optimism.etherscan.io/tx/0xf5215570a7921fb12022f7cab3ca0db53462e7b10a437b23fb2796100c8f907f
-Waiting for status to be READY_TO_PROVE
-Time so far 6.617 seconds
-Time so far 276.217 seconds
-In the challenge period, waiting for status READY_FOR_RELAY
-Time so far 279.51 seconds
-Ready for relay, finalizing message now
-Time so far 335.965 seconds
-Waiting for status to change to RELAYED
-Time so far 338.155 seconds
-On L1:2838777968 Gwei    On L2:737703229 Gwei
-withdrawETH took 359.783 seconds
+You're going to use the Node REPL to interact with the Optimism SDK.
+To start the Node REPL run the following command in your terminal:
+
+```bash
+node
 ```
+
+This will bring up a Node REPL prompt that allows you to run javascript code.
+
+## Import Dependencies
+
+You need to import some dependencies into your Node REPL session.
+
+<Steps>
+
+{<h3>Import the Optimism SDK</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
+```
+
+{<h3>Import ethers.js</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
+```
+
+</Steps>
+
+## Set Session Variables
+
+You'll need a few variables throughout this tutorial.
+Let's set those up node.
+
+<Steps>
+
+{<h3>Load your private key</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L6 hash=755b77a7ffc7dfdc186f36c37d3d847a
+```
+
+{<h3>Create the RPC providers and wallets</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L8-L11 hash=9afdce50665ae93bce602068071ffaa1
+```
+
+</Steps>
+
+## Get ETH
+
+You're going to need some ETH on L1 that you can bridge to L2.
+You can get some Sepolia ETH from [this faucet](https://sepoliafaucet.com).
+
+## Deposit ETH
+
+Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBridge` contract.
+You'll then receive the same number of ETH on L2 in return.
+
+<Steps>
+
+{<h3>Check your balance on L1</h3>}
+
+See how much ETH you have on L1 so you can confirm that the deposit worked later on.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L14 hash=3be1dd9a6019e9f59ad6fab38e168e99
+```
+
+{<h3>Create a CrossChainMessenger instance</h3>}
+
+The Optimism SDK exports a `CrossChainMessenger` class that makes it easy to interact with the `L1StandardBridge` contract.
+
+Create an instance of the `CrossChainMessenger` class:
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L16-L21 hash=997b9c4cdd5fb1f9d4e0882a683ae016
+```
+{<h3>Deposit your ETH</h3>}
+
+Now you can deposit your ETH into the Standard Bridge contract.
+You'll deposit a small amount of ETH just to demonstrate the process.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L24-L25 hash=ce11a2dabfed5f70016f2c82eae9262c
+```
+
+{<h3>Wait for the deposit to be relayed</h3>}
+
+You can use the `waitForMessageStatus` function to wait for the deposit to be relayed to L2.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L28 hash=659971675ab8d53bc2bd5196f72c873b
+```
+
+{<h3>Check your balance on L1</h3>}
+
+You should now have less ETH on L1.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L31 hash=3be1dd9a6019e9f59ad6fab38e168e99
+```
+
+{<h3>Check your balance on L2</h3>}
+
+You should now have more ETH on L2.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L34 hash=7884641849eab1590b148118d709f0fd
+```
+
+</Steps>
+
+## Withdraw ETH
+
+You just bridged some ETH from L1 to L2.
+Nice!
+Now you're going to repeat the process in reverse to bridge some ETH from L2 to L1.
+
+<Steps>
+
+{<h3>Start your withdrawal on L2</h3>}
+
+The first step to withdrawing ETH from L2 to L1 is to start the withdrawal on L2.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L37-L38 hash=562c1ad81362ab4014cd182a44f09364
+```
+
+{<h3>Check your balance on L2</h3>}
+
+You should now have less ETH on L2, but your balance on L1 will not have changed yet.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L41 hash=7884641849eab1590b148118d709f0fd
+```
+
+{<h3>Wait until the withdrawal is ready to prove</h3>}
+
+The second step to withdrawing ETH from L2 to L1 is to prove to the bridge on L1 that the withdrawal happened on L2.
+You first need to wait until the withdrawal is ready to prove.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L44 hash=e8b55ec0f16f90ba4d4197cf47ff8e6d
+```
+
+<Callout type="info">
+This step can take a few minutes.
+Feel free to take a quick break while you wait.
+</Callout>
+
+{<h3>Prove the withdrawal on L1</h3>}
+
+Once the withdrawal is ready to be proven, you'll send an L1 transaction to prove that the withdrawal happened on L2.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L47 hash=fee5f5e924472ee9daceb681ccae1cb9
+```
+
+{<h3>Wait until the withdrawal is ready for relay</h3>}
+
+The final step to withdrawing ETH from L2 to L1 is to relay the withdrawal on L1.
+This can only happen after the fault proof period has elapsed.
+On OP Sepolia, this is only a few seconds.
+On OP Mainnet, this takes 7 days.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L50 hash=55a41ac5586b8a688ffd6dfbb20f2d15
+```
+
+{<h3>Relay the withdrawal on L1</h3>}
+
+Once the withdrawal is ready to be relayed you can finally complete the withdrawal process.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L53 hash=f8d30944dad1664d82b9fdf14da59f9e
+```
+
+{<h3>Wait until the withdrawal is relayed</h3>}
+
+Now you simply wait until the message is relayed.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L56 hash=c2c14a739c44011a058e9848a0019f15
+```
+
+{<h3>Check your balance on L1</h3>}
+
+You should now have more ETH on L1.
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L59 hash=3be1dd9a6019e9f59ad6fab38e168e99
+```
+
+</Steps>
 
 ## Next Steps
 
-You should now be able to write applications that use our SDK and bridge to transfer ETH between layer 1 and layer 2.
-
-Note that for withdrawals of ETH (or commonly used ERC-20 tokens) you would probably want to use a [third party bridge](https://www.optimism.io/apps/bridges) for higher speed and lower cost.
-Here is the API documentation for some of those bridges:
-
-*   [Hop](https://docs.hop.exchange/v/developer-docs/)
-*   [Synapse](https://docs.synapseprotocol.com/)
-*   [Across](https://docs.across.to/)
-*   [Celer Bridge](https://cbridge-docs.celer.network/developer/cbridge-sdk)
-
-## Detailed Breakdown of `index.js`
-
-The following section provides a detailed breakdown of how everything operates under the hood. It is optional reading, of course, but
-might be useful if debugging or troubleshooting is needed.
-
-```js
-#! /usr/local/bin/node
-
-// Transfers between L1 and L2 using the Optimism SDK
-
-const ethers = require("ethers")
-const optimismSDK = require("@eth-optimism/sdk")
-require('dotenv').config()
-
-```
-
-The libraries we need: [`ethers`](https://docs.ethers.io/v5/), [`dotenv`](https://www.npmjs.com/package/dotenv) and the Optimism SDK itself.
-
-```js
-const mnemonic = process.env.MNEMONIC
-const l1Url = `https://eth-goerli.g.alchemy.com/v2/${process.env.GOERLI_KEY}`
-const l2Url = `https://opt-goerli.g.alchemy.com/v2/${process.env.OP_GOERLI_KEY}`
-```
-
-Configuration, read from `.env`.
-
-```js
-// Global variable because we need them almost everywhere
-let crossChainMessenger
-let addr    // Our address
-```
-
-The configuration parameters required for transfers.
-
-### `getSigners`
-
-This function returns the two signers (one for each layer).
-
-```js
-const getSigners = async () => {
-    const l1RpcProvider = new ethers.providers.JsonRpcProvider(l1Url)    
-    const l2RpcProvider = new ethers.providers.JsonRpcProvider(l2Url)
-```
-
-The first step is to create the two providers, each connected to an endpoint in the appropriate layer.
-
-```js
-    const hdNode = ethers.utils.HDNode.fromMnemonic(mnemonic)
-    const privateKey = hdNode.derivePath(ethers.utils.defaultPath).privateKey
-```
-
-To derive the private key and address from a mnemonic it is not enough to create the `HDNode` ([Hierarchical Deterministic Node](https://en.bitcoin.it/wiki/Deterministic_wallet#Type_2:_Hierarchical_deterministic_wallet)).
-The same mnemonic can be used for different blockchains (it's originally a Bitcoin standard), and the node with Ethereum information is under [`ethers.utils.defaultPath`](https://docs.ethers.io/v5/single-page/#/v5/api/utils/hdnode/-%23-hdnodes--defaultpath).
-
-```js
-    const l1Wallet = new ethers.Wallet(privateKey, l1RpcProvider)
-    const l2Wallet = new ethers.Wallet(privateKey, l2RpcProvider)
-
-    return [l1Wallet, l2Wallet]
-}   // getSigners
-```
-
-Finally, create and return the wallets.
-We need to use wallets, rather than providers, because we need to sign transactions.
-
-### `setup`
-
-This function sets up the parameters we need for transfers.
-
-```js
-const setup = async() => {
-  const [l1Signer, l2Signer] = await getSigners()
-  addr = l1Signer.address
-```
-
-Get the signers we need, and our address.
-
-```js
-  crossChainMessenger = new optimismSDK.CrossChainMessenger({
-      l1ChainId: 5,    // Goerli value, 1 for mainnet
-      l2ChainId: 420,  // Goerli value, 10 for mainnet
-      l1SignerOrProvider: l1Signer,
-      l2SignerOrProvider: l2Signer,
-  })
-```
-
-Create the [`CrossChainMessenger`](https://sdk.optimism.io/classes/crosschainmessenger) object that we use to transfer assets.
-
-### Variables that make it easier to convert between WEI and ETH
-
-Both ETH and DAI are denominated in units that are 10^18 of their basic unit.
-These variables simplify the conversion.
-
-```js
-const gwei = 1000000000n
-const eth = gwei * gwei   // 10^18
-const centieth = eth/100n
-```
-
-### `reportBalances`
-
-This function reports the ETH balances of the address on both layers.
-
-```js
-const reportBalances = async () => {
-  const l1Balance = (await crossChainMessenger.l1Signer.getBalance()).toString().slice(0,-9)
-  const l2Balance = (await crossChainMessenger.l2Signer.getBalance()).toString().slice(0,-9)
-
-  console.log(`On L1:${l1Balance} Gwei    On L2:${l2Balance} Gwei`)
-}    // reportBalances
-```
-
-### `depositETH`
-
-This function shows how to deposit ETH from Ethereum to OP Mainnet (or Goerli to OP Goerli).
-
-```js
-const depositETH = async () => {
-
-  console.log("Deposit ETH")
-  await reportBalances()
-```
-
-To show that the deposit actually happened we show before and after balances.
-
-```js
-  const start = new Date()
-
-  const response = await crossChainMessenger.depositETH(gwei)  
-```
-
-[`crossChainMessenger.depositETH()`](https://sdk.optimism.io/classes/crosschainmessenger#depositETH-2) creates and sends the deposit trasaction on L1.
-
-```js
-  console.log(`Transaction hash (on L1): ${response.hash}`)
-  await response.wait()
-```
-
-Of course, it takes time for the transaction to actually be processed on L1.
-
-```js
-  console.log("Waiting for status to change to RELAYED")
-  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
-  await crossChainMessenger.waitForMessageStatus(response.hash, 
-                                                  optimismSDK.MessageStatus.RELAYED) 
-```
-
-After the transaction is processed on L1 it needs to be picked up by an offchain service and relayed to L2.
-To show that the deposit actually happened we need to wait until the message is relayed.
-The [`waitForMessageStatus`](https://sdk.optimism.io/classes/crosschainmessenger#waitForMessageStatus) function does this for us.
-[Here are the statuses we can specify](https://sdk.optimism.io/enums/messagestatus).
-
-The third parameter (which is optional) is a hashed array of options:
-
-*   `pollIntervalMs`: The poll interval
-*   `timeoutMs`: Maximum time to wait
-
-```js
-  await reportBalances()    
-  console.log(`depositETH took ${(new Date()-start)/1000} seconds\n\n`)
-}     // depositETH()
-```
-
-Once the message is relayed the balance change on OP Mainnet (or OP Goerli) is practically instantaneous.
-We can just report the balances and see that the L2 balance rose by 1 gwei.
-
-### `withdrawETH`
-
-This function shows how to withdraw ETH from OP Mainnet to Ethereum (or OP Goerli to Goerli).
-
-```js
-const withdrawETH = async () => { 
-  
-  console.log("Withdraw ETH")
-  const start = new Date()  
-  await reportBalances()
-
-  const response = await crossChainMessenger.withdrawETH(centieth)
-```
-
-For deposits it was enough to transfer 1 gwei to show that the L2 balance increases.
-However, in the case of withdrawals the withdrawing account needs to pay on L1 for finalizing the message, which costs more than that.
-
-By sending 0.01 ETH it is guaranteed that the withdrawal will actually increase the L1 ETH balance instead of decreasing it.
-
-```js
-  console.log(`Transaction hash (on L2): ${response.hash}`)
-  console.log(`\tFor more information: https://goerli-optimism.etherscan.io/tx/${response.hash}`)
-  await response.wait()
-```
-
-This is the initial withdrawal transaction on OP Goerli (it would look the same on OP Mainnet).
-
-```js
-  console.log("Waiting for status to be READY_TO_PROVE")
-  console.log(`Time so far ${(new Date()-start)/1000} seconds`)
-  await crossChainMessenger.waitForMessageStatus(response.hash, 
-    optimismSDK.MessageStatus.READY_TO_PROVE)
-```
-
-The Merkle proof has to be submitted after the state root is written on L1.
-On Goerli we usually submit a new state root every four minutes.
-When the state root is updated, you see a new transaction [on the L2OutputOracle contract](https://goerli.etherscan.io/address/0xE6Dfba0953616Bacab0c9A8ecb3a9BBa77FC15c0).
-
-```js
-  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
-  await crossChainMessenger.proveMessage(response.hash)
-```
-
-Submit the Merkle proof, starting the challenge period.
-
-```js
-  console.log("In the challenge period, waiting for status READY_FOR_RELAY") 
-  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
-  await crossChainMessenger.waitForMessageStatus(response.hash, 
-                                                optimismSDK.MessageStatus.READY_FOR_RELAY)
-```
-
-Wait the challenge period.
-On Goerli the challenge period is very short (a few seconds) to speed up debugging.
-On the production network it is seven days for security.
-
-```js
-  console.log("Ready for relay, finalizing message now")
-  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
-  await crossChainMessenger.finalizeMessage(response.hash)
-```
-
-Finalize the withdrawal and actually get back the 0.01 ETH.
-
-```js
-  console.log("Waiting for status to change to RELAYED")
-  console.log(`Time so far ${(new Date()-start)/1000} seconds`)  
-  await crossChainMessenger.waitForMessageStatus(response, 
-    optimismSDK.MessageStatus.RELAYED) 
-  await reportBalances()   
-  console.log(`withdrawETH took ${(new Date()-start)/1000} seconds\n\n\n`)  
-}     // withdrawETH()
-```
-
-### `main`
-
-A `main` to run the setup followed by both operations.
-
-```js
-const main = async () => {    
-    await setup()
-    await depositETH()
-    await withdrawETH() 
-}  // main
-
-main().then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error)
-    process.exit(1)
-  })
-```
+Congrats!
+You've just deposited and withdrawn ETH using the Optimism SDK.
+You should now be able to write applications that use the Optimism SDK to transfer ETH between L1 and L2.
+Although this tutorial used Sepolia and OP Sepolia, the same process works for Ethereum and OP Mainnet.

@@ -1,0 +1,83 @@
+name: Check Tutorials
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
+
+jobs:
+  cross-dom-bridge-erc20:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout ethereum-optimism/docs
+      uses: actions/checkout@v2
+      with:
+        repository: 'ethereum-optimism/docs'
+        path: 'docs'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20.x' 
+
+    - name: Install pnpm
+      run: npm install -g pnpm
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Run tutorial
+      run:
+        node ./public/tutorials/cross-dom-bridge-erc20.js
+
+    - name: Notify Slack on failure
+      uses: ravsamhq/notify-slack-action@v2
+      if: always()
+      with:
+        status: ${{ job.status }}
+        notify_when: "failure"
+        notification_title: "{workflow} has {status_message} (<{run_url}|view errors>)"
+        message_format: "{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>"
+        footer: "<{run_url}|View Run>"
+        mention_users_when: "failure,warnings"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  cross-dom-bridge-eth:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout ethereum-optimism/docs
+      uses: actions/checkout@v2
+      with:
+        repository: 'ethereum-optimism/docs'
+        path: 'docs'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20.x' 
+
+    - name: Install pnpm
+      run: npm install -g pnpm
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Run tutorial
+      run:
+        node ./public/tutorials/cross-dom-bridge-eth.js
+
+    - name: Notify Slack on failure
+      uses: ravsamhq/notify-slack-action@v2
+      if: always()
+      with:
+        status: ${{ job.status }}
+        notify_when: "failure"
+        notification_title: "{workflow} has {status_message} (<{run_url}|view errors>)"
+        message_format: "{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>"
+        footer: "<{run_url}|View Run>"
+        mention_users_when: "failure,warnings"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

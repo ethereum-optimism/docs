@@ -4,8 +4,6 @@ lang: en-US
 description: Learn how Optimistic Rollups work at a high level.
 ---
 
-import Image from 'next/image'
-
 # Rollup Protocol Overview
 
 The big idea that makes Optimism possible is the Optimistic Rollup.
@@ -18,11 +16,11 @@ Optimism is an "Optimistic Rollup," which is basically just a fancy way of descr
 Specifically, Optimistic Rollups take advantage of the consensus mechanism (like PoW or PoS) of their parent chain instead of providing their own.
 In OP Mainnet's case this parent blockchain is Ethereum.
 
-<Image src="/img/op-stack/protocol/ethereum-optimism-forever.png" alt="Ethereum and Optimism Forever Doodle" width={400} height={400} />
+![Ethereum and Optimism Forever Doodle](/img/op-stack/protocol/ethereum-optimism-forever.png)
 
 ## Block storage
 
-In Bedrock L2 blocks are saved to the Ethereum blockchain using a non-contract address ([`0xff00...0420` on Goerli](https://goerli.etherscan.io/address/0xff00000000000000000000000000000000000420), [`0xff00..0010` on Ethereum](https://etherscan.io/address/0xff00000000000000000000000000000000000010)) to minimize the L1 gas expense.
+In Bedrock L2 blocks are saved to the Ethereum blockchain using a non-contract address ([`0xff00..0010` on Ethereum](https://etherscan.io/address/0xff00000000000000000000000000000000000010)) to minimize the L1 gas expense.
 As these blocks are submitted as transaction calldata on Ethereum, there is no way to modify or censor them after the "transaction" is included in a block that has enough attestations.
 This is the way that OP Mainnet inherits the availability and integrity guarantees of Ethereum.
 
@@ -68,7 +66,7 @@ The execution engine (implemented as the `op-geth` component) receive blocks usi
 
 ## Bridging assets between layers
 
-Optimism is designed so that users can send arbitrary messages between smart contracts on L2 (OP Mainnet, OP Goerli, etc.) and the underlying L1 (Ethereum mainnet, Goerli, etc.).
+Optimism is designed so that users can send arbitrary messages between smart contracts on L2 (OP Mainnet, OP Sepolia, etc.) and the underlying L1 (Ethereum mainnet, Sepolia, etc.).
 This makes it possible to transfer assets, including ERC20 tokens, between the two networks.
 The exact mechanism by which this communication occurs differs depending on the direction in which messages are being sent.
 
@@ -98,7 +96,7 @@ Withdrawals (the term is used for any OP Mainnet to Ethereum message, regardless
 
 [You can read the full withdrawal specifications here](https://github.com/ethereum-optimism/optimism/blob/develop/specs/withdrawals.md)
 
-## Fault proofs
+## Fault Proofs
 
 In an Optimistic Rollup, state commitments are published to L1 (Ethereum in the case of OP Mainnet) without any direct proof of the validity of these commitments.
 Instead, these commitments are considered pending for a period of time (called the "challenge window").
@@ -111,3 +109,8 @@ It's important to note that a successful challenge does not roll back OP Mainnet
 The ordering of transactions and the state of OP Mainnet is unchanged by a fault proof challenge.
 
 The fault proof process is currently undergoing major redevelopment as a side-effect of the November 11th [EVM Equivalence](https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306) update.
+
+## Next Steps
+
+*   If you want to learn more about rollup protocol, check out the guides on [deposit flow](deposit-flow), [withdrawal flow](withdrawal-flow), or [transaction flow](transaction-flow).
+*   To learn about spinning up your own L2 rollup, see the [chain operator overview](/builders/chain-operators/overview) or go directly to the tutorial on [creating your own L2 rollup](/builders/chain-operators/tutorials/create-l2-rollup).

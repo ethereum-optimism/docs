@@ -1,8 +1,15 @@
-{
-  "plugins": [
+import remarkLintNoSmartQuotes from './utils/plugins/remark/remark-lint-no-smart-quotes.mjs'
+
+export default {
+  plugins: [
+    remarkLintNoSmartQuotes,
+    "remark-gfm",
     "remark-frontmatter",
     "remark-preset-lint-consistent",
     "remark-preset-lint-recommended",
+    "remark-lint-table-cell-padding",
+    "remark-lint-table-pipe-alignment",
+    "remark-lint-table-pipes",
     [
       "remark-lint-heading-style",
       "atx"
@@ -14,7 +21,7 @@
     [
       "remark-lint-frontmatter-schema",
       {
-        "schemas": {
+        schemas: {
           "./utils/schemas/page.schema.yaml": [
             "./pages/**/*.mdx"
           ]
@@ -23,3 +30,4 @@
     ]
   ]
 }
+

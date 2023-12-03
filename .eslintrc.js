@@ -1,11 +1,12 @@
 module.exports = {
   parserOptions: {
-    ecmaVersion: 'latest',
+    ecmaVersion: 'latest'
   },
   extends: [
     'plugin:mdx/recommended',
   ],
   rules: {
+    'semi': ['error', 'never']
   },
   overrides: [
     {
@@ -14,7 +15,11 @@ module.exports = {
         'plugin:mdx/recommended'
       ],
       settings: {
-        'mdx/code-blocks': true,
+        'mdx/code-blocks': true
+      },
+      rules: {
+        'no-unused-expressions': 'off',
+        'semi': ['error', 'never']
       }
     }
   ]
