@@ -1,8 +1,8 @@
-import remarkLintNoSmartQuotes from './utils/plugins/remark/remark-lint-no-smart-quotes.mjs'
+import remarkLintNoBlockedCharacters from './utils/plugins/remark/remark-lint-no-blocked-characters.mjs'
 
 export default {
   plugins: [
-    remarkLintNoSmartQuotes,
+    remarkLintNoBlockedCharacters,
     "remark-gfm",
     "remark-frontmatter",
     "remark-preset-lint-consistent",
