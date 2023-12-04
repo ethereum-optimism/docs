@@ -69,7 +69,7 @@ Your pull request should usually target the `main` branch, though the Optimism D
 To submit your contribution for review:
 
 1. Create a new [pull request on GitHub](https://github.com/ethereum-optimism/docs/issues/new/choose).
-2. Select a PR type from the list or choose **Open a blank isssue** at the bottom of the page.
+2. Select a PR type from the list or choose **Open a blank issue** at the bottom of the page.
 3. Complete the form as requested. For blank PR issues, please provide a clear title and accurate description/context.
 4. Click the "Create pull request"button to create the pull request effectively.
     
