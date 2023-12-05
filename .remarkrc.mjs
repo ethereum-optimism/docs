@@ -10,6 +10,7 @@ export default {
     "remark-lint-table-cell-padding",
     "remark-lint-table-pipe-alignment",
     "remark-lint-table-pipes",
+    "@double-great/remark-lint-alt-text",
     [
       "remark-lint-heading-style",
       "atx"
