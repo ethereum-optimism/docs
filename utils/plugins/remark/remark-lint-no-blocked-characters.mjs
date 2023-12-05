@@ -1,25 +1,32 @@
 import { visit } from 'unist-util-visit'
 import { lintRule } from 'unified-lint-rule'
 
-const remarkLintNoSmartQuotes = lintRule(
+/**
+ * Custom remark lint rule that blocks certain characters (smart quotes,
+ * invisible spaces, etc.) from being used in the docs. Helps make the docs
+ * more consistent and avoids characters that might cause issues on certain
+ * platforms.
+ */
+const remarkLintNoBlockedCharacters = lintRule(
   {
     url: 'https://github.com/ethereum-optimism/docs',
-    origin: 'remark-lint:no-smart-quotes'
+    origin: 'remark-lint:no-blocked-characters'
   },
   (tree, file) => {
     visit(tree, 'text', (node) => {
-      const smartQuotesRegex = /[“”‘’]/g
+      const characterRegex = /[“”‘’ ]/g
       const replacements = {
         '“': '"',
         '”': '"',
         '‘': "'",
-        '’': "'"
+        '’': "'",
+        ' ': " "
       }
 
       let match
-      while ((match = smartQuotesRegex.exec(node.value)) !== null) {
+      while ((match = characterRegex.exec(node.value)) !== null) {
         file.message(
-          `Smart quote found: ${match[0]} at index ${match.index}`,
+          `Blocked character found: (${match[0]}) at index ${match.index}`,
           node
         )
 
@@ -33,4 +40,4 @@ const remarkLintNoSmartQuotes = lintRule(
   }
 )
 
-export default remarkLintNoSmartQuotes
+export default remarkLintNoBlockedCharacters
