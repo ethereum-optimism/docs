@@ -1,60 +1,79 @@
 ---
-title: Optimize Contracts for Cheaper Dapps
+title: Contract Optimization on OP Mainnet
 lang: en-US
-description: Learn strategies to optimize your contracts to make decentralized applications even cheaper.
+description: Learn how to optimize contracts for OP Mainnet and what to look out for when you do so.
 ---
 
-# Optimize Contracts for Cheaper Dapps
+import { Callout } from 'nextra/components'
 
-This is a basic introduction into some of the concepts you need to understand to fully optimise your contracts in the OP Mainnet environment.
+# Contract Optimization on OP Mainnet
 
-*   The cost of using a decentralized application in OP Mainnet is much lower than the cost of the equivalent application on L1 Ethereum.
-    [See Layer2 Fees](https://l2fees.info/) for the current values.
-*   And with proper contract optimization, we can make our decentralized applications even cheaper. This guide covers some strategies.
+OP Mainnet is designed to be [EVM equivalent](https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306), which means OP Mainnet looks exactly like Ethereum in every way possible.
+One large and mostly unavoidable discrepancy between OP Mainnet and Ethereum is a slight [difference in transaction fee models](/stack/transaction-fees/overview).
+This difference means that there are some opportunities to optimize OP Mainnet contracts to better take advantage of the OP Mainnet fee model.
 
-## Understand Transaction Fees
+This guide explains the basic concepts that allow you to optimize OP Mainnet contracts and provides several examples of how you might take advantage of these concepts.
+You'll also get a better understanding of the tradeoffs and risks involved with potential contract optimizations.
+By the end of this guide you should have a clear understanding of how OP Mainnet contracts can be optimized and whether or not these optimizations make sense for your application.
 
-The cost of an L2 transaction on OP Mainnet is composed of two components:
+<Callout>
+Contract optimizations are powerful but can also create additional contract complexity.
+Some types of optimizations may also become unnecessary as OP Mainnet evolves.
+Make sure to read through all of the considerations on this page before committing to any optimizations.
+</Callout>
 
-*   L2 execution fee, which is proportional to the gas actually used in processing the transaction.
+## Fundamentals
 
-*   L1 data fee, which is proportional to:
-    *   The gas cost of writing the transaction's data to L1 (roughly equal to the transaction's length)
-    *   The cost of gas on L1.
-        The cost of gas on L1 can be extremely volatile.
+App developers might already be familiar with the concept of [gas optimization](https://www.alchemy.com/overviews/solidity-gas-optimization) to decrease the cost of interacting with smart contracts.
+Gas optimization can reduce the amount of gas used by a contract and make your application cheaper (and therefore improve user experience).
 
-To view the current gas costs as a user, [see here](https://optimism.io/gas-tracker). To retrieve them programatically, [see here](/builders/tools/javascript/sdk-estimate-gas).
+OP Mainnet contracts can be gas optimized to reduce overall transaction costs, just like contracts on Ethereum.
+However, OP Mainnet transactions must also pay for another fee called the L1 Data Fee which accounts for the cost of publishing transaction data to Ethereum.
+At the time this guide was written, this L1 Data Fee makes up the majority of the cost of most transactions on OP Mainnet.
 
-For a more in depth look at how transaction fees are calculated see our [fee documentation](/stack/transaction-fees/overview).
+Because the L1 Data Fee tends to be larger than the execution gas fee, **OP Mainnet contracts can be further optimized by increasing the amount of storage/execution used in order to decrease the amount of user-provided data in each transaction.**
+This is the basic premise that makes OP Mainnet contract optimization slightly different than on Ethereum.
 
-## Optimization Tradeoffs
+## Considerations
 
-In almost all cases, the L1 data fee is the vast majority of the transaction's cost.
-The L2 execution fee is, comparatively speaking, negligible.
-This means that the optimization tradeoffs are very different in OP Mainnet than they are in Ethereum.
+### Additional Complexity
 
-Transaction call data is *expensive*.
-The cost of writing a byte to L1 is approximately 16 gas.
-At a cost of 45 gwei per L1 gas unit, writing one byte to L1 on OP Mainnet costs 720 gwei, or 720,000 units of L2 gas (at the non-congested price of 0.001 gwei per L2 gas unit).
+Contract optimizations can create additional complexity, which can in turn create additional risk.
+Developers should always consider whether this added complexity is worth the reduction in cost.
 
-In comparison, onchain processing and storage are cheap.
-The worst case for writing to storage (previously uninitialized storage) is a cost of [22100 L2 gas per EVM word, which contains 32 bytes of data](https://www.evm.codes/#55), which averages out to less than 700 L2 gas / byte.
-At a cost of 45 gwei per L1 gas unit, this means it is cheaper to write a whole kilobyte to storage, rather than add one byte to the transaction call data.
+### Changing Economics
 
-## Modify the [ABI (application binary interface)](https://docs.soliditylang.org/en/latest/abi-spec.html)
+Various potential upgrades to OP Mainnet may also make optimizations to the L1 Data Fee less relevant.
+For instance, [EIP-4844](https://www.eip4844.com/), if adopted, should significantly reduce the cost of publishing data to Ethereum and would therefore also decrease the L1 Data Fee.
 
-[The standard ABI](https://docs.soliditylang.org/en/latest/abi-spec.html) was designed with L1 tradeoffs in mind.
-It uses four byte function selectors and pads values to a 32 byte size.
-Neither is optimal when using OP Mainnet.
+OP Mainnet also uses an [EIP-1559](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1559.md) mechanism that automatically increases the base fee as chain usage increases.
+Optimizations based on reducing the L1 Data Fee may become less relevant if the base fee becomes a larger part of the total transaction cost.
 
-It is much more efficient to [create a shorter ABI with just the required bytes, and decode it onchain](https://ethereum.org/en/developers/tutorials/short-abi/).
-All of your [`view`](https://docs.soliditylang.org/en/latest/contracts.html#view-functions) and [`pure`](https://docs.soliditylang.org/en/latest/contracts.html#pure-functions) functions can use the standard ABI at no cost.
+<Callout>
+Generally speaking, **developers should assume that L1 Data Fee optimizations will become less useful as time goes on**.
+If you expect your contracts to be used for long periods of time, you may wish to avoid optimizations for long term savings.
+If you expect your contracts to be used mostly in the short term or you have the ability to upgrade contracts in the future, optimizations may be better suited for you.
+</Callout>
 
-## Use smaller values when possible
+## Techniques
 
-Your modified ABI is not going to pad values, so the less bytes you use the better.
-For example, it is standard to use `uint256` for amounts.
-This means that the highest number we can represent is 2<sup>256</sup>-1, or about 1.2\*10<sup>77</sup>.
-When storing ETH balances, for example, using `uint256` is overkill as there are only [120 million ETH](https://ycharts.com/indicators/ethereum_supply). Thus, we can safely store ETH balances in `uint88` which is just eleven bytes.
+### Calldata Compression
 
-Go through your contracts and identify any values that will never reach 32 bytes and reduce them to logical sizes. You can do this same process for ints, bytes and [other Solidity data types](https://docs.soliditylang.org/en/develop/types.html#types).
+Compressing user data on the client side and decompressing it on the contract side can be an effective way to decrease costs on OP Mainnet.
+This technique decreases the amount of data provided by the user in exchange for a significant increase in onchain computation.
+
+Although several libraries exist to perform this calldata compression, none of these libraries have been audited as of the writing of this page.
+As a result, links to these libraries have been explicitly omitted here to avoid encouraging developers from using potentially buggy software.
+Most of these libraries can be found with a quick search online but, as always, be careful with code you find on the internet.
+
+### Custom Encoding
+
+The [Solidity ABI encoding scheme](https://docs.soliditylang.org/en/v0.8.23/abi-spec.html#argument-encoding) is not particularly data efficient.
+Contracts can often reduce the amount of calldata provided by defining a custom argument encoding protocol.
+
+Custom argument encodings can be combined with stored data to further reduce costs.
+For example, `address` arguments could potentially be replaced with a `uint64` pointer that performs a lookup in a stored mapping of `uint64 => address`.
+This would cut out a significant number of bytes with further reductions if the total number of addresses that need to be looked up is small (which would allow `uint64` to be reduced to `uint32` or less).
+
+Custom encodings are typically less complex that general-purpose calldata compression libraries but carry additional complexity no matter what.
+When combined with stored data, application-specific custom encodings can be significantly more efficient than general-purpose compression mechanisms.
