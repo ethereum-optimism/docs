@@ -21,7 +21,7 @@ const messenger = new optimism.CrossChainMessenger({
 })
 
 console.log('Depositing ETH...')
-tx = await messenger.depositETH(ethers.utils.parseEther('0.01'))
+tx = await messenger.depositETH(ethers.utils.parseEther('0.006942'))
 await tx.wait()
 
 console.log('Waiting for deposit to be relayed...')
@@ -34,7 +34,7 @@ console.log('L2 balance:')
 console.log((await l2Wallet.getBalance()).toString())
 
 console.log('Withdrawing ETH...')
-const withdrawal = await messenger.withdrawETH(ethers.utils.parseEther('0.01'))
+const withdrawal = await messenger.withdrawETH(ethers.utils.parseEther('0.004269'))
 await withdrawal.wait()
 
 console.log('L2 balance:')
