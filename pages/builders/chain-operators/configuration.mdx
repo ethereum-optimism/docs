@@ -20,37 +20,37 @@ The OP Stack is a flexible platform with various configuration values that you c
 
 New OP Stack blockchains are currently configured with a JSON file inside the Optimism repository. The file is `<optimism repository>/packages/contracts-bedrock/deploy-config/<chain name>.json`. For example, [this is the configuration file for the tutorial blockchain](https://github.com/ethereum-optimism/optimism/blob/129032f15b76b0d2a940443a39433de931a97a44/packages/contracts-bedrock/deploy-config/getting-started.json).
 
-### Admin accounts
+### Admin addresses
 
 | Key                | Type       | Description                                                                                                                                                                                                                                           | Default / Recommended value                                                         |
 | ------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `finalSystemOwner` | L1 Address | Address that will own all ownable contracts on L1 once the deployment is finished, including the `ProxyAdmin` contract.                                                                                                                               | It is recommended to have a single admin account to retain a common security model. |
-| `controller`       | L1 Address | Address that will own the `SystemDictator` contract and can therefore control the flow of the deployment or upgrade.                                                                                                                                  | It is recommended to have a single admin account to retain a common security model. |
-| `proxyAdminOwner`  | L2 Address | Address that will own the `ProxyAdmin` contract on L2. The L2 `ProxyAdmin` contract owns all of the `Proxy` contracts for every predeployed contract in the range `0x42...0000` to `0x42..2048`. This makes predeployed contracts easily upgradeable. | It is recommended to have a single admin account to retain a common security model. |
+| `finalSystemOwner` | L1 Address | Address that will own all ownable contracts on L1 once the deployment is finished, including the `ProxyAdmin` contract.                                                                                                                               | It is recommended to have a single admin address to retain a common security model. |
+| `controller`       | L1 Address | Address that will own the `SystemDictator` contract and can therefore control the flow of the deployment or upgrade.                                                                                                                                  | It is recommended to have a single admin address to retain a common security model. |
+| `proxyAdminOwner`  | L2 Address | Address that will own the `ProxyAdmin` contract on L2. The L2 `ProxyAdmin` contract owns all of the `Proxy` contracts for every predeployed contract in the range `0x42...0000` to `0x42..2048`. This makes predeployed contracts easily upgradeable. | It is recommended to have a single admin address to retain a common security model. |
 
 ### Fee recipients
 
 | Key                          | Type             | Description                                                                        | Default value                                                                       |
 | ---------------------------- | ---------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `baseFeeVaultRecipient`      | L1 or L2 Address | Address that the base fees from all transactions on the L2 can be withdrawn to.    | It is recommended to have a single admin account to retain a common security model. |
-| `l1FeeVaultRecipient`        | L1 or L2 Address | Address that the L1 data fees from all transactions on the L2 can be withdrawn to. | It is recommended to have a single admin account to retain a common security model. |
-| `sequencerFeeVaultRecipient` | L1 or L2 Address | Address that the tip fees from all transactions on the L2 can be withdrawn to.     | It is recommended to have a single admin account to retain a common security model. |
+| `baseFeeVaultRecipient`      | L1 or L2 Address | Address that the base fees from all transactions on the L2 can be withdrawn to.    | It is recommended to have a single admin address to retain a common security model. |
+| `l1FeeVaultRecipient`        | L1 or L2 Address | Address that the L1 data fees from all transactions on the L2 can be withdrawn to. | It is recommended to have a single admin address to retain a common security model. |
+| `sequencerFeeVaultRecipient` | L1 or L2 Address | Address that the tip fees from all transactions on the L2 can be withdrawn to.     | It is recommended to have a single admin address to retain a common security model. |
 
 ### Minimum Fee Withdrawal Amounts
 
-| Key                                   | Type          | Description                                                                                  | Default value |
-| ------------------------------------- | ------------- | -------------------------------------------------------------------------------------------- | ------------- |
-| `baseFeeVaultMinimumWithdrawalAmount` | Number in wei | The minimum amount of funds the `BaseFeeVault` contract must have for a fee withdrawal.      | 10 ether      |
-| `l1FeeVaultMinimumWithdrawalAmount`   | Number in wei | The minimum amount of funds the `L1FeeVault` contract must have for a fee withdrawal.        | 10 ether      |
-| `sequencerFeeVaultWithdrawalAmount`   | Number in wei | The minimum amount of funds the `SequencerFeeVault` contract must have for a fee withdrawal. | 10 ether      |
+| Key                                   | Type          | Description                                                                                | Default value |
+| ------------------------------------- | ------------- | ------------------------------------------------------------------------------------------ | ------------- |
+| `baseFeeVaultMinimumWithdrawalAmount` | Number in wei | The minimum amount of ETH the `BaseFeeVault` contract must have for a fee withdrawal.      | 10 ether      |
+| `l1FeeVaultMinimumWithdrawalAmount`   | Number in wei | The minimum amount of ETH the `L1FeeVault` contract must have for a fee withdrawal.        | 10 ether      |
+| `sequencerFeeVaultWithdrawalAmount`   | Number in wei | The minimum amount of ETH the `SequencerFeeVault` contract must have for a fee withdrawal. | 10 ether      |
 
 ### Withdrawal Network
 
-| Key                                  | Type                             | Description                                                                                                                              | Default value |
-| ------------------------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `baseFeeVaultWithdrawalNetwork`      | Number representing network enum | A value of `0` will withdraw funds to the recipient address on L1 and a value of `1` will withdraw funds to the recipient address on L2. |               |
-| `l1FeeVaultWithdrawalNetwork`        | Number representing network enum | A value of `0` will withdraw funds to the recipient address on L1 and a value of `1` will withdraw funds to the recipient address on L2. |               |
-| `sequencerFeeVaultWithdrawalNetwork` | Number representing network enum | A value of `0` will withdraw funds to the recipient address on L1 and a value of `1` will withdraw funds to the recipient address on L2. |               |
+| Key                                  | Type                             | Description                                                                                                                          | Default value |
+| ------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| `baseFeeVaultWithdrawalNetwork`      | Number representing network enum | A value of `0` will withdraw ETH to the recipient address on L1 and a value of `1` will withdraw ETH to the recipient address on L2. |               |
+| `l1FeeVaultWithdrawalNetwork`        | Number representing network enum | A value of `0` will withdraw ETH to the recipient address on L1 and a value of `1` will withdraw ETH to the recipient address on L2. |               |
+| `sequencerFeeVaultWithdrawalNetwork` | Number representing network enum | A value of `0` will withdraw ETH to the recipient address on L1 and a value of `1` will withdraw ETH to the recipient address on L2. |               |
 
 ### Misc.
 
@@ -73,7 +73,7 @@ These fields apply to L2 blocks: Their timing, when do they need to be written t
 | `channelTimeout`      | Number of blocks  | Maximum number of L1 blocks that a transaction channel frame can be considered valid. A transaction channel frame is a chunk of a compressed batch of transactions. After the timeout, the frame is dropped.                  | 300 (1 hour)                                            |
 | `p2pSequencerAddress` | L1 Address        | Address of the key that the Sequencer uses to sign blocks on the p2p network.                                                                                                                                                 | Sequencer, an address for which you own the private key |
 | `batchInboxAddress`   | L1 Address        | Address that Sequencer transaction batches are sent to on L1.                                                                                                                                                                 | 0xff00…0042069                                          |
-| `batchSenderAddress`  | L1 Address        | Address of the account that nodes will filter for when searching for Sequencer transaction batches being sent to the `batchInboxAddress`. Can be updated later via the `SystemConfig` contract on L1.                         | Batcher, an address for which you own the private key   |
+| `batchSenderAddress`  | L1 Address        | Address that nodes will filter for when searching for Sequencer transaction batches being sent to the `batchInboxAddress`. Can be updated later via the `SystemConfig` contract on L1.                                        | Batcher, an address for which you own the private key   |
 
 ### Proposal fields
 
@@ -86,7 +86,7 @@ These fields apply to output root proposals.
 | `l2OutputOracleSubmissionInterval`  | Number of blocks  | Number of blocks between proposals to the `L2OutputOracle`. Will be removed with the addition of permissionless proposals.                                                                                                                          | 120 (24 minutes)                                                                    |
 | `finalizationPeriodSeconds`         | Number of seconds | Number of seconds that a proposal must be available to challenge before it is considered finalized by the `OptimismPortal` contract.                                                                                                                | We recommend 12 on test networks, seven days on production ones                     |
 | `l2OutputOracleProposer`            | L1 Address        | Address that is allowed to submit output proposals to the `L2OutputOracle` contract. Will be removed when we have permissionless proposals.                                                                                                         |                                                                                     |
-| `l2OutputOracleChallenger`          | L1 Address        | Address that is allowed to challenge output proposals submitted to the `L2OutputOracle`. Will be removed when we have permissionless challenges.                                                                                                    | It is recommended to have a single admin account to retain a common security model. |
+| `l2OutputOracleChallenger`          | L1 Address        | Address that is allowed to challenge output proposals submitted to the `L2OutputOracle`. Will be removed when we have permissionless challenges.                                                                                                    | It is recommended to have a single admin address to retain a common security model. |
 
 ### L1 data fee
 
