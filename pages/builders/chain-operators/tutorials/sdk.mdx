@@ -126,10 +126,10 @@ They further assume that your project already includes the Optimism SDK [`@eth-o
 To verify the SDK's functionality, transfer some ETH from L1 to L2.
 
 <Steps>
-  ### Get the current balances
+  ### Get initial ETH available
 
   ```js
-  balances0 = [
+  initialETH = [
      await l1Provider.getBalance(l1Signer.address),
      await l2Provider.getBalance(l1Signer.address)
   ]
@@ -142,29 +142,29 @@ To verify the SDK's functionality, transfer some ETH from L1 to L2.
   rcpt = await tx.wait()
   ```
 
-  ### Get the balances after the transfer
+  ### Get ETH available after transfer
 
   ```js
-  balances1 = [
+  finalETH = [
      await l1Provider.getBalance(l1Signer.address),
      await l2Provider.getBalance(l1Signer.address)
   ]
   ```
 
-  ### See that the L1 balance changed
+  ### See that the ETH available on L1 changed
 
   It probably changed by a lot more than 1 gwei because of the cost of the transaction.
 
   ```js
-  (balances0[0]-balances1[0])/1e9
+  (initialETH[0] - finalETH[0])/1e9
   ```
 
-  ### See that the L2 balance changed
+  ### See that the ETH available on L2 changed
 
   This process might take a few minutes.
 
   ```js
-  ((await l2Provider.getBalance(l1Signer.address))-balances0[1])/1e9
+  ((await l2Provider.getBalance(l1Signer.address)) - initialETH[1])/1e9
   ```
 </Steps>
 
