@@ -59,13 +59,13 @@ In this tutorial we'll be using the [`op-geth` implementation](https://github.co
 
 ### Batcher
 
-The Batcher is an entity for publishing transactions from the Sequencer to the L1 blockchain.
+The Batcher is a service that publishes transactions from the Sequencer to the L1 blockchain.
 The Batcher runs continuously alongside the Sequencer and publishes transactions in batches (hence the name) on a regular basis.
 We'll be using the [`op-batcher` implementation](https://github.com/ethereum-optimism/optimism/tree/develop/op-batcher) of the Batcher component found within the [Optimism Monorepo](https://github.com/ethereum-optimism/optimism).
 
 ### Proposer
 
-The Proposer is an entity responsible for publishing transactions *results* (in the form of L2 state roots) to the L1 blockchain.
+The Proposer is a service responsible for publishing transactions *results* (in the form of L2 state roots) to the L1 blockchain.
 This allows smart contracts on L1 to read the state of the L2, which is necessary for cross-chain communication and user withdrawals.
 It's likely that the Proposer will be removed in the future, but for now it's a necessary component of the OP Stack.
 We'll be using the [`op-proposer` implementation](https://github.com/ethereum-optimism/optimism/tree/develop/op-proposer) of the Proposer component found within the [Optimism Monorepo](https://github.com/ethereum-optimism/optimism).
@@ -223,14 +223,14 @@ You'll need to fill out a few environment variables before we can start deployin
   | `L1_RPC_KIND` | Kind of L1 RPC you're connecting to, used to inform optimal transactions receipts fetching. Valid options: `alchemy`, `quicknode`, `infura`, `parity`, `nethermind`, `debug_geth`, `erigon`, `basic`, `any`. |
 </Steps>
 
-## Generate Accounts
+## Generate Addresses
 
-You'll need four accounts and their private keys when setting up the chain:
+You'll need four addresses and their private keys when setting up the chain:
 
-*   The `Admin` account has the ability to upgrade contracts.
-*   The `Batcher` account publishes Sequencer transaction data to L1.
-*   The `Proposer` account publishes L2 transaction results (state roots) to L1.
-*   The `Sequencer` account signs blocks on the p2p network.
+*   The `Admin` address has the ability to upgrade contracts.
+*   The `Batcher` address publishes Sequencer transaction data to L1.
+*   The `Proposer` address publishes L2 transaction results (state roots) to L1.
+*   The `Sequencer` address signs blocks on the p2p network.
 
 <Steps>
   {<h3>Enter the Optimism Monorepo</h3>}
@@ -239,7 +239,7 @@ You'll need four accounts and their private keys when setting up the chain:
   cd ~/optimism
   ```
 
-  {<h3>Generate new accounts</h3>}
+  {<h3>Generate new addresses</h3>}
 
   <Callout type="error">
     You should **not** use the `wallets.sh` tool for production deployments.
@@ -257,38 +257,38 @@ You'll need four accounts and their private keys when setting up the chain:
   ```text
   Copy the following into your .envrc file:
    
-  # Admin account
+  # Admin address
   export GS_ADMIN_ADDRESS=0x9625B9aF7C42b4Ab7f2C437dbc4ee749d52E19FC
   export GS_ADMIN_PRIVATE_KEY=0xbb93a75f64c57c6f464fd259ea37c2d4694110df57b2e293db8226a502b30a34
-   
-  # Batcher account
+
+  # Batcher address
   export GS_BATCHER_ADDRESS=0xa1AEF4C07AB21E39c37F05466b872094edcf9cB1
   export GS_BATCHER_PRIVATE_KEY=0xe4d9cd91a3e53853b7ea0dad275efdb5173666720b1100866fb2d89757ca9c5a
    
-  # Proposer account
+  # Proposer address
   export GS_PROPOSER_ADDRESS=0x40E805e252D0Ee3D587b68736544dEfB419F351b
   export GS_PROPOSER_PRIVATE_KEY=0x2d1f265683ebe37d960c67df03a378f79a7859038c6d634a61e40776d561f8a2
    
-  # Sequencer account
+  # Sequencer address
   export GS_SEQUENCER_ADDRESS=0xC06566E8Ec6cF81B4B26376880dB620d83d50Dfb
   export GS_SEQUENCER_PRIVATE_KEY=0x2a0290473f3838dbd083a5e17783e3cc33c905539c0121f9c76614dda8a38dca
   ```
 
-  {<h3>Save the accounts</h3>}
+  {<h3>Save the addresses</h3>}
 
   Copy the output from the previous step and paste it into your `.envrc` file as directed.
 
-  {<h3>Fund the accounts</h3>}
+  {<h3>Fund the addresses</h3>}
 
-  **You will need to send ETH to the `Admin`, `Proposer`, and `Batcher` accounts.**
+  **You will need to send ETH to the `Admin`, `Proposer`, and `Batcher` addresses.**
   The exact amount of ETH required depends on the L1 network being used.
-  **You do not need to send any ETH to the `Sequencer` account as it does not send transactions.**
+  **You do not need to send any ETH to the `Sequencer` address as it does not send transactions.**
 
-  We recommend funding the accounts with the following amounts when using Sepolia:
+  We recommend funding the addresses with the following amounts when using Sepolia:
 
-  *   `Admin` — 0.2 ETH
-  *   `Proposer` — 0.2 ETH
-  *   `Batcher` — 0.1 ETH
+  *   `Admin` — 0.2 Sepolia ETH
+  *   `Proposer` — 0.2 Sepolia ETH
+  *   `Batcher` — 0.1 Sepolia ETH
 </Steps>
 
 ## Load Environment variables
@@ -583,8 +583,8 @@ The `op-batcher` takes transactions from the Sequencer and publishes those trans
 Once these Sequencer transactions are included in a finalized L1 block, they're officially part of the canonical chain.
 The `op-batcher` is critical!
 
-It's best to give the `Batcher` account at least 1 Sepolia ETH to ensure that it can continue operating without running out of ETH for gas.
-Keep an eye on the balance of the `Batcher` account because it can expend ETH quickly if there are a lot of transactions to publish.
+It's best to give the `Batcher` address at least 1 Sepolia ETH to ensure that it can continue operating without running out of ETH for gas.
+Keep an eye on the balance of the `Batcher` address because it can expend ETH quickly if there are a lot of transactions to publish.
 
 <Steps>
   {<h3>Open up a new terminal</h3>}
@@ -661,7 +661,7 @@ If you need an easy way to connect to your chain, just [click here](https://chai
 ## Get ETH On Your Chain
 
 Once you've connected your wallet, you'll probably notice that you don't have any ETH to pay for gas on your chain.
-The easiest way to deposit Sepolia ETH into your chain is to send funds directly to the `L1StandardBridge` contract.
+The easiest way to deposit Sepolia ETH into your chain is to send ETH directly to the `L1StandardBridge` contract.
 
 <Steps>
   {<h3>Navigate to the contracts-bedrock directory</h3>}

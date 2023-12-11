@@ -109,7 +109,7 @@ In order for Optimism to upgrade to a Superchain, it must have the following pro
 | Shared bridge for all OP Chains              | Enables OP Chains to have standardized security properties.                                |
 | Cheap OP Chain deployment                    | Enables deploying and transacting on OP Chains without the high fees of transacting on L1. |
 | Configuration options for OP Chains          | Enables OP Chains to configure their data availability provider, sequencer address, etc.   |
-| Secure transactions and cross-chain messages | Enables users to safely migrate assets between OP Chains.                                  |
+| Secure transactions and cross-chain messages | Enables users to safely migrate state between OP Chains.                                   |
 
 Once Optimism has satisfied these properties it may be considered a Superchain.
 
@@ -133,11 +133,11 @@ Bedrock introduced L2 chain derivation from an L1 chain, where all chain data ca
 
 ### Permissionless proof system to enable withdrawals
 
-In Bedrock, there is a permissioned entity (the proposer) who is required for users to submit withdrawals. Additionally, proposers must submit proposals to L1 at a set interval. This introduces linear overhead as the number of chains in the Superchain increases, and even introduces an upper bound on the number of chains due to the limited L1 resources.
+In Bedrock, there is a permissioned role (the "proposer" role) that is required for users to submit withdrawals. Additionally, proposers must submit proposals to L1 at a set interval. This introduces linear overhead as the number of chains in the Superchain increases, and even introduces an upper bound on the number of chains due to the limited L1 resources.
 
 In order to address these issues, we can introduce two features:
 
-1.  Withdrawal claims (a.k.a. Permissionless proposals) — allow anyone to submit a withdrawal (aka a proposal), not just a designated proposer. This removes the permissioned entity from the system, enabling users to submit their own withdrawal messages.
+1.  Withdrawal claims (a.k.a. Permissionless proposals) — allow anyone to submit a withdrawal (aka a proposal), not just a designated proposer. This removes the permissioned role from the system, enabling users to submit their own withdrawal messages.
 2.  Remove proposal submission interval — enable withdrawal claims to be made *only* when a user needs to withdraw. This removes the overhead incurred when deploying a new OP Chain.
 
 <Callout type="info">
@@ -180,11 +180,11 @@ Modular sequencing also enables permissionless experimentation with different se
 
 To ship the initial Superchain with high confidence in security and decentralization, a decentralized security council should be introduced to govern upgrades. The security council should be able to update the set of chain attestors, initiate contract upgrades with a delay, and hit an emergency bridge pause button which also cancels pending upgrades.
 
-The ability to pause the bridge in case of emergency means that in the worst case, where the requisite threshold of the security council participants had their private keys leaked, the result would be that withdrawals are indefinitely paused and bridge upgrades would be perpetually canceled. In other words, the L1 funds would be frozen. This follows the design principle of safety over liveness—the principle that one should always prevent the loss of funds (i.e. enforce safety) even if it means the funds get locked (i.e. sacrifice liveness).
+The ability to pause the bridge in case of emergency means that in the worst case, where the requisite threshold of the security council participants had their private keys leaked, the result would be that withdrawals are indefinitely paused and bridge upgrades would be perpetually canceled. In other words, the L1 bridge would be frozen. This follows the design principle of safety over liveness—the principle that one should always prevent the loss of ETH or tokens (i.e. enforce safety) even if it means the ETh or tokens get locked (i.e. sacrifice liveness).
 
 #### Unfreezing the bridge via L1 soft fork
 
-In order to address the frozen funds, there is a potential final recovery mechanism which has been discussed by the L2 community which we call the "L1 Soft Fork Upgrade Recovery"mechanism. This mechanism enables L1 to initiate a bridge upgrade with a soft fork, bypassing all other permissions within the Superchain bridge contracts. This approach may [introduce systemic risk](https://web.archive.org/web/20231102063913/https://vitalik.ca/general/2023/05/21/dont_overload.html) to Ethereum and requires research and community buy-in before implementation. It is not required for implementing the Superchain and is being documented for research completeness. Without further research into the implications and safety, it is not an approach the team currently endorses.
+In order to address the frozen bridge, there is a potential final recovery mechanism which has been discussed by the L2 community which we call the "L1 Soft Fork Upgrade Recovery"mechanism. This mechanism enables L1 to initiate a bridge upgrade with a soft fork, bypassing all other permissions within the Superchain bridge contracts. This approach may [introduce systemic risk](https://web.archive.org/web/20231102063913/https://vitalik.ca/general/2023/05/21/dont_overload.html) to Ethereum and requires research and community buy-in before implementation. It is not required for implementing the Superchain and is being documented for research completeness. Without further research into the implications and safety, it is not an approach the team currently endorses.
 
 The mechanism is as follows:
 
@@ -207,7 +207,7 @@ We expect that, if successful, the post-Bedrock Superchain release will mark a m
 3.  Cross-Chain transactions are asynchronous, breaking the ability to perform atomic cross-chain transactions (like flash loans).
 4.  Posting transactions to the Superchain is not-scalable because the transaction data must be submitted to L1 which has limited capacity.
 5.  There are no easy frameworks for building scalable dApps which utilize many OP Chains.
-6.  There is no easy wallet for managing assets and dApps across many OP Chains.
+6.  There is no easy wallet for managing tokens and dApps across many OP Chains.
 
 If each one of these pain points were addressed, it could be possible to build decentralized alternatives to even the most complex web2 applications.
 
@@ -231,7 +231,7 @@ It is possible to replace the trusted set of chain attestors by introducing perm
 
 #### Proposed Solution:
 
-Fault proofs introduce a UX burden because they require waiting a challenge period in order to safely finalize. This means that, depending on your challenge period length, users need to wait a long time before their assets are migrated from one OP Chain to the next.
+Fault proofs introduce a UX burden because they require waiting a challenge period in order to safely finalize. This means that, depending on your challenge period length, users need to wait a long time before their ETH and tokens are migrated from one OP Chain to the next.
 
 On the other hand, validity proofs do not have this problem. Validity proofs don't have a challenge period and therefore provide instant withdrawals from one OP Chain to the next. This is extremely important if users are expected to migrate between chains frequently, even during normal dApp execution. However, validity proofs are commonly implemented using zero-knowledge proofs (ZKPs), which are expensive and bug-prone. It will likely take years to truly productionize ZKPs enough such that they can be the primary cross-chain communication protocol.
 
@@ -244,7 +244,7 @@ This heterogeneous bridging system means that developers can build their applica
 3.  Low security, low latency validity proof (using trusted chain attestors in place of a ZKP)
 4.  High security, low latency validity proof (once ZKPs are ready)
 
-Mixing multiple proof systems enables developers to provide low latency bridging for low value assets and high latency for high value assets. It is even possible to turn a low security asset which was instantly bridged into a high security asset by proving the asset's validity using a high security high latency bridge. This building block enables developers to make interesting security tradeoffs such as using a high threshold attestation proof with a high security high latency fault proof fallback.
+Mixing multiple proof systems enables developers to provide low latency bridging for low value state and high latency for high value state. It is even possible to turn low security state which was instantly bridged into high security state by proving the state's validity using a high security high latency bridge. This building block enables developers to make interesting security tradeoffs such as using a high threshold attestation proof with a high security high latency fault proof fallback.
 
 ### Synchronous Cross-Chain Transactions
 
@@ -296,7 +296,7 @@ Because of the ability for hashes to reduce arbitrary size data into a constant 
 
 5.  There are no easy frameworks for building scalable dApps which utilize many OP Chains.
 
-6.  There is no easy wallet for managing assets and dApps across many OP Chains.
+6.  There is no easy wallet for managing ETH and tokens and dApps across many OP Chains.
 
 #### Proposed Solution (Sketch):
 
