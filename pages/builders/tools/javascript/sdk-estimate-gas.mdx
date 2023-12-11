@@ -41,7 +41,7 @@ The node script, `gas.js`, makes these assumptions:
   *   Create a `.env` file
 
   ```js filename=".env file"
-  # Put the mnemonic for an account on Optimism here
+  # Put the mnemonic for an address on Optimism here
   MNEMONIC=test test test test test test test test test test test junk
 
   # API KEY for Alchemy
@@ -307,7 +307,7 @@ The node script, `gas.js`, makes these assumptions:
 
   Edit the `env` file as follows:
 
-  *   `MNEMONIC` is the mnemonic to an account that has enough ETH to pay for the transaction.
+  *   `MNEMONIC` is the mnemonic to an address that has enough ETH to pay for the transaction.
   *   `ALCHEMY_API_KEY` is the API key for an OP Mainnet or OP Goerli app on [Alchemy](https://www.alchemy.com/), our preferred provider.
   *   `OPTIMISM_GOERLI_URL` is the URL for OP Goerli, if you use [a different node provider](/builders/tools/rpc-providers).
   *   `OPTIMISM_MAINNET_URL` is the URL for OP Mainnet, if you use [a different node provider](/builders/tools/rpc-providers).
@@ -490,7 +490,7 @@ const getEstimates = async (provider, tx) => {
 [Estimate the total cost (L1+L2) of running the transaction](https://sdk.optimism.io/modules.html#estimateTotalGasCost).
 
 > :warning: This function calls `eth_estimateGas`, which runs the transaction in the node (without changing the blockchain state).
-> This means that the account in `l2Provider` has to have enough ETH to pay for the gas cost of the transaction.
+> This means that the address in `l2Provider` has to have enough ETH to pay for the gas cost of the transaction.
 
 ```js
     l1Cost: await provider.estimateL1GasCost(tx),
@@ -658,7 +658,7 @@ This is [the standard way to submit a transaction in Ethers](https://docs.ethers
       }
 ```
 
-If the transaction failed, it could be because the account lacks the ETH to pay for gas.
+If the transaction failed, it could be because the address lacks the ETH to pay for gas.
 The error message shows that information so the user knows about it.
 
 ```js
@@ -671,7 +671,7 @@ The error message shows that information so the user knows about it.
       }
 ```
 
-It takes a bit of time before the change in the account's balance is processed.
+It takes a bit of time before the change in the address's balance is processed.
 This loop lets us wait until it is processed so we'll be able to know the full cost.
 
 Note that this is not the only way to wait until a transaction happens.

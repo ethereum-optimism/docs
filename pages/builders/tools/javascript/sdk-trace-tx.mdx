@@ -137,10 +137,10 @@ We are going to trace [this deposit](https://goerli.etherscan.io/tx/0x80da95d06c
 
   You can view this transaction [on Etherscan](https://goerli-optimism.etherscan.io/tx/0xa31eda15162e681e78a52e35b63c3b3379e23705129c19d186790089519ac7d7).
 
-  ### Check for Transferred Assets
+  ### Check for Transferred Tokens
 
-  To see if actual assets were transferred, you can parse the event log.
-  In OP Mainnet terminology, *deposit* refers to any transaction going from L1 Ethereum to OP Mainnet, and *withdrawal* refers to any transaction going from OP Mainnet to L1 Ethereum, whether or not there are assets attached.
+  To see if actual tokens were transferred, you can parse the event log.
+  In OP Mainnet terminology, *deposit* refers to any transaction going from L1 Ethereum to OP Mainnet, and *withdrawal* refers to any transaction going from OP Mainnet to L1 Ethereum, whether or not there are tokens attached.
 
   The event names and their parameters are usually available on Etherscan, but you can't just copy and paste, you need to make a few changes:
 
@@ -168,13 +168,13 @@ We are going to trace [this deposit](https://goerli.etherscan.io/tx/0x80da95d06c
 
   ### Locate `Mint` Events
 
-  When an asset is deposited, it is actually locked in the bridge on L1 and an equivalent asset is minted on L2.
-  To see transferred assets, look for `Mint` events.
+  When a token is deposited, it is actually locked in the bridge on L1 and an equivalent token is minted on L2.
+  To see transferred tokens, look for `Mint` events.
 
   ```js
   mints = logEvents.filter(x => x.name == 'Mint')
   for(i = 0; i<mints.length; i++)
-    console.log(`Asset: ${mints[i].address}, amount ${mints[0].args._amount / 1e18}`)
+    console.log(`Token: ${mints[i].address}, amount ${mints[0].args._amount / 1e18}`)
   ```
 </Steps>
 
@@ -210,10 +210,10 @@ We are going to trace [this withdrawal](https://goerli-optimism.etherscan.io/tx/
 
   You can view this transaction [on Etherscan](https://goerli.etherscan.io/tx/0xec821514b495c2c49dcba9b2c1a0955b85d02cd516748bc89c373d534ee878d4).
 
-  ### Check for Transferred Assets
+  ### Check for Transferred Tokens
 
-  In OP Mainnet terminology, *deposit* refers to any transaction going from L1 Ethereum to OP Mainnet, and *withdrawal* refers to any transaction going from OP Mainnet to L1 Ethereum, whether or not there are assets attached.
-  To see if actual assets were transferred, you can parse the event log.
+  In OP Mainnet terminology, *deposit* refers to any transaction going from L1 Ethereum to OP Mainnet, and *withdrawal* refers to any transaction going from OP Mainnet to L1 Ethereum, whether or not there are tokens attached.
+  To see if actual tokens were transferred, you can parse the event log.
   This is how you parse the event log of the L2 transaction.
 
   The event names and their parameters are usually available on Etherscan, but you can't just copy and paste, you need to make a few changes:
@@ -248,12 +248,12 @@ We are going to trace [this withdrawal](https://goerli-optimism.etherscan.io/tx/
 
   ### Locate `Burn` Events
 
-  When an asset is withdrawn, it is burned on L2, and then the bridge on L1 releases the equivalent asset.
-  To see transferred assets, look for `Burn` events.
+  When a token is withdrawn, it is burned on L2, and then the bridge on L1 releases the equivalent token.
+  To see transferred tokens, look for `Burn` events.
 
   ```js
   burns = logEvents.filter(x => x.name == 'Burn')
   for(i = 0; i<burns.length; i++)
-    console.log(`Asset: ${burns[i].address}, amount ${burns[0].args._amount / 1e18}`)
+    console.log(`Token: ${burns[i].address}, amount ${burns[0].args._amount / 1e18}`)
   ```
 </Steps>
