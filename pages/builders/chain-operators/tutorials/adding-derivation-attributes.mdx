@@ -16,17 +16,17 @@ import { Callout, Steps } from 'nextra/components'
 
 ## Overview
 
-In this tutorial, we'll modify the Bedrock Rollup. Although there are many ways to modify the OP Stack, we're going to spend this tutorial modifying the Derivation function. Specifically, we're going to update the Derivation function to track the amount of ETH being burned on L1! Who's gonna tell [ultrasound.money](http://ultrasound.money) that they should replace their backend with an OP Stack chain?
+In this tutorial, you'll modify the Bedrock Rollup. Although there are many ways to modify the OP Stack, you're going to spend this tutorial modifying the Derivation function. Specifically, you're going to update the Derivation function to track the amount of ETH being burned on L1! Who's gonna tell [ultrasound.money](http://ultrasound.money) that they should replace their backend with an OP Stack chain?
 
 ## Getting the idea
 
-Let's quickly recap what we're about to do. The `op-node` is responsible for generating the Engine API payloads that trigger `op-geth` to produce blocks and transactions. The `op-node` already generates a "system transaction"for every L1 block that relays information about the current L1 state to the L2 chain. We're going to modify the `op-node` to add a new system transaction that reports the total burn amount (the base fee multiplied by the gas used) in each block.
+Let's quickly recap what you're about to do. The `op-node` is responsible for generating the Engine API payloads that trigger `op-geth` to produce blocks and transactions. The `op-node` already generates a "system transaction"for every L1 block that relays information about the current L1 state to the L2 chain. You're going to modify the `op-node` to add a new system transaction that reports the total burn amount (the base fee multiplied by the gas used) in each block.
 
 Although it might sound like a lot, the whole process only involves deploying a single smart contract, adding one new file to `op-node`, and modifying one existing file inside `op-node`. It'll be painless. Let's go!
 
 ## Deploy the burn contract
 
-We're going to use a smart contract on our Rollup to store the reports that the `op-node` makes about the L1 burn. Here's the code for our smart contract:
+You're going to use a smart contract on your Rollup to store the reports that the `op-node` makes about the L1 burn. Here's the code for your smart contract:
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -80,7 +80,7 @@ Deploy this smart contract to your L2 (using any tool you find convenient). Make
 
 ## Add the burn transaction
 
-Now we need to add logic to the `op-node` to automatically submit a burn report whenever an L1 block is produced. Since this transaction is very similar to the system transaction that reports other L1 block info (found in [l1\_block\_info.go](https://github.com/ethereum-optimism/optimism/blob/c9cd1215b76111888e25ee27a49a0bc0c4eeb0f8/op-node/rollup/derive/l1_block_info.go)), we'll use that transaction as a jumping-off point.
+Now you need to add logic to the `op-node` to automatically submit a burn report whenever an L1 block is produced. Since this transaction is very similar to the system transaction that reports other L1 block info (found in [l1\_block\_info.go](https://github.com/ethereum-optimism/optimism/blob/c9cd1215b76111888e25ee27a49a0bc0c4eeb0f8/op-node/rollup/derive/l1_block_info.go)), you'll use that transaction as a jumping-off point.
 
 <Steps>
   ### Navigate to the `op-node` package:
@@ -208,7 +208,7 @@ Now we need to add logic to the `op-node` to automatically submit a burn report 
 
 ## Insert the burn transactions
 
-Finally, we'll need to update `~/optimism/op-node/rollup/derive/attributes.go` to insert the new burn transaction into every block. You'll need to make the following changes:
+Finally, you'll need to update `~/optimism/op-node/rollup/derive/attributes.go` to insert the new burn transaction into every block. You'll need to make the following changes:
 
 <Steps>
   ### Find these lines:
@@ -244,12 +244,12 @@ Finally, we'll need to update `~/optimism/op-node/rollup/derive/attributes.go` t
   txs = append(txs, l1BurnTx)
   ```
 
-  All we're doing here is creating a new burn transaction after every `l1InfoTx` and inserting it into every block.
+  All you're doing here is creating a new burn transaction after every `l1InfoTx` and inserting it into every block.
 </Steps>
 
 ## Rebuild your op-node
 
-Before we can see this change take effect, you'll need to rebuild your `op-node`:
+Before you can see this change take effect, you'll need to rebuild your `op-node`:
 
 ```bash
 cd ~/optimism/op-node
@@ -260,7 +260,7 @@ Now start your `op-node` if it isn't running or restart your `op-node` if it's a
 
 ## Checking the result
 
-Query the `total` function of your contract, you should also start to see the total slowly increasing. Play around with the `tally` function to grab the amount of gas burned since a given L2 block. You could use this to implement a version of [ultrasound.money](http://ultrasound.money) that keeps track of things with an OP Stack as a backend. We did it reddit!
+Query the `total` function of your contract, you should also start to see the total slowly increasing. Play around with the `tally` function to grab the amount of gas burned since a given L2 block. You could use this to implement a version of [ultrasound.money](http://ultrasound.money) that keeps track of things with an OP Stack as a backend.
 
 One way to get the total is to run these commands:
 
@@ -273,4 +273,4 @@ cast call <YOUR_BURN_CONTRACT_HERE> "total()" | cast --from-wei
 
 With just a few tiny changes to the `op-node`, you were just able to implement a change to the OP Stack that allows you to keep track of the L1 ETH burn on L2. With a live Cannon fault proof system, you should not only be able to track the L1 burn on L2, you should be able to *prove* the burn to contracts back on L1. That's crazy!
 
-The OP Stack is an extremely powerful platform that allows you to perform a large amount of computation trustlessly. It's a superpower for smart contracts. Tracking the L1 burn is just one of the many, many wild things you can do with the OP Stack. If you're looking for inspiration or you want to see what others are building on the OP Stack, check out our OP Stack Hacks page. Maybe you'll find a project you want to work on, or maybe you'll get the inspiration you need to build the next killer smart contract.
+The OP Stack is an extremely powerful platform that allows you to perform a large amount of computation trustlessly. It's a superpower for smart contracts. Tracking the L1 burn is just one of the many, many wild things you can do with the OP Stack. If you're looking for inspiration or you want to see what others are building on the OP Stack, check out the OP Stack Hacks page. Maybe you'll find a project you want to work on, or maybe you'll get the inspiration you need to build the next killer smart contract.

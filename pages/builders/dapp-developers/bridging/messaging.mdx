@@ -13,7 +13,7 @@ This page explains how bridging works, how to use it, and what to watch out for.
 
 <Callout type="info">
   This is a high-level overview of the bridging process.
-  For a step-by-step tutorial on how to send data between L1 and L2, check out our [Solidity tutorial](cross-dom-solidity).
+  For a step-by-step tutorial on how to send data between L1 and L2, check out the [Solidity tutorial](cross-dom-solidity).
 </Callout>
 
 ## Understanding Contract Calls
@@ -36,7 +36,7 @@ Under the hood, Solidity is triggering the code for `MyOtherContract` by sending
 A lot of this complexity is abstracted away to simplify the developer experience.
 Solidity also has manual encoding tools that allow us to demonstrate the same process in a more verbose way.
 
-Here's how we might manually encode the same call:
+Here's how you might manually encode the same call:
 
 ```solidity
 contract MyContract {
@@ -53,7 +53,7 @@ contract MyContract {
 }
 ```
 
-Here we're using the [low-level "call" function](https://docs.soliditylang.org/en/v0.8.23/units-and-global-variables.html#members-of-address-types) and one of the [ABI encoding functions built into Solidity](https://docs.soliditylang.org/en/v0.8.23/units-and-global-variables.html#abi-encoding-and-decoding-functions).
+Here you're using the [low-level "call" function](https://docs.soliditylang.org/en/v0.8.23/units-and-global-variables.html#members-of-address-types) and one of the [ABI encoding functions built into Solidity](https://docs.soliditylang.org/en/v0.8.23/units-and-global-variables.html#abi-encoding-and-decoding-functions).
 Although these two code snippets look a bit different, they're doing the exact same thing.
 Because of limitations of Solidity, **the OP Stack's bridging interface is designed to look like the second code snippet**.
 
@@ -86,9 +86,9 @@ This is basically equivalent to:
 address(_target).call{gas: _gasLimit}(_message);
 ```
 
-Except, of course, that we're calling a contract on a completely different network.
+Except, of course, that you're calling a contract on a completely different network.
 
-We're glossing over a lot of the technical details that make this whole thing work under the hood, but this should be enough to get you started.
+This is glossing over a lot of the technical details that make this whole thing work under the hood, but this should be enough to get you started.
 Want to call a contract on OP Mainnet from a contract on Ethereum?
 It's dead simple:
 
@@ -158,7 +158,7 @@ Contracts frequently make use of `msg.sender` to make decisions based on the cal
 For example, many contracts will use the [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) pattern to selectively restrict access to certain functions.
 Because messages are essentially shuttled between L1 and L2 by the messenger contracts, **the `msg.sender` you'll see when receiving one of these messages will be the messenger contract** corresponding to the layer you're on.
 
-In order to get around this, we added a `xDomainMessageSender` function to each messenger:
+In order to get around this, you can find a `xDomainMessageSender` function to each messenger:
 
 ```solidity
 function xDomainMessageSender() public returns (address);
@@ -218,9 +218,9 @@ This means that any messages you send from Layer 2 will only be received on Laye
 We call this period of time the "challenge period" because it is the time during which a transaction can be challenged with a [fault proof](/stack/protocol/overview#fault-proofs).
 
 Optimistic Rollups are "optimistic" because they're based around the idea of publishing the *result* of a transaction to Ethereum without actually executing the transaction on Ethereum.
-In the "optimistic" case, this transaction result is correct and we can completely avoid the need to perform complicated (and expensive) logic on Ethereum.
+In the "optimistic" case, this transaction result is correct and one can completely avoid the need to perform complicated (and expensive) logic on Ethereum.
 
-However, we still need some way to prevent incorrect transaction results from being published in place of correct ones.
+However, one still needs some way to prevent incorrect transaction results from being published in place of correct ones.
 Here's where the "fault proof" comes into play.
 Whenever a transaction result is published, it's considered "pending" for a period of time known as the challenge period.
 During this period of time, anyone may re-execute the transaction *on Ethereum* in an attempt to demonstrate that the published result was incorrect.
