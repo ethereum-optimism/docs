@@ -19,7 +19,7 @@ const config: DocsThemeConfig = {
     link: 'https://github.com/ethereum-optimism/docs',
   },
   chat: {
-    link: 'https://twitter.com/OptimismGov',
+    link: 'https://twitter.com/OptimismFND',
     icon: (
       <svg width="24" height="24" viewBox="0 0 248 204">
         <path
