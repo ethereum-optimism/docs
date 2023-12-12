@@ -88,6 +88,7 @@ const config: DocsThemeConfig = {
           property="og:description"
           content={frontMatter.description || 'Optimism Developer Docs'}
         />
+        <link rel="icon" href="/img/icons/favicon.ico" type="image/x-icon"></link>
       </>
     )
   },
