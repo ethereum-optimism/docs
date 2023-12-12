@@ -61,7 +61,7 @@ const config: DocsThemeConfig = {
     key: '2.0-release',
     text: (
       <a href="https://github.com/ethereum-optimism/developers/discussions/categories/feedback" target="_blank">
-        🎉 WELCOME to the new Optimism Developer Docs! Your feedback will help us improve. Please leave feedback here →
+        🎉 Welcome to the new Optimism Developer Docs! Your feedback will help us improve. Please leave feedback here →
       </a>
     )
   },
