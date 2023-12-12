@@ -8,42 +8,18 @@ import { Callout } from 'nextra/components'
 
 # Differences between Ethereum and OP Mainnet
 
-It's important to note that there are various minor discrepancies between the behavior of OP Mainnet and Ethereum.
-You should be aware of these discrepancies when building apps on top of OP Mainnet.
+OP Mainnet is designed to be [EVM equivalent](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306) and introduces as few changes as possible to the Ethereum protocol.
+However, there are some minor differences between the behavior of Ethereum and OP Mainnet that developers should be aware of.
 
-## Opcode Differences
+## Opcodes
 
-| Opcode                                             | Solidity equivalent | Behavior                                                                                                                                                                                                          |
-| -------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `COINBASE`                                         | `block.coinbase`    | Undefined                                                                                                                                                                                                         |
-| `DIFFICULTY`                                       | `block.difficulty`  | Random value. As this value is set by the sequencer, it is not as reliably random as the L1 equivalent. [You can use an oracle for randomness](/builders/tools/oracles#verifiable-randomness-function-vrf).       |
-| `NUMBER`                                           | `block.number`      | L2 block number                                                                                                                                                                                                   |
-| `TIMESTAMP`                                        | `block.timestamp`   | Timestamp of the L2 block                                                                                                                                                                                         |
-| `ORIGIN`                                           | `tx.origin`         | If the transaction is an L1 ⇒ L2 transaction, then `tx.origin` is set to the [aliased address](#address-aliasing) of the address that triggered the L1 ⇒ L2 transaction. Otherwise, this opcode behaves normally. |
-| `CALLER`                                           | `msg.sender`        | If the transaction is an L1 ⇒ L2 transaction, and this is the initial call (rather than an internal transaction from one contract to another), the same [address aliasing](#address-aliasing) behavior applies.   |
-| [`PUSH0`](https://www.evm.codes/#5f?fork=shanghai) | N/A                 | Opcode not supported yet (will be added in a hardfork)                                                                                                                                                            |
-
-<Callout type="info">
-  `tx.origin == msg.sender`:
-  On L1 Ethereum `tx.origin` is equal to `msg.sender` only when the smart contract was called directly from an externally owned account (EOA).
-  However, on OP Mainnet `tx.origin` is the origin *on OP Mainnet*.
-  It could be an EOA.
-  However, in the case of messages from L1, it is possible for a message from a smart contract on L1 to appear on L2 with `tx.origin == msg.sender`.
-  This is unlikely to make a significant difference, because an L1 smart contract cannot directly manipulate the L2 state.
-  However, there could be edge cases we did not think about where this matters.
-</Callout>
-
-### Accessing L1 information
-
-If you need the equivalent information from the latest L1 block, you can get it from [the `L1Block` contract](https://github.com/ethereum-optimism/optimism/blob/65ec61dde94ffa93342728d324fecf474d228e1f/packages/contracts-bedrock/contracts/L2/L1Block.sol).
-This contract is a predeploy at address [`0x4200000000000000000000000000000000000015`](https://sepolia-optimism.etherscan.io/address/0x4200000000000000000000000000000000000015).
-You can use [the getter functions](https://docs.soliditylang.org/en/v0.8.12/contracts.html#getter-functions) to get these parameters:
-
-*   `number`: The latest L1 block number known to L2
-*   `timestamp`: The timestamp of the latest L1 block
-*   `basefee`: The base fee of the latest L1 block
-*   `hash`: The hash of the latest L1 block
-*   `sequenceNumber`: The number of the L2 block within the epoch (the epoch changes when there is a new L1 block)
+| Opcode       | Solidity Equivalent | Behavior                                                                                                                                                                                                                                                |
+| ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `COINBASE`   | `block.coinbase`    | Returns the address of the current Sequencer's fee wallet. Effectively the same as Ethereum with the caveat the value typically does not change from block to block.                                                                                    |
+| `PREVRANDAO` | `block.prevrandao`  | Set **pseudorandomly** for each block by the Sequencer as opposed to the stronger guarantees provided by [RANDAO](https://eips.ethereum.org/EIPS/eip-4399) on Ethereum.                                                                                 |
+| `ORIGIN`     | `tx.origin`         | If the transaction is an L1 ⇒ L2 transaction triggered by a smart contract on L1, then `tx.origin` is set to the [aliased address](#address-aliasing) of the address that triggered the L1 ⇒ L2 transaction. Otherwise, this opcode behaves normally.   |
+| `CALLER`     | `msg.sender`        | If the transaction is an L1 ⇒ L2 transaction triggered by a smart contract on L1, and this is the first call frame (rather than an internal transaction from one contract to another), the same [address aliasing](#address-aliasing) behavior applies. |
+| `PUSH0`      | -                   | Currently not supported by OP Mainnet. Support to be introduced as part of the [Canyon hardfork](https://web.archive.org/web/20231207231718/https://blog.oplabs.co/canyon-hardfork/).                                                                   |
 
 ### Address Aliasing
 
@@ -75,18 +51,15 @@ In all other cases, the transaction sender address is set according to the same 
 
 ## Transactions
 
-### Transaction costs
+### Transaction Fees
 
-[Transaction costs on OP Mainnet](/stack/transactions/transaction-fees) include an [L2 execution fee](/stack/transactions/transaction-fees#the-l2-execution-fee) and an [L1 data fee](/stack/transactions/transaction-fees#the-l1-data-fee).
+Transactions OP Mainnet must pay for an [L1 data fee](/stack/transactions/transaction-fees#the-l1-data-fee) on top of the standard [execution gas fee](/stack/transactions/transaction-fees#execution-gas-fee) you would expect on Ethereum.
+Refer to the guide on [OP Mainnet Transaction Fees](/stack/transactions/transaction-fees) for more information.
 
-#### EIP-1559
+### EIP-1559 Parameters
 
-The L2 execution fee is calculated using [EIP-1559](https://notes.ethereum.org/@vbuterin/eip-1559-faq). The cost of a unit of gas is composed of two components:
-
-*   **Base fee**: This fee is the same for all transactions in a block. It varies between blocks based on the difference between the actual size of the blocks (which depends on the demand for block space) and the target block size. When the block uses more gas than the target block size the base fee goes up to discourage demand. When the block uses less gas than the target block size the base fee goes down to encourage demand.
-*   **Priority fee**: This fee is specified in the transaction itself and varies between transactions. Block proposers are expected to select the transactions that offer them the highest priority fees first.
-
-The EIP-1559 parameters are different:
+The base fee on OP Mainnet is, like Ethereum, computed via the [EIP-1559](https://notes.ethereum.org/@vbuterin/eip-1559-faq) mechanism.
+The EIP-1559 parameters used by OP Mainnet differ from those used by Ethereum as follows.
 
 | Parameter                             | OP Mainnet value | Ethereum value (for reference) |
 | ------------------------------------- | ---------------: | -----------------------------: |
@@ -98,39 +71,8 @@ The EIP-1559 parameters are different:
 | Maximum base fee decrease (per block) |               2% |                          12.5% |
 | Block time in seconds                 |                2 |                             12 |
 
-### Transaction pool (a.k.a. mempool)
+### Mempool Rules
 
-As in L1 Ethereum, transactions are stored in a pool until they can be included in a block.
-To minimize MEV, Bedrock's mempool is private.
-To submit transactions, you will need to configure `op-geth` to forward transactions to the sequencer. This may change in the future.
-
-The sequencer processes transactions in the mempool in order of their base and priority fees.
-
-## Blocks
-
-There are several differences in the way blocks are produced between L1 Ethereum and OP Mainnet.
-
-| Parameter           |            L1 Ethereum | Optimism Bedrock |
-| ------------------- | ---------------------: | ---------------: |
-| Time between blocks | 12 seconds<sup>1</sup> |        2 seconds |
-| Block target size   |         15,000,000 gas |    5,000,000 gas |
-| Block maximum size  |         30,000,000 gas |   30,000,000 gas |
-
-(1) This is the ideal.
-If any blocks are missed, it could be an integer multiple such as 24 seconds, 36 seconds, etc.
-
-**Note:** The L1 Ethereum parameter values are taken from [ethereum.org](https://ethereum.org/en/developers/docs/blocks/#block-time).
-
-## Network specifications
-
-### JSON-RPC differences
-
-OP Mainnet uses the same [JSON-RPC API](https://eth.wiki/json-rpc/API) as Ethereum.
-Some additional OP Mainnet specific methods have been introduced.
-See the full list of [custom JSON-RPC methods](/builders/node-operators/json-rpc) for more information.
-
-## Contract addresses
-
-The addresses in which various infrastructure contracts are installed are different between L1 Ethereum and OP Mainnet.
-For example, [WETH9](https://github.com/gnosis/canonical-weth/blob/master/contracts/WETH9.sol) is installed on L1 Ethereum on [address `0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2`](https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2).
-On OP Mainnet the same contract is installed on [address `0x4200000000000000000000000000000000000006`](https://explorer.optimism.io/address/0x4200000000000000000000000000000000000006).
+Unlike Ethereum, OP Mainnet does not have a large public mempool.
+The OP Mainnet Sequencer mempool is currently only visible to the Sequencer.
+The Sequencer executes transactions from the mempool in priority fee order (highest fee first).
