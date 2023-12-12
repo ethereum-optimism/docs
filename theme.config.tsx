@@ -69,7 +69,7 @@ const config: DocsThemeConfig = {
     const { asPath } = useRouter()
     if (asPath !== '/') {
       return {
-        titleTemplate: '%s | OP Docs'
+        titleTemplate: '%s | Optimism Docs'
       }
     }
   },
@@ -83,10 +83,10 @@ const config: DocsThemeConfig = {
     return (
       <>
         <meta property="og:url" content={url} />
-        <meta property="og:title" content={frontMatter.title || 'OP Docs'} />
+        <meta property="og:title" content={frontMatter.title || 'Optimism Docs'} />
         <meta
           property="og:description"
-          content={frontMatter.description || 'Optimism Developer Docs'}
+          content={frontMatter.description || 'Optimism Docs for developers'}
         />
         <link rel="icon" href="/img/icons/favicon.ico" type="image/x-icon"></link>
       </>
