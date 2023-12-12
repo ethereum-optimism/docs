@@ -58,10 +58,10 @@ const config: DocsThemeConfig = {
     text: '✏️ Edit this page on GitHub'
   },
   banner: {
-    key: '1.0-release',
+    key: '2.0-release',
     text: (
       <a href="https://github.com/ethereum-optimism/developers/discussions/categories/feedback" target="_blank">
-        🎉 BETA: You're reading the beta release of Optimism Docs 1.0. Your feedback will help us improve. Leave feedback here →
+        🎉 Welcome to the new Optimism Developer Docs! Your feedback will help us improve. Please leave feedback here →
       </a>
     )
   },
