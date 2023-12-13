@@ -29,15 +29,15 @@ To configure your node, you will need to do the following:
 We'll start with `op-geth`'s configuration because it is more complex. As mentioned before, `op-geth` is a minimal fork of `go-ethereum`. As a result, it stores its state in a database that requires initialization. Initialization is done one of two ways, depending on which network you're deploying:
 
 1.  **With a Genesis File:** This is for OP Sepolia, and other testnets or deployments that are not migrated from a legacy network. In this case, you'll download the [genesis file](https://networks.optimism.io/op-sepolia/genesis.json) and initialize the data directory via `geth init`.
-2.  **With a Data Directory:** This is used for networks that are migrated from a legacy network. This would include OP Mainnet and OP Goerli. In this case, you'll download a preconfigured data directory and extract it. No further initialization is necessary in this case, because the data directory contains the network's genesis information.
+2.  **With a Data Directory:** This is used for networks that are migrated from a legacy network. This currently **only** includes OP Mainnet. In this case, you'll download a preconfigured data directory and extract it. No further initialization is necessary in this case, because the data directory contains the network's genesis information.
 
-Regardless of how `op-geth` is initialized, you'll need to ensure that you have sufficient disk space available to store the network's data. As of this writing, the mainnet data directory is ~100GB for a full node and ~1TB for an archival node. The OP Goerli data directory is ~40GB for a full node.
+Regardless of how `op-geth` is initialized, you'll need to ensure that you have sufficient disk space available to store the network's data. As of this writing, the mainnet data directory is ~100GB for a full node and ~1TB for an archival node.
 
-Instructions for each initialization method are below. If you're spinning up an OP Mainnet or OP Goerli node, use the [Initialization via Data Directory](#initialization-via-data-directory) path. If you're spinning up an OP Sepolia node, use the [Initialization via Genesis File](#initialization-via-genesis-file) path.
+Instructions for each initialization method are below. If you're spinning up an OP Mainnet, use the [Initialization via Data Directory](#initialization-via-data-directory) path. If you're spinning up an OP Sepolia node, use the [Initialization via Genesis File](#initialization-via-genesis-file) path.
 
 #### Initialization via Genesis File
 
-`op-geth` uses JSON files to encode a network's genesis information. Unlike OP Mainnet and OP Goerli, the genesis for OP Sepolia is not currently included in the `op-geth` binary. For networks that are initialized in this way, you'll receive a URL to the genesis JSON. You'll need to download the genesis JSON, then run the following command to initialize the data directory:
+`op-geth` uses JSON files to encode a network's genesis information. Unlike OP Mainnet, the genesis for OP Sepolia is not currently included in the `op-geth` binary. For networks that are initialized in this way, you'll receive a URL to the genesis JSON. You'll need to download the genesis JSON, then run the following command to initialize the data directory:
 
 ```bash
 #!/bin/sh
@@ -137,7 +137,7 @@ Consult [Geth's documentation](https://geth.ethereum.org/docs/) for more informa
 
 ### Configuring op-node
 
-`op-node` is a standalone, statically linked binary. It stores no state, and requires no initialization. It consumes configuration parameters either via the command line or environment variables. For some networks, the Rollup Node also requires a configuration file (called `rollup.json` or the "rollup config") that configures network-specific genesis parameters. For official networks like OP Goerli, OP Sepolia, and OP Mainnet, the genesis config is hardcoded in the `op-node` software and can be specified via a `--network` flag.
+`op-node` is a standalone, statically linked binary. It stores no state, and requires no initialization. It consumes configuration parameters either via the command line or environment variables. For some networks, the Rollup Node also requires a configuration file (called `rollup.json` or the "rollup config") that configures network-specific genesis parameters. For official networks like OP Sepolia and OP Mainnet, the genesis config is hardcoded in the `op-node` software and can be specified via a `--network` flag.
 
 A minimal valid configuration for a rollup node on our `op sepolia` testnet looks like this:
 
@@ -164,7 +164,7 @@ The default port for the peer-to-peer network is `9003`. You will need to open t
 
 ### Legacy Geth
 
-If you are running a node for an upgraded network like OP Mainnet or OP Goerli (but not OP Sepolia), you will also need to run Legacy Geth in order to serve historical execution traces. Fundamentally, Legacy Geth is our old `l2geth` binary running against a preconfigured data directory. To configure Legacy Geth, follow the instructions above for using a preconfigured data directory, then execute the following command:
+If you are running a node for an upgraded network like OP Mainnet (but not OP Sepolia), you will also need to run Legacy Geth in order to serve historical execution traces. Fundamentally, Legacy Geth is our old `l2geth` binary running against a preconfigured data directory. To configure Legacy Geth, follow the instructions above for using a preconfigured data directory, then execute the following command:
 
 <Callout type="danger">
   It is imperative that you specify the `USING_OVM=true` environment variable in the command below. Failing to specify this will cause `l2geth` to return invalid execution traces, or panic at startup.
@@ -1463,7 +1463,7 @@ Explicitly set network id (integer). The default value is `1`. For testnets: use
 
 ###### `op-network`
 
-Select a pre-configured OP-Stack network (warning: op-mainnet and op-goerli require special sync, datadir is recommended), options: base-devnet-0-goerli-dev-0, base-goerli, base-mainnet, base-sepolia, conduit-devnet-0-goerli-dev-0, op-goerli, op-labs-chaosnet-0-goerli-dev-0, op-labs-devnet-0-goerli-dev-0, op-mainnet, op-sepolia, pgn-mainnet, pgn-sepolia, zora-mainnet, zora-sepolia
+Select a pre-configured OP-Stack network (warning: op-mainnet requires special sync, datadir is recommended), options: base-devnet-0-goerli-dev-0, base-goerli, base-mainnet, base-sepolia, conduit-devnet-0-goerli-dev-0, op-goerli, op-labs-chaosnet-0-goerli-dev-0, op-labs-devnet-0-goerli-dev-0, op-mainnet, op-sepolia, pgn-mainnet, pgn-sepolia, zora-mainnet, zora-sepolia
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--op-network=<value>`</Tabs.Tab>
