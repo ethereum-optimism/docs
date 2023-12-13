@@ -1,128 +1,65 @@
 ---
-title: Explorer and Indexer
+title: Block Explorer
 lang: en-US
-description: Learn to see what is happening in your OP Stack chain using Blockscout.
+description: Learn how to deploy a Blockscout block explorer for your OP Stack chain.
 ---
 
-# Explorer and Indexer
+import { Callout } from 'nextra/components'
 
-The next step is to be able to see what is actually happening in your blockchain.
-One easy way to do this is to use [Blockscout](https://www.blockscout.com/).
+# Deploying a Block Explorer
 
-## Before You Begin
+[Blockscout](https://www.blockscout.com/) is an open source block explorer that supports OP Stack chains.
+Keep reading for a quick overview on how to deploy Blockscout for your OP Stack chain.
 
-You'll need to create a separate archive node and install a Docker Engine to work with Blockscout.
+<Callout>
+  Check out the [Blockscout documentation](https://docs.blockscout.com) for up-to-date information on how to deploy and maintain a Blockscout instance.
+</Callout>
 
-### Archive mode
+## Dependencies
 
-Blockscout expects to interact with an Ethereum execution client in [archive mode](https://www.alchemy.com/overviews/archive-nodes#archive-nodes).
-If your `op-geth` is running in full mode, you can create a separate archive node.
-To do so, follow the [directions to add a node](/stack/getting-started#adding-nodes), but in the command you use to start `op-geth` replace:
+*   [Docker](https://docs.docker.com/get-docker/)
+
+## Create an Archive Node
+
+Blockscout needs access to an [archive node](https://www.alchemy.com/overviews/archive-nodes#archive-nodes) for your OP Stack chain to properly index transactions, blocks, and internal interactions.
+If using `op-geth`, you can run a node in archive mode with the `--gcmode=archive` flag.
+
+<Callout>
+  Archive nodes take up significantly more disk space than full nodes.
+  You may need to have 2-4 terabytes of disk space available (ideally SSD) if you intend to run an archive node for a production OP Stack chain.
+  1-200 gigabytes of disk space may be sufficient for a development chain.
+</Callout>
+
+## Installation
+
+Blockscout can be started from its source code on GitHub.
 
 ```sh
-	--gcmode=full \
+git clone https://github.com/blockscout/blockscout.git -b production-optimism
+cd blockscout/docker-compose
 ```
 
-with
+## Configuration
+
+Review the configuration files within the `envs` directory and make any necessary changes.
+In particular, make sure to review `envs/common-blockscout.env` and `envs/common-frontend.env`.
+
+## Starting Blockscout
+
+Start Blockscout with the following command:
 
 ```sh
-	--gcmode=archive \
+DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up
 ```
-
-### Docker
-
-The easiest way to run Blockscout is to use Docker.
-Download and install [Docker engine](https://docs.docker.com/engine/install/#server).
-
-## Installation and Configuration
-
-1.  Clone the Blockscout repository.
-
-    ```sh
-    cd ~
-    git clone https://github.com/blockscout/blockscout.git -b production-optimism
-    cd blockscout/docker-compose
-    ```
-
-2.  Depending on the version of Docker you have, there may be an issue with the environment path.
-    Run this command to fix it:
-
-    ```sh
-    ln -s `pwd`/envs ..
-    ```
-
-3.  If `op-geth` in archive mode runs on a different computer or a port that isn't 8545, edit `envs/common-blockscout.env` to set `ETHEREUM_JSONRPC_HTTP_URL` to the correct URL. and If you want to access `Blockscout` on other hosts, replace `localhost` in `docker-compose/envs/common-frontend.env` with the IP address of the computer running `Blockscout`.
-
-4.  Start Blockscout
-
-    ```sh
-    DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up
-    ```
 
 ## Usage
 
-After the docker containers start, browse to http:// \< *computer running Blockscout* > to view the user interface.
+### Explorer
 
-You can also use the [API](https://docs.blockscout.com/for-users/api)
+After Blockscout is started, browse to [https://localhost:3000](https://localhost:3000) to view the user interface.
+Note that this URL may differ if you have changed the Blockscout configuration.
 
-### GraphQL
+### API
 
-Blockscout's API includes [GraphQL](https://graphql.org/) support under `/graphiql`.
-For example, this query looks at addresses.
-
-```
-query {
-  addresses(hashes:[
-   "0xcB69A90Aa5311e0e9141a66212489bAfb48b9340", 
-   "0xC2dfA7205088179A8644b9fDCecD6d9bED854Cfe"])
-```
-
-GraphQL queries start with a top level entity (or entities).
-In this case, this [top level query](https://docs.blockscout.com/for-users/api/graphql#queries) is for multiple addresses.
-
-Note that you can only query on fields that are indexed.
-For example, the following is a query on the addresses.
-However, you couldn't query on `contractCode` or `fetchedCoinBalance`.
-
-```
- {
-    hash
-    contractCode
-    fetchedCoinBalance
-```
-
-The fields above are fetched from the address table.
-
-```
-    transactions(first:5) {
-```
-
-We can also fetch the transactions that include the address (either as source or destination).
-The API does not let us fetch an unlimited number of transactions, so here the query asks for the first 5.
-
-```
-      edges {
-        node {
-```
-
-Because this is a [graph](https://en.wikipedia.org/wiki/Graph_\(discrete_mathematics\)), the entities that connect two types, for example addresses and transactions, are called `edges`.
-At the other end of each edge there is a transaction, which is a separate `node`.
-
-```
-          hash
-          fromAddressHash
-          toAddressHash
-          input
-        }
-```
-
-These are the fields read for each transaction.
-
-```
-      }
-    }
-  }
-}
-```
-
-Finally, close all the brackets.
+Blockscout provides both a REST API and a GraphQL API.
+Refer to the [API documentation](https://docs.blockscout.com/for-users/api) for more information.
