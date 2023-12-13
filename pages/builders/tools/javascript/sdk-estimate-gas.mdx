@@ -23,7 +23,7 @@ Once you do that, you can use the SDK normally.
 The node script, `gas.js`, makes these assumptions:
 
 *   You have [Node.js](https://nodejs.org/en/), [pnpm](https://pnpm.io/), and [yarn](https://classic.yarnpkg.com/) installed on your system.
-*   There is network connectivity to a provider on the Optimistic Goerli L2 network and to the npm package registry.
+*   There is network connectivity to a provider on the OP Sepolia network and to the npm package registry.
 
 ## Running the script
 
@@ -47,11 +47,11 @@ The node script, `gas.js`, makes these assumptions:
   # API KEY for Alchemy
   ALCHEMY_API_KEY=xxxx
 
-  # URL to access Optimism Goerli (if not using Alchemy)
-  OPTIMISM_GOERLI_URL=xxxx
+  # URL to access OP Sepolia (if not using Alchemy)
+  OPTIMISM_SEPOLIA_URL=xxxx
 
 
-  # URL to access Optimism mainnet (if not using Alchemy)
+  # URL to access OP Mainnet (if not using Alchemy)
   OPTIMISM_MAINNET_URL=xxxx
   ```
 
@@ -60,7 +60,7 @@ The node script, `gas.js`, makes these assumptions:
   ```js filename="gas.js"
   #! /usr/local/bin/node
 
-  // Estimate the costs of an OP Mainnet or OP Goerli transaction
+  // Estimate the costs of an OP Mainnet or OP Sepolia transaction
 
   const ethers = require("ethers")
   const optimismSDK = require("@eth-optimism/sdk")
@@ -74,8 +74,8 @@ The node script, `gas.js`, makes these assumptions:
     .option('network', {
       // All of those choices are :
       // mainnet - OP Mainnet, the production network
-      // goerli - OP Goerli, the main test network
-      choices: ["mainnet", "goerli"],
+      // sepolia - OP Sepolia, the main test network
+      choices: ["mainnet", "sepolia"],
       description: 'L2 network to use'
     }).
     option('verify', {
@@ -97,10 +97,10 @@ The node script, `gas.js`, makes these assumptions:
 
   // These are the addresses of the Greeter.sol contract on the various OP networks:
   // mainnet - OP Mainnet, the production network
-  // goerli - OP Goerli, the main test network
+  // sepolia - OP Sepolia, the main test network
   const greeterAddrs = {
     "mainnet":  "0xcf210488dad6da5fe54d260c45253afc3a9e708c",
-    "goerli": "0x106941459a8768f5a92b770e280555faf817576f",
+    "sepolia": "0x5DE8a2957eddb140567fF90ba5d57bc9769f3055",
   }
 
 
@@ -113,11 +113,11 @@ The node script, `gas.js`, makes these assumptions:
   const getSigner = async () => {
     let endpointUrl;
 
-    if (argv.network == 'goerli')
+    if (argv.network == 'sepolia')
       endpointUrl = 
         process.env.ALCHEMY_API_KEY ? 
-          `https://opt-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}` :
-          process.env.OPTIMISM_GOERLI_URL
+          `https://opt-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}` :
+          process.env.OPTIMISM_SEPOLIA_URL
     if (argv.network == 'mainnet')
       endpointUrl = 
         process.env.ALCHEMY_API_KEY ? 
@@ -308,8 +308,8 @@ The node script, `gas.js`, makes these assumptions:
   Edit the `env` file as follows:
 
   *   `MNEMONIC` is the mnemonic to an address that has enough ETH to pay for the transaction.
-  *   `ALCHEMY_API_KEY` is the API key for an OP Mainnet or OP Goerli app on [Alchemy](https://www.alchemy.com/), our preferred provider.
-  *   `OPTIMISM_GOERLI_URL` is the URL for OP Goerli, if you use [a different node provider](/builders/tools/rpc-providers).
+  *   `ALCHEMY_API_KEY` is the API key for an OP Mainnet or OP Sepolia app on [Alchemy](https://www.alchemy.com/), our preferred provider.
+  *   `OPTIMISM_SEPOLIA_URL` is the URL for OP Sepolia, if you use [a different node provider](/builders/tools/rpc-providers).
   *   `OPTIMISM_MAINNET_URL` is the URL for OP Mainnet, if you use [a different node provider](/builders/tools/rpc-providers).
 
   ### Use Node to run the script
@@ -322,7 +322,7 @@ The node script, `gas.js`, makes these assumptions:
 
   *   `--network`: The network to estimate gas on:
       *   `mainnet`: OP Mainnet
-      *   `goerli`: OP Goerli
+      *   `sepolia`: OP Sepolia
 
   *   `--verify`: Run the transaction to verify the estimate
 </Steps>
@@ -394,8 +394,8 @@ In this section we go over the relevant parts of the script.
   const argv = yargs
     .option('network', {
       // mainnet - OP Mainnet, the production network
-      // goerli - OP Goerli, the main test network
-      choices: ["mainnet", "goerli"],
+      // sepolia - OP Sepolia, the main test network
+      choices: ["mainnet", "sepolia"],
       description: 'OP network to use'
     }).
     option('verify', {
@@ -417,17 +417,17 @@ In this section we go over the relevant parts of the script.
   ```js
   // These are the addresses of the Greeter.sol contract on the various Optimism networks:
   // mainnet - OP Mainnet, the production network
-  // goerli - OP Goerli, the main test network
+  // sepolia - OP Sepolia, the main test network
   const greeterAddrs = {
     "mainnet":  "0xcf210488dad6da5fe54d260c45253afc3a9e708c",
-    "goerli": "0x106941459a8768f5a92b770e280555faf817576f"
+    "sepolia": "0x5DE8a2957eddb140567fF90ba5d57bc9769f3055"
   }
   ```
 
   Addresses for the Greeter contracts:
 
   *   [Mainnet](https://explorer.optimism.io/address/0xcf210488dad6da5fe54d260c45253afc3a9e708c#code)
-  *   [Goerli](https://goerli-explorer.optimism.io/address/0x106941459a8768f5a92b770e280555faf817576f#code)
+  *   [Sepolia](https://sepolia-optimistic.etherscan.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#code)
 
   ```js
   // Utilities
@@ -451,11 +451,11 @@ In this section we go over the relevant parts of the script.
 const getSigner = async () => {
   let endpointUrl;
 
-  if (argv.network == 'goerli')
+  if (argv.network == 'sepolia')
     endpointUrl = 
       process.env.ALCHEMY_API_KEY ? 
-        `https://opt-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}` :
-        process.env.OPTIMISM_GOERLI_URL
+        `https://opt-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}` :
+        process.env.OPTIMISM_SEPOLIA_URL
   if (argv.network == 'mainnet')
     endpointUrl = 
       process.env.ALCHEMY_API_KEY ? 
@@ -683,7 +683,7 @@ You can also use [`crossDomainMessenger.waitForMessageStatus`](https://sdk.optim
       real.l1Cost = realTxResp.l1Fee 
 ```
 
-These fields are specific to OP Mainnet and OP Goerli transaction responses.
+These fields are specific to OP Mainnet and OP Sepolia transaction responses.
 
 ```js
       real.l2Gas = realTxResp.gasUsed
