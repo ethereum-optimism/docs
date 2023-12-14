@@ -37,7 +37,7 @@ geth init \
 <Steps>
   ### Navigate into your `op-geth` directory
 
-  ### Create a random number 
+  ### Create a random number
 
   This will be the shared secret for `op-geth` and `op-node` to communicate over the engine API authrpc.
 
@@ -49,11 +49,11 @@ geth init \
 ## Start `op-geth`
 
 <Steps>
-  ### Navigate into your `op-geth` directory 
+  ### Navigate into your `op-geth` directory
 
-  ### Start `op-geth` with the following command 
+  ### Start `op-geth` with the following command
 
-  *   Make sure you update your path to your data directory 
+  *   Make sure you update your path to your data directory
 
   ```sh
   ./build/bin/geth \
@@ -84,6 +84,12 @@ geth init \
   *   Change `L1 RPC URL` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
   *   Set `L1 RPC KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
   *   Set the `/path/to/op-geth/jwt.txt` to the path of the shared secret you generated in a previous step
+
+  <Callout type="info">
+    If you're running an Erigon Ethereum execution client for your L1 provider you will need to include `--l1.trustrpc`. At the time of writing,
+    Erigon doesn't support the `eth_getProof` that we prefer to use to load L1 data for some processing in `op-node`. The trustrpc flag makes it
+    use something else that erigon supports, but the `op-node` can't verify for correctness.
+  </Callout>
 
   ```sh
   ./bin/op-node \
