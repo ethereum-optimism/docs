@@ -4,54 +4,68 @@ lang: en-US
 description: Learn how node operating works on OP chains.
 ---
 
+import { Callout } from 'nextra/components'
+
 # Node Operator Overview
 
-This document provides an overview of how to deploy an OP node. To learn more about how Bedrock itself works and its motivations, please see [the specs on GitHub](https://github.com/ethereum-optimism/optimism/tree/65ec61dde94ffa93342728d324fecf474d228e1f/specs). If you want to skip ahead to building and running a node, you can start with the [node operator tutorials](#node-operator-tutorials).
+The Node Operator section of the Optimism Docs is a collection of guides and tutorials to help you run your own OP Mainnet or OP Sepolia nodes.
+If you'd like to learn more about how OP Mainnet works under the hood, refer to the [OP Mainnet Getting Started Guide](/chain/getting-started) or the [OP Stack Getting Started Guide](/stack/getting-started).
+If you want to get right into running a node, feel free to skip ahead to the [Node Operator Tutorials](#node-operator-tutorials) section.
 
-## Deployment Overview
+## Node Architecture
 
-A deployment consists of two core components:
+All OP Mainnet nodes are composed of two core software services, the Rollup Node and the Execution Client.
+OP Mainnet also optionally supports a third component, Legacy Geth, that can serve stateful queries for blocks and transactions created before the [Bedrock Upgrade](https://blog.oplabs.co/introducing-optimism-bedrock/).
 
-1.  The Rollup Node, which is responsible for deriving blocks from L1 and passing them to the Execution engine. It also participates in a peer-to-peer network that synchronizes unsubmitted blocks as the sequencer creates them.
-2.  The Execution Engine, which is responsible for executing the blocks it receives from the rollup node and storing state. It also exposes standard JSON-RPC methods to query blockchain data and submit transactions to the network.
+### Rollup Node
 
-The Rollup Node and Execution Engine communicate with each other over JSON-RPC via the Engine API. This is similar to how regular Ethereum networks are deployed. The Rollup Node functions as Optimism's consensus client, and the Execution Engine as its execution client.
+The Rollup Node is responsible for deriving L2 block payloads from L1 data and passing those payloads to the Execution Client. The Rollup Node can also optionally participate in a peer-to-peer network to receive blocks directly from the Sequencer before those blocks are submitted to L1. The Rollup Node is largely analogous to a [consensus client](https://ethereum.org/en/developers/docs/nodes-and-clients/#what-are-nodes-and-clients) in Ethereum.
 
-For OP Mainnet (but not OP Sepolia) you may also need to run a third component called Legacy Geth. Legacy Geth is used to serve execution traces for transactions prior to the Bedrock upgrade, which OP Mainnet refers to as "historical transactions". When the Rollup Node encounters an RPC call that requires historical execution traces, it will forward the request to Legacy Geth. Note, however, that unlike our previous networks requests for historical *data* will be served by the Execution Engine directly. This distinction will be clarified later on in this document.
+### Execution Client
 
-The architecture of a typical Bedrock deployment looks like this:
+The Execution Client is responsible for executing the block payloads it receives from the Rollup Node over JSON-RPC via the standard [Ethereum Engine API](https://github.com/ethereum/execution-apis/blob/main/src/engine/common.md#engine-api----common-definitions).
+The Execution Client exposes the standard JSON-RPC API that Ethereum developers are familiar with, and can be used to query blockchain data and submit transactions to the network.
+The Execution Client is largely analogous to an [execution client](https://ethereum.org/en/developers/docs/nodes-and-clients/#what-are-nodes-and-clients) in Ethereum.
 
-![Bedrock deployment diagram.](/img/guides/node-operators/bedrock-deployment.png)
+### Legacy Geth
 
-## System Requirements
+OP Mainnet underwent a large database migration as part of the [Bedrock Upgrade](https://blog.oplabs.co/introducing-optimism-bedrock/) in 2023.
+Blocks and transactions included in OP Mainnet prior to the Bedrock Upgrade are served by current execution engines but cannot be executed without the help of a special component called Legacy Geth.
+This means that you will need to run Legacy Geth if you want to be able to run RPC calls such as `eth_call` on blocks before the Bedrock Upgrade.
 
-The following are recommended minimum system requirements to run OP Mainnet:
+Legacy Geth is the software that was used to run OP Mainnet nodes prior to the Bedrock Upgrade.
+If you run an instance of Legacy Geth alongside your OP Mainnet node, your node will be able to forward requests against historical transactions to the Legacy Geth instance.
+Legacy Geth is **not** required and is typically only necessary if you want to maintain a complete archive node for OP Mainnet.
 
-*   `op-node`: Minimum 2CPUs, 4GB RAM. No storage is necessary.
-*   `op-geth`: Minimum 4 CPUs, 8GB RAM. At least 40GB of storage is required for OP Sepolia. At least 600GB of storage is required for mainnet. Storage must be SSD. Requirements are significantly higher for archive nodes.
+### Diagram
 
-## Getting the Software
+The following diagram shows how the Rollup Node, Execution Client, and Legacy Geth components work together to form a complete OP Mainnet node.
+This diagram uses the `op-node` and `op-geth` implementations of the Rollup Node and Execution Client respectively, but the same architecture generally applies to other implementations as well.
 
-`op-geth` and `op-node` are available as Docker images. Consult the [documentation](/chain/networks) for the network you are participating in to get the correct image tag.
+![OP Mainnet node architecture diagram.](/img/guides/node-operators/node-arch.svg)
 
-Legacy Geth uses version `0.5.31` of our old `l2geth` image.
+## Software Releases
 
-You can also compile `op-geth` and `op-node` from source.
+It's important to keep your node software up to date to ensure that you won't fall out of sync with other OP Mainnet nodes when there's an upgrade.
+Software updates can also include important bug fixes and patches that can help keep your node stable.
+Refer to the [Software Releases](/builders/node-operators/releases) page for a detailed look at the latest releases of various Rollup Node and Execution Client implementations.
+Notifications about important updates are also posted to the [@Optimism Twitter account](https://twitter.com/optimism).
 
-## Node Operator Tutorials
+## Tutorials
 
-Here's a curated collection of node operator tutorials put together by the Optimism community.
-They'll help you get a head start deploying your first OP node.
+<Callout>
+  Got an idea for a new tutorial?
+  We'd love to hear it.
+  Head over to GitHub to [suggest a new tutorial](https://github.com/ethereum-optimism/docs/issues/new?assignees=\&labels=tutorial%2Cdocumentation%2Ccommunity-request\&projects=\&template=suggest_tutorial.yaml\&title=%5BTUTORIAL%5D+Add+PR+title).
+</Callout>
 
-| Tutorial Name                                             | Description                                                               | Difficulty Level |
-| --------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------- |
-| [Building a Node From Source](tutorials/node-from-source) | Learn how to build your own node without relying on images from Optimism. | 🟢 Easy          |
-| [Running OP Mainnet from Source](tutorials/mainnet)       | Learn how to run a node from source using OP Mainnet.                     | 🟡 Medium        |
-| [Running OP Testnet from Source](tutorials/testnet)       | Learn how to run a node from source using OP Testnet.                     | 🟡 Medium        |
-
-You can also [suggest a new tutorial](https://github.com/ethereum-optimism/docs/issues/new?assignees=\&labels=tutorial%2Cdocumentation%2Ccommunity-request\&projects=\&template=suggest_tutorial.yaml\&title=%5BTUTORIAL%5D+Add+PR+title) if you have something specific in mind. We'd love to grow this list!
+| Tutorial Name                                               | Description                                            | Difficulty Level |
+| ----------------------------------------------------------- | ------------------------------------------------------ | ---------------- |
+| [Building a Node From Source](tutorials/node-from-source)   | Learn how to compile node components from source code. | 🟢 Easy          |
+| [Running an OP Mainnet Node from Source](tutorials/mainnet) | Learn how to run an OP Mainnet node from source code.  | 🟡 Medium        |
+| [Running an OP Sepolia Node from Source](tutorials/testnet) | Learn how to run an OP Sepolia node from source code.  | 🟡 Medium        |
 
 ## Next Steps
 
-*   Now that you've got your node up and running, check out the [Node Metrics and Monitoring Guide](./management/metrics) for health monitoring.
+*   If you've already got your node up and running, check out the [Node Metrics and Monitoring Guide](./management/metrics) to learn how to keep tabs on your node and make sure it keeps running smoothly.
 *   If you run into any problems, please visit the [Node Troubleshooting Guide](./management/troubleshooting) for help.
