@@ -1,0 +1,128 @@
+---
+title: Canyon Network Upgrade
+lang: en-US
+description: Details on how to prepare your nodes for the Canyon Network upgrade.
+---
+
+import { Callout } from 'nextra/components'
+
+# Canyon Network Upgrade
+
+The following information is how you can prepare your nodes for both the Canyon upgrade and the ProtocolVersions contract.
+
+<details>
+  <summary>ProtocolVersions Smart Contract Information</summary>
+  These releases enshrine a `protocol-version` within nodes as a constant in the software, with requirements and recommendations signaled through the L1 `ProtocolVersions` contract. Nodes periodically read the value from L1 and compare it against the locally hardcoded constant. This release also introduces a "Superchain target" (within the [superchain-registry](https://github.com/ethereum-optimism/superchain-registry), a library the op-node uses) which groups chains together.
+
+  Each chain operator is still in charge of upgrading their own sequencer nodes, but their nodes will now be aware of upgrades, and can be configured to halt or produce warnings when an upgrade is near and the node is behind the protocol-version. Because this behavior is optional, this is not a consensus-critical change for this release. However, we anticipate future releases to utilize this functionality more explicitly, and upgrade the Superchain in unison.
+
+  The `rollup.json` and `genesis.json` files are deprecated for chains that follow a Superchain target, and will be imported into the op-node from the [superchain-registry](https://github.com/ethereum-optimism/superchain-registry) instead.
+</details>
+
+## Mainnet Information
+
+<Callout type="warning">
+  The Canyon mainnet network upgrade is scheduled for **January 11th at 17:00:00 UTC 2024**.
+</Callout>
+
+This is the upgrade guide to the Canyon network upgrade and synced `protocol-version` upgrades.
+
+### Required Action
+
+You must upgrade your nodes to the following versions prior to January 11th 2024.
+
+*   Upgrade your `op-node` to version: [v1.3.2](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.3.2)
+*   Upgrade your `op-geth` to version: [v1.101304.2](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101304.2)
+
+### Recommended Configuration
+
+*Note: this configuration path uses the protocol-version functionalities described above.*
+
+#### Set the network flags
+
+*   On `op-geth` specify `--op-network` with a pre-configured OP Stack network.
+*   On `op-node` specify `--network` with a pre-configured OP Stack network.
+
+The following are the supported options:
+
+```
+options: base-goerli, base-mainnet, base-sepolia, op-goerli, op-labs-chaosnet-0-goerli-dev-0, op-labs-devnet-0-goerli-dev-0, op-mainnet, op-sepolia, pgn-mainnet, pgn-sepolia, zora-goerli, zora-mainnet
+```
+
+#### Loading and reporting protocol versions from the Superchain:
+
+*   On `op-node` set `--rollup.load-protocol-versions` to `true`.
+
+#### Optionally, enabling halting your node on breaking changes:
+
+*   On `op-geth` specify `--rollup.halt=major`
+*   On `op-node` specify `--rollup.halt=major`
+
+This does not shut down your node, but stops syncing once it detects an incompatible protocol version. Your node defaults to not halting, but we recommend setting this to at least `major` so your node does not produce diverging state.
+
+### Verifying Your Configuration
+
+You can verify your node is configured correctly with the following:
+
+*   Both op-node and op-geth log their configuration at startup
+*   Check that Canyon time is set to `1704992401` in the op-node logs
+*   Check that Canyon time and Shanghai time are set to `1704992401` in the op-geth logs
+
+## Testnet Information
+
+<Callout type="warning">
+  The Canyon testnet network upgrade (on both Sepolia and Goerli) is scheduled for **November 14th at 17:00:00 UTC 2023**. We suggest doing this by November 7th 2023 for the testnet upgrade, and monitoring the mainnet upgrade dates through governance.
+</Callout>
+
+### Required Action
+
+You must upgrade your nodes to the following versions prior to January 11th 2024.
+
+*   Upgrade your `op-node` to version: [v1.3.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.3.1)
+*   Upgrade your `op-geth` to version: [v1.101304.1](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101304.1)
+
+### Recommended Configuration
+
+#### Set the network flags
+
+*   On `op-geth` specify `--op-network` with a pre-configured OP Stack network.
+*   On `op-node` specify `--network` with a pre-configured OP Stack network.
+
+The following are the supported options:
+
+```
+options: base-goerli, base-mainnet, base-sepolia, op-goerli, op-labs-chaosnet-0-goerli-dev-0, op-labs-devnet-0-goerli-dev-0, op-mainnet, op-sepolia, pgn-mainnet, pgn-sepolia, zora-goerli, zora-mainnet
+```
+
+#### Loading and reporting protocol versions from the Superchain:
+
+*   On `op-node` set `--rollup.load-protocol-versions` to `true`.
+
+#### Optionally, enabling halting your node on breaking changes:
+
+*   On `op-geth` specify `--rollup.halt=major`
+*   On `op-node` specify `--rollup.halt=major`
+
+This does not shut down your node, but stops syncing once it detects an incompatible protocol version. Your node defaults to not halting, but we recommend setting this to at least `major` so your node does not produce diverging state.
+
+### Manual Configuration
+
+**Not recommended, but supported. Only do this on OP Goerli & OP Sepolia and NOT OP MAINNET**
+
+Using an existing datadir / geth init and rollup.json configuration.
+
+*   On `op-geth` use the flag `--override.canyon`.
+*   On `op-node` either add `canyon_time` to the `rollup.json` or use the `--override.canyon` flag at timestamp `1699981200`
+*   **Please note: We strongly suggest using the `--network flag`. We recommend against long term us of the override.canyon flag because the node does not persist the canyon timestamp. If the flag is removed, without activating canyon another way, the node will diverge.**
+
+### Verifying Your Configuration on OP Goerli & OP Sepolia
+
+You can verify your node is configured correctly with the following:
+
+*   Both op-node and op-geth log their configuration at startup
+*   Check that Canyon time is set to `1699981200` in the op-node logs
+*   Check that Canyon time and Shanghai time are set to `1699981200` in the op-geth logs
+
+## Additional Support
+
+If you require additional support. Please reach out on our [developer forum](https://github.com/ethereum-optimism/developers/discussions) and we'll answer your questions there.
