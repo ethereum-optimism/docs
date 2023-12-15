@@ -1,147 +1,189 @@
 ---
-title: Running OP Mainnet from Source
+title: Running an OP Mainnet Node from Source
 lang: en-US
 description: Learn how to run a node from source using OP Mainnet.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Running OP Mainnet from Source
+# Running an OP Mainnet Node from Source
 
-<Callout type="info">
-  Please complete the first tutorial on [building a node from source](node-from-source), if you have not done so.
-</Callout>
+This tutorial explains how to run an OP Mainnet node from source code.
+Running an OP Mainnet node from source code is a flexible alternative to using pre-built Docker images.
 
-## Get the data directory
+## Building the Source Code
 
-The next step is to download the data directory for `op-geth`.
-You will need 500+ GB for this part alone.
+You'll need to build `op-node` and `op-geth` from their respective source repositories before you can run a node.
+Make sure to follow the instructions on [Building a Node from Source](./node-from-source) before continuing.
+
+## Hardware Requirements
+
+Hardware requirements for OP Mainnet nodes can vary depending on the type of node you plan to run.
+Archive nodes generally require significantly more resources than full nodes.
+Below are suggested minimum hardware requirements for each type of node.
+
+*   16GB RAM
+*   1TB SSD (full node) or 2TB SSD (archive node)
+*   Reasonably modern CPU
+
+## Get the Migrated Data Directory
+
+OP Mainnet underwent a large database migration as part of the [Bedrock Upgrade](https://blog.oplabs.co/introducing-optimism-bedrock/) in 2023.
+You will need access to the migrated OP Mainnet database to run a node.
+You can [migrate your own data directory](https://blog.oplabs.co/reproduce-bedrock-migration/) or simply download database that has already been migrated.
+In this section, you'll learn how to download and verify the pre-migrated database.
 
 <Steps>
-  ### Download the data directory snapshot
+  {<h3>Download the Migrated Data Directory</h3>}
 
-  This is a large file so expect it to take some time. [Bedrock Data Directory (303GB)](https://datadirs.optimism.io/mainnet-bedrock.tar.zst)
+  Click the link below to download the latest publicly available database snapshot for OP Mainnet.
+  This is a large file (325GB), so expect the download to take some time to complete.
 
-  <Callout>
-    Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
-  </Callout>
+  [OP Mainnet Migrated Data Directory (325GB)](https://datadirs.optimism.io/mainnet-bedrock.tar.zst)
 
-  ### Check the validity of your download
+  {<h3>Verify the Download</h3>}
 
-  This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
-
-  ```bash
-  sha256sum mainnet-bedrock.tar.zst
-  # expected output
-  ec4baf47e309a14ffbd586dc85376833de640c0f2a8d7355cb8a9e64c38bfcd1  mainnet-bedrock.tar.zst
-  ```
-
-  OR
+  You should always verify the integrity of your downloads to ensure that they have not been corrupted.
+  A corrupted database can include invalid data or may cause your node to fail.
+  Verify the integrity of the download by checking the SHA512 checksum of the downloaded file.
 
   ```bash
   sha512sum mainnet-bedrock.tar.zst
-  # expected output
+  ```
+
+  You should see the following output:
+
+  ```bash
   c17067b7bc39a6daa14f71d448c6fa0477834c3e68a25e96f26fe849c12a09bffe510e96f7eacdef19e93e3167d15250f807d252dd6f6f9053d0e4457c73d5fb mainnet-bedrock.tar.zst
   ```
 
-  ### Create the `op-geth` data directory and fill it
+  If you see a different output, then the download is corrupted and you should try downloading the file again.
 
-  This will take time.
+  {<h3>Extract the Data Directory</h3>}
 
-  Navigate to location you want to put your `op-geth` directory and unpack the compressed data directory
+  Once you've downloaded the database snapshot, you'll need to extract it to a directory on your machine.
+  This will take some time to complete.
 
-  ```sh
-  mkdir op-geth-datadir
-  cd op-geth-datadir
-  tar xvf <<PATH_TO_DATA_DIR>>
+  ```bash
+  tar xvf mainnet-bedrock.tar.zst
   ```
 </Steps>
 
-## (Optional - OP Mainnet Archive Node) Get the data directory for `l2geth`
+## Get the Legacy Geth Directory (Optional)
+
+Blocks and transactions included in OP Mainnet before the Bedrock Upgrade cannot be executed by modern OP Mainnet nodes.
+OP Mainnet nodes will **serve** these blocks and transactions but cannot run certain queries against them (e.g. `eth_call`).
+If you need to run stateful queries like `eth_call` against these older blocks and transactions, you will need to run a Legacy Geth node alongside your OP Mainnet node.
+
+Running a Legacy Geth node is entirely optional and typically only useful for operators who want to run complete archive nodes of the OP Mainnet state.
+If you want to run a full node then you can safely skip this section.
 
 <Steps>
-  ### Download the data directory snapshot
+  {<h3>Download the Legacy Geth Data Directory</h3>}
 
-  This is a large file so expect it to take some time. [Legacy Geth Data Directory (2.9TB)](https://datadirs.optimism.io/mainnet-legacy-archival.tar.zst)
+  Click the link below to download the latest publicly available database snapshot for Legacy Geth.
+  This is a very large file (2.9TB), so expect the download to take some time to complete.
 
-  <Callout>
-    Use a tool like [aria2](https://aria2.github.io/) to reduce the chance of your data directory being corrupted.
-  </Callout>
+  [Legacy Geth Data Directory (2.9TB)](https://datadirs.optimism.io/mainnet-legacy-archival.tar.zst)
 
-  ### Check the validity of your download
+  {<h3>Verify the Download</h3>}
 
-  This is an important step. Corrupted data directories will make your node fail. So ensure your checksum matches.
+  You should always verify the integrity of your downloads to ensure that they have not been corrupted.
+  A corrupted database can include invalid data or may cause your node to fail.
+  Verify the integrity of the download by checking the SHA512 checksum of the downloaded file.
 
-  ```sh
-  sha256sum mainnet-legacy-archival.tar.zst
-  # expected output
-  4adedb61125b81b55f9bdccc2e85092050c65ef2253c86e2b79569732b772829  mainnet-legacy-archival.tar.zst
+  ```bash
+  sha512sum mainnet-legacy-archival.tar.zst
   ```
 
-  OR
+  You should see the following output:
 
-  ```sh
-  sha512sum mainnet-legacy-archival.tar.zst
-  # expected output
+  ```bash
   e348488c458baa755510f23bbc8601619bc66bea78a89354c949ba7be3c6b39ed7dd2c50516621e38df6120299407da0d24445b96bf94a50364ed07bb8234b26 mainnet-legacy-archival.tar.zst
   ```
 
-  ### Create the data directory in `l2geth` and fill it
+  If you see a different output, then the download is corrupted and you should try downloading the file again.
 
-  This will take time.
+  {<h3>Extract the Data Directory</h3>}
 
-  Navigate to location you want to put your `l2geth` directory and run these commands:
+  Once you've downloaded the database snapshot, you'll need to extract it to a directory on your machine.
+  This will take some time to complete.
 
-  ```sh
-  mkdir l2geth-datadir
-  cd l2geth-datadir
-  tar xvf <<PATH_TO_DATA_DIR>>
+  ```bash
+  tar xvf mainnet-legacy-archival.tar.zst
   ```
 </Steps>
 
-## Create a shared secret between `op-geth` and `op-node`
+## Start Legacy Geth (Optional)
+
+If you've chosen to run a Legacy Geth node alongside your OP Mainnet node, you'll need to start it before you start your OP Mainnet node.
 
 <Steps>
-  ### Navigate into your `op-geth` directory
+  {<h3>Navigate to your Legacy Geth directory</h3>}
 
-  ### Create a random number
+  Find the directory where you built the `l2geth` binary.
 
-  This will be the shared secret for `op-geth` and `op-node` to communicate over the engine API authrpc.
+  {<h3>Start l2geth</h3>}
 
-  ```sh
-  openssl rand -hex 32 > jwt.txt
-  ```
-</Steps>
+  Run the following command to start `l2geth`:
 
-## (Optional - Archive Node) Start `l2geth`
-
-<Steps>
-  ### Navigate into your `l2geth` directory
-
-  ### Start `l2geth` with the following command
-
-  ```sh
+  ```bash
   USING_OVM=true \
     ETH1_SYNC_SERVICE_ENABLE=false \
     RPC_API=eth,rollup,net,web3,debug \
     RPC_ENABLE=true \
-    RPC_PORT=8546 \ # need to rebind port because op-geth uses the same default port
-    ./build/bin/geth --datadir << /path/to/l2geth-datadir>>
+    RPC_PORT=8546 \
+    ./build/bin/geth --datadir /path/to/l2geth-datadir
   ```
 </Steps>
 
+## Create a JWT Secret
+
+`op-geth` and `op-node` communicate over the engine API authrpc.
+This communication is secured using a shared secret.
+You will need to generate a shared secret and provide it to both `op-geth` and `op-node` when you start them.
+In this case, the secret takes the form of a 32 byte hex string.
+
+Run the following command to generate a random 32 byte hex string:
+
+```bash
+openssl rand -hex 32 > jwt.txt
+```
+
 ## Start `op-geth`
 
+It's generally easier to start `op-geth` before starting `op-node`.
+You can still start `op-geth` without yet running `op-node`, but the `op-geth` instance will simply not receive any blocks until `op-node` is started.
+
 <Steps>
-  ### Navigate into your `op-geth` directory
+  {<h3>Navigate to your op-geth directory</h3>}
 
-  ### Start `op-geth` with the following command
+  Find the directory where you built the `op-geth` binary.
 
-  *   Make sure you update your path to your data directory
+  {<h3>Copy in the JWT secret</h3>}
 
-  ```sh
+  Copy the JWT secret you generated in a previous step into the `op-geth` directory.
+
+  ```bash
+  cp /path/to/jwt.txt .
+  ```
+
+  {<h3>Set environment variables</h3>}
+
+  Set the following environment variables:
+
+  ```bash
+  export DATADIR_PATH=... # Path to the migrated data directory
+  ```
+
+  {<h3>Start op-geth</h3>}
+
+  Use the following command to start `op-geth` in a default configuration.
+  The JSON-RPC API will become available on port 8545.
+  Refer to the `op-geth` [configuration documentation](../management/configuration#op-geth) for more detailed information about available options.
+
+  ```bash
   ./build/bin/geth \
-    --datadir=<</path/to/op-geth-datadir>> \
     --http \
     --http.port=8545 \
     --http.addr=0.0.0.0 \
@@ -152,154 +194,95 @@ You will need 500+ GB for this part alone.
     --nodiscover \
     --syncmode=full \
     --maxpeers=0 \
-    --op-network=op-mainnet
+    --op-network=op-mainnet \
+    --datadir=$DATADIR_PATH
   ```
-
-  <Callout type="info">
-    Archive Nodes
-    You will need to point `op-geth` at `l2geth` with `--rollup.historicalrpc`: Enables the historical RPC endpoint. This endpoint is used to fetch historical execution data from Legacy Geth from before the [Bedrock upgrade](https://twitter.com/optimismFND/status/1666850591669202965). This flag is only necessary for OP Mainnet.
-
-    You will also need to add `--gcmode archive`.
-  </Callout>
 </Steps>
 
 ## Start `op-node`
 
+Once you've started `op-geth`, you can start `op-node`.
+`op-node` will connect to `op-geth` and begin synchronizing the OP Mainnet state.
+`op-node` will begin sending block payloads to `op-geth` when it derives derives enough blocks from Ethereum.
+
 <Steps>
-  ### Navigate to the `op-node` directory
+  {<h3>Navigate to your op-node directory</h3>}
 
-  ### Start `op-node` with the following command
+  Find the directory where you built the `op-node` binary.
 
-  *   Change `L1 RPC URL` to your local L1 node or a service provider's URL for the L1 node (L1 Ethereum). E.g. for Infura, `https://mainnet.infura.io/v3/API_KEY`.
-  *   Set `L1 RPC KIND` to the network provider you are using (options: alchemy, quicknode, infura, parity, nethermind, debug\_geth, erigon, basic, any).
-  *   Set the `/path/to/op-geth/jwt.txt` to the path of the shared secret you generated in a previous step
+  {<h3>Copy in the JWT secret</h3>}
 
-  <Callout type="info">
-    If you're running an Erigon Ethereum execution client for your L1 provider you will need to include `--l1.trustrpc`. At the time of writing,
-    Erigon doesn't support the `eth_getProof` that we prefer to use to load L1 data for some processing in `op-node`. The trustrpc flag makes it
-    use something else that erigon supports, but the `op-node` can't verify for correctness.
-  </Callout>
+  Both `op-geth` and `op-node` need to use the same JWT secret.
+  Copy the JWT secret you generated in a previous step into the `op-node` directory.
 
-  ```sh
-  ./bin/op-node \
-      --l1=<< L1 RPC URL >>  \
-      --l1.rpckind=<< L1 RPC KIND >> \
-      --l2=ws://localhost:8551 \
-      --l2.jwt-secret=<< /path/to/op-geth/jwt.txt >> \
-      --network=op-mainnet \
-      --rpc.addr=0.0.0.0 \
-      --rpc.port=8547
+  ```bash
+  cp /path/to/jwt.txt .
   ```
+
+  {<h3>Set environment variables</h3>}
+
+  Set the following environment variables:
+
+  ```bash
+  export L1_RPC_URL=...  # URL for the L1 node to sync from
+  export L1_RPC_KIND=... # RPC type (alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any)
+  ```
+
+  {<h3>Start op-node</h3>}
+
+  Use the following command to start `op-node` in a default configuration.
+  Refer to the `op-node` [configuration documentation](../management/configuration#op-node) for more detailed information about available options.
+
+  ```bash
+  ./bin/op-node \
+    --l1=$L1_RPC_URL \
+    --l1.rpckind=$L1_RPC_KIND \
+    --l2=ws://localhost:8551 \
+    --l2.jwt-secret=./jwt.txt \
+    --network=op-mainnet \
+    --rpc.addr=0.0.0.0 \
+    --rpc.port=8547
+  ```
+
+  <Callout>
+    Some L1 nodes, like Erigon, do not support the `eth_getProof` RPC method that the `op-node` uses to load L1 data for certain processing steps.
+    If you are using an L1 node that does not support `eth_getProof`, you will need to include the `--l1.trustrpc` flag when starting `op-node`.
+    Note that this flag will cause `op-node` to trust the L1 node to provide correct data as it will no longer be able to independently verify the data it receives.
+  </Callout>
 </Steps>
 
-## The initial synchronization
+## Synchronization
 
-The datadir provided by Optimism is not updated continuously, so before you can use the node you need a to synchronize it.
+Once you've started `op-geth` and `op-node` you should see the two begin to communicate with each other and synchronize the OP Mainnet chain.
+Initial synchronization can take several hours to complete.
 
-During that process you get log messages from `op-node`, and nothing else appears to happen.
+During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to `op-geth`.
+This means that `op-node` is requesting blocks from Ethereum one-by-one and determining the corresponding OP Mainnet blocks that were published to Ethereum.
+You should see logs like the following from `op-node`:
 
-```
+```text
 INFO [06-26|13:31:20.389] Advancing bq origin                      origin=17171d..1bc69b:8300332 originBehind=false
 ```
 
-That is normal - it means that `op-node` is looking for a location in the batch queue.
-After a few minutes it finds it, and then it can start synchronizing.
+Once the `op-node` has derived enough blocks from Ethereum, it will begin sending these blocks to `op-geth`.
+You should see logs like the following from `op-node`:
 
-While it is synchronizing, you can expect log messages such as these from `op-node`:
-
-```
+```text
 INFO [06-26|14:00:59.460] Sync progress                            reason="processed safe block derived from L1" l2_finalized=ef93e6..e0f367:4067805 l2_safe=7fe3f6..900127:4068014 l2_unsafe=7fe3f6..900127:4068014 l2_time=1,673,564,096 l1_derived=6079cd..be4231:8301091
 INFO [06-26|14:00:59.460] Found next batch                         epoch=8e8a03..11a6de:8301087 batch_epoch=8301087 batch_timestamp=1,673,564,098
 INFO [06-26|14:00:59.461] generated attributes in payload queue    txs=1  timestamp=1,673,564,098
 INFO [06-26|14:00:59.463] inserted block                           hash=e80dc4..72a759 number=4,068,015 state_root=660ced..043025 timestamp=1,673,564,098 parent=7fe3f6..900127 prev_randao=78e43d..36f07a fee_recipient=0x4200000000000000000000000000000000000011 txs=1  update_safe=true
 ```
 
-And log messages such as these from `op-geth`:
+You should then also begin to see logs like the following from `op-geth`:
 
-```
+```text
 INFO [06-26|14:02:12.974] Imported new potential chain segment     number=4,068,194 hash=a334a0..609a83 blocks=1         txs=1         mgas=0.000  elapsed=1.482ms     mgasps=0.000   age=5mo2w20h dirty=2.31MiB
 INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,194 hash=a334a0..609a83 root=e80f5e..dd06f9 elapsed="188.373µs" age=5mo2w20h
 INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
 ```
 
-## Estimate the synchronization time
-
-To estimate how long the synchronization will take, you need to first find out how many blocks you synchronize in a minute. You can use this [Foundry](https://book.getfoundry.sh/) script to get an estimated sync time.
-
-<Steps>
-  ### Navigate to your `scripts` directory
-
-  ### Create a new file:
-
-  ```sh
-  touch run-estimate.sh
-  ```
-
-  ### Make it executable:
-
-  ```sh
-  chmod +x run-estimate.sh
-  ```
-
-  ### Insert this snippet of code into `run-estimate.sh`:
-
-  ```sh
-  #!/usr/bin/bash
-
-  export ETH_RPC_URL=http://localhost:8545
-  CHAIN_ID=`cast chain-id`
-  echo Chain ID: $CHAIN_ID
-  echo Please wait
-
-  if [ $CHAIN_ID -eq 10 ]; then
-    L2_URL=https://mainnet.optimism.io
-  fi
-
-
-  if [ $CHAIN_ID -eq 11155420 ]; then
-    L2_URL=https://sepolia.optimism.io
-  fi
-
-  T0=`cast block-number --rpc-url $ETH_RPC_URL` ; sleep 60 ; T1=`cast block-number --rpc-url $ETH_RPC_URL`
-  PER_MIN=`expr $T1 - $T0`
-  echo Blocks per minute: $PER_MIN
-
-
-  if [ $PER_MIN -eq 0 ]; then
-      echo Not synching
-      exit;
-  fi
-
-  # During that minute the head of the chain progressed by thirty blocks
-  PROGRESS_PER_MIN=`expr $PER_MIN - 30`
-  echo Progress per minute: $PROGRESS_PER_MIN
-
-
-  # How many more blocks do we need?
-  HEAD=`cast block-number --rpc-url $L2_URL`
-  BEHIND=`expr $HEAD - $T1`
-  MINUTES=`expr $BEHIND / $PROGRESS_PER_MIN`
-  HOURS=`expr $MINUTES / 60`
-  echo Hours until sync completed: $HOURS
-
-  if [ $HOURS -gt 24 ] ; then
-     DAYS=`expr $HOURS / 24`
-     echo Days until sync complete: $DAYS
-  fi
-  ```
-
-  ### Run the following command to get an estimate:
-
-  ```sh
-  ./run-estimate.sh
-  ```
-</Steps>
-
-## Operations
-
-It is best to start `op-geth` first and shut it down last.
-
 ## Next Steps
 
-*   Now that you've got your node up and running, check out the [Node Metrics and Monitoring Guide](../management/metrics) for health monitoring.
-*   If you run into any problems, please visit the [Node Troubleshooting Guide](../management/troubleshooting) for help.
+*   If you've already got your node up and running, check out the [Node Metrics and Monitoring Guide](./management/metrics) to learn how to keep tabs on your node and make sure it keeps running smoothly.
+*   If you run into any problems, please visit the [Node Troubleshooting Guide](./management/troubleshooting) for help.
