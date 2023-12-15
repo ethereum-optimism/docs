@@ -8,123 +8,172 @@ import { Callout, Steps } from 'nextra/components'
 
 # Building a Node from Source
 
-Here are the instructions if you want to build your own node without relying on images from Optimism. These instructions were generated on an Ubuntu 20.04 LTS box, but they should work with other systems too.
+Docker images are the easiest way to run an OP Mainnet node, but you can always build your own node from source code.
+You might want to do this if you want to run a node on a specific architecture or if you want to inspect the source code of the node you're running.
+This guide will walk you through the full process of building a node from source.
 
-## Before You Begin
+## What You're Going to Build
 
-### Hardware requirements
+### Rollup Node
 
-Nodes need to process and store the transaction history of OP Mainnet or OP Sepolia. They need to be relatively powerful machines (real or virtual). We recommend at least 16 GB RAM. We recommend a 2TB SSD for OP Mainnet, our current archive node usage is \~1TB. We recommend a 256GB SSD for OP Sepolia, or current full node usage is \~1.6GB and archive node usage is \~5.6GB.
+The Rollup Node is responsible for deriving L2 block payloads from L1 data and passing those payloads to the Execution Client.
+The Rollup Node can also optionally participate in a peer-to-peer network to receive blocks directly from the Sequencer before those blocks are submitted to L1.
+The Rollup Node is largely analogous to a [consensus client](https://ethereum.org/en/developers/docs/nodes-and-clients/#what-are-nodes-and-clients) in Ethereum.
 
-### Software requirements
+In this tutorial you will build the `op-node` implementation of the Rollup Node as found in the [Optimism Monorepo](https://github.com/ethereum-optimism/optimism).
 
-You'll need the following software installed to follow this tutorial:
+### Execution Client
 
-*   [Git](https://git-scm.com/)
-*   [Go](https://go.dev/)
-*   [nvm](https://github.com/nvm-sh/nvm)
-*   [Node](https://nodejs.org/en)
-*   [Pnpm](https://pnpm.io/)
-*   [Foundry](https://github.com/foundry-rs/foundry#installation)
-*   [Make](https://linux.die.net/man/1/make)
-*   [jq](https://github.com/jqlang/jq)
-*   [direnv](https://direnv.net/)
-*   [zstd](https://facebook.github.io/zstd/)
+The Execution Client is responsible for executing the block payloads it receives from the Rollup Node over JSON-RPC via the standard [Ethereum Engine API](https://github.com/ethereum/execution-apis/blob/main/src/engine/common.md#engine-api----common-definitions).
+The Execution Client exposes the standard JSON-RPC API that Ethereum developers are familiar with, and can be used to query blockchain data and submit transactions to the network.
+The Execution Client is largely analogous to an [execution client](https://ethereum.org/en/developers/docs/nodes-and-clients/#what-are-nodes-and-clients) in Ethereum.
 
-This tutorial was checked on:
+In this tutorial you will build the `op-geth` implementation of the Execution Client as found in the [`op-geth` repository](https://github.com/ethereum-optimism/op-geth).
 
-| Software                      | Version    | Installation command(s)                                                                                                                                                                                                   |                                                   |
-| ----------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| Ubuntu                        | 20.04 LTS  |                                                                                                                                                                                                                           |                                                   |
-| git, curl, jq, make, and zstd | OS default | `sudo apt update`, <br />`sudo apt install -y git curl make jq zstd`                                                                                                                                                      |                                                   |
-| Go                            | 1.20       | `wget https://go.dev/dl/go1.20.linux-amd64.tar.gz`, <br /> `tar xvzf go1.20.linux-amd64.tar.gz`, <br /> `sudo cp go/bin/go /usr/bin/go`, <br />`sudo mv go /usr/lib`, <br />`echo export GOROOT=/usr/lib/go >> ~/.bashrc` |                                                   |
-| Node                          | 18.17.1    | `nvm install 18.17.1`, <br /> `nvm use 18.17.1`                                                                                                                                                                           |                                                   |
-| pnpm                          | 8.6.12     | `sudo npm install -g pnpm`                                                                                                                                                                                                |                                                   |
-| Foundry                       | 0.2.0      | \`curl -L [https://foundry.paradigm.xyz](https://foundry.paradigm.xyz)                                                                                                                                                    | bash`, <br /> `. \~/.bashrc`, <br /> `foundryup\` |
+### Legacy Geth (Optional)
 
-## Build the Optimism Monorepo
+Legacy Geth is an optional component for OP Mainnet archive nodes.
+Legacy Geth allows you to execute stateful queries like `eth_call` against blocks and transactions that occurred before the OP Mainnet [Bedrock Upgrade](https://blog.oplabs.co/introducing-optimism-bedrock/).
+Legacy Geth is only relevant to OP Mainnet archive nodes and is not required for full nodes or OP Sepolia nodes.
 
-<Steps>
-  ### Navigate to your working directory
+Currently, `l2Geth` is the only available implementation of Legacy Geth.
+In this tutorial you will build the `l2geth` implementation of Legacy Geth as found in the [`optimism-legacy` repository](https://github.com/ethereum-optimism/optimism-legacy).
 
-  ### Clone the [Optimism Monorepo](https://github.com/ethereum-optimism/optimism)
+## Software Dependencies
 
-  <Callout type="info">
-    If you want to run the same version we're using in production, you can checkout our latest [release commit](https://github.com/ethereum-optimism/optimism/releases).
-  </Callout>
+| Dependency                                                    | Version  | Version Check Command |
+| ------------------------------------------------------------- | -------- | --------------------- |
+| [git](https://git-scm.com/)                                   | `^2`     | `git --version`       |
+| [go](https://go.dev/)                                         | `^1.21`  | `go version`          |
+| [node](https://nodejs.org/en/)                                | `^20`    | `node --version`      |
+| [pnpm](https://pnpm.io/installation)                          | `^8`     | `pnpm --version`      |
+| [foundry](https://github.com/foundry-rs/foundry#installation) | `^0.2.0` | `forge --version`     |
+| [make](https://linux.die.net/man/1/make)                      | `^4`     | `make --version`      |
 
-  ```bash
-  git clone https://github.com/ethereum-optimism/optimism.git
-  ```
+## Build the Rollup Node
 
-  ### Install required modules
+First you're going to build the `op-node` implementation of the Rollup Node as found in the [Optimism Monorepo](https://github.com/ethereum-optimism/optimism).
 
-  ```bash
-  cd optimism
-  pnpm install
-  ```
-
-  ### Build the various packages inside of the Optimism Monorepo
-
-  ```bash
-  make op-node
-  pnpm build
-  ```
-
-  This process will take some time, so you can move onto the next section while the build completes.
-</Steps>
-
-## Build op-geth
 
 <Steps>
-  ### Navigate to your working directory
 
-  ### Clone [`op-geth`](https://github.com/ethereum-optimism/op-geth)
+{<h3>Clone the Optimism Monorepo</h3>}
 
-  <Callout type="info">
-    If you want to run the same version we're using in production, you can checkout our latest [release commit](https://github.com/ethereum-optimism/op-geth/releases).
-  </Callout>
+The Optimism Monorepo contains the source code for the `op-node`.
 
-  ```bash
-  git clone https://github.com/ethereum-optimism/op-geth.git
-  ```
+```bash
+git clone https://github.com/ethereum-optimism/optimism.git
+cd optimism
+```
 
-  ### Build `op-geth`
+{<h3>Check out the required release branch</h3>}
 
-  ```bash
-  cd op-geth    
-  make geth
-  ```
-</Steps>
+Release branches are created when new versions of the `op-node` are created.
+Read through the [Releases page](https://github.com/ethereum-optimism/optimism/releases) to determine the correct branch to check out.
 
-## (Optional - OP Mainnet Archive Node) Build l2geth
+```bash
+git checkout <name of release branch>
+```
 
-<Callout type="info">
-  OP Mainnet Archive Node
-  This step is only necessary for OP Mainnet archive nodes. If you're building a OP Testnet archive node, you do not need to do this step.
+<Callout>
+Make sure to read the Releases page carefully to determine the correct branch to check out.
+Some releases may only be required for the OP Sepolia testnet.
 </Callout>
 
+{<h3>Install Node.js dependencies</h3>}
+
+Install the Node.js dependencies for the Optimism Monorepo.
+
+```bash
+pnpm install
+```
+
+{<h3>Build Node.js packages</h3>}
+
+Build the Node.js packages for the Optimism Monorepo.
+
+```bash
+pnpm build
+```
+
+{<h3>Build op-node</h3>}
+
+Build the `op-node` implementation of the Rollup Node.
+
+```bash
+make op-node
+```
+
+</Steps>
+
+## Build the Execution Client
+
+Next you're going to build the `op-geth` implementation of the Execution Client as found in the [op-geth repository](https://github.com/ethereum-optimism/op-geth).
+
 <Steps>
-  ### Navigate to your working directory
 
-  ### Clone [`l2geth`](https://github.com/ethereum-optimism/optimism-legacy)
+{<h3>Clone op-geth</h3>}
 
-  ```bash
-  git clone https://github.com/ethereum-optimism/optimism-legacy.git
-  ```
+The [`op-geth` repository](https://github.com/ethereum-optimism/op-geth) contains the source code for the `op-geth` implementation of the Execution Client.
 
-  ### Build `l2geth`
+```bash
+git clone https://github.com/ethereum-optimism/op-geth.git
+cd op-geth
+```
 
-  ```bash
-  cd optimism-legacy/l2geth
-  make
-  ```
+{<h3>Check out the required release branch</h3>}
+
+
+Release branches are created when new versions of the `op-geth` are created.
+Read through the [Releases page](https://github.com/ethereum-optimism/op-geth/releases) to determine the correct branch to check out.
+
+```bash
+git checkout <name of release branch>
+```
+
+<Callout>
+Make sure to read the Releases page carefully to determine the correct branch to check out.
+Some releases may only be required for the OP Sepolia testnet.
+</Callout>
+
+{<h3>Build op-geth</h3>}
+
+Build the `op-geth` implementation of the Execution Client.
+
+```bash
+make op-geth
+```
+
+</Steps>
+
+## Build Legacy Geth (Optional)
+
+Legacy Geth is an optional component for OP Mainnet archive nodes.
+Legacy Geth allows you to execute stateful queries like `eth_call` against blocks and transactions that occurred before the OP Mainnet [Bedrock Upgrade](https://blog.oplabs.co/introducing-optimism-bedrock/).
+Legacy Geth is only relevant to OP Mainnet archive nodes and is not required for full nodes or OP Sepolia nodes.
+
+<Steps>
+
+{<h3>Clone the OP Legacy Repository</h3>}
+
+The OP Legacy repository contains the source code for the `l2geth` implementation of Legacy Geth.
+
+```bash
+git clone https://github.com/ethereum-optimism/optimism-legacy.git
+cd optimism-legacy
+```
+
+{<h3>Build l2geth</h3>}
+
+```bash
+cd l2geth
+make
+```
+
 </Steps>
 
 ## Next Steps
 
-The rest of the steps depend on whether you want to run an OP Mainnet or OP Sepolia node.
-
-*   Click here to continue [building on OP Mainnet](mainnet)
-*   Click here to continue [building on OP Testnet](testnet)
+*   Click here to [Run an OP Mainnet Node from Source Code](mainnet)
+*   Click here to [Run an OP Sepolia Node from Source Code](testnet)
 *   If you run into any problems, please visit the [Node Troubleshooting Guide](../management/troubleshooting) for help.
