@@ -49,6 +49,19 @@ await messenger.proveMessage(withdrawal.hash)
 console.log('Waiting for withdrawal to be relayable...')
 await messenger.waitForMessageStatus(withdrawal.hash, optimism.MessageStatus.READY_FOR_RELAY)
 
+// Wait for the next block to be produced, only necessary for CI because messenger can return
+// READY_FOR_RELAY before the RPC we're using is caught up to the latest block. Waiting for an
+// additional block ensures that the RPC is caught up and the message can be relayed. Users
+// should not need to do this when running the tutorial.
+const maxWaitTime = 120000 // 2 minutes in milliseconds
+const currentBlock = await l1Provider.getBlockNumber()
+while (await l1Provider.getBlockNumber() < currentBlock + 1) {
+  if (Date.now() > maxWaitTime) {
+    throw new Error('Timed out waiting for block to be produced')
+  }
+  await new Promise(resolve => setTimeout(resolve, 1000))
+}
+
 console.log('Relaying withdrawal...')
 await messenger.finalizeMessage(withdrawal.hash)
 
