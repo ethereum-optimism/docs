@@ -60,7 +60,7 @@ You can now start changing content and see the website updated live each time yo
 To prevent building issues upstream, you should build the content locally before submitting a pull request: stop or delete the terminal server if it's running, then run `pnpm dev`.
 
 - If no issues are reported ("client"and "server compiled successfully"), go ahead and submit the pull request. 
-- If some issues are reported (e.g., broken links), please use information reported by the terminal to fix issues. You can run `pnpm fix` to automatically fix most linting issues.
+- Otherwise, please use information reported by the terminal to fix any issues (e.g., broken links). You can run `pnpm fix` to automatically fix most linting issues. For spellcheck-related issues, please add your term to the `words.txt` file in the root of this repository.
 - Try another `pnpm dev` and repeat until no issues are reported.
 
 
