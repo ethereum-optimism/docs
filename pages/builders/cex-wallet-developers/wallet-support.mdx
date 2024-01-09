@@ -1,90 +1,56 @@
 ---
-title: Support OP Mainnet in Your Wallet
+title: Supporting OP Mainnet in Your Wallet
 lang: en-US
-description: Learn how to add support for OP Mainnet in Your Wallet.
+description: Learn how to support OP Mainnet in your wallet.
 ---
 
 import { Callout } from 'nextra/components'
 
-# Support OP Mainnet in Your Wallet
+# Supporting OP Mainnet in Your Wallet
 
-This guide is intended for wallet developers who want to provide their users with the ability to send transactions on OP Mainnet (most other OP Stack chains behave similarly).
-OP Mainnet generally behaves like any other EVM-based chain, with the exception of minor discrepancies related to [transaction fees](#fees).
-These fee discrepancies are a direct result of the fact that OP Mainnet is a Layer 2 blockchain network that must publish transaction data to Ethereum.
+Check out this guide to get an overview of everything you need to know to properly support OP Mainnet within your wallet.
 
-## Connect to OP Mainnet
+## Connecting to OP Mainnet
 
-OP Mainnet shares the [Ethereum JSON-RPC API](https://eth.wiki/json-rpc/API) with only [a few minor differences](/builders/node-operators/json-rpc).
-You'll find all of the important information about OP Mainnet, as well as any test networks, on the [Networks page](/chain/networks).
-You can choose to connect to OP Mainnet through the rate-limited public endpoints, [private endpoints from infrastructure providers](/chain/networks), or [by running your own node](/builders/node-operators/tutorials/node-from-source).
-Because of throughput limits, it is recommended to use private node [providers](/builders/tools/rpc-providers) or running your own node for production applications.
+OP Mainnet is designed to be [EVM equivalent](https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306) and supports all of the same tooling as Ethereum.
+You can use your favorite Ethereum libraries and tools to work with OP Mainnet.
+Head over to the [Networks and RPC Endpoints](/chain/networks) page for network connection details and check out the [RPC Providers](/builders/tools/rpc-providers) page for an updated list of RPC providers that support OP Mainnet.
+If you need to run your own OP Mainnet node, head over to the [Node Operator Overview](/builders/node-operators/overview) page.
 
-## Canonical token addresses
+## Native Gas Token (ETH)
 
-The ERC-20 contract address for a token on OP Mainnet may differ from the address for the same token on Ethereum.
-Optimism maintains [a token list](https://static.optimism.io/optimism.tokenlist.json) that includes known addresses for many popular tokens.
-You can view the same list with a more user-friendly interface [here](https://tokenlists.org/token-list?url=https://static.optimism.io/optimism.tokenlist.json).
+OP Mainnet uses ETH as its native gas token.
+Transactions are paid for in ETH and account balances are denominated in ETH.
 
-For instance, when looking at the **SNX** token, the [Superchain token list](https://static.optimism.io/optimism.tokenlist.json) returns the following addresses:
+## Transaction Fees
 
-| ChainID | Network                  | Address                                    |
-| ------: | ------------------------ | ------------------------------------------ |
-|       1 | Ethereum                 | 0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f |
-|      10 | OP Mainnet               | 0x8700daec35af8ff88c16bdf0418774cb3d7599b4 |
-|       5 | Goerli (test network)    | 0x51f44ca59b867E005e48FA573Cb8df83FC7f7597 |
-|     420 | OP Goerli (test network) | 0x2E5ED97596a8368EB9E44B1f3F25B2E813845303 |
-
-## Transaction status
-
-A transaction in OP Mainnet can be in one of two states:
-
-1.  **Sequencer Confirmed**: The transaction has been accepted by the sequencer on OP Mainnet (L2)
-2.  **Confirmed Onchain**: The transaction has been written to Ethereum (L1)
-
-## Transaction fees
-
-In OP Mainnet transaction fees include both an [L1 data fee](/stack/transactions/fees#estimating-the-l1-data-fee) and an [L2 execution fee](/stack/transactions/fees#the-l2-execution-fee).
-To display the entire estimated cost of a transaction to your users you can [use the SDK](/builders/dapp-developers/tutorials/sdk-estimate-costs).
-It is **highly recommended** to displaying fees on OP Mainnet (and any other OP Stack chain that uses the same mechanism) as one unified fee to minimize user confusion.
-Users should, however, be able to view the L1 data fee and the L2 execution fee separately if they wish to drill in deeper.
-
-The OP Stack supports [EIP 1559](https://eips.ethereum.org/EIPS/eip-1559).
-Therefore, the L2 execution fee is made up of two components: a fixed (per-block) base fee and a user-selected priority fee.
-
-### Base fee
-
-[The EIP 1559 parameters](/stack/differences#pre--EIP--155-support) have different values on OP Mainnet (and many other OP Stack chains) than those on L1 Ethereum.
-As a result, in every block the base fee can be between 98% and 110% of the previous value.
-Since blocks are produced every two seconds, the base fee can be between 54% and 1745% of the value a minute earlier.
-If it takes the user fourteen seconds to approve the transaction in the wallet, the base fee can almost double in that time.
-
-The base fee specified in the transaction is not necessarily the base fee that the user will pay, *it is merely an upper limit to that amount*.
-In most cases, it makes sense to specify a much higher base fee than the current value to ensure acceptance.
-
-For instance, as I'm writing this, ETH is approximately $2000, and a cent equals about 5000 gwei.
-Assuming 20% of a cent is an acceptable base fee for a transaction, and that the transaction is a large 5,000,000 gas one (at the target block size), this gives us a base fee of 200,000 wei.
-That would be the value to include in the transaction even though the L2 base fee (as I'm writing this) is 2420 wei.
+OP Mainnet charges the standard gas fee for transactions, but also charges an additional L1 data fee for the cost of publishing transaction data to Ethereum.
+Check out the [Transaction Fees](/stack/transactions/fees) page for more information about how transaction fees work on OP Mainnet.
 
 <Callout>
-  Up to date information
-
-  You can get the current L2 base fee [in the gas tracker dashboard](https://optimism.io/gas-tracker).
+Transactions on OP Mainnet must pay for an additional "L1 data fee" that often heavily outweighs the standard gas fee.
+Make sure that your wallet is configured to display this fee to your users so that they are aware of the total cost of their transaction.
 </Callout>
 
-### Priority fee
+## Smart Contracts
 
-In contrast to the base fee, the priority fee in the transaction is the amount that the user pays, and therefore it makes sense to keep it as low as possible.
-If you already have estimating code you use for L1 Ethereum, you can just use that.
+Smart contracts on OP Mainnet function the same way they do on Ethereum.
+You can use your favorite Ethereum libraries and tools to interact with smart contracts on OP Mainnet.
 
-Note that on OP Mainnet the priority fee tends to be very low.
-As I am writing this, a priority fee of 500 wei is sufficient ([see here](https://optimism.io/gas-tracker) to get the current values).
+## Token Addresses
 
-### Sending "max" ETH
+The ERC-20 contract address for a token on OP Mainnet may differ from the address for the same token on Ethereum.
+Addresses for many common tokens will differ between OP Mainnet and Ethereum.
+Make sure to reference the [Bridged Token Addresses](/chain/tokenlist) to confirm that you are using the correct token addresses in your application.
 
-Many wallets allow users to send the maximum amount of ETH available in the user's wallet.
-Of course, this requires that the predicted fee for the send transaction be deducted from the ETH amount being sent.
-You **MUST** deduct both the L2 execution fee and the L1 data fee or the charged fee plus the amount sent will exceed the user's available wallet balance and the transaction will fail.
+## Bridging ETH and ERC-20s
 
-### Displaying the gas prices
+You may need to transfer ETH or ERC-20 tokens between OP Mainnet and Ethereum.
+This is a useful feature for users who want to move tokens between the two networks.
+Refer to the [Basics of Bridging](/builders/dapp-developers/bridging/basics) and the [Standard Bridge](/builders/dapp-developers/bridging/standard-bridge) guides for more information about how to bridge ETH and ERC-20 tokens between OP Mainnet and Ethereum.
 
-If you want to display the current gas prices, you can use [`eth_gasPrice`](https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_gasprice).
+## Transaction Statuses
+
+OP Mainnet transactions have a number of different statuses during the transaction lifecycle.
+The status of a transaction can be useful for users.
+Refer to the [Transaction Statuses](/builders/dapp-developers/transactions/statuses) page for more information about the different transaction statuses and how to handle them in your application.
