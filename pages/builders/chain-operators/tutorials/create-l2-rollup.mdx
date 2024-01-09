@@ -370,6 +370,56 @@ Currently, chain configuration lives inside of the [`contracts-bedrock`](https:/
   It's recommended to keep this file as-is for now so you don't run into any unexpected errors.
 </Steps>
 
+## Deploy the Create2 Factory (Optional)
+
+If you're deploying an OP Stack chain to a network other than Sepolia, you may need to deploy a Create2 factory contract to the L1 chain.
+This factory contract is used to deploy OP Stack smart contracts in a deterministic fashion.
+
+<Callout>
+  This step is typically only necessary if you are deploying your OP Stack chain to custom L1 chain.
+  If you are deploying your OP Stack chain to Sepolia, you can safely skip this step.
+</Callout>
+
+<Steps>
+  {<h3>Check if the factory exists</h3>}
+
+  The Create2 factory contract will be deployed at the address `0x4e59b44847b379578588920cA78FbF26c0B4956C`.
+  You can check if this contract has already been deployed to your L1 network with a block explorer or by running the following command:
+
+  ```bash
+  cast codesize 0x4e59b44847b379578588920cA78FbF26c0B4956C --rpc-url $L1_RPC_URL
+  ```
+
+  If the command returns `0` then the contract has not been deployed yet.
+  If the command returns `69` then the contract has been deployed and you can safely skip this section.
+
+  {<h3>Fund the factory deployer</h3>}
+
+  You will need to send some ETH to the address that will be used to deploy the factory contract, `0x3fAB184622Dc19b6109349B94811493BF2a45362`.
+  This address can only be used to deploy the factory contract and will not be used for anything else.
+  Send at least 1 ETH to this address on your L1 chain.
+
+  {<h3>Deploy the factory</h3>}
+
+  Using `cast`, deploy the factory contract to your L1 chain:
+
+  ```bash
+  cast public --rpc-url $L1_RPC_URL 0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222 
+  ```
+
+  {<h3>Wait for the transaction to be mined</h3>}
+
+  Make sure that the transaction is included in a block on your L1 chain before continuing.
+
+  {<h3>Verify that the factory was deployed</h3>}
+
+  Run the code size check again to make sure that the factory was properly deployed:
+
+  ```bash
+  cast codesize 0x4e59b44847b379578588920cA78FbF26c0B4956C --rpc-url $L1_RPC_URL
+  ```
+</Steps>
+
 ## Deploy the L1 contracts
 
 Once you've configured your network, it's time to deploy the L1 contracts necessary for the functionality of the chain.
