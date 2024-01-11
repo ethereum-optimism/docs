@@ -59,9 +59,10 @@ You can now start changing content and see the website updated live each time yo
 
 To prevent building issues upstream, you should build the content locally before submitting a pull request: stop or delete the terminal server if it's running, then run `pnpm dev`.
 
-- If no issues are reported ("client"and "server compiled successfully"), go ahead and submit the pull request. 
-- Otherwise, please use information reported by the terminal to fix any issues (e.g., broken links). You can run `pnpm fix` to automatically fix most linting issues. For spellcheck-related issues, please add your term to the `words.txt` file in the root of this repository.
-- Try another `pnpm dev` and repeat until no issues are reported.
+- Use the information reported by the terminal to fix any issues (e.g., broken links). 
+- Run `pnpm fix` to automatically fix most linting issues (e.g., formatting and style guide). 
+- Run `pnpm spellcheck` to test your content against the dictionary. Add new term(s) to the `words.txt` file in the root of this repository to resolve spellcheck issues.
+- Try another `pnpm dev` and repeat until no issues are reported ("client" and "server compiled successfully").
 
 
 Your pull request should usually target the `main` branch, though the Optimism Documentation team might sometimes ask you to target another branch.

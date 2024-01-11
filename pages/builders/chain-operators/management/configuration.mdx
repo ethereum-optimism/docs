@@ -79,27 +79,36 @@ These fields apply to L2 blocks: Their timing, when do they need to be written t
 
 These fields apply to output root proposals.
 
-| Key                                 | Type              | Description                                                                                                                                                                                                                                         | Default value                                                                       |
-| ----------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `l2OutputOracleStartingBlockNumber` | Number            | Block number of the first OP Stack block. Typically this should be zero, but this may be non-zero for networks that have been upgraded from a legacy system (like Optimism Mainnet). Will be removed with the addition of permissionless proposals. | 0                                                                                   |
-| `l2OutputOracleStartingTimestamp`   | Number            | Timestamp of the first OP Stack block. This MUST be the timestamp corresponding to the block defined by the `l1StartingBlockTag`. Will be removed with the addition of permissionless proposals.                                                    |                                                                                     |
-| `l2OutputOracleSubmissionInterval`  | Number of blocks  | Number of blocks between proposals to the `L2OutputOracle`. Will be removed with the addition of permissionless proposals.                                                                                                                          | 120 (24 minutes)                                                                    |
-| `finalizationPeriodSeconds`         | Number of seconds | Number of seconds that a proposal must be available to challenge before it is considered finalized by the `OptimismPortal` contract.                                                                                                                | Recommend 12 on test networks, seven days on production ones                        |
-| `l2OutputOracleProposer`            | L1 Address        | Address that is allowed to submit output proposals to the `L2OutputOracle` contract. Will be removed when the OP Stack has permissionless proposals.                                                                                                |                                                                                     |
-| `l2OutputOracleChallenger`          | L1 Address        | Address that is allowed to challenge output proposals submitted to the `L2OutputOracle`. Will be removed when the OP Stack has permissionless challenges.                                                                                           | It is recommended to have a single admin address to retain a common security model. |
+| Key                                 | Type              | Description                                                                                                                                                                                                                                   | Default value                                                                       |
+| ----------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `l2OutputOracleStartingBlockNumber` | Number            | Block number of the first OP Stack block. Typically this should be zero, but this may be non-zero for networks that have been upgraded from a legacy system (like OP Mainnet). Will be removed with the addition of permissionless proposals. | 0                                                                                   |
+| `l2OutputOracleStartingTimestamp`   | Number            | Timestamp of the first OP Stack block. This MUST be the timestamp corresponding to the block defined by the `l1StartingBlockTag`. Will be removed with the addition of permissionless proposals.                                              |                                                                                     |
+| `l2OutputOracleSubmissionInterval`  | Number of blocks  | Number of blocks between proposals to the `L2OutputOracle`. Will be removed with the addition of permissionless proposals.                                                                                                                    | 120 (24 minutes)                                                                    |
+| `finalizationPeriodSeconds`         | Number of seconds | Number of seconds that a proposal must be available to challenge before it is considered finalized by the `OptimismPortal` contract.                                                                                                          | Recommend 12 on test networks, seven days on production ones                        |
+| `l2OutputOracleProposer`            | L1 Address        | Address that is allowed to submit output proposals to the `L2OutputOracle` contract. Will be removed when the OP Stack has permissionless proposals.                                                                                          |                                                                                     |
+| `l2OutputOracleChallenger`          | L1 Address        | Address that is allowed to challenge output proposals submitted to the `L2OutputOracle`. Will be removed when the OP Stack has permissionless challenges.                                                                                     | It is recommended to have a single admin address to retain a common security model. |
 
 ### L1 data fee
 
-These fields apply to the cost of the [L1 data fee](/stack/transactions/transaction-fees#the-l1-data-fee) for L2 transactions.
+#### Bedrock & Regolith
+
+These fields apply to the cost of the [L1 data fee](/stack/transactions/fees#the-l1-data-fee) for L2 transactions prior to the Ecotone upgrade.
 
 | Key                      | Type   | Description                                                                                                                                        | Default value |
 | ------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | `gasPriceOracleOverhead` | Number | Fixed L1 gas overhead per transaction.                                                                                                             | 2100          |
 | `gasPriceOracleScalar`   | Number | Dynamic L1 gas overhead per transaction, given in 6 decimals. Default value of 1000000 implies a dynamic gas overhead of exactly 1x (no overhead). | 1000000       |
 
+#### Ecotone
+
+| Key                               | Type   | Description                                                                                         | Default value |
+| --------------------------------- | ------ | --------------------------------------------------------------------------------------------------- | ------------- |
+| `gasPriceOracleBaseFeeScalar`     | Number | Scalar applied to the Ethereum base fee in the L1 data fee cost function, given in 6 decimals.      | 1000000       |
+| `gasPriceOracleBlobBaseFeeScalar` | Number | Scalar applied to the Ethereum blob base fee in the L1 data fee cost function, given in 6 decimals. | 0             |
+
 ### EIP 1559 gas algorithm
 
-These fields apply to [the EIP 1559 algorithm](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1559.md) used for the [L2 execution costs](/stack/transactions/transaction-fees/#the-l2-execution-fee) of transactions on the blockchain.
+These fields apply to [the EIP 1559 algorithm](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1559.md) used for the [L2 execution costs](/stack/transactions/fees/#the-l2-execution-fee) of transactions on the blockchain.
 
 | Key                           | Type   | Description                                                                                                                                                                                                                  | Default value | Value on L1 Ethereum |
 | ----------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------- |
@@ -110,7 +119,7 @@ These fields apply to [the EIP 1559 algorithm](https://github.com/ethereum/EIPs/
 
 ### Governance token
 
-The governance token is a side-effect of use of the OP Stack in the Optimism Mainnet network. It may not be included by default in future releases.
+The governance token is a side-effect of use of the OP Stack in the OP Mainnet network. It may not be included by default in future releases.
 
 | Key                     | Type       | Description                                                                                 | Default value |
 | ----------------------- | ---------- | ------------------------------------------------------------------------------------------- | ------------- |
