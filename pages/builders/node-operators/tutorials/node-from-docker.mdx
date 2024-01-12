@@ -1,0 +1,85 @@
+---
+title: Running a Node With Docker
+lang: en-US
+description: Learn how to run a node using Docker.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Running a Node With Docker
+
+Using [Docker](https://docs.docker.com/engine/install/) is an easy way to run an OP Mainnet node.
+This tutorial will walk you through the process of using [`simple-optimism-node`](https://github.com/smartcontracts/simple-optimism-node) to run an OP Mainnet or OP Sepolia node using Docker.
+`simple-optimism-node` also provides useful tools like a monitoring dashboard and health checking software.
+Although less flexible than [running a node from source](./node-from-source) or building your own Docker setup, this is a great way to quickly get started with OP Mainnet.
+
+## What's Included
+
+`simple-optimism-node` includes all the basic components to run an OP Mainnet or OP Sepolia node.
+It also includes several additional services to monitor the health of your node and the health of the network you're connected to.
+See the [What's Included](https://github.com/smartcontracts/simple-optimism-node#whats-included) section of the `simple-optimism-node` README for more details.
+
+## Dependencies
+
+*   [Docker](https://docs.docker.com/engine/install/)
+*   [Docker Compose](https://docs.docker.com/compose/install/)
+
+## Setup
+
+Clone the `simple-optimism-node` repository to get started.
+
+```bash
+git clone https://github.com/smartcontracts/simple-optimism-node.git
+cd simple-optimism-node
+```
+
+## Configuration
+
+Configuration for `simple-optimism-node` is handled through environment variables inside of an `.env` file.
+
+<Steps>
+
+{<h3>Create an .env file</h3>}
+
+The repository includes a sample environment variable file located at `.env.example` that you can copy and modify to get started.
+Make a copy of this file and name it `.env`.
+
+```bash
+cp .env.example .env
+```
+
+{<h3>Configure the .env file</h3>}
+
+Open the `.env` file in your favorite text editor.
+Set the variables inside of the `REQUIRED (BEDROCK)` section of the file. 
+Read the descriptions of each variable to understand what they do and how to set them.
+You can also see the [Configure the Node](https://github.com/smartcontracts/simple-optimism-node#configure-the-node) section of the `simple-optimism-node` README for more details.
+
+Make sure that the [`NETWORK_NAME`](https://github.com/smartcontracts/simple-optimism-node/blob/45672749013e50dd6bbc75d05ce46e4a8b50fd3d/.env.example#L6) variable is set to either `op-mainnet` or `op-sepolia` depending on which network you want to connect to.
+
+<Callout type="info">
+You can also set the variables inside of the `REQUIRED (LEGACY)` section of the file if you wish to run an archival OP Mainnet node.
+Refer to the `simple-optimism-node` [README](https://github.com/smartcontracts/simple-optimism-node#readme) for more information about running legacy OP Mainnet software alongside your OP Mainnet node.
+</Callout>
+
+</Steps>
+
+## Run the Node
+
+Once you've configured your `.env` file, you can run the node using Docker Compose.
+The following command will start the node in the background.
+
+```bash
+docker compose --profile current up -d
+```
+
+## Operating the Node
+
+You can use Docker Compose to interact with the node and manage the various containers that you started.
+Refer to the [Operating the Node](https://github.com/smartcontracts/simple-optimism-node#operating-the-node) section of the `simple-optimism-node` README for more information.
+
+## Checking Node Status
+
+`simple-optimism-node` includes a monitoring dashboard that you can use to check the status of your node.
+You can access the dashboard by visiting `http://localhost:3000` in your browser.
+Refer to the [Metrics Dashboard](https://github.com/smartcontracts/simple-optimism-node#metrics-dashboard) section of the `simple-optimism-node` README for more information.
