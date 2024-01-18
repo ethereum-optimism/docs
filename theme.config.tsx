@@ -60,7 +60,7 @@ const config: DocsThemeConfig = {
   banner: {
     key: '2.1-release',
     text: (
-      <a href="https://docs.optimism.io/builders/notices/ecotone-fee-changes" target="_self">
+      <a href="/builders/notices/ecotone-fee-changes" target="_self">
         📌 UPDATE: Get Prepared for Ecotone Fee Estimation Changes. Please review the Notices (README) for more info. → 📌
       </a>
     )
