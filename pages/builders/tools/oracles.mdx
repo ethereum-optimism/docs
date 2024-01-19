@@ -15,8 +15,18 @@ For example, a [stablecoin](https://ethereum.org/en/stablecoins/) that accepts E
 *   Do we need to liquidate any deposits because they are under collateralized?
 
 <Callout type="info">
-Please visit the [community oracles page](https://github.com/ethereum-optimism/developers/blob/main/community/tools/oracles.md) for a listing of third-party Oracles being used or built by the Optimism developer community.
+This page includes providers that meet specific [inclusion criteria](#inclusion-criteria), as outlined below. Please visit the [community oracles page](https://github.com/ethereum-optimism/developers/blob/main/community/tools/oracles.md) for an additional listing of third-party Oracles.
 </Callout>
+
+## Inclusion Criteria
+
+Developer teams who want to feature products/tools on this page must meet the following criteria:
+    1. ongoing partnership with Optimism whether formal agreement, RPGF, RFP, collaborated on specific initiatives, etc.; 
+    2. established user base and OP ecosystem engagement such as governance participation, homegrown TG / Discord participation, etc.; and
+    3. actively maintains a highly-rated developer tool that aligns with OP’s commitment to a magical developer experience (e.g., easy-to-use, easy-to-integrate, great DevX as noted by community, etc.)
+
+For teams that are supporting but still establishing a user base, we encourage you to share your tool on the [community oracles page](https://github.com/ethereum-optimism/developers/blob/main/community/tools/oracles.md). 
+You can also promote your tool in the [developer forum](https://github.com/ethereum-optimism/developers/discussions/categories/show-and-tell) and share your tool in front of a live audience at the next [demo day](https://community.optimism.io/docs/contribute/demo-day/).
 
 ## Security and Decentralization
 
@@ -62,69 +72,28 @@ You can always get up to date information (see, for example, [here (scroll down 
 
 [See this guide to learn how to use the Chainlink feeds](https://docs.chain.link/docs/get-the-latest-price/).
 
-## Tellor
+## Pyth Network
 
-[Tellor](https://tellor.io/) is a permissionless, censorship-resistant, and customizable oracle.
+The Pyth Network is a financial oracle network which delivers over 400 low-latency, high-fidelity price feeds across cryptocurrencies, FX pairs, equities, ETFs, and commodities.
 
-The Tellor protocol can secure putting any verifiable data onchain, from spot price feeds, TWAPs, random numbers, to EVM calldata - you can even [specify your own "query type"](https://github.com/tellor-io/dataSpecs/issues/new?assignees=\&labels=\&template=new_query_type.yaml\&title=%5BNew+Data+Request+Form%5D%3A+) to build a feed to fit your specific needs.
+- Pyth’s price data is sourced from over [95 first-party sources](https://pyth.network/publishers) including exchanges, market makers, and financial services providers. 
+-Pyth [Price Feeds](https://pyth.network/price-feeds) offer both the real-time spot price of the asset as well as an accompanying confidence interval band around that price
+-The Pyth [TradingView](https://docs.pyth.network/guides/how-to-create-tradingview-charts) integration allows users to view and display Pyth prices on their own website and UI.
 
-As described in the oracles overview section of this page, we are an oracle protocol that has "a mechanism to reward entities that provide accurate information and penalize those that provide incorrect information." Therefore it is necessary to allow some reasonable [amount of time](https://docs.tellor.io/tellor/getting-data/solidity-integration#reading-data) between an oracle update and using that data, to allow for a potential dispute (probabilistic finality).
+You can explore the full catalog of Pyth Price Feed IDs for [OP Mainnet and Sepolia (EVM Stable)](https://pyth.network/developers/price-feed-ids#pyth-evm-stable). 
 
-Tellor is a pull oracle where users fund (tip) a specific feed to get updated data reports and then read the data from our oracle contract, however under certain circumstances it can act similar to a push oracle; if your reading from a feed that is already being updated by others, or if you are [running your own data reporter.](https://docs.tellor.io/tellor/reporting-data/introduction)
+## RedStone
 
-To learn more about using tellor please [read our docs](https://docs.tellor.io) or [get in touch](https://github.com/ethereum-optimism/developers/discussions).
+[RedStone](https://redstone.finance/) offers flexible Data Feeds for Lending Markets, Perpetuals, Options, Stablecoins, Yield Aggregators and other types of novel DeFi protocols. The infrastructure is well battle-tested and secures hundreds of millions of USD across mainnets.
 
-[Tellor contract addresses on OP Mainnet and the testnets can be found here.](https://docs.tellor.io/tellor/the-basics/contracts-reference#optimism)
+Builders can choose how they want to consume the data among 3 dedicated models:
 
-## Band
+- [RedStone Core](https://docs.redstone.finance/docs/smart-contract-devs/get-started/redstone-core) (pull oracle) - <10s update time, broad spectrum of feeds, best for most use cases. All [Core Price Feeds](https://app.redstone.finance/#/app/tokens) are available on OP Mainnet & OP Sepolia.
+- [RedStone Classic](https://docs.redstone.finance/docs/smart-contract-devs/get-started/redstone-classic) (push oracle) - for protocols designed for the traditional oracle interface, customisable heartbeat and deviation threshold.
+- [RedStone X](https://docs.redstone.finance/docs/smart-contract-devs/get-started/redstone-x) - specifically for Perps and Options, highest update frequency and front-running protection.
 
-[Band](https://bandprotocol.com/vrf) provides a source of [onchain randomness](https://bandprotocol.com/vrf).
-[You can learn how to use it here](https://docs.bandchain.org/products/vrf/getting-started).
-It is a single-transaction pull oracle.
-
-## Universal Market Access (UMA)
-
-[UMA](https://umaproject.org/) is a generic oracle.
-It lets any contract request information (ask a question), and any staked entity can provide an answer.
-Other external entities can dispute the proposed answer by providing their own answer and putting up their own stake.
-In the case of dispute the question goes to a vote of token holders.
-The token holders that vote with the majority are assumed to be truthful and get rewarded.
-The external entities that proposed the correct answer are rewarded.
-Those that proposed the wrong answer lose their stake.
-
-[See here for the UMA addresses on OP Mainnet](https://github.com/UMAprotocol/protocol/blob/master/packages/core/networks/10.json).
-
-[See here for instructions how to use UMA](https://docs.umaproject.org/build-walkthrough/build-process).
-
-UMA is a pull Oracle, it does not get information until it is requested by a contract.
-This means that a decentralized application needs to issue two transactions.
-First, a transaction that causes a contract on the blockchain to ask for the information.
-Later (in the case of UMA 48 hours later if there is no dispute, longer if there is), a second transaction need to be triggered to cause the contract to read from the Oracle and see the response to the request.
-
-## Uniswap
-
-Technically speaking [Uniswap](https://uniswap.io/) is not an oracle, because the information comes from onchain sources.
-However, Uniswap pools do provide [quotes that give the relative price of tokens](https://docs.uniswap.org/concepts/protocol/oracle).
-
-<Callout type="warning">
-  Using onchain token prices, especially those in low liquidity pools, makes you vulnerable to price manipulation.
-</Callout>
-
-To use Uniswap as an Oracle:
-
-1.  See [the list of pools on OP Mainnet](https://info.uniswap.org/#/optimism/).
-
-2.  To find the pool address, [look at the Uniswap factory](https://explorer.optimism.io/address/0x1f98431c8ad98523631ae4a59f267346ea31f984#readContract).
-    Use **getPool** with these parameters:
-
-    | Parameter           | Meaning                                                                                                                        |    |
-    | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -- |
-    | One token address   | [Address of the ERC-20 contract for that token on OP Mainnet (chainId 10)](https://static.optimism.io/optimism.tokenlist.json) |    |
-    | Other token address | [Address of the ERC-20 contract for that token on OP Mainnet (chainId 10)](https://static.optimism.io/optimism.tokenlist.json) | \\ |
-    | Pool fee            | The pool fee percentage times ten thousand. For example, for 0.3% enter `3000`                                                 |    |
-
-3.  In your contract, use [IUniswapV3PoolState](https://github.com/Uniswap/v3-core/blob/main/contracts/interfaces/pool/IUniswapV3PoolState.sol) and [IUniswapV3PoolDerivedState](https://github.com/Uniswap/v3-core/blob/main/contracts/interfaces/pool/IUniswapV3PoolDerivedState.sol) to get the pool state.
+Interested in integration? [Get in contact](https://discord.com/invite/PVxBZKFr46) with the RedStone team!
 
 ## Next Steps
 *   Please visit the [community oracles page](https://github.com/ethereum-optimism/developers/blob/main/community/tools/oracles.md) for a listing of third-party Oracles used by the Optimism developer community.
-*   Simply open a PR to add your oracle to the list.
+*   Looking for other developer tools? See developer tools [overview](overview) to explore more options!
