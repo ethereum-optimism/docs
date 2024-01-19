@@ -72,7 +72,7 @@ await messenger.waitForMessageStatus(withdrawal.hash, optimism.MessageStatus.REA
 // READY_FOR_RELAY before the RPC we're using is caught up to the latest block. Waiting for an
 // additional block ensures that the RPC is caught up and the message can be relayed. Users
 // should not need to do this when running the tutorial.
-const maxWaitTime = 120000 // 2 minutes in milliseconds
+const maxWaitTime = Date.now() + 120000 // 2 minutes in milliseconds
 const currentBlock = await l1Provider.getBlockNumber()
 while (await l1Provider.getBlockNumber() < currentBlock + 1) {
   if (Date.now() > maxWaitTime) {

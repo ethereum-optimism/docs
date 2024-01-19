@@ -10,7 +10,7 @@ This page documents all of the things that we do that are currently not made obv
 Nextra uses [Remark](https://github.com/remarkjs/remark) as a markdown processor.
 Remark plugins can be injected into Nextra by modifying the `mdxOptions` object inside of [`next.config.mjs`](/next.config.mjs).
 
-### Custom Pugins
+### Custom Plugins
 
 #### remarkCodeImport
 

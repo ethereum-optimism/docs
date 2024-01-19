@@ -8,7 +8,7 @@ import { Callout } from 'nextra/components'
 
 # Transaction Fees on OP Mainnet
 
-OP Mainnet is designed to be [EVM equivalent](https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306), which means it reuses the same Ethereum code you're already familiar with and behaves as much like Ethereum as possible.
+OP Mainnet is designed to be [EVM equivalent](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306), which means it reuses the same Ethereum code you're already familiar with and behaves as much like Ethereum as possible.
 However, transaction fees on all Layer 2 systems need to diverge from Ethereum to some extent for a number of reasons.
 This page provides a detailed look at exactly how transaction fees work on OP Mainnet so you can properly account for them in your application.
 
@@ -56,17 +56,23 @@ The [`eth_maxPriorityFeePerGas`](https://docs.alchemy.com/reference/eth-maxprior
 The L1 Data Fee is the only part of the OP Mainnet transaction fee that differs from the Ethereum transaction fee.
 This fee arises from the fact that the transaction data for all OP Mainnet transactions is published to Ethereum.
 This guarantees that the transaction data is available for nodes to download and execute.
-The L1 Data Fee accounts for the cost to publish an OP Mainnet transaction to Ethereum and is primarily determined by the current base fee on Ethereum.
+The L1 Data Fee accounts for the cost to publish an OP Mainnet transaction to Ethereum and is primarily determined
+by the current base fee on Ethereum. After the Ecotone upgrade, OP Stack chains will have the option of posting
+transactions using [`blobs`](https://www.eip4844.com/). For blob-enabled chains, the current Ethereum blob data
+gas price will largely determine the L1 data fee.
 
 ### Mechanism
 
 The L1 Data Fee is automatically charged for any transaction that is included in an OP Mainnet block.
 This fee is deducted directly from the address that sent the transaction.
-The exact amount paid depends on the size of the transaction in bytes, the current Ethereum gas price, and several small parameters.
+The exact amount paid depends on the estimated size of the transaction in bytes after compression,
+the current Ethereum gas price and/or blob gas price, and several small parameters.
 
-The L1 Data Fee is most heavily influenced by the Ethereum base fee that is continuously and trustlessly relayed from Ethereum to OP Mainnet.
-The base fee is updated on OP Mainnet for every Ethereum block and fluctuates at most by 12.5% between updates.
-As a result, short-term fluctuations of the L1 Data Fee are generally quite small and should not impact the average transaction.
+The L1 Data Fee is most heavily influenced by the Ethereum base fee that is continuously and trustlessly relayed from Ethereum to
+OP Mainnet.  With the Ecotone upgrade, the Ethereum blob base fee also gets relayed to OP Mainnet, and will become the most
+important factor in for chains configured to use blobs instead of base fee.  The base fee and blob base fee is updated on OP
+Mainnet for every Ethereum block, and each fluctuates at most by 12.5% between updates.  As a result, short-term fluctuations of
+the L1 Data Fee are generally quite small and should not impact the average transaction.
 
 <Callout>
   The L1 Data Fee is charged automatically.
@@ -78,10 +84,18 @@ As a result, short-term fluctuations of the L1 Data Fee are generally quite smal
 
 ### Formula
 
-The L1 Data Fee is calculated based on the following parameters:
+#### Bedrock
+
+<Callout>
+The L1 Data Fee formula would change with the proposed Ecotone upgrade.
+Ecotone has not yet been approved by Optimism Governance.
+Refer to the [Network Upgrade Overview](/builders/node-operators/network-upgrades/overview) to check when the Ecotone upgrade is scheduled to activate on OP Sepolia and OP Mainnet.
+</Callout>
+
+Prior to the Ecotone upgrade, the L1 Data Fee is calculated based on the following parameters:
 
 *   The RLP-encoded **signed** transaction.
-*   The current Ethereum base fee (trustlessly relayed from Ethereum).
+*   The current Ethereum base fee  (trustlessly relayed from Ethereum).
 *   A fixed overhead cost for publishing a transaction (currently set to 188 gas).
 *   A dynamic overhead cost which scales with the size of the transaction (currently set to 0.684).
 
@@ -90,7 +104,7 @@ Each zero byte costs 4 gas and each non-zero byte costs 16 gas.
 This is the same way that Ethereum calculates the gas cost of transaction data.
 
 ```python
-tx_data_gas = count_zero_bytes(tx_data) * 4 + count_non_zero_bytes(tx_data) * 16=
+tx_data_gas = count_zero_bytes(tx_data) * 4 + count_non_zero_bytes(tx_data) * 16
 ```
 
 After calculating the gas cost of the transaction data, the fixed and dynamic overhead values are applied.
@@ -104,3 +118,51 @@ Finally, the total L1 Data Fee is calculated by multiplying the total gas cost b
 ```python
 l1_data_fee = tx_total_gas * ethereum_base_fee
 ```
+
+#### Ecotone
+
+<Callout>
+The L1 Data Fee formula would change with the proposed Ecotone upgrade.
+Ecotone has not yet been approved by Optimism Governance.
+Refer to the [Network Upgrade Overview](/builders/node-operators/network-upgrades/overview) to check when the Ecotone upgrade is scheduled to activate on OP Sepolia and OP Mainnet.
+</Callout>
+
+The pricing function changes with the proposed Ecotone upgrade because of the introduction of the option to
+post transaction batches to the L1 using blobs instead of through L1 calldata. This updated
+function uses the following parameters:
+
+*   The RLP-encoded **signed** transaction.
+*   The current Ethereum base fee and/or blob base fee (trustlessly relayed from Ethereum).
+*   Two new scalar parameters that independently scale the base fee blob base fee.
+
+At the exact point of the Ecotone upgrade, the dynamic overhead parameter value is used to
+initialize the Ecotone base fee scalar, and blob base fee is set to 0. The overhead parameter from
+the previous function becomes ignored.
+
+The Ecotone L1 Data Fee calculation begins with counting the number of zero bytes and non-zero
+bytes in the transaction data.  Each zero byte costs 4 gas and each non-zero byte costs 16
+gas. This value, when divided by 16, can be thought of as a rough estimate of the size of the
+transaction data after compression.
+
+```python
+tx_compressed_size = [(count_zero_bytes(tx_data)*4 + count_non_zero_bytes(tx_data)*16)] / 16
+```
+
+Next, the two scalars are applied to the base fee and blob base fee parameters to compute a weighted
+gas price multiplier.
+
+```python
+weighted_gas_price = 16*base_fee_scalar*base_fee + blob_base_fee_scalar*blob_base_fee
+```
+
+The l1 data fee is then:
+
+```python
+l1_data_fee = tx_compressed_size * weighted_gas_price
+```
+
+Recall that base_fee_scalar is set to dynamic_overhead and blob_base_fee_scalar is 0 immediately
+following the upgrade. Because the old overhead parameter becomes ignored, new L1 data prices will
+be (slightly, since overhead is typically a very small) lower than before the fork.  Chain
+operators will likely want to retune the parameters appropriately after the fork, particularly if
+they plan on enabling blobs.
