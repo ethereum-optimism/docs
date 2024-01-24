@@ -1,0 +1,73 @@
+---
+title: Chain Architecture
+lang: en-US
+description: Learn about the OP chain architecture.
+---
+
+import Image from 'next/image'
+
+# Chain Architecture
+
+This page contains information about the components of a the roll protocol and
+how they work together to build the layer 2 blockchain from the Chain Operator's
+perspective. The OP Stack is built in such a way that it is as similar to 
+Ethereum as possible. Like Ethereum, the OP Stack has execution and consensus 
+clients. The OP Stack also has some privileged roles that produce L2 blocks.
+If you want a more detailed view of the OP Stack protocol, check out the 
+[OP Stack section](/stack/getting-started) of our documentation.
+
+## Sequencer Components
+
+These clients and services work together to enable the sequencer role on the L2 network.
+Sequencer nodes gather proposed transactions from users and publish them to the L1.
+
+<Image
+  src="/img/builders/chain-operators/sequencer-diagram.png"
+  alt="Sequencer Component Diagram"
+  width={400} 
+  height={400} 
+/>
+
+### op-geth
+
+`op-geth` implements the layer 2 execution layer, with [minimal changes](https://op-geth.optimism.io/) 
+for a secure Ethereum-equivalent application environment.
+
+### op-node
+
+`op-node` implements most rollup-sepcific functionality as the layer 2 
+consensus layer, similar to a layer 1 beacon-node. The `op-node` is stateless and gets 
+its view of the world from `op-geth`.
+
+### op-batcher
+
+`op-batcher` is the service that submits the L2 sequencer data to L1, to make it available
+for verifiers. To reduce the cost of writing to the L1, it only posts the minimal 
+amount of data required to reproduce L2 blocks.
+
+### op-proposer
+
+`op-proposer` is the service that submits the output roots to the L1. This is to enable
+trustless execution of L2-to-L1 messaging and creates the view into the L2 state from
+the L1's perspective.
+
+## Robust Sequencer (todo)
+
+The following is a high level guide on how you can make your sequencer more robust.
+
+Need a diagrams and descriptions of the following notes. We may need some additional
+information here.
+
+
+Notes:
+- sequencer isn't directly connected to the internet
+- sequencer is peered with replica nodes 
+- replica nodes serve RPC requests 
+- replica nodes forward eth_sendRawTx to sequencer 
+
+tx flow 
+non eth_sendRawTransaction rpcs:
+
+mainnet.optimism.io --> proxyd --> infra provider nodes 
+mainnet.optimism.io --> proxyd --> mainnet-sequencer.optimism.io --> sequencer
+
