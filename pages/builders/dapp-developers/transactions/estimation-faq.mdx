@@ -1,0 +1,46 @@
+---
+title: Gas Estimation FAQs
+lang: en-US
+description: Learn answers to common questions about gas estimation.
+---
+
+import { Callout } from 'nextra/components'
+
+# Gas Estimation FAQs
+
+This page provides answers to common questions about gas estimation. Please read these related pages for additional info:
+
+*   [transaction fees](/builders/dapp-developers/transactions/fees)
+*   [estimating transaction fees](/builders/dapp-developers/transactions/estimates)
+*   [setting transaction gas parameters](https://docs.optimism.io/builders/dapp-developers/transactions/parameters)
+*   [transaction statuses](/builders/dapp-developers/transactions/statuses)
+*   [troubleshooting transactions](/builders/dapp-developers/transactions/troubleshooting)
+
+## What is the recommended way to send the transaction with viem? Do I need to specify price/base fee/priority fee OR just send and pray?
+
+One reason we went with '''estimateFees''' is because it's an action that will exist on non-OP chains. On ethereum `estimateFees` would just do '''gasPrice \* gasUsed''' while on OP chains it's '''gasPrice \* gasUsed + L1GasFee''' but from developer/user point of view they don't have to think about that they just call '''viemClient.estimateFees()'''
+
+## Can I send my transaction directly with an '''eth\_sendRawTransaction'''? Likely abstracted away with a library like viem?
+
+The sending transaction directly flow works! The libraries just give you an L1 estimate as well, which is automatically handled in the direct flow, but you're deducted more than the estimateGas endpoint since that only accounts for the L2 portion.
+
+## Does the `eth_estimateGas` RPC method estimate the total L1 + L2 gas cost?
+
+No, eth\_estimateGas only estimates the gas on the L2.
+
+## How do I estimate the L1 gas cost?
+
+Utilize the functions in the [`GasPriceOracle`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/L2/GasPriceOracle.sol). See
+the [estimating transaction fees](/builders/dapp-developers/transactions/estimates) guide for a detailed walk-thru and list of [available tooling](/builders/dapp-developers/transactions/estimates#tooling).
+
+## How do I make a good gas estimate before submitting my transaction?
+
+TBD
+
+## How do I provide gas estimates for my frontend?
+
+TBD
+
+## Can I limit the L1 gas I'm willing to spend? Does setting the `gasLimit` on transactions account for L1?
+
+TBD
