@@ -51,15 +51,31 @@ cp .env.example .env
 {<h3>Configure the .env file</h3>}
 
 Open the `.env` file in your favorite text editor.
-Set the variables inside of the `REQUIRED (BEDROCK)` section of the file. 
-Read the descriptions of each variable to understand what they do and how to set them.
-You can also see the [Configure the Node](https://github.com/smartcontracts/simple-optimism-node#configure-the-node) section of the `simple-optimism-node` README for more details.
+Set the variables inside of the `REQUIRED (BEDROCK)` section of the file according to the guide below:
 
-Make sure that the [`NETWORK_NAME`](https://github.com/smartcontracts/simple-optimism-node/blob/45672749013e50dd6bbc75d05ce46e4a8b50fd3d/.env.example#L6) variable is set to either `op-mainnet` or `op-sepolia` depending on which network you want to connect to.
+**NETWORK_NAME** - Choose which Optimism network layer you want to operate on:
+* `op-mainnet` - Optimism Mainnet
+* `op-sepolia` - Optimism Sepolia (Testnet)
+
+**NODE_TYPE** - Choose the type of node you want to run:
+* `full` (Full node) - A Full node contains a few recent blocks without historical states.
+* `archive` (Archive node) - An Archive node stores the complete history of the blockchain, including historical states.
+
+**OP_NODE__RPC_ENDPOINT** - Specify the endpoint for the RPC of Layer 1 (e.g., Ethereum mainnet). For instance, you can use the free plan of Alchemy for the Ethereum mainnet.
+
+**OP_NODE__RPC_TYPE** - Specify the service provider for the RPC endpoint you've chosen in the previous step. The available options are:
+* `alchemy` - Alchemy
+* `quicknode` - Quicknode (ETH only)
+* `erigon` - Erigon
+* `basic` - Other providers
+
+**HEALTHCHECK__REFERENCE_RPC_PROVIDER** - Specify the public RPC endpoint for Layer 2 network you want to operate on for healthchecking. For instance:
+* **Optimism Mainnet** - https://mainnet.optimism.io
+* **Optimism Sepolia** - https://sepolia.optimism.io
 
 <Callout type="info">
 You can also set the variables inside of the `REQUIRED (LEGACY)` section of the file if you wish to run an archival OP Mainnet node.
-Refer to the `simple-optimism-node` [README](https://github.com/smartcontracts/simple-optimism-node#readme) for more information about running legacy OP Mainnet software alongside your OP Mainnet node.
+Refer to the [OP Mainnet only configurations](https://github.com/smartcontracts/simple-optimism-node?tab=readme-ov-file#op-mainnet-only-configurations) section of `simple-optimism-node` readme for more information about running legacy OP Mainnet software alongside your OP Mainnet node.
 </Callout>
 
 </Steps>
@@ -70,7 +86,17 @@ Once you've configured your `.env` file, you can run the node using Docker Compo
 The following command will start the node in the background.
 
 ```bash
-docker compose --profile current up -d
+docker compose up -d --build
+```
+
+## Upgrade the Node
+
+Pull the latest updates from GitHub, Docker Hub and rebuild the container.
+
+```bash
+git pull
+docker compose pull
+docker compose up -d --build --force-recreate
 ```
 
 ## Operating the Node
@@ -82,4 +108,17 @@ Refer to the [Operating the Node](https://github.com/smartcontracts/simple-optim
 
 `simple-optimism-node` includes a monitoring dashboard that you can use to check the status of your node.
 You can access the dashboard by visiting `http://localhost:3000` in your browser.
-Refer to the [Metrics Dashboard](https://github.com/smartcontracts/simple-optimism-node#metrics-dashboard) section of the `simple-optimism-node` README for more information.
+Refer to the [Grafana dashboard](https://github.com/smartcontracts/simple-optimism-node#grafana-dashboard) section of the `simple-optimism-node` README for more information.
+
+Another way to check the node syncing progress is to run `./progress.sh`, which will print output showing the number of blocks per second and the estimated time until synchronization is completed.
+
+```
+./progress.sh
+```
+
+```
+Chain ID: 10
+Please wait
+Blocks per minute: ...
+Hours until sync completed: ...
+```
