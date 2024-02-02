@@ -8,7 +8,14 @@ import { Callout } from 'nextra/components'
 
 # Ecotone Network Upgrade
 
-The following information is how you can prepare your nodes for the Ecotone upgrade.
+The following information is how you can prepare your nodes for the Ecotone upgrade. There 
+is a new Beacon endpoint for `op-node`, because soon after the Ecotone activation, batch 
+transactions will be sent as 4844 blobs, and blobs can only be retrieved from Beacon nodes.
+
+<Callout type="info">
+  If you're using Lighthouse, make sure to use at least the finalized version `v4.6.0`
+  because the latest rc contains a bug in its `blob_sidecars` http endpoint.
+</Callout> 
 
 ## Mainnet Information
 
@@ -30,8 +37,9 @@ The following information is how you can prepare your nodes for the Ecotone upgr
 
 You must upgrade your nodes to the following versions prior to Tue Feb 6 17:00:00 UTC 2024.
 
-*   Upgrade your `op-node` to version: [v1.5.0](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.0)
 *   Upgrade your `op-geth` to version: [v1.101305.3](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101305.3)
+*   Upgrade your `op-node` to version: [v1.5.0](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.0)
+*   Configure [--l1.beacon / $OP_NODE_L1_BEACON](/builders/node-operators/management/configuration#l1beacon) with the address of your L1 Beacon-node HTTP endpoint to use.
 
 ### Verifying Your Configuration on OP Goerli
 
