@@ -9,7 +9,7 @@ description: Learn how Optimistic Rollups work at a high level.
 The big idea that makes Optimism possible is the Optimistic Rollup.
 We'll go through a brief explainer of *how* Optimistic Rollups work at a high level.
 Then we'll explain *why* Optimism is built as an Optimistic Rollup and why we believe it's the best option for a system that addresses all of our design goals.
-Checkout the [protocol specs](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/specs), if you want to more detail about the rollup protocol.
+Checkout the [protocol specs](https://specs.optimism.io/), if you want to more detail about the rollup protocol.
 
 ## Optimistic Rollups TL;DR
 
@@ -25,7 +25,7 @@ In Bedrock L2 blocks are saved to the Ethereum blockchain using a non-contract a
 As these blocks are submitted as transaction calldata on Ethereum, there is no way to modify or censor them after the "transaction" is included in a block that has enough attestations.
 This is the way that OP Mainnet inherits the availability and integrity guarantees of Ethereum.
 
-Blocks are written to L1 in [a compressed format](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/specs/derivation.md#batch-submission-wire-format) to reduce costs.
+Blocks are written to L1 in [a compressed format](https://specs.optimism.io/protocol/derivation.html#batch-submission-wire-format) to reduce costs.
 This is important because writing to L1 is [the major cost of OP Mainnet transactions](/stack/transactions/fees).
 
 ## Block production
@@ -46,7 +46,7 @@ Transactions get to the sequencer in two ways:
     The first block of the epoch includes all the deposits that happened in the L1 block to which it corresponds.
     If the sequencer attempts to ignore a legitimate L1 transaction it ends up with a state that is inconsistent with the verifiers, same as if the sequencer tried to fake the state by other means.
     This provides OP Mainnet with L1 Ethereum level censorship resistance.
-    You can read more about this mechanism [in the protocol specifications](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/specs/derivation.md#deriving-the-transaction-list).
+    You can read more about this mechanism [in the protocol specifications](https://specs.optimism.io/protocol/derivation.html#deriving-the-transaction-list).
 
 2.  Transactions submitted directly to the sequencer.
     These transactions are a lot cheaper to submit (because you do not need the expense of a separate L1 transaction), but of course they cannot be made censorship resistant, because the sequencer is the only participant that knows about them.
@@ -59,11 +59,11 @@ The execution engine (implemented as the `op-geth` component) receive blocks usi
 
 1.  The execution engine can update itself using peer to peer network with other execution engines.
     This operates the same way that the L1 execution clients synchronize the state across the network.
-    You can read more about it [in the specs](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/specs/exec-engine.md#happy-path-sync).
+    You can read more about it [in the specs](https://specs.optimism.io/protocol/exec-engine.html#happy-path-sync).
 
 2.  The rollup node (implemented as the `op-node` component) derives the L2 blocks from L1.
     This mechanism is slower, but censorship resistant.
-    You can read more about it [in the specs](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/specs/exec-engine.md#worst-case-sync).
+    You can read more about it [in the specs](https://specs.optimism.io/protocol/exec-engine.html#worst-case-sync).
 
 ## Bridging ETH or Tokens Between Layers
 
@@ -81,7 +81,7 @@ In Optimism terminology, transactions going from Ethereum (L1) to OP Mainnet (L2
 You use [`L1CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/L1/L1CrossDomainMessenger.sol) or [`L1StandardBridge`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/L1/L1StandardBridge.sol).
 Deposit transactions become part of the canonical blockchain in the first L2 block of the "epoch" corresponding to the L1 block where the deposits were made.
 This L2 block will usually be created a few minutes after the corresponding L1 block.
-You can read more about this [in the specs](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/specs/deposits.md).
+You can read more about this [in the specs](https://specs.optimism.io/protocol/deposits.html).
 
 ### Moving from OP Mainnet to Ethereum
 
@@ -95,7 +95,7 @@ Withdrawals (the term is used for any OP Mainnet to Ethereum message) have three
 
 3.  After the fault challenge period ends (a week on mainnet, less than that on the test network), finalize the withdrawal.
 
-[You can read the full withdrawal specifications here](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/specs/withdrawals.md)
+[You can read the full withdrawal specifications here](https://specs.optimism.io/protocol/withdrawals.html)
 
 ## Fault Proofs
 
@@ -104,7 +104,7 @@ Instead, these commitments are considered pending for a period of time (called t
 If a proposed state commitment goes unchallenged for the duration of the challenge window (currently set to 7 days), then it is considered final.
 Once a commitment is considered final, smart contracts on Ethereum can safely accept withdrawal proofs about the state of OP Mainnet based on that commitment.
 
-When a state commitment is challenged, it can be invalidated through a "fault proof" ([formerly known as a "fraud proof"](https://github.com/ethereum-optimism/optimistic-specs/discussions/53)) process.
+When a state commitment is challenged, it can be invalidated through a "fault proof" ([formerly known as a "fraud proof"](https://specs.optimism.io/experimental/fault-proof/index.html)) process.
 If the commitment is successfully challenged, then it is removed from the `StateCommitmentChain` to eventually be replaced by another proposed commitment.
 It's important to note that a successful challenge does not roll back OP Mainnet itself, only the published commitments about the state of the chain.
 The ordering of transactions and the state of OP Mainnet is unchanged by a fault proof challenge.
