@@ -33,9 +33,12 @@ The OP Stack's unique, modular design allows the decoupling of the FPP and FPVM,
 
 ## Fault Proof Program
 
-The default for this system component is `op-program`, which implements a fault proof program that runs through the rollup state-transition to verify an L2 output from L1 inputs. This verifiable output can then resolve a disputed output on L1.
+The default for this system component is `op-program`, which implements a fault proof program that runs through the rollup state-transition to verify an L2 output from L1 inputs. This verifiable output can then resolve a disputed output on L1. 
+The FPP is a combination of `op-node` and `op-geth`, so it has both the consensus and execution "parts" of the protocol in a single process. This means Engine API calls that would normally be made over HTTP are instead made as direct method calls to the op-geth code.
 
-The program is designed so that it can be run in a deterministic way such that two invocations with the same input data will result in not only the same output, but the same program execution trace. This allows it to be run in an on-chain VM as part of the dispute resolution process.
+The FPP is designed so that it can be run in a deterministic way such that two invocations with the same input data will result in not only the same output, but the same program execution trace. This allows it to be run in an on-chain VM as part of the dispute resolution process.
+
+All data is retrieved via the Preimage Oracle API. The preimages could be provided via the FPVM when on-chain or by a native "host" implementation that can download the required data from nodes via JSON-RPC requests. The native host implementation is also provided by `op-program` but doesn't run as part of the on-chain execution.  Basically op-program has two halves: the "client" Fault Proof Program part covered in this section and the "host" part used to fetch required preimages.
 
 ## Fault Proof Virtual Machine
 
