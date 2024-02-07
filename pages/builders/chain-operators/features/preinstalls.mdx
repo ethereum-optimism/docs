@@ -4,7 +4,7 @@ lang: en-US
 description: Learn how to use the deterministic deployment preinstalls on your chain.
 ---
 
-import { Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 
 # Deterministic Deployment Preinstalls
 
@@ -21,51 +21,91 @@ This feature also helps the Superchain to standardize on particularly highly use
 
 ## Contracts and Rationale
 
-This table lists the specific contracts to be pre/deployed for new OP Chains.
+This table lists the specific contracts to be pre/deployed for new OP Chains. If you are an existing OP chain, please follow the [implementation steps below](#implementation-for-existing-op-chains).
 
-| Contract   |  Version       | Rationale                                                                           |
-| ---------- | ----------------- | -------------------------------------------------------------------------------- |
-| `Safe.sol` | x |        Every domain needs a multisig, and apps cannot productionize without them            |
-| `Multicall3` | x |   Widely used by the ecosystem | 
-| create2 Proxy | x | Many projects utilize a create2 proxy to deploy their smart contracts deterministically (see [hardhat-deploy](https://github.com/wighawag/hardhat-deploy#4-deterministicdeployment-ability-to-specify-a-deployment-factory)), makes it easy for developers to be able to just deploy their contracts to any OP Stack chain. | 
-
-
+| Contract                                                                                                                            | Rationale                                                                                                                                                   | Deployed Address for New OP Chains                                                                                                             |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Safe`](https://github.com/safe-global/safe-smart-account/blob/v1.3.0/contracts/GnosisSafe.sol)                                    | Every domain needs a multisig and apps cannot productionize without them                                                                                    | TBD                                                                                                                                            |
+| [`SafeL2`](https://github.com/safe-global/safe-smart-account/blob/v1.3.0/contracts/GnosisSafeL2.sol)                                | TBD                                                                                                                                                         | TBD                                                                                                                                            |
+| [`Multicall3`](https://github.com/mds1/multicall/tree/main)                                                                         | Widely used by the ecosystem                                                                                                                                | `0xcA11bde05977b3631167028862bE2a173976CA11`                                                                                                   |
+| [`MultiSend`](https://github.com/safe-global/safe-smart-account/blob/v1.3.0/contracts/libraries/MultiSend.sol)                      | TBD                                                                                                                                                         | TBD                                                                                                                                            |
+| [`MultiSendCallOnly`](https://github.com/safe-global/safe-smart-account/blob/v1.3.0/contracts/libraries/MultiSendCallOnly.sol)      | TBD                                                                                                                                                         | TBD                                                                                                                                            |
+| [create2 Proxy](https://github.com/Arachnid/deterministic-deployment-proxy)                                                         | Easier for developers to deploy their contracts to any OP Stack chain                                                                                       | TBD                                                                                                                                            |
+| [`create2deployer`](https://github.com/pcaversaccio/create2deployer)                                                                | Deployed on every chain and widely used for producing the same addresses on different chains                                                                | `0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2`                                                                                                   |
+| [Safe Singleton Factory](https://github.com/safe-global/safe-singleton-factory/blob/main/source/deterministic-deployment-proxy.yul) | TBD                                                                                                                                                         | `0x4e59b44847b379578588920ca78fbf26c0b4956c`                                                                                                   |
+| [`permit2`](https://github.com/Uniswap/permit2)                                                                                     | Easily integrate with Uniswap, allows every ERC20 token to be used with permit even if technically not supported, useful for multi transfer or multi revoke | `0x000000000022D473030F116dDEE9F6B43aC78BA3`                                                                                                   |
+| [ERC-4337 Entrypoint `v0.6.0`](https://github.com/eth-infinitism/account-abstraction/tree/v0.6.0)                                   | TBD                                                                                                                                                         | `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`   <br /> `SenderCreator` dependency @ `0x7fc98430eaedbb6070b35b39d798725049088348` on ETH mainnet |
 
 ## Implementation for Existing OP Chains
 
-It is still unclear to me if existing developers need to take any steps to make this happen...
+Seems like there are 2 groups of contracts (safe contracts with different versions so diff steps for devs to take) and then all other contracts. Need to find a way to explain.
 
-### `v1.3.0`
+### Step 1: Deploy Safe Contracts
 
-This version seems to be the latest production ready version of the [Safe contracts listed above](#contracts-and-rationale), meaning existing OP chains should have a deployed instance of the contracts for this version.
+Safe contracts include `Safe`, `SafeL2`, `MultiSend`, and `MultiSendCallOnly` and `Safe Singleton Factory` which are going to be `v1.3.0` or `v1.4.1`.
 
-For developers on `v1.3.0`, do the following:
-1\.
-2.
-3\.
+For existing OP chains that don't have `v1.3.0` of the contracts deployed, choose ONE of the following options:
 
-### `v1.4.1`
-
-This version and proceeding versions are to make use of Safe Singleton Factory, so existing OP chains with the deployed factory should be able to deploy this version at anytime.
-
-For developers on `v1.4.1`, do the following:
-1\.
-2.
-3\.
-
-### Other versions
-
-For existing OP chains that don't have either version of the contracts deployed, there are three options:
-
-*   Option 1: Deploy [https://github.com/Arachnid/deterministic-deployment-proxy](https://github.com/Arachnid/deterministic-deployment-proxy) to each OP chain
-    1.  Requires support of pre EIP-155 transactions
+*   Option 1: Deploy [https://github.com/Arachnid/deterministic-deployment-proxy](https://github.com/Arachnid/deterministic-deployment-proxy) to each OP chain. **NOTE**: Requires support of pre EIP-155 transactions.
 *   Option 2: Follow the [singleton deployment process](https://github.com/safe-global/safe-singleton-factory/tree/main#how-to-get-the-singleton-deployed-to-your-network) for Safe Singleton Factory
 *   Option 3: Hardfork in [https://github.com/Arachnid/deterministic-deployment-proxy](https://github.com/Arachnid/deterministic-deployment-proxy) and/or Safe Singleton Factory for each OP chain
 
-## How to Add Your Own Preinstalls (Bindgen)
+**OR**
 
-[BindGen](https://github.com/ethereum-optimism/optimism/tree/develop/op-bindings/bindgen) is a CLI tool that gives OP chain operators a process to follow to add their own preinstalls if they choose to.
+For existing OP chains on `v1.4.1` without Safe Singleton Factory, choose ONE of the following options:
 
-<Callout type="warning">
-  Please read the note about [Contracts that Don't Make Good Preinstalls](https://github.com/ethereum-optimism/optimism/tree/develop/op-bindings/bindgen) before starting this process.
-</Callout>
+*   Option 1: Follow the [singleton deployment process](https://github.com/safe-global/safe-singleton-factory/tree/main#how-to-get-the-singleton-deployed-to-your-network) for Safe Singleton Factory
+*   Option 2: Hardfork in [https://github.com/Arachnid/deterministic-deployment-proxy](https://github.com/Arachnid/deterministic-deployment-proxy) and/or Safe Singleton Factory for each OP chain
+
+### Step 2: Deploy Other Contracts
+
+Existing OP chains will need to deploy the following contracts, in addition to the safe contracts discussed above.
+
+<Steps>
+  {<h3>Safe Singleton Factory</h3>}
+
+  This contract is already deployed to OP, BASE, and ZORA.
+  For other existing OP chains that don't have it, the following pre-signed transaction can be submitted to deploy the contract at the deterministic address `0x4e59b44847b379578588920ca78fbf26c0b4956c`.
+
+  {<h3>MultiCall3</h3>}
+
+  This contract is already deployed to OP, BASE, and ZORA.
+  For other existing OP chains that don't have it, the following pre-signed transaction can be submitted to deploy the contract at the deterministic address `0xcA11bde05977b3631167028862bE2a173976CA11`.
+
+  {<h3>create2deployer</h3>}
+
+  This contract is already deployed to OP and ZORA. For other existing OP chains that don't have it, there doesn't seem to be a pre-signed transaction available, meaning there are two options to deploy the contract at the address `0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2`:
+
+  1.  Request `pcaversaccio` (the private key owner) to sign transactions (for each OP chain) to deploy
+  2.  Hardfork the contract into each OP chain
+
+  <Callout type="warning">
+    BASE deployment [requires hardfork](https://github.com/pcaversaccio/create2deployer/issues/128).
+  </Callout>
+
+  {<h3>permit2</h3>}
+
+  This contract is already deployed to OP and BASE. For other existing OP chains that don't have it, there doesn't seem to be a pre-signed transaction available, meaning there are two options to deploy the contract at the address `0x000000000022D473030F116dDEE9F6B43aC78BA3`:
+
+  1.  Request Uniswap (or whomever has the original deployer private key) to sign transactions (for each OP chain) to deploy
+  2.  Hardfork the contract into each OP chain
+
+  {<h3>ERC-4337 Entry Point `v0.6.0`</h3>}
+
+  This contract is already deployed to OP, BASE, and ZORA. For other existing OP chains that don't have it, there doesn't seem to be a pre-signed transaction available, meaning there are two options to deploy the contract at the address `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`:
+
+  1.  Contact the original deployer
+  2.  Hardfork the contract into each OP chain
+
+  <Callout type="warning">
+    `SenderCreator` Dependency:
+
+    *   `EntryPoint` [deploys](https://github.com/eth-infinitism/account-abstraction/blob/abff2aca61a8f0934e533d0d352978055fddbd96/contracts/core/EntryPoint.sol#L26) `SenderCreator` upon initialization, so it's required that `SenderCreator` be added as a preinstall for `EntryPoint` to work as intended.
+    *   The deployed bytecode at `0x7fc98430eaedbb6070b35b39d798725049088348` on ETH mainnet is being used for the preinstall.
+  </Callout>
+</Steps>
+
+## Resources and Next Steps
+
+*   Still Have Questions? You can reach us in our [developer support forum](https://github.com/ethereum-optimism/developers/discussions).
+*   Interested in adding your own Preinstalls? Check out the [BindGen CLI tool](https://github.com/ethereum-optimism/optimism/tree/develop/op-bindings/bindgen) and be sure to read the note about [Contracts that Don't Make Good Preinstalls](https://github.com/ethereum-optimism/optimism/tree/develop/op-bindings/bindgen) before starting this process.
