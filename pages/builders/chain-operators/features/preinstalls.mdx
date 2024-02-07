@@ -1,0 +1,71 @@
+---
+title: Deterministic Deployment Preinstalls
+lang: en-US
+description: Learn how to use the deterministic deployment preinstalls on your chain.
+---
+
+import { Callout } from 'nextra/components'
+
+# Deterministic Deployment Preinstalls
+
+This guide explains deterministic deployment preinstalls and its benefits for developers.
+Deterministic deployment preinstalls is a feature that provides certain core contracts to be already deployed across all chains at launch, saving countless hours for developers.
+Without this feature, new chain developers experienced difficulties when trying to deploy anything to production because of missing core contracts that could take several weeks to deploy (even longer for smaller chains).
+
+Deterministic deployment preinstalls solves this problem by deploying smart contracts at their appropriate addresses in the L2 genesis state to ensure that these do not need to be redeployed after each OP Stack chain launches.
+This feature also helps the Superchain to standardize on particularly highly used smart contracts, so developers can assume these contracts will exist on any remote domain.
+
+<Callout type="info">
+  Deterministic deployment preinstalls will be automatic for all new OP chains after XXX. If you are an existing OP chain, follow [this process](#implementation-for-existing-op-chains) or use Bindgen to [add your own preinstalls](#how-to-add-your-own-preinstalls-bindgen).
+</Callout>
+
+## Contracts and Rationale
+
+This table lists the specific contracts to be pre/deployed for new OP Chains.
+
+| Contract   |  Version       | Rationale                                                                           |
+| ---------- | ----------------- | -------------------------------------------------------------------------------- |
+| `Safe.sol` | x |        Every domain needs a multisig, and apps cannot productionize without them            |
+| `Multicall3` | x |   Widely used by the ecosystem | 
+| create2 Proxy | x | Many projects utilize a create2 proxy to deploy their smart contracts deterministically (see [hardhat-deploy](https://github.com/wighawag/hardhat-deploy#4-deterministicdeployment-ability-to-specify-a-deployment-factory)), makes it easy for developers to be able to just deploy their contracts to any OP Stack chain. | 
+
+
+
+## Implementation for Existing OP Chains
+
+It is still unclear to me if existing devs need to take any steps to make this happen...
+
+### `v1.3.0`
+
+This version seems to be the latest production ready version of the [Safe contracts listed above](#contracts-and-rationale), meaning existing OP chains should have a deployed instance of the contracts for this version.
+
+For developers on `v1.3.0`, do the following:
+1\.
+2.
+3\.
+
+### `v1.4.1`
+
+This version and proceeding versions are to make use of Safe Singleton Factory, so existing OP chains with the deployed factory should be able to deploy this version at anytime.
+
+For developers on `v1.4.1`, do the following:
+1\.
+2.
+3\.
+
+### Other versions
+
+For existing OP chains that don't have either version of the contracts deployed, there are three options:
+
+*   Option 1: Deploy [https://github.com/Arachnid/deterministic-deployment-proxy](https://github.com/Arachnid/deterministic-deployment-proxy) to each OP chain
+    1.  Requires support of pre EIP-155 transactions
+*   Option 2: Follow the [singleton deployment process](https://github.com/safe-global/safe-singleton-factory/tree/main#how-to-get-the-singleton-deployed-to-your-network) for Safe Singleton Factory
+*   Option 3: Hardfork in [https://github.com/Arachnid/deterministic-deployment-proxy](https://github.com/Arachnid/deterministic-deployment-proxy) and/or Safe Singleton Factory for each OP chain
+
+## How to Add Your Own Preinstalls (Bindgen)
+
+[BindGen](https://github.com/ethereum-optimism/optimism/tree/develop/op-bindings/bindgen) is a CLI tool that gives OP chain operators a process to follow to add their own preinstalls if they choose to.
+
+<Callout type="warning">
+  Please read the note about [Contracts that Don't Make Good Preinstalls](https://github.com/ethereum-optimism/optimism/tree/develop/op-bindings/bindgen) before starting this process.
+</Callout>
