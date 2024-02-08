@@ -218,6 +218,36 @@ The command line help listing is reproduced below for your convenience.
 
 #### GLOBAL OPTIONS
 
+###### conductor.enabled
+
+Enable the conductor service. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--conductor.enabled=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--conductor.enabled=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_CONDUCTOR_ENABLED=false`</Tabs.Tab>
+</Tabs>
+
+###### conductor.rpc
+
+Conductor service rpc endpoint. The default value is `http://127.0.0.1:8547`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--conductor.rpc=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--conductor.rpc=http://127.0.0.1:8547`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_CONDUCTOR_RPC=http://127.0.0.1:8547`</Tabs.Tab>
+</Tabs>
+
+###### conductor.rpc-timeout value
+
+Conductor service rpc timeout. The default value is `1s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--conductor.rpc-timeout value=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--conductor.rpc-timeout value=1s`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_CONDUCTOR_RPC_TIMEOUT=1s`</Tabs.Tab>
+</Tabs>
+
 ###### heartbeat.enabled
 
 Enables or disables heartbeating. The default value is `false`.
@@ -258,6 +288,36 @@ Address of L1 User JSON-RPC endpoint to use (eth namespace required). The defaul
   <Tabs.Tab>`OP_NODE_L1_ETH_RPC="http://127.0.0.1:8545"`</Tabs.Tab>
 </Tabs>
 
+###### l1.beacon
+
+Address of L1 Beacon-node HTTP endpoint to use. 
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l1.beacon=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l1.beacon="127.0.0.1:3500"`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L1_BEACON="127.0.0.1:3500"`</Tabs.Tab>
+</Tabs>
+
+###### l1.beacon.fetch-all-sidecars
+
+If true, all sidecars are fetched and filtered locally. Workaround for buggy Beacon nodes. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l1.beacon.fetch-all-sidecars=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--l1.beacon.fetch-all-sidecars=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L1_BEACON=false`</Tabs.Tab>
+</Tabs>
+
+###### l1.beacon.ignore
+
+When false, halts op-node startup if the healthcheck to the Beacon-node endpoint fails. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l1.beacon.ignore=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--l1.beacon.ignore=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L1_BEACON=false`</Tabs.Tab>
+</Tabs>
+
 ###### l1.epoch-poll-interval
 
 Poll interval for retrieving new L1 epoch updates such as safe and finalized block changes. Disabled if 0 or negative. The default value is `6m24s`.
@@ -276,6 +336,16 @@ Polling interval for latest-block subscription when using an HTTP RPC provider. 
   <Tabs.Tab>`--l1.http-poll-interval=<value>`</Tabs.Tab>
   <Tabs.Tab>`--l1.http-poll-interval=12s`</Tabs.Tab>
   <Tabs.Tab>`OP_NODE_L1_HTTP_POLL_INTERVAL=12s`</Tabs.Tab>
+</Tabs>
+
+###### l1.max-concurrency
+
+Maximum number of concurrent RPC requests to make to the L1 RPC provider. The default value is `10`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l1.max-concurrency=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l1.max-concurrency=10`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L1_MAX_CONCURRENCY=10`</Tabs.Tab>
 </Tabs>
 
 ###### l1.rpc-max-batch-size
@@ -344,36 +414,6 @@ Address of L2 Engine JSON-RPC endpoints to use (engine and eth namespace require
   <Tabs.Tab>`OP_NODE_L2_ENGINE_RPC=http://127.0.0.1:8751`</Tabs.Tab>
 </Tabs>
 
-###### l2.backup-unsafe-sync-rpc
-
-Set the backup L2 unsafe sync RPC endpoint.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--l2.backup-unsafe-sync-rpc=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--l2.backup-unsafe-sync-rpc=http://127.0.0.1:8752`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_L2_BACKUP_UNSAFE_SYNC_RPC=http://127.0.0.1:8752`</Tabs.Tab>
-</Tabs>
-
-###### l2.backup-unsafe-sync-rpc.trustrpc
-
-Like l1.trustrpc, configure if response data from the RPC needs to be verified, e.g., blockhash computation. This does not include checks if the blockhash is part of the canonical chain.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--l2.backup-unsafe-sync-rpc.trustrpc=<boolean>`</Tabs.Tab>
-  <Tabs.Tab>`--l2.backup-unsafe-sync-rpc.trustrpc=false`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_L2_BACKUP_UNSAFE_SYNC_RPC_TRUST_RPC=false`</Tabs.Tab>
-</Tabs>
-
-###### l2.engine-sync
-
-Enables or disables execution engine P2P sync. The default value is `false`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--l2.engine-sync=<boolean>`</Tabs.Tab>
-  <Tabs.Tab>`--l2.engine-sync=false`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_L2_ENGINE_SYNC_ENABLED=false`</Tabs.Tab>
-</Tabs>
-
 ###### l2.jwt-secret
 
 Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will be generated if left empty.
@@ -382,16 +422,6 @@ Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will
   <Tabs.Tab>`--l2.jwt-secret=<value>`</Tabs.Tab>
   <Tabs.Tab>`--l2.jwt-secret=/path/to/jwt/secret`</Tabs.Tab>
   <Tabs.Tab>`OP_NODE_L2_ENGINE_AUTH=/path/to/jwt/secret`</Tabs.Tab>
-</Tabs>
-
-###### l2.skip-sync-start-check
-
-Skip sanity check of consistency of L1 origins of the unsafe L2 blocks when determining the sync-starting point. This defers the L1-origin verification, and is recommended to use in when utilizing l2.engine-sync. The default value is `false`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--l2.skip-sync-start-check=<boolean>`</Tabs.Tab>
-  <Tabs.Tab>`--l2.skip-sync-start-check=false`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_L2_SKIP_SYNC_START_CHECK=false`</Tabs.Tab>
 </Tabs>
 
 ###### log.color
@@ -456,7 +486,12 @@ Metrics listening port. The default value is `7300`.
 
 ###### network
 
-Predefined network selection. Available networks: zora-sepolia, base-goerli, op-labs-chaosnet-0-goerli-dev-0, pgn-mainnet, base-sepolia, pgn-sepolia, op-sepolia, op-goerli, base-devnet-0-goerli-dev-0, conduit-devnet-0-goerli-dev-0, op-labs-devnet-0-goerli-dev-0, base-mainnet, op-mainnet, zora-mainnet.
+Predefined network selection. Available networks: oplabs-devnet-0-sepolia-dev-0,
+op-labs-chaosnet-0-goerli-dev-0, zora-mainnet, base-sepolia, pgn-sepolia,
+zora-sepolia, base-devnet-0-sepolia-dev-0, base-goerli,
+base-devnet-0-goerli-dev-0, conduit-devnet-0-goerli-dev-0, base-mainnet,
+pgn-mainnet, op-sepolia, lyra-mainnet, mode-mainnet, op-mainnet, op-goerli,
+op-labs-devnet-0-goerli-dev-0, orderly-mainnet.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--network=<value>`</Tabs.Tab>
@@ -470,8 +505,28 @@ Manually specify the Canyon fork timestamp, overriding the bundled setting. The 
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--override.canyon=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--override.canyon=1699981200`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_OVERRIDE_CANYON=1699981200`</Tabs.Tab>
+  <Tabs.Tab>`--override.canyon=0`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_OVERRIDE_CANYON=0`</Tabs.Tab>
+</Tabs>
+
+###### override.delta
+
+Manually specify the Delta fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.delta=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.delta=0`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_OVERRIDE_DELTA=0`</Tabs.Tab>
+</Tabs>
+
+###### override.ecotone
+
+Manually specify the ecotone fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.ecotone=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.ecotone=0`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_OVERRIDE_ECOTONE=0`</Tabs.Tab>
 </Tabs>
 
 ###### p2p.advertise.ip
