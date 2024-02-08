@@ -41,8 +41,7 @@ The L2 Proxy Admin is an address that can be used to upgrade most OP Mainnet sys
 
 ### Mitigations
 
-*   L2 Proxy Admin is a 5-of-7 [multisig](https://optimistic.etherscan.io/address/0x7871d1187a97cbbe40710ac119aa3d412944e4fe#readProxyContract).
-*   L2 Proxy Admin may eventually be operated by a [Security Council](https://gov.optimism.io/t/intro-to-optimisms-security-council/6885).
+*   L2 Proxy Admin is controlled by the same L1 account as the [L1 Proxy Admin](#l1-proxy-admin).
 
 ### Addresses
 
@@ -95,9 +94,14 @@ OP Mainnet nodes will look for transactions from this address to find new batche
 
 ### Description
 
-The Proposer is a software service that submits proposals about the state of OP Mainnet to the `L2OutputOracle` contract on Ethereum.
-Proposals submitted to the `L2OutputOracle` contract can be used to execute withdrawal transactions on Ethereum after 7 days.
-Proposer addresses are typically "hot wallets" as they must be available to frequently sign and publish new state proposals.
+The Proposer is a role that is allowed to create instances of the `PermissionedDisputeGame` dispute game type.
+The `PermissionedDisputeGame` can be used as a fallback dispute game in the case that the `FaultDisputeGame` is found to include a critical security vulnerability.
+The Guardian role is responsible for changing the respected dispute game type if necessary.
+
+### Capabilities
+
+*   Can create instances of the `PermissionedDisputeGame` dispute game type.
+*   Can participate in the `PermissionedDisputeGame` dispute game process.
 
 ### Risks
 
@@ -119,7 +123,11 @@ Proposer addresses are typically "hot wallets" as they must be available to freq
 
 ### Description
 
-The Challenger is an address that can be used to challenge invalid state proposals submitted by the [Proposer](#proposer) role.
+The Challenger is an address that can participate in and challenge `PermissionedDisputeGame` instances created by the [Proposer](#proposer) role.
+
+### Capabilities
+
+*   Can participate in the `PermissionedDisputeGame` dispute game process.
 
 ### Risks
 
@@ -140,9 +148,15 @@ The Challenger is an address that can be used to challenge invalid state proposa
 
 ### Description
 
-The Guardian is an address that can be used to pause withdrawals from OP Mainnet.
-This is a backup safety mechanism that allows for a temporary halt in the event of a security concern.
-The Guardian role cannot pause specific withdrawals and can only pause all withdrawals.
+The Guardian is an address that can be used to pause several system contracts on OP Mainnet.
+This is a backup safety mechanism that allows for a temporary halt, particularly of withdrawal logic, in the event of a security concern.
+The Guardian also has the ability to manage several aspects of the `OptimismPortal` contract to address active security concerns.
+
+### Capabilities
+
+*   Pause several system contracts on OP Mainnet.
+*   Disable the ability for specific dispute game types from being used to execute withdrawals.
+*   Disable the ability for specific dispute game instances from being used to execute withdrawals.
 
 ### Risks
 
