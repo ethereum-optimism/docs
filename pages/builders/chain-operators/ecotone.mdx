@@ -1,0 +1,209 @@
+---
+title: Ecotone Upgrade for Chain Operators
+lang: en-US
+description: Learn how to upgrade your chain and configure the sequencer for Ecotone.
+---
+
+import { Callout, Steps } from 'nextra/components'
+import { Tabs } from 'nextra/components'
+
+# Ecotone Upgrade for Chain Operators
+
+This guide will walk you through how to upgrade your chain and configure the sequencer for Ecotone. It is organized into three parts: 
+
+*   [Setting the Ecotone Activation Date](#setting-ecotone-activation-date)
+*   [Switching to Using Blobs](#switching-to-using-blobs)
+*   [Switching Back to Using Calldata](#switching-back-to-using-calldata)
+
+<Callout type="warning">
+  Before beginning Ecotone activation, you must prepare your multisig and [L1 data fee configuration](/builders/notices/ecotone-fee-changes). You must also [restart your batcher](management/operations) with the updated configuration before Ecotone activation.
+</Callout>
+
+## Setting Ecotone Activation Date
+
+For OP Chains that have entries in the superchain-registry, the Ecotone activation date is part of the `op-node` and `op-geth` nodes. No action is needed for this step, and you can skip to the next step on [Switching to Using Blobs](#switching-to-using-blobs).
+
+For custom chains, the activation dates can be set in the `rollup.json` or in overrides (CLI) by calling `op-node` help or `op-geth` help.
+
+<Tabs items={['op-node', 'op-geth']}>
+  <Tabs.Tab>
+    ```shell
+    --override.ecotone value            (default: 0)                       ($OP_NODE_OVERRIDE_ECOTONE)
+              Manually specify the Ecotone fork timestamp, overriding the bundled setting
+    ```
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ```shell
+    --override.ecotone value            (default: 0)                       ($GETH_OVERRIDE_ECOTONE)
+              Manually specify the Optimism Ecotone fork timestamp, overriding the bundled
+              setting
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+<Callout type="info">
+  As soon as Ecotone is activated, you will have a temporary decrease in L1 fee margin.
+</Callout>
+
+## Switching to Using Blobs
+
+After Ecotone is activated, follow these steps to switch to using blobs.
+
+<Steps>
+  {<h3>Set Recommended Fee Values</h3>}
+
+  At the point of the fork, your current scalar setting will become the `BaseFeeScalar` value, and the `BlobBaseFeeScalar` will be set to `0`.
+  When you enable blobs, if your chain is submitting mostly full blobs, then you'll want to configure `BlobBaseFeeScalar` to be somewhere around the previous `BaseFeeScalar`, and configure `BaseFeeScalar` to a low but non-zero value.
+
+  For devnet and testnet, once batcher moves to blobs, set the following:
+
+  ```
+  l1BaseFeeScalar = 7600
+  l1BlobBaseFeeScalar = 862000
+  ```
+
+  <Callout type="warning">
+    These scalar values assume that blobs are being completely filled with data.
+    If you are not operating at high throughput (e.g., \~1000 txs per day) and if you only half-fill blobs, you will want to *double* these values to adjust accordingly.
+  </Callout>
+
+  {<h3>Adjust Fees to Change Margins</h3>}
+
+  If you've enabled blobs, the `BlobBaseFeeScalar` is going to be the most important for covering your L1 fees, so it's important to scale that parameter to achieve an appropriate margin.
+
+  To increase the margin on L1 data fees by 10%, chains should do the following:
+
+  *   newL1BaseFeeScalar = prevl1BaseFeeScalar \* 1.1
+  *   newl1BlobBaseFeeScalar = prevl1BaseFeeScalar \* 1.1
+
+  ```shell
+  function _getL1FeeEcotone(bytes memory _data) internal view returns (uint256) {
+          uint256 l1GasUsed = _getCalldataGas(_data);
+          uint256 scaledBaseFee = baseFeeScalar() * 16 * l1BaseFee();
+          uint256 scaledBlobBaseFee = blobBaseFeeScalar() * blobBaseFee();
+          uint256 fee = l1GasUsed * (scaledBaseFee + scaledBlobBaseFee);
+          return fee / (16 * 10 ** DECIMALS);
+      }
+  ```
+
+  {<h3>Encode Fee Values and Send the L1 Transaction to Set Values</h3>}
+
+  The [ecotone-scalar utility](https://github.com/ethereum-optimism/optimism/tree/develop/op-chain-ops/cmd/ecotone-scalar) converts a desired `BaseFeeScalar` and `BlobBaseFeeScalar` into a single value that can be provided to the L1 `SystemConfig.setGasConfig` method through its `scalar` argument ("overhead" is ignored and can be set to `0`).
+
+  Run the following code using the ecotone-scalar encoding tool:
+
+  ```js
+  go run ./op-chain-ops/cmd/ecotone-scalar --scalar=7600 --blob-scalar=862000
+  # base fee scalar     : 7600
+  # blob base fee scalar: 862000
+  # v1 hex encoding  : 0x010000000000000000000000000000000000000000000000000d273000001db0
+  # uint value for the 'scalar' parameter in SystemConfig.setGasConfig():
+  452312848583266388373324160190187140051835877600158453279134889792719822256
+  ```
+
+  You will get a value that looks something like: `0x010000000000000000000000000000000000000000000000000d273000001db0`
+
+  <Callout type="info">
+    The `0x01` byte at the start indicates the version of the scalar, and the hex value at the end are the encoded scalars.
+  </Callout>
+
+  This value has to be called by the owner of the `SystemConfigProxy` L1 Contract:
+
+  ```shell
+  cast calldata 'setGasConfig(uint256,uint256)' 0 0x010000000000000000000000000000000000000000000000000d273000001db0`
+  ```
+
+  Check that the L2 the gas price oracle returns the expected values for `baseFeeScalar` and `blobBaseFeeScalar` (wait \~1 minute):
+
+  <Callout type="info">
+    You'll have to provide a `gas-price` to geth when making this call.
+  </Callout>
+
+  ```shell
+  cast call 0x420000000000000000000000000000000000000F 'baseFeeScalar()(uint256)' --gas-price 10000000
+  ```
+
+  Finally, run the post-Ecotone GPO functions:
+
+  ```shell
+      /// @notice Retrieves the latest known L1 base fee.
+      /// @return Latest known L1 base fee.
+      function l1BaseFee() public view returns (uint256) {
+          return L1Block(Predeploys.L1_BLOCK_ATTRIBUTES).basefee();
+      }
+
+      /// @notice Retrieves the current blob base fee.
+      /// @return Current blob base fee.
+      function blobBaseFee() public view returns (uint256) {
+          return L1Block(Predeploys.L1_BLOCK_ATTRIBUTES).blobBaseFee();
+      }
+
+      /// @notice Retrieves the current base fee scalar.
+      /// @return Current base fee scalar.
+      function baseFeeScalar() public view returns (uint32) {
+          return L1Block(Predeploys.L1_BLOCK_ATTRIBUTES).baseFeeScalar();
+      }
+
+      /// @notice Retrieves the current blob base fee scalar.
+      /// @return Current blob base fee scalar.
+      function blobBaseFeeScalar() public view returns (uint32) {
+          return L1Block(Predeploys.L1_BLOCK_ATTRIBUTES).blobBaseFeeScalar();
+      }
+  ```
+
+  {<h3>Change the Batcher Configuration</h3>}
+
+  Now that the fee config has been updated, immediately configure your batcher!
+  Prepare the batcher update before you configure `OP_BATCHER_DATA_AVAILABILITY_TYPE=blobs`.
+
+  <Callout type="info">
+    The batcher will have to be restarted for it to take effect.
+  </Callout>
+
+  Also check if you are using a non-zero value for `OP_BATCHER_MAX_CHANNEL_DURATION`. When non-zero, this parameter is the max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1.
+  If you have this set to 5 for example, then your batcher will send a blob to the L1 every 5\*12=60 seconds. If your chain doesn't generate at least \~128kb of data in 60 seconds, then you'll be posting only partially full blobs and wasting storage.
+
+  <Callout type="warning">
+    Consider the following risks if setting `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 vs 10 hours:
+    *   You have to submit batches within the 12-hour sequencing window.
+    *   This also means your safe head will stall for 5 hours, which will negatively impact apps on your chain that rely on the safe head for operation (e.g., apps like Centralized Exchanges or third party bridges wait until txs are marked safe before processing a deposit/withdrawal).
+    *   If your chain is currently processing less than 128KB per 5 hours, then your chain will not be using full blobs, so you will be overpaying.
+  </Callout>
+</Steps>
+
+## Switching Back to Using Calldata
+
+After posting to blob space, chains will follow these steps to switch from blobs back to using calldata.
+
+<Steps>
+  {<h3>Use Recommended Calldata Fee Values</h3>}
+
+  Please use the recommended fee values to ensure fees for calldata are charged accurately by doing the following:
+
+  *   Stage your system config update transaction and stage your batcher to update.
+  *   If you are using calldata, then you can set `BaseFeeScalar` similarly to how you would have set "scalar" prior to Ecotone, though with a 3-4% bump to compensate for the removal of the "overhead" component. `BlobBaseFeeScalar` should be set to 0.
+
+  <Callout type="default">
+    As soon as ecotone is activated, your `baseFeeScalar` will remain the same and `blobBaseFeeScalar` will default to `0`, but because of the removal of the overhead, you'll be taking 3-4% less margin on your L1 Data fees as stated above.
+  </Callout>
+
+  {<h3>Adjust `BaseFeeScalar` Fee to Change Margins</h3>}
+
+  Chains can update their fees to increase or decrease their margin. If using calldata, then `BaseFeeScalar` should be scaled to achieve the desired margin.
+
+  {<h3>Encode Fee Values and Send the L1 Transaction to Set Values</h3>}
+
+  The [ecotone-scalar utility](https://github.com/ethereum-optimism/optimism/tree/develop/op-chain-ops/cmd/ecotone-scalar) converts a desired `BaseFeeScalar` and `BlobBaseFeeScalar` into a single value that can be provided to the L1 `SystemConfig.setGasConfig` method through its "scalar" argument ("overhead" is ignored and can be set to `0`).
+  For calldata, you'll want to set `BlobBaseFeeScalar` to `0` when using this utility.
+
+  {<h3>Change the Batcher Configuration</h3>}
+
+  To change the batcher configuration, either remove the `OP_BATCHER_DATA_AVAILABILITY_TYPE` parameter, or set its value to "calldata" instead of "blobs".
+  The batcher will have to be restarted for this to take effect.
+</Steps>
+
+## Other Considerations
+
+*   If you'd like to set up snap sync for your chain, you'll need to set up a [Boot Node](../node-operators/management/configuration#configuring-peer-to-peer-networking).
+*   If you want to enable archive nodes, you will need to access a blob archiver service. You can use [Optimism's](../node-operators/management/snapshots#op-mainnet-archive-node) or [run your own](tools/explorer#create-an-archive-node).
