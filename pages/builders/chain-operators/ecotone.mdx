@@ -9,7 +9,7 @@ import { Tabs } from 'nextra/components'
 
 # Ecotone Upgrade for Chain Operators
 
-This guide will walk you through how to upgrade your chain and configure the sequencer for Ecotone. It is organized into three parts: 
+This guide will walk you through how to upgrade your chain and configure the sequencer for Ecotone. It is organized into three parts:
 
 *   [Setting the Ecotone Activation Date](#setting-ecotone-activation-date)
 *   [Switching to Using Blobs](#switching-to-using-blobs)
@@ -21,9 +21,9 @@ This guide will walk you through how to upgrade your chain and configure the seq
 
 ## Setting Ecotone Activation Date
 
-For OP Chains that have entries in the superchain-registry, the Ecotone activation date is part of the `op-node` and `op-geth` nodes. No action is needed for this step, and you can skip to the next step on [Switching to Using Blobs](#switching-to-using-blobs).
-
-For custom chains, the activation dates can be set in the `rollup.json` or in overrides (CLI) by calling `op-node` help or `op-geth` help.
+1.  Upgrade to Ecotone using the newest release \[ADD link].
+2.  For OP Chains that have entries in the superchain-registry, the Ecotone activation date is part of the `op-node` and `op-geth` nodes. No action is needed for this step, and you can skip to the next step on [Switching to Using Blobs](#switching-to-using-blobs).
+3.  For custom chains, the activation dates can be set in the `rollup.json` (set `ecotone_time`) or in overrides (CLI) by calling `op-node` help or `op-geth` help.
 
 <Tabs items={['op-node', 'op-geth']}>
   <Tabs.Tab>
@@ -41,6 +41,17 @@ For custom chains, the activation dates can be set in the `rollup.json` or in ov
     ```
   </Tabs.Tab>
 </Tabs>
+
+4.  Configure an L1 beacon node on your sequencer before activation.
+
+<Callout type="warning">
+  Prepare your batcher to be restarted with updated config in advance of the Ecotone activation.
+</Callout>
+
+```shell
+--l1.beacon value                                                      ($OP_NODE_L1_BEACON)
+          Address of L1 Beacon-node HTTP endpoint to use.
+```
 
 <Callout type="info">
   As soon as Ecotone is activated, you will have a temporary decrease in L1 fee margin.
@@ -166,6 +177,7 @@ After Ecotone is activated, follow these steps to switch to using blobs.
 
   <Callout type="warning">
     Consider the following risks if setting `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 vs 10 hours:
+
     *   You have to submit batches within the 12-hour sequencing window.
     *   This also means your safe head will stall for 5 hours, which will negatively impact apps on your chain that rely on the safe head for operation (e.g., apps like Centralized Exchanges or third party bridges wait until txs are marked safe before processing a deposit/withdrawal).
     *   If your chain is currently processing less than 128KB per 5 hours, then your chain will not be using full blobs, so you will be overpaying.
