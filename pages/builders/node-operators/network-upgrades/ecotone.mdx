@@ -25,22 +25,29 @@ This means node operators will need access to a [consensus client](https://ether
   If Ecotone activates before you've set a beacon value, then your node will crash.
 </Callout>
 
-### Set an L1 Beacon Value (All Nodes)
+### Upgrade Your Nodes and Set Beacon Value (All Nodes)
 
-You must start the Ecotone upgrade by configuring the L1 Beacon value in your `op-node`. **This step is necessary for EVERY node operator.**
+These steps are necessary for EVERY node operator:
+
+1.  Update to the newest releases of [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101305.3) and [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.0).
+2.  Set the [L1 beacon value](/builders/node-operators/management/configuration#l1beacon) in your `op-node` with the address of your L1 Beacon-node HTTP endpoint.
+
+<Callout type="warning">
+  If you update to the mainnet release and you have no L1 beacon value set, your node will crash.
+</Callout>
 
 ```shell
 --l1.beacon value                                                      ($OP_NODE_L1_BEACON)
           Address of L1 Beacon-node HTTP endpoint to use.
 ```
 
-For the next step, you will either [enable snapsync](#enable-snapsyncel-sync-full-nodes) OR [configure a blob archiver](#configure-a-blob-archiver-archive-nodes), based on the type of node you are running.
+3.  Either run your own L1 beacon node or configure to use an external RPC like [QuickNode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
 
 ### Enable Snapsync/EL Sync (Full Nodes)
 
 For full nodes, the fastest way to get up and running is by enabling snapsync/EL sync. Use the following steps to get started:
 
-1.  Enable [syncmode to EL Sync](../management/configuration#configuring-op-node) on `op-node`. This essentially tells `op-node` to not do anything to sync from L1 Data because the execution layer has been configured to sync on its own.
+1.  Enable [syncmode to EL Sync](../management/configuration#configuring-op-node) on `op-node`. This essentially tells `op-node` not to sync from L1 Data because the execution layer has been configured to sync on its own.
 2.  Enable [`syncmode=snap`](../management/configuration#configuration) on `op-geth`.
 
 <Callout>
@@ -52,7 +59,7 @@ For full nodes, the fastest way to get up and running is by enabling snapsync/EL
 There are several blob archiver options for archive nodes and new full notes without EL sync. Choose one of the following options:
 
 *   **Option 1:** Configure a blob archiver. You will need an [RPC endpoint](/chain/networks) for this option.
-*   **Option 2:** Configure your beacon node to retain all blobs to not rely on a blob archiver.
+*   **Option 2:** Configure your own beacon node to retain all blobs to not rely on a blob archiver or use an external RPC provider that runs blob-retaining beacon nodes [like QuickNode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
 *   **Option 3:** Archive nodes can use a snapshot within the last 18 days and not use the blob archiver at all. You must configure the L1 Beacon endpoint on `op-node`, but if L1 beacon endpoint doesn't have the blobs, fall back to blob archiver.
 
 ## Testnet Information
