@@ -1,24 +1,26 @@
 ---
-title: Preparing for Ecotone Fee Estimation Changes
+title: Preparing for Ecotone Breaking Changes
 lang: en-US
-description: Learn how to prepare for changes to the fee estimation formula in the proposed Ecotone upgrade.
+description: Learn how to prepare for Ecotone upgrade breaking changes.
 ---
 
 import { Steps, Callout } from 'nextra/components'
+import { Tabs } from 'nextra/components'
 
-# Preparing for Ecotone Fee Estimation Changes
+# Preparing for Ecotone Breaking Changes
+This page outlines breaking changes related to Ecotone network upgrade for wallets and front-end developers, chain operators, and node operators. 
+If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
+
+## For Wallets and Front-End Developers: Ecotone Fee Estimation Changes
 
 The proposed Ecotone upgrade to the OP Stack and OP Mainnet changes the formula for estimating the [L1 Data Fee](/stack/transactions/fees#l1-data-fee) component of the [OP Stack Transaction Fee](/stack/transactions/fees) in preparation for the introduction of [EIP-4844](https://eip4844.com) support.
+*   This new formula is designed to account for the option to post transaction data within [data blobs](/builders/chain-operators/management/blobs) instead of as Ethereum calldata, a feature enabled by [EIP-4844](https://eip4844.com).
+*   Read the [Ecotone Formula](/stack/transactions/fees#ecotone) section of the [Transaction Fees](/stack/transactions/fees) page for more information about the new formula.
+
 Your application may need to be updated to account for this change.
-Read on to learn more about the change and how you can prepare for it.
+Read on to learn more about how you can prepare for Ecotone.
 
-## Understanding the Change
-
-The L1 Data Fee component of the transaction fee for OP Stack (and therefore OP Mainnet) is expected to change with the proposed Ecotone upgrade.
-This new formula is designed to account for the option to post transaction data within data blobs instead of as Ethereum calldata, a feature enabled by [EIP-4844](https://eip4844.com).
-Read the [Ecotone Formula](/stack/transactions/fees#ecotone) section of the [Transaction Fees](/stack/transactions/fees) page for more information about the new formula.
-
-## Preparing Your Application
+### Preparing Your Application
 
 <Callout type="warning">
   Changes to the L1 Data Fee formula may affect your application if you are computing this fee component on your own.
@@ -29,3 +31,83 @@ Refer to the [tooling](/builders/dapp-developers/transactions/estimates#tooling)
 If you cannot use existing tooling, use the `getL1Fee` function on the `GasPriceOracle` smart contract to compute the L1 Data Fee component of the transaction fee.
 This function would be automatically updated during the proposed upgrade.
 Avoid implementing the formula yourself, as it may change in the future.
+
+## For Chain Operators: Ecotone Activation Date
+The proposed Ecotone upgrade impacts OP chains and requires chain operators to upgrade their chain and configure the sequencer for Ecotone. 
+Chain operators will also want to review the guide on [Using Blobs](/builders/chain-operators/management/blobs) for next steps after Ecotone activation.
+
+### Preparing Your Chain
+
+OP chains will essentially complete three steps for Ecotone: upgrade to the new release, configure the chain to update at the right time, and prepare for activation (which can take a month).
+
+<Callout type="warning">
+You must first configure your multisig and [L1 data fee configuration](/stack/transactions/fees#l1-data-fee) and [restart your batcher](../chain-operators/management/operations) with the updated configuration before Ecotone activation.
+</Callout>
+
+<Steps>
+{<h3>Upgrade to Ecotone Using the Newest Release</h3>}
+**TBD: Add links here.**
+
+{<h3>Configure the Ecotone Activation Date</h3>}
+  *   For OP Chains that have entries in the superchain-registry, the Ecotone activation date is part of the `op-node` and `op-geth` nodes. No action is needed for this step, and you can skip to the next step on [Switching to Using Blobs](#switching-to-using-blobs).
+  *   For custom chains, the activation dates can be set in the `rollup.json` (set `ecotone_time`) or in overrides (CLI) by calling `op-node` help or `op-geth` help.
+
+<Tabs items={['op-node', 'op-geth']}>
+  <Tabs.Tab>
+    ```shell
+    --override.ecotone value            (default: 0)                       ($OP_NODE_OVERRIDE_ECOTONE)
+              Manually specify the Ecotone fork timestamp, overriding the bundled setting
+    ```
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ```shell
+    --override.ecotone value            (default: 0)                       ($GETH_OVERRIDE_ECOTONE)
+              Manually specify the Optimism Ecotone fork timestamp, overriding the bundled
+              setting
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+{<h3>Prepare for Ecotone Activation</h3>}
+Configure an L1 beacon node on your sequencer.
+
+```shell
+--l1.beacon value                                                      ($OP_NODE_L1_BEACON)
+          Address of L1 Beacon-node HTTP endpoint to use.
+```
+
+<Callout type="info">
+  As soon as Ecotone is activated, you will have a temporary decrease in L1 fee margin. **For Kev: what does this mean for developers? need clarity.**
+</Callout>
+</Steps>
+
+## For Node Operators: Set Beacon Value
+The proposed Ecotone upgrade impacts node operators because of the new Beacon endpoint for `op-node` and soon after the Ecotone activation, batch
+transactions will be sent as 4844 blobs, and blobs can only be retrieved from Beacon nodes.
+This means node operators will need access to a [consensus client](https://ethereum.org/developers/docs/nodes-and-clients#consensus-clients) (i.e. Lighthouse, Lodestar, Nimbus, Prysm, Teku, etc.).
+
+### Preparing Your Node
+Existing node operators have additional steps to follow and should read the guide on [preparing existing nodes for Ecotone](/builders/node-operators/network-upgrades/ecotone).
+
+These steps are necessary for EVERY node operator:
+<Steps>
+{<h3>Upgrade to Newest Releases of `op-geth` and `op-node`</h3>}
+*   [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101305.3)
+*   [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.0)
+
+{<h3>Set the L1 beacon value</h3>}
+Set the [L1 beacon value](/builders/node-operators/management/configuration#l1beacon) in your `op-node` with the address of your L1 Beacon-node HTTP endpoint.
+
+<Callout type="warning">
+  You must set an L1 beacon value ASAP as soon as you update to the latest release.
+  If Ecotone activates before you've set a beacon value, then your node will crash.
+</Callout>
+
+```shell
+--l1.beacon value                                                      ($OP_NODE_L1_BEACON)
+          Address of L1 Beacon-node HTTP endpoint to use.
+```
+{<h3>Run the L1 Beacon Node</h3>}
+Either run your own L1 beacon node or configure to use an external RPC like [QuickNode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
+</Steps>

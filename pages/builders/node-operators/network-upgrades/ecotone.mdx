@@ -4,7 +4,7 @@ lang: en-US
 description: Details on how to prepare your nodes for the Ecotone Network upgrade.
 ---
 
-import { Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 
 # Ecotone Network Upgrade
 
@@ -12,7 +12,7 @@ import { Callout } from 'nextra/components'
   The Ecotone testnet network upgrade for OP Goerli activated at **1707238800 Tue Feb 6 17:00:00 UTC 2024**. The Ecotone upgrade for OP Sepolia is not scheduled yet.
 </Callout>
 
-The following information is how you can prepare your nodes for the Ecotone upgrade. There
+The following information is how you can prepare your existing nodes for the Ecotone upgrade. There
 is a new Beacon endpoint for `op-node`, because soon after the Ecotone activation, batch
 transactions will be sent as 4844 blobs, and blobs can only be retrieved from Beacon nodes.
 This means node operators will need access to a [consensus client](https://ethereum.org/developers/docs/nodes-and-clients#consensus-clients) (i.e. Lighthouse, Lodestar, Nimbus, Prysm, Teku, etc.).
@@ -22,31 +22,26 @@ This means node operators will need access to a [consensus client](https://ether
   because the latest rc contains a bug in its `blob_sidecars` http endpoint.
 </Callout>
 
-## Upgrade Your Nodes and Set Beacon Value (All Nodes)
+## Required Actions (All Nodes)
 
 These steps are necessary for EVERY node operator:
 
-1.  Update to the newest releases of [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101305.3) and [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.0).
-2.  Set the [L1 beacon value](/builders/node-operators/management/configuration#l1beacon) in your `op-node` with the address of your L1 Beacon-node HTTP endpoint.
+1.  Upgrade your `op-geth` to version: [v1.101308.0](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101308.0)
+2.  Upgrade your `op-node` to version: [v1.5.1](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.1)
+3.  Set [--l1.beacon / $OP\_NODE\_L1\_BEACON](/builders/node-operators/management/configuration#l1beacon) with the address of your L1 Beacon-node HTTP endpoint to use.
+4.  Either run your own L1 beacon node or configure to use an external RPC like [QuickNode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
 
 <Callout type="warning">
   You must set an L1 beacon value ASAP as soon as you update to the latest release.
   If Ecotone activates before you've set a beacon value, then your node will crash.
 </Callout>
 
-```shell
---l1.beacon value                                                      ($OP_NODE_L1_BEACON)
-          Address of L1 Beacon-node HTTP endpoint to use.
-```
-
-3.  Either run your own L1 beacon node or configure to use an external RPC like [QuickNode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
-
 ## Enable Snapsync/EL Sync (Full Nodes)
 
 For full nodes, the fastest way to get up and running is by enabling snapsync/EL sync. Use the following steps to get started:
 
-1.  Enable [`—syncmode=execution-layer`](../management/configuration#configuring-op-node) on `op-node`. This essentially tells `op-node` not to sync from L1 Data because the execution layer has been configured to sync on its own.
-2.  Enable [`syncmode=snap`](../management/configuration#configuration) on `op-geth`.
+1.  Enable `—-syncmode=execution-layer` on `op-node`. More details on [`—-syncmode=execution-layer`](../management/configuration#configuring-op-node). This essentially tells `op-node` not to sync from L1 Data because the execution layer has been configured to sync on its own.
+2.  Enable `syncmode=snap` on `op-geth`. More details on [`syncmode=snap`](../management/configuration#configuration).
 
 <Callout>
   If you're running a full node without EL sync, follow the next step to [configure a blob archiver](#configure-a-blob-archiver-archive-nodes).
@@ -65,8 +60,8 @@ There are several blob archiver options for archive nodes and new full notes wit
 You can verify your node is configured correctly with the following:
 
 *   `op-node` and `op-geth` will log their configurations at startup
-*   Check that Ecotone time is set to `activation time stamp` in the op-node logs
-*   Check that Ecotone and Cancun time is set to `Ecotone time stamp` in the op-geth logs
+*   Check that Ecotone time is set to `activation-timestamp` in the op-node logs
+*   Check that Ecotone and Cancun time is set to Ecotone `activation-timestamp` in the op-geth logs
 
 ## Additional Support
 
