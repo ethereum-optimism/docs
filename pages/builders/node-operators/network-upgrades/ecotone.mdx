@@ -30,31 +30,33 @@ You must upgrade your nodes to the following versions prior to Wed Feb 21 17:00:
 1.  Upgrade your `op-geth` to version: [v1.101308.0](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101308.0)
 2.  Upgrade your `op-node` to version: [v1.5.1](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.1)
 3.  Set [--l1.beacon / $OP\_NODE\_L1\_BEACON](/builders/node-operators/management/configuration#l1beacon) with the address of your L1 Beacon-node HTTP endpoint to use.
-4.  Either run your own L1 beacon node or configure to use an external RPC like [QuickNode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
+4.  Either run your own L1 beacon node like [Lighthouse](https://lighthouse-book.sigmaprime.io/run_a_node.html) or use a third-party beacon node RPC service, like [Quicknode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
 
 <Callout type="warning">
-  You must set an L1 beacon value ASAP as soon as you update to the latest release.
-  If Ecotone activates before you've set a beacon value, then your node will crash.
-</Callout>
-
-## Enable Snapsync/EL Sync (Full Nodes)
-
-For full nodes, the fastest way to get up and running is by enabling snapsync/EL sync. Use the following steps to get started:
-
-1.  Enable `—-syncmode=execution-layer` on `op-node`. More details on [`—-syncmode=execution-layer`](../management/configuration#configuring-op-node). This essentially tells `op-node` not to sync from L1 Data because the execution layer has been configured to sync on its own.
-2.  Enable `syncmode=snap` on `op-geth`. More details on [`syncmode=snap`](../management/configuration#configuration).
-
-<Callout>
-  If you're running a full node without EL sync, follow the next step to [configure a blob archiver](#configure-a-blob-archiver-archive-nodes).
+  If Ecotone activates and you have not set an l1 beacon value on your `op-node`, your node will crash.
 </Callout>
 
 ## Configure a Blob Archiver (Archive Nodes)
 
 There are several blob archiver options for archive nodes and new full notes without EL sync. Choose one of the following options:
 
-*   **Option 1:** Configure a blob archiver. You will need an [RPC endpoint](/chain/networks) for this option.
-*   **Option 2:** Configure your own beacon node to retain all blobs to not rely on a blob archiver or use an external RPC provider that runs blob-retaining beacon nodes [like QuickNode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
-*   **Option 3:** Archive nodes can use a snapshot within the last 18 days and not use the blob archiver at all. You must configure the L1 Beacon endpoint on `op-node`, but if L1 beacon endpoint doesn't have the blobs, fall back to blob archiver.
+*   **Option 1:**  Configure a `beacon-archiver`. There is a configurable `beacon-archiver` that will allow nodes to sync blob data that is older than 18 days - after blobs are 18 days old, normal beacon nodes will  "pruned" or remove them. If your node is already in sync with the head of the chain, you won't need to use a `beacon-archiver`.
+    *   If you're spinning up a new node, if you load it from a snapshot that's within 18 days (the amount of time until blobs are pruned) you will not need to use a `beacon-archiver`  at all as long as your node does not fall offline for more than 18 days.
+    *   If you're running a new node that is syncing more than 18 days (the amount of time until blobs are pruned) after Ecotone launch, then you will need to configure a `beacon-archiver` on the `op-node`.
+
+```shell
+--l1.beacon-archiver value                                                      ($OP_NODE_L1_BEACON)
+          HTTP Endpoint of a Blob Archiver or an L1 Beacon-node that does not prune blobs 
+```
+
+*   **Option 2:** Run your own L1 beacon node like [Lighthouse](https://lighthouse-book.sigmaprime.io/run_a_node.html) and configure it to retain all blobs and use that endpoint here.
+
+```shell
+# lighthouse
+--prune-blobs=false
+```
+
+*   **Option 3:** Run a `blob-archiver`, which functions the same, but is lighter weight: [https://github.com/base-org/blob-archiver](https://github.com/base-org/blob-archiver)
 
 ## Verify Your Configuration
 
