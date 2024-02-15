@@ -24,17 +24,49 @@ This means node operators will need access to a [consensus client](https://ether
 
 ## Required Actions (All Nodes)
 
-These steps are necessary for EVERY node operator:
-You must upgrade your nodes to the following versions prior to Wed Feb 21 17:00:00 UTC 2024.
+You must upgrade your nodes to the following versions prior to Wed Feb 21 17:00:00 UTC 2024. These steps are necessary for EVERY node operator:
 
-1.  Upgrade your `op-geth` to version: [v1.101308.0](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101308.0)
-2.  Upgrade your `op-node` to version: [v1.5.1](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.1)
-3.  Set [--l1.beacon / $OP\_NODE\_L1\_BEACON](/builders/node-operators/management/configuration#l1beacon) with the address of your L1 Beacon-node HTTP endpoint to use.
-4.  Either run your own L1 beacon node like [Lighthouse](https://lighthouse-book.sigmaprime.io/run_a_node.html) or use a third-party beacon node RPC service, like [Quicknode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
+1.  Update to the latest release
+
+*   [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101305.3)
+*   [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.0)
+
+2.  Configure the Ecotone Activation Date
+
+*   If you are operating a node for an OP Chain that has an entry in the `superchain-registry`, the Ecotone activation date is part of the `op-node` and `op-geth` nodes. So, no action is needed for the sequencer after upgrading to the latest release.
+*   For node operators of custom chains not included in the `superchain-registry`, the activation dates can be set in the `rollup.json` (set `ecotone_time`) or set the activation time via overrides (CLI) in both `op-node` and `op-geth` help. These will need to be set on `op-node` and `op-geth` for the sequencer and all other nodes.
+
+<Tabs items={['op-node', 'op-geth']}>
+  <Tabs.Tab>
+    ```shell
+    --override.ecotone value            (default: 0)                       ($OP_NODE_OVERRIDE_ECOTONE)
+              Manually specify the Ecotone fork timestamp, overriding the bundled setting
+    ```
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    ```shell
+    --override.ecotone value            (default: 0)                       ($GETH_OVERRIDE_ECOTONE)
+              Manually specify the Optimism Ecotone fork timestamp, overriding the bundled
+              setting
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+3.  Prepare for Activation
+
+*   All node operators must set an L1 beacon value in your `op-node` as soon as you update to the latest release.
 
 <Callout type="warning">
   If Ecotone activates and you have not set an l1 beacon value on your `op-node`, your node will crash.
 </Callout>
+
+```shell
+--l1.beacon value                                                      ($OP_NODE_L1_BEACON)
+          HTTP endpoint Address of L1 Beacon-node.
+```
+
+*   Either run your own L1 beacon node like [Lighthouse](https://lighthouse-book.sigmaprime.io/run_a_node.html) or use a third-party beacon node RPC service, like [Quicknode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
 
 ## Configure a Blob Archiver (Archive Nodes)
 
