@@ -127,3 +127,27 @@ The governance token is a side-effect of use of the OP Stack in the OP Mainnet n
 | `governanceTokenOwner`  | L2 Address | Address that will own the token contract deployed by default to every OP Stack based chain. |               |
 | `governanceTokenSymbol` | String     | Symbol for the token deployed by default to each OP Stack chain.                            | OP            |
 | `governanceTokenName`   | String     | Name for the token deployed by default to each OP Stack chain.                              | Optimism      |
+
+### OP-Batcher Configuration
+
+The `OP_BATCHER_MAX_CHANNEL_DURATION` is configurable, see the section below for guidance.
+
+| Key                               | Type                   | Description                                                                                               | Default value  |
+| --------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- | -------------- |
+| `OP_BATCHER_MAX_CHANNEL_DURATION` | L2 Number of L1 Blocks | The max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1. | 1500 l1 blocks |
+
+<details>
+  <summary><h4>Setting your  `OP_BATCHER_MAX_CHANNEL_DURATION`</h4></summary>
+
+  To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 hours, with a value of `1500` L1 blocks. When non-zero, this parameter is the max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1.  If you have this set to 5 for example, then your batcher will send a batch to the L1 every 5\*12=60 seconds. When using blobs, because 128kb blobs need to be purchased in full, if your chain doesn't generate at least \~128kb of data in those 60 seconds, then you'll be posting only partially full blobs and wasting storage.
+
+  *   We do not recommend setting any values higher than targeting 5 hours, as batches have to be submitted within the sequencing window which defaults to 12 hours for OP chains, otherwise your chain may experience a 12 hour long chain reorg. 5 hours is the longest length of time we recommend that still sits snugly within that 12 hour window to avoid affecting stability.
+  *   If your chain fills up full blobs of data before the `OP_BATCHER_MAX_CHANNEL_DURATION` elapses, a batch will be submitted anyways - (e.g. even if the OP Mainnet batcher sets an `OP_BATCHER_MAX_CHANNEL_DURATION` of 5 hours, it will still be submitting batches every few minutes)
+
+  <Callout>
+    While setting an`OP_BATCHER_MAX_CHANNEL_DURATION` of `1500` results in the cheapest fees, it also means that your [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall for up to 5 hours.
+
+    *   This will negatively impact apps on your chain that rely on the safe head for operation. While many apps can likely operate simply by following the unsafe head, often Centralized Exchanges or third party bridges wait until transactions are marked safe before processing deposits and withdrawal.
+    *   Thus a larger gap between posting batches can result in significant delays in the operation of certain types of high-security applications.
+  </Callout>
+</details>
