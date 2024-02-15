@@ -214,7 +214,8 @@ The command line help listing is reproduced below for your convenience.
 
 ### op-node
 
-`op-node` implements most rollup-specific functionality as Consensus-Layer, similar to a L1 beacon-node. The following options are from the `--help` in [v1.3.1](https://github.com/ethereum-optimism/optimism/tree/op-node/v1.3.1).
+`op-node` implements most rollup-specific functionality as Consensus-Layer, similar to a L1 beacon-node. 
+The following options are from the `--help` in [v1.5.1](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.1).
 
 #### GLOBAL OPTIONS
 
@@ -751,7 +752,10 @@ Hex-encoded private key for signing off on p2p application messages as sequencer
 
 ###### p2p.static
 
-Comma-separated multiaddr-format peer list. Static connections to make and maintain, these peers will be regarded as trusted.
+Comma-separated multiaddr-format peer list. Static connections to make and
+maintain, these peers will be regarded as trusted. Addresses of the local peer
+are ignored. Duplicate/Alternative addresses for the same peer all apply, but
+only a single connection per peer is maintained.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--p2p.static=<value>`</Tabs.Tab>
@@ -789,6 +793,16 @@ Enable the pprof server. Default is `false`.
   <Tabs.Tab>`OP_NODE_PPROF_ENABLED=false`</Tabs.Tab>
 </Tabs>
 
+###### pprof.path
+
+pprof file path. If it is a directory, the path is \{dir\}/\{profileType\}.prof
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--pprof.path=<path>`</Tabs.Tab>
+  <Tabs.Tab>`--pprof.path={dir}/{profileType}.prof`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_PPROF_PATH={dir}/{profileType}.prof`</Tabs.Tab>
+</Tabs>
+
 ###### pprof.port
 
 pprof listening port. Default is `6060`.
@@ -797,6 +811,16 @@ pprof listening port. Default is `6060`.
   <Tabs.Tab>`--pprof.port=<value>`</Tabs.Tab>
   <Tabs.Tab>`--pprof.port=6060`</Tabs.Tab>
   <Tabs.Tab>`OP_NODE_PPROF_PORT=6060`</Tabs.Tab>
+</Tabs>
+
+###### pprof.type
+
+pprof profile type. One of cpu, heap, goroutine, threadcreate, block, mutex, allocs
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--pprof.type=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--pprof.type=cpu`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_PPROF_TYPE=cpu`</Tabs.Tab>
 </Tabs>
 
 ###### rollup.config
