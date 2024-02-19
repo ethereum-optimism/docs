@@ -132,14 +132,19 @@ The governance token is a side-effect of use of the OP Stack in the OP Mainnet n
 
 The `OP_BATCHER_MAX_CHANNEL_DURATION` is configurable, see the section below for guidance.
 
-| Key                               | Type                   | Description                                                                                               | Default value  |
-| --------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- | -------------- |
-| `OP_BATCHER_MAX_CHANNEL_DURATION` | L2 Number of L1 Blocks | The max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1. | 1500 l1 blocks |
+| Key                               | Type                | Description                                                                                               | Default value |
+| --------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------- | ------------- |
+| `OP_BATCHER_MAX_CHANNEL_DURATION` | Number of L1 Blocks | The max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1. | 1500          |
+
+<Callout>
+  The default value inside `op-batcher`, if not specified, is still `0`, which means channel duration tracking is disabled.
+  For very low throughput chains, this would mean to fill channels until close to the sequencing window and post the channel to `L1 SUB_SAFETY_MARGIN` L1 blocks before the sequencing window expires.
+</Callout>
 
 <details>
   <summary><h4>Setting your  `OP_BATCHER_MAX_CHANNEL_DURATION`</h4></summary>
 
-  To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 hours, with a value of `1500` L1 blocks. When non-zero, this parameter is the max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1.  If you have this set to 5 for example, then your batcher will send a batch to the L1 every 5\*12=60 seconds. When using blobs, because 128kb blobs need to be purchased in full, if your chain doesn't generate at least \~128kb of data in those 60 seconds, then you'll be posting only partially full blobs and wasting storage.
+  To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 hours, with a value of `1500` L1 blocks. When non-zero, this parameter is the max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1. If you have this set to 5 for example, then your batcher will send a batch to the L1 every 5\*12=60 seconds. When using blobs, because 130kb blobs need to be purchased in full, if your chain doesn't generate at least \~130kb of data in those 60 seconds, then you'll be posting only partially full blobs and wasting storage.
 
   *   We do not recommend setting any values higher than targeting 5 hours, as batches have to be submitted within the sequencing window which defaults to 12 hours for OP chains, otherwise your chain may experience a 12 hour long chain reorg. 5 hours is the longest length of time we recommend that still sits snugly within that 12 hour window to avoid affecting stability.
   *   If your chain fills up full blobs of data before the `OP_BATCHER_MAX_CHANNEL_DURATION` elapses, a batch will be submitted anyways - (e.g. even if the OP Mainnet batcher sets an `OP_BATCHER_MAX_CHANNEL_DURATION` of 5 hours, it will still be submitting batches every few minutes)

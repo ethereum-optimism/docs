@@ -31,8 +31,8 @@ This guide walks you through how to switch to using blobs for your chain after E
   ```
 
   <Callout type="warning">
-    However, if your chain has less data throughput than 120kb per batch submission, you may have to only partially fill blobs.
-    Because you must purchase an entire blob, you will be paying for 120KB of data, but submitting less, and must adjust your scalar accordingly.
+    However, if your chain has less data throughput than 130kb per batch submission, you may have to only partially fill blobs.
+    Because you must purchase an entire blob, you will be paying for 130KB of data, but submitting less, and must adjust your scalar accordingly.
   </Callout>
 
   Assuming a 5 hour `OP_BATCHER_MAX_CHANNEL_DURATION`, this is how to configure on the `op-batcher`.
@@ -76,6 +76,8 @@ This guide walks you through how to switch to using blobs for your chain after E
   Depending on the tool used, you may have to input the uint representation or the hex version, but both Foundry's `cast` and Gnosis's Safe UI accept the hex value.
 
   This value has to be set on Layer 1 by the `owner` of the `SystemConfigProxy` L1 Contract. Note that when calling `setGasConfig(uint256,uint256)`, the first parameter is a deprecated value that can just be set to `0` and the second parameter is where you will paste your encoded scalar value.
+
+  An exemplary way to create the calldata for your update transaction to the SystemConfigProxy is:
 
   ```shell
   cast calldata 'setGasConfig(uint256,uint256)' 0 0x010000000000000000000000000000000000000000000000000d273000001db0`
@@ -157,5 +159,5 @@ Chains can follow these steps to switch from blobs back to using calldata.
 
 ## Other Considerations
 
-*   If you'd like to set up snap sync for your chain, you'll need to set up a [Boot Node](/builders/node-operators/management/configuration#configuring-peer-to-peer-networking).
+*   For general information on Ecotone changes, visit the [Ecotone notice page](/builders/notices/ecotone-fee-changes).
 *   If you want to enable archive nodes, you will need to access a blob archiver service. You can use [Optimism's](/builders/node-operators/management/snapshots#op-mainnet-archive-node) or [run your own](tools/explorer#create-an-archive-node).
