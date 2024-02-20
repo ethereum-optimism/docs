@@ -10,11 +10,12 @@ import { Tabs } from 'nextra/components'
 # Ecotone Network Upgrade
 
 <Callout type="warning">
-  The Ecotone testnet network upgrade for OP Goerli activated at **1707238800 Tue Feb 6 17:00:00 UTC 2024**. Ecotone Sepolia releases are published and will activate **1708534800 Wed Feb 21 17:00:00 UTC 2024**. 
-  Ecotone mainnet network upgrade will be at **1710781201 Mon Mar 18 17:00:00 UTC 2024**, pending [governance approval](https://gov.optimism.io/t/upgrade-proposal-5-ecotone-network-upgrade/7669). 
+  *   The Ecotone upgrade for OP Goerli activated at **1707238800 Tue Feb 6 17:00:00 UTC 2024**.
+  *   Ecotone Sepolia releases are published and will activate **1708534800 Wed Feb 21 17:00:00 UTC 2024**.
+  *   Ecotone Mainnet upgrade will be at **1710781201 Mon Mar 18 17:00:00 UTC 2024**, pending [governance approval](https://gov.optimism.io/t/upgrade-proposal-5-ecotone-network-upgrade/7669).
 </Callout>
 
-The following information is how you can prepare your existing nodes for the Ecotone upgrade. There
+The following information is how you can prepare your existing nodes for the Ecotone upgrade and assumes a [basic Ecotone configuration](/builders/notices/ecotone-fee-changes#for-node-operators) is already in place. There
 is a new Beacon endpoint for `op-node`, because soon after the Ecotone activation, batch
 transactions will be sent as 4844 blobs, and blobs can only be retrieved from Beacon nodes.
 This means node operators will need access to a [consensus client](https://ethereum.org/developers/docs/nodes-and-clients#consensus-clients) (i.e. Lighthouse, Lodestar, Nimbus, Prysm, Teku, etc.).
@@ -23,56 +24,6 @@ This means node operators will need access to a [consensus client](https://ether
   If you're using Lighthouse, make sure to use at least the finalized version `v4.6.0`
   because the latest rc contains a bug in its `blob_sidecars` http endpoint.
 </Callout>
-
-## Required Actions (All Nodes)
-
-You must upgrade your nodes to the following versions prior to Wed Feb 21 17:00:00 UTC 2024. These steps are necessary for EVERY node operator:
-
-1.  Update to the latest release
-
-*   [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101308.1)
-*   [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/v1.6.1)
-
-2.  Configure the Ecotone Activation Date
-
-*   If you are operating a node for an OP Chain that has an entry in the `superchain-registry`, the Ecotone activation date is part of the `op-node` and `op-geth` nodes. So, no action is needed for the sequencer after upgrading to the latest release.
-*   For node operators of custom chains not included in the `superchain-registry`, the activation dates can be set in the `rollup.json` (set `ecotone_time`) or via overrides (CLI) in both `op-node` and `op-geth` help. These will need to be set on `op-node` and `op-geth` for the sequencer and all other nodes.
-
-<Callout type="warning">
-Even if the ecotone activation is configured via the `rollup.json`, it still needs to be configured separately on `op-geth` via command line flag.
-</Callout>
-
-<Tabs items={['op-node', 'op-geth']}>
-  <Tabs.Tab>
-    ```shell
-    --override.ecotone value            (default: 0)                       ($OP_NODE_OVERRIDE_ECOTONE)
-              Manually specify the Ecotone fork timestamp, overriding the bundled setting
-    ```
-  </Tabs.Tab>
-
-  <Tabs.Tab>
-    ```shell
-    --override.ecotone value            (default: 0)                       ($GETH_OVERRIDE_ECOTONE)
-              Manually specify the Optimism Ecotone fork timestamp, overriding the bundled
-              setting
-    ```
-  </Tabs.Tab>
-</Tabs>
-
-3.  Prepare for Activation
-
-*   All node operators must set an L1 beacon value in your `op-node` as soon as you update to the latest release.
-
-<Callout type="warning">
-  If Ecotone activates and you have not set an l1 beacon value on your `op-node`, your node will crash.
-</Callout>
-
-```shell
---l1.beacon value                                                      ($OP_NODE_L1_BEACON)
-          HTTP endpoint Address of L1 Beacon-node.
-```
-
-*   Either run your own L1 beacon node like [Lighthouse](https://lighthouse-book.sigmaprime.io/run_a_node.html) or use a third-party beacon node RPC service, like [Quicknode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
 
 ## Configure a Blob Archiver (Archive Nodes)
 
