@@ -46,9 +46,16 @@ Choose one of the following options to access a beacon archiver endpoint:
 ```
 
 *   **Option 2:**  Run a `blob-archiver` and configure `op-node` to use the `blob-archiver` API service with `--l1.beacon-archiver`.
-Running a `blob-archiver` is lighter weight: [https://github.com/base-org/blob-archiver](https://github.com/base-org/blob-archiver). 
+Running a `blob-archiver` is lighter weight than running a beacon node that does not prune blobs: [https://github.com/base-org/blob-archiver](https://github.com/base-org/blob-archiver). There is a configurable `beacon-archiver` that will allow nodes to sync blob data that is older than 18 days - after blobs are 18 days old, normal beacon nodes will  "prune" or remove them. If your node is already in sync with the head of the chain, you won't need to use a `beacon-archiver`.
+    *   If you're spinning up a new node, if you load it from a snapshot that's within 18 days (the amount of time until blobs are pruned) you will not need to use a `beacon-archiver`  at all as long as your node does not fall offline for more than 18 days.
+    *   If you're running a new node that is syncing more than 18 days (the amount of time until blobs are pruned) after Ecotone launch, then you will need to configure a `beacon-archiver` on the `op-node`.
 
-*   **Option 3:** If you don't want to operate any Beacon infrastructure, you can use an external Beacon service like [Quicknode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
+```shell
+--l1.beacon-archiver value                                                      ($OP_NODE_L1_BEACON)
+          HTTP Endpoint of a Blob Archiver or an L1 Beacon-node that does not prune blobs 
+```
+
+*   **Option 3:** If you don't want to operate any Beacon infrastructure, you can use an external service that provides access to pruned Blobs.
 
 ## Verify Your Configuration
 
