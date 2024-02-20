@@ -58,10 +58,10 @@ const config: DocsThemeConfig = {
     text: '✏️ Edit this page on GitHub'
   },
   banner: {
-    key: '2.1-release',
+    key: '2.2-release',
     text: (
       <a href="https://docs.optimism.io/builders/notices/ecotone-fee-changes" target="_self">
-        📌 UPDATE: Get Prepared for Ecotone Fee Estimation Changes. Please review the Notices (README) for more info. → 📌
+        📌 UPDATE: Get Prepared for Ecotone Breaking Changes for Wallets, Front-End Developers, Chain Operators, and Node Operators. → 📌
       </a>
     )
   },
