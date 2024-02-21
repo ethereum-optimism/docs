@@ -74,9 +74,9 @@ These fields apply to L2 blocks: Their timing, when do they need to be written t
 | `batchInboxAddress`   | L1 Address        | Address that Sequencer transaction batches are sent to on L1.                                                                                                                                                                 | 0xff00…0042069                                          |
 | `batchSenderAddress`  | L1 Address        | Address that nodes will filter for when searching for Sequencer transaction batches being sent to the `batchInboxAddress`. Can be updated later via the `SystemConfig` contract on L1.                                        | Batcher, an address for which you own the private key   |
 
-### Proposal fields
+### Proposal Fields
 
-These fields apply to output root proposals.
+These fields apply to output root proposals. The `l2OutputOracleSubmissionInterval` is configurable, see the section below for guidance.
 
 | Key                                 | Type              | Description                                                                                                                                                                                                                                   | Default value                                                                       |
 | ----------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -86,6 +86,25 @@ These fields apply to output root proposals.
 | `finalizationPeriodSeconds`         | Number of seconds | Number of seconds that a proposal must be available to challenge before it is considered finalized by the `OptimismPortal` contract.                                                                                                          | Recommend 12 on test networks, seven days on production ones                        |
 | `l2OutputOracleProposer`            | L1 Address        | Address that is allowed to submit output proposals to the `L2OutputOracle` contract. Will be removed when the OP Stack has permissionless proposals.                                                                                          |                                                                                     |
 | `l2OutputOracleChallenger`          | L1 Address        | Address that is allowed to challenge output proposals submitted to the `L2OutputOracle`. Will be removed when the OP Stack has permissionless challenges.                                                                                     | It is recommended to have a single admin address to retain a common security model. |
+
+#### Setting your `Ol2OutputOracleSubmissionInterval`
+
+Chain operators can post batches as infrequently as every 10 hours (within the 12 hour sequencer window) to save on costs. Recommendations for chain operators:
+
+*   A maximum batch submission interval of \~6 hours to guarantee that you get your batches get in on time and you do not trigger reorgs.
+*   As your chain grows in usage, and apps like CEXes and bridges start relying on the safe head for things like deposits and transfers, chain operators should start to drop the batch submission interval.
+
+<Callout type="warning">
+  **If you don't submit batches within the sequencer window, the chain will reorg.**
+  A reorg this large impacts the user experience because all transactions from the past 12 hours will be wiped, and this may require full node operators to re-sync from genesis.
+</Callout>
+
+When deploying your contracts, you can set the `l2OutputOracleSubmissionInterval` to any value you wish to save on costs (e.g., 24 hours or 12 hours). On OP mainnet, `l2OutputOracleSubmissionInterval` is set to `1800 L2 blocks = 1 hr`.
+The tradeoff here is that users will only be able to prove withdrawals after an output root is posted, so users will have to submit their L2 withdrawal transaction, wait up to the number of hours in the submission interval, then prove on L1, then wait 1 week, then finalize.
+
+<Callout type="info">
+  After fault proofs are shipped to mainnet, output roots can be submitted as infrequently as you wish, and there won't be a submission interval anymore.
+</Callout>
 
 ### L1 data fee
 
