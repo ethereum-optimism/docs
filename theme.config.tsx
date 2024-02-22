@@ -49,7 +49,7 @@ const config: DocsThemeConfig = {
   banner: {
     key: '2.2-release',
     text: (
-      <a href="https://docs.optimism.io/builders/notices/ecotone-changes" target="_self" rel="noopener noreferrer">
+      <a href="https://docs.optimism.io/builders/notices/ecotone-changes" target="_self" rel="noopener noreferrer" aria-label="Learn about Ecotone Breaking Changes">
         📌 UPDATE: Get Prepared for Ecotone Breaking Changes for Wallets, Front-End Developers, Chain Operators, and Node Operators. → 📌
       </a>
     )
