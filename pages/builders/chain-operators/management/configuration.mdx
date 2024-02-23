@@ -87,12 +87,7 @@ These fields apply to output root proposals. The `l2OutputOracleSubmissionInterv
 | `l2OutputOracleProposer`            | L1 Address        | Address that is allowed to submit output proposals to the `L2OutputOracle` contract. Will be removed when the OP Stack has permissionless proposals.                                                                                          |                                                                                     |
 | `l2OutputOracleChallenger`          | L1 Address        | Address that is allowed to challenge output proposals submitted to the `L2OutputOracle`. Will be removed when the OP Stack has permissionless challenges.                                                                                     | It is recommended to have a single admin address to retain a common security model. |
 
-#### Setting your `Ol2OutputOracleSubmissionInterval`
-
-Chain operators can post batches as infrequently as every 10 hours (within the 12 hour sequencer window) to save on costs. Recommendations for chain operators:
-
-*   A maximum batch submission interval of \~6 hours to guarantee that you get your batches get in on time and you do not trigger reorgs.
-*   As your chain grows in usage, and apps like CEXes and bridges start relying on the safe head for things like deposits and transfers, chain operators should start to drop the batch submission interval.
+#### Setting your `l2OutputOracleSubmissionInterval`
 
 <Callout type="warning">
   **If you don't submit batches within the sequencer window, the chain will reorg.**
@@ -103,7 +98,7 @@ When deploying your contracts, you can set the `l2OutputOracleSubmissionInterval
 The tradeoff here is that users will only be able to prove withdrawals after an output root is posted, so users will have to submit their L2 withdrawal transaction, wait up to the number of hours in the submission interval, then prove on L1, then wait 1 week, then finalize.
 
 <Callout type="info">
-  After fault proofs are shipped to mainnet, output roots can be submitted as infrequently as you wish, and there won't be a submission interval anymore.
+  After fault proofs are shipped to Mainnet, output roots can be submitted as infrequently as you wish, and there won't be a submission interval anymore.
 </Callout>
 
 ### L1 data fee
@@ -167,7 +162,7 @@ To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` 
 *   We do not recommend setting any values higher than targeting 5 hours, as batches have to be submitted within the sequencing window which defaults to 12 hours for OP chains, otherwise your chain may experience a 12 hour long chain reorg. 5 hours is the longest length of time we recommend that still sits snugly within that 12 hour window to avoid affecting stability.
 *   If your chain fills up full blobs of data before the `OP_BATCHER_MAX_CHANNEL_DURATION` elapses, a batch will be submitted anyways - (e.g. even if the OP Mainnet batcher sets an `OP_BATCHER_MAX_CHANNEL_DURATION` of 5 hours, it will still be submitting batches every few minutes)
 
-<Callout>
+<Callout type="warning">
   While setting an`OP_BATCHER_MAX_CHANNEL_DURATION` of `1500` results in the cheapest fees, it also means that your [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall for up to 5 hours.
 
   *   This will negatively impact apps on your chain that rely on the safe head for operation. While many apps can likely operate simply by following the unsafe head, often Centralized Exchanges or third party bridges wait until transactions are marked safe before processing deposits and withdrawal.
