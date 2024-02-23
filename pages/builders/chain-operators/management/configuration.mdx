@@ -74,9 +74,9 @@ These fields apply to L2 blocks: Their timing, when do they need to be written t
 | `batchInboxAddress`   | L1 Address        | Address that Sequencer transaction batches are sent to on L1.                                                                                                                                                                 | 0xff00…0042069                                          |
 | `batchSenderAddress`  | L1 Address        | Address that nodes will filter for when searching for Sequencer transaction batches being sent to the `batchInboxAddress`. Can be updated later via the `SystemConfig` contract on L1.                                        | Batcher, an address for which you own the private key   |
 
-### Proposal fields
+### Proposal Fields
 
-These fields apply to output root proposals.
+These fields apply to output root proposals. The `l2OutputOracleSubmissionInterval` is configurable, see the section below for guidance.
 
 | Key                                 | Type              | Description                                                                                                                                                                                                                                   | Default value                                                                       |
 | ----------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -86,6 +86,21 @@ These fields apply to output root proposals.
 | `finalizationPeriodSeconds`         | Number of seconds | Number of seconds that a proposal must be available to challenge before it is considered finalized by the `OptimismPortal` contract.                                                                                                          | Recommend 12 on test networks, seven days on production ones                        |
 | `l2OutputOracleProposer`            | L1 Address        | Address that is allowed to submit output proposals to the `L2OutputOracle` contract. Will be removed when the OP Stack has permissionless proposals.                                                                                          |                                                                                     |
 | `l2OutputOracleChallenger`          | L1 Address        | Address that is allowed to challenge output proposals submitted to the `L2OutputOracle`. Will be removed when the OP Stack has permissionless challenges.                                                                                     | It is recommended to have a single admin address to retain a common security model. |
+
+#### Setting your `l2OutputOracleSubmissionInterval`
+
+<Callout type="error">
+  **If you don't submit batches within the sequencer window, the chain will reorg.**
+  A reorg this large impacts the user experience because all transactions from the past 12 hours will be wiped, and this may require full node operators to re-sync from genesis.
+</Callout>
+
+
+When deploying your contracts, you can set the `l2OutputOracleSubmissionInterval` to any value you wish to save on costs (e.g., 24 hours or 12 hours). On OP mainnet, `l2OutputOracleSubmissionInterval` is set to `1800 L2 blocks = 1 hr`.
+The tradeoff here is that users will only be able to prove withdrawals after an output root is posted, so users will have to submit their L2 withdrawal transaction, wait up to the number of hours in the submission interval, then prove on L1, then wait 1 week, then finalize.
+
+<Callout type="info">
+  After fault proofs are shipped to Mainnet, output roots can be submitted as infrequently as you wish, and there won't be a submission interval anymore.
+</Callout>
 
 ### L1 data fee
 
@@ -148,7 +163,7 @@ To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` 
 *   We do not recommend setting any values higher than targeting 5 hours, as batches have to be submitted within the sequencing window which defaults to 12 hours for OP chains, otherwise your chain may experience a 12 hour long chain reorg. 5 hours is the longest length of time we recommend that still sits snugly within that 12 hour window to avoid affecting stability.
 *   If your chain fills up full blobs of data before the `OP_BATCHER_MAX_CHANNEL_DURATION` elapses, a batch will be submitted anyways - (e.g. even if the OP Mainnet batcher sets an `OP_BATCHER_MAX_CHANNEL_DURATION` of 5 hours, it will still be submitting batches every few minutes)
 
-<Callout>
+<Callout type="warning">
   While setting an`OP_BATCHER_MAX_CHANNEL_DURATION` of `1500` results in the cheapest fees, it also means that your [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall for up to 5 hours.
 
   *   This will negatively impact apps on your chain that rely on the safe head for operation. While many apps can likely operate simply by following the unsafe head, often Centralized Exchanges or third party bridges wait until transactions are marked safe before processing deposits and withdrawal.
