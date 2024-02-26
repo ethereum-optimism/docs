@@ -23,7 +23,7 @@ Archive nodes generally require significantly more resources than full nodes.
 Below are suggested minimum hardware requirements for each type of node.
 
 *   16GB RAM
-*   1TB SSD (full node) or 2TB SSD (archive node)
+*   1TB SSD (full node) or 4TB SSD (archive node)
 *   Reasonably modern CPU
 
 ## Get the Migrated Data Directory
@@ -157,6 +157,11 @@ USING_OVM=true \
 
 </Steps>
 
+## Assess Blob Archiver
+
+Assess if you need to configure a blob archiver service by reading the 
+[Configure a Blob Archiver documentation](/builders/node-operators/management/blobs#configure-a-blob-archiver-archive-nodes).
+
 ## Create a JWT Secret
 
 `op-geth` and `op-node` communicate over the engine API authrpc.
@@ -207,7 +212,7 @@ Refer to the `op-geth` [configuration documentation](../management/configuration
 ./build/bin/geth \
   --http \
   --http.port=8545 \
-  --http.addr=0.0.0.0 \
+  --http.addr=localhost \
   --authrpc.addr=localhost \
   --authrpc.jwtsecret=./jwt.txt \
   --verbosity=3 \
@@ -249,6 +254,7 @@ Set the following environment variables:
 ```bash
 export L1_RPC_URL=...  # URL for the L1 node to sync from
 export L1_RPC_KIND=... # RPC type (alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any)
+export L1_BEACON_URL=... # URL address for the L1 Beacon-node HTTP endpoint to use.
 ```
 
 {<h3>Start op-node</h3>}
@@ -265,10 +271,11 @@ Refer to the `op-node` [configuration documentation](../management/configuration
 ./bin/op-node \
   --l1=$L1_RPC_URL \
   --l1.rpckind=$L1_RPC_KIND \
+  --l1.beacon=$L1_BEACON_URL \
   --l2=ws://localhost:8551 \
   --l2.jwt-secret=./jwt.txt \
   --network=op-mainnet \
-  --rpc.addr=0.0.0.0 \
+  --rpc.addr=127.0.0.1 \
   --rpc.port=8547
 ```
 
