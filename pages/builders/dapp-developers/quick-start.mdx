@@ -1,15 +1,17 @@
 ---
 title: Superchain App Quick Start
 lang: en-US
-description: Learn how to quickly build and deploy an app to any OP Chain.
+description: Learn how to quickly build and deploy an app to any OP Chain using Scaffold-OP.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 import Image from 'next/image'
+import { Tabs } from 'nextra/components'
 
 # Superchain App Quick Start
 
-This quick start guide walks you through an easy two-step process to deploy an app to any OP Chain – in under 15 minutes. It covers the setup process and links to more detailed documentation articles, so you can dive a bit deeper when needed.
+This quick start walks you through an easy three-step process to deploy an app to any OP Chain – in under 15 minutes. 
+This quick start uses `Scaffold-OP` to build the Superchain App, covers the setup process, and links to more detailed documentation articles, so you can dive a bit deeper when needed.
 
 ## Step 1: Get Testnet ETH from Superchain Faucet
 
@@ -19,111 +21,131 @@ You can request testnet ETH from the Superchain Faucet in one of two ways: **con
 
 <Image src="/img/builders/dapp-developers/quick-start/faucet-markup.png" alt="Superchain Faucet sign-up options" width={500} height={500} />
 
-If you **connect a wallet**, you can get up to 1 testnet ETH per network every 24 hours. If you **login with Github**, you can get up to 0.05 testnet ETH per day.
+*   If you **connect a wallet**, you can get up to 1 testnet ETH per network every 24 hours. 
+*   If you **login with Github**, you can get up to 0.05 testnet ETH per day.
 
 <Callout>
   Looking for more faucets?
   You can also try using [other available OP Sepolia faucets](/builders/tools/build/faucets).
 </Callout>
 
-Now you have testnet ETH for several OP Chains! You can use these to deploy and play with testnet apps on chains like Base, Zora, and Mode. For this quick start, we're going to use it to deploy a basic app on OP Mainnet.
+## Step 2: Build a Basic App with Scaffold-OP
 
-## Step 2: Build a Basic App with the Starter Kit
-
-The [Optimism Starter Kit](https://github.com/ethereum-optimism/optimism-starter) helps you quickly deploy an app to any OP Chain. It runs [viem](https://viem.sh/) under the hood (a lightweight alternative to ethers.js and web3.js for interacting with Ethereum) and automatically verifies and publishes contract code to the block explorer for you.
+Scaffold-OP is a fork of [`scaffold-ETH2`](https://docs.scaffoldeth.io/) with minimal differences: additional dapp examples, native support for Superchain testnets, and more low-level instructions.
+Scaffold-OP is an open-source toolkit for building decentralized applications on the Ethereum blockchain and is designed to make it easier for developers to create and deploy smart contracts and
+build user interfaces that interact with those contracts.
 
 ### Prerequisites
 
-You'll need to install the following items to get started:
+Before you begin, you need to install the following tools:
 
-*   [node](https://nodejs.org/en/)
-*   [foundry](https://book.getfoundry.sh/getting-started/installation)
+*   [node v18.17 or higher](https://nodejs.org/en/download/)
+*   yarn [v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install)
+*   [git](https://git-scm.com/downloads)
 
 <Steps>
-  {<h3>Get an Etherscan key</h3>}
-
-  *   Register for [Etherscan on Optimism](https://explorer.optimism.io/register). This account is different from your normal Etherscan account.
-  *   Go to the [API keys page](https://explorer.optimism.io/myapikey) and click **Add** to create a new API key.
-
-  {<h3>Set up the Environment</h3>}
-
-  You will first need to set up your `.env` to tell Forge where to deploy your contract.
-
-  1.  Copy `.env.example` to `.env`.
-
-      ```sh
-      cp .env.example .env
-      ```
-
-  2.  Edit your `.env` to specify the environment variables.
-
-      *   `ETHERSCAN_API_KEY`: Your Etherscan API Key.
-
-      *   `FORGE_RPC_URL`: The RPC URL of the network to which you deploy.
-          If you use [Alchemy](https://github.com/ethereum-optimism/optimism-tutorial/tree/main/ecosystem/alchemy), your URL will look like this: `https://opt-goerli.g.alchemy.com/v2/<Alchemy API Key>`
-
-      *   `FORGE_PRIVATE_KEY`: The private key of the wallet you want to deploy from.
-
-      *   `VITE_WALLETCONNECT_PROJECT_ID`: WalletConnect v2 requires a project ID. You can obtain it from your WC dashboard: [https://docs.walletconnect.com/2.0/web/web3wallet/installation#obtain-project-id](https://docs.walletconnect.com/2.0/web/web3wallet/installation#obtain-project-id)
-
-  {<h3>Start the application</h3>}
-
-  1.  Clone/fork the optimism-starter repo
-
-      ```sh
-      git clone https://github.com/ethereum-optimism/optimism-starter.git
-      ```
-
-  2.  Install the necessary node packages:
-
-      ```sh
-      cd optimism-starter
-      npm install
-      ```
-
-  3.  Start the frontend with `npm run dev`
-
-      ```sh
-      npm run dev
-      ```
-
-      If you get errors during this step, you might need to [update your Foundry to the latest version](#install-foundry).
-
-  4.  Open [localhost:5173](http://localhost:5173) in your browser.
-
-      Once the webpage has loaded, changes made to files inside the `src/` directory (e.g. `src/App.tsx`) will automatically update the webpage.
-
-  {<h3>Generate ABIs & React Hooks</h3>}
-
-  This project comes with `@wagmi/cli` built in, which means you can generate wagmi-compatible (type safe) ABIs & React Hooks straight from the command line.
-
-  To generate ABIs & React Hooks from your Foundry project (in `./contracts`), you can run:
+  {<h3>Clone the Repo & Install Dependencies</h3>}
 
   ```sh
-  npm run wagmi
+  git clone https://github.com/ethereum-optimism/scaffold-op.git
+  cd scaffold-op
+  yarn install
   ```
 
-  This will use the wagmi config (`wagmi.config.ts`) to generate a `src/generated.ts` file which will include your ABIs & Hooks that you can start using in your project.
+  {<h3>Run a Local Network</h3>}
 
-  [Here is an example](https://github.com/ethereum-optimism/optimism-starter/blob/main/src/components/Attestoooooor.tsx#L77) of Hooks from the generated file being used.
-
-  {<h3>Deploy Your Contracts</h3>}
-
-  To deploy your contracts to a network, you can use Foundry's [Forge](https://book.getfoundry.sh/forge/) – a command line tool to tests, build, and deploy your smart contracts.
-
-  You can read a more in-depth guide on using Forge to deploy a smart contract [here](https://book.getfoundry.sh/forge/deploying), but we have included a simple script in the `package.json` to get you started.
-
-  To deploy a smart contract to Ethereum Mainnet using Forge, run:
+  Use the first terminal to run a local network:
 
   ```sh
-  npm run deploy
+  yarn chain
   ```
+
+  This command starts a local Ethereum network using Hardhat. The network runs on your local machine and can be used for testing and development.
+  You can customize the network configuration in `hardhat.config.ts`.
+
+  {<h3>Deploy the Test Contract</h3>}
+
+  Use the second terminal to deploy the contract:
+
+  ```sh
+  yarn deploy
+  ```
+
+  This command deploys a test smart contract to the local network. The contract is located in `packages/hardhat/contracts` and can be modified to suit your needs.
+  The `yarn deploy` command uses the deploy script located in `packages/hardhat/deploy` to deploy the contract to the network. You can also customize the deploy script **by doing XXXXX**.
+
+  {<h3>Start your NextJS App</h3>}
+
+  Use the second terminal to start your NextJS app:
+
+  ```sh
+   yarn start
+  ```
+
+  Visit your app on `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app configuration in `packages/nextjs/scaffold.config.ts`.
+
+  Run smart contract test with `yarn hardhat:test`
+
+  *   Edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
+  *   Edit your frontend in `packages/nextjs/pages`
+  *   Edit your deployment scripts in `packages/hardhat/deploy`
+</Steps>
+
+## Step 3: Deploy Contracts to Superchain Testnets
+You will follow the steps below to deploy contracts to a remote testnet (e.g., Optimism Sepolia). 
+Please ensure you have enough Sepolia ETH on all these Superchains before deploying (See [Step 1 above](#step-1-get-testnet-eth-from-superchain-faucet)).
+
+<Steps>
+  {<h3>Make the `.env` file</h3>}
+
+  Inside the `packages/hardhat` directory, copy `.env.example` to `.env.`
+
+  ```sh
+  cd packages/hardhat && cp .env.example .env
+  ```
+
+  {<h3>Specify the Environment Variables</h3>}
+
+  Edit your `.env` to specify the environment variables. At a minimum, you must specify the `DEPLOYER_PRIVATE_KEY`.
+
+  ```sh
+  DEPLOYER_PRIVATE_KEY = "your_private_key_with_sepolia_ETH";
+  ```
+
+  <Callout type="warning">
+    The contract will be deployed from the address associated with this private key, so make sure it has enough Sepolia ETH (See [Step 1 above](#step-1-get-testnet-eth-from-superchain-faucet)).
+  </Callout>
+
+  {<h3>Deploy Smart Contracts to Selected Networks</h3>}
+
+  This step deploys all smart contracts in `packages/hardhat/contracts` to the selected network(s). Network names are found in `hardhat.config.js`.
+
+  *   Inside `scaffold-op`, run one of the following options:
+
+  <Tabs items={['optionA', 'optionB']}>
+    <Tabs.Tab>
+      ```sh
+      yarn deploy --network-options
+      ```
+    </Tabs.Tab>
+
+    <Tabs.Tab>
+      ```sh
+      yarn deploy --network networkName
+      ```
+    </Tabs.Tab>
+  </Tabs>
+
+  *   Use spacebar to make your selection(s).
+
+  <Callout type="info">
+    If the deployments are successful, you will see the deployment transaction hash on the terminal.
+  </Callout>
 </Steps>
 
 Congratulations! You now have an OP Mainnet app ready for development, which can also be deployed to more OP Chains! 🎉
 
 ## Next Steps
 
-*   Follow [these instructions](https://github.com/ethereum-optimism/optimism-starter/blob/main/README.md#developing-with-anvil-optimism-mainnet-fork) if you'd like to develop using Anvil, for an Optimism Mainnet Fork.
-*   If you're looking to build your app using alternatives such as NEXT.js or a burner wallet, then [check out this resource](https://github.com/ethereum-optimism/optimism-starter/blob/main/README.md#alternatives).
+*   You can also [add Foundry to Scaffold-OP](https://github.com/ethereum-optimism/scaffold-op?tab=readme-ov-file#adding-foundry) for more robust and faster testing.
 *   Visit the [dapp developer tutorials](overview#tutorials) for guides on how to add bridging, wallet features, and L1-to-L2 transactions.

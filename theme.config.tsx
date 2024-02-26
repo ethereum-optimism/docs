@@ -58,10 +58,10 @@ const config: DocsThemeConfig = {
     text: '✏️ Edit this page on GitHub'
   },
   banner: {
-    key: '2.1-release',
+    key: '2.3-release',
     text: (
-      <a href="https://docs.optimism.io/builders/notices/ecotone-fee-changes" target="_self">
-        📌 UPDATE: Get Prepared for Ecotone Fee Estimation Changes. Please review the Notices (README) for more info. → 📌
+      <a href="https://docs.optimism.io/builders/dapp-developers/quick-start" target="_self">
+        🎉 NEW TOOL: Build your Superchain App using the new `Scaffold-OP`-- Check it out and share your feedback. → 🎉
       </a>
     )
   },
