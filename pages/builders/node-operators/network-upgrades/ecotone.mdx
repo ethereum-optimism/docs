@@ -4,42 +4,67 @@ lang: en-US
 description: Details on how to prepare your nodes for the Ecotone Network upgrade.
 ---
 
-import { Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
+import { Tabs } from 'nextra/components'
 
 # Ecotone Network Upgrade
 
-The following information is how you can prepare your nodes for the Ecotone upgrade.
-
-## Mainnet Information
-
-<Callout type="info">
-    The Ecotone mainnet network upgrade is not scheduled yet.
-</Callout>
-
-## Testnet Information 
-
 <Callout type="warning">
-    The Ecotone testnet network upgrade for OP Goerli will activate at **1707238800 Tue Feb 6 17:00:00 UTC 2024**.
+  *   The Ecotone upgrade for OP Goerli activated at **1707238800 Tue Feb 6 17:00:00 UTC 2024**.
+  *   Ecotone Sepolia releases are published and activates at **1708534800 Wed Feb 21 17:00:00 UTC 2024**.
+  *   Ecotone Mainnet upgrade will be at **1710781201 Mon Mar 18 17:00:00 UTC 2024**, pending [governance approval](https://gov.optimism.io/t/upgrade-proposal-5-ecotone-network-upgrade/7669).
 </Callout>
+
+The following information is how you can prepare your existing nodes for the Ecotone upgrade and assumes a [basic Ecotone configuration](/builders/notices/ecotone-changes#for-node-operators) is already in place. There
+is a new Beacon endpoint for `op-node`, because soon after the Ecotone activation, batch
+transactions will be sent as 4844 blobs, and blobs can only be retrieved from Beacon nodes.
+This means node operators will need access to a [consensus client](https://ethereum.org/developers/docs/nodes-and-clients#consensus-clients) (i.e. Lighthouse, Lodestar, Nimbus, Prysm, Teku, etc.).
 
 <Callout type="info">
-    The Ecotone testnet network upgrade for OP Sepolia is not scheduled yet.
+  If you're using Lighthouse, make sure to use at least the finalized version `v4.6.0`
+  because the latest rc contains a bug in its `blob_sidecars` http endpoint.
 </Callout>
 
-### Required Action
+## Configure a Blob Archiver (Archive Nodes)
 
-You must upgrade your nodes to the following versions prior to Tue Feb 6 17:00:00 UTC 2024.
+There is a configurable `beacon-archiver` that will allow nodes to sync blob data that is older than 18 days - after blobs are 18 days old, normal beacon nodes will  "prune" or remove them. If your node is already in sync with the head of the chain, you won't need to use a `beacon-archiver`.
 
-*   Upgrade your `op-node` to version: [v1.5.0](https://github.com/ethereum-optimism/optimism/releases/tag/v1.5.0)
-*   Upgrade your `op-geth` to version: [v1.101305.3](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101305.3)
+*   If you're spinning up a new node, if you load it from a snapshot that's within 18 days (the amount of time until blobs are pruned) you will not need to use a `beacon-archiver`  at all as long as your node does not fall offline for more than 18 days.
+*   If you're running a new node that is syncing more than 18 days (the amount of time until blobs are pruned) after Ecotone launch, then you will need to configure a `beacon-archiver` on the `op-node`.
 
-### Verifying Your Configuration on OP Goerli
+```shell
+--l1.beacon-archiver value                                                      ($OP_NODE_L1_BEACON)
+          HTTP Endpoint of a Blob Archiver or an L1 Beacon-node that does not prune blobs 
+```
+
+Choose one of the following options to access a beacon archiver endpoint:
+
+*   **Option 1:** Run a beacon node with blobs pruning disabled. For example, you can run your own L1 beacon node like [Lighthouse](https://lighthouse-book.sigmaprime.io/run_a_node.html) and configure it to retain all blobs and use that endpoint here.
+
+```shell
+# lighthouse
+--prune-blobs=false
+```
+
+*   **Option 2:**  Run a `blob-archiver` and configure `op-node` to use the `blob-archiver` API service with `--l1.beacon-archiver`.
+    Running a `blob-archiver` is lighter weight than running a beacon node that does not prune blobs: [https://github.com/base-org/blob-archiver](https://github.com/base-org/blob-archiver). There is a configurable `beacon-archiver` that will allow nodes to sync blob data that is older than 18 days - after blobs are 18 days old, normal beacon nodes will  "prune" or remove them. If your node is already in sync with the head of the chain, you won't need to use a `beacon-archiver`.
+    *   If you're spinning up a new node, if you load it from a snapshot that's within 18 days (the amount of time until blobs are pruned) you will not need to use a `beacon-archiver`  at all as long as your node does not fall offline for more than 18 days.
+    *   If you're running a new node that is syncing more than 18 days (the amount of time until blobs are pruned) after Ecotone launch, then you will need to configure a `beacon-archiver` on the `op-node`.
+
+```shell
+--l1.beacon-archiver value                                                      ($OP_NODE_L1_BEACON)
+          HTTP Endpoint of a Blob Archiver or an L1 Beacon-node that does not prune blobs 
+```
+
+*   **Option 3:** If you don't want to operate any Beacon infrastructure, you can use an external service that provides access to pruned Blobs.
+
+## Verify Your Configuration
 
 You can verify your node is configured correctly with the following:
 
 *   `op-node` and `op-geth` will log their configurations at startup
-*   Check that Ecotone and Cancun time is set to `1707238800` in the op-node logs
-
+*   Check that Ecotone time is set to `activation-timestamp` in the op-node logs
+*   Check that Ecotone and Cancun time is set to `activation-timestamp` in the op-geth logs
 
 ## Additional Support
 

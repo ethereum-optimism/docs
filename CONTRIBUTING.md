@@ -61,7 +61,8 @@ To prevent building issues upstream, you should build the content locally before
 
 - Use the information reported by the terminal to fix any issues (e.g., broken links). 
 - Run `pnpm fix` to automatically fix most linting issues (e.g., formatting and style guide). 
-- Run `pnpm spellcheck` to test your content against the dictionary. Add new term(s) to the `words.txt` file in the root of this repository to resolve spellcheck issues.
+- Run `pnpm spellcheck:lint` to test your content against the dictionary. Add new words to the dictionary by appending them to `words.txt`.
+- Run `pnpm spellcheck:fix` to add new words to the dictionary automatically.
 - Try another `pnpm dev` and repeat until no issues are reported ("client" and "server compiled successfully").
 
 
