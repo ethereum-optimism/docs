@@ -31,7 +31,7 @@ We'll start with `op-geth`'s configuration because it is more complex. As mentio
 1.  **With a Genesis File:** This is for OP Sepolia, and other testnets or deployments that are not migrated from a legacy network. In this case, you'll download the [genesis file](https://networks.optimism.io/op-sepolia/genesis.json) and initialize the data directory via `geth init`.
 2.  **With a Data Directory:** This is used for networks that are migrated from a legacy network. This currently **only** includes OP Mainnet. In this case, you'll download a preconfigured data directory and extract it. No further initialization is necessary in this case, because the data directory contains the network's genesis information.
 
-Regardless of how `op-geth` is initialized, you'll need to ensure that you have sufficient disk space available to store the network's data. As of this writing, the mainnet data directory is \~100GB for a full node and \~1TB for an archival node.
+Regardless of how `op-geth` is initialized, you'll need to ensure that you have sufficient disk space available to store the network's data. As of this writing, the mainnet data directory is \~1TB for a full node and \~4TB for an archival node.
 
 Instructions for each initialization method are below. If you're spinning up an OP Mainnet, use the [Initialization via Data Directory](#initialization-via-data-directory) path. If you're spinning up an OP Sepolia node, use the [Initialization via Genesis File](#initialization-via-genesis-file) path.
 
@@ -140,6 +140,15 @@ Consult [Geth's documentation](https://geth.ethereum.org/docs/) for more informa
 
 `op-node` is a standalone, statically linked binary. It stores no state, and requires no initialization. It consumes configuration parameters either via the command line or environment variables. For some networks, the Rollup Node also requires a configuration file (called `rollup.json` or the "rollup config") that configures network-specific genesis parameters. For official networks like OP Sepolia and OP Mainnet, the genesis config is hardcoded in the `op-node` software and can be specified via a `--network` flag.
 
+Following the [Ecotone upgrade](/builders/node-operators/network-upgrades#ecotone)
+node operators must set an L1 beacon value to retrieve [blobs](/builders/node-operators/management/blobs)
+from a Beacon node.
+
+<Callout type="warning">
+  The `op-node` RPC should not be exposed publicly. If left exposed, it could
+  accidentally expose admin controls to the public internet.
+</Callout>
+
 #### Working Base Configuration
 
 A minimal valid configuration that runs `op-node` looks like:
@@ -150,7 +159,8 @@ op-node --l1=<ethereum mainnet RPC url> \
         --network=op-mainnet \
         --rpc.addr=127.0.0.1 \
         --rpc.port=9545 \
-        --l2.jwt-secret=<path to JWT secret>
+        --l2.jwt-secret=<path to JWT secret> \
+        --l1.beacon=<http endpoint address of L1 Beacon-node>
 ```
 
 You can manually specify a path to a rollup config with the `--rollup.config` flag. This is used for testnets or internal deployments that are not migrated from a legacy network.
