@@ -13,9 +13,8 @@ This page outlines breaking changes related to Ecotone network upgrade for walle
 If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
 
 <Callout type="warning">
-  *   The Ecotone upgrade for OP Goerli activated at **1707238800 Tue Feb 6 17:00:00 UTC 2024**.
-  *   Ecotone Sepolia releases are published and activates at **1708534800 Wed Feb 21 17:00:00 UTC 2024**.
-  *   Ecotone Mainnet upgrade will be at **1710781201 Mon Mar 18 17:00:00 UTC 2024**, pending [governance approval](https://gov.optimism.io/t/upgrade-proposal-5-ecotone-network-upgrade/7669).
+  *   The Ecotone upgrade for OP Sepolia activated at **1708534800 Wed Feb 21 17:00:00 UTC 2024**.
+  *   The Ecotone OP Mainnet upgrade will be at **1710374401 Thu Mar 14 00:00:01 UTC 2024**, pending [governance approval](https://gov.optimism.io/t/upgrade-proposal-5-ecotone-network-upgrade/7669).
 </Callout>
 
 ## For Wallets and Front-End Developers
@@ -48,19 +47,31 @@ Chain operators will also want to review the guide on [Using Blobs](/builders/ch
 
 ### Preparing Your Chain
 
-1.  Ensure your sequencer node is prepared by following the [three node operator steps](#preparing-your-node): update to latest release, configure the Ecotone activation date, and preparing for activation.
+<Steps> 
 
-2.  Encode and prepare to send an L1 transaction from your `SystemConfigProxy` owner shortly after Ecotone activation. See the guide on [Using Blobs](/builders/chain-operators/management/blobs#determine-scalar-values-for-using-blobs) for more details.
+### Prepare Sequencer Node 
+
+Ensure your sequencer node is prepared by following the [three node operator steps](#preparing-your-node): update to latest release, configure the Ecotone activation date, and preparing for activation.
+
+### Prepare `SystemConfig` Transaction
+
+Encode and prepare to send an L1 transaction from your `SystemConfigProxy` owner shortly after Ecotone activation. See the guide on [Using Blobs](/builders/chain-operators/management/blobs#determine-scalar-values-for-using-blobs) for more details.
 
 <Callout type="info">
   At the point of activation of the Ecotone fork, your current scalar setting will by default become the `BaseFeeScalar` value, and the `BlobBaseFeeScalar` will be set to `0`.
 </Callout>
 
-3.  Prepare your batcher to be restarted with the updated configuration in advance of the Ecotone activation to submit blobs. See the guide on [Using Blobs](/builders/chain-operators/management/blobs#update-your-batcher-to-post-blobs) for more details.
+### Prepare Batcher
 
-4.  You will want to do the above steps very shortly after the activation of Ecotone to take full advantage of cheaper fees with 4844.
+Prepare your batcher to be restarted with the updated configuration in advance of the Ecotone activation to submit blobs. See the guide on [Using Blobs](/builders/chain-operators/management/blobs#update-your-batcher-to-post-blobs) for more details.
+
+### Take Full Advantage of Blobs
+
+You will want to do the above steps very shortly after the activation of Ecotone to take full advantage of cheaper fees with 4844.
     Also, due to the removal of the `overhead` in the calculation of L1 data fees, after Ecotone activates, chain operators are expected to experience an up to 10% decrease in L1 fee margin.
     This could result in operating at a loss until the above steps are completed.
+
+</Steps>
 
 ## For Node Operators
 
@@ -72,12 +83,14 @@ This means node operators will need access to a [beacon node/consensus client](h
 
 These steps are necessary for EVERY node operator:
 
-1.  Update to the latest release
+<Steps> 
 
-*   [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101308.1)
-*   [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/v1.6.1)
+### Update to the latest release
 
-2.  Configure the Ecotone Activation Date
+*   [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101308.2)
+*   [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.0)
+
+### Configure the Ecotone Activation Date
 
 *   If you are operating a node for an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json), the Ecotone activation date is part of the `op-node` and `op-geth` nodes. So, no action is needed for the sequencer after upgrading to the latest release.
 *   For node operators of custom chains not included in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json), the activation dates can be set in the `rollup.json` (set `ecotone_time`) or set the activation time via overrides (CLI) in both `op-node` and `op-geth`. These will need to be set on `op-node` and `op-geth` for the sequencer and all other nodes.
@@ -103,7 +116,7 @@ These steps are necessary for EVERY node operator:
   </Tabs.Tab>
 </Tabs>
 
-3.  Prepare for Activation
+### Prepare for Activation
 
 *   All node operators must set an L1 beacon value in your `op-node` as soon as you update to the latest release.
 
@@ -121,3 +134,11 @@ These steps are necessary for EVERY node operator:
 <Callout type="default">
   Existing node operators have additional steps to follow and should read the guide on [preparing existing nodes for Ecotone](/builders/node-operators/network-upgrades/ecotone).
 </Callout>
+
+### You can verify your node is configured correctly with the following:
+
+*   `op-node` and `op-geth` will log their configurations at startup
+*   Check that Ecotone time is set to `activation-timestamp` in the op-node logs
+*   Check that Ecotone and Cancun time is set to `activation-timestamp` in the op-geth logs
+
+</Steps>
