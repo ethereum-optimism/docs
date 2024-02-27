@@ -47,10 +47,10 @@ const config: DocsThemeConfig = {
     text: '✏️ Edit this page on GitHub'
   },
   banner: {
-    key: '2.2-release',
+    key: '2.3-release',
     text: (
-      <a href="https://docs.optimism.io/builders/notices/ecotone-changes" target="_self" rel="noopener noreferrer" aria-label="Learn about Ecotone Breaking Changes">
-        📌 UPDATE: Get Prepared for Ecotone Breaking Changes for Wallets, Front-End Developers, Chain Operators, and Node Operators. → 📌
+      <a href="https://docs.optimism.io/builders/dapp-developers/quick-start" target="_self" rel="noopener noreferrer" aria-label="Test out Scaffold-OP for building Superchain Apps">
+        🎉 NEW TOOL: Build your Superchain App using the new <b>Scaffold-OP</b>! Check it out and share your feedback. → 🎉
       </a>
     )
   },
