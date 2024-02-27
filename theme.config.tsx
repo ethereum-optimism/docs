@@ -50,7 +50,7 @@ const config: DocsThemeConfig = {
     key: '2.3-release',
     text: (
       <a href="https://docs.optimism.io/builders/dapp-developers/quick-start" target="_self" rel="noopener noreferrer" aria-label="Test out Scaffold-OP for building Superchain Apps">
-        🎉 NEW TOOL: Build your Superchain App using the new <code>Scaffold-OP</code>! Check it out and share your feedback. → 🎉
+        🎉 NEW TOOL: Build your Superchain App using the new <b>Scaffold-OP</b>! Check it out and share your feedback. → 🎉
       </a>
     )
   },
