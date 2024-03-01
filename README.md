@@ -16,7 +16,7 @@ Please see the [CONTRIBUTING.md](CONTRIBUTING.md) page for specifics on how to w
 
 ## Project Board
 
-Documentation updates are tracked on the following project board. You can also track [issues](https://github.com/ethereum-optimism/docs/issues) or submit documentation [requests](https://github.com/ethereum-optimism/docs/issues/new/choose) directly from this repo.
+You can track documentation [issues](https://github.com/ethereum-optimism/docs/issues) or submit documentation [requests](https://github.com/ethereum-optimism/docs/issues/new/choose) directly from this repo.
 
 ## License
 
