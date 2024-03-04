@@ -1,0 +1,146 @@
+---
+title: Network Upgrades
+lang: en-US
+description: Learn more about how network upgrades work and how to keep your nodes up to date.
+---
+
+import Image from 'next/image'
+import { Steps, Callout } from 'nextra/components'
+
+# Network Upgrade Overview
+
+<Callout type="warning">
+  Read this [notice](/builders/notices/ecotone-changes.mdx) to prepare for Ecotone.
+</Callout>
+
+This section has information on how to upgrade your Mainnet and Testnet nodes 
+for new network upgrades. The network upgrade naming scheme after the Bedrock
+upgrade has a geology themed name based on the next letter in the english 
+alphabet.
+
+
+## Activations
+
+Network upgrades are activated by timestamps. Failing to upgrade your node
+before the timestamp will cause a chain divergence. You will need to resync
+your node to reconcile the chain.
+
+| Upgrade                                                                        | Governance Approval                                                                        | [OP Mainnet Activations](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/mainnet/superchain.yaml) | [OP Sepolia Activations](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/sepolia/superchain.yaml) |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| [Fjord](https://specs.optimism.io/protocol/superchain-upgrades.html#fjord)     | TBD                                                                                        | TBD                                                                                                                                     | TBD                                                                                                                                     |
+| [Ecotone](https://specs.optimism.io/protocol/superchain-upgrades.html#ecotone) | [TBD](https://gov.optimism.io/t/upgrade-proposal-5-ecotone-network-upgrade/7669)           | Optimistically Thu Mar 14 00:00:01 UTC 2024 (`1710374401`)                                                                              | Wed Feb 21 17:00:00 UTC 2024 (`1708534800`)                                                                                             |
+| [Delta](https://specs.optimism.io/protocol/superchain-upgrades.html#delta)     | [approved](https://gov.optimism.io/t/final-upgrade-proposal-3-delta-network-upgrade/7310)  | Thu Feb 22 00:00:00 UTC 2024 (`1708560000`)                                                                                             | Fri Dec 22 00:00:00 UTC 2023 (`1703203200`)                                                                                             |
+| [Canyon](https://specs.optimism.io/protocol/superchain-upgrades.html#canyon)   | [approved](https://gov.optimism.io/t/final-upgrade-proposal-2-canyon-network-upgrade/7088) | Thu Jan 11 17:00:01 UTC 2024 (`1704992401`)                                                                                             | Tue Nov 14 17:00:00 UTC 2023 (`1699981200`)                                                                                             |
+
+## Summary of Changes
+
+These are the summary of each network upgrade changes order by the most recent
+activation. These are a reflection of the [Superchain Upgrades Specifications](https://specs.optimism.io/protocol/superchain-upgrades.html)
+
+### [Fjord](https://specs.optimism.io/protocol/superchain-upgrades.html#fjord)
+
+Name of the next upgrade after Ecotone. Placeholder for development coordination.
+
+### [Ecotone](https://specs.optimism.io/protocol/superchain-upgrades.html#ecotone)
+
+The Ecotone upgrade contains the Dencun upgrade from L1, and adopts EIP-4844 blobs for data-availability.
+
+Cancun (Execution Layer):
+
+*   [EIP-1153: Transient storage opcodes](https://eips.ethereum.org/EIPS/eip-1153)
+*   [EIP-4844: Shard Blob Transactions](https://eips.ethereum.org/EIPS/eip-4844)
+*   [Blob transactions are disabled](https://specs.optimism.io/protocol/exec-engine.html#ecotone-disable-blob-transactions)
+*   [EIP-4788: Beacon block root in the EVM](https://eips.ethereum.org/EIPS/eip-4788)
+*   [The L1 beacon block root is embedded into L2](https://specs.optimism.io/protocol/exec-engine.html#ecotone-beacon-block-root)
+*   [The Beacon roots contract deployment is automated](https://specs.optimism.io/protocol/derivation.html#ecotone-beacon-block-roots-contract-deployment-eip-4788)
+*   [EIP-5656: MCOPY - Memory copying instruction](https://eips.ethereum.org/EIPS/eip-5656)
+*   [EIP-6780: SELFDESTRUCT only in same transaction](https://eips.ethereum.org/EIPS/eip-6780)
+*   [EIP-7516: BLOBBASEFEE opcode](https://eips.ethereum.org/EIPS/eip-7516)
+*   [BLOBBASEFEE always pushes 1 onto the stack](https://specs.optimism.io/protocol/exec-engine.html#ecotone-disable-blob-transactions)
+
+Deneb (Consensus Layer): *not applicable to L2*
+
+*   [EIP-7044: Perpetually Valid Signed Voluntary Exits](https://eips.ethereum.org/EIPS/eip-7044)
+*   [EIP-7045: Increase Max Attestation Inclusion Slot](https://eips.ethereum.org/EIPS/eip-7045)
+*   [EIP-7514: Add Max Epoch Churn Limit](https://eips.ethereum.org/EIPS/eip-7514)
+
+Data Availability (DA) upgrade:
+
+*   Blobs Data Availability: support blobs DA the [L1 Data-retrieval stage](https://specs.optimism.io/protocol/derivation.html#ecotone-blob-retrieval).
+*   Rollup fee update: support blobs DA in [L1 Data Fee computation](https://specs.optimism.io/protocol/exec-engine.html#ecotone-l1-cost-fee-changes-eip-4844-da)
+*   Auto-upgrading and extension of the [L1 Attributes Predeployed Contract](https://specs.optimism.io/protocol/deposits.html#ecotone-l1block-upgrade)
+    (also known as `L1Block` predeploy)
+
+### [Delta](https://specs.optimism.io/protocol/superchain-upgrades.html#delta)
+
+The Delta upgrade consists of a single consensus-layer feature: [Span Batches](https://specs.optimism.io/protocol/span-batches.html).
+
+The Delta upgrade uses a *L2 block-timestamp* activation-rule, and is specified only in the rollup-node (`delta_time`).
+
+### [Canyon](https://specs.optimism.io/protocol/superchain-upgrades.html#canyon)
+
+The Canyon upgrade contains the Shapella upgrade from L1 and some minor protocol fixes.
+
+*   [EIP-3651: Warm COINBASE](https://eips.ethereum.org/EIPS/eip-3651)
+*   [EIP-3855: PUSH0 instruction](https://eips.ethereum.org/EIPS/eip-3855)
+*   [EIP-3860: Limit and meter initcode](https://eips.ethereum.org/EIPS/eip-3860)
+*   [EIP-4895: Beacon chain push withdrawals as operations](https://eips.ethereum.org/EIPS/eip-4895)
+*   [Withdrawals are prohibited in P2P Blocks](https://specs.optimism.io/protocol/rollup-node-p2p.html#block-validation)
+*   [Withdrawals should be set to the empty array with Canyon](https://specs.optimism.io/protocol/derivation.html#building-individual-payload-attributes)
+*   [EIP-6049: Deprecate SELFDESTRUCT](https://eips.ethereum.org/EIPS/eip-6049)
+*   [Modifies the EIP-1559 Denominator](https://specs.optimism.io/protocol/exec-engine.html#1559-parameters)
+*   [Channel Ordering Fix](https://specs.optimism.io/protocol/derivation.html#reading)
+*   [Adds the deposit nonce & deposit nonce version to the deposit receipt hash](https://specs.optimism.io/protocol/deposits.html#deposit-receipt)
+*   [Deploys the create2Deployer to `0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2`](https://specs.optimism.io/protocol/predeploys.html#create2deployer)
+
+The Canyon upgrade uses a *L2 block-timestamp* activation-rule, and is specified in both the
+rollup-node (`canyon_time`) and execution engine (`config.canyonTime`). Shanghai time in the
+execution engine should be set to the same time as the Canyon time.
+
+## Upgrade Process
+
+Network upgrades follow this general process in which the features included in
+the upgrade are put into a release version cut from the `develop` branch and
+then the software is deployed on production networks.
+
+<Callout type="info">
+  "Baking" on a network means the node software has been deployed and is live.
+  Engineers take this time to observe the behavior of the software on
+  production networks.
+</Callout>
+
+<Image src="/img/builders/node-operators/network-upgrades/node-software-release-timeline.png" alt="Node Software Release Timeline" width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
+
+<Steps>
+  ### Devnet
+
+  *   `Devnet Upgrade Notice Period` is for core developers to upgrade the
+      node software on an internal devnet prior to the activation timestamp.
+  *   `Upgrade Activates on Devnet`
+  *   `Baking on Devnet`
+
+  ### Testnet
+
+  *   `Testnet Upgrade Notice Period` is to allow testnet node operators to
+      upgrade the node software on testnet prior to the activation timestamp.
+  *   `Upgrade Activates on Testnet`
+  *   `Baking on Testnet`
+
+  ### Mainnet
+
+  *   `Governance Voting Review Period` is when the Optimism Collective's
+      governance system reviews proposals, including network upgrade proposals.
+  *   `Governance Voting Period` is when the Optimism Collective's governance
+      system votes on proposals.
+  *   `Veto Period` is when the Citizens' House of the governance system can
+      veto a protocol upgrade that has been approved by the Token House.
+  *   `Cut Mainnet Release`
+  *   `Mainnet Upgrade Notice Period` is to allow mainnet node operators to
+      upgrade the node software on mainnet prior to the activation timestamp.
+  *   `Upgrade Activated`
+</Steps>
+
+## More Information
+
+*   To check for the latest node software, see the [Software Releases](/builders/node-operators/releases)
+*   For more information on the governance process see the [governance documentation](https://community.optimism.io/docs/governance/)
