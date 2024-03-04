@@ -23,6 +23,10 @@ This guide walks you through how to switch to using blobs for your chain after E
 
 ## Switch to Using Blobs
 
+**The values in the following steps have example values.** You should utilize this
+[fee parameter calculator]()
+to get a better estimate for scalar values on your chain.
+
 <Steps>
   ### Determine Scalar Values for Using Blobs
 
@@ -33,23 +37,26 @@ This guide walks you through how to switch to using blobs for your chain after E
   information is tuned to a network like OP Mainnet.
   For more details on fee scalar, see [Transaction Fees, Ecotone section](/stack/transactions/fees#ecotone).
 
-  If your chain is submitting full blobs, rough *recommended* scalar values to set to target a minimal margin on costs are:
+  If your chain is submitting full blobs, rough *example* scalar values to set 
+  to target a minimal margin on costs are:
 
   ```
-  l1BaseFeeScalar = 11000
-  l1BlobBaseFeeScalar = 1087000
+  l1BaseFeeScalar = 1100
+  l1BlobBaseFeeScalar = 655000
   ```
 
   However, if your chain has less data throughput than 130kb per batch submission, you may have to only partially fill blobs.
   Because you must purchase an entire blob, you will be paying for 130KB of data, but submitting less, and must adjust your scalar accordingly.
 
 
-  Assuming a 5 hour `OP_BATCHER_MAX_CHANNEL_DURATION`, this is how to configure on the `op-batcher`.
-  If you are posting 65KB per 5 hours of data (assuming roughly 250 byte transactions, this would be \~1250 transactions per day), then you would want to double the above recommended scalar values:
+  Assuming a 5 hour `OP_BATCHER_MAX_CHANNEL_DURATION`, this is how to configure 
+  on the `op-batcher`. If you are posting 65KB per 5 hours of data (assuming 
+  roughly 250 byte transactions, this would be \~1250 transactions per day), 
+  then you would want to double the above example scalar values:
 
   ```
-  baseFeeScalar = 22000 = 11000 * 2
-  blobBaseFeeScalar = 2174000 = 1087000 * 2
+  baseFeeScalar = 2200 = 1100 * 2
+  blobBaseFeeScalar = 1310000 = 655000 * 2
   ```
 
   #### Adjust Fees to Change Margins
@@ -72,15 +79,15 @@ This guide walks you through how to switch to using blobs for your chain after E
   Here is an example of what you might see when using the utility:
 
   ```js
-  ./bin/ecotone-scalar --scalar=7600 --blob-scalar=862000
-  # base fee scalar     : 7600
-  # blob base fee scalar: 862000
-  # v1 hex encoding  : 0x010000000000000000000000000000000000000000000000000d273000001db0
+  ./bin/ecotone-scalar --scalar=1100 --blob-scalar=655000
+  # base fee scalar     : 1100
+  # blob base fee scalar: 655000
+  # v1 hex encoding  : 0x0100000000000000000000000000000000000000000000000009fe980000044c
   # uint value for the 'scalar' parameter in SystemConfigProxy.setGasConfig():
-  452312848583266388373324160190187140051835877600158453279134889792719822256
+  452312848583266388373324160190187140051835877600158453279134000734489543756
   ```
 
-  You will get a value that looks something like: `0x010000000000000000000000000000000000000000000000000d273000001db0`
+  You will get a value that looks something like: `0x0100000000000000000000000000000000000000000000000009fe980000044c`
   Note that the `0x01` byte at the start indicates the version of the scalar, and the hex value at the end are the encoded scalars.
   Depending on the tool used, you may have to input the uint representation or the hex version, but both Foundry's `cast` and Gnosis's Safe UI accept the hex value.
 
@@ -89,7 +96,7 @@ This guide walks you through how to switch to using blobs for your chain after E
   An exemplary way to create the calldata for your update transaction to the SystemConfigProxy is:
 
   ```shell
-  cast calldata 'setGasConfig(uint256,uint256)' 0 0x010000000000000000000000000000000000000000000000000d273000001db0`
+  cast calldata 'setGasConfig(uint256,uint256)' 0 0x0100000000000000000000000000000000000000000000000009fe980000044c`
   ```
 
   Check that the gas price oracle on L2 returns the expected values for `baseFeeScalar` and `blobBaseFeeScalar` (wait \~1 minute):
