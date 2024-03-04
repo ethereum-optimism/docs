@@ -11,6 +11,12 @@ import { Tabs } from 'nextra/components'
 
 This guide walks you through how to switch to using blobs for your chain after Ecotone is activated.
 
+<Callout type="warning">
+  The scalar values you use on your chain are coupled with the data throughput 
+  of your chain. You can utilize this [fee parameter calculator]()
+  to get a better estimate for scalars values on your chain.
+</Callout>
+
 <Callout type="info">
   This guide is intended for chains already upgraded to Ecotone. Please see the [Ecotone Upgrade Notice](/builders/notices/ecotone-changes) before continuing.
 </Callout>
@@ -20,7 +26,11 @@ This guide walks you through how to switch to using blobs for your chain after E
 <Steps>
   ### Determine Scalar Values for Using Blobs
 
-  The first step to switching to submit data with Blobs is to calculate the scalar values you wish to set for the formula to charge users fees.
+  The first step to switching to submit data with Blobs is to calculate the 
+  scalar values you wish to set for the formula to charge users fees. 
+  You can utilize this [fee parameter calculator]()
+  to get a better estimate for scalar values on your chain. The following
+  information is tuned to a network like OP Mainnet.
   For more details on fee scalar, see [Transaction Fees, Ecotone section](/stack/transactions/fees#ecotone).
 
   If your chain is submitting full blobs, rough *recommended* scalar values to set to target a minimal margin on costs are:
@@ -88,7 +98,7 @@ This guide walks you through how to switch to using blobs for your chain after E
     This is checked on L2, so ensure you are using an RPC URL for your chain. You'll also need to provide a `gas-price` to geth when making this call.
   </Callout>
 
-  <Tabs items={['baseFeeScalar', 'baseFeeScalar']}>
+  <Tabs items={['baseFeeScalar', 'blobBaseFeeScalar']}>
     <Tabs.Tab>
       ```shell
       cast call 0x420000000000000000000000000000000000000F 'baseFeeScalar()(uint256)' --gas-price 10000000 --rpc-url YOUR_L2_RPC_URL
@@ -118,13 +128,21 @@ This guide walks you through how to switch to using blobs for your chain after E
 
 ## Switch Back to Using Calldata
 
-As a chain operator, if the `blobBaseFee` is expensive enough and your chain is not processing enough transactions to meaningfully fill blobs within your configured batcher `OP_BATCHER_MAX_CHANNEL_DURATION`, you may wish to switch back to posting data to calldata.
-Chains can follow these steps to switch from blobs back to using calldata.
+As a chain operator, if the `blobBaseFee` is expensive enough and your chain is 
+not processing enough transactions to meaningfully fill blobs within your 
+configured batcher `OP_BATCHER_MAX_CHANNEL_DURATION`, you may wish to switch 
+back to posting data to calldata. Chains can follow these steps to switch from 
+blobs back to using calldata.
 
 <Steps>
   ### Determine Your Scalar Values for Using Calldata
 
-  If you are using calldata, then you can set your `BaseFeeScalar` similarly to how you would have set "scalar" prior to Ecotone, though with a 5-10% bump to compensate for the removal of the "overhead" component.\
+  If you are using calldata, then you can set your `BaseFeeScalar` similarly to 
+  how you would have set "scalar" prior to Ecotone, though with a 5-10% bump to 
+  compensate for the removal of the "overhead" component.
+  You can utilize this [fee parameter calculator]()
+  to get a better estimate for scalar values on your chain. The following
+  information is tuned to a network like OP Mainnet.\
   To target a 5% margin on your L1 Fees, we would recommend:
 
   ```
