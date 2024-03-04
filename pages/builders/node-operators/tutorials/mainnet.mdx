@@ -26,10 +26,173 @@ Below are suggested minimum hardware requirements for each type of node.
 *   1TB SSD (full node) or 4TB SSD (archive node)
 *   Reasonably modern CPU
 
-## Get the Migrated Data Directory
+## Full Node Guide
+
+## Assess Blob Archiver
+
+Assess if you need to configure a blob archiver service by reading the 
+[Configure a Blob Archiver documentation](/builders/node-operators/management/blobs#configure-a-blob-archiver-archive-nodes).
+
+## Create a JWT Secret
+
+`op-geth` and `op-node` communicate over the engine API authrpc.
+This communication is secured using a shared secret.
+You will need to generate a shared secret and provide it to both `op-geth` and `op-node` when you start them.
+In this case, the secret takes the form of a 32 byte hex string.
+
+Run the following command to generate a random 32 byte hex string:
+
+```bash
+openssl rand -hex 32 > jwt.txt
+```
+
+## Start `op-geth`
+
+It's generally easier to start `op-geth` before starting `op-node`.
+You can still start `op-geth` without yet running `op-node`, but the `op-geth` instance will simply not receive any blocks until `op-node` is started.
+
+CALLOUT: Snap sync options here.
+
+<Steps>
+
+{<h3>Navigate to your op-geth directory</h3>}
+
+Find the directory where you built the `op-geth` binary.
+
+{<h3>Copy in the JWT secret</h3>}
+
+Copy the JWT secret you generated in a previous step into the `op-geth` directory.
+
+```bash
+cp /path/to/jwt.txt .
+```
+
+{<h3>Set environment variables</h3>}
+
+Set the following environment variables:
+
+```bash
+export DATADIR_PATH=... # Path to the migrated data directory
+```
+
+{<h3>Start op-geth</h3>}
+
+Use the following command to start `op-geth` in a default configuration.
+The JSON-RPC API will become available on port 8545.
+Refer to the `op-geth` [configuration documentation](../management/configuration#op-geth) for more detailed information about available options.
+
+```bash
+./build/bin/geth \
+  --http \
+  --http.port=8545 \
+  --http.addr=localhost \
+  --authrpc.addr=localhost \
+  --authrpc.jwtsecret=./jwt.txt \
+  --verbosity=3 \
+  --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
+  --op-network=op-mainnet \
+  --datadir=$DATADIR_PATH
+```
+
+</Steps>
+
+## Start `op-node`
+
+Once you've started `op-geth`, you can start `op-node`.
+`op-node` will connect to `op-geth` and begin synchronizing the OP Mainnet state.
+`op-node` will begin sending block payloads to `op-geth` when it derives enough blocks from Ethereum.
+
+<Steps>
+
+{<h3>Navigate to your op-node directory</h3>}
+
+Find the directory where you built the `op-node` binary.
+
+{<h3>Copy in the JWT secret</h3>}
+
+Both `op-geth` and `op-node` need to use the same JWT secret.
+Copy the JWT secret you generated in a previous step into the `op-node` directory.
+
+```bash
+cp /path/to/jwt.txt .
+```
+
+{<h3>Set environment variables</h3>}
+
+Set the following environment variables:
+
+```bash
+export L1_RPC_URL=...  # URL for the L1 node to sync from
+export L1_RPC_KIND=... # RPC type (alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any)
+export L1_BEACON_URL=... # URL address for the L1 Beacon-node HTTP endpoint to use.
+```
+
+{<h3>Start op-node</h3>}
+
+Use the following command to start `op-node` in a default configuration.
+Refer to the `op-node` [configuration documentation](../management/configuration#op-node) for more detailed information about available options.
+
+<Callout type="warning">
+  The `op-node` RPC should not be exposed publicly. If left exposed, it could
+  accidentally expose admin controls to the public internet.
+</Callout>
+
+```bash
+./bin/op-node \
+  --l1=$L1_RPC_URL \
+  --l1.rpckind=$L1_RPC_KIND \
+  --l1.beacon=$L1_BEACON_URL \
+  --l2=ws://localhost:8551 \
+  --l2.jwt-secret=./jwt.txt \
+  --network=op-mainnet \
+  --syncmode=execution-layer
+```
+
+<Callout>
+Some L1 nodes, like Erigon, do not support the `eth_getProof` RPC method that the `op-node` uses to load L1 data for certain processing steps.
+If you are using an L1 node that does not support `eth_getProof`, you will need to include the `--l1.trustrpc` flag when starting `op-node`.
+Note that this flag will cause `op-node` to trust the L1 node to provide correct data as it will no longer be able to independently verify the data it receives.
+</Callout>
+
+</Steps>
+
+## Synchronization
+
+Once you've started `op-geth` and `op-node` you should see the two begin to communicate with each other and synchronize the OP Mainnet chain.
+Initial synchronization can take several hours to complete.
+
+During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to `op-geth`.
+This means that `op-node` is requesting blocks from Ethereum one-by-one and determining the corresponding OP Mainnet blocks that were published to Ethereum.
+You should see logs like the following from `op-node`:
+
+```text
+INFO [06-26|13:31:20.389] Advancing bq origin                      origin=17171d..1bc69b:8300332 originBehind=false
+```
+
+Once the `op-node` has derived enough blocks from Ethereum, it will begin sending these blocks to `op-geth`.
+You should see logs like the following from `op-node`:
+
+```text
+INFO [06-26|14:00:59.460] Sync progress                            reason="processed safe block derived from L1" l2_finalized=ef93e6..e0f367:4067805 l2_safe=7fe3f6..900127:4068014 l2_unsafe=7fe3f6..900127:4068014 l2_time=1,673,564,096 l1_derived=6079cd..be4231:8301091
+INFO [06-26|14:00:59.460] Found next batch                         epoch=8e8a03..11a6de:8301087 batch_epoch=8301087 batch_timestamp=1,673,564,098
+INFO [06-26|14:00:59.461] generated attributes in payload queue    txs=1  timestamp=1,673,564,098
+INFO [06-26|14:00:59.463] inserted block                           hash=e80dc4..72a759 number=4,068,015 state_root=660ced..043025 timestamp=1,673,564,098 parent=7fe3f6..900127 prev_randao=78e43d..36f07a fee_recipient=0x4200000000000000000000000000000000000011 txs=1  update_safe=true
+```
+
+You should then also begin to see logs like the following from `op-geth`:
+
+```text
+INFO [06-26|14:02:12.974] Imported new potential chain segment     number=4,068,194 hash=a334a0..609a83 blocks=1         txs=1         mgas=0.000  elapsed=1.482ms     mgasps=0.000   age=5mo2w20h dirty=2.31MiB
+INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,194 hash=a334a0..609a83 root=e80f5e..dd06f9 elapsed="188.373µs" age=5mo2w20h
+INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
+
+
+## Archive Node Guide
+
+### Get the Migrated Data Directory
 
 OP Mainnet underwent a large database migration as part of the [Bedrock Upgrade](https://web.archive.org/web/20230608050602/https://blog.oplabs.co/introducing-optimism-bedrock/) in 2023.
-You will need access to the migrated OP Mainnet database to run a node.
+You will need access to the migrated OP Mainnet database to run an archive node.
 You can [migrate your own data directory](https://web.archive.org/web/20240110231645/https://blog.oplabs.co/reproduce-bedrock-migration/) or simply download database that has already been migrated.
 In this section, you'll learn how to download and verify the pre-migrated database.
 
@@ -82,6 +245,12 @@ For instance, if you've downloaded the very first database snapshot, you can ext
 ```bash
 tar xvf mainnet-bedrock.tar.zst
 ```
+
+{<h3>Initialize op-geth with the datadir </h3>}
+
+{<h3>Configure op-geth differently </h3>}
+
+Set --syncmode=full and --gcmode=archive on op-geth.
 
 </Steps>
 
@@ -157,165 +326,6 @@ USING_OVM=true \
 
 </Steps>
 
-## Assess Blob Archiver
-
-Assess if you need to configure a blob archiver service by reading the 
-[Configure a Blob Archiver documentation](/builders/node-operators/management/blobs#configure-a-blob-archiver-archive-nodes).
-
-## Create a JWT Secret
-
-`op-geth` and `op-node` communicate over the engine API authrpc.
-This communication is secured using a shared secret.
-You will need to generate a shared secret and provide it to both `op-geth` and `op-node` when you start them.
-In this case, the secret takes the form of a 32 byte hex string.
-
-Run the following command to generate a random 32 byte hex string:
-
-```bash
-openssl rand -hex 32 > jwt.txt
-```
-
-## Start `op-geth`
-
-It's generally easier to start `op-geth` before starting `op-node`.
-You can still start `op-geth` without yet running `op-node`, but the `op-geth` instance will simply not receive any blocks until `op-node` is started.
-
-<Steps>
-
-{<h3>Navigate to your op-geth directory</h3>}
-
-Find the directory where you built the `op-geth` binary.
-
-{<h3>Copy in the JWT secret</h3>}
-
-Copy the JWT secret you generated in a previous step into the `op-geth` directory.
-
-```bash
-cp /path/to/jwt.txt .
-```
-
-{<h3>Set environment variables</h3>}
-
-Set the following environment variables:
-
-```bash
-export DATADIR_PATH=... # Path to the migrated data directory
-```
-
-{<h3>Start op-geth</h3>}
-
-Use the following command to start `op-geth` in a default configuration.
-The JSON-RPC API will become available on port 8545.
-Refer to the `op-geth` [configuration documentation](../management/configuration#op-geth) for more detailed information about available options.
-
-```bash
-./build/bin/geth \
-  --http \
-  --http.port=8545 \
-  --http.addr=localhost \
-  --authrpc.addr=localhost \
-  --authrpc.jwtsecret=./jwt.txt \
-  --verbosity=3 \
-  --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
-  --nodiscover \
-  --syncmode=full \
-  --maxpeers=0 \
-  --op-network=op-mainnet \
-  --datadir=$DATADIR_PATH
-```
-
-</Steps>
-
-## Start `op-node`
-
-Once you've started `op-geth`, you can start `op-node`.
-`op-node` will connect to `op-geth` and begin synchronizing the OP Mainnet state.
-`op-node` will begin sending block payloads to `op-geth` when it derives enough blocks from Ethereum.
-
-<Steps>
-
-{<h3>Navigate to your op-node directory</h3>}
-
-Find the directory where you built the `op-node` binary.
-
-{<h3>Copy in the JWT secret</h3>}
-
-Both `op-geth` and `op-node` need to use the same JWT secret.
-Copy the JWT secret you generated in a previous step into the `op-node` directory.
-
-```bash
-cp /path/to/jwt.txt .
-```
-
-{<h3>Set environment variables</h3>}
-
-Set the following environment variables:
-
-```bash
-export L1_RPC_URL=...  # URL for the L1 node to sync from
-export L1_RPC_KIND=... # RPC type (alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any)
-export L1_BEACON_URL=... # URL address for the L1 Beacon-node HTTP endpoint to use.
-```
-
-{<h3>Start op-node</h3>}
-
-Use the following command to start `op-node` in a default configuration.
-Refer to the `op-node` [configuration documentation](../management/configuration#op-node) for more detailed information about available options.
-
-<Callout type="warning">
-  The `op-node` RPC should not be exposed publicly. If left exposed, it could
-  accidentally expose admin controls to the public internet.
-</Callout>
-
-```bash
-./bin/op-node \
-  --l1=$L1_RPC_URL \
-  --l1.rpckind=$L1_RPC_KIND \
-  --l1.beacon=$L1_BEACON_URL \
-  --l2=ws://localhost:8551 \
-  --l2.jwt-secret=./jwt.txt \
-  --network=op-mainnet \
-  --rpc.addr=127.0.0.1 \
-  --rpc.port=8547
-```
-
-<Callout>
-Some L1 nodes, like Erigon, do not support the `eth_getProof` RPC method that the `op-node` uses to load L1 data for certain processing steps.
-If you are using an L1 node that does not support `eth_getProof`, you will need to include the `--l1.trustrpc` flag when starting `op-node`.
-Note that this flag will cause `op-node` to trust the L1 node to provide correct data as it will no longer be able to independently verify the data it receives.
-</Callout>
-
-</Steps>
-
-## Synchronization
-
-Once you've started `op-geth` and `op-node` you should see the two begin to communicate with each other and synchronize the OP Mainnet chain.
-Initial synchronization can take several hours to complete.
-
-During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to `op-geth`.
-This means that `op-node` is requesting blocks from Ethereum one-by-one and determining the corresponding OP Mainnet blocks that were published to Ethereum.
-You should see logs like the following from `op-node`:
-
-```text
-INFO [06-26|13:31:20.389] Advancing bq origin                      origin=17171d..1bc69b:8300332 originBehind=false
-```
-
-Once the `op-node` has derived enough blocks from Ethereum, it will begin sending these blocks to `op-geth`.
-You should see logs like the following from `op-node`:
-
-```text
-INFO [06-26|14:00:59.460] Sync progress                            reason="processed safe block derived from L1" l2_finalized=ef93e6..e0f367:4067805 l2_safe=7fe3f6..900127:4068014 l2_unsafe=7fe3f6..900127:4068014 l2_time=1,673,564,096 l1_derived=6079cd..be4231:8301091
-INFO [06-26|14:00:59.460] Found next batch                         epoch=8e8a03..11a6de:8301087 batch_epoch=8301087 batch_timestamp=1,673,564,098
-INFO [06-26|14:00:59.461] generated attributes in payload queue    txs=1  timestamp=1,673,564,098
-INFO [06-26|14:00:59.463] inserted block                           hash=e80dc4..72a759 number=4,068,015 state_root=660ced..043025 timestamp=1,673,564,098 parent=7fe3f6..900127 prev_randao=78e43d..36f07a fee_recipient=0x4200000000000000000000000000000000000011 txs=1  update_safe=true
-```
-
-You should then also begin to see logs like the following from `op-geth`:
-
-```text
-INFO [06-26|14:02:12.974] Imported new potential chain segment     number=4,068,194 hash=a334a0..609a83 blocks=1         txs=1         mgas=0.000  elapsed=1.482ms     mgasps=0.000   age=5mo2w20h dirty=2.31MiB
-INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,194 hash=a334a0..609a83 root=e80f5e..dd06f9 elapsed="188.373µs" age=5mo2w20h
-INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
 ```
 
 ## Next Steps
