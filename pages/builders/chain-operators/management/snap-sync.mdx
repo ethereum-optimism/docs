@@ -1,25 +1,43 @@
 ---
-title: Using Snap Sync
+title: Using Snap Sync for Chain Operators
 lang: en-US
-description: Learn how to use snap sync on your OP chain.
+description: Learn how to use and enable snap sync on your OP chain.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Using Snap Sync
+# Using Snap Sync for Chain Operators
 
-Snap sync enables developers to more quickly sync their nodes and is a mechanism for node operators to sync chains that are using blobs without a blob archiver.
+This guide reviews the optional feature of Snap Sync for OP chains, including benefits and how to enable the feature.
 
-<Callout type="warning">
-  For snap sync, all `op-geth` nodes should be ran with public IP addresses to easily find other op-geth nodes to sync from. 
-  The only exception is for sequencers and transaction ingress nodes.
-</Callout>
+Snap Sync significantly improves the experience of syncing an OP Stack node. Snap Sync is a native feature of go-ethereum that is now optionally enabled on `op-node` & `op-geth`.
+Snap Sync works by downloading a snapshot of the state from other nodes on the network and is then able to start executing blocks from the completed state rather than having to re-execute every single block.
+This means that performing a Snap Sync is significantly faster than performing a full sync.
+
+*   Snap sync enables node operators on your network to sync faster.
+*   Snap sync removes the need for nodes on your post Ecotone network to run a [blob archiver](/builders/node-operators/management/blobs).
 
 ## Enable Snap Sync for Chains
 
 To enable snap sync, chain operators need to spin up a node which is exposed to the network and has transaction gossip disabled.
 
+<Callout type="warning">
+  For snap sync, all `op-geth` nodes should be ran with the [`--discovery.port=30303`](/builders/node-operators/management/configuration#discoveryport) exposed to easily find other op-geth nodes to sync from.
+  The only exception is for sequencers and transaction ingress nodes.
+</Callout>
+
+<Steps>
+  ### Setup a Snap Sync Node
+
+  *   Expose op-geth [discovery port](/builders/node-operators/management/configuration#discoveryport) to the internet and figure out the default port and if there's any conflict with `op-geth`
+  *   Disable transaction gossip with the [`--rollup.disabletxpoolgossip`](/builders/node-operators/management/configuration#rollupdisabletxpoolgossip) flag
+
+  ### Enable Snap Sync on Your Network
+
+  *   Follow the [Node Operator Snap Sync Guide](/builders/node-operators/management/snap-sync#enable-snap-sync-for-your-node) to enable snap sync for your chain network.
+</Steps>
+
 ## Next Steps
 
-*   link to snap sync spec file
-*   link to node snap sync page??
+*   See the [Node Configuration](/builders/node-operators/management/configuration#configuration) guide for additional explanation or customization.
+*   If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
