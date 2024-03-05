@@ -20,27 +20,12 @@ This guide walks you through how to switch to using blobs for your chain after E
 <Steps>
   ### Determine Scalar Values for Using Blobs
 
-  The first step to switching to submit data with Blobs is to calculate the scalar values you wish to set for the formula to charge users fees.
+  The first step to switching to submit data with Blobs is to calculate the
+  scalar values you wish to set for the formula to charge users fees.
+  To determine the scalar values to use for your chain, you can utilize this [fee parameter calculator](https://docs.google.com/spreadsheets/d/12VIiXHaVECG2RUunDSVJpn67IQp9NHFJqUsma2PndpE/edit)
+  to get a better estimate for scalar values on your chain. Input the average transaction per day your chain is processing, the types of transactions that occur on your chain, the [`OP_BATCHER_MAX_CHANNEL_DURATION`](https://docs.optimism.io/builders/chain-operators/management/configuration#setting-your--op_batcher_max_channel_duration) you have parameterized on your `op-batcher`, and the target margin you wish to charge users on top of your L1 costs. The following
+  information is tuned to a network like OP Mainnet.
   For more details on fee scalar, see [Transaction Fees, Ecotone section](/stack/transactions/fees#ecotone).
-
-  If your chain is submitting full blobs, rough *recommended* scalar values to set to target a minimal margin on costs are:
-
-  ```
-  l1BaseFeeScalar = 11000
-  l1BlobBaseFeeScalar = 1087000
-  ```
-
-  However, if your chain has less data throughput than 130kb per batch submission, you may have to only partially fill blobs.
-  Because you must purchase an entire blob, you will be paying for 130KB of data, but submitting less, and must adjust your scalar accordingly.
-
-
-  Assuming a 5 hour `OP_BATCHER_MAX_CHANNEL_DURATION`, this is how to configure on the `op-batcher`.
-  If you are posting 65KB per 5 hours of data (assuming roughly 250 byte transactions, this would be \~1250 transactions per day), then you would want to double the above recommended scalar values:
-
-  ```
-  baseFeeScalar = 22000 = 11000 * 2
-  blobBaseFeeScalar = 2174000 = 1087000 * 2
-  ```
 
   #### Adjust Fees to Change Margins
 
@@ -62,15 +47,15 @@ This guide walks you through how to switch to using blobs for your chain after E
   Here is an example of what you might see when using the utility:
 
   ```js
-  ./bin/ecotone-scalar --scalar=7600 --blob-scalar=862000
-  # base fee scalar     : 7600
-  # blob base fee scalar: 862000
-  # v1 hex encoding  : 0x010000000000000000000000000000000000000000000000000d273000001db0
+  ./bin/ecotone-scalar --scalar=1100 --blob-scalar=655000
+  # base fee scalar     : 1100
+  # blob base fee scalar: 655000
+  # v1 hex encoding  : 0x0100000000000000000000000000000000000000000000000009fe980000044c
   # uint value for the 'scalar' parameter in SystemConfigProxy.setGasConfig():
-  452312848583266388373324160190187140051835877600158453279134889792719822256
+  452312848583266388373324160190187140051835877600158453279134000734489543756
   ```
 
-  You will get a value that looks something like: `0x010000000000000000000000000000000000000000000000000d273000001db0`
+  You will get a value that looks something like: `0x0100000000000000000000000000000000000000000000000009fe980000044c`
   Note that the `0x01` byte at the start indicates the version of the scalar, and the hex value at the end are the encoded scalars.
   Depending on the tool used, you may have to input the uint representation or the hex version, but both Foundry's `cast` and Gnosis's Safe UI accept the hex value.
 
@@ -79,7 +64,7 @@ This guide walks you through how to switch to using blobs for your chain after E
   An exemplary way to create the calldata for your update transaction to the SystemConfigProxy is:
 
   ```shell
-  cast calldata 'setGasConfig(uint256,uint256)' 0 0x010000000000000000000000000000000000000000000000000d273000001db0`
+  cast calldata 'setGasConfig(uint256,uint256)' 0 0x0100000000000000000000000000000000000000000000000009fe980000044c`
   ```
 
   Check that the gas price oracle on L2 returns the expected values for `baseFeeScalar` and `blobBaseFeeScalar` (wait \~1 minute):
@@ -88,7 +73,7 @@ This guide walks you through how to switch to using blobs for your chain after E
     This is checked on L2, so ensure you are using an RPC URL for your chain. You'll also need to provide a `gas-price` to geth when making this call.
   </Callout>
 
-  <Tabs items={['baseFeeScalar', 'baseFeeScalar']}>
+  <Tabs items={['baseFeeScalar', 'blobBaseFeeScalar']}>
     <Tabs.Tab>
       ```shell
       cast call 0x420000000000000000000000000000000000000F 'baseFeeScalar()(uint256)' --gas-price 10000000 --rpc-url YOUR_L2_RPC_URL
@@ -118,19 +103,21 @@ This guide walks you through how to switch to using blobs for your chain after E
 
 ## Switch Back to Using Calldata
 
-As a chain operator, if the `blobBaseFee` is expensive enough and your chain is not processing enough transactions to meaningfully fill blobs within your configured batcher `OP_BATCHER_MAX_CHANNEL_DURATION`, you may wish to switch back to posting data to calldata.
-Chains can follow these steps to switch from blobs back to using calldata.
+As a chain operator, if the `blobBaseFee` is expensive enough and your chain is
+not processing enough transactions to meaningfully fill blobs within your
+configured batcher `OP_BATCHER_MAX_CHANNEL_DURATION`, you may wish to switch
+back to posting data to calldata. Utilize the [fee parameter calculator](https://docs.google.com/spreadsheets/d/12VIiXHaVECG2RUunDSVJpn67IQp9NHFJqUsma2PndpE/edit) to inform whether your transactions will be cheaper if submitting blobs or if submitting calldata. Chains can follow these steps to switch from
+blobs back to using calldata.
 
 <Steps>
   ### Determine Your Scalar Values for Using Calldata
 
-  If you are using calldata, then you can set your `BaseFeeScalar` similarly to how you would have set "scalar" prior to Ecotone, though with a 5-10% bump to compensate for the removal of the "overhead" component.\
-  To target a 5% margin on your L1 Fees, we would recommend:
-
-  ```
-    BaseFeeScalar = 752400 
-    BlobBaseFeeScalar = 0
-  ```
+  If you are using calldata, then you can set your `BaseFeeScalar` similarly to
+  how you would have set "scalar" prior to Ecotone, though with a 5-10% bump to
+  compensate for the removal of the "overhead" component.
+  You can utilize this [fee parameter calculator](https://docs.google.com/spreadsheets/d/12VIiXHaVECG2RUunDSVJpn67IQp9NHFJqUsma2PndpE/edit)
+  to get a better estimate for scalar values on your chain. The following
+  information is tuned to a network like OP Mainnet.
 
   Chains can update their fees to increase or decrease their margin. If using calldata, then `BaseFeeScalar` should be scaled to achieve the desired margin.
   For example, to increase your L1 Fee margin by 10%:
