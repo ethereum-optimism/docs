@@ -9,36 +9,51 @@ import { Callout } from 'nextra/components'
 # OP Mainnet Security Model
 
 OP Mainnet is a work in progress.
-Constant, iterative improvement of the security mechanisms that safeguard OP Mainnet users is a top priority.
-At the moment, **it's important to understand that the security of OP Mainnet is dependent on a [multisig wallet](https://web.archive.org/web/20230528121452/https://www.coindesk.com/tech/2020/11/10/multisignature-wallets-can-keep-your-coins-safer-if-you-use-them-right/)** managed by several anonymous individuals.
-This multisig wallet can be used to upgrade core OP Mainnet smart contracts without upgrade delays. For more information, see [Optimism's Security Council](https://optimism.help/Token+House+Governance/Security+Council/Intro+to+Optimism's+Security+Council).
+Constant, iterative improvement of the security mechanisms that safeguard OP Mainnet users is a top priority for the entire [Optimism Collective](https://community.optimism.io/docs/governance/).
+The Optimism Collective strives to be clear and transparent about the security of OP Mainnet and the OP Stack as a whole.
 
-<Callout type="info">
-  Please also read this [Community Notice](https://www.optimism.io/community-notice) containing important information about OP Mainnet, its security model, and the Optimism Foundation.
+<Callout>
+  Refer to this [Community Notice](https://www.optimism.io/community-notice) for important information about OP Mainnet, its security model, and the Optimism Foundation.
 </Callout>
 
+## Bottom Line
+
+The security model of any blockchain system is only as strong as its lowest common denominator.
+At the moment, **it's important to understand that the security of OP Mainnet is dependent on a [multisig](https://etherscan.io/address/0x5a0Aae59D09fccBdDb6C6CcEB07B7279367C3d2A)** managed jointly by the [Optimism Security Council](https://gov.optimism.io/t/intro-to-optimisms-security-council/6885) and the Optimism Foundation.
+OP Mainnet and the OP Stack in general **may also contain unknown bugs that could lead to the loss of some or all of the ETH or tokens held within the system**.
+
+## OP Mainnet Multisig
+
+The security of OP Mainnet is currently dependent on a multisig managed jointly by the [Optimism Security Council](https://gov.optimism.io/t/intro-to-optimisms-security-council/6885) and the Optimism Foundation.
+This multisig is a [2-of-2 nested multisig](https://etherscan.io/address/0x5a0Aae59D09fccBdDb6C6CcEB07B7279367C3d2A) which is in turn governed by a [4-of-12 multisig](https://etherscan.io/address/0xc2819DC788505Aac350142A7A707BF9D03E3Bd03) managed by the Optimism Security Council and a [5-of-7 multisig](https://etherscan.io/address/0x847B5c174615B1B7fDF770882256e2D3E95b9D92) managed by the Optimism Foundation.
+
+This multisig can be used to upgrade core OP Mainnet smart contracts **without upgrade delays** to allow for quick responses to potential security concerns.
+All upgrades to the OP Mainnet system must be approved by both component multisigs and either can veto an upgrade.
+
+## Bugs and Unknowns
+
 Please also keep in mind that just like any other system, **the Optimism codebase may contain unknown bugs** that could lead to the loss of some or all of the ETH or tokens held within the system.
-The 2222 smart contract codebase has been [audited regularly](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/technical-documents/security-reviews), but **audits are not a stamp of approval** and **a completed audit does not mean that the audited codebase is free of bugs.**
+The OP Stack has been audited [on many occasions](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/technical-documents/security-reviews), but **audits are not a stamp of approval** and **a completed audit does not mean that the audited codebase is free of bugs.**
+
 It's important to understand that using OP Mainnet inherently exposes you to the risk of bugs within the Optimism codebase, and that you use OP Mainnet at your own risk.
 
-## Next gen fault proofs
+## Work in Progress
 
-As part of the OVM 2.0 upgrade, the **Optimism fault proof mechanism had to be temporarily disabled**. This means that users of the OP Mainnet network currently need to trust the Sequencer node (run by Optimism Foundation) to publish valid state roots to Ethereum. **You can also read more about our [security model](/chain/security/security-policy)**.
+### Fault Proofs
 
-We're making progress on the upgrade fault proof mechanism and we expect to productionize our work in 2023. You can keep up with developments in the [Cannon repository](https://github.com/ethereum-optimism/cannon/).
+Fault proofs are a mechanism that allow users to prove if a transaction output published to the [`L2OutputOracle`](https://github.com/ethereum-optimism/optimism/blob/5877ee24cc9aaef5848c1372e0e196707fb336a0/packages/contracts-bedrock/src/L1/L2OutputOracle.sol) contract is invalid.
+Fault proofs are an important part of future of OP Mainnet security and begin to reduce the need for a multisig.
+An alpha version of the first fault proof mechanism is [currently in testing](https://blog.oplabs.co/building-a-fault-proof-system/).
 
-## Decentralizing the sequencer
+<Callout>
+It is important to understand that **fault proofs are not a silver bullet** and that **fault proofs do not meaningfully improve the security of a system if the system still has a multisig or security council that can instantly upgrade the system**.
+OP Mainnet is following a multi-client and multi-proof approach designed to eventually remove the need for instant upgrades entirely.
+</Callout>
 
-Currently, the Optimism Foundation runs the sole sequencer on OP Mainnet. This does not mean that Optimism can censor user transactions. However, it is still desirable to decentralize the sequencer over time, eliminating Optimism's role entirely so that anyone can participate in the network as a block producer.
+### Sequencer Decentralization
 
-The first step to decentralizing the sequencer is to still have one sequencer at a time, but rotate that sequencer with some frequency. The precise mechanic for sequencer rotation is not yet finalized, but will involve two components:
-
-*   an **economic mechanism** which creates a competitive market for sequencing, and redirects excess sequencer profits [towards protocol development](https://web.archive.org/web/20231217000541/https://medium.com/ethereum-optimism/retroactive-public-goods-funding-33c9b7d00f0c).
-*   a **governance mechanism** which prevents sequencers from prioritizing short-term profits over the long-term health of the network.
-
-After this, the next step is to support multiple concurrent sequencers. This can be simply achieved by adopting a standard BFT consensus protocol, as used by other L1 protocols and sidechains like Polygon and Cosmos.
-
-You can keep up with the roadmap progress in the [Cannon repository](https://github.com/ethereum-optimism/cannon/) for the fault proofs and [Optimism specs repository](https://specs.optimism.io/) for the overall protocol work.
+The Optimism Foundation currently operates the sole sequencer on OP Mainnet.
+Although users can always bypass the Sequencer by sending transactions directly to the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/5877ee24cc9aaef5848c1372e0e196707fb336a0/packages/contracts-bedrock/src/L1/OptimismPortal.sol) contract, sequencer decentralization can still help mitigate the effect of short-term outages for users.
 
 ## Security Model FAQ
 
@@ -48,11 +63,6 @@ You can keep up with the roadmap progress in the [Cannon repository](https://git
 **Fault proofs do not meaningfully improve the security of a system if that system can be upgraded within the 7 day challenge window ("fast upgrade keys")**.
 A system with fast upgrade keys, such as OP Mainnet, is fully dependent on the upgrade keys for security.
 OP Mainnet's goal is to be the first system that deploys fault proofs that can secure the system by themselves, without fast upgrade keys.
-
-### Who manages the multisig?
-
-The multisig is managed by an anonymous set of individuals.
-Members are anonymous in order to make the multisig more difficult to compromise.
 
 ### How is Optimism planning to remove the multisig?
 
