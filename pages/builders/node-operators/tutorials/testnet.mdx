@@ -22,46 +22,9 @@ Hardware requirements for OP Sepolia nodes can vary depending on the type of nod
 Archive nodes generally require significantly more resources than full nodes.
 Below are suggested minimum hardware requirements for each type of node.
 
-*   16GB RAM
-*   1TB SSD (full node) or 2TB SSD (archive node)
+*   8GB RAM
+*   60 GB SSD (full node) or 200 GB SSD (archive node)
 *   Reasonably modern CPU
-
-## Initialize the Data Directory
-
-Unlike OP Mainnet, OP Sepolia does not require a migrated data directory.
-Instead, like with Ethereum, you'll simply need to initialize the data directory with the OP Sepolia genesis file.
-
-<Steps>
-
-{<h3>Navigate to the op-geth directory</h3>}
-
-Find and enter the directory where you built `op-geth` from source.
-
-{<h3>Download the genesis file</h3>}
-
-Download the genesis file from the OP Sepolia networks page.
-
-```bash
-curl -o op-sepolia-genesis.json -sL https://networks.optimism.io/op-sepolia/genesis.json
-```
-
-{<h3>Set environment variables</h3>}
-
-Set the following environment variables:
-
-```bash
-export DATADIR_PATH=... # Path to the folder where geth data will be stored
-```
-
-{<h3>Initialize the data directory</h3>}
-
-Initialize the data directory with the genesis file.
-
-```bash
-geth init --datadir=$DATADIR op-sepolia-genesis.json
-```
-
-</Steps>
 
 ## Assess Blob Archiver
 
@@ -114,6 +77,12 @@ Use the following command to start `op-geth` in a default configuration.
 The JSON-RPC API will become available on port 8545.
 Refer to the `op-geth` [configuration documentation](../management/configuration#op-geth) for more detailed information about available options.
 
+<Callout type="info"> 
+*   Set `--syncmode=execution-layer` on `op-node` if you don't set `--syncmode=full` here on op-geth.
+*   For archive nodes, set `--syncmode=full` and `--gcmode=archive` on `op-geth`. 
+*   The default settings are for full nodes.
+</Callout>
+
 ```bash
 ./build/bin/geth \
   --http \
@@ -123,9 +92,6 @@ Refer to the `op-geth` [configuration documentation](../management/configuration
   --authrpc.jwtsecret=./jwt.txt \
   --verbosity=3 \
   --rollup.sequencerhttp=https://sepolia-sequencer.optimism.io/ \
-  --nodiscover \
-  --syncmode=full \
-  --maxpeers=0 \
   --op-network=op-sepolia \
   --datadir=$DATADIR_PATH
 ```
@@ -173,6 +139,10 @@ Refer to the `op-node` [configuration documentation](../management/configuration
   accidentally expose admin controls to the public internet.
 </Callout>
 
+<Callout type="info">
+Sync mode should be set to `--syncmode=execution-layer`.
+</Callout>
+
 ```bash
 ./bin/op-node \
   --l1=$L1_RPC_URL \
@@ -181,8 +151,7 @@ Refer to the `op-node` [configuration documentation](../management/configuration
   --l2=ws://localhost:8551 \
   --l2.jwt-secret=./jwt.txt \
   --network=op-sepolia \
-  --rpc.addr=127.0.0.1 \
-  --rpc.port=8547
+  --syncmode=execution-layer
 ```
 
 <Callout>
