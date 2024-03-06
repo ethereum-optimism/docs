@@ -30,7 +30,7 @@ Below are suggested minimum hardware requirements for each type of node.
 
 ### Assess Blob Archiver
 
-Assess if you need to configure a blob archiver service by reading the 
+Assess if you need to configure a blob archiver service by reading the
 [Configure a Blob Archiver documentation](/builders/node-operators/management/blobs#configure-a-blob-archiver-archive-nodes).
 
 ### Create a JWT Secret
@@ -51,53 +51,51 @@ openssl rand -hex 32 > jwt.txt
 It's generally easier to start `op-geth` before starting `op-node`.
 You can still start `op-geth` without yet running `op-node`, but the `op-geth` instance will simply not receive any blocks until `op-node` is started.
 
-<Callout type="warning"> 
-*   Set `--syncmode=execution-layer` on `op-node` if you don't set `--syncmode=full` here on op-geth.
-*   For archive nodes, set `--syncmode=full` and `--gcmode=archive` on `op-geth`
-*   The default settings are for full nodes.
+<Callout type="warning">
+  *   Set `--syncmode=execution-layer` on `op-node` if you don't set `--syncmode=full` here on op-geth.
+  *   For archive nodes, set `--syncmode=full` and `--gcmode=archive` on `op-geth`
+  *   The default settings are for full nodes.
 </Callout>
 
 <Steps>
+  {<h3>Navigate to your op-geth directory</h3>}
 
-{<h3>Navigate to your op-geth directory</h3>}
+  Find the directory where you built the `op-geth` binary.
 
-Find the directory where you built the `op-geth` binary.
+  {<h3>Copy in the JWT secret</h3>}
 
-{<h3>Copy in the JWT secret</h3>}
+  Copy the JWT secret you generated in a previous step into the `op-geth` directory.
 
-Copy the JWT secret you generated in a previous step into the `op-geth` directory.
+  ```bash
+  cp /path/to/jwt.txt .
+  ```
 
-```bash
-cp /path/to/jwt.txt .
-```
+  {<h3>Set environment variables</h3>}
 
-{<h3>Set environment variables</h3>}
+  Set the following environment variables:
 
-Set the following environment variables:
+  ```bash
+  export DATADIR_PATH=... # Path to the desired data directory for op-geth
+  ```
 
-```bash
-export DATADIR_PATH=... # Path to the desired data directory for op-geth
-```
+  {<h3>Start op-geth</h3>}
 
-{<h3>Start op-geth</h3>}
+  Use the following command to start `op-geth` in a default configuration.
+  The JSON-RPC API will become available on port 8545.
+  Refer to the `op-geth` [configuration documentation](../management/configuration#op-geth) for more detailed information about available options.
 
-Use the following command to start `op-geth` in a default configuration.
-The JSON-RPC API will become available on port 8545.
-Refer to the `op-geth` [configuration documentation](../management/configuration#op-geth) for more detailed information about available options.
-
-```bash
-./build/bin/geth \
-  --http \
-  --http.port=8545 \
-  --http.addr=localhost \
-  --authrpc.addr=localhost \
-  --authrpc.jwtsecret=./jwt.txt \
-  --verbosity=3 \
-  --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
-  --op-network=op-mainnet \
-  --datadir=$DATADIR_PATH
-```
-
+  ```bash
+  ./build/bin/geth \
+    --http \
+    --http.port=8545 \
+    --http.addr=localhost \
+    --authrpc.addr=localhost \
+    --authrpc.jwtsecret=./jwt.txt \
+    --verbosity=3 \
+    --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
+    --op-network=op-mainnet \
+    --datadir=$DATADIR_PATH
+  ```
 </Steps>
 
 ### Start `op-node`
@@ -107,57 +105,55 @@ Once you've started `op-geth`, you can start `op-node`.
 `op-node` will begin sending block payloads to `op-geth` when it derives enough blocks from Ethereum.
 
 <Steps>
+  {<h3>Navigate to your op-node directory</h3>}
 
-{<h3>Navigate to your op-node directory</h3>}
+  Find the directory where you built the `op-node` binary.
 
-Find the directory where you built the `op-node` binary.
+  {<h3>Copy in the JWT secret</h3>}
 
-{<h3>Copy in the JWT secret</h3>}
+  Both `op-geth` and `op-node` need to use the same JWT secret.
+  Copy the JWT secret you generated in a previous step into the `op-node` directory.
 
-Both `op-geth` and `op-node` need to use the same JWT secret.
-Copy the JWT secret you generated in a previous step into the `op-node` directory.
+  ```bash
+  cp /path/to/jwt.txt .
+  ```
 
-```bash
-cp /path/to/jwt.txt .
-```
+  {<h3>Set environment variables</h3>}
 
-{<h3>Set environment variables</h3>}
+  Set the following environment variables:
 
-Set the following environment variables:
+  ```bash
+  export L1_RPC_URL=...  # URL for the L1 node to sync from
+  export L1_RPC_KIND=... # RPC type (alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any)
+  export L1_BEACON_URL=... # URL address for the L1 Beacon-node HTTP endpoint to use.
+  ```
 
-```bash
-export L1_RPC_URL=...  # URL for the L1 node to sync from
-export L1_RPC_KIND=... # RPC type (alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any)
-export L1_BEACON_URL=... # URL address for the L1 Beacon-node HTTP endpoint to use.
-```
+  {<h3>Start op-node</h3>}
 
-{<h3>Start op-node</h3>}
+  Use the following command to start `op-node` in a default configuration.
+  Refer to the `op-node` [configuration documentation](../management/configuration#op-node) for more detailed information about available options.
 
-Use the following command to start `op-node` in a default configuration.
-Refer to the `op-node` [configuration documentation](../management/configuration#op-node) for more detailed information about available options.
+  <Callout type="warning">
+    The `op-node` RPC should not be exposed publicly. If left exposed, it could
+    accidentally expose admin controls to the public internet.
+  </Callout>
 
-<Callout type="warning">
-  The `op-node` RPC should not be exposed publicly. If left exposed, it could
-  accidentally expose admin controls to the public internet.
-</Callout>
+  ```bash
+  ./bin/op-node \
+    --l1=$L1_RPC_URL \
+    --l1.rpckind=$L1_RPC_KIND \
+    --l1.beacon=$L1_BEACON_URL \
+    --l2=ws://localhost:8551 \
+    --l2.jwt-secret=./jwt.txt \
+    --network=op-mainnet \
+    --syncmode=execution-layer
+  ```
 
-```bash
-./bin/op-node \
-  --l1=$L1_RPC_URL \
-  --l1.rpckind=$L1_RPC_KIND \
-  --l1.beacon=$L1_BEACON_URL \
-  --l2=ws://localhost:8551 \
-  --l2.jwt-secret=./jwt.txt \
-  --network=op-mainnet \
-  --syncmode=execution-layer
-```
-
-<Callout>
-Some L1 nodes, like Erigon, do not support the `eth_getProof` RPC method that the `op-node` uses to load L1 data for certain processing steps.
-If you are using an L1 node that does not support `eth_getProof`, you will need to include the `--l1.trustrpc` flag when starting `op-node`.
-Note that this flag will cause `op-node` to trust the L1 node to provide correct data as it will no longer be able to independently verify the data it receives.
-</Callout>
-
+  <Callout>
+    Some L1 nodes, like Erigon, do not support the `eth_getProof` RPC method that the `op-node` uses to load L1 data for certain processing steps.
+    If you are using an L1 node that does not support `eth_getProof`, you will need to include the `--l1.trustrpc` flag when starting `op-node`.
+    Note that this flag will cause `op-node` to trust the L1 node to provide correct data as it will no longer be able to independently verify the data it receives.
+  </Callout>
 </Steps>
 
 ### Synchronization
@@ -191,71 +187,114 @@ INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,
 INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
 ```
 
+### Snap Sync Synchronization
+
+You will see these `op-node` logs at the start of snap sync:
+
+```text
+INFO [03-06|10:56:55.602] Starting EL sync
+INFO [03-06|10:56:55.615] Sync progress                            reason="unsafe payload from sequencer while in EL sync" l2_finalized=000000..000000:0 l2_safe=000000..000000:0 l2_pending_safe=000000..000000:0 l2_unsafe=4284ab..7e7e84:117076319 l2_time=1,709,751,415 l1_derived=000000..000000:0
+INFO [03-06|10:56:57.567] Optimistically inserting unsafe L2 execution payload to drive EL sync id=4ac160..df4d12:117076320
+```
+
+`Starting EL sync` is shown once and the **sync progress / inserting logs** should be repeated until done.
+
+`op-node` will log the following when done:
+
+```text
+lvl=info msg="Finished EL sync" sync_duration=23h25m0.370558429s finalized_block=0x4f69e83ff1407f2e2882f2526ee8a154ac326590799889cede3af04a7742f18d:116817417
+```
+
+There are two stages on `op-geth` for snap sync:
+
+1.  `op-geth` log something like this as it is downloading the headers:
+
+```text
+lvl=info msg="Syncing beacon headers" downloaded=116775778 left=1162878 eta=53.182s 
+```
+
+2.  For the second stage, `op-geth` will log the following:
+
+```text
+lvl=info msg="Syncing: state download in progress" synced=99.75% state="191.33 GiB" accounts=124,983,227@25.62GiB slots=806,829,266@165.16GiB codes=78965@566.74MiB eta=-2m7.602s
+```
+
+This will also be logged:
+
+```text
+msg="Syncing: chain download in progress" synced=100.00% chain="176.01 GiB" headers=116,817,399@45.82GiB bodies=116,817,286@52.87GiB receipts=116,817,286@77.32GiB eta=77.430ms
+```
+
+`op-geth` will also log FCU:
+
+```text
+Forkchoice requested sync to new head  number=117,076,468 hash=e3884c..bf4e2b
+```
+
 ## Archive Nodes
 
 <Callout type="info">
-You only need an archive node if you need the historical state. Most node operators should default to full nodes.
+  You only need an archive node if you need the historical state. Most node operators should default to full nodes.
 </Callout>
 
 ### Get the Migrated Data Directory
+
 OP Mainnet underwent a large database migration as part of the [Bedrock Upgrade](https://web.archive.org/web/20230608050602/https://blog.oplabs.co/introducing-optimism-bedrock/) in 2023.
 You will need access to the migrated OP Mainnet database to run an archive node.
 You can [migrate your own data directory](https://web.archive.org/web/20240110231645/https://blog.oplabs.co/reproduce-bedrock-migration/) or simply download database that has already been migrated.
 In this section, you'll learn how to download and verify the pre-migrated database.
 
 <Steps>
+  {<h3>Download the Migrated Data Directory</h3>}
 
-{<h3>Download the Migrated Data Directory</h3>}
+  Click the link below to find the latest publicly available database snapshots for OP Mainnet.
+  Snapshots are available for multiple dates and snapshots get larger as they get closer the current date.
+  Snapshots are large files and may take some time to download.
+  [OP Mainnet Snapshots](/builders/node-operators/management/snapshots#op-mainnet)
 
-Click the link below to find the latest publicly available database snapshots for OP Mainnet.
-Snapshots are available for multiple dates and snapshots get larger as they get closer the current date.
-Snapshots are large files and may take some time to download.
-[OP Mainnet Snapshots](/builders/node-operators/management/snapshots#op-mainnet)
+  {<h3>Verify the Download</h3>}
 
-{<h3>Verify the Download</h3>}
+  You should always verify the integrity of your downloads to ensure that they have not been corrupted.
+  A corrupted database can include invalid data or may cause your node to fail.
+  Verify the integrity of the download by checking the SHA256 checksum of the downloaded file.
 
-You should always verify the integrity of your downloads to ensure that they have not been corrupted.
-A corrupted database can include invalid data or may cause your node to fail.
-Verify the integrity of the download by checking the SHA256 checksum of the downloaded file.
+  ```bash
+  sha256sum <filename>
+  ```
 
-```bash
-sha256sum <filename>
-```
+  For instance, if you've downloaded the very first database snapshot, you can verify the download by running the following command:
 
-For instance, if you've downloaded the very first database snapshot, you can verify the download by running the following command:
+  ```bash
+  sha256sum mainnet-bedrock.tar.zst
+  ```
 
-```bash
-sha256sum mainnet-bedrock.tar.zst
-```
+  You should see then following output:
 
-You should see then following output:
+  ```bash
+  ec4baf47e309a14ffbd586dc85376833de640c0f2a8d7355cb8a9e64c38bfcd1  mainnet-bedrock.tar.zst
+  ```
 
-```bash
-ec4baf47e309a14ffbd586dc85376833de640c0f2a8d7355cb8a9e64c38bfcd1  mainnet-bedrock.tar.zst
-```
+  Your exact output will depend on the snapshot you've downloaded.
+  Check the [OP Mainnet Snapshots](/builders/node-operators/management/snapshots#op-mainnet) page for the correct checksum for the snapshot you've downloaded.
 
-Your exact output will depend on the snapshot you've downloaded.
-Check the [OP Mainnet Snapshots](/builders/node-operators/management/snapshots#op-mainnet) page for the correct checksum for the snapshot you've downloaded.
+  {<h3>Extract the Data Directory</h3>}
 
-{<h3>Extract the Data Directory</h3>}
+  Once you've downloaded the database snapshot, you'll need to extract it to a directory on your machine.
+  This will take some time to complete.
 
-Once you've downloaded the database snapshot, you'll need to extract it to a directory on your machine.
-This will take some time to complete.
+  ```bash
+  tar xvf <filename>
+  ```
 
-```bash
-tar xvf <filename>
-```
+  For instance, if you've downloaded the very first database snapshot, you can extract it by running the following command:
 
-For instance, if you've downloaded the very first database snapshot, you can extract it by running the following command:
+  ```bash
+  tar xvf mainnet-bedrock.tar.zst
+  ```
 
-```bash
-tar xvf mainnet-bedrock.tar.zst
-```
+  {<h3>Configure op-geth for archive mode</h3>}
 
-{<h3>Configure op-geth for archive mode</h3>}
-
-Set `--syncmode=full` and `--gcmode=archive` on `op-geth`.
-
+  Set `--syncmode=full` and `--gcmode=archive` on `op-geth`.
 </Steps>
 
 ### Get the Legacy Geth Directory (Optional)
@@ -268,41 +307,39 @@ Running a Legacy Geth node is entirely optional and typically only useful for op
 If you want to run a full node then you can safely skip this section.
 
 <Steps>
+  {<h3>Download the Legacy Geth Data Directory</h3>}
 
-{<h3>Download the Legacy Geth Data Directory</h3>}
+  Click the link below to download the latest publicly available database snapshot for Legacy Geth.
+  This is a very large file (2.9TB), so expect the download to take some time to complete.
 
-Click the link below to download the latest publicly available database snapshot for Legacy Geth.
-This is a very large file (2.9TB), so expect the download to take some time to complete.
+  [Legacy Geth Data Directory (2.9TB)](/builders/node-operators/management/snapshots#op-mainnet-legacy)
 
-[Legacy Geth Data Directory (2.9TB)](/builders/node-operators/management/snapshots#op-mainnet-legacy)
+  {<h3>Verify the Download</h3>}
 
-{<h3>Verify the Download</h3>}
+  You should always verify the integrity of your downloads to ensure that they have not been corrupted.
+  A corrupted database can include invalid data or may cause your node to fail.
+  Verify the integrity of the download by checking the SHA256 checksum of the downloaded file.
 
-You should always verify the integrity of your downloads to ensure that they have not been corrupted.
-A corrupted database can include invalid data or may cause your node to fail.
-Verify the integrity of the download by checking the SHA256 checksum of the downloaded file.
+  ```bash
+  sha256sum mainnet-legacy-archival.tar.zst
+  ```
 
-```bash
-sha256sum mainnet-legacy-archival.tar.zst
-```
+  You should see the following output:
 
-You should see the following output:
+  ```bash
+  4adedb61125b81b55f9bdccc2e85092050c65ef2253c86e2b79569732b772829  mainnet-legacy-archival.tar.zst
+  ```
 
-```bash
-4adedb61125b81b55f9bdccc2e85092050c65ef2253c86e2b79569732b772829  mainnet-legacy-archival.tar.zst
-```
+  If you see a different output, then the download is corrupted and you should try downloading the file again.
 
-If you see a different output, then the download is corrupted and you should try downloading the file again.
+  {<h3>Extract the Data Directory</h3>}
 
-{<h3>Extract the Data Directory</h3>}
+  Once you've downloaded the database snapshot, you'll need to extract it to a directory on your machine.
+  This will take some time to complete.
 
-Once you've downloaded the database snapshot, you'll need to extract it to a directory on your machine.
-This will take some time to complete.
-
-```bash
-tar xvf mainnet-legacy-archival.tar.zst
-```
-
+  ```bash
+  tar xvf mainnet-legacy-archival.tar.zst
+  ```
 </Steps>
 
 ### Start Legacy Geth (Optional)
@@ -310,24 +347,22 @@ tar xvf mainnet-legacy-archival.tar.zst
 If you've chosen to run a Legacy Geth node alongside your OP Mainnet node, you'll need to start it before you start your OP Mainnet node.
 
 <Steps>
+  {<h3>Navigate to your Legacy Geth directory</h3>}
 
-{<h3>Navigate to your Legacy Geth directory</h3>}
+  Find the directory where you built the `l2geth` binary.
 
-Find the directory where you built the `l2geth` binary.
+  {<h3>Start l2geth</h3>}
 
-{<h3>Start l2geth</h3>}
+  Run the following command to start `l2geth`:
 
-Run the following command to start `l2geth`:
-
-```bash
-USING_OVM=true \
-  ETH1_SYNC_SERVICE_ENABLE=false \
-  RPC_API=eth,rollup,net,web3,debug \
-  RPC_ENABLE=true \
-  RPC_PORT=8546 \
-  ./build/bin/geth --datadir /path/to/l2geth-datadir
-```
-
+  ```bash
+  USING_OVM=true \
+    ETH1_SYNC_SERVICE_ENABLE=false \
+    RPC_API=eth,rollup,net,web3,debug \
+    RPC_ENABLE=true \
+    RPC_PORT=8546 \
+    ./build/bin/geth --datadir /path/to/l2geth-datadir
+  ```
 </Steps>
 
 ## Next Steps
