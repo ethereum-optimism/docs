@@ -1,24 +1,24 @@
 ---
-title: Bridging Your Standard ERC-20 Token to OP Mainnet Using the Standard Bridge
+title: Bridging Your Standard ERC-20 Token Using the Standard Bridge
 lang: en-US
-description: Learn how to bridge your standard ERC-20 token to OP Mainnet using the standard bridge.
+description: Learn how to bridge your standard ERC-20 token using the standard bridge.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Bridging Your Standard ERC-20 Token to OP Mainnet Using the Standard Bridge
+# Bridging Your Standard ERC-20 Token Using the Standard Bridge
 
 <Callout type="info">
-**This tutorial is for developers who want to bridge a new ERC-20 token to OP Mainnet.**
+**This tutorial is for developers who want to bridge a new ERC-20 token to an OP Stack chain.**
 If you want to bridge existing tokens, you can skip to the tutorial on [Bridging ERC-20 tokens with the Optimism SDK](./cross-dom-bridge-erc20).
 </Callout>
 
-In this tutorial you'll learn how to bridge a standard ERC-20 token from Ethereum to OP Mainnet using the Standard Bridge system.
-This tutorial is meant for developers who already have an existing ERC-20 token on Ethereum and want to create a bridged representation of that token on OP Mainnet.
+In this tutorial you'll learn how to bridge a standard ERC-20 token from Ethereum to an OP Stack chain using the Standard Bridge system.
+This tutorial is meant for developers who already have an existing ERC-20 token on Ethereum and want to create a bridged representation of that token on layer 2.
 
-This tutorial explains how to use the [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol) to deploy a standardized ERC-20 token on OP Mainnet.
+This tutorial explains how to use the [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol) to deploy a standardized ERC-20 token on layer 2.
 Tokens created by this factory contract are compatible with the Standard Bridge system and include basic logic for deposits, transfers, and withdrawals.
-If you want to include specialized logic within your L2 token, see the tutorial on [Bridging Your Custom ERC-20 Token to OP Mainnet Using the Standard Bridge](./standard-bridge-custom-token) instead.
+If you want to include specialized logic within your L2 token, see the tutorial on [Bridging Your Custom ERC-20 Token Using the Standard Bridge](./standard-bridge-custom-token) instead.
 
 <Callout type="error">
 The Standard Bridge **does not** support [**fee on transfer tokens**](https://github.com/d-xo/weird-erc20#fee-on-transfer) or [**rebasing tokens**](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops) because they can cause bridge accounting errors.
@@ -29,7 +29,7 @@ The Standard Bridge **does not** support [**fee on transfer tokens**](https://gi
 The Standard Bridge system requires that L2 representations of L1 tokens implement the [`IOptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol) interface.
 This interface is a superset of the standard ERC-20 interface and includes functions that allow the bridge to properly verify deposits/withdrawals and mint/burn tokens as needed.
 Your L2 token contract must implement this interface in order to be bridged using the Standard Bridge system.
-This tutorial will show you how to use the [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol) to create a basic standardized ERC-20 token on OP Mainnet.
+This tutorial will show you how to use the [`OptimismMintableERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/186e46a47647a51a658e699e9ff047d39444c2de/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol) to create a basic standardized ERC-20 token on layer 2.
 
 ## Dependencies
 
