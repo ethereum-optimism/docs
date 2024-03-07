@@ -51,12 +51,6 @@ openssl rand -hex 32 > jwt.txt
 It's generally easier to start `op-geth` before starting `op-node`.
 You can still start `op-geth` without yet running `op-node`, but the `op-geth` instance will simply not receive any blocks until `op-node` is started.
 
-<Callout type="warning">
-  *   Set `--syncmode=execution-layer` on `op-node` if you don't set `--syncmode=full` here on op-geth.
-  *   For archive nodes, set `--syncmode=full` and `--gcmode=archive` on `op-geth`
-  *   The default settings are for full nodes.
-</Callout>
-
 <Steps>
   {<h3>Navigate to your op-geth directory</h3>}
 
@@ -156,10 +150,63 @@ Once you've started `op-geth`, you can start `op-node`.
   </Callout>
 </Steps>
 
-### Synchronization
+### Synchronization Verification
 
-Once you've started `op-geth` and `op-node` you should see the two begin to communicate with each other and synchronize the OP Mainnet chain.
-Initial synchronization can take several hours to complete.
+Once you've started `op-geth` and `op-node` you should see the two begin to 
+communicate with each other and synchronize the OP Mainnet chain.
+
+#### Snap Sync (Default)
+
+Initial synchronization can take several hours to complete. You will see these 
+`op-node` logs at the start of snap sync:
+
+```text
+INFO [03-06|10:56:55.602] Starting EL sync
+INFO [03-06|10:56:55.615] Sync progress                            reason="unsafe payload from sequencer while in EL sync" l2_finalized=000000..000000:0 l2_safe=000000..000000:0 l2_pending_safe=000000..000000:0 l2_unsafe=4284ab..7e7e84:117076319 l2_time=1,709,751,415 l1_derived=000000..000000:0
+INFO [03-06|10:56:57.567] Optimistically inserting unsafe L2 execution payload to drive EL sync id=4ac160..df4d12:117076320
+```
+
+`Starting EL sync` is shown once and the **sync progress / inserting logs** should be repeated until done.
+
+`op-node` will log the following when done:
+
+```text
+lvl=info msg="Finished EL sync" sync_duration=23h25m0.370558429s finalized_block=0x4f69e83ff1407f2e2882f2526ee8a154ac326590799889cede3af04a7742f18d:116817417
+```
+
+There are two stages on `op-geth` for snap sync:
+
+<Steps>
+  {<h3>Downloading the headers</h3>}
+  `op-geth` log something like this as it is downloading the headers:
+
+  ```text
+  lvl=info msg="Syncing beacon headers" downloaded=116775778 left=1162878 eta=53.182s 
+  ```
+
+  {<h3>Sync progress</h3>}  
+
+  For the second stage, `op-geth` will log the following:
+
+  ```text
+  lvl=info msg="Syncing: state download in progress" synced=99.75% state="191.33 GiB" accounts=124,983,227@25.62GiB slots=806,829,266@165.16GiB codes=78965@566.74MiB eta=-2m7.602s
+  ```
+
+  ```text
+  msg="Syncing: chain download in progress" synced=100.00% chain="176.01 GiB" headers=116,817,399@45.82GiB bodies=116,817,286@52.87GiB receipts=116,817,286@77.32GiB eta=77.430ms
+  ```
+  
+  All the while, `op-geth` will also log the forkchoice update:
+
+  ```text
+  Forkchoice requested sync to new head  number=117,076,468 hash=e3884c..bf4e2b
+  ```
+
+</Steps>
+
+#### Full Sync
+
+Initial full synchronization can take several days or weeks to complete.
 
 During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to `op-geth`.
 This means that `op-node` is requesting blocks from Ethereum one-by-one and determining the corresponding OP Mainnet blocks that were published to Ethereum.
@@ -185,50 +232,6 @@ You should then also begin to see logs like the following from `op-geth`:
 INFO [06-26|14:02:12.974] Imported new potential chain segment     number=4,068,194 hash=a334a0..609a83 blocks=1         txs=1         mgas=0.000  elapsed=1.482ms     mgasps=0.000   age=5mo2w20h dirty=2.31MiB
 INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,194 hash=a334a0..609a83 root=e80f5e..dd06f9 elapsed="188.373µs" age=5mo2w20h
 INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
-```
-
-### Snap Sync Synchronization
-
-You will see these `op-node` logs at the start of snap sync:
-
-```text
-INFO [03-06|10:56:55.602] Starting EL sync
-INFO [03-06|10:56:55.615] Sync progress                            reason="unsafe payload from sequencer while in EL sync" l2_finalized=000000..000000:0 l2_safe=000000..000000:0 l2_pending_safe=000000..000000:0 l2_unsafe=4284ab..7e7e84:117076319 l2_time=1,709,751,415 l1_derived=000000..000000:0
-INFO [03-06|10:56:57.567] Optimistically inserting unsafe L2 execution payload to drive EL sync id=4ac160..df4d12:117076320
-```
-
-`Starting EL sync` is shown once and the **sync progress / inserting logs** should be repeated until done.
-
-`op-node` will log the following when done:
-
-```text
-lvl=info msg="Finished EL sync" sync_duration=23h25m0.370558429s finalized_block=0x4f69e83ff1407f2e2882f2526ee8a154ac326590799889cede3af04a7742f18d:116817417
-```
-
-There are two stages on `op-geth` for snap sync:
-
-1.  `op-geth` log something like this as it is downloading the headers:
-
-```text
-lvl=info msg="Syncing beacon headers" downloaded=116775778 left=1162878 eta=53.182s 
-```
-
-2.  For the second stage, `op-geth` will log the following:
-
-```text
-lvl=info msg="Syncing: state download in progress" synced=99.75% state="191.33 GiB" accounts=124,983,227@25.62GiB slots=806,829,266@165.16GiB codes=78965@566.74MiB eta=-2m7.602s
-```
-
-This will also be logged:
-
-```text
-msg="Syncing: chain download in progress" synced=100.00% chain="176.01 GiB" headers=116,817,399@45.82GiB bodies=116,817,286@52.87GiB receipts=116,817,286@77.32GiB eta=77.430ms
-```
-
-`op-geth` will also log FCU:
-
-```text
-Forkchoice requested sync to new head  number=117,076,468 hash=e3884c..bf4e2b
 ```
 
 ## Archive Nodes
