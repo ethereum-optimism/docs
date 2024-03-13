@@ -74,9 +74,9 @@ These fields apply to L2 blocks: Their timing, when do they need to be written t
 | `batchInboxAddress`   | L1 Address        | Address that Sequencer transaction batches are sent to on L1.                                                                                                                                                                 | 0xff00…0042069                                          |
 | `batchSenderAddress`  | L1 Address        | Address that nodes will filter for when searching for Sequencer transaction batches being sent to the `batchInboxAddress`. Can be updated later via the `SystemConfig` contract on L1.                                        | Batcher, an address for which you own the private key   |
 
-### Proposal fields
+### Proposal Fields
 
-These fields apply to output root proposals.
+These fields apply to output root proposals. The `l2OutputOracleSubmissionInterval` is configurable, see the section below for guidance.
 
 | Key                                 | Type              | Description                                                                                                                                                                                                                                   | Default value                                                                       |
 | ----------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -86,6 +86,16 @@ These fields apply to output root proposals.
 | `finalizationPeriodSeconds`         | Number of seconds | Number of seconds that a proposal must be available to challenge before it is considered finalized by the `OptimismPortal` contract.                                                                                                          | Recommend 12 on test networks, seven days on production ones                        |
 | `l2OutputOracleProposer`            | L1 Address        | Address that is allowed to submit output proposals to the `L2OutputOracle` contract. Will be removed when the OP Stack has permissionless proposals.                                                                                          |                                                                                     |
 | `l2OutputOracleChallenger`          | L1 Address        | Address that is allowed to challenge output proposals submitted to the `L2OutputOracle`. Will be removed when the OP Stack has permissionless challenges.                                                                                     | It is recommended to have a single admin address to retain a common security model. |
+
+#### Setting your `l2OutputOracleSubmissionInterval`
+
+
+When deploying your contracts, you can set the `l2OutputOracleSubmissionInterval` to any value you wish to save on costs (e.g., 24 hours or 12 hours). On OP mainnet, `l2OutputOracleSubmissionInterval` is set to `1800 L2 blocks = 1 hr`.
+The tradeoff here is that users will only be able to prove withdrawals after an output root is posted, so users will have to submit their L2 withdrawal transaction, wait up to the number of hours in the submission interval, then prove on L1, then wait 1 week, then finalize.
+
+<Callout type="info">
+  After fault proofs are shipped to Mainnet, output roots can be submitted as infrequently as you wish, and there won't be a submission interval anymore.
+</Callout>
 
 ### L1 data fee
 
@@ -100,7 +110,7 @@ These fields apply to the cost of the [L1 data fee](/stack/transactions/fees#the
 
 #### Ecotone
 
-For more information, see the [Ecotone Upgrade guide](../ecotone) for chain operators.
+For more information, see the [Ecotone Upgrade guide](/builders/notices/ecotone-changes#for-chain-operators) for chain operators.
 
 | Key                               | Type   | Description                                                                                         | Default value |
 | --------------------------------- | ------ | --------------------------------------------------------------------------------------------------- | ------------- |
@@ -141,18 +151,16 @@ The `OP_BATCHER_MAX_CHANNEL_DURATION` is configurable, see the section below for
   For very low throughput chains, this would mean to fill channels until close to the sequencing window and post the channel to `L1 SUB_SAFETY_MARGIN` L1 blocks before the sequencing window expires.
 </Callout>
 
-<details>
-  <summary><h4>Setting your  `OP_BATCHER_MAX_CHANNEL_DURATION`</h4></summary>
+#### Setting your  `OP_BATCHER_MAX_CHANNEL_DURATION`
 
-  To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 hours, with a value of `1500` L1 blocks. When non-zero, this parameter is the max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1. If you have this set to 5 for example, then your batcher will send a batch to the L1 every 5\*12=60 seconds. When using blobs, because 130kb blobs need to be purchased in full, if your chain doesn't generate at least \~130kb of data in those 60 seconds, then you'll be posting only partially full blobs and wasting storage.
+To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 hours, with a value of `1500` L1 blocks. When non-zero, this parameter is the max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1. If you have this set to 5 for example, then your batcher will send a batch to the L1 every 5\*12=60 seconds. When using blobs, because 130kb blobs need to be purchased in full, if your chain doesn't generate at least \~130kb of data in those 60 seconds, then you'll be posting only partially full blobs and wasting storage.
 
-  *   We do not recommend setting any values higher than targeting 5 hours, as batches have to be submitted within the sequencing window which defaults to 12 hours for OP chains, otherwise your chain may experience a 12 hour long chain reorg. 5 hours is the longest length of time we recommend that still sits snugly within that 12 hour window to avoid affecting stability.
-  *   If your chain fills up full blobs of data before the `OP_BATCHER_MAX_CHANNEL_DURATION` elapses, a batch will be submitted anyways - (e.g. even if the OP Mainnet batcher sets an `OP_BATCHER_MAX_CHANNEL_DURATION` of 5 hours, it will still be submitting batches every few minutes)
+*   We do not recommend setting any values higher than targeting 5 hours, as batches have to be submitted within the sequencing window which defaults to 12 hours for OP chains, otherwise your chain may experience a 12 hour long chain reorg. 5 hours is the longest length of time we recommend that still sits snugly within that 12 hour window to avoid affecting stability.
+*   If your chain fills up full blobs of data before the `OP_BATCHER_MAX_CHANNEL_DURATION` elapses, a batch will be submitted anyways - (e.g. even if the OP Mainnet batcher sets an `OP_BATCHER_MAX_CHANNEL_DURATION` of 5 hours, it will still be submitting batches every few minutes)
 
-  <Callout>
-    While setting an`OP_BATCHER_MAX_CHANNEL_DURATION` of `1500` results in the cheapest fees, it also means that your [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall for up to 5 hours.
+<Callout type="warning">
+  While setting an`OP_BATCHER_MAX_CHANNEL_DURATION` of `1500` results in the cheapest fees, it also means that your [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall for up to 5 hours.
 
-    *   This will negatively impact apps on your chain that rely on the safe head for operation. While many apps can likely operate simply by following the unsafe head, often Centralized Exchanges or third party bridges wait until transactions are marked safe before processing deposits and withdrawal.
-    *   Thus a larger gap between posting batches can result in significant delays in the operation of certain types of high-security applications.
-  </Callout>
-</details>
+  *   This will negatively impact apps on your chain that rely on the safe head for operation. While many apps can likely operate simply by following the unsafe head, often Centralized Exchanges or third party bridges wait until transactions are marked safe before processing deposits and withdrawal.
+  *   Thus a larger gap between posting batches can result in significant delays in the operation of certain types of high-security applications.
+</Callout>
