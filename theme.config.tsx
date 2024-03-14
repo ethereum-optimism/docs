@@ -50,7 +50,7 @@ const config: DocsThemeConfig = {
     key: '2.4-release',
     text: (
       <a href="/builders/notices/fpac-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fault Proof Breaking Changes">
-        📌 UPDATE: Get Prepared for Fault Proof Breaking Changes. Please review the Notices (README) for more info. → 📌
+        📌 UPDATE: Get Prepared for Breaking Changes to Fault Proofs and Withdrawal Times. Please review the Notices (README) for more info. → 📌
       </a>
     )
   },
