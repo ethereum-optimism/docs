@@ -49,7 +49,7 @@ const config: DocsThemeConfig = {
   banner: {
     key: '2.4-release',
     text: (
-      <a href="/builders/notices/fpac-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fault Proof Breaking Changes">
+      <a href="/builders/notices/fp-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fault Proof Breaking Changes">
         📌 UPDATE: Get Prepared for Breaking Changes to Fault Proofs and Withdrawal Times. Please review the Notices (README) for more info. → 📌
       </a>
     )
