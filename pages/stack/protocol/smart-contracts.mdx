@@ -9,31 +9,31 @@ import { Callout } from 'nextra/components'
 # Smart Contract Overview
 
 This guide explains how smart contracts work at a high level functionality
-of the smart contract components. You can find their addresses on OP Mainnet 
+of the smart contract components. You can find their addresses on OP Mainnet
 [here](/chain/addresses).
 
 ## L1 contracts
 
 ### [DelayedVetoable](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/DelayedVetoable.sol)
 
-This contract enables a delay before a call is forwarded to a target contract, 
-and during the delay period the call can be vetoed by the authorized vetoer. 
-This contract does not support value transfers, only data is forwarded. 
-Additionally, this contract cannot be used to forward calls with data beginning 
-with the function selector of the queuedAt(bytes32) function. This is because 
-of input validation checks which solidity performs at runtime on functions 
+This contract enables a delay before a call is forwarded to a target contract,
+and during the delay period the call can be vetoed by the authorized vetoer.
+This contract does not support value transfers, only data is forwarded.
+Additionally, this contract cannot be used to forward calls with data beginning
+with the function selector of the queuedAt(bytes32) function. This is because
+of input validation checks which solidity performs at runtime on functions
 which take an argument.
 
 ### [L1CrossDomainMessenger](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/L1CrossDomainMessenger.sol)
 
-The L1CrossDomainMessenger is a message passing interface between L1 and L2 
-responsible for sending and receiving data on the L1 side. Users are encouraged 
+The L1CrossDomainMessenger is a message passing interface between L1 and L2
+responsible for sending and receiving data on the L1 side. Users are encouraged
 to use this interface instead of interacting with lower-level contracts directly.
 
 ### [L1ERC721Bridge](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/L1ERC721Bridge.sol)
 
-The `L1ERC721bridge` is a contract which works together with the L2 ERC721 bridge 
-to make it possible to transfer ERC721 tokens from Ethereum to Optimism. This 
+The `L1ERC721bridge` is a contract which works together with the L2 ERC721 bridge
+to make it possible to transfer ERC721 tokens from Ethereum to Optimism. This
 contract acts as an escrow for ERC721 tokens deposited into L2.
 
 ### [L1StandardBridge](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/L1StandardBridge.sol)
@@ -162,67 +162,66 @@ transaction processing and block production.
 
 ## Legacy Contracts
 
-Those are legacy contracts from the old version of the OP Stack. 
+Those are legacy contracts from the old version of the OP Stack.
 
 ### [AddressManager](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/legacy/AddressManager.sol)
 
-`AddressManager` is a legacy contract that was used in the old version of the 
-Optimism system to manage a registry of string names to addresses. We now use 
-a more standard proxy system instead, but this contract is still necessary for 
+`AddressManager` is a legacy contract that was used in the old version of the
+Optimism system to manage a registry of string names to addresses. We now use
+a more standard proxy system instead, but this contract is still necessary for
 backwards compatibility with several older contracts.
 
 ### [DeployerWhitelist](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/legacy/DeployerWhitelist.sol)
 
-`DeployerWhitelist` is a legacy contract that was originally used to act as a 
-whitelist of addresses allowed to the Optimism network. The `DeployerWhitelist` 
-has since been disabled, but the code is kept in state for the sake of full 
-backwards compatibility. As of the Bedrock upgrade, the `DeployerWhitelist` is 
+`DeployerWhitelist` is a legacy contract that was originally used to act as a
+whitelist of addresses allowed to the Optimism network. The `DeployerWhitelist`
+has since been disabled, but the code is kept in state for the sake of full
+backwards compatibility. As of the Bedrock upgrade, the `DeployerWhitelist` is
 completely unused by the Optimism system and could, in theory, be removed entirely.
 
 ### [L1BlockNumber](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/legacy/L1BlockNumber.sol)
 
 `L1BlockNumber` is a legacy contract that fills the roll of the `OVM_L1BlockNumber`
-contract in the old version of the Optimism system. Only necessary for backwards 
-compatibility. If you want to access the L1 block number going forward, you should 
+contract in the old version of the Optimism system. Only necessary for backwards
+compatibility. If you want to access the L1 block number going forward, you should
 use the `L1Block` contract instead.
 
 ### [L1ChugSplashProxy](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/legacy/L1ChugSplashProxy.sol)
 
-Basic ChugSplash proxy contract for L1. Very close to being a normal proxy but 
-has added functions `setCode` and `setStorage` for changing the code or storage 
-of the contract. Note for future developers: do NOT make anything in this 
-contract 'public' unless you know what you're doing. Anything public can 
-potentially have a function signature that conflicts with a signature attached 
-to the implementation contract. Public functions SHOULD always have the 
-`proxyCallIfNotOwner` modifier unless there's some *really* good reason not to 
-have that modifier. And there almost certainly is not a good reason to not have 
+Basic ChugSplash proxy contract for L1. Very close to being a normal proxy but
+has added functions `setCode` and `setStorage` for changing the code or storage
+of the contract. Note for future developers: do NOT make anything in this
+contract 'public' unless you know what you're doing. Anything public can
+potentially have a function signature that conflicts with a signature attached
+to the implementation contract. Public functions SHOULD always have the
+`proxyCallIfNotOwner` modifier unless there's some *really* good reason not to
+have that modifier. And there almost certainly is not a good reason to not have
 that modifier. Beware!
 
 ### [LegacyERC20ETH](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/legacy/LegacyERC20ETH.sol)
 
-`LegacyERC20ETH` is a legacy contract that held ETH balances before the Bedrock 
-upgrade. All ETH balances held within this contract were migrated to the state 
-trie as part of the Bedrock upgrade. Functions within this contract that mutate 
+`LegacyERC20ETH` is a legacy contract that held ETH balances before the Bedrock
+upgrade. All ETH balances held within this contract were migrated to the state
+trie as part of the Bedrock upgrade. Functions within this contract that mutate
 state were already disabled as part of the EVM equivalence upgrade.
 
 ### [LegacyMessagePasser](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/legacy/LegacyMessagePasser.sol)
 
-The `LegacyMessagePasser` was the low-level mechanism used to send messages from 
-L2 to L1 before the Bedrock upgrade. It is now deprecated in favor of the new 
+The `LegacyMessagePasser` was the low-level mechanism used to send messages from
+L2 to L1 before the Bedrock upgrade. It is now deprecated in favor of the new
 `MessagePasser`.
 
 ### [LegacyMintableERC20](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/legacy/LegacyMintableERC20.sol)
 
-The legacy implementation of the `OptimismMintableERC20`. This contract is 
+The legacy implementation of the `OptimismMintableERC20`. This contract is
 deprecated and should no longer be used.
 
 ### [ResolvedDelegateProxy](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/legacy/ResolvedDelegateProxy.sol)
 
-`ResolvedDelegateProxy` is a legacy proxy contract that makes use of the 
-`AddressManager` to resolve the implementation address. We're maintaining 
-this contract for backwards compatibility so we can manage all legacy 
+`ResolvedDelegateProxy` is a legacy proxy contract that makes use of the
+`AddressManager` to resolve the implementation address. We're maintaining
+this contract for backwards compatibility so we can manage all legacy
 proxies where necessary.
-
 
 ## Releases
 
@@ -242,29 +241,29 @@ and contract releases you'll see them tagged as `op-contract/vX.X.X`.
 
 ### v1.0.0 - Bedrock
 
-The bedrock protocol upgrade refactored to the protocol to minimize the amount 
+The bedrock protocol upgrade refactored to the protocol to minimize the amount
 of code in the OP Stack, pushed it as close as possible to Ethereum-Equivalence,
-and most importantly making the stack modular. 
+and most importantly making the stack modular.
 
 *   [Bedrock release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.0.0) ...
 *   [Governance post](https://gov.optimism.io/t/draft-upgrade-proposal-bedrock/5014)
 
 ### v1.1.0 - ProtocolVersions
 
-The Protocol Version documents the progression of the total set of canonical 
-OP Stack specifications. Components of the OP Stack implement the subset of 
-their respective protocol component domain, up to a given Protocol Version 
+The Protocol Version documents the progression of the total set of canonical
+OP Stack specifications. Components of the OP Stack implement the subset of
+their respective protocol component domain, up to a given Protocol Version
 of the OP Stack.
 
-The Protocol Version is NOT a hardfork identifier, but rather indicates 
-software-support for a well-defined set of features introduced in past and 
+The Protocol Version is NOT a hardfork identifier, but rather indicates
+software-support for a well-defined set of features introduced in past and
 future hardforks, not the activation of said hardforks.
 
 <Callout type="info">
-  The Protocol Version only applies to the Protocol specifications with the 
-  [Superchain Targets](https://specs.optimism.io/protocol/superchain-upgrades.html#superchain-target) 
-  specified within. This versioning is independent of the Semver versioning 
-  used in OP Stack smart contracts, and the Semver-versioned reference software 
+  The Protocol Version only applies to the Protocol specifications with the
+  [Superchain Targets](https://specs.optimism.io/protocol/superchain-upgrades.html#superchain-target)
+  specified within. This versioning is independent of the Semver versioning
+  used in OP Stack smart contracts, and the Semver-versioned reference software
   of the OP-Stack.
 </Callout>
 
@@ -273,7 +272,7 @@ future hardforks, not the activation of said hardforks.
 
 ### v1.2.0 - SuperchainConfig with Extended Pause Functionality
 
-The SuperchainConfig contract is used to manage global configuration values for 
+The SuperchainConfig contract is used to manage global configuration values for
 multiple OP Chains within a single Superchain network.
 
 *   [SuperchainConfig and Extended Pause release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.2.0)
@@ -281,11 +280,11 @@ multiple OP Chains within a single Superchain network.
 
 ### v1.3.0 - Multi-Chain Prep (MCP)
 
-This protocol upgrade strengthens the security and upgradeability of the 
-Superchain by enabling L1 contracts to be upgraded atomically across multiple 
-chains in a single transaction. This upgrade also extends the `SystemConfig` 
-to contain the addresses of the contracts in the network, allowing users to 
-discover the system’s contract addresses programmatically. 
+This protocol upgrade strengthens the security and upgradeability of the
+Superchain by enabling L1 contracts to be upgraded atomically across multiple
+chains in a single transaction. This upgrade also extends the `SystemConfig`
+to contain the addresses of the contracts in the network, allowing users to
+discover the system's contract addresses programmatically.
 
 *   [MCP release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.3.0-rc.1)
 *   [Governance post](https://gov.optimism.io/t/upgrade-proposal-6-multi-chain-prep-mcp-l1/7677)
