@@ -1,16 +1,16 @@
 # Content Reuse
 
-Content reuse is when you reuse the same piece of content in various different places. It means that technical writers don't have to re-write text many times, and it means that the original piece of copy should be easy to locate so that it can be used as often as needed. When changes are made to that original piece of text, it will then be automatically changed wherever else that piece of text is used, which saves a lot of time.
+Content reuse is when you reuse the same piece of content in various places. It means that technical writers don't have to re-write text many times, and it means that the original piece of copy should be easy to locate so that it can be used as often as needed. When changes are made to that original piece of text, it will then be automatically changed wherever else that piece of text is used, which saves a lot of time.
 
-## content directory
+## Content Directory
 
 The content directory contains markdown files that can be imported across the nextra website.
 
-## how to write reusable content
+## How to Write Reusable Content
 
 Create a `.md` file in the `/content` directory.
 
-## how to use reusable content
+## How to Use Reusable Content
 
 1. Import it at the top of `.mdx` file:
 
