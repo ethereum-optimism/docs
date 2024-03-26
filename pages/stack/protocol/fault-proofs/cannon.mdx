@@ -18,7 +18,7 @@ However, Cannon is Optimism's default Fault Proof Virtual Machine (FPVM). Cannon
 
 Note that Cannon is just one example of a FPVM that can be used to resolve disputes.
 
-This documentation will go into detail about the sub-components that make up the offchain Cannon implementation as a whole.
+This documentation will go into detail about the subcomponents that make up the offchain Cannon implementation as a whole.
 Additionally, we will explore the differences between Cannon and the onchain `MIPS.sol`. For more information about the onchain
 implementation, please refer to [MIPS reference](mips).
 Now for simplicity, when referring to Cannon in this documentation, we are referring to the offchain implementation.
@@ -51,7 +51,7 @@ the fault dispute game. Then, once the execution trace bisection begins and Cann
 Executable and Linkable Format (ELF) binary to be run inside of Cannon. Within Cannon is the `mipsevm` that is built to handle the MIPS R3000,
 32-bit Instruction Set Architecture (ISA). OP-Program is built such that the same inputs will produce not only the same outputs, but the
 same execution trace. This allows all participants in a fault dispute game to run OP-Program within Cannon such that, given the same L2
-block state transition, can generate the exact same execution traces which will in turn generate the witness proof for the exact same
+block state transition, can generate the same execution traces which will in turn generate the witness proof for the exact same
 instruction to run onchain.
 
 ![OP-Program Execution Modes.](/img/op-stack/protocol/op-program-execution-modes.svg)
@@ -76,7 +76,7 @@ entire 32-bit memory space onchain due to cost. Therefore, memory is stored in a
 spread across [`memory.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/memory.go) and
 [`page.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/page.go).
 The tree has a fixed-depth of 27 levels, with leaf values of 32 bytes each. This spans the full 32-bit address space: `2**27 * 32 = 2**32`.
-Each leaf contains the memory at that part of the tree.
+Each leaf contains the memory for that part of the tree.
 
 `memory.go` defines the data structure, `Memory`, which holds pointers to `nodes` and `pages`. A memory `node` holds the calculated Merkle
 root of its parent node within the memory binary Merkle tree, where the 'location' of the node is determined by its generalized index.
@@ -88,17 +88,17 @@ size for the Go runtime. A `Page` represents the lowest depths of the memory bin
 to `memory.go`, calculating Merkle roots for each level of the tree.
 
 Nodes in this memory tree are combined as: `out = keccak256(left ++ right)`, where `++` is concatenation,
-and `left` and `right` are the 32-byte outputs of the respective sub-trees or the leaf values themselves.
+and `left` and `right` are the 32-byte outputs of the respective subtrees or the leaf values themselves.
 Individual leaf nodes are not hashed.
 
 In both `memory.go` and `page.go`, there are a few optimizations designed to reduce the computationally expensive Merkle root calculations.
 One such optimization is that the Merkle root of zeroed-out regions of memory are calculated for each depth. This means the tree is efficiently allocated,
-since the root of fully zeroed sub-trees can be computed without actually creating the full-subtree:
+since the root of fully zeroed subtrees can be computed without actually creating the full-subtree:
 `zero_hash[d] = hash(zero_hash[d-1], zero_hash[d-1])`, until the base-case of `zero_hash[0] == bytes32(0)`.
 So, pre-calculating zeroed Merkle roots initially allows unused memory regions to be cached. Additionally, non-zero Merkle roots
 are cached in both `memory.go` and `page.go`, and used so long as the memory region the Merkle root covers has not been written to.
 Otherwise, the cache is invalidated, which requires the Merkle root to be calculated over its entire subtree. Another optimization
-specifically in `memory.go` is caching the last two pages that have been used. Two pages are cached on account of the `mipsevm` using up
+specifically in `memory.go` is caching the last two pages that have been used. Two pages are cached because the `mipsevm` uses up
 to two memory addresses per instruction: one address is the `PC`, which contains the instruction to run, and the other address may be the
 target of a load or store instruction.
 
@@ -130,7 +130,7 @@ struct that holds all the relevant information for the particular MIPS instructi
 calldata can be seen in the [`MIPS.sol` documentation](mips#contract-state).
 
 Additionally, if a Pre-image is required for the MIPS
-instruction, `witness.go` will communicate the relevant Pre-image key and offset to OP-Challenger, so that it can be posted onchain
+instruction, `witness.go` will communicate the relevant Pre-image key and offset to OP-Challenger so that it can be posted onchain
 to `PreimageOracle.sol`.
 
 An important note about generating the witness proof: it is imperative that all relevant information about the instruction to be run
@@ -155,7 +155,7 @@ While loading the ELF file into Cannon, [`metadata.go`](https://github.com/ether
 is used to parse all the symbols stored in the ELF file. Understanding which ELF symbols exist and at which regions of memory
 they are located is important for other functionality, such as understanding if the current `PC` is running within a specific function.
 
-Another step that occurs while loading the ELF file is patching the binary of any incompatible functions. This step is **very
+Another step that occurs while loading the ELF file is patching the binary of any incompatible functions. This step is crucial, as a key design decision
 important**, as a key design decision in both the onchain and offchain `mipsevm` implementations is that neither implementation
 has access to a kernel. This is primarily due to the limitations within the EVM itself, and since the offchain Cannon
 implementation must match functionality exactly with its onchain counterpart, kernel access is also not available within Cannon. This means that the VMs
