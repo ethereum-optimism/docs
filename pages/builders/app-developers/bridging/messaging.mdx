@@ -13,7 +13,7 @@ This page explains how bridging works, how to use it, and what to watch out for.
 
 <Callout type="info">
   This is a high-level overview of the bridging process.
-  For a step-by-step tutorial on how to send data between L1 and L2, check out the [Solidity tutorial](/builders/dapp-developers/tutorials/cross-dom-solidity).
+  For a step-by-step tutorial on how to send data between L1 and L2, check out the [Solidity tutorial](/builders/app-developers/tutorials/cross-dom-solidity).
 </Callout>
 
 ## Understanding Contract Calls
@@ -61,7 +61,7 @@ Because of limitations of Solidity, **the OP Stack's bridging interface is desig
 
 At a high level, the process for sending data between L1 and L2 is pretty similar to the process for sending data between two contracts on Ethereum (with a few caveats).
 Communication between L1 and L2 is made possible by a pair of special smart contracts called the "messenger" contracts.
-Each layer has its own messenger contract which serves to abstract away some lower-level communication details, a lot like how HTTP libraries abstract away physical network connections.
+Each layer has its own messenger contract, which serves to abstract away some lower-level communication details, a lot like how HTTP libraries abstract away physical network connections.
 
 We won't get into *too* much detail about these contracts here.
 The most important thing that you need to know is that each messenger contract has a `sendMessage` function that allows you to send a message to a contract on the other layer.
@@ -129,7 +129,7 @@ The speed of a cross-chain transaction depends on the direction in which the tra
 ### For L1 to L2 Transactions
 
 Transactions sent from L1 to L2 take **approximately 1-3 minutes** to get from Ethereum to OP Mainnet, or from Sepolia to OP Sepolia.
-This is because the Sequencer waits for a certain number of L1 blocks to be created before including L1 to L2 transactions in order to avoid potentially annoying [reorgs](https://www.alchemy.com/overviews/what-is-a-reorg).
+This is because the Sequencer waits for a certain number of L1 blocks to be created before including L1 to L2 transactions to avoid potentially annoying [reorgs](https://www.alchemy.com/overviews/what-is-a-reorg).
 
 ### For L2 to L1 Transactions
 
@@ -202,7 +202,7 @@ Each message from L2 to L1 requires three transactions:
 1.  An L2 transaction that *initiates* the transaction, which is priced the same as any other transaction made on OP Mainnet.
 
 2.  An L1 transaction that *proves* the transaction.
-    This transaction can only be submitted after L2 block including your L2 transaction is proposed on L1.
+    This transaction can only be submitted after L2 block, including your L2 transaction, is proposed on L1.
     This transaction is expensive because it includes verifying a [Merkle trie](/connect/resources/glossary#merkle-patricia-trie) inclusion proof on L1.
 
 3.  An L1 transaction that *finalizes* the transaction.

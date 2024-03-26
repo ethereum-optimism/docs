@@ -36,9 +36,9 @@ The OP Stack's unique, modular design allows the decoupling of the FPP and FPVM,
 The default for this system component is `op-program`, which implements a fault proof program that runs through the rollup state-transition to verify an L2 output from L1 inputs. This verifiable output can then resolve a disputed output on L1. 
 The FPP is a combination of `op-node` and `op-geth`, so it has both the consensus and execution "parts" of the protocol in a single process. This means Engine API calls that would normally be made over HTTP are instead made as direct method calls to the op-geth code.
 
-The FPP is designed so that it can be run in a deterministic way such that two invocations with the same input data will result in not only the same output, but the same program execution trace. This allows it to be run in an on-chain VM as part of the dispute resolution process.
+The FPP is designed so that it can be run in a deterministic way such that two invocations with the same input data will result in not only the same output, but the same program execution trace. This allows it to be run in an onchain VM as part of the dispute resolution process.
 
-All data is retrieved via the Preimage Oracle API. The preimages could be provided via the FPVM when on-chain or by a native "host" implementation that can download the required data from nodes via JSON-RPC requests. The native host implementation is also provided by `op-program` but doesn't run as part of the on-chain execution.  Basically op-program has two halves: the "client" Fault Proof Program part covered in this section and the "host" part used to fetch required preimages.
+All data is retrieved via the Preimage Oracle API. The preimages could be provided via the FPVM when onchain or by a native "host" implementation that can download the required data from nodes via JSON-RPC requests. The native host implementation is also provided by `op-program` but doesn't run as part of the onchain execution.  Basically op-program has two halves: the "client" Fault Proof Program part covered in this section and the "host" part used to fetch required preimages.
 
 ## Fault Proof Virtual Machine
 
@@ -53,12 +53,12 @@ To do this, only one instruction is proven at a time. The bisection game will na
 *   To execute the instruction, the VM emulates something akin to an instruction-cycle of a thread-context: the instruction is read from memory, interpreted, and the register-file and memory may change a little.
 *   To support the pre-image oracle, and basic program runtime needs like memory-allocation, the execution also supports a subset of linux syscalls. Read/write syscalls allow interaction with the pre-image oracle: the program writes a hash as request for a pre-image, and then reads the value in small chunks at a time.
 
-[Cannon](cannon) is the default FPVM used in all disputes. [MIPS](mips) is the on-chain smart contract implementation of Cannon that can be implemented due to the modularity of the dispute game.
+[Cannon](cannon) is the default FPVM used in all disputes. [MIPS](mips) is the onchain smart contract implementation of Cannon that can be implemented due to the modularity of the dispute game.
 
 ## Dispute Game Protocol
 
 In the Dispute protocol, different types of dispute games can be created, managed, and upgraded through the [DisputeGameFactory](https://github.com/ethereum-optimism/optimism/blob/6a53c7a3294edf140d552962f81c0f742bf445f9/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol#L4).
-This opens the door to innovative features, like aggregate proof systems and the ability to expand the protocol to allow for disputing things apart from the state of L2, such as a `FaultDisputeGame` geared towards on-chain binary verification.
+This opens the door to innovative features, like aggregate proof systems and the ability to expand the protocol to allow for disputing things apart from the state of L2, such as a `FaultDisputeGame` geared towards onchain binary verification.
 
 A dispute game is a core primitive to the dispute protocol. It models a simple state machine, and it is initialized with a 32 byte commitment to any piece of information of which the validity can be disputed.
 They contain a function to resolve this commitment to be true or false, which is left for the implementor of the primitive to define. Dispute games themselves rely on two fundamental properties:
@@ -75,5 +75,5 @@ The first full implementation of the VM generic in the bisection game includes a
 
 ## Next Steps
 
-*   See [Mips.sol](mips) to learn more about the on-chain smart contract implementation of Cannon.
+*   See [Mips.sol](mips) to learn more about the onchain smart contract implementation of Cannon.
 *   See [Cannon FPVM Specification](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/specs/cannon-fault-proof-vm.md) for more detail.
