@@ -9,19 +9,18 @@ description: Learn how Optimistic Rollups work at a high level.
 The big idea that makes Optimism possible is the Optimistic Rollup.
 We'll go through a brief explainer of *how* Optimistic Rollups work at a high level.
 Then we'll explain *why* Optimism is built as an Optimistic Rollup and why we believe it's the best option for a system that addresses all of our design goals.
-Checkout the [protocol specs](https://specs.optimism.io/), if you want to more detail about the rollup protocol.
+Check out the [protocol specs](https://specs.optimism.io/), if you want to more detail about the rollup protocol.
 
 ## Optimistic Rollups TL;DR
 
 Optimism is an "Optimistic Rollup," which is basically just a fancy way of describing a blockchain that piggy-backs off of the security of another "parent" blockchain.
-Specifically, Optimistic Rollups take advantage of the consensus mechanism (like PoW or PoS) of their parent chain instead of providing their own.
-In OP Mainnet's case this parent blockchain is Ethereum.
+Specifically, Optimistic Rollups leverage the consensus mechanism (like PoW or PoS) of their parent chain instead of providing their own. In OP Mainnet's case, this parent blockchain is Ethereum.
 
 ![Ethereum and Optimism Forever Doodle.](/img/op-stack/protocol/ethereum-optimism-forever.png)
 
 ## Block storage
 
-In Bedrock L2 blocks are saved to the Ethereum blockchain using a non-contract address ([`0xff00..0010` on Ethereum](https://etherscan.io/address/0xff00000000000000000000000000000000000010)) to minimize the L1 gas expense.
+In Bedrock, L2 blocks are saved to the Ethereum blockchain using a non-contract address ([`0xff00..0010` on Ethereum](https://etherscan.io/address/0xff00000000000000000000000000000000000010)) to minimize the L1 gas expense.
 As these blocks are submitted as transaction calldata on Ethereum, there is no way to modify or censor them after the "transaction" is included in a block that has enough attestations.
 This is the way that OP Mainnet inherits the availability and integrity guarantees of Ethereum.
 
@@ -36,7 +35,7 @@ Optimism block production is primarily managed by a single party, called the "se
 *   Constructing and executing L2 blocks.
 *   Submitting user transactions to L1.
 
-In Bedrock the sequencer does have a mempool, similar to L1 Ethereum, but the mempool is private to avoid opening opportunities for MEV.
+In Bedrock, the sequencer does have a mempool, similar to L1 Ethereum, but the mempool is private to avoid opening opportunities for MEV.
 In OP Mainnet blocks are produced every two seconds, regardless of whether they are empty (no transactions), filled up to the block gas limit with transactions, or anything in between.
 
 Transactions get to the sequencer in two ways:
@@ -49,7 +48,7 @@ Transactions get to the sequencer in two ways:
     You can read more about this mechanism [in the protocol specifications](https://specs.optimism.io/protocol/derivation.html#deriving-the-transaction-list).
 
 2.  Transactions submitted directly to the sequencer.
-    These transactions are a lot cheaper to submit (because you do not need the expense of a separate L1 transaction), but of course they cannot be made censorship resistant, because the sequencer is the only participant that knows about them.
+    These transactions are a lot cheaper to submit, as they do not require the expense of a separate L1 transaction. However, they cannot be made censorship resistant since the sequencer is the only participant that knows about them.
 
 For the moment, [The Optimism Foundation](https://www.optimism.io/) runs the only block producer on OP Mainnet. Refer to [Protocol specs](overview) section for more information about how we plan to decentralize the Sequencer role in the future.
 
@@ -114,4 +113,4 @@ The fault proof process is currently undergoing major redevelopment as a side-ef
 ## Next Steps
 
 *   If you want to learn more about rollup protocol, check out the guides on [deposit flow](deposit-flow), [withdrawal flow](withdrawal-flow), or [transaction flow](transaction-flow).
-*   To learn about spinning up your own L2 rollup, see the [chain operator overview](/builders/chain-operators/self-hosted) or go directly to the tutorial on [creating your own L2 rollup](/builders/chain-operators/tutorials/create-l2-rollup).
+*   To learn about operating your own L2 rollup, see the guide on [starting a self-hosted chain](/builders/chain-operators/self-hosted) or go directly to the tutorial on [creating your own L2 rollup](/builders/chain-operators/tutorials/create-l2-rollup).
