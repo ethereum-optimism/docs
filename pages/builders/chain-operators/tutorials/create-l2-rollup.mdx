@@ -434,6 +434,35 @@ forge script scripts/Deploy.s.sol:Deploy --sig 'sync()' --rpc-url $L1_RPC_URL
 
 ## Layer 2
 
+### Build `op-geth`
+
+<Steps>
+
+{<h3>Clone op-geth</h3>}
+
+```bash
+cd ~
+git clone --branch v1.101311.0 https://github.com/ethereum-optimism/op-geth.git
+```
+
+todo: add note about latest release 
+
+
+{<h3>Enter op-geth</h3>}
+
+```bash
+cd op-geth
+```
+
+{<h3>Build op-geth</h3>}
+
+```bash
+make geth
+```
+
+</Steps>
+
+
 todo: decide if we should switch to release v.1.7.4, its probably the move 
 and then we can use the new solidity genesis generation process
 
@@ -496,33 +525,8 @@ make op-node op-batcher op-proposer
 pnpm build
 ```
 
-### Build `op-geth`
 
-<Steps>
-
-{<h3>Clone op-geth</h3>}
-
-```bash
-cd ~
-git clone https://github.com/ethereum-optimism/op-geth.git
-```
-
-{<h3>Enter op-geth</h3>}
-
-```bash
-cd op-geth
-```
-
-{<h3>Build op-geth</h3>}
-
-```bash
-make geth
-```
-
-</Steps>
-
-
-## Initialize `op-geth`
+### Initialize `op-geth`
 
 You're almost ready to run your chain!
 Now you just need to run a few commands to initialize `op-geth`.
@@ -551,7 +555,7 @@ build/bin/geth init --datadir=datadir genesis.json
 
 </Steps>
 
-## Start `op-geth`
+### Start `op-geth`
 
 Now you'll start `op-geth`, your Execution Client.
 Note that you won't start seeing any transactions until you start the Consensus Client in the next step.
@@ -580,6 +584,8 @@ Feel free to run other (non-Sequencer) nodes in full mode if you'd like to save 
 It's important that you've already initialized the geth node at this point as per the previous section. Failure to do this will cause startup issues between `op-geth` and `op-node`.
 </Callout>
 
+todo: verify configuration
+
 ```bash
 ./build/bin/geth \
   --datadir ./datadir \
@@ -607,7 +613,7 @@ It's important that you've already initialized the geth node at this point as pe
 
 </Steps>
 
-## Start `op-node`
+### Start `op-node`
 
 Once you've got `op-geth` running you'll need to run `op-node`.
 Like Ethereum, the OP Stack has a Consensus Client (`op-node`) and an Execution Client (`op-geth`).
@@ -624,6 +630,8 @@ You'll need a terminal window to run the `op-node` in.
 ```bash
 cd ~/optimism/op-node
 ```
+
+todo: verify configuration
 
 {<h3>Run op-node</h3>}
 
@@ -669,7 +677,7 @@ You can alternatively also remove the [--p2p.static](/builders/node-operators/ma
 
 </Steps>
 
-## Start `op-batcher`
+### Start `op-batcher`
 
 The `op-batcher` takes transactions from the Sequencer and publishes those transactions to L1.
 Once these Sequencer transactions are included in a finalized L1 block, they're officially part of the canonical chain.
@@ -689,6 +697,8 @@ You'll need a terminal window to run the `op-batcher` in.
 ```bash
 cd ~/optimism/op-batcher
 ```
+
+todo: verify configuration 
 
 {<h3>Run op-batcher</h3>}
 
@@ -718,7 +728,7 @@ If you want to reduce costs, either set this value to 0 to disable it or increas
 
 </Steps>
 
-## Start `op-proposer`
+### Start `op-proposer`
 
 Now start `op-proposer`, which proposes new state roots.
 
@@ -736,6 +746,8 @@ cd ~/optimism/op-proposer
 
 {<h3>Run op-proposer</h3>}
 
+todo: verify configuration
+
 ```bash
 ./bin/op-proposer \
   --poll-interval=12s \
@@ -748,13 +760,15 @@ cd ~/optimism/op-proposer
 
 </Steps>
 
-## Connect Your Wallet to Your Chain
+## Interact With Your Chain
+
+### Connect Your Wallet to Your Chain
 
 You now have a fully functioning OP Stack Rollup with a Sequencer node running on `http://localhost:8545`.
 You can connect your wallet to this chain the same way you'd connect your wallet to any other EVM chain.
 If you need an easy way to connect to your chain, just [click here](https://chainid.link?network=opstack-getting-started).
 
-## Get ETH On Your Chain
+### Get ETH On Your Chain
 
 Once you've connected your wallet, you'll probably notice that you don't have any ETH to pay for gas on your chain.
 The easiest way to deposit Sepolia ETH into your chain is to send ETH directly to the `L1StandardBridge` contract.
@@ -781,7 +795,7 @@ It may take up to 5 minutes for that ETH to appear in your wallet on L2.
 
 </Steps>
 
-## See Your Rollup in Action
+### See Your Rollup in Action
 
 You can interact with your Rollup the same way you'd interact with any other EVM chain.
 Send some transactions, deploy some contracts, and see what happens!
