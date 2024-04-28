@@ -115,7 +115,7 @@ Make sure that you have correctly hooked `direnv` into your shell by modifying y
 If you haven't edited a config file then you probably haven't configured `direnv` properly (and things might not work later).
 </Callout>
 
-## Get Access to a Sepolia Node
+## Get Access to Layer 1
 
 You'll be deploying a OP Stack Rollup chain that uses a Layer 1 blockchain to host and order transaction data.
 The OP Stack Rollups were designed to use EVM Equivalent blockchains like Ethereum, OP Mainnet, or standard Ethereum testnets as their L1 chains.
@@ -126,7 +126,11 @@ You can also use other EVM-compatible blockchains, but you may run into unexpect
 If you want to use an alternative network, make sure to carefully review each command and replace any Sepolia-specific values with the values for your network.
 
 Since you're deploying your OP Stack chain to Sepolia, you'll need to have access to a Sepolia node.
-You can either use a node provider like [Alchemy](https://www.alchemy.com/) (easier) or run your own Sepolia node (harder).
+You can either use a node provider (easier) or run your own Sepolia node (harder).
+
+<Callout>
+You will need access to the Layer 1 execution and consensus layers.
+</Callout>
 
 ## Layer 1
 
@@ -148,7 +152,7 @@ git clone --branch op-contracts/v1.3.0 --recurse-submodules https://github.com/e
 
 <Callout>
 You will be using the `op-contracts/v1.3.0` branch of the Optimism Monorepo to deploy an OP Stack testnet chain during this tutorial.
-You should **NEVER** use the `develop` or `master` branches in production.
+You should **NEVER** use the `develop`, `master`, or non-audited/governance approved branches in production.
 </Callout>
 
 *   `--branch op-contracts/v1.3.0`: Specifies the `v1.3.0` smart contract release tag to checkout immediately after cloning.
@@ -434,6 +438,40 @@ forge script scripts/Deploy.s.sol:Deploy --sig 'sync()' --rpc-url $L1_RPC_URL
 
 ## Layer 2
 
+Now that we have deployed the contracts on L1, we can turn our focus to Layer 2.
+
+### Build the Optimism Monorepo
+
+<Steps>
+
+{<h3>Checkout Go Code Branch</h3>}
+
+```bash
+cd ~/optimism
+git checkout v1.7.4
+```
+
+<Callout type="info">
+Tags of the form `v<semver>`, such as `v1.7.4`, indicate releases of all Go 
+code only, and **DO NOT** include smart contracts. This branch is for `op-node`,
+`op-batcher`, and `op-proposer`.
+</Callout>
+
+{<h3>Install dependencies</h3>}
+
+```bash
+pnpm install 
+```
+
+{<h3>Build the client and services</h3>}
+
+```bash
+make op-node op-batcher op-proposer 
+```
+
+
+</Steps>
+
 ### Build `op-geth`
 
 <Steps>
@@ -445,14 +483,12 @@ cd ~
 git clone --branch v1.101311.0 https://github.com/ethereum-optimism/op-geth.git
 ```
 
-<Callout>
-You will be using the `v1.101311.0` tag of the op- to deploy an OP Stack testnet chain during this tutorial.
-You should **NEVER** use the `develop` or `master` branches in production.
+<Callout type="info">
+You will be using the `v1.101311.0` release of `op-geth` to deploy an OP Stack testnet chain during this tutorial.
+Best practice is to use the latest release.
 </Callout>
 
-*   `--branch v1.101311.0`: Specifies the `v1.3.0` smart contract release tag to checkout immediately after cloning.
-
-
+*   `--branch v1.101311.0`: Specifies the `v1.101311.0` release tag to checkout immediately after cloning.
 
 {<h3>Enter op-geth</h3>}
 
@@ -469,10 +505,11 @@ make geth
 </Steps>
 
 
-todo: decide if we should switch to release v.1.7.4, its probably the move 
-and then we can use the new solidity genesis generation process. See `Solidity L2 Genesis Generation: What is New` notion doc
 
 ### Generate the L2 config files
+
+todo: rewrite this section, see `Solidity L2 Genesis Generation: What is New` notion doc
+
 
 Now that you've set up the L1 smart contracts you can automatically generate several configuration files that are used within the Consensus Client and the Execution Client.
 
@@ -484,10 +521,10 @@ You need to generate three important files:
 
 <Steps>
 
-{<h3>Navigate to the op-node package</h3>}
+{<h3>Navigate to the smart contract package</h3>}
 
 ```bash
-cd ~/optimism/op-node
+cd ~/optimism/packages/contracts-bedrock
 ```
 
 {<h3>Create genesis files</h3>}
@@ -656,6 +693,7 @@ todo: verify configuration
   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY \
   --l1=$L1_RPC_URL \
   --l1.rpckind=$L1_RPC_KIND
+  --l1.beacon=
 ```
 
 Once you run this command, you should start seeing the `op-node` begin to sync L2 blocks from the L1 chain.
