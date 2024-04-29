@@ -46,16 +46,3 @@ jobs:
       run: |
         cd docs
         lychee --config ./lychee.toml --quiet "./pages"
-
-    - name: Notify Slack on failure
-      uses: ravsamhq/notify-slack-action@v2
-      if: always()
-      with:
-        status: ${{ job.status }}
-        notify_when: "failure"
-        notification_title: "{workflow} has {status_message} (<{run_url}|view errors>)"
-        message_format: "{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>"
-        footer: "<{run_url}|View Run>"
-        mention_users_when: "failure,warnings"
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
