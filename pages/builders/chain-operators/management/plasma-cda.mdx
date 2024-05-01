@@ -1,0 +1,136 @@
+---
+title: Run an OP Chain in Plasma Mode with Centralized DA
+lang: en-US
+description: Learn how to run an OP chain in plasma-mode with a centralized DA server.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Run an OP Chain in Plasma Mode with Centralized DA
+
+<Callout type="error">
+  **This is beta software.** For now, we only recommend spinning up testnets and staying in touch with [developer support](https://github.com/ethereum-optimism/developers/discussions) for deploying these chains to mainnet.
+</Callout>
+
+This guide walks you through how to run an OP chain in plasma-mode with a centralized DA server. This process is for new chain operators. There's no path for existing chains at this time.
+Plasma Mode is available in the latest [`op-node` v1.7.3](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.3).
+
+<Steps>
+  ### Setting Up Your S3 Bucket
+
+  You must create and setup your S3 bucket. Then, pass the S3 bucket permissions to the DA server.
+
+  *   Create S3 bucket using [Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html) or [Google Cloud S3](https://cloud.google.com/storage/docs/creating-buckets)
+  *   Get access credentials to bucket
+  *   Configure DA server with those access credentials & bucket URI (private)
+
+  ### Deploying Your Contracts
+
+  Next, you'll deploy contracts for a new chain to use OP Plasma. This is basically a standard chain deployment procedure where chain operators essentially deploy L1 configs and create L2 genesis.
+
+  *   Use contracts version `op-contracts/v1.4.0-rc.1`.
+  *   Set `usePlasma` in the deploy config + DA Specific parameters. See the [devnet L1 template](https://github.com/ethereum-optimism/optimism/blob/8dd17a7b114a7c25505cd2e15ce4e3d0f7e3f7c1/packages/contracts-bedrock/deploy-config/devnetL1-template.json#L65-L69) for more details.
+
+  ```json
+    "usePlasma": true,
+    "daChallengeWindow": 3600, // 12h (43200 max L2 reorg depth)
+    "daResolveWindow": 3600, // 12h
+    "daBondSize": 103486250000000000, // (72925 + 120000 * 16,64) * 50Gwei ~ 0.1ETH
+    "daResolverRefundPercentage": 0, // Disabled initially
+    "daChallengeProxy": "0x00...00", // TODO: Joshua determine if we need this
+  ```
+
+  <Callout type="warning">
+    The recommended value for both `daChallengeWindow` and `daResolveWindow` should be within the 4-12 hour range.
+  </Callout>
+
+  ### Operating a DA Server
+
+  The DA server is one of two pieces of new software that chain operators will need to run in addition to your node, batcher, proposer, and geth. The S3 client will load configurations from the environment, shared credentials, and shared config files. Depending on your cloud provider a wide array of configurations are available.
+
+  *   Configure the DA Server to point to S3.
+      Sample environment variables are provided below:
+
+  ```js
+  export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
+  export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
+  export AWS_SESSION_TOKEN=YOUR_SESSION_TOKEN
+  export AWS_REGION=YOUR_REGION
+  ```
+
+  *   Amazon has additional [configuration options](https://docs.aws.amazon.com/sdkref/latest/guide/creds-config-files.html) that you can use.
+  *   Google Cloud S3 has these additional variables that can be used:
+
+  ```js
+  export AWS_ENDPOINT_URL="https://storage.googleapis.com"
+  export AWS_ACCESS_KEY_ID=YOUR_GOOGLE_ACCESS_KEY_ID
+  export AWS_SECRET_ACCESS_KEY=YOUR_GOOGLE_ACCESS_KEY_SECRET
+  ```
+
+  <Callout type="warning">
+    The server does not perform authentication on `put` requests, which means people could just call the server and store data. Need to do that at a load balancing layer.
+  </Callout>
+
+  ### Configuring `op-node` and `op-geth`
+
+  You can now spin up your OP chain and set a few flags to enable plasma mode. No configuration changes are required for `op-geth` or `op-proposer`.
+
+  *   Set the `--plasma.enabled=true` for both `op-batcher` and `op-node`.
+  *   Point `op-batcher` and `op-node` to the DA server by setting  `--plasma.da-server=$DA\_SERVER\_HTTP\_URL` for both.
+
+  ```go
+      --plasma.da-server value                                               ($OP_NODE_PLASMA_DA_SERVER)
+            HTTP address of a DA Server
+     
+      --plasma.enabled                    (default: false)                   ($OP_NODE_PLASMA_ENABLED)
+            Enable plasma mode
+     
+      --plasma.verify-on-read             (default: true)                    ($OP_NODE_PLASMA_VERIFY_ON_READ)
+            Verify input data matches the commitments from the DA storage service
+  ```
+
+  <Callout type="info">
+    After completing these steps, you will have an OP plasma centralized DA chain up and running.
+  </Callout>
+
+  ### Running Sentinel to Resolve Challenges
+
+  Chain operators will need to run sentinel to respond to DA challenges. Sentinel resolves alt-da disputes, and chain operators need to pay for the L1 transaction fee. Chain operators
+  will have a hot key to bond ETH (this is the private key, which is funded and exposed to bond risk). In terms of resolving, chain operators don't get the bond back. However, as a chain operator, you want to resolve challenges to avoid reorgs.
+  For more details on the bonding logic, [see the specs](https://specs.optimism.io/experimental/plasma.html).
+
+  *   Chain operators need to set the flags below to run sentinel but not in auto-initializing mode
+  *   Someone else should run sentinel in initializing mode, to resolve challenges
+
+  ```
+  sentinel
+        --datadir=data
+        --l1-rpc-http=$L1_HTTP_URL
+        --l1-rpc-ws=$L1_WS_URL
+        --da-storage-uri=$DA_SERVER_HTTP_URL
+        --private-key=$PRIVATE_KEY
+        --config=/rollup.json
+  ```
+
+  ### Setting Your Fee Configuration
+
+  Chain operators will need to determine fee scalars values to charge users since they are not posting everything to Ethereum, just a small subset. The fee scalar values are network throughput dependent, so values will need to be adjusted by chain operators as needed.
+
+  *   Set scalar values inside the deploy config. The example below shows some possible fee scalar values, but will need to be adjusted up or down based on network throughput.
+
+      ```
+      // Set in Deploy Config
+        "gasPriceOracleBaseFeeScalar": 7663, // Commitment tx base cost + 0.5% challenge rate
+        "gasPriceOracleBlobBaseFeeScalar": 0, // blobs are off for now
+      ```
+
+  *   Cost structure for Plasma Mode: The transaction data is split up into 128kb chunks and placed into S3. Chain operators will need to submit 32 byte commitments (goes to batch inbox address) to L1 for each 128kb chunks. Then, figure out how much that costs relative to the amount of transactions your chain is putting through.
+
+  <Callout type="warning">
+    Some initial scalar values must be set early on in the deploy config (See [Step 2: Deploying Your Contracts](#deploying-your-contracts)). And then at a later point, chain operators can update the scalar values with an L1 transaction.
+  </Callout>
+</Steps>
+
+## Next Steps
+*   To run a DA server alongside your node, see the [DA Server guide](/builders/node-operators/management/da-server) for node operators.
+*   For detailed information on Plasma Mode, see the [specs](https://specs.optimism.io/experimental/plasma.html).

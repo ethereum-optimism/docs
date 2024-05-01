@@ -1,0 +1,48 @@
+---
+title: Run a DA Server in Plasma Mode Alongside Your Node
+lang: en-US
+description: Learn how to run a DA server in plasma-mode alongside your node.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Run a DA Server in Plasma Mode Alongside Your Node
+
+<Callout type="error">
+  **This is beta software.** For now, we only recommend spinning up testnets and staying in touch with [developer support](https://github.com/ethereum-optimism/developers/discussions) for deploying these chains to mainnet.
+</Callout>
+
+This guide walks you through how to run a DA server in plasma-mode alongside your node. This process is for both full and archive nodes.
+Plasma Mode is available in the latest [`op-node` v1.7.3](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.3).
+
+<Steps>
+  ### Connecting to the S3 Bucket
+
+  For centralized DA, node operators must run a DA server alongside your node to properly read from. You have two options:
+
+  *   Option 1: Connect to the S3 bucket
+  *   Option 2: Connect to the public get URL (provided by the chain operator)
+
+  ### Configuring `op-node`
+
+  You can now spin up your node and set a few flags to enable plasma mode. No configuration changes are required for `op-geth`.
+
+  *   Set the `--plasma.enabled=true` flag for `op-node`.
+  *   Point `op-node` to the DA server by setting  `--plasma.da-server=$DA\_SERVER\_HTTP\_URL`.
+
+  ```go
+      --plasma.da-server value                                               ($OP_NODE_PLASMA_DA_SERVER)
+            HTTP address of a DA Server
+     
+      --plasma.enabled                    (default: false)                   ($OP_NODE_PLASMA_ENABLED)
+            Enable plasma mode
+     
+      --plasma.verify-on-read             (default: true)                    ($OP_NODE_PLASMA_VERIFY_ON_READ)
+            Verify input data matches the commitments from the DA storage service
+  ```
+</Steps>
+
+## Next Steps
+
+*   To run an OP Chain in plasma-mode with centralized DA, see the [DA Server guide](/builders/chain-operators/management/plasma-cda) for chain operators.
+*   For detailed information on Plasma Mode, see the [specs](https://specs.optimism.io/experimental/plasma.html).
