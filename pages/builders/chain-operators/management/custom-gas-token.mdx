@@ -1,0 +1,120 @@
+---
+title: How to Run a Custom Gas Token Chain
+lang: en-US
+description: Learn how to run a custom gas token chain.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# How to Run a Custom Gas Token Chain
+
+<Callout type="warning">
+  We do not recommend running a Custom Gas Token chain in production mainnet yet.
+  This guide is for running testnet chains. The OP Labs team will flag when they have confidence in the security of the implementation code.
+</Callout>
+
+This guide provides a walkthrough for chain operators who want to run a custom gas token chain.
+An OP Stack chain that uses the custom gas token feature enables an end user to deposit an L1 native ERC20 token into L2 where that asset is minted as the native L2 asset and can be used to pay for gas on L2.
+
+<Steps>
+  ### Deploying Your Contracts
+
+  *   Checkout the [custom gas token branch](https://github.com/ethereum-optimism/optimism/pull/10143) and use the commit to deploy. This will be merged into the main branch after fault proofs are code complete.
+
+  <Callout type="error">
+    Be sure to check out this branch or you will not deploy a chain that uses custom gas token!
+  </Callout>
+
+  *   Update the deploy config in `contracts-bedrock/deploy-config` with new fields: `useCustomGasToken` and `customGasTokenAddress`
+
+  *   Set `useCustomGasToken` to `true` and the address of the L1 ERC20 token should be in `customGasTokenAddress`. The ERC20 should already be deployed before trying to spin up the custom gas token chain.
+
+  If you set `useCustomGasToken` to `false` (it defaults this way), then it will use ETH as the gas paying token.
+
+  *   Set `customGasTokenAddress` to the contract address of an L1 ERC20 token you wish to use as the gas token on your L2.
+
+  The custom gas token being set must meet the following criteria:
+
+  *   the number of decimals on the token MUST be exactly 18
+  *   the name of the token MUST be less than or equal to 32 bytes
+  *   symbol MUST be less than or equal to 32 bytes.
+
+  <Callout type="warning">
+    You will NOT be able to change the address of the custom gas token if it is already set.
+  </Callout>
+
+  *   Deploy the L1 contracts from `contracts-bedrock` using the following command:
+
+  ```bash
+  DEPLOYMENT_OUTFILE=deployments/artifact.json \
+  DEPLOY_CONFIG_PATH=<PATH_TO_MY_DEPLOY_CONFIG> \
+    forge script scripts/Deploy.s.sol:Deploy \
+    --broadcast --private-key $PRIVATE_KEY \
+    --rpc-url $ETH_RPC_URL
+  ```
+
+  *   `DEPLOYMENT_OUTFILE` is the path to the file at which the L1 contract deployment artifacts are written to after deployment. Foundry has filesystem restrictions for security, so make this file a child of the `deployments` directory. This file will contain key/value pairs of the names and addresses of the deployed contracts.
+  *   `DEPLOY_CONFIG_PATH` is the path to the file for the deploy config used to deploy
+
+  ### Generating L2 Allocs
+
+  <Callout type="info">
+    Be sure to use the same branch that you used to deploy the L1 contracts.
+  </Callout>
+
+  A forge script is used to generate the L2 genesis. It is a requirement that the L1 contracts have been deployed before generating the L2 genesis, since some L1 contract addresses are embedded into the L2 genesis.
+
+  ```bash
+  CONTRACT_ADDRESSES_PATH=deployments/artifact.json \
+  DEPLOY_CONFIG_PATH=<PATH_TO_MY_DEPLOY_CONFIG> \
+  STATE_DUMP_PATH=<PATH_TO_WRITE_L2_ALLOCS> \
+    forge script scripts/L2Genesis.s.sol:L2Genesis \
+    --sig 'runWithStateDump()' --chain-id $L2_CHAIN_ID
+  ```
+
+  To generate L2 Allocs, it is assumed that:
+
+  *   You have the L1 contracts artifact, specified with `DEPLOYMENT_OUTFILE`
+  *   `CONTRACT_ADDRESSES_PATH` is the path to the deployment artifact from deploying the L1 contracts in the first step, aka `DEPLOYMENT_OUTFILE`
+  *   `DEPLOY_CONFIG_PATH` is the path to the file for the deploy config used to deploy
+  *   `STATE_DUMP_PATH` is a path to the generated L2 allocs file, this is the genesis state and is required for the next step.
+
+  ### Generating L2 Genesis
+
+  The `op-node` is used to generate the final L2 genesis file. It takes the allocs created by the forge script as input for the `--l2-allocs` flag.
+
+  ```bash
+  op-node genesis l2 \
+    --l1-rpc $ETH_RPC_URL \
+    --deploy-config <PATH_TO_MY_DEPLOY_CONFIG> \
+    --l2-allocs <PATH_TO_L2_ALLOCS> \
+    --l1-deployments <PATH_TO_L1_DEPLOY_ARTIFACT> \
+    --outfile.l2 <PATH_TO_WRITE_L2_GENESIS> \
+    --outfile.rollup <PATH_TO_WRITE_OP_NODE_CONFIG>
+  ```
+
+  ### Spinning Up Your Infrastructure
+
+  Ensure that the end to end system is running.
+
+  ### Depositing Your Custom Gas Token into Your Chain
+
+  *   To deposit your custom gas token into your chain, you must use the **`OptimismPortalProxy.depositERC20Transaction`**  method
+  *   Users MUST first `approve()` the `OptimismPortal` before they can deposit tokens using `depositERC20Transaction`.
+
+  ```
+  function depositERC20Transaction(
+      address _to,
+      uint256 _mint,
+      uint256 _value,
+      uint64 _gasLimit,
+      bool _isCreation,
+      bytes memory _data
+  ) public;
+  ```
+</Steps>
+
+## Next Steps
+
+*   For more detailed info on custom gas tokens, see the [specs](https://specs.optimism.io/experimental/custom-gas-token.html).
+*   If experience any problems, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
