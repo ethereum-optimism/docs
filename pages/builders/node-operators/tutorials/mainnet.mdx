@@ -23,8 +23,17 @@ Archive nodes generally require significantly more resources than full nodes.
 Below are suggested minimum hardware requirements for each type of node.
 
 *   16GB RAM
-*   1TB SSD (full node) or 4TB SSD (archive node)
 *   Reasonably modern CPU
+
+### SSD Capacity Requirements
+
+Given the growing size of the blockchain state, choosing the right SSD size is important.
+Below are the storage needs as of April 2024:
+
+*   **Full Node:** The snapshot size for a full node is approximately 1.6TB, with the data directory's capacity increasing by about 1TB every six months.
+*   **Archive Node:** The snapshot size for an archive node is approximately 5TB, with the data directory's capacity increasing by about 3TB every six months.
+
+Based on these trends, node operators should plan for future storage needs and choose SSDs that can handle these increasing requirements.
 
 ## Full Nodes
 
@@ -211,9 +220,12 @@ There are two stages on `op-geth` for snap sync:
 
 #### Full Sync
 
-Initial full synchronization can take several days or weeks to complete.
+<Callout type="info">
+You will need access to the migrated OP Mainnet database to run a full node with full sync.
+You can [migrate your own data directory](https://web.archive.org/web/20240110231645/https://blog.oplabs.co/reproduce-bedrock-migration/) or follow the options available for [archive nodes](#get-the-migrated-data-directory).
+</Callout>
 
-During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to `op-geth`.
+Initial full synchronization can take several days or weeks to complete. During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to `op-geth`.
 This means that `op-node` is requesting blocks from Ethereum one-by-one and determining the corresponding OP Mainnet blocks that were published to Ethereum.
 You should see logs like the following from `op-node`:
 
