@@ -18,16 +18,16 @@ Specifically, Optimistic Rollups leverage the consensus mechanism (like PoW or P
 
 ![Ethereum and Optimism Forever Doodle.](/img/op-stack/protocol/ethereum-optimism-forever.png)
 
-## Block storage
+## Block Storage
 
 In Bedrock, L2 blocks are saved to the Ethereum blockchain using a non-contract address ([`0xff00..0010` on Ethereum](https://etherscan.io/address/0xff00000000000000000000000000000000000010)) to minimize the L1 gas expense.
-As these blocks are submitted as transaction calldata on Ethereum, there is no way to modify or censor them after the "transaction" is included in a block that has enough attestations.
+As these blocks are submitted as transactions using EIP-4844 [blobs](/builders/chain-operators/management/blobs), there is no way to modify or censor them after the "transaction" is included in a block that has enough attestations.
 This is the way that OP Mainnet inherits the availability and integrity guarantees of Ethereum.
 
 Blocks are written to L1 in [a compressed format](https://specs.optimism.io/protocol/derivation.html#batch-submission-wire-format) to reduce costs.
 This is important because writing to L1 is [the major cost of OP Mainnet transactions](/stack/transactions/fees).
 
-## Block production
+## Block Production
 
 Optimism block production is primarily managed by a single party, called the "sequencer," which helps the network by providing the following services:
 
@@ -52,7 +52,7 @@ Transactions get to the sequencer in two ways:
 
 For the moment, [The Optimism Foundation](https://www.optimism.io/) runs the only block producer on OP Mainnet. Refer to [Protocol specs](overview) section for more information about how we plan to decentralize the Sequencer role in the future.
 
-## Block execution
+## Block Execution
 
 The execution engine (implemented as the `op-geth` component) receive blocks using two mechanisms:
 
