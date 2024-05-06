@@ -1,13 +1,13 @@
 ---
 title: Rollup Operations
 lang: en-US
-description: Learn basics of rollup operations, such as how to start and stop your rollup and how to add nodes.
+description: Learn basics of rollup operations, such as how to start and stop your rollup, get your rollup config, and how to add nodes.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
 # Rollup Operations
-This guide reviews the basics of rollup operations, such as how to start your rollup, stop your rollup, and add nodes.
+This guide reviews the basics of rollup operations, such as how to start your rollup, stop your rollup, get your rollup config, and add nodes.
 
 ## Stopping Your Rollup
 
@@ -60,6 +60,65 @@ Just wait until it is.
 
 </Callout>
 
+## Getting Your Rollup Config
+
+Use this tool to get your rollup config from `op-node`. This will only work if your chain is **already** in the [superchain-registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json) and `op-node` has been updated to pull those changes in from the registry.
+
+<Callout type="warning">
+This script will NOT work for chain operators trying to generate this data in order to submit it to the registry.
+</Callout>
+
+<Steps>
+### Get your rollup config from `op-node`
+
+You'll need to run this tool:
+
+```
+./bin/op-node networks dump-rollup-config --network=sepolia   
+{
+  "genesis": {
+    "l1": {
+      "hash": "0x48f520cf4ddaf34c8336e6e490632ea3cf1e5e93b0b2bc6e917557e31845371b",
+      "number": 4071408
+    },
+    "l2": {
+      "hash": "0x102de6ffb001480cc9b8b548fd05c34cd4f46ae4aa91759393db90ea0409887d",
+      "number": 0
+    },
+    "l2_time": 1691802540,
+    "system_config": {
+      "batcherAddr": "0x8f23bb38f531600e5d8fddaaec41f13fab46e98c",
+      "overhead": "0x00000000000000000000000000000000000000000000000000000000000000bc",
+      "scalar": "0x00000000000000000000000000000000000000000000000000000000000a6fe0",
+      "gasLimit": 30000000
+    }
+  },
+  "block_time": 2,
+  "max_sequencer_drift": 600,
+  "seq_window_size": 3600,
+  "channel_timeout": 300,
+  "l1_chain_id": 11155111,
+  "l2_chain_id": 11155420,
+  "regolith_time": 0,
+  "canyon_time": 1699981200,
+  "delta_time": 1703203200,
+  "ecotone_time": 1708534800,
+  "batch_inbox_address": "0xff00000000000000000000000000000011155420",
+  "deposit_contract_address": "0x16fc5058f25648194471939df75cf27a2fdc48bc",
+  "l1_system_config_address": "0x034edd2a225f7f429a63e0f1d2084b9e0a93b538",
+  "protocol_versions_address": "0x79add5713b383daa0a138d3c4780c7a1804a8090",
+  "da_challenge_address": "0x0000000000000000000000000000000000000000",
+  "da_challenge_window": 0,
+  "da_resolve_window": 0,
+  "use_plasma": false
+}
+```
+### Check the Flags
+Ensure that you are using the appropriate flag. 
+The `--network=sepolia` flag allows the tool to pick up the appropriate data from the registry, and uses the OPChains mapping under the hood.
+
+</Steps>
+
 ## Adding Nodes
 
 To add nodes to the rollup, you need to initialize `op-node` and `op-geth`, similar to what you did for the first node.
@@ -99,3 +158,8 @@ If you do it this way, you won't have to wait until the transactions are written
 
 ### Start `op-node` (using the same command line you used on the initial node)
 </Steps>
+
+## Next Steps
+
+*   See the [Node Configuration](/builders/node-operators/management/configuration#configuration) guide for additional explanation or customization.
+*   If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
