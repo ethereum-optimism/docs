@@ -21,6 +21,15 @@ export const PREDEPLOYS = {
   'EAS': '0x4200000000000000000000000000000000000021'
 }
 
+export const LEGACY_CONTRACT_NAMES = [
+  'AddressManager',
+  'DeployerWhitelist',
+  'L1MessageSender',
+  'LegacyERC20ETH',
+  'LegacyMessagePasser',
+  'L1BlockNumber',
+]
+
 export const CHAIN_CONSTANTS = {
   1: {
     explorer: 'https://etherscan.io',
