@@ -8,16 +8,16 @@ import { Callout } from 'nextra/components'
 
 # Node Base Configuration
 
-<Callout type="warning">
-  Always run `op-node` and `op-geth` in a one-to-one configuration. Don't run multiple `op-geth` instances behind one `op-node`, or vice versa.
-</Callout>
-
-This page provides information on basic node configuration and recommended flags for op-node, op-geth, and legacy geth (optional). To configure your node to run on a Superchain network, you will need to do the following:
+This page provides information on basic node configuration and recommended flags for `op-node`, `op-geth`, and legacy geth (optional). To configure your node to run on a Superchain network, you will need to do the following:
 
 1.  Configure `op-node` to point to the correct L1, `op-geth`, and L2 network.
 2.  Initialize `op-geth` with the correct network parameters.
 3.  Configure `op-geth` to properly communicate with the Rollup Node.
 4.  Optionally, configure Legacy Geth.
+
+<Callout type="warning">
+  Always run `op-node` and `op-geth` in a one-to-one configuration. Don't run multiple `op-geth` instances behind one `op-node`, or vice versa.
+</Callout>
 
 ## Configuring `op-geth`
 
@@ -95,7 +95,7 @@ Then, specify the following flags:
 *   `--authrpc.port`: Sets the port `op-geth`'s authenticated RPC should listen on. The default value is `8551`.
 *   `--authrpc.jwtsecret`: Sets the path to a JWT secret file you generated above.
 
-### Optional op-geth Configuration
+### Recommended Flags for `op-geth` Configuration
 
 You may also want to specify the following flags based on your configuration:
 
@@ -177,7 +177,7 @@ The default port for the peer-to-peer network is `9003`. You will need to open t
 
 If you are running a node for an upgraded network like OP Mainnet (but not OP Sepolia), you will also need to run Legacy Geth in order to serve historical execution traces. Fundamentally, Legacy Geth is our old `l2geth` binary running against a preconfigured data directory. To configure Legacy Geth, follow the instructions above for using a preconfigured data directory, then execute the following command:
 
-<Callout type="danger">
+<Callout type="error">
   It is imperative that you specify the `USING_OVM=true` environment variable in the command below. Failing to specify this will cause `l2geth` to return invalid execution traces, or panic at startup.
 </Callout>
 
@@ -215,5 +215,6 @@ The term *historical execution* refers to RPC methods that need to execute trans
 If you do not need these RPC methods for historical data, then you do not need to run Legacy Geth at all.
 
 ## Next Steps
-*   TBD
-*   TBD
+*   See the [op-node configuration](/builders/node-operators/configuration/node-config) guide for additional configuration options for `op-node` and the Consensus-Layer.
+*   Similarly, visit the [op-geth configuration](/builders/node-operators/configuration/geth-config) guide for additional configuration options for `op-geth` and Execution-Layer.
+*   If you run into any problems, please reach out to our [developer support forum](https://github.com/ethereum-optimism/developers/discussions) for help.
