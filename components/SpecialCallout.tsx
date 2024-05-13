@@ -16,10 +16,23 @@ interface Props {
 export function SpecialCallout({ context }: Props): ReactElement {
   return (
     <div className="custom-callouts nx-w-full nx-mt-6 nx-flex nx-justify-center nx-items-center nx-bg-white dark:nx-bg-black">
-      <div className="nx-w-full nx-truncate nx-px-4 nx-text-center nx-font-medium nx-text-sm">
-        {context
-          ? context
-          : 'This page is currently undergoing maintenance, it is possible that certain parts may not function as expected.'}
+      <div className="nx-w-full  nx-px-4 nx-text-center nx-font-medium nx-text-sm">
+        {context ? (
+          context
+        ) : (
+          <div>
+            Please do not rely on the content of this page as it is currently
+            undergoing maintenance. Code samples and solutions may not function
+            as expected. Please check back for an update or{' '}
+            <a
+              href="https://github.com/ethereum-optimism/docs/labels/tutorial"
+              className="callout-link"
+            >
+              signup to help us revise this page
+            </a>
+            . We welcome your contribution!
+          </div>
+        )}
       </div>
     </div>
   );
