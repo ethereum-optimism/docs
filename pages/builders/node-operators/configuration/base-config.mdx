@@ -8,16 +8,16 @@ import { Callout } from 'nextra/components'
 
 # Node Base Configuration
 
-This page provides information on basic node configuration and recommended flags for `op-node`, `op-geth`, and legacy geth (optional). To configure your node to run on a Superchain network, you will need to do the following:
+<Callout type="warning">
+  Always run `op-node` and `op-geth` in a one-to-one configuration. Don't run multiple `op-geth` instances behind one `op-node`, or vice versa.
+</Callout>
+
+To configure your node, you will need to do the following:
 
 1.  Configure `op-node` to point to the correct L1, `op-geth`, and L2 network.
 2.  Initialize `op-geth` with the correct network parameters.
 3.  Configure `op-geth` to properly communicate with the Rollup Node.
 4.  Optionally, configure Legacy Geth.
-
-<Callout type="warning">
-  Always run `op-node` and `op-geth` in a one-to-one configuration. Don't run multiple `op-geth` instances behind one `op-node`, or vice versa.
-</Callout>
 
 ## Configuring `op-geth`
 
@@ -34,9 +34,10 @@ Depending on the network you're running, initialization is done one of three way
 
 Regardless of how `op-geth` is initialized, you'll need to ensure that you have sufficient disk space available to store the network's data. As of this writing, the OP Mainnet data directory is \~1.6TB for a full node and \~5TB for an archival node.
 
-Instructions for each initialization method are below. OP Mainnet nodes should use the [Initialization via Data Directory](#initialization-via-data-directory) path, and OP Sepolia nodes should use the [Initialization via Genesis File](#initialization-via-genesis-file) path.
+### Initialize `op-geth`
+Instructions for each initialization method are below. If you're spinning up an OP Mainnet, use the [Initialization via Data Directory](#initialization-via-data-directory) path. If you're spinning up an OP Sepolia node, use the [Initialization via Genesis File](#initialization-via-genesis-file) path.
 
-### Initialization via Genesis File (OP Sepolia nodes)
+#### Initialization via Genesis File
 
 `op-geth` uses JSON files to encode a network's genesis information. For 
 networks that are initialized in this way, you'll receive a URL to the genesis 
@@ -57,7 +58,7 @@ else
 fi
 ```
 
-### Initialization via Data Directory (OP Mainnet nodes)
+#### Initialization via Data Directory
 
 To initialize `op-geth` with a preconfigured data directory, simply download and extract the data directory to a place of your choosing. The data directory is exported as a tar file. An example command to do this is below:
 
@@ -66,7 +67,7 @@ curl -o <path to data directory> -sL <URL to data directory>
 tar -xvf <path to data directory>
 ```
 
-### Initialization via Network Flags
+#### Initialization via Network Flags
 
 To initialize `op-geth` with the network flags, you simply need to set the 
 `--op-network=<value>` and `--network=<value>` on `op-node`. To see the latest
@@ -173,11 +174,11 @@ For best results, run `op-node` with a static IP address that is accessible from
 
 The default port for the peer-to-peer network is `9003`. You will need to open this port on your firewall to receive unsubmitted blocks. For your node to be discoverable, this port must be accessible via both TCP and UDP protocols.
 
-## Configuring Legacy Geth
+## Legacy Geth
 
 If you are running a node for an upgraded network like OP Mainnet (but not OP Sepolia), you will also need to run Legacy Geth in order to serve historical execution traces. Fundamentally, Legacy Geth is our old `l2geth` binary running against a preconfigured data directory. To configure Legacy Geth, follow the instructions above for using a preconfigured data directory, then execute the following command:
 
-<Callout type="error">
+<Callout type="danger">
   It is imperative that you specify the `USING_OVM=true` environment variable in the command below. Failing to specify this will cause `l2geth` to return invalid execution traces, or panic at startup.
 </Callout>
 
