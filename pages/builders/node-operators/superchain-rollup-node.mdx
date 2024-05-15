@@ -1,12 +1,12 @@
 ---
-title: How to Run a Node Within the Superchain
+title: How to Run a Node in the Superchain
 lang: en-US
 description: Learn how to run an OP Stack rollup node within the Superchain.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# How to Run a Node Within the Superchain
+# How to Run a Node in the Superchain
 
 This guide provides an overview of how to run an OP Stack rollup node within the Superchain. It walks you through how to build, configure, run, and monitor your node on one of the OP Chains within the Superchain. To skip ahead to building and running a node, you can explore the [node operator tutorials](#node-operator-tutorials).
 
@@ -19,8 +19,8 @@ Before building your node, you will learn fundamental aspects of OP Stack rollup
 
   These are the two fundamental components of an OP Stack rollup node:
 
-  *   **Node Architecture**: OP Stack rollup nodes use the rollup node and execution client and can also support legacy geth. For more details, see the [Node Architecture](/builders/node-operators/architecture) guide.
-  *   **Network Upgrades**: Network upgrades for OP Stack Rollup nodes are [activated by timestamps](/builders/node-operators/network-upgrades#activations). Failing to upgrade your node before the timestamp causes a chain divergence, requiring you to resync your node to reconcile the chain. Follow the established [Node Upgrade Process](/builders/node-operators/network-upgrades#upgrade-process) to avoid chain divergence.
+  *   **Node Architecture**: OP Stack rollup nodes use the rollup node and execution client and can also support legacy geth for pre-bedrock historical execution requests. For more details, see the [Node Architecture](/builders/node-operators/architecture) guide.
+  *   **Network Upgrades**: Network upgrades for OP Stack Rollup nodes are generally [activated by timestamps](/builders/node-operators/network-upgrades#activations). Failing to upgrade your node before the timestamp causes a chain divergence, requiring you to resync your node to reconcile the chain. Follow the established [Node Upgrade Process](/builders/node-operators/network-upgrades#upgrade-process) to avoid chain divergence.
 
   <Callout type="info">
     If you are building an archive node on OP Mainnet, then you'll need a [node snapshot](/builders/node-operators/management/snapshots). This is **not required** for nodes using [snap sync](/builders/node-operators/management/snap-sync).
@@ -30,7 +30,7 @@ Before building your node, you will learn fundamental aspects of OP Stack rollup
 
   Now, you are ready to build your OP Stack rollup node. You have two options for this:
 
-  *   **Option 1:** Follow the [Running a Node with Docker](/builders/node-operators/tutorials/node-from-docker) tutorial, which walks you through the complete process of **building** and **running** your OP Stack rollup node.
+  *   **Option 1:** Follow the [Running a Node with Docker](/builders/node-operators/tutorials/node-from-docker) tutorial, which gets your OP Stack rollup node up and running without having to build it from source.
   *   **Option 2:** Follow the [Building a Node from Source](/builders/node-operators/tutorials/node-from-source) tutorial, if you need to use a specific architecture or want to inspect the source code of your OP Stack rollup node. 
 </Steps>
 
@@ -46,7 +46,9 @@ OP Stack rollup nodes can be configured for individual needs. The following step
   *   Configure `op-node` using the [base configuration](/builders/node-operators/configuration/base-config#working-base-configuration-1).
 
   {<h3>Enable Snap Sync</h3>}
-  *   Enable [snap sync](/builders/node-operators/management/snap-sync) for your node to significantly improve the experience and speed of syncing an OP Stack node.
+  
+  *   Enable [snap sync](/builders/node-operators/management/snap-sync) for your node to significantly improve the experience and speed of syncing an OP Stack node. 
+  This is an **optional** feature but highly recommended for node providers.
 
   <Callout type="info">
     Additional configuration options exist for [`op-geth`](/builders/node-operators/configuration/geth-config) and [`op-node`](/builders/node-operators/configuration/node-config), respectively.
@@ -89,10 +91,10 @@ It is important to regularly monitor your node, and you can optionally configure
   {<h3>Setup Prometheus & Grafana</h3>}
 
   <Callout type="warning">
-  The following steps are intended for `op-geth` instead of `op-node`, so it must be tweaked to work for rollup nodes running within the Superchain.
+  The following steps are intended for `go-ethereum`, so it must be tweaked to work for rollup nodes running within the Superchain.
   </Callout>
 
-  *   Setup [influxdb](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-influxdb) to monitor geth.
+  *   Setup [influxdb](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-influxdb) to hold metrics data.
   *   Setup [prometheus](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-prometheus) to read your endpoint.
   *   Setup your [grafana dashboard](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-grafana) to provide UI for metrics.
 
@@ -102,7 +104,7 @@ It is important to regularly monitor your node, and you can optionally configure
 
 *   It's important to keep your node software up to date. Software updates can also include important bug fixes and patches that can help keep your node stable.
 *   Refer to the [Software Releases](/builders/node-operators/releases) page for a detailed look at the latest releases of various Rollup Node and Execution Client implementations.
-*   Notifications about important updates are also posted to the [**@Optimism Twitter account**](https://twitter.com/optimism), and to the [**Node & Protocol Announcements Channel on Telegram**](https://t.me/+caq1Ukfp29c0Mzcx).
+*   Notifications are also posted to the Optimism Upgrade Announcement Channels on [**Discord**](https://discord.com/channels/667044843901681675/754090866435424270) and [**Telegram**](https://t.me/+vPoESXHxEm83YWQx).
 
 ## Node Operator Tutorials
 
@@ -121,5 +123,5 @@ It is important to regularly monitor your node, and you can optionally configure
 
 ## Next Steps
 
-*   If you've already got your node up and running, check out the [Node Metrics and Monitoring Guide](./management/metrics) to learn how to keep tabs on your node and make sure it keeps running smoothly.
-*   If you run into any problems, please visit the [Node Troubleshooting Guide](./management/troubleshooting) for help.
+*   If you've already got your node up and running, check out the [Node Metrics and Monitoring Guide](/builders/node-operators/management/metrics) to learn how to keep tabs on your node and make sure it keeps running smoothly.
+*   If you run into any problems, please visit the [Node Troubleshooting Guide](/builders/node-operators/management/troubleshooting) for help.
