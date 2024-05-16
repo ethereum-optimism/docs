@@ -1,23 +1,37 @@
 ---
-title: Preparing for Fault Proofs Breaking Changes
+title: Preparing for Fault Proofs Changes
 lang: en-US
-description: Learn how to prepare for Fault Proofs breaking changes.
+description: Learn how to prepare for Fault Proofs changes.
 ---
 
 import { Steps, Callout } from 'nextra/components'
 
-# Preparing for Fault Proofs Breaking Changes
+# Preparing for Fault Proofs Changes
 
-This page outlines breaking changes related to Fault Proof upgrade for bridges, centralized exchanges, and custom solutions that use withdrawals. This page outlines changes for OP Mainnet and OP Sepolia only, and details for other OP Chains are forthcoming.
+Fault Proofs are scheduled to launch on OP Mainnet **June 2024**. This page outlines changes – some breaking – related to the upgrade. **These apply to users, bridges, and centralized exchanges**, as well as any custom solutions that use withdrawals. This page outlines changes for OP Mainnet and OP Sepolia only. Details for other OP Chains are forthcoming.
+
 If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
 
 <Callout type="warning">
-  *   Fault Proofs are scheduled to launch on Mainnet **Summer 2024**.
-  *   Withdrawals put in place before the upgrade will need to be resubmitted post-upgrade.
-  *   **Withdrawal times will be longer.** Withdrawals between OP Sepolia and Sepolia will no longer be instant due to the Fault Proofs mechanism.
+IMPORTANT NOTICE FOR BRIDGES AND USERS: Withdrawals initiated immediately prior to the OP Mainnet upgrade (within seven days or fewer) will need to be reproven.
+  *   Reproving withdrawals will need to go through a new 7-day period. The time accrued before the upgrade will not count.
+  *   This means the withdrawal time could be as long as 13-14 days during the upgrade window. If you submit it ~6 days before the upgrade, then must re-submit after the upgrade, you will have to wait a new seven days, bringing the total to 13.
+  *   This only applies to transactions during the 7-day leadup to the Fault Proofs upgrade. Transactions submitted after the upgrade will work as normal.
+</Callout>
+
+<Callout type="warning">
+  After the OP Mainnet upgrade, the maximum withdrawal time will be longer for transactions if they are disputed.
+  *   Undisputed transactions will resolve in seven days.
+  *   Disputed transactions may take up to 10.5 days while the dispute game is resolving.
+</Callout>
+
+<Callout type="warning">
+  As of the Fault Proofs update to OP Sepolia in March 2024, **OP Sepolia withdrawals are no longer instant.** This is because the Fault Proof mechanism now applies to OP Sepolia transactions.
 </Callout>
 
 ## Overview of Changes
+
+If you are operating a custom bridge, review this section for changes you need to make. If you are using Optimism SDK or Viem for your bridging, you can [skip to the next section](#for-bridges-and-centralized-exchanges).
 
 The `L2OutputOracle` is being entirely removed and replaced by the `OptimismPortal` and `DisputeGameFactory`. The `L2OutputOracle` smart contract is currently used by the trusted Proposer role to store L2 state output proposals.
 Presently, developers use these outputs to prove that their withdrawals actually happened on L2. But with fault proofs, developers will have to change how their client software proves withdrawals in the first step of the two-step withdrawal process.
@@ -40,7 +54,7 @@ Developers should then verify this proposal locally as the default game type wil
 
 ## For Bridges and Centralized Exchanges
 
-The proposed Fault Proof upgrade requires developers to enable Fault Proof changes before the Mainnet release. This impacts bridges, centralized exchanges, and custom solutions that use withdrawals.
+The proposed Fault Proof upgrade requires developers to enable Fault Proof changes before the Op Mainnet release. This impacts bridges, centralized exchanges, and custom solutions that use withdrawals.
 
 <Callout type="error">
   Withdrawals that haven't finalized before the upgrade occurs will be unable to be finalized post-upgrade without resubmitting. This means these withdrawals will need to go through a new 7-day period. The time accrued before the upgrade will not count.
@@ -56,7 +70,7 @@ The proposed Fault Proof upgrade requires developers to enable Fault Proof chang
 
   *   **Option 1: Optimism SDK Update.** If you use OptimismSDK for bridging, simply update to version 3.2.0 or higher.
       The Optimism SDK changes do not break the API and require no changes other than updating to the correct software version to support the new `OptimismPortal` logic. The Optimism SDK will automatically begin to use the new logic once it detects that the FPM update has gone live.
-  *   **Option 2: Viem Update.** Viem changes will break the API and require both updating to latest version and replacing use of the currently used decorator with the `experimental` decorator that supports fault proofs. When fault proofs are on Mainnet in the future, `publicActionsL2` will be updated to support fault proofs by default, and it will be recommended that developers switch to the stable API.
+  *   **Option 2: Viem Update.** Viem changes will break the API and require both updating to latest version and replacing use of the currently used decorator with the `experimental` decorator that supports fault proofs. When Fault Proofs are on OP Mainnet, `publicActionsL2` will be updated to support fault proofs by default, and it will be recommended that developers switch to the stable API.
 
   ### Update Withdrawal Monitor
 
