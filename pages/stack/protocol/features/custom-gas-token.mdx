@@ -25,6 +25,7 @@ When deposited, this L1 ERC-20 token will become the native gas token on the L2 
 
 <Callout type="warning">
   **Caveats chain operators should be aware of:**
+
   *   You cannot switch from your custom gas token to another token after the chain is launched.
   *   You will need to manually modify your fee configuration values to properly charge fees for users.
   *   Understand the [constraints required for your chain to be able to join the Superchain](#considerations) when setting the custom gas token for your chain.
@@ -69,16 +70,17 @@ The custom token being used must adhere to the following constraints to be able 
 
 ### What is the Wrapped (ERC-20) Gas Token?
 
-- The `WETH` predeploy at `0x4200000000000000000000000000000000000006` represents the wrapped custom gas token. If you wish to transact with your native gas token as an ERC-20, you can `deposit` and `withdraw` from this contract to wrap and unwrap your token.
-- What this means is the asset at the `WETH` predeploy is not `ether` but instead is the wrapped version of your custom gas token. Its an ERC20 token, the `name()` will be `"Wrapped ..."` (whatever the name of your token is).
+*   The `WETH` predeploy at `0x4200000000000000000000000000000000000006` represents the wrapped custom gas token. If you wish to transact with your native gas token as an ERC-20, you can `deposit` and `withdraw` from this contract to wrap and unwrap your token.
+*   What this means is the asset at the `WETH` predeploy is not `ether` but instead is the wrapped version of your custom gas token. Its an ERC20 token, the `name()` will be `"Wrapped ..."` (whatever the name of your token is).
 
 ### How do I charge fees as the chain operator?
 
 The initial release of custom gas token does not have special logic for taking into account the exchange rate between the custom gas token and ether. This logic is nice to have because it requires ether to purchase data availability for Ethereum. If the chain is earning in a custom gas token and spending in ether, then it must earn enough custom gas token such that it can be sold for ether.
 
-For the initial release of custom gas token, the chain operator will need to manage this either out of band or by manually tuning the fee parameters to ensure profitability. A future release may include [L1 Fee Abstraction](https://github.com/ethereum-optimism/specs/issues/73) where the L1 fee is calculated in a smart contract instead of native code. This would enable an on chain oracle to take into account the exchange rate of the custom gas token. This oracle could be something like Uniswap TWAP or Chainlink.
+For the initial release of custom gas token, the chain operator will need to manage this either out of band or by manually tuning the fee parameters to ensure profitability. A future release may include [L1 Fee Abstraction](https://github.com/ethereum-optimism/specs/issues/73) where the L1 fee is calculated in a smart contract instead of native code. This would enable an on chain oracle to take into account the exchange rate of the custom gas token. This oracle could be something like Uniswap TWAP or Chainlink.
 
 ### What's the best way to monitor my custom gas token chain?
+
 It is important to monitor your custom gas token chain to see if your chain's bridge is undercollateralized by checking that the amount of ETH in the `OptimismPortal` is greater or equal to the amount of ETH on the L2. [Chain monitor](https://github.com/ethereum-optimism/optimism/tree/v1.7.4/packages/chain-mon) is one way to actively monitor your custom gas token chain.
 
 ### Can I migrate my chain into being custom gas token?
