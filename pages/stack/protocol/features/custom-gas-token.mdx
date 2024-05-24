@@ -1,0 +1,66 @@
+---
+title: Custom Gas Token
+lang: en-US
+description: Learn how to run a custom gas token chain.
+---
+
+import { Callout } from 'nextra/components'
+
+# Custom Gas Token Explainer
+
+The Custom Gas Token configuration lets OP Stack chain operators deploy their chain allowing a specific ERC-20 token to be deposited in as the native token to pay for gas fees. Chain operators can now customize their gas token to:
+
+*   provide utility for their project's token
+*   make it easier to subsidize gas costs for their users directly via their token treasury
+*   facilitate in-game economies, allowing players to pay for gas with their in-game currency
+*   build alignment with the community of any token.
+
+## Native Gas Tokens
+
+By default, L2 OP Stack chains allow users to deposit ETH from L1 into the chain as the L2 ETH, the native token that can then be used to pay for gas fees.
+Chain operators wanted to configure the stack to use a custom token to pay for gas, other than ETH.
+
+With custom gas tokens, chain operators can now set an L1 ERC-20 token address at the time of deploying the contracts of their chain.
+When deposited, this L1 ERC-20 token will become the native gas token on the L2 and can be used to pay for gas fees.
+
+<Callout type="warning">
+  **Caveats chain operators should be aware of:**
+  *   You cannot switch from your custom gas token to another token after the chain is launched.
+  *   You will need to manually modify your fee configuration values to properly charge fees for users.
+  *   Understand the [constraints required for your chain to be able to join the Superchain](#considerations) when setting the custom gas token for your chain.
+</Callout>
+
+## How It Works
+
+This is the general flow of how custom gas tokens work on the OP Stack:
+
+*   On deployment of an L2 chain, set the address of an L1 token to be used as the gas token.
+*   When depositing a custom gas token to L2, it mints the native L2 token.
+*   Withdrawing the native L2 token results in the unlocking of the custom token on L1.
+*   The native L2 token is used by default to pay for gas fees.
+
+## Benefits
+
+Chain operators get the following benefits by using custom gas tokens:
+
+*   use an L1 ERC-20 token as the custom gas token for L2 OP Stack chain deployment
+*   use an ERC-20 token on an existing L2 OP Stack chain as as the custom gas token for an L3 OP Stack chain deployment
+*   use custom gas tokens with other configurations of the OP Stack, including Plasma Mode.
+
+## Considerations
+
+The custom token being used must adhere to the following constraints to be able to join the Superchain:
+
+*   Must be a non-yield bearing token (This is a requirement from Legal)
+*   Must be a valid ERC-20 token
+*   Must have 18 decimals
+*   Can't be rebasing or have a transfer fee
+*   Must only be transferrable via a call to the token address itself
+*   Must only be able to set allowance via a call to the token address itself
+*   Must not have a callback on transfer, and more generally a user must not be able to make a transfer to themselves revert
+
+## Next Steps
+
+*   Ready to get started? Read our guide on how to [deploy your custom gas token chain](/builders/chain-operators/management/custom-gas-token).
+*   For bridges or developers building on a custom gas token chain, read our guide on how to deposit custom gas tokens into a chain.
+*   For more info about how the custom gas token feature works under the hood, [check out the specs](https://specs.optimism.io/protocol/granite/custom-gas-token.html).
