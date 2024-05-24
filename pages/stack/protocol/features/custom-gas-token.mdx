@@ -1,7 +1,7 @@
 ---
-title: Custom Gas Token
+title: Custom Gas Token Explainer
 lang: en-US
-description: Learn how to run a custom gas token chain.
+description: Learn the basic process, benefits, and considerations for running a custom gas token chain.
 ---
 
 import { Callout } from 'nextra/components'
@@ -43,9 +43,9 @@ This is the general flow of how custom gas tokens work on the OP Stack:
 
 Chain operators get the following benefits by using custom gas tokens:
 
-*   use an L1 ERC-20 token as the custom gas token for L2 OP Stack chain deployment
-*   use an ERC-20 token on an existing L2 OP Stack chain as as the custom gas token for an L3 OP Stack chain deployment
-*   use custom gas tokens with other configurations of the OP Stack, including Plasma Mode.
+*   can use an L1 ERC-20 token as the custom gas token for L2 OP Stack chain deployment
+*   can use an ERC-20 token on an existing L2 OP Stack chain as as the custom gas token for an L3 OP Stack chain deployment
+*   can use custom gas tokens with other configurations of the OP Stack, including Plasma Mode.
 
 ## Considerations
 
@@ -62,5 +62,31 @@ The custom token being used must adhere to the following constraints to be able 
 ## Next Steps
 
 *   Ready to get started? Read our guide on how to [deploy your custom gas token chain](/builders/chain-operators/management/custom-gas-token).
-*   For bridges or developers building on a custom gas token chain, read our guide on how to deposit custom gas tokens into a chain.
+*   For bridges or developers building on a custom gas token chain, read our tutorial on [depositing custom gas tokens into a chain](/builders/app-developers/tutorials/standard-bridge-custom-token).
 *   For more info about how the custom gas token feature works under the hood, [check out the specs](https://specs.optimism.io/protocol/granite/custom-gas-token.html).
+
+## FAQs
+
+### What is the Wrapped (ERC-20) Gas Token?
+
+- The `WETH` predeploy at `0x4200000000000000000000000000000000000006` represents the wrapped custom gas token. If you wish to transact with your native gas token as an ERC-20, you can `deposit` and `withdraw` from this contract to wrap and unwrap your token.
+- What this means is the asset at the `WETH` predeploy is not `ether` but instead is the wrapped version of your custom gas token. Its an ERC20 token, the `name()` will be `"Wrapped ..."` (whatever the name of your token is).
+
+### How do I charge fees as the chain operator?
+
+The initial release of custom gas token does not have special logic for taking into account the exchange rate between the custom gas token and ether. This logic is nice to have because it requires ether to purchase data availability for Ethereum. If the chain is earning in a custom gas token and spending in ether, then it must earn enough custom gas token such that it can be sold for ether.
+
+For the initial release of custom gas token, the chain operator will need to manage this either out of band or by manually tuning the fee parameters to ensure profitability. A future release may include [L1 Fee Abstraction](https://github.com/ethereum-optimism/specs/issues/73) where the L1 fee is calculated in a smart contract instead of native code. This would enable an on chain oracle to take into account the exchange rate of the custom gas token. This oracle could be something like Uniswap TWAP or Chainlink.
+
+### What's the best way to monitor my custom gas token chain?
+It is important to monitor your custom gas token chain to see if your chain's bridge is undercollateralized by checking that the amount of ETH in the `OptimismPortal` is greater or equal to the amount of ETH on the L2. [Chain monitor](https://github.com/ethereum-optimism/optimism/tree/v1.7.4/packages/chain-mon) is one way to actively monitor your custom gas token chain.
+
+### Can I migrate my chain into being custom gas token?
+
+If you are already live using `ether` to pay for gas, you cannot become a custom gas token chain. It would require a large migration and chain downtime and it is not a service that we provide.
+
+Custom gas token hack to standard gas token is possible with architectural changes. L1 and L2 architectural changes are required, messengers and bridges on both sides, OptimismPortal (L1), and SystemConfig (L1). Additional information can be found in the [specs](https://specs.optimism.io/protocol/granite/custom-gas-token.html).
+
+### Do node operators need to do anything?
+
+There are no core changes to `op-geth` or `op-node` so the infrastructure that node operators run is exactly the same as any other OP Stack based chain. The differences are encapsulated in the smart contracts, so only the L1 contract deployments and L2 genesis generation need to be done in a particular way.
