@@ -17,16 +17,17 @@ The Custom Gas Token configuration lets OP Stack chain operators deploy their ch
 
 ## Native Gas Tokens
 
-By default, L2 OP Stack chains allow users to deposit ETH from L1 into the chain as the L2 ETH, the native token that can then be used to pay for gas fees.
+By default, L2 OP Stack chains allow users to deposit ETH from L1 into the L2 chain as native L2 token that can then be used to pay for gas fees.
 Chain operators wanted to configure the stack to use a custom token to pay for gas, other than ETH.
 
-With custom gas tokens, chain operators can now set an L1 ERC-20 token address at the time of deploying the contracts of their chain.
+With custom gas tokens, chain operators can now set an L1 ERC-20 token address at the time of deploying the contracts of their L2 chain.
 When deposited, this L1 ERC-20 token will become the native gas token on the L2 and can be used to pay for gas fees.
 
 <Callout type="warning">
   **Caveats chain operators should be aware of:**
 
   *   You cannot switch from your custom gas token to another token after the chain is launched.
+  *   Existing chains cannot switch to use a custom gas token. A custom token must be configured at the time of chain deployment.
   *   You will need to manually modify your fee configuration values to properly charge fees for users.
   *   Understand the [constraints required for your chain to be able to join the Superchain](#considerations) when setting the custom gas token for your chain.
 </Callout>
@@ -36,7 +37,7 @@ When deposited, this L1 ERC-20 token will become the native gas token on the L2 
 This is the general flow of how custom gas tokens work on the OP Stack:
 
 *   On deployment of an L2 chain, set the address of an L1 token to be used as the gas token.
-*   When depositing a custom gas token to L2, it mints the native L2 token.
+*   When depositing the custom gas token to L2, it mints the native L2 token.
 *   Withdrawing the native L2 token results in the unlocking of the custom token on L1.
 *   The native L2 token is used by default to pay for gas fees.
 
@@ -52,13 +53,16 @@ Chain operators get the following benefits by using custom gas tokens:
 
 The custom token being used must adhere to the following constraints to be able to join the Superchain:
 
-*   Must be a non-yield bearing token (This is a requirement from Legal)
-*   Must be a valid ERC-20 token
-*   Must have 18 decimals
-*   Can't be rebasing or have a transfer fee
-*   Must only be transferrable via a call to the token address itself
-*   Must only be able to set allowance via a call to the token address itself
-*   Must not have a callback on transfer, and more generally a user must not be able to make a transfer to themselves revert
+*   must be a valid ERC-20 token
+*   the number of decimals on the token MUST be exactly 18
+*   the name of the token MUST be less than or equal to 32 bytes
+*   symbol MUST be less than or equal to 32 bytes.
+*   must not be yield-bearing
+*   cannot be rebasing or have a transfer fee
+*   must be transferrable only via a call to the token address itself
+*   must only be able to set allowance via a call to the token address itself
+*   must not have a callback on transfer, and more generally a user must not be able to make a transfer to themselves revert
+
 
 ## Next Steps
 
@@ -75,19 +79,13 @@ The custom token being used must adhere to the following constraints to be able 
 
 ### How do I charge fees as the chain operator?
 
-The initial release of custom gas token does not have special logic for taking into account the exchange rate between the custom gas token and ether. This logic is nice to have because it requires ether to purchase data availability for Ethereum. If the chain is earning in a custom gas token and spending in ether, then it must earn enough custom gas token such that it can be sold for ether.
+The initial release of custom gas token does not have special logic for taking into account the exchange rate between the custom gas token and ether. Currently, the protocol charges fees for users with scalars on the L1 blob fee and L1 base fee in ETH. Chain operator will be taking user fees in the custom gas token and spending in ether.
 
-For the initial release of custom gas token, the chain operator will need to manage this either out of band or by manually tuning the fee parameters to ensure profitability. A future release may include [L1 Fee Abstraction](https://github.com/ethereum-optimism/specs/issues/73) where the L1 fee is calculated in a smart contract instead of native code. This would enable an on chain oracle to take into account the exchange rate of the custom gas token. This oracle could be something like Uniswap TWAP or Chainlink.
-
-### What's the best way to monitor my custom gas token chain?
-
-It is important to monitor your custom gas token chain to see if your chain's bridge is undercollateralized by checking that the amount of ETH in the `OptimismPortal` is greater or equal to the amount of ETH on the L2. [Chain monitor](https://github.com/ethereum-optimism/optimism/tree/v1.7.4/packages/chain-mon) is one way to actively monitor your custom gas token chain.
+For the initial release of custom gas token, the chain operator will need to manage this either out of band or by manually tuning the fee scalar values to capture the exchange rate between ETH and the custom gas token to ensure profitability. A future release may include [L1 Fee Abstraction](https://github.com/ethereum-optimism/specs/issues/73) where the L1 fee is calculated in a smart contract instead of native code. This would enable an on chain oracle to take into account the exchange rate of the custom gas token.
 
 ### Can I migrate my chain into being custom gas token?
 
-If you are already live using `ether` to pay for gas, you cannot become a custom gas token chain. It would require a large migration and chain downtime and it is not a service that we provide.
-
-Custom gas token hack to standard gas token is possible with architectural changes. L1 and L2 architectural changes are required, messengers and bridges on both sides, OptimismPortal (L1), and SystemConfig (L1). Additional information can be found in the [specs](https://specs.optimism.io/protocol/granite/custom-gas-token.html).
+If you are already live using `ether` to pay for gas, you cannot become a custom gas token chain. This would likely require a risky, high lift state migration that we would not recommend.
 
 ### Do node operators need to do anything?
 

@@ -9,8 +9,7 @@ import { Callout, Steps } from 'nextra/components'
 # How to Run a Custom Gas Token Chain
 
 <Callout type="warning">
-  We do not recommend running a Custom Gas Token chain in production mainnet yet.
-  This guide is for running testnet chains. The OP Labs team will flag when they have confidence in the security of the implementation code.
+The Custom Gas Token feature is a Beta feature of the MIT licensed OP Stack. While it has received initial review from core contributors, it is still undergoing testing, and may have bugs or other issues.
 </Callout>
 
 This guide provides a walkthrough for chain operators who want to run a custom gas token chain. See the [Custom Gas Token Explainer](/stack/protocol/features/custom-gas-token) for a general overview of this OP Stack feature.
@@ -19,28 +18,32 @@ An OP Stack chain that uses the custom gas token feature enables an end user to 
 <Steps>
   ### Deploying Your Contracts
 
-  *   Checkout the [custom gas token branch](https://github.com/ethereum-optimism/optimism/pull/10143) and use the commit to deploy.
+  *   Checkout the [`v2.0.0-beta.1` of the contracts](https://github.com/ethereum-optimism/optimism/tree/op-contracts/v2.0.0-beta.1) and use the commit to deploy.
 
   <Callout type="error">
-    Be sure to check out this branch or you will not deploy a chain that uses custom gas token!
+    Be sure to check out this tag or you will not deploy a chain that uses custom gas token!
   </Callout>
 
   *   Update the deploy config in `contracts-bedrock/deploy-config` with new fields: `useCustomGasToken` and `customGasTokenAddress`
 
-  *   Set `useCustomGasToken` to `true` and the address of the L1 ERC20 token should be in `customGasTokenAddress`. The ERC20 should already be deployed before trying to spin up the custom gas token chain.
+  *   Set `useCustomGasToken` to `true`. If you set `useCustomGasToken` to `false` (it defaults this way), then it will use ETH as the gas paying token.
 
-  If you set `useCustomGasToken` to `false` (it defaults this way), then it will use ETH as the gas paying token.
-
-  *   Set `customGasTokenAddress` to the contract address of an L1 ERC20 token you wish to use as the gas token on your L2.
+  *   Set `customGasTokenAddress` to the contract address of an L1 ERC20 token you wish to use as the gas token on your L2. The ERC20 should already be deployed before trying to spin up the custom gas token chain.
 
   The custom gas token being set must meet the following criteria:
 
+  *   must be a valid ERC-20 token
   *   the number of decimals on the token MUST be exactly 18
   *   the name of the token MUST be less than or equal to 32 bytes
   *   symbol MUST be less than or equal to 32 bytes.
+  *   must not be yield-bearing
+  *   cannot be rebasing or have a transfer fee
+  *   must be transferrable only via a call to the token address itself
+  *   must only be able to set allowance via a call to the token address itself
+  *   must not have a callback on transfer, and more generally a user must not be able to make a transfer to themselves revert
 
   <Callout type="warning">
-    You will NOT be able to change the address of the custom gas token if it is already set.
+    You will NOT be able to change the address of the custom gas token after it is set during deployment.
   </Callout>
 
   *   Deploy the L1 contracts from `contracts-bedrock` using the following command:
@@ -59,7 +62,7 @@ An OP Stack chain that uses the custom gas token feature enables an end user to 
   ### Generating L2 Allocs
 
   <Callout type="info">
-    Be sure to use the same branch that you used to deploy the L1 contracts.
+    Be sure to use the same tag that you used to deploy the L1 contracts.
   </Callout>
 
   A forge script is used to generate the L2 genesis. It is a requirement that the L1 contracts have been deployed before generating the L2 genesis, since some L1 contract addresses are embedded into the L2 genesis.
@@ -97,9 +100,9 @@ An OP Stack chain that uses the custom gas token feature enables an end user to 
 
   Ensure that the end to end system is running.
 
-  ### Depositing Your Custom Gas Token into Your Chain
+  ### Depositing Custom Gas Token into the Chain
 
-  *   To deposit your custom gas token into your chain, you must use the **`OptimismPortalProxy.depositERC20Transaction`**  method
+  *   To deposit the custom gas token into the chain, users must use the **`OptimismPortalProxy.depositERC20Transaction`** method
   *   Users MUST first `approve()` the `OptimismPortal` before they can deposit tokens using `depositERC20Transaction`.
 
   ```
@@ -111,6 +114,18 @@ An OP Stack chain that uses the custom gas token feature enables an end user to 
       bool _isCreation,
       bytes memory _data
   ) public;
+  ```
+
+  ### Withdrawing Custom Gas Tokens out of the Chain
+
+  *   To withdraw your native custom gas token from the chain, users must use the **`L2ToL1MessagePasser.initiateWithdrawal`** method. Proving and finalizing withdrawals is identical to the process on chains that use ETH as the native gas token.
+
+  ```
+  function initiateWithdrawal(
+      address _target,
+      uint256 _gasLimit,
+      bytes memory _data
+  ) public payable;
   ```
 </Steps>
 
