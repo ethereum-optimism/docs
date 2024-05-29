@@ -41,6 +41,7 @@ An OP Stack chain that uses the custom gas token feature enables an end user to 
   *   must be transferrable only via a call to the token address itself
   *   must only be able to set allowance via a call to the token address itself
   *   must not have a callback on transfer, and more generally a user must not be able to make a transfer to themselves revert
+  *   a user must not be able to make a transfer have unexpected side effects
 
   <Callout type="warning">
     You will NOT be able to change the address of the custom gas token after it is set during deployment.
@@ -99,6 +100,26 @@ An OP Stack chain that uses the custom gas token feature enables an end user to 
   ### Spinning Up Your Infrastructure
 
   Ensure that the end to end system is running.
+
+  ### Validating your deployment
+
+  This calls the `WETH` predeploy which should be considered wrapped native asset in the context of custom gas token. It should return the name of the token prefixed by `"Wrapped "`
+
+  ```bash
+  cast call --rpc-url $L2_ETH_RPC_URL 0x4200000000000000000000000000000000000006 'name()(string)'
+  ```
+
+  This calls the `L1Block` predeploy should return `true`.
+
+  ```bash
+  cast call --rpc-url $L2_ETH_RPC_URL 0x4200000000000000000000000000000000000015 'isCustomGasToken()(bool)
+  ```
+
+  This calls the L1 `SystemConfig` contract and should return `true`.
+
+  ```bash
+  cast call --rpc-url $L1_ETH_RPC_URL <SYSTEM_CONFIG_ADDRESS> 'isCustomGasToken()(bool)
+  ```
 
   ### Depositing Custom Gas Token into the Chain
 
