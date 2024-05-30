@@ -5,7 +5,10 @@ import { useConfig } from 'nextra-theme-docs'
 import { FeelbackYesNo, PRESET_LIKE_DISLIKE } from "@feelback/react"
 import "@feelback/react/styles/feelback.css"
 
+import Docsearch from "./components/docsearch";
+
 const config: DocsThemeConfig = {
+  search: { component: <Docsearch /> },
   logo: (
     <>
       <svg width="194" height="32" viewBox="0 0 194 32" fill="none" xmlns="http://www.w3.org/2000/svg">
