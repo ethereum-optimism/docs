@@ -11,9 +11,9 @@ import '@docsearch/css';
 const config: DocsThemeConfig = {
   search: { 
     component: <DocSearch 
-      apiKey="88db2b7e75dff6e68ff1f74226546454"
-      indexName="optimism"
-      appId="P7A16UOSI5"
+      apiKey={process.env.NEXT_PUBLIC_ALGOLIA_API_KEY}
+      indexName={process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME}
+      appId={process.env.NEXT_PUBLIC_ALGOLIA_APP_ID}
       searchParameters={{ facets: ["tags:en"] }}
       placeholder="Search documentation..."
     /> 
