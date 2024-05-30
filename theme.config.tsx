@@ -14,6 +14,7 @@ const config: DocsThemeConfig = {
       apiKey="88db2b7e75dff6e68ff1f74226546454"
       indexName="optimism"
       appId="P7A16UOSI5"
+      searchParameters={{ facets: ["tags:en"] }}
     /> 
   },
   logo: (
