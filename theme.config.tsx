@@ -15,6 +15,7 @@ const config: DocsThemeConfig = {
       indexName="optimism"
       appId="P7A16UOSI5"
       searchParameters={{ facets: ["tags:en"] }}
+      placeholder="Search documentation..."
     /> 
   },
   logo: (
