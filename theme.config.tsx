@@ -47,10 +47,10 @@ const config: DocsThemeConfig = {
     text: '✏️ Edit this page on GitHub'
   },
   banner: {
-    key: '2.4-release',
+    key: 'fp-mainnet-release',
     text: (
       <a href="/builders/notices/fp-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fault Proof Breaking Changes">
-        📌 UPDATE: Get Prepared for Breaking Changes to Fault Proofs and Withdrawal Times. Please review the Notices (README) for more info. → 📌
+      📣📣📣 ATTENTION: Fault Proofs are planned for OP Mainnet. <strong><i>Withdrawal claims submitted after June 3 will need to be resubmitted after the upgrade</i></strong>, which will be at least 7 days later. Click here for more info. 📣📣📣
       </a>
     )
   },
