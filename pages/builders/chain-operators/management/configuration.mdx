@@ -82,6 +82,12 @@ disable Interop.
 *  **Type:** Number of seconds
 *  **Default:** nil
 
+#### l1CancunTimeOffset
+
+When Cancun activates. Relative to L1 genesis.
+
+*  **Type:** Number of seconds
+
 ---
 
 ### Admin addresses
@@ -105,6 +111,46 @@ upgradeable.
 *  **Type:** L2 Address
 *  **Default / Recommended value:** It is recommended to have a single admin 
 address to retain a common security model.
+
+---
+
+### Proxy Addresses
+
+#### l1StandardBridgeProxy
+
+L1StandardBridgeProxy represents the address of the L1StandardBridgeProxy on L1
+and is used as part of building the L2 genesis state.
+
+* **Type:** L1 Address 
+
+#### l1CrossDomainMessengerProxy
+
+L1CrossDomainMessengerProxy represents the address of the 
+L1CrossDomainMessengerProxy on L1 and is used as part of building the L2 
+genesis state.
+
+* **Type:** L1 Address
+
+#### l1ERC721BridgeProxy
+
+L1ERC721BridgeProxy represents the address of the L1ERC721Bridge on L1 and is 
+used as part of building the L2 genesis state.
+
+* **Type:** L1 Address
+
+#### systemConfigProxy
+
+SystemConfigProxy represents the address of the SystemConfigProxy on L1 and is
+used as part of the derivation pipeline.
+
+* **Type:** L1 Address
+
+#### optimismPortalProxy
+
+OptimismPortalProxy represents the address of the OptimismPortalProxy on L1 and
+is used as part of the derivation pipeline.
+
+* **Type:** L1 Address
 
 ---
 
@@ -160,6 +206,100 @@ Address that nodes will filter for when searching for Sequencer transaction batc
 
 *  **Type:** L1 Address
 *  **Default value:** Batcher, an address for which you own the private key
+
+#### systemConfigStartBlock
+
+SystemConfigStartBlock represents the block at which the op-node should start
+syncing from. It is an override to set this value on legacy networks where it 
+is not set by default. It can be removed once all networks have this value set 
+in their storage.
+
+* **Type:** L2 Block Number
+
+---
+
+### Chain Information
+
+#### numDeployConfirmations
+
+Number of confirmations to wait when deploying smart contracts to L1.
+
+*  **Type:** Number of blocks
+*  **Default value:** 1
+
+#### l1StartingBlockTag
+
+Block tag for the L1 block where the L2 chain will begin syncing from. Generally recommended to use a finalized block to avoid issues with reorgs.
+
+*  **Type:** Block hash
+*  **Default value:** None
+
+#### l1ChainID
+
+Chain ID of the L1 chain.
+
+*  **Type:** Number
+*  **Default value:**
+
+1 for L1 Ethereum mainnet
+11155111 for the Sepolia test network
+See here for other blockchains.
+
+#### l2ChainID
+
+Chain ID of the L2 chain.
+
+*  **Type:** Number
+*  **Default value:** 42069
+
+#### l2GenesisBlockExtraData
+
+L2GenesisBlockExtraData is configurable extradata. Will default to 
+[]byte("BEDROCK") if left unspecified.
+
+#### superchainConfigGuardian
+
+SuperchainConfigGuardian represents the GUARDIAN account in the 
+SuperchainConfig. Has the ability to pause withdrawals.
+
+* **Type:** L1 Address
+
+---
+
+### Gas 
+
+#### eip1559Elasticity
+
+EIP1559Elasticity is the elasticity of the EIP1559 fee market.
+
+*  **Type:** Number
+
+#### eip1559Denominator
+
+EIP1559Denominator is the denominator of EIP1559 base fee market.
+
+*  **Type:** Number
+
+#### eip1559DenominatorCanyon
+
+EIP1559DenominatorCanyon is the denominator of EIP1559 base fee market when 
+Canyon is active.
+
+*  **Type:** Number
+
+#### gasPriceOracleBaseFeeScalar
+
+GasPriceOracleBaseFeeScalar represents the value of the base fee scalar used 
+for fee calculations.
+
+* **Type:** Number
+
+#### gasPriceOracleBlobBaseFeeScalar
+
+GasPriceOracleBlobBaseFeeScalar represents the value of the blob base fee 
+scalar used for fee calculations.
+
+* **Type:** Number
 
 --- 
 
@@ -281,71 +421,288 @@ amount for the SequencerFeeVault.
 
 #### baseFeeVaultWithdrawalNetwork
 
-A value of 0 will withdraw ETH to the recipient address on L1 and a value of 1 will withdraw ETH to the recipient address on L2.
+BaseFeeVaultWithdrawalNetwork represents the withdrawal network for the 
+BaseFeeVault. value of 0 will withdraw ETH to the recipient address on L1 and 
+a value of 1 will withdraw ETH to the recipient address on L2.
 
 *  **Type:** Number representing network enum
 *  **Default value:** None
 
 #### l1FeeVaultWithdrawalNetwork
 
-A value of 0 will withdraw ETH to the recipient address on L1 and a value of 1 will withdraw ETH to the recipient address on L2.
+L1FeeVaultWithdrawalNetwork represents the withdrawal network for the 
+L1FeeVault. A value of 0 will withdraw ETH to the recipient address on L1 and a
+value of 1 will withdraw ETH to the recipient address on L2.
 
 *  **Type:** Number representing network enum
 *  **Default value:** None
 
 #### sequencerFeeVaultWithdrawalNetwork
 
-A value of 0 will withdraw ETH to the recipient address on L1 and a value of 1 will withdraw ETH to the recipient address on L2.
+SequencerFeeVaultWithdrawalNetwork represents the withdrawal network for the 
+SequencerFeeVault. A value of 0 will withdraw ETH to the recipient address on 
+L1 and a value of 1 will withdraw ETH to the recipient address on L2.
 
 *  **Type:** Number representing network enum
 *  **Default value:** None
 
+---
+
+### Fault Proofs 
+
+#### faultGameAbsolutePrestate
+
+FaultGameAbsolutePrestate is the absolute prestate of Cannon. This is computed
+by generating a proof from the 0th -> 1st instruction and grabbing the prestate
+from the output JSON. All honest challengers should agree on the setup state of
+the program.
+
+* **Type:** Hash
+
+#### faultGameMaxDepth
+
+FaultGameMaxDepth is the maximum depth of the position tree within the fault 
+dispute game. `2^{FaultGameMaxDepth}` is how many instructions the execution 
+trace bisection game supports. Ideally, this should be conservatively set so 
+that there is always enough room for a full Cannon trace.
+
+* **Type:** Number
+
+#### faultGameClockExtension
+
+FaultGameClockExtension is the amount of time that the dispute game will set 
+the potential grandchild claim's, clock to, if the remaining time is less than 
+this value at the time of a claim's creation.
+
+* **Type:** Number
+
+#### faultGameMaxClockDuration
+
+FaultGameMaxClockDuration is the maximum amount of time that may accumulate on 
+a team's chess clock before they may no longer respond.
+
+* **Type:** Number
+
+#### faultGameGenesisBlock
+
+FaultGameGenesisBlock is the block number for genesis.
+
+* **Type:** Number
+
+#### faultGameGenesisOutputRoot
+
+FaultGameGenesisOutputRoot is the output root for the genesis block.
+
+* **Type:** Hash
+
+#### faultGameSplitDepth
+
+FaultGameSplitDepth is the depth at which the fault dispute game splits from 
+output roots to execution trace claims.
+
+* **Type:** Number
+
+#### faultGameWithdrawalDelay
+
+FaultGameWithdrawalDelay is the number of seconds that users must wait before 
+withdrawing ETH from a fault game.
+
+* **Type:** Number
+
+#### preimageOracleMinProposalSize
+
+PreimageOracleMinProposalSize is the minimum number of bytes that a large
+preimage oracle proposal can be.
+
+* **Type:** Number
+
+#### preimageOracleChallengePeriod
+
+PreimageOracleChallengePeriod is the number of seconds that challengers have to
+challenge a large preimage proposal.
+
+* **Type:** Number of Seconds
+
+#### proofMaturityDelaySeconds
+
+ProofMaturityDelaySeconds is the number of seconds that a proof must be mature
+before it can be used to finalize a withdrawal.
+
+* **Type:** Number
+  
+#### disputeGameFinalityDelaySeconds
+
+DisputeGameFinalityDelaySeconds is an additional number of seconds a dispute 
+game must wait before it can be used to finalize a withdrawal.
+
+* **Type:** Number
+  
+#### respectedGameType
+
+RespectedGameType is the dispute game type that the OptimismPortal contract 
+will respect for finalizing withdrawals.
+
+* **Type:** Number
+  
+#### useFaultProofs
+
+UseFaultProofs is a flag that indicates if the system is using fault proofs
+instead of the older output oracle mechanism.
+
+* **Type:** Boolean
+  
 --- 
 
-### Misc.
+### Custom Gas Token
 
-#### numDeployConfirmations
+#### useCustomGasToken
 
-Number of confirmations to wait when deploying smart contracts to L1.
+UseCustomGasToken is a flag to indicate that a custom gas token should be used.
 
-*  **Type:** Number of blocks
-*  **Default value:** 1
+* **Type:** boolean 
 
-#### l1StartingBlockTag
+#### customGasTokenAddress
 
-Block tag for the L1 block where the L2 chain will begin syncing from. Generally recommended to use a finalized block to avoid issues with reorgs.
+CustomGasTokenAddress is the address of the ERC20 token to be used to pay for gas on L2.
 
-*  **Type:** Block hash
-*  **Default value:** None
+* **Type:** Address
 
-#### l1ChainID
+### Alt-DA Mode / Plasma Mode 
 
-Chain ID of the L1 chain.
+#### usePlasma
 
-*  **Type:** Number
-*  **Default value:**
+UsePlasma is a flag that indicates if the system is using op-plasma
 
-1 for L1 Ethereum mainnet
-11155111 for the Sepolia test network
-See here for other blockchains.
+* **Type:** bool
 
-#### l2ChainID
+#### daCommitmentType
 
-Chain ID of the L2 chain.
+DACommitmentType specifies the allowed commitment
 
-*  **Type:** Number
-*  **Default value:** 42069
+* **Type:** string
 
-#### l2GenesisBlockExtraData
+#### daChallengeWindow
 
-L2GenesisBlockExtraData is configurable extradata. Will default to 
-[]byte("BEDROCK") if left unspecified.
+DAChallengeWindow represents the block interval during which the availability
+of a data commitment can be challenged.
 
-#### superchainConfigGuardian
+* **Type:** Number
 
-SuperchainConfigGuardian represents the GUARDIAN account in the 
-SuperchainConfig. Has the ability to pause withdrawals.
-* **Type:** L1 Address
+#### daResolveWindow
+
+DAResolveWindow represents the block interval during which a data availability 
+challenge can be resolved.
+
+* **Type:** Number
+
+#### daBondSize
+
+DABondSize represents the required bond size to initiate a data availability 
+challenge.
+
+* **Type:** Number
+
+#### daResolverRefundPercentage
+
+DAResolverRefundPercentage represents the percentage of the resolving cost to 
+be refunded to the resolver such as 100 means 100% refund.
+
+* **Type:** Number
+
+#### daChallengeProxy
+
+DAChallengeProxy represents the L1 address of the DataAvailabilityChallenge 
+contract.
+
+* **Type:** Address
+
+--- 
+
+### Interoperability
+
+#### useInterop
+
+UseInterop is a flag that indicates if the system is using interop.
+
+* **Type:** boolean
+
+---
+
+### Governance
+
+#### enableGovernance
+
+EnableGovernance configures whether or not include governance token predeploy.
+
+* **Type:** boolean
+
+#### governanceTokenSymbol
+
+GovernanceTokenSymbol represents the  ERC20 symbol of the GovernanceToken.
+
+*  **Type**: string 
+
+#### governanceTokenName
+
+GovernanceTokenName represents the ERC20 name of the GovernanceToken
+
+*  **Type**: string
+
+#### governanceTokenOwner
+
+GovernanceTokenOwner represents the owner of the GovernanceToken. Has the 
+ability to mint and burn tokens.
+
+*  **Type**: L2 Address 
+
+---
+
+### Miscellaneous
+
+#### fundDevAccounts
+
+FundDevAccounts configures whether or not to fund the dev accounts. Should only
+be used during devnet deployments.
+
+*  **Type**: Boolean
+
+#### requiredProtocolVersion
+
+RequiredProtocolVersion indicates the protocol version that nodes are 
+recommended to adopt, to stay in sync with the network.
+
+*  **Type**: String
+
+#### recommendedProtocolVersion
+
+RecommendedProtocolVersion indicates the protocol version that nodes are 
+recommended to adopt, to stay in sync with the network.
+
+*  **Type**: String
+
+---
+
+### Deprecated 
+
+#### (**DEPRECATED**) gasPriceOracleScalar
+
+GasPriceOracleScalar represents the initial value of the gas scalar in the 
+GasPriceOracle predeploy. Deprecated: Since Ecotone, this field is superseded 
+by GasPriceOracleBaseFeeScalar and GasPriceOracleBlobBaseFeeScalar.
+
+#### (**DEPRECATED**) gasPriceOracleOverhead
+
+GasPriceOracleOverhead represents the initial value of the gas overhead in the
+GasPriceOracle predeploy. Deprecated: Since Ecotone, this field is superseded 
+by GasPriceOracleBaseFeeScalar and GasPriceOracleBlobBaseFeeScalar.
+
+#### (**DEPRECATED**) deploymentWaitConfirmations
+
+DeploymentWaitConfirmations is the number of confirmations to wait during
+deployment. This is DEPRECATED and should be removed in a future PR.
+
+---
+
 
 ### OP-Batcher Configuration
 
