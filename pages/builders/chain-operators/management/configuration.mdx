@@ -18,6 +18,13 @@ Stack chain deployment, look no further.
   configuration, you can refer to the [source code](https://github.com/ethereum-optimism/optimism/blob/develop/op-chain-ops/genesis/config.go).
 </Callout>
 
+<Callout type="info">
+  Standard configuration is the set of requirements for an OP Stack chain to be
+  considered a Standard Chain within the superchain. These requirements are 
+  currently a draft, pending governance approval. For more details, please see
+  this [governance thread](https://gov.optimism.io/t/season-6-draft-standard-rollup-charter/8135).
+</Callout>
+
 ## Rollup Configuration
 
 New OP Stack blockchains are currently configured with a JSON file inside the
@@ -178,6 +185,9 @@ Number of seconds between each L2 block. Must be \< = L1 block time (12 on mainn
 *   **Type:** Number of seconds
 *   **Default value:** None
 *   **Notes:** Must not be `0`. Must be less than the L1 blocktime and a whole number.
+*   **Standard Config Requirement:** 2 seconds. High security and 
+interoperability compatibility requirement, until de-risked/solved at app 
+layer.
 
 #### maxSequencerDrift
 
@@ -189,15 +199,23 @@ How far the L2 timestamp can differ from the actual L1 timestamp.
 
 #### sequencerWindowSize
 
-Maximum number of L1 blocks that a Sequencer can wait to incorporate the information in a specific L1 block. For example, if the window is 10 then the information in L1 block n must be incorporated by L1 block n+10.
+Maximum number of L1 blocks that a Sequencer can wait to incorporate the 
+information in a specific L1 block. For example, if the window is 10 then the
+information in L1 block n must be incorporated by L1 block n+10.
 
 *   **Type:** Number of blocks
 *   **Default value:** None
 *   \**Notes:* Must not be `0`. 3600 (12 hours) is suggested.
+*   **Standard Config Requirement:**  3_600 base layer blocks (12 hours for an 
+L2 on Ethereum, assuming 12 second L1 blocktime). This is an important value 
+for constraining the sequencer's ability to re-order transactions; higher 
+values would pose a risk to user protections.
 
 #### channelTimeout
 
-Maximum number of L1 blocks that a transaction channel frame can be considered valid. A transaction channel frame is a chunk of a compressed batch of transactions. After the timeout, the frame is dropped.
+Maximum number of L1 blocks that a transaction channel frame can be considered 
+valid. A transaction channel frame is a chunk of a compressed batch of 
+transactions. After the timeout, the frame is dropped.
 
 *   **Type:** Number of blocks
 *   **Default value:** None
@@ -217,6 +235,8 @@ Address that Sequencer transaction batches are sent to on L1.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Standard Config Requirement:** Current convention is 
+`0xff000...000{chainId}`.
 
 #### batchSenderAddress
 
@@ -237,6 +257,8 @@ in their storage.
 
 *   **Type:** L2 Block Number
 *   **Default value:** None
+*   **Standard Config Requirement:** The block where the SystemConfig was 
+initialized.
 
 ***
 
@@ -268,6 +290,7 @@ Chain ID of the L2 chain.
 *   **Type:** Number
 *   **Default value:** None
 *   \**Notes:* Must not be `0`. For security reasons, should be unique.
+*   **Standard Config Requirement:** Foundation-approved, globally unique value
 
 #### l2GenesisBlockExtraData
 
@@ -289,6 +312,12 @@ SuperchainConfig. Has the ability to pause withdrawals.
 ***
 
 ### Gas
+
+*   **Standard Config Requirement:** Set such that Fee Margin is between 0 and
+50%.
+*   **Standard Config Requirement:** No higher than 200_000_000 gas. Chain 
+operators are driven to maintain a stable and reliable chain. When considering
+to change this value, careful deliberation is necessary.
 
 #### eip1559Elasticity
 
@@ -381,6 +410,10 @@ considered finalized by the OptimismPortal contract.
 *   **Default value:** None
 *   \**Notes:* Must not be `0`. Recommend 12 on test networks, seven days on
     production ones.
+*   **Standard Config Requirement:** 7 days. High security. Excessively safe 
+upper bound that leaves enough time to consider social layer solutions to a 
+hack if necessary. Allows enough time for other network participants to 
+challenge the integrity of the corresponding output root.
 
 #### l2OutputOracleProposer
 
@@ -664,7 +697,7 @@ DACommitmentType specifies the allowed commitment
 
 *   **Type:** string
 *   **Default value:** None
-*   **Notes:** DACommitmentType must be either KeccakCommtiment or
+*   **Notes:** DACommitmentType must be either KeccakCommitment or
     GenericCommitment
 
 #### daChallengeWindow
