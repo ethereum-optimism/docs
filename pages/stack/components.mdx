@@ -20,10 +20,6 @@ This doesn't include all of the modules or layers that may exist in the future, 
   Please note that not all of the modules described on this page already exist in a production state — these are explicitly marked as either "**in development**"or "**proposed**."
 </Callout>
 
-## Major Components
-
-![The OP Stack components.](/img/op-stack/protocol/components.png)
-
 ## Layers
 
 ### Data Availability
@@ -39,13 +35,13 @@ Ethereum DA is currently the most widely used Data Availability module for the O
 
 ### Sequencing
 
-The Sequencing Layer determines how user transactions on an OP Stack chain are collected and published to the Data Availability Layer module(s) in use. In the default Rollup configuration of the OP Stack, Sequencing is typically handled by a single dedicated Sequencer. Rules defined in the Derivation Layer generally restrict the Sequencer's ability to withhold transactions for more than a specific period of time. In the proposed future, Sequencing will be modular such that chains can easily select and change the mechanism that controls their current Sequencer.
+The Sequencing Layer determines how user transactions on an OP Stack chain are collected and published to the Data Availability Layer module(s) in use. In the default Rollup configuration of the OP Stack, Sequencing is typically handled by a single dedicated Sequencer. Rules defined in the Derivation Layer generally restrict the Sequencer's ability to withhold transactions for more than a specific period of time. In the future, Sequencing will be modular such that chains can easily select and change the mechanism that controls their current Sequencer.
 
 #### Single Sequencer
 
 The default Sequencer module for the OP Stack is the Single Sequencer module in which a dedicated actor is given the ability to act as the Sequencer. The Single Sequencer module allows a governance mechanism to determine who may act as the Sequencer at any given time.
 
-#### Multiple Sequencer (proposed)
+#### Multiple Sequencer
 
 A simple modification to the Single Sequencer module is the Multiple Sequencer module in which the Sequencer at any given time is selected from a pre-defined set of possible actors. Individual OP Stack based chains would be able to determine the exact mechanism that defines the set of possible Sequencers and the mechanism that selects a Sequencer from the set.
 
@@ -60,9 +56,9 @@ The Rollup module derives Engine API inputs from Ethereum block data, Sequencer 
 *   [Specifications](https://specs.optimism.io/protocol/derivation.html#l2-chain-derivation-pipeline)
 *   [Source code](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/op-node)
 
-#### Indexer (proposed)
+#### Indexer
 
-The Indexer module is a proposed Derivation Layer module that would derive Engine API inputs when transactions are sent to, events are emitted by, or storage is modified in specific smart contracts on a Data Availability Layer module like Ethereum DA.
+The Indexer module is a Derivation Layer module that would derive Engine API inputs when transactions are sent to, events are emitted by, or storage is modified in specific smart contracts on a Data Availability Layer module like Ethereum DA.
 
 ### Execution
 
@@ -77,9 +73,9 @@ The EVM is an Execution Layer module that uses the same state representation and
 
 ### Settlement Layer
 
-The Settlement Layer is a mechanism on external blockchains that establish a **view** of the state of an OP Stack chain on those external chains (including other OP Stack chains). For each OP Stack chain, there may be one or more Settlement mechanisms on one or more external chains. Settlement Layer mechanisms are **read-only** and allow parties external to the blockchain to make decisions based on the state of an OP Stack chain.
+The Settlement Layer is a mechanism on external blockchains that establish a **view** of the state of an OP Stack chain (target) on those external, third-party chains (including other OP Stack chains). For each target chain, there may be one or more Settlement mechanisms on one or more external chains. Settlement Layer mechanisms are **read-only** and allow a third-party chain to make decisions, potentially impacting their own state, based on the state of the target OP Stack chain.
 
-The term "Settlement Layer" has its origins in the fact that Settlement Layer mechanisms are often used to handle withdrawals of ETH and tokens out of a blockchain. This sort of withdrawal system first involves proving the state of the target blockchain to some third-party chain and then processing a withdrawal based on that state. The Settlement Layer, at its core, simply allows a third-party chain to become aware of the state of the target chain.
+The term "Settlement Layer" has its origins in the fact that Settlement Layer mechanisms are often used to handle withdrawals of ETH and tokens out of a blockchain. This sort of withdrawal system first involves proving the state of the target blockchain to some third-party chain and then processing a withdrawal based on that state. The Settlement Layer, at its core, simply allows a third-party chain to become convinced of the state of the target chain.
 
 Once a transaction is published and finalized on the corresponding Data Availability layer, the transaction is also finalized on the OP Stack chain. Short of breaking the underlying Data Availability layer, it can no longer be modified or removed. It may not be accepted by the Settlement Layer yet because the Settlement Layer needs to be able to verify transaction *results*, but the transaction itself is already immutable.
 
@@ -90,13 +86,13 @@ An Attestation-based Fault Proof mechanism uses an optimistic protocol to establ
 *   [Specifications](https://specs.optimism.io/protocol/withdrawals.html) (called [withdrawal transactions](/builders/app-developers/bridging/messaging))
 *   [Source code](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/packages/contracts-bedrock/src)
 
-#### Fault Proof Optimistic Settlement (proposed)
+#### Fault Proof Optimistic Settlement
 
 A Fault Proof Optimistic Settlement mechanism is mostly identical to the Attestation-based Fault Proof mechanism used today but it replaces the MultiSig challenger with a permissionless fault proving process. A correctly constructed fault proof should be able to invalidate any incorrect proposals during the allocated challenge period. This places a trust assumption on the correctness of the fault proof construction. At this time, work on the development of a Fault Proof  mechanism is well underway.
 
-#### Validity Proof Settlement (proposed)
+#### Validity Proof Settlement 
 
-A Validity Proof Settlement mechanism uses a mathematical proof to attest to the correctness of a proposed view. A proposed state will not be accepted without a valid proof. This places a trust assumption on the correctness of the validity proof construction.
+A Validity Proof Settlement mechanism uses a mathematical proof to attest to the correctness of a proposed view. When a proposed state is accompanied by a valid proof, it is immediately and unconditionally accepted; otherwise, it is rejected. This mechanism relies on cryptographic assumptions, rather than trust in certain participants or processes. While it eliminates the need for a challenge period, it requires significant upfront computation to generate the proof.
 
 ### Governance
 
