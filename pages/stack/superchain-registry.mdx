@@ -1,86 +1,110 @@
-# Overview of the Superchain Registry
+---
+title: Superchain Registry Explainer
+lang: en-US
+description: Learn about Superchain configurations, member chains, contract permissions, and tools for contributing new chains or superchains.
+---
 
-<Callout type="info">
-   ⚠️ This repository is a work in progress. At a later date, it will be proposed to, and must be approved by, Optimism Governance. Until that time, the configuration described here is subject to change.
+import { Callout, Steps } from 'nextra/components'
 
+# Superchain Registry Explainer
+
+<Callout type="warning">
+  The [superchain registry](https://github.com/ethereum-optimism/superchain-registry/tree/main) is a work in progress and still must be approved by Optimism Governance. Until that time, the configuration described here is subject to change.
 </Callout>
 
-The Superchain Registry is a critical component of the Optimism ecosystem, particularly in managing the inclusion and 
-configuration of Layer 2 (L2) chains within the Superchain framework. Optimism's vision for scalability involves the 
-creation of a network of L2 chains, referred to as the Superchain, which leverages the OP Stack—a modular and open-source
- set of tools for building these chains.
- The Superchain Registry functions as an index that tracks which chains are part of the Superchain. 
- It ensures transparency by documenting the configuration parameters for each chain, 
- such as their protocol versions and governance settings. This registry is essential for maintaining consistency and 
- security across the network by verifying that all included chains meet the criteria set forth by their 
- respective Blockspace Charters​ [Optimism Collective](https://gov.optimism.io/t/season-6-introducing-blockspace-charters-superchain-first-governance/8133)​ 
- [Optimism Docs](https://docs.optimism.io/chain/addresses)​.
+This page provides a holistic view of Superchain configurations, covering mainnet and testnet targets, member chains, contract permissions, and tools for contributing new chains or superchains. 
+The goal is to offer essential data for seamless integration into OP Stack software while facilitating the derivation of complete deployment artifacts.
 
-The Superchain Registry repository hosts Superchain-configuration data in a minimal human-readable form. 
-This includes mainnet and testnet Superchain targets, and their respective member chains.
+The Superchain Registry is a critical component of the Optimism ecosystem, particularly in managing the inclusion and
+configuration of Layer 2 (L2) chains within the Superchain framework. Optimism's vision for scalability involves the
+creation of a network of L2 chains, referred to as the Superchain, which leverages the OP Stack—a modular and open-source
+set of tools for building these chains.
+
+*   The Superchain Registry functions as an index that tracks which chains are part of the Superchain.
+*   The registry ensures transparency by documenting the configuration parameters for each chain, such as their protocol versions and governance settings.
+*   The registry is essential for maintaining consistency and security across the network by verifying that all included chains meet the criteria set forth by their
+    respective [Blockspace Charters](https://gov.optimism.io/t/season-6-introducing-blockspace-charters-superchain-first-governance/8133)​.
+    Also see [chain addresses](/chain/addresses)​ for more information.
+
+## Superchain Configuration
+
+The Superchain Registry repository hosts Superchain-configuration data in a minimal human-readable form.
+This includes mainnet and testnet Superchain targets and their respective member chains.
 
 Other configuration, such as contract-permissions, and `SystemConfig` parameters are hosted and governed onchain.
 
-The superchain configs are made available in minimal form, to embed in OP-Stack software. 
+The superchain configs are made available in minimal form, to embed in OP Stack software.
 Full deployment artifacts and genesis-states can be derived from the minimal form using the reference [op-chain-ops](https://github.com/ethereum-optimism/optimism/tree/develop/op-chain-ops) tooling.
 
+## Semantic Versioning Lockfiles
+
+Semantic Versioning Lockfiles (`semver.yaml`) are used to lock the versions of contracts and tools to specific releases.
+This ensures that all deployments are consistent and predictable, preventing issues that might arise from version mismatches.
+These lockfiles adhere to [Semantic Versioning](https://semver.org/), which is a versioning scheme for software that aims to convey meaning about the underlying changes with each release.
+
 The `semver.yaml` files each represent the semantic versioning lockfile for all the smart contracts in that superchain.
- It is meant to be used when building transactions that upgrade the implementations set in the proxies.
+It is meant to be used when building transactions that upgrade the implementations set in the proxies.
 
 If you would like to contribute a new chain or superchain, please see our [contributing guide](https://github.com/ethereum-optimism/superchain-registry/blob/main/CONTRIBUTING.md).
 
-# Superchain Go Module
+## Superchain Go Module
+
 Superchain configs can be imported as Go-module:
 
-``` go get github.com/ethereum-optimism/superchain-registry/superchain@latest```
+` go get github.com/ethereum-optimism/superchain-registry/superchain@latest`
 
 See [op-chain-ops](https://github.com/ethereum-optimism/optimism/tree/develop/op-chain-ops) for config tooling and for smart-contract bindings.
 
-# Validation Go Module
+## Validation Go Module
 
-A second module exists in this repo whose purpose is to validate the config exported by the `superchain` module. 
-It is a separate module to avoid import cycles and polluting downstream dependencies with things like `go-ethereum` 
-(which is used in the validation tests). 
+A second module exists in this repo whose purpose is to validate the config exported by the `superchain` module.
+It is a separate module to avoid import cycles and polluting downstream dependencies with things like `go-ethereum`
+(which is used in the validation tests).
 The modules are tracked by a top-level go.work file.
-The associated `go.work.sum` file is gitignored and not crucial to typical workflows,
-(perchain-registry/blob/main/.circleci/config.yml).
+The associated `go.work.sum` file is gitignored and not crucial to [typical workflows]
+(https://github.com/ethereum-optimism/superchain-registry/blob/main/.circleci/config.yml).
 
-# CheckSecurityConfigs
+## CheckSecurityConfigs
 
-The `CheckSecurityConfigs.s.sol` script is used in CI to perform security checks of OP Chains registered in the superchain directory. 
-At high level, it performs checks to ensure privileges are properly granted to the right addresses. 
+The `CheckSecurityConfigs.s.sol` script is used in CI to perform security checks of OP Chains registered in the superchain directory.
+At high level, it performs checks to ensure privileges are properly granted to the right addresses.
 More specifically, it checks the following privilege grants and role designations:
 
-### 1. Generic privileges:
+<Steps>
+  ### Generic Privileges
 
-i. Proxy admins. For example, `L1ERC721BridgeProxy` and `OptimismMintableERC20FactoryProxy` specify 
-the proxy admin addresses who can change their implementations.
+  *   Proxy admins. For example, `L1ERC721BridgeProxy` and `OptimismMintableERC20FactoryProxy` specify
+      the proxy admin addresses who can change their implementations.
+  *   Address managers. For example, `ProxyAdmin` specifies the address manager it trusts to look up certain addresses by name.
+  *   Contract owners. For example, many `Ownable` contracts use this role to specify the message senders allowed to make privileged calls.
 
-ii. Address managers. For example, `ProxyAdmin` specifies the address manager it trusts to look up certain addresses by name.
-iii. Contract owners. For example, many `Ownable` contracts use this role to specify the message senders allowed to make privileged calls.
+  ### Optimism Privileged Cross-contract Calls
 
-### 2. Optimism privileged cross-contract calls:
+  *   Trusted messengers. For example, `L1ERC721BridgeProxy` and `L1StandardBridgeProxy` specify
+      the cross domain messenger address they trust with cross domain message sender information.
+  *   Trusted bridges. For example, `OptimismMintableERC20FactoryProxy` specifies
+      the L1 standard bridge it trusts to mint and burn tokens.
+  *   Trusted portal. For example, `L1CrossDomainMessengerProxy` specifies
+      the portal it trusts to deposit transactions and get L2 senders.
+  *   Trusted oracles. For example, `OptimismPortalProxy` specifies the L2 oracle they trust with the L2 state root information.
+        <Callout type="info">
+        After the FPAC upgrade, the `OptimismPortalProxy` specifies the `DisputeGameFactory` they trust rather than the legacy `L2OutputOracle` contract.
+        </Callout>
+  *   Trusted system config. For example, `OptimismPortalProxy` specifies the system config they trust to get resource config from. TODO(issues/37): add checks for the ResourceMetering contract.
 
-i. Trusted messengers. For example, `L1ERC721BridgeProxy` and `L1StandardBridgeProxy` specify 
-    the cross domain messenger address they trust with cross domain message sender information.
-ii. Trusted bridges. For example, `OptimismMintableERC20FactoryProxy` specifies 
-the L1 standard bridge it trusts to mint and burn tokens.
-iii. Trusted portal. For example, `L1CrossDomainMessengerProxy` specifies 
-the portal it trusts to deposit transactions and get L2 senders.
-iv. Trusted oracles. For example, `OptimismPortalProxy` specifies the L2 oracle they trust with the L2 state root information.
-a. After the FPAC upgrade, the `OptimismPortalProxy` specifies the `DisputeGameFactory` they trust rather than the legacy `L2OutputOracle` contract. 
-v. Trusted system config. For example, `OptimismPortalProxy` specifies the system config they trust to get resource config from. TODO(issues/37): add checks for the ResourceMetering contract.
-3. Optimism privileged operational roles:
+  ### Optimism Privileged Operational Roles
 
-i. Guardians. This is the role that can pause withdraws in the Optimism protocol.
-    a. After the FPAC upgrade, the `Guardian` can also blacklist dispute games and change the respected game type in the `OptimismPortal`.
-ii. Challengers. This is the role that can delete `L2OutputOracleProxy`'s output roots in the Optimism protocol 
-a. After the FPAC upgrade, the `CHALLENGER` is a permissionless role in the `FaultDisputeGame`. 
-However, in the PermissionedDisputeGame, the `CHALLENGER` role is the only party allowed to dispute 
-output proposals created by the `PROPOSER` role.
+  *   Guardians. This is the role that can pause withdraws in the Optimism protocol.
+      *   After the FPAC upgrade, the `Guardian` can also blacklist dispute games and change the respected game type in the `OptimismPortal`.
+  *   Challengers. This is the role that can delete `L2OutputOracleProxy`'s output roots in the Optimism protocol.
+        <Callout type="info">
+        After the FPAC upgrade, the `CHALLENGER` is a permissionless role in the `FaultDisputeGame`.
+        However, in the PermissionedDisputeGame, the `CHALLENGER` role is the only party allowed to dispute
+        output proposals created by the `PROPOSER` role.
+        </Callout>
+</Steps>
 
-            
-As a result, here is a visualization of all the relationships the CheckSecurityConfigs.s.sol script checks:
+  As a result, here is a visualization of all the relationships the `CheckSecurityConfigs.s.sol` script checks:
 
   L1ERC721BridgeProxy -- "admin()" --> ProxyAdmin
   L1ERC721BridgeProxy -- "messenger()" --> L1CrossDomainMessengerProxy
@@ -92,7 +116,7 @@ As a result, here is a visualization of all the relationships the CheckSecurityC
   ProxyAdmin -- "owner()" --> ProxyOwnerMultisig
 
   L1CrossDomainMessengerProxy -- "PORTAL()" --> OptimismPortalProxy
-  L1CrossDomainMessengerProxy -- "addressManager[address(this)]" --> AddressManager
+  L1CrossDomainMessengerProxy -- "addressManager\[address(this)]" --> AddressManager
 
   L1StandardBridgeProxy -- "getOwner()" -->  ProxyAdmin
   L1StandardBridgeProxy -- "messenger()" --> L1CrossDomainMessengerProxy
@@ -101,8 +125,8 @@ As a result, here is a visualization of all the relationships the CheckSecurityC
 
   OptimismPortalProxy -- "admin()" --> ProxyAdmin
   OptimismPortalProxy -- "GUARDIAN()" --> GuardianMultisig
-  OptimismPortalProxy -- "L2_ORACLE()" --> L2OutputOracleProxy
-  OptimismPortalProxy -- "SYSTEM_CONFIG()" --> SystemConfigProxy
+  OptimismPortalProxy -- "L2\_ORACLE()" --> L2OutputOracleProxy
+  OptimismPortalProxy -- "SYSTEM\_CONFIG()" --> SystemConfigProxy
   OptimismPortalProxy -- "disputeGameFactory()" --> DisputeGameFactoryProxy
 
   L2OutputOracleProxy -- "admin()" --> ProxyAdmin
@@ -118,9 +142,4 @@ As a result, here is a visualization of all the relationships the CheckSecurityC
 
   DelayedWETHProxy -- "admin()" --> ProxyAdmin
   DelayedWETHProxy -- "owner()" --> ProxyAdminOwner
-
-
-
-
-
 
