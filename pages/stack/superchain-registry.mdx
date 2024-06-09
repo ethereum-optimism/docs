@@ -12,7 +12,7 @@ import { Callout, Steps } from 'nextra/components'
   The [superchain registry](https://github.com/ethereum-optimism/superchain-registry/tree/main) is a work in progress and still must be approved by Optimism Governance. Until that time, the configuration described here is subject to change.
 </Callout>
 
-This page provides a holistic view of Superchain configurations, covering mainnet and testnet targets, member chains, contract permissions, and tools for contributing new chains or superchains. 
+This page provides a holistic view of Superchain configurations, covering mainnet and testnet targets, member chains, contract permissions, and tools for contributing new chains or superchains.
 The goal is to offer essential data for seamless integration into OP Stack software while facilitating the derivation of complete deployment artifacts.
 
 The Superchain Registry is a critical component of the Optimism ecosystem, particularly in managing the inclusion and
@@ -61,8 +61,8 @@ A second module exists in this repo whose purpose is to validate the config expo
 It is a separate module to avoid import cycles and polluting downstream dependencies with things like `go-ethereum`
 (which is used in the validation tests).
 The modules are tracked by a top-level go.work file.
-The associated `go.work.sum` file is gitignored and not crucial to [typical workflows]
-(https://github.com/ethereum-optimism/superchain-registry/blob/main/.circleci/config.yml).
+The associated `go.work.sum` file is gitignored and not crucial to \[typical workflows]
+([https://github.com/ethereum-optimism/superchain-registry/blob/main/.circleci/config.yml](https://github.com/ethereum-optimism/superchain-registry/blob/main/.circleci/config.yml)).
 
 ## CheckSecurityConfigs
 
@@ -88,7 +88,7 @@ More specifically, it checks the following privilege grants and role designation
       the portal it trusts to deposit transactions and get L2 senders.
   *   Trusted oracles. For example, `OptimismPortalProxy` specifies the L2 oracle they trust with the L2 state root information.
         <Callout type="info">
-        After the FPAC upgrade, the `OptimismPortalProxy` specifies the `DisputeGameFactory` they trust rather than the legacy `L2OutputOracle` contract.
+          After the FPAC upgrade, the `OptimismPortalProxy` specifies the `DisputeGameFactory` they trust rather than the legacy `L2OutputOracle` contract.
         </Callout>
   *   Trusted system config. For example, `OptimismPortalProxy` specifies the system config they trust to get resource config from. TODO(issues/37): add checks for the ResourceMetering contract.
 
@@ -98,48 +98,47 @@ More specifically, it checks the following privilege grants and role designation
       *   After the FPAC upgrade, the `Guardian` can also blacklist dispute games and change the respected game type in the `OptimismPortal`.
   *   Challengers. This is the role that can delete `L2OutputOracleProxy`'s output roots in the Optimism protocol.
         <Callout type="info">
-        After the FPAC upgrade, the `CHALLENGER` is a permissionless role in the `FaultDisputeGame`.
-        However, in the PermissionedDisputeGame, the `CHALLENGER` role is the only party allowed to dispute
-        output proposals created by the `PROPOSER` role.
+          After the FPAC upgrade, the `CHALLENGER` is a permissionless role in the `FaultDisputeGame`.
+          However, in the PermissionedDisputeGame, the `CHALLENGER` role is the only party allowed to dispute
+          output proposals created by the `PROPOSER` role.
         </Callout>
 </Steps>
 
-  As a result, here is a visualization of all the relationships the `CheckSecurityConfigs.s.sol` script checks:
+As a result, here is a visualization of all the relationships the `CheckSecurityConfigs.s.sol` script checks:
 
-  L1ERC721BridgeProxy -- "admin()" --> ProxyAdmin
-  L1ERC721BridgeProxy -- "messenger()" --> L1CrossDomainMessengerProxy
+L1ERC721BridgeProxy -- "admin()" --> ProxyAdmin
+L1ERC721BridgeProxy -- "messenger()" --> L1CrossDomainMessengerProxy
 
-  OptimismMintableERC20FactoryProxy -- "admin()" --> ProxyAdmin
-  OptimismMintableERC20FactoryProxy -- "BRIDGE()" --> L1StandardBridgeProxy
+OptimismMintableERC20FactoryProxy -- "admin()" --> ProxyAdmin
+OptimismMintableERC20FactoryProxy -- "BRIDGE()" --> L1StandardBridgeProxy
 
-  ProxyAdmin -- "addressManager()" --> AddressManager
-  ProxyAdmin -- "owner()" --> ProxyOwnerMultisig
+ProxyAdmin -- "addressManager()" --> AddressManager
+ProxyAdmin -- "owner()" --> ProxyOwnerMultisig
 
-  L1CrossDomainMessengerProxy -- "PORTAL()" --> OptimismPortalProxy
-  L1CrossDomainMessengerProxy -- "addressManager\[address(this)]" --> AddressManager
+L1CrossDomainMessengerProxy -- "PORTAL()" --> OptimismPortalProxy
+L1CrossDomainMessengerProxy -- "addressManager\[address(this)]" --> AddressManager
 
-  L1StandardBridgeProxy -- "getOwner()" -->  ProxyAdmin
-  L1StandardBridgeProxy -- "messenger()" --> L1CrossDomainMessengerProxy
+L1StandardBridgeProxy -- "getOwner()" -->  ProxyAdmin
+L1StandardBridgeProxy -- "messenger()" --> L1CrossDomainMessengerProxy
 
-  AddressManager -- "owner()" -->  ProxyAdmin
+AddressManager -- "owner()" -->  ProxyAdmin
 
-  OptimismPortalProxy -- "admin()" --> ProxyAdmin
-  OptimismPortalProxy -- "GUARDIAN()" --> GuardianMultisig
-  OptimismPortalProxy -- "L2\_ORACLE()" --> L2OutputOracleProxy
-  OptimismPortalProxy -- "SYSTEM\_CONFIG()" --> SystemConfigProxy
-  OptimismPortalProxy -- "disputeGameFactory()" --> DisputeGameFactoryProxy
+OptimismPortalProxy -- "admin()" --> ProxyAdmin
+OptimismPortalProxy -- "GUARDIAN()" --> GuardianMultisig
+OptimismPortalProxy -- "L2\_ORACLE()" --> L2OutputOracleProxy
+OptimismPortalProxy -- "SYSTEM\_CONFIG()" --> SystemConfigProxy
+OptimismPortalProxy -- "disputeGameFactory()" --> DisputeGameFactoryProxy
 
-  L2OutputOracleProxy -- "admin()" --> ProxyAdmin
-  L2OutputOracleProxy -- "CHALLENGER()" --> ChallengerMultisig
+L2OutputOracleProxy -- "admin()" --> ProxyAdmin
+L2OutputOracleProxy -- "CHALLENGER()" --> ChallengerMultisig
 
-  SystemConfigProxy -- "admin()" --> ProxyAdmin
-  SystemConfigProxy -- "owner()" --> SystemConfigOwnerMultisig
+SystemConfigProxy -- "admin()" --> ProxyAdmin
+SystemConfigProxy -- "owner()" --> SystemConfigOwnerMultisig
 
-  DisputeGameFactoryProxy -- "admin()" --> ProxyAdmin
-  DisputeGameFactoryProxy -- "owner()" --> ProxyAdminOwner
+DisputeGameFactoryProxy -- "admin()" --> ProxyAdmin
+DisputeGameFactoryProxy -- "owner()" --> ProxyAdminOwner
 
-  AnchorStateRegistryProxy -- "admin()" --> ProxyAdmin
+AnchorStateRegistryProxy -- "admin()" --> ProxyAdmin
 
-  DelayedWETHProxy -- "admin()" --> ProxyAdmin
-  DelayedWETHProxy -- "owner()" --> ProxyAdminOwner
-
+DelayedWETHProxy -- "admin()" --> ProxyAdmin
+DelayedWETHProxy -- "owner()" --> ProxyAdminOwner
