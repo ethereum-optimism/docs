@@ -50,7 +50,7 @@ const config: DocsThemeConfig = {
     key: 'fp-mainnet-release',
     text: (
       <a href="/builders/notices/fp-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fault Proof Breaking Changes">
-      📣📣📣 ATTENTION: Fault Proofs are planned for OP Mainnet. <strong><i>Withdrawal claims submitted after June 3 will need to be resubmitted after the upgrade</i></strong>, which will be at least 7 days later. Click here for more info. 📣📣📣
+      📣📣📣 ATTENTION: Fault Proofs are planned for OP Mainnet. <strong><i>Withdrawal claims submitted after June 3 will need to be reproven after the upgrade</i></strong>, which will be at least 7 days later. Click here for more info. 📣📣📣
       </a>
     )
   },
