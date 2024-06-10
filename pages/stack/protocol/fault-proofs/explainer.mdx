@@ -28,9 +28,9 @@ See the permission fault proofs diagram below for more details:
 <Image src="/img/op-stack/protocol/fp-permissionless.png" alt="Permissionless Fault Proofs flow" width={700} height={600} />
 
 In [Optimistic Rollups (OP Stack Chains)](/stack/protocol/rollup/overview), there is a \~1 week challenge period where anyone can challenge the output root if they see that the root is not an accurate representation of the rollup's state.
-With permissionless fault proofs, anyone can spin up their own validator node that can either propose a state (output root) or dispute a state root (output proposal) submitted by a proposer. 
+With permissionless fault proofs, anyone can spin up their own node and challenger service that can either propose a state (output root) or dispute a state root (output proposal) submitted by a proposer. Specifically, the additional challenger service (`op-challenger`) can be attached to the node to particiapte in the dispute games.
 
-The validator node can:
+The node can:
 
 *   Post claims about an OP Stack chain's state to Ethereum (i.e, propose output roots)
 *   Challenge invalid claims (output roots) made by other validators
@@ -41,7 +41,7 @@ Fault Proof for OP Stack Chains is [modular in design](/stack/protocol/fault-pro
 
 Additionally, the following [security safeguards](/stack/protocol/fault-proofs/fp-security) have been built around the game, as follows:
 
-*   An off chain monitoring system has been set up to monitor all proposed roots and ensure they align with the correct state.
+*   An off chain monitoring system has been set up to monitor all proposed roots and ensure they align with the correct state. See [`op-dispute-mon`](https://github.com/ethereum-optimism/optimism/blob/develop/op-dispute-mon/README.md?plain=1) for more details.
 *   After a root is finalized through a game, an additional delay has been added before withdrawals can occur. During this period, the `GUARDIAN` role can reject the root. This will allow the monitoring to stop invalid withdrawals.
 *   A contract called `DelayedWETH` has been set up to hold the bonds and only allow payouts after a delay, so that bonds can be redirected towards the rightful recipient in the event that a game is abused.
 *   If there is a disagreement over the result of the fault proofs, the security council can intervene and reject the outcome of the dispute game.
@@ -73,11 +73,24 @@ Users are able to complete the full withdrawal cycle without depending on any pr
 The caveat is that the Guardian role has the ability to override the system by either blacklisting games or reverting to a permissioned system.
 So the trust assumption is reduced to requiring only that the guardian role does not act to intervene but there is still a trust assumption, inline with the stage 1 requirements.
 
-### Since the roles of proposer and challenger will be open to everyone, is there a guide available outlining the best practices for running them?
+### Since the roles of proposer and challenger will be open to everyone, are guides available outlining the best practices for running them?
 
 It's not expected that normal users run `op-proposer` to regularly propose output roots.
 Users would generally just propose a single output root if they need to withdraw and the chain operator isn't proposing outputs for them via direct calls to the `DisputeGameFactory` via Etherscan or using the [`create-game`](https://github.com/ethereum-optimism/optimism/tree/develop/op-challenger#create-game) subcommand of op-challenger.
 OP-challenger docs are forthcoming.
+
+### How much ether should a chain operator put aside to operate the fault proof system?
+As much you can spare. The nominal operating cost of running FPs (i.e., assuming no invalid proposals or malicious actors) will depend on the initial bond set for the Dispute Game and the frequency of posting proposals. 
+Assuming op-mainnet parameters, where we'll be posting proposals hourly, that's 0.08 ETH per hour. Assuming a 7 day dispute window, you'll need roughly 14 ETH (including gas costs) to make proposals.
+If chains are using the similar FP deploy configs as op-mainnet, I recommend they stick to a 0.08 ETH initial bond.
+
+However, the capital requirements for operating a FP chain in itself is much larger than 14 ETH. An operator that secures their chain using FPs must be willing to stake alot of ETH to secure the chain. 
+Since all it takes is one bad dispute game to loot the entire bridge. One may decide the capital requirements aren't worth it, and use only a Permissioned FP system.
+The capital requirements will be improved in the later stages of Fault Proofs to make it more feasible for smaller chains. But right now, unless you're able to marshal several thousand ETH in funds to defend a permissionless FP chain, it's probably best to use permissioned FPs.
+
+One middle ground is to put a hard cap on operating costs. Say 100 ETH. And then switch to permissioned FPs only when those costs are overrun (cuz the chain is under attack). 
+If you do this, then you'll have to contend with the possible reputational and switching costs of reverting to a permissioned FP system though. 
+For example, withdrawals against permissioned FPs will be invalidated and would have to be re-created for the permissioned FPs. 100 ETH isn't really alot for a well-funded attacker to try something - if not to frustrate chain operations.
 
 ### How large are the bonds expected to be needed to sustain and win a dispute?
 
