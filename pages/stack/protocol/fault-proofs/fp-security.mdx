@@ -8,51 +8,54 @@ import { Callout } from 'nextra/components'
 
 # Fault Proofs Mainnet Security
 
-<Callout type="warning">
-  Some contracts for the Fault Proof Mainnet system are still being updated.
-  Current versions of the Dispute Game contracts can be found within the [Optimism Monorepo](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/src/dispute).
-  All content below is subject to change as these contracts are finalized.
+<Callout type="info">
+  Source code for Fault Proof Mainnet contracts approved by Optimism Governance can be found [here](https://github.com/ethereum-optimism/optimism/tree/op-contracts/v1.5.0).
 </Callout>
 
-This page details changes to the security model for the Fault Proofs Mainnet System. The most significant change introduced by Fault Proof Mainnet is the modification of the `OptimismPortal` to reference a new contract, the `DisputeGameFactory`, instead of the `L2OutputOracle`.
-*   The `DisputeGameFactory` contract generates `DisputeGame` contract instances that each act as a host to a proposed output root for a given block.
-*   Unlike the `L2OutputOracle`, the `DisputeGameFactory` contract is no longer an entirely trusted contract but instead offers users the ability to play a "fault dispute game" in which the correctness of the proposal is determined programmatically.
+This page details changes to the security model of the OP Stack with the introduction of the Fault Proof Mainnet upgrade.
+The most significant change introduced by the Fault Proof Mainnet upgrade is the modification of the `OptimismPortal` to reference the `DisputeGameFactory` instead of the permissioned `L2OutputOracle`.
+*   The `DisputeGameFactory` contract generates `FaultDisputeGame` contract instances that each act as a host to a proposal about the state of the OP Stack chain at a given block number.
+*   Unlike the `L2OutputOracle`, the `DisputeGameFactory` contract offers users the ability to permissionlessly play "fault dispute games" in which the correctness of the proposal is determined programmatically.
 
 ## Security Model
 
 Fault Proof Mainnet is a large contract upgrade that introduces a number of novel components.
-Our approach to FPM security has therefore been to limit the blast radius of any potential bugs to specific contracts and fallback mechanisms that can be easily audited.
+Given the relative complexity of these novel components, the approach to security for FPM has been to limit the blast radius of potential bugs to very specific contracts and fallback mechanisms that can be easily audited.
 
 ### Handling Invalid Proposals
 
-All of the security mechanisms we put in place generally revolve around the possibility that a dispute game may incorrectly finalize and invalid proposal.
+All of the security mechanisms put in place generally revolve around the possibility that a `FaultDisputeGame` contract may incorrectly finalize an invalid proposal.
 There are two major potential impacts of such an invalid proposal:
 
 1.  An invalid proposal would allow users to prove and execute withdrawal transactions against invalid states, potentially allowing for the withdrawal of ETH or ERC-20 tokens that those users should not be able to withdraw.
-2.  An invalid proposal would cause honest challengers to lose the bonds they submitted in order to play a role within the `DisputeGame`. Bonds can become quite large, so this can have a significant impact on the effected challengers.
+2.  An invalid proposal would cause honest challengers to lose the bonds they submitted in order to play a role within the `FaultDisputeGame`. Bonds can become quite large, so this can have a significant impact on the affected challengers.
 
-### Understanding `OptimismPortal` and `DisputeGame` Contracts
+Potential impact is managed through the introduction of a number of safeguards within the `OptimismPortal` and `FaultDisputeGame` contracts.
 
-We address these problems by encapsulating security concerns into two contracts:
+### Safeguards Within `OptimismPortal`
 
-1.  The `OptimismPortal` includes various security mechanisms, some old and some new, that allow the `GUARDIAN` and `SystemOwner` roles to collaborate to prevent invalid proposals from impacting withdrawals.
-2.  The `DisputeGame` contracts store bonds within a `DelayedWETH` contract that is managed by the `SystemOwner`. Withdrawals from the `DelayedWETH` contract are delayed which gives the `SystemOwner` the ability to manually recover from situations in which bonds would be incorrectly distributed. This delay will most likely be set to a period of 7 days to give the `SystemOwner` sufficient time to respond to potential security concerns.
+The `OptimismPortal` contract includes various security mechanisms that allow the `Guardian` and `SystemOwner` roles to collaborate to prevent invalid proposals from impacting withdrawals.
 
-We specifically include the following capabilities within the `OptimismPortal`:
+*   The `SystemOwner` can replace the `Guardian` address.
+*   The `Guardian` can trigger the global pause mechanism found in the original system.
+*   The `Guardian` can "blacklist" specific `FaultDisputeGame` contracts that resolve incorrectly.
+*   The `Guardian` can change the respected type of `FaultDisputeGame` contract in the case that an entire class of `FaultDisputeGame` contracts is found to have critical bugs. If desired, the `Guardian` can also choose to revert to a `PermissionedDisputeGame` contract that only allows specific roles to submit and challenge proposals.
 
-*   The `SystemOwner` can trigger the global pause mechanism found in the original system.
-*   The `SystemOwner` can replace the `GUARDIAN` address.
-*   The `GUARDIAN` can "blacklist" specific `DisputeGame` contracts that resolve incorrectly.
-*   The `GUARDIAN` can change the respected type of `DisputeGame` contract in the case that an entire class of `DisputeGame` contracts is found to have critical bugs. A `PermissionedDisputeGame` is provided by default that allows the same `PROPOSER` and `CHALLENGER` roles found in the original system to participate. If required, the `GUARDIAN` can choose to revert to this `PermissionedDisputeGame`.
+### Safeguards Within `FaultDisputeGame`
 
-And these capabilities within the `DelayedWETH` contract:
+The `FaultDisputeGame` contracts store bonds within a `DelayedWETH` contract that is managed by the `SystemOwner`. Withdrawals from the `DelayedWETH` contract are delayed which gives the `SystemOwner` the ability to manually recover from situations in which bonds would be incorrectly distributed. This delay is set to a period of 7 days to give the `SystemOwner` or `Guardian` sufficient time to respond to potential security concerns.
 
-*   The `SystemOwner` can trigger the global pause mechanism to halt WETH withdrawals.
+### Safeguards Within `DelayedWETH`
+
+*   The `SystemOwner` can replace the `Guardian` address.
 *   The `SystemOwner` can hold funds from any specific `DisputeGame` contract.
 *   The `SystemOwner` can remove funds from the `DelayedWETH` contract if the issue extends to so many `DisputeGame` contracts that holding funds from specific contracts is not viable.
+*   The `Guardian` can trigger the global pause mechanism to halt WETH withdrawals.
 
-As with the original system, the cumulative effect of these security capabilities is that the `GUARDIAN` role provides fast response capabilities while the `SystemOwner` can always step in to resolve all classes of bugs that could result in a loss of funds.
-The most significant change in security model with the introduction of Fault Proof Mainnet is that `SystemOwner` can take a more passive role as most potential safety failures can be handled automatically the Fault Proof system instead of needing to be handled by a permissioned role like the `GUARDIAN`.
+### Cumulative Security Impact
+
+As with the original system, the cumulative effect of these security capabilities is that the `Guardian` role provides fast response capabilities while the `SystemOwner` can always step in to resolve all classes of bugs that could result in a loss of funds.
+The most significant change in security model with the introduction of Fault Proof Mainnet is that `SystemOwner` can take a more passive role as invalid proposals will generally be rejected by the Fault Proof system while the `Guardian` can act as a backstop only in case of a failure in the fault proof game.
 
 ## Next Steps
 

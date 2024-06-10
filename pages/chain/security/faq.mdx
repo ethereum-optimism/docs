@@ -29,28 +29,20 @@ All upgrades to the OP Mainnet system must be approved by both component multisi
 ## Fault Proofs
 
 <Callout>
-  It is important to understand that **fault proofs are not a silver bullet** and that **fault proofs do not meaningfully improve the security of a system if the system still has a multisig or security council that can instantly upgrade the system**.
+  It is important to understand that **fault proofs are not a silver bullet** and that **fault proofs provide limited improvements to the security of a system if the system still has a multisig or security council that can instantly upgrade the system**.
   OP Mainnet is following a multi-client and multi-proof approach designed to eventually remove the need for instant upgrades entirely.
 </Callout>
 
-Fault proofs are a mechanism that allow users to prove if a transaction output published to the [`L2OutputOracle`](https://github.com/ethereum-optimism/optimism/blob/5877ee24cc9aaef5848c1372e0e196707fb336a0/packages/contracts-bedrock/src/L1/L2OutputOracle.sol) contract is invalid.
-The behavior and security model of the `L2OutputOracle` is determined by three roles:
+Users can withdraw ETH and tokens from OP Mainnet to Ethereum by submitting a withdrawal proof that shows the withdrawal was actually included inside of OP Mainnet.
+Withdrawals are proven against proposals about the state of OP Mainnet that are published through the [`DisputeGameFactory`](https://github.com/ethereum-optimism/optimism/blob/363c5d7f4fb14180a0e2a28cc948fe2146f03dce/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol) contract.
 
-1.  The `PROPOSER` is a permissioned role that is given the authority to publish output roots.
-2.  The `GUARDIAN` is a permissioned role that is given the authority to remove output roots published by the `PROPOSER`.
-3.  The `SystemOwner` is the address that controls the `ProxyAdmin` contract, which in turn controls the proxy in front of the `L2OutputOracle` contract.
+Proposals can be submitted to the `DisputeGameFactory` contract by any user and submissions do not require any special permissions.
+Each submitted proposal creates a [`FaultDisputeGame`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/FaultDisputeGame.sol) contract that allows any other user to challenge the validity of a proposal by participating in a "fault proof" process.
+A more detailed explanation of the fault proof game can be found in the [Fault Proofs Explainer](/stack/protocol/fault-proofs/explainer).
 
-The cumulative effect of these roles on the security model is therefore:
-
-1.  A liveness failure can occur if the `PROPOSER` fails to publish new proposals AND the `SystemOwner` does not change the `PROPOSER`.
-2.  A safety failure can occur if the `PROPOSER` publishes an invalid output root AND the `GUARDIAN` fails to remove the invalid output AND the `SystemOwner` does not change the `GUARDIAN`.
-3.  The `SystemOwner` can trigger the system-wide pause action to halt activity in the `OptimismPortal` to give itself time to carry out one of the above actions.
-
-In summary, the `PROPOSER` and `GUARDIAN` roles essentially exist for convenience and short-term safety and liveness while the security of the system ultimately lies with the `SystemOwner`.
-
-<Callout type="info">
-  See the [FP Mainnet Security Model](/stack/protocol/fault-proofs/fp-security) for a detailed walk-thru of significant changes to Fault Proof Mainnet for the OP Stack.
-</Callout>
+Although the fault proof game is permissionless, the Optimism Security Council acting as the [Guardian](/chain/security/priviledged-roles#guardian) role provides a backstop in case of a failure in the fault proof game.
+Each proposal must wait for a delay period during which the Guardian can prevent invalid proposals from being used to withdraw ETH or tokens through a number of safety hatches.
+The Guardian can also choose to shift the system to use a `PermissionedDisputeGame` in which only specific `PROPOSER` and `CHALLENGER` roles can submit and challenge proposals.
 
 ## Bugs and Unknowns
 
@@ -70,8 +62,8 @@ Although users can always bypass the Sequencer by sending transactions directly 
 
 ### Does OP Mainnet have fault proofs?
 
-**No**, OP Mainnet does not currently have fault proofs.
-**Fault proofs do not meaningfully improve the security of a system if that system can be upgraded within the 7 day challenge window ("fast upgrade keys")**.
+**Yes**, OP Mainnet has fault proofs.
+It is important to note that **fault proofs are not a silver bullet** and that **fault proofs provide limited improvements to the security of a system if the system still has a multisig or security council that can instantly upgrade the system**.
 A system with fast upgrade keys, such as OP Mainnet, is fully dependent on the upgrade keys for security.
 OP Mainnet's goal is to be the first system that deploys fault proofs that can secure the system by themselves, without fast upgrade keys.
 
