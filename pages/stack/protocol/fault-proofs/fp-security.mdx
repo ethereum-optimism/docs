@@ -22,15 +22,15 @@ The most significant change introduced by the Fault Proof Mainnet upgrade is the
 Fault Proof Mainnet is a large contract upgrade that introduces a number of novel components.
 Given the relative complexity of these novel components, the approach to security for FPM has been to limit the blast radius of potential bugs to very specific contracts and fallback mechanisms that can be easily audited.
 
-### Handling Invalid Proposals
+### Handling Invalid Game Results
 
-All of the security mechanisms put in place generally revolve around the possibility that a `FaultDisputeGame` contract may incorrectly finalize an invalid proposal.
-There are two major potential impacts of such an invalid proposal:
+All of the security mechanisms put in place generally revolve around the possibility that a `FaultDisputeGame` contract may incorrectly finalize an invalid game result.
+There are two variations of this:
 
-1.  An invalid proposal would allow users to prove and execute withdrawal transactions against invalid states, potentially allowing for the withdrawal of ETH or ERC-20 tokens that those users should not be able to withdraw.
-2.  An invalid proposal would cause honest challengers to lose the bonds they submitted in order to play a role within the `FaultDisputeGame`. Bonds can become quite large, so this can have a significant impact on the affected challengers.
+1.  Resolving that an invalid proposal is valid potentially leading to stolen funds, and 
+2.  Resolving that a valid proposal is invalid causing liveness delays or failures.
 
-Potential impact is managed through the introduction of a number of safeguards within the `OptimismPortal` and `FaultDisputeGame` contracts.
+Both cases would cause honest challengers to lose bonds (unless the `Guardian` stepped in). Potential impact is managed through the introduction of a number of safeguards within the `OptimismPortal` and `FaultDisputeGame` contracts.
 
 ### Safeguards Within `OptimismPortal`
 
@@ -43,7 +43,7 @@ The `OptimismPortal` contract includes various security mechanisms that allow th
 
 ### Safeguards Within `FaultDisputeGame`
 
-The `FaultDisputeGame` contracts store bonds within a `DelayedWETH` contract that is managed by the `SystemOwner`. Withdrawals from the `DelayedWETH` contract are delayed which gives the `SystemOwner` the ability to manually recover from situations in which bonds would be incorrectly distributed. This delay is set to a period of 7 days to give the `SystemOwner` or `Guardian` sufficient time to respond to potential security concerns.
+The `FaultDisputeGame` contracts store bonds within a `DelayedWETH` contract that is managed by the `SystemOwner`. Withdrawals from the `DelayedWETH` contract are delayed which gives the `SystemOwner` the ability to manually recover from situations in which bonds would be incorrectly distributed. This delay is set to 7 days on OP Mainnet to give the `SystemOwner` or `Guardian` sufficient time to respond to potential security concerns.
 
 ### Safeguards Within `DelayedWETH`
 
