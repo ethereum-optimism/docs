@@ -26,6 +26,32 @@ This multisig is a [2-of-2 nested multisig](https://etherscan.io/address/0x5a0Aa
 This multisig can be used to upgrade core OP Mainnet smart contracts **without upgrade delays** to allow for quick responses to potential security concerns.
 All upgrades to the OP Mainnet system must be approved by both component multisigs and either can veto an upgrade.
 
+## Fault Proofs
+
+<Callout>
+  It is important to understand that **fault proofs are not a silver bullet** and that **fault proofs do not meaningfully improve the security of a system if the system still has a multisig or security council that can instantly upgrade the system**.
+  OP Mainnet is following a multi-client and multi-proof approach designed to eventually remove the need for instant upgrades entirely.
+</Callout>
+
+Fault proofs are a mechanism that allow users to prove if a transaction output published to the [`L2OutputOracle`](https://github.com/ethereum-optimism/optimism/blob/5877ee24cc9aaef5848c1372e0e196707fb336a0/packages/contracts-bedrock/src/L1/L2OutputOracle.sol) contract is invalid.
+The behavior and security model of the `L2OutputOracle` is determined by three roles:
+
+1.  The `PROPOSER` is a permissioned role that is given the authority to publish output roots.
+2.  The `GUARDIAN` is a permissioned role that is given the authority to remove output roots published by the `PROPOSER`.
+3.  The `SystemOwner` is the address that controls the `ProxyAdmin` contract, which in turn controls the proxy in front of the `L2OutputOracle` contract.
+
+The cumulative effect of these roles on the security model is therefore:
+
+1.  A liveness failure can occur if the `PROPOSER` fails to publish new proposals AND the `SystemOwner` does not change the `PROPOSER`.
+2.  A safety failure can occur if the `PROPOSER` publishes an invalid output root AND the `GUARDIAN` fails to remove the invalid output AND the `SystemOwner` does not change the `GUARDIAN`.
+3.  The `SystemOwner` can trigger the system-wide pause action to halt activity in the `OptimismPortal` to give itself time to carry out one of the above actions.
+
+In summary, the `PROPOSER` and `GUARDIAN` roles essentially exist for convenience and short-term safety and liveness while the security of the system ultimately lies with the `SystemOwner`.
+
+<Callout type="info">
+  See the [FP Mainnet Security Model](/stack/protocol/fault-proofs/fp-security) for a detailed walk-thru of significant changes to Fault Proof Mainnet for the OP Stack.
+</Callout>
+
 ## Bugs and Unknowns
 
 Please also keep in mind that just like any other system, **the Optimism codebase may contain unknown bugs** that could lead to the loss of some or all of the ETH or tokens held within the system.
@@ -34,17 +60,6 @@ The OP Stack has been audited [on many occasions](https://github.com/ethereum-op
 It's important to understand that using OP Mainnet inherently exposes you to the risk of bugs within the Optimism codebase, and that you use OP Mainnet at your own risk.
 
 ## Work in Progress
-
-### Fault Proofs
-
-Fault proofs are a mechanism that allow users to prove if a transaction output published to the [`L2OutputOracle`](https://github.com/ethereum-optimism/optimism/blob/5877ee24cc9aaef5848c1372e0e196707fb336a0/packages/contracts-bedrock/src/L1/L2OutputOracle.sol) contract is invalid.
-Fault proofs are an important part of future of OP Mainnet security and begin to reduce the need for a multisig.
-An alpha version of the first fault proof mechanism is [currently in testing](https://blog.oplabs.co/building-a-fault-proof-system/).
-
-<Callout>
-It is important to understand that **fault proofs are not a silver bullet** and that **fault proofs do not meaningfully improve the security of a system if the system still has a multisig or security council that can instantly upgrade the system**.
-OP Mainnet is following a multi-client and multi-proof approach designed to eventually remove the need for instant upgrades entirely.
-</Callout>
 
 ### Sequencer Decentralization
 
