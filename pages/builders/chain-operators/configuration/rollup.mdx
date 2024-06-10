@@ -1,16 +1,17 @@
 ---
-title: Chain Configuration
+title: Rollup Configuration
 lang: en-US
-description: Learn about the rollup configuration keys and values.
+description: Learn the OP Stack rollup configurations.
 ---
 
 import { Callout } from 'nextra/components'
 
-# Chain Configuration
+# Rollup Configuration
 
-The OP Stack is a flexible platform with various configuration values that you
-can tweak to fit your specific needs. If you're looking to fine-tune your OP
-Stack chain deployment, look no further.
+New OP Stack blockchains are currently configured with a JSON file inside the
+Optimism repository. You can see example configurations in the
+[deploy-config directory](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/deploy-config).
+
 
 <Callout type="warning">
   The Rollup configuration is an active work in progress and will likely evolve
@@ -25,15 +26,13 @@ Stack chain deployment, look no further.
   this [governance thread](https://gov.optimism.io/t/season-6-draft-standard-rollup-charter/8135).
 </Callout>
 
-## Rollup Configuration
 
-New OP Stack blockchains are currently configured with a JSON file inside the
-Optimism repository. You can see example configurations in the
-[deploy-config directory](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/deploy-config).
+## Offset Values
 
-### Offset Values
+These offset values determine when network upgrades (hardforks) activate on
+your blockchain.
 
-#### l2GenesisRegolithTimeOffset
+### l2GenesisRegolithTimeOffset
 
 L2GenesisRegolithTimeOffset is the number of seconds after genesis block that
 Regolith hard fork activates. Set it to 0 to activate at genesis. Nil to
@@ -42,7 +41,7 @@ disable Regolith.
 *   **Type:** Number of seconds
 *   **Default:** nil
 
-#### l2GenesisCanyonTimeOffset
+### l2GenesisCanyonTimeOffset
 
 L2GenesisCanyonTimeOffset is the number of seconds after genesis block that
 Canyon hard fork activates. Set it to 0 to activate at genesis. Nil to
@@ -51,7 +50,7 @@ disable Canyon.
 *   **Type:** Number of seconds
 *   **Default:** nil
 
-#### l2GenesisDeltaTimeOffset
+### l2GenesisDeltaTimeOffset
 
 L2GenesisDeltaTimeOffset is the number of seconds after genesis block that
 Delta hard fork activates. Set it to 0 to activate at genesis. Nil to disable
@@ -60,7 +59,7 @@ Delta.
 *   **Type:** Number of seconds
 *   **Default:** nil
 
-#### l2GenesisEcotoneTimeOffset
+### l2GenesisEcotoneTimeOffset
 
 L2GenesisEcotoneTimeOffset is the number of seconds after genesis block that
 Ecotone hard fork activates. Set it to 0 to activate at genesis. Nil to disable
@@ -69,7 +68,7 @@ Ecotone.
 *   **Type:** Number of seconds
 *   **Default:** nil
 
-#### l2GenesisFjordTimeOffset
+### l2GenesisFjordTimeOffset
 
 L2GenesisFjordTimeOffset is the number of seconds after genesis block that
 Fjord hard fork activates. Set it to 0 to activate at genesis. Nil to
@@ -78,7 +77,7 @@ disable Fjord.
 *   **Type:** Number of seconds
 *   **Default:** nil
 
-#### l2GenesisInteropTimeOffset
+### l2GenesisInteropTimeOffset
 
 L2GenesisInteropTimeOffset is the number of seconds after genesis block that
 the Interop hard fork activates. Set it to 0 to activate at genesis. Nil to
@@ -87,7 +86,7 @@ disable Interop.
 *   **Type:** Number of seconds
 *   **Default:** nil
 
-#### l1CancunTimeOffset
+### l1CancunTimeOffset
 
 When Cancun activates. Relative to L1 genesis.
 
@@ -96,9 +95,9 @@ When Cancun activates. Relative to L1 genesis.
 
 ***
 
-### Admin addresses
+## Admin addresses
 
-#### finalSystemOwner
+### finalSystemOwner
 
 FinalSystemOwner is the owner of the system on L1. Any L1 contract that is
 ownable has this account set as its owner.
@@ -109,7 +108,7 @@ ownable has this account set as its owner.
     address to retain a common security model.
 *   **Notes:** Must not be `address(0)`
 
-#### proxyAdminOwner
+### proxyAdminOwner
 
 Address that will own the ProxyAdmin contract on L2. The L2 ProxyAdmin contract
 owns all of the Proxy contracts for every predeployed contract in the range
@@ -124,9 +123,9 @@ upgradeable.
 
 ***
 
-### Proxy Addresses
+## Proxy Addresses
 
-#### l1StandardBridgeProxy
+### l1StandardBridgeProxy
 
 L1StandardBridgeProxy represents the address of the L1StandardBridgeProxy on L1
 and is used as part of building the L2 genesis state.
@@ -135,7 +134,7 @@ and is used as part of building the L2 genesis state.
 *   **Default value:** None
 *   **Notes:** Must not be `address(0)`
 
-#### l1CrossDomainMessengerProxy
+### l1CrossDomainMessengerProxy
 
 L1CrossDomainMessengerProxy represents the address of the
 L1CrossDomainMessengerProxy on L1 and is used as part of building the L2
@@ -145,7 +144,7 @@ genesis state.
 *   **Default value:** None
 *   **Notes:** Must not be `address(0)`
 
-#### l1ERC721BridgeProxy
+### l1ERC721BridgeProxy
 
 L1ERC721BridgeProxy represents the address of the L1ERC721Bridge on L1 and is
 used as part of building the L2 genesis state.
@@ -154,7 +153,7 @@ used as part of building the L2 genesis state.
 *   **Default value:** None
 *   **Notes:** Must not be `address(0)`
 
-#### systemConfigProxy
+### systemConfigProxy
 
 SystemConfigProxy represents the address of the SystemConfigProxy on L1 and is
 used as part of the derivation pipeline.
@@ -163,7 +162,7 @@ used as part of the derivation pipeline.
 *   **Default value:** None
 *   **Notes:** Must not be `address(0)`
 
-#### optimismPortalProxy
+### optimismPortalProxy
 
 OptimismPortalProxy represents the address of the OptimismPortalProxy on L1 and
 is used as part of the derivation pipeline.
@@ -174,11 +173,11 @@ is used as part of the derivation pipeline.
 
 ***
 
-### Blocks
+## Blocks
 
 These fields apply to L2 blocks: Their timing, when they need to be written to L1, and how they get written.
 
-#### l2BlockTime
+### l2BlockTime
 
 Number of seconds between each L2 block. Must be \< = L1 block time (12 on mainnet and Sepolia).
 
@@ -189,7 +188,7 @@ Number of seconds between each L2 block. Must be \< = L1 block time (12 on mainn
 interoperability compatibility requirement, until de-risked/solved at app 
 layer.
 
-#### maxSequencerDrift
+### maxSequencerDrift
 
 How far the L2 timestamp can differ from the actual L1 timestamp.
 
@@ -197,7 +196,7 @@ How far the L2 timestamp can differ from the actual L1 timestamp.
 *   **Default value:** None
 *   **Notes:** Must not be `0`. 600 (10 minutes) is suggested.
 
-#### sequencerWindowSize
+### sequencerWindowSize
 
 Maximum number of L1 blocks that a Sequencer can wait to incorporate the 
 information in a specific L1 block. For example, if the window is 10 then the
@@ -211,7 +210,7 @@ L2 on Ethereum, assuming 12 second L1 blocktime). This is an important value
 for constraining the sequencer's ability to re-order transactions; higher 
 values would pose a risk to user protections.
 
-#### channelTimeout
+### channelTimeout
 
 Maximum number of L1 blocks that a transaction channel frame can be considered 
 valid. A transaction channel frame is a chunk of a compressed batch of 
@@ -221,7 +220,7 @@ transactions. After the timeout, the frame is dropped.
 *   **Default value:** None
 *   **Notes:** 300 (1 hour) is suggested
 
-#### p2pSequencerAddress
+### p2pSequencerAddress
 
 Address of the key that the Sequencer uses to sign blocks on the p2p network.
 
@@ -229,7 +228,7 @@ Address of the key that the Sequencer uses to sign blocks on the p2p network.
 *   **Default value:** None
 *   **Notes:** Sequencer, an address for which you own the private key
 
-#### batchInboxAddress
+### batchInboxAddress
 
 Address that Sequencer transaction batches are sent to on L1.
 
@@ -238,7 +237,7 @@ Address that Sequencer transaction batches are sent to on L1.
 *   **Standard Config Requirement:** Current convention is 
 `0xff000...000{chainId}`.
 
-#### batchSenderAddress
+### batchSenderAddress
 
 Address that nodes will filter for when searching for Sequencer transaction
 batches being sent to the batchInboxAddress. Can be updated later via the
@@ -248,7 +247,7 @@ SystemConfig contract on L1.
 *   **Default value:** Batcher, an address for which you own the private key.
 *   **Notes:** Must not be `address(0)`
 
-#### systemConfigStartBlock
+### systemConfigStartBlock
 
 SystemConfigStartBlock represents the block at which the op-node should start
 syncing from. It is an override to set this value on legacy networks where it
@@ -262,9 +261,9 @@ initialized.
 
 ***
 
-### Chain Information
+## Chain Information
 
-#### l1StartingBlockTag
+### l1StartingBlockTag
 
 Block tag for the L1 block where the L2 chain will begin syncing from.
 Generally recommended to use a finalized block to avoid issues with reorgs.
@@ -273,7 +272,7 @@ Generally recommended to use a finalized block to avoid issues with reorgs.
 *   **Default value:** None
 *   \**Notes:* Must not be `0`.
 
-#### l1ChainID
+### l1ChainID
 
 Chain ID of the L1 chain.
 
@@ -283,7 +282,7 @@ Chain ID of the L1 chain.
     Sepolia test network, and See [here](https://chainlist.org/?testnets=true)
     for other blockchains.
 
-#### l2ChainID
+### l2ChainID
 
 Chain ID of the L2 chain.
 
@@ -292,7 +291,7 @@ Chain ID of the L2 chain.
 *   \**Notes:* Must not be `0`. For security reasons, should be unique.
 *   **Standard Config Requirement:** Foundation-approved, globally unique value
 
-#### l2GenesisBlockExtraData
+### l2GenesisBlockExtraData
 
 L2GenesisBlockExtraData is configurable extradata. Will default to
 \[]byte("BEDROCK") if left unspecified.
@@ -300,7 +299,7 @@ L2GenesisBlockExtraData is configurable extradata. Will default to
 *   **Type:** Number
 *   **Default value:** \[]byte("BEDROCK")
 
-#### superchainConfigGuardian
+### superchainConfigGuardian
 
 SuperchainConfigGuardian represents the GUARDIAN account in the
 SuperchainConfig. Has the ability to pause withdrawals.
@@ -311,7 +310,7 @@ SuperchainConfig. Has the ability to pause withdrawals.
 
 ***
 
-### Gas
+## Gas
 
 *   **Standard Config Requirement:** Set such that Fee Margin is between 0 and
 50%.
@@ -319,7 +318,7 @@ SuperchainConfig. Has the ability to pause withdrawals.
 operators are driven to maintain a stable and reliable chain. When considering
 to change this value, careful deliberation is necessary.
 
-#### eip1559Elasticity
+### eip1559Elasticity
 
 EIP1559Elasticity is the elasticity of the EIP1559 fee market.
 
@@ -327,7 +326,7 @@ EIP1559Elasticity is the elasticity of the EIP1559 fee market.
 *   **Default value:** None
 *   \**Notes:* Must not be `0`.
 
-#### eip1559Denominator
+### eip1559Denominator
 
 EIP1559Denominator is the denominator of EIP1559 base fee market.
 
@@ -335,7 +334,7 @@ EIP1559Denominator is the denominator of EIP1559 base fee market.
 *   **Default value:** None
 *   \**Notes:* Must not be `0`.
 
-#### eip1559DenominatorCanyon
+### eip1559DenominatorCanyon
 
 EIP1559DenominatorCanyon is the denominator of EIP1559 base fee market when
 Canyon is active.
@@ -344,7 +343,7 @@ Canyon is active.
 *   **Default value:** None
 *   \**Notes:* Must not be `0` if Canyon is activated.
 
-#### gasPriceOracleBaseFeeScalar
+### gasPriceOracleBaseFeeScalar
 
 GasPriceOracleBaseFeeScalar represents the value of the base fee scalar used
 for fee calculations.
@@ -353,7 +352,7 @@ for fee calculations.
 *   **Default value:** None
 *   \**Notes:* Should not be `0`.
 
-#### gasPriceOracleBlobBaseFeeScalar
+### gasPriceOracleBlobBaseFeeScalar
 
 GasPriceOracleBlobBaseFeeScalar represents the value of the blob base fee
 scalar used for fee calculations.
@@ -364,13 +363,13 @@ scalar used for fee calculations.
 
 ***
 
-### Proposal Fields
+## Proposal Fields
 
 These fields apply to output root proposals. The
 l2OutputOracleSubmissionInterval is configurable, see the section below for
 guidance.
 
-#### l2OutputOracleStartingBlockNumber
+### l2OutputOracleStartingBlockNumber
 
 Block number of the first OP Stack block. Typically this should be zero, but
 this may be non-zero for networks that have been upgraded from a legacy system
@@ -381,7 +380,7 @@ proposals.
 *   **Default value:** None
 *   \**Notes:* Should be `0` for new chains.
 
-#### l2OutputOracleStartingTimestamp
+### l2OutputOracleStartingTimestamp
 
 Timestamp of the first OP Stack block. This MUST be the timestamp corresponding
 to the block defined by the l1StartingBlockTag. Will be removed with the
@@ -392,7 +391,7 @@ addition of permissionless proposals.
 *   \**Notes:* his MUST be the timestamp corresponding to the block defined by
     the l1StartingBlockTag.
 
-#### l2OutputOracleSubmissionInterval
+### l2OutputOracleSubmissionInterval
 
 Number of blocks between proposals to the L2OutputOracle. Will be removed with
 the addition of permissionless proposals.
@@ -401,7 +400,7 @@ the addition of permissionless proposals.
 *   **Default value:** None
 *   \**Notes:* Must not be `0`. 120 (4 minutes) is suggested.
 
-#### finalizationPeriodSeconds
+### finalizationPeriodSeconds
 
 Number of seconds that a proposal must be available to challenge before it is
 considered finalized by the OptimismPortal contract.
@@ -415,7 +414,7 @@ upper bound that leaves enough time to consider social layer solutions to a
 hack if necessary. Allows enough time for other network participants to 
 challenge the integrity of the corresponding output root.
 
-#### l2OutputOracleProposer
+### l2OutputOracleProposer
 
 Address that is allowed to submit output proposals to the L2OutputOracle
 contract. Will be removed when the OP Stack has permissionless proposals.
@@ -424,7 +423,7 @@ contract. Will be removed when the OP Stack has permissionless proposals.
 *   **Default value:** None
 *   **Notes:** Must not be `address(0)`
 
-#### l2OutputOracleChallenger
+### l2OutputOracleChallenger
 
 Address that is allowed to challenge output proposals submitted to the
 L2OutputOracle. Will be removed when the OP Stack has permissionless
@@ -437,9 +436,9 @@ challenges.
 
 ***
 
-### Fee recipients
+## Fee recipients
 
-#### baseFeeVaultRecipient
+### baseFeeVaultRecipient
 
 BaseFeeVaultRecipient represents the recipient of fees accumulated in the
 BaseFeeVault. Can be an account on L1 or L2, depending on the
@@ -450,7 +449,7 @@ BaseFeeVaultWithdrawalNetwork value.
 *   **Notes:** Must not be `address(0)`. It is recommended to have a single admin
     address to retain a common security model.
 
-#### l1FeeVaultRecipient
+### l1FeeVaultRecipient
 
 L1FeeVaultRecipient represents the recipient of fees accumulated in the
 L1FeeVault. Can be an account on L1 or L2, depending on the
@@ -461,7 +460,7 @@ L1FeeVaultWithdrawalNetwork value.
 *   **Notes:** Must not be `address(0)`. It is recommended to have a single admin
     address to retain a common security model.
 
-#### sequencerFeeVaultRecipient
+### sequencerFeeVaultRecipient
 
 SequencerFeeVaultRecipient represents the recipient of fees accumulated in the
 SequencerFeeVault. Can be an account on L1 or L2, depending on the
@@ -474,13 +473,13 @@ SequencerFeeVaultWithdrawalNetwork value.
 
 ***
 
-### Minimum Fee Withdrawal Amounts
+## Minimum Fee Withdrawal Amounts
 
 Withdrawals to L1 are expensive and the minimum fee is to prevent overhead
 costs of continuous tiny withdrawals. If the withdrawal execution costs more
 than the fee-reward, then the fee Must not be collected economically.
 
-#### baseFeeVaultMinimumWithdrawalAmount
+### baseFeeVaultMinimumWithdrawalAmount
 
 BaseFeeVaultMinimumWithdrawalAmount represents the minimum withdrawal amount
 for the BaseFeeVault.
@@ -488,7 +487,7 @@ for the BaseFeeVault.
 *   **Type:** Number in wei
 *   **Default value:** None
 
-#### l1FeeVaultMinimumWithdrawalAmount
+### l1FeeVaultMinimumWithdrawalAmount
 
 L1FeeVaultMinimumWithdrawalAmount represents the minimum withdrawal amount for
 the L1FeeVault.
@@ -496,7 +495,7 @@ the L1FeeVault.
 *   **Type:** Number in wei
 *   **Default value:** None
 
-#### sequencerFeeVaultWithdrawalAmount
+### sequencerFeeVaultWithdrawalAmount
 
 SequencerFeeVaultMinimumWithdrawalAmount represents the minimum withdrawal
 amount for the SequencerFeeVault.
@@ -506,9 +505,9 @@ amount for the SequencerFeeVault.
 
 ***
 
-### Withdrawal Network
+## Withdrawal Network
 
-#### baseFeeVaultWithdrawalNetwork
+### baseFeeVaultWithdrawalNetwork
 
 BaseFeeVaultWithdrawalNetwork represents the withdrawal network for the
 BaseFeeVault. value of 0 will withdraw ETH to the recipient address on L1 and
@@ -518,7 +517,7 @@ a value of 1 will withdraw ETH to the recipient address on L2.
 *   **Default value:** None
 *   **Notes:** Withdrawals to Ethereum are more expensive.
 
-#### l1FeeVaultWithdrawalNetwork
+### l1FeeVaultWithdrawalNetwork
 
 L1FeeVaultWithdrawalNetwork represents the withdrawal network for the
 L1FeeVault. A value of 0 will withdraw ETH to the recipient address on L1 and a
@@ -528,7 +527,7 @@ value of 1 will withdraw ETH to the recipient address on L2.
 *   **Default value:** None
 *   **Notes:** Withdrawals to Ethereum are more expensive.
 
-#### sequencerFeeVaultWithdrawalNetwork
+### sequencerFeeVaultWithdrawalNetwork
 
 SequencerFeeVaultWithdrawalNetwork represents the withdrawal network for the
 SequencerFeeVault. A value of 0 will withdraw ETH to the recipient address on
@@ -540,9 +539,9 @@ L1 and a value of 1 will withdraw ETH to the recipient address on L2.
 
 ***
 
-### Fault Proofs
+## Fault Proofs
 
-#### faultGameAbsolutePrestate
+### faultGameAbsolutePrestate
 
 FaultGameAbsolutePrestate is the absolute prestate of Cannon. This is computed
 by generating a proof from the 0th -> 1st instruction and grabbing the prestate
@@ -552,7 +551,7 @@ the program.
 *   **Type:** Hash
 *   **Default value:** None
 
-#### faultGameMaxDepth
+### faultGameMaxDepth
 
 FaultGameMaxDepth is the maximum depth of the position tree within the fault
 dispute game. `2^{FaultGameMaxDepth}` is how many instructions the execution
@@ -562,7 +561,7 @@ that there is always enough room for a full Cannon trace.
 *   **Type:** Number
 *   **Default value:** None
 
-#### faultGameClockExtension
+### faultGameClockExtension
 
 FaultGameClockExtension is the amount of time that the dispute game will set
 the potential grandchild claim's, clock to, if the remaining time is less than
@@ -571,7 +570,7 @@ this value at the time of a claim's creation.
 *   **Type:** Number
 *   **Default value:** None
 
-#### faultGameMaxClockDuration
+### faultGameMaxClockDuration
 
 FaultGameMaxClockDuration is the maximum amount of time that may accumulate on
 a team's chess clock before they may no longer respond.
@@ -579,21 +578,21 @@ a team's chess clock before they may no longer respond.
 *   **Type:** Number
 *   **Default value:** None
 
-#### faultGameGenesisBlock
+### faultGameGenesisBlock
 
 FaultGameGenesisBlock is the block number for genesis.
 
 *   **Type:** Number
 *   **Default value:** None
 
-#### faultGameGenesisOutputRoot
+### faultGameGenesisOutputRoot
 
 FaultGameGenesisOutputRoot is the output root for the genesis block.
 
 *   **Type:** Hash
 *   **Default value:** None
 
-#### faultGameSplitDepth
+### faultGameSplitDepth
 
 FaultGameSplitDepth is the depth at which the fault dispute game splits from
 output roots to execution trace claims.
@@ -601,7 +600,7 @@ output roots to execution trace claims.
 *   **Type:** Number
 *   **Default value:** None
 
-#### faultGameWithdrawalDelay
+### faultGameWithdrawalDelay
 
 FaultGameWithdrawalDelay is the number of seconds that users must wait before
 withdrawing ETH from a fault game.
@@ -609,7 +608,7 @@ withdrawing ETH from a fault game.
 *   **Type:** Number
 *   **Default value:** None
 
-#### preimageOracleMinProposalSize
+### preimageOracleMinProposalSize
 
 PreimageOracleMinProposalSize is the minimum number of bytes that a large
 preimage oracle proposal can be.
@@ -617,7 +616,7 @@ preimage oracle proposal can be.
 *   **Type:** Number
 *   **Default value:** None
 
-#### preimageOracleChallengePeriod
+### preimageOracleChallengePeriod
 
 PreimageOracleChallengePeriod is the number of seconds that challengers have to
 challenge a large preimage proposal.
@@ -625,7 +624,7 @@ challenge a large preimage proposal.
 *   **Type:** Number of Seconds
 *   **Default value:** None
 
-#### proofMaturityDelaySeconds
+### proofMaturityDelaySeconds
 
 ProofMaturityDelaySeconds is the number of seconds that a proof must be mature
 before it can be used to finalize a withdrawal.
@@ -634,7 +633,7 @@ before it can be used to finalize a withdrawal.
 *   **Default value:** None
 *   \**Notes:* Should not be `0`.
 
-#### disputeGameFinalityDelaySeconds
+### disputeGameFinalityDelaySeconds
 
 DisputeGameFinalityDelaySeconds is an additional number of seconds a dispute
 game must wait before it can be used to finalize a withdrawal.
@@ -643,7 +642,7 @@ game must wait before it can be used to finalize a withdrawal.
 *   **Default value:** None
 *   \**Notes:* Should not be `0`.
 
-#### respectedGameType
+### respectedGameType
 
 RespectedGameType is the dispute game type that the OptimismPortal contract
 will respect for finalizing withdrawals.
@@ -651,7 +650,7 @@ will respect for finalizing withdrawals.
 *   **Type:** Number
 *   **Default value:** None
 
-#### useFaultProofs
+### useFaultProofs
 
 UseFaultProofs is a flag that indicates if the system is using fault proofs
 instead of the older output oracle mechanism.
@@ -663,16 +662,16 @@ instead of the older output oracle mechanism.
 
 ***
 
-### Custom Gas Token
+## Custom Gas Token
 
-#### useCustomGasToken
+### useCustomGasToken
 
 UseCustomGasToken is a flag to indicate that a custom gas token should be used.
 
 *   **Type:** boolean
 *   **Default value:** None
 
-#### customGasTokenAddress
+### customGasTokenAddress
 
 CustomGasTokenAddress is the address of the ERC20 token to be used to pay for
 gas on L2.
@@ -681,9 +680,9 @@ gas on L2.
 *   **Default value:** None
 *   **Notes:** Must not be `address(0)`.
 
-### Alt-DA Mode / Plasma Mode
+## Alt-DA Mode / Plasma Mode
 
-#### usePlasma
+### usePlasma
 
 UsePlasma is a flag that indicates if the system is using op-plasma
 
@@ -691,7 +690,7 @@ UsePlasma is a flag that indicates if the system is using op-plasma
 *   **Default value:** None
 *   **Notes:**
 
-#### daCommitmentType
+### daCommitmentType
 
 DACommitmentType specifies the allowed commitment
 
@@ -700,7 +699,7 @@ DACommitmentType specifies the allowed commitment
 *   **Notes:** DACommitmentType must be either KeccakCommitment or
     GenericCommitment
 
-#### daChallengeWindow
+### daChallengeWindow
 
 DAChallengeWindow represents the block interval during which the availability
 of a data commitment can be challenged.
@@ -709,7 +708,7 @@ of a data commitment can be challenged.
 *   **Default value:** None
 *   **Notes:** DAChallengeWindow must no be 0 when using plasma mode
 
-#### daResolveWindow
+### daResolveWindow
 
 DAResolveWindow represents the block interval during which a data availability
 challenge can be resolved.
@@ -718,7 +717,7 @@ challenge can be resolved.
 *   **Default value:** None
 *   **Notes:** DAChallengeWindow must no be 0 when using plasma mode
 
-#### daBondSize
+### daBondSize
 
 DABondSize represents the required bond size to initiate a data availability
 challenge.
@@ -726,7 +725,7 @@ challenge.
 *   **Type:** Number
 *   **Default value:** None
 
-#### daResolverRefundPercentage
+### daResolverRefundPercentage
 
 DAResolverRefundPercentage represents the percentage of the resolving cost to
 be refunded to the resolver such as 100 means 100% refund.
@@ -734,7 +733,7 @@ be refunded to the resolver such as 100 means 100% refund.
 *   **Type:** Number
 *   **Default value:** None
 
-#### daChallengeProxy
+### daChallengeProxy
 
 DAChallengeProxy represents the L1 address of the DataAvailabilityChallenge
 contract.
@@ -745,9 +744,9 @@ contract.
 
 ***
 
-### Interoperability
+## Interoperability
 
-#### useInterop
+### useInterop
 
 UseInterop is a flag that indicates if the system is using interop.
 
@@ -756,30 +755,30 @@ UseInterop is a flag that indicates if the system is using interop.
 
 ***
 
-### Governance
+## Governance
 
-#### enableGovernance
+### enableGovernance
 
 EnableGovernance configures whether or not include governance token predeploy.
 
 *   **Type:** boolean
 *   **Default value:** None
 
-#### governanceTokenSymbol
+### governanceTokenSymbol
 
 GovernanceTokenSymbol represents the  ERC20 symbol of the GovernanceToken.
 
 *   **Type**: string
 *   **Default value:** None
 
-#### governanceTokenName
+### governanceTokenName
 
 GovernanceTokenName represents the ERC20 name of the GovernanceToken
 
 *   **Type**: string
 *   **Default value:** None
 
-#### governanceTokenOwner
+### governanceTokenOwner
 
 GovernanceTokenOwner represents the owner of the GovernanceToken. Has the
 ability to mint and burn tokens.
@@ -789,23 +788,23 @@ ability to mint and burn tokens.
 
 ***
 
-### Miscellaneous
+## Miscellaneous
 
-#### fundDevAccounts
+### fundDevAccounts
 
 FundDevAccounts configures whether or not to fund the dev accounts. Should only
 be used during devnet deployments.
 
 *   **Type**: Boolean
 
-#### requiredProtocolVersion
+### requiredProtocolVersion
 
 RequiredProtocolVersion indicates the protocol version that nodes are
 recommended to adopt, to stay in sync with the network.
 
 *   **Type**: String
 
-#### recommendedProtocolVersion
+### recommendedProtocolVersion
 
 RecommendedProtocolVersion indicates the protocol version that nodes are
 recommended to adopt, to stay in sync with the network.
@@ -814,82 +813,25 @@ recommended to adopt, to stay in sync with the network.
 
 ***
 
-### Deprecated
+## Deprecated
 
-#### (**DEPRECATED**) gasPriceOracleScalar
+### (**DEPRECATED**) gasPriceOracleScalar
 
 GasPriceOracleScalar represents the initial value of the gas scalar in the
 GasPriceOracle predeploy. Deprecated: Since Ecotone, this field is superseded
 by GasPriceOracleBaseFeeScalar and GasPriceOracleBlobBaseFeeScalar.
 
-#### (**DEPRECATED**) gasPriceOracleOverhead
+### (**DEPRECATED**) gasPriceOracleOverhead
 
 GasPriceOracleOverhead represents the initial value of the gas overhead in the
 GasPriceOracle predeploy. Deprecated: Since Ecotone, this field is superseded
 by GasPriceOracleBaseFeeScalar and GasPriceOracleBlobBaseFeeScalar.
 
-#### (**DEPRECATED**) deploymentWaitConfirmations
+### (**DEPRECATED**) deploymentWaitConfirmations
 
 DeploymentWaitConfirmations is the number of confirmations to wait during
 deployment. This is DEPRECATED and should be removed in a future PR.
 
-#### (**DEPRECATED**) numDeployConfirmations
+### (**DEPRECATED**) numDeployConfirmations
 
 Number of confirmations to wait when deploying smart contracts to L1.
-
-***
-
-### OP-Batcher Configuration
-
-The `op-batcher` is configurable, see the sections below for guidance.
-
-| Key                                 | Type   | Description                                                                                                | Default value |
-| ----------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------- | ------------- |
-| `OP_BATCHER_MAX_CHANNEL_DURATION`   | Number | The maximum duration of L1-blocks to keep a channel open. Set to `0` to disable.                           | 0             |
-| `OP_BATCHER_BATCH_TYPE`             | Number | The batch type. Set to `0` for SingularBatch and `1` for SpanBatch.                                        | 0             |
-| `OP_BATCHER_DATA_AVAILABILITY_TYPE` | String | The data availability type to use for submitting batches to the L1. Valid options: `calldata`, `blobs`     | calldata      |
-| `OP_BATCHER_TARGET_NUM_FRAMES`      | Number | The target number of frames to create per channel. Controls number of blobs per blob tx, if using Blob DA. | 1             |
-| `OP_BATCHER_TXMGR_MIN_BASEFEE`      | Number | Enforces a minimum base fee (in GWei) to assume when determining tx fees. 1 GWei by default.               | 1             |
-| `OP_BATCHER_TXMGR_MIN_TIP_CAP`      | Number | Enforces a minimum tip cap (in GWei) to use when determining tx fees. 1 GWei by default.                   | 1             |
-| `OP_BATCHER_RESUBMISSION_TIMEOUT`   | Number | Duration to wait before resubmitting a transaction to L1.                                                  | 48s           |
-
-#### Set Your  `OP_BATCHER_MAX_CHANNEL_DURATION`
-
-<Callout>
-  The default value inside `op-batcher`, if not specified, is still `0`, which means channel duration tracking is disabled.
-  For very low throughput chains, this would mean to fill channels until close to the sequencing window and post the channel to `L1 SUB_SAFETY_MARGIN` L1 blocks before the sequencing window expires.
-</Callout>
-
-To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 hours, with a value of `1500` L1 blocks. When non-zero, this parameter is the max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1. If you have this set to 5 for example, then your batcher will send a batch to the L1 every 5\*12=60 seconds. When using blobs, because 130kb blobs need to be purchased in full, if your chain doesn't generate at least \~130kb of data in those 60 seconds, then you'll be posting only partially full blobs and wasting storage.
-
-*   We do not recommend setting any values higher than targeting 5 hours, as batches have to be submitted within the sequencing window which defaults to 12 hours for OP chains, otherwise your chain may experience a 12 hour long chain reorg. 5 hours is the longest length of time we recommend that still sits snugly within that 12 hour window to avoid affecting stability.
-*   If your chain fills up full blobs of data before the `OP_BATCHER_MAX_CHANNEL_DURATION` elapses, a batch will be submitted anyways - (e.g. even if the OP Mainnet batcher sets an `OP_BATCHER_MAX_CHANNEL_DURATION` of 5 hours, it will still be submitting batches every few minutes)
-
-<Callout type="warning">
-  While setting an`OP_BATCHER_MAX_CHANNEL_DURATION` of `1500` results in the cheapest fees, it also means that your [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall for up to 5 hours.
-
-  *   This will negatively impact apps on your chain that rely on the safe head for operation. While many apps can likely operate simply by following the unsafe head, often Centralized Exchanges or third party bridges wait until transactions are marked safe before processing deposits and withdrawal.
-  *   Thus a larger gap between posting batches can result in significant delays in the operation of certain types of high-security applications.
-</Callout>
-
-#### Configure Your Batcher to Use Multiple Blobs
-
-The `op-batcher` has the capabilities to send multiple blobs per single blob transaction. This is accomplished by the use of multi-frame channels, see the [specs](https://specs.optimism.io/protocol/derivation.html#frame-format) for more technical details on channels and frames.
-
-A minimal batcher configuration (with env vars) to enable 6-blob batcher transactions is:
-
-```
-  - OP_BATCHER_BATCH_TYPE=1 # span batches, optional
-  - OP_BATCHER_DATA_AVAILABILITY_TYPE=blobs
-  - OP_BATCHER_TARGET_NUM_FRAMES=6 # 6 blobs per tx
-  - OP_BATCHER_TXMGR_MIN_BASEFEE=2.0 # 2 gwei, might need to tweak, depending on gas market
-  - OP_BATCHER_TXMGR_MIN_TIP_CAP=2.0 # 2 gwei, might need to tweak, depending on gas market
-  - OP_BATCHER_RESUBMISSION_TIMEOUT=240s # wait 4 min before bumping fees
-```
-
-This enables blob transactions and sets the target number of frames to 6, which translates to 6 blobs per transaction.
-The minimum tip cap and base fee are also lifted to 2 gwei because it is uncertain how easy it will be to get 6-blob transactions included and slightly higher priority fees should help.
-The resubmission timeout is increased to a few minutes to give more time for inclusion before bumping the fees because current transaction pool implementations require a doubling of fees for blob transaction replacements.
-
-Multi-blob transactions are particularly useful for medium to high-throughput chains, where enough transaction volume exists to fill up 6 blobs in a reasonable amount of time.
-You can use [this calculator](https://docs.google.com/spreadsheets/d/12VIiXHaVECG2RUunDSVJpn67IQp9NHFJqUsma2PndpE/edit) for your chain to determine what number of blobs are right for you, and what gas scalar configuration to use. Please also refer to guide on [Using Blobs](/builders/chain-operators/management/blobs) for chain operators.
