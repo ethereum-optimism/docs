@@ -9,25 +9,22 @@ import { Callout } from 'nextra/components'
 # OP Stack Genesis Creation
 
 The following guide shows you how to generate the L2 allocs. This is a JSON
-file that represents the L2 genesis state.
+file that represents the L2 genesis state. You will provide this file to the 
+execution client (op-geth) to initialize your network.
 
-## [develop](https://github.com/ethereum-optimism/optimism/tree/develop)
+## Solidity Script
 
-<Callout type="warning">
-  The primary development branch is `develop`. It contains the most up-to-date
-  software that remains backwards compatible with the latest experimental
-  network deployments. **Changes to made to the smart contracts are usually
-  NOT considered backwards compatible.**
-</Callout>
+At the time of this page is being written, the preferred genesis generation 
+method is to use the foundry script is the monorepo. It can be found at
+[packages/contracts-bedrock/scripts/L2Genesis.s.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/L2Genesis.s.sol).
 
-As of 2024-06-04, a foundry script is used to generate the L2 genesis allocs.
 The `CONTRACT_ADDRESSES_PATH` env var represents the deployment artifact that
 was generated during a contract deployment. The same deploy config JSON file
 should be used for L1 contracts deployment as when generating the L2 genesis
 allocs. The `STATE_DUMP_PATH` env var represents the filepath at which the
 allocs will be written to on disk.
 
-```
+```bash
 CONTRACT_ADDRESSES_PATH=deployments/artifact.json \
 DEPLOY_CONFIG_PATH=<PATH_TO_MY_DEPLOY_CONFIG> \
 STATE_DUMP_PATH=<PATH_TO_WRITE_L2_ALLOCS> \
@@ -35,27 +32,27 @@ STATE_DUMP_PATH=<PATH_TO_WRITE_L2_ALLOCS> \
   --sig 'runWithStateDump()'
 ```
 
-## [op-contracts/v1.3.0](https://github.com/ethereum-optimism/optimism/tree/op-contracts/v1.3.0)
+## Subcommand (op-node genesis l2)
 
-The Multi-Chain Prep (MCP) L1 [release](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.3.0),
-cross-chain upgrades and mitigates potential exploitation risks during
-emergency, multi-chain upgrades by transitioning chain-specific deployment
-configuration variables from immutables into storage. It also extends
-`SystemConfig` to contain the addresses of the network's contracts.
-
-This release was cut before the `L2Genesis.s.sol` script was added. Instead of
-a solidity script, you can use the `op-node` to create your genesis file.
-Within the `op-node` directory of the monorepo, you can 
+Historically the genesis file creation was handled by the `genesis l2` 
+subcommand, provided by the `op-node`. The following is an example of its usage
+from [v1.7.6](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.6).
 
 ```bash
 go run cmd/main.go genesis l2 \
-  --deploy-config <<Path to deploy config file>> \
-  todo: get clarity on this flag (ath to network deployment directory. Cannot be used with --l1-deployments)
-  --deployment-dir ../packages/contracts-bedrock/deployments/getting-started/ \
-  todo: shoudl we use this instead?
-  --l1-deployments value                                                
-     Path to L1 deployments JSON file. Cannot be used with --deployment-dir
-  --outfile.l2 genesis.json \
-  --outfile.rollup rollup.json \
-  --l1-rpc $L1_RPC_URL
+  --deploy-config=<Path to deploy config file> \
+  --l1-deployments value=<Path to L1 deployments JSON file as in superchain-registry> \
+  --outfile.l2=<Path to L2 genesis output file: i.e. ./genesis.json> \
+  --outfile.rollup=<Path to rollup output file: i.e. ./rollup.json> \
+  --l1-rpc=<RPC URL for an Ethereum L1 node. Cannot be used with --l1-starting-bloc>>
 ```
+
+Alternatively you can omit `--l1-rpc` and use `--l1-starting-block`. This option
+lets you provide a path to a JSON file containing the L1 starting block. This 
+overrides the need for using an L1 RPC to fetch the block. It cannot be used 
+with `--l1-rpc`.
+
+## Next Steps
+
+*  Learn how to [initialize](/builders/node-operators/configuration/base-config#initialization-via-genesis-file)
+`op-geth` with your genesis file
