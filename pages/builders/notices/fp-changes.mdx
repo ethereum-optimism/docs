@@ -1,19 +1,19 @@
 ---
-title: Preparing for Fault Proofs Changes
+title: Preparing for Fault Proofs Breaking Changes
 lang: en-US
 description: Learn how to prepare for Fault Proofs changes.
 ---
 
 import { Steps, Callout } from 'nextra/components'
 
-# Preparing for Fault Proofs Changes
+# Preparing for Fault Proofs Breaking Changes
 
 OP Labs has submitted a [proposal to governance](https://gov.optimism.io/t/upgrade-proposal-fault-proofs/8161) to upgrade OP Mainnet to support Fault Proofs. If this proposal passes, fault proofs would launch on OP Mainnet approximately June 2024. This document details changes that apply to users, bridges, and centralized exchanges, as well as any custom solutions that use withdrawals. This page outlines changes for OP Mainnet and OP Sepolia only. Details for other OP Chains are forthcoming.
 
 If you experience difficulty at any stage of this process, please reach out to [OP Labs Developer Support](https://github.com/ethereum-optimism/developers/discussions).
 
 <Callout type="error">
- **IMPORTANT NOTICE FOR BRIDGES AND USERS**
+ **Important Notice for Bridges and Users**
 
 **ALL** withdrawals that are not finalized before the Fault Proofs upgrade executes will need to be reproven after the upgrade is complete.
 
@@ -22,7 +22,7 @@ If you experience difficulty at any stage of this process, please reach out to [
 </Callout>
 
 <Callout type="warning">
-  **IMPORTANT NOTICE FOR BRIDGES AND USERS**
+  **Important Notice for Bridges and Users**
   
   Maximum withdrawal delay times are increasing with the Fault Proofs upgrade.
   *   Withdrawals will generally take 7 days to finalize (unchanged from before Fault Proofs).
@@ -61,8 +61,8 @@ Developers should then verify this proposal locally as the default game type wil
 The proposed Fault Proof upgrade requires developers to enable Fault Proof changes before the Op Mainnet release. This impacts bridges, centralized exchanges, and custom solutions that use withdrawals.
 
 <Callout type="error">
-  Withdrawals that haven't finalized before the upgrade occurs will be unable to be finalized post-upgrade without resubmitting. This means these withdrawals will need to go through a new 7-day period. The time accrued before the upgrade will not count.
-  This means the withdrawal time could be as long as 13-14 days during the upgrade window. (If you submit it \~6 days before the upgrade, then must re-submit after the upgrade, you will have to wait a new seven days.)
+  Withdrawals that haven't finalized before the upgrade occurs will be unable to be finalized post-upgrade without reproving. This means these withdrawals will need to go through a new 7-day period. The time accrued before the upgrade will not count.
+  This means the withdrawal time could be as long as 13-14 days during the upgrade window. (If you submit it \~6 days before the upgrade, then must re-prove after the upgrade, you will have to wait a new seven days.)
 </Callout>
 
 <Steps>
@@ -74,7 +74,7 @@ The proposed Fault Proof upgrade requires developers to enable Fault Proof chang
 
   *   **Option 1: Optimism SDK Update.** If you use OptimismSDK for bridging, simply update to version 3.2.0 or higher.
       The Optimism SDK changes do not break the API and require no changes other than updating to the correct software version to support the new `OptimismPortal` logic. The Optimism SDK will automatically begin to use the new logic once it detects that the FPM update has gone live.
-  *   **Option 2: Viem Update.** Viem changes will break the API and require both updating to latest version and replacing use of the currently used decorator with the `experimental` decorator that supports fault proofs. When Fault Proofs are on OP Mainnet, `publicActionsL2` will be updated to support fault proofs by default, and it will be recommended that developers switch to the stable API.
+  *   **Option 2: Viem Update.** Update to the latest version of Viem (version of >=2.9.0). Viem will automatically begin to use the new logic once it detects that the FPM update has gone live.
 
   ### Update Withdrawal Monitor
 
@@ -96,5 +96,5 @@ The proposed Fault Proof upgrade requires developers to enable Fault Proof chang
 
 ## Next Steps
 
-*   See the [Fault Proofs Overview](/stack/protocol/fault-proofs/overview) to learn more about the three main components of the Fault Proof System.
+*   See the [Fault Proofs Explainer](/stack/protocol/fault-proofs/explainer) to learn more about the three main components of the Fault Proof System.
 *   You can also read more about [Cannon FPVM](/stack/protocol/fault-proofs/cannon) and [Mips.sol](/stack/protocol/fault-proofs/mips), the onchain smart contract implementation of Cannon.

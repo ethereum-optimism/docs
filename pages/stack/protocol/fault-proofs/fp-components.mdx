@@ -1,13 +1,15 @@
 ---
-title: Fault Proofs Overview
+title: FP System Components
 lang: en-US
-description: Learn about the fault proof system, its components, and how they will work together to enhance decentralization in the Optimism ecosystem.
+description: Learn about fault proof system components and how they work together to enhance decentralization in the Optimism ecosystem.
 ---
 
 import Image from 'next/image'
 import { Callout } from 'nextra/components'
 
-# Fault Proof Overview
+# FP System Components
+
+This page explains the fault proof system components and how they work together to enhance decentralization in the Optimism ecosystem.
 
 The Fault Proof System is comprised of three main components: a Fault Proof Program (FPP), a Fault Proof Virtual Machine (FPVM), and a dispute game protocol.
 The system is designed to eventually enable secure bridging without central fallback.
@@ -33,12 +35,12 @@ The OP Stack's unique, modular design allows the decoupling of the FPP and FPVM,
 
 ## Fault Proof Program
 
-The default for this system component is `op-program`, which implements a fault proof program that runs through the rollup state-transition to verify an L2 output from L1 inputs. This verifiable output can then resolve a disputed output on L1. 
+The default for this system component is `op-program`, which implements a fault proof program that runs through the rollup state-transition to verify an L2 output from L1 inputs. This verifiable output can then resolve a disputed output on L1.
 The FPP is a combination of `op-node` and `op-geth`, so it has both the consensus and execution "parts" of the protocol in a single process. This means Engine API calls that would normally be made over HTTP are instead made as direct method calls to the op-geth code.
 
 The FPP is designed so that it can be run in a deterministic way such that two invocations with the same input data will result in not only the same output, but the same program execution trace. This allows it to be run in an onchain VM as part of the dispute resolution process.
 
-All data is retrieved via the Preimage Oracle API. The preimages could be provided via the FPVM when onchain or by a native "host" implementation that can download the required data from nodes via JSON-RPC requests. The native host implementation is also provided by `op-program` but doesn't run as part of the onchain execution.  Basically op-program has two halves: the "client" Fault Proof Program part covered in this section and the "host" part used to fetch required preimages.
+All data is retrieved via the [Preimage Oracle API](https://specs.optimism.io/experimental/fault-proof/index.html#pre-image-oracle). The preimages could be provided via the FPVM when onchain or by a native "host" implementation that can download the required data from nodes via JSON-RPC requests. The native host implementation is also provided by `op-program` but doesn't run as part of the onchain execution.  Basically, `op-program` has two halves: the "client" Fault Proof Program part covered in this section and the "host" part used to fetch required preimages.
 
 ## Fault Proof Virtual Machine
 
@@ -75,5 +77,6 @@ The first full implementation of the VM generic in the bisection game includes a
 
 ## Next Steps
 
-*   See [Mips.sol](mips) to learn more about the onchain smart contract implementation of Cannon.
-*   See [Cannon FPVM Specification](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/specs/cannon-fault-proof-vm.md) for more detail.
+*   For more detail on Cannon and its default operation as part of Optimism's Fault Proof Virtual Machine, see [Cannon FPVM](cannon).
+*   For a detailed walk-thru of significant changes to Fault Proof Mainnet, see [FP Mainnet Security](fp-security).
+*   For detailed information about the entire FP program, FP virtual machine, and dispute game, see the [specs](https://specs.optimism.io/fault-proof/index.html).

@@ -1,7 +1,7 @@
 ---
 title: Fault Proof VM - MIPS.sol
 lang: en-US
-description: Learn about the MIPS.sol smart contract that works as part of Optimism's Fault Proof Virtual Machine.
+description: Learn about the `MIPS.sol` smart contract that works as part of Optimism's Fault Proof Virtual Machine.
 ---
 
 import Image from 'next/image'
@@ -9,54 +9,52 @@ import { Callout } from 'nextra/components'
 
 # Fault Proof VM: MIPS.sol
 
-The MIPS.sol smart contract is an onchain implementation of a virtual machine (VM) that encompasses the 32-bit, Big-Endian, MIPS III Instruction Set Architecture (ISA).
+The `MIPS.sol` smart contract is an onchain implementation of a virtual machine (VM) that encompasses the 32-bit, Big-Endian, MIPS III Instruction Set Architecture (ISA).
 This smart contract is the counterpart to the off-chain MIPSEVM golang implementation of the same ISA. Together, the onchain and off-chain VM implementations make up [Cannon](cannon),
 Optimism's Fault Proof Virtual Machine (FPVM). Cannon is a singular instance of a FPVM that can be used as part of the Dispute Game for Optimism's (and Base's) optimistic rollup L2 blockchain.
 The Dispute Game itself is modular, allowing for any FPVM to be used in a dispute; however, Cannon is currently the only FPVM implemented and thus will be used in all disputes.
 
 ## Control Flow
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/nIN5sNc6nQM?si=TL9TcoV01PNcD8D2" title="Walkthrough: OP Stack Fault Proof System Alpha Release" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
-
-In the above video, we can see that the MIPS.sol contract interacts with two other contracts: FaultDisputeGame.sol and PreimageOracle.sol.
-FaultDisputeGame.sol is the deployed instance of a Fault Dispute Game for an active dispute, and PreimageOracle.sol stores Pre-images.
+The `FaultDisputeGame.sol` interacts with `MIPS.sol` and then `MIPS.sol` calls into `PreimageOracle.sol`. `MIPS.sol` is only called at the max depth of the game when someone needs to call `step`.
+`FaultDisputeGame.sol` is the deployed instance of a Fault Dispute Game for an active dispute, and `PreimageOracle.sol` stores Pre-images.
 
 *   Pre-images contain data from both L1 and L2,  which includes information such as block headers, transactions, receipts, world state nodes, and more. Pre-images are used as the inputs to the derivation process used to calculate the true L2 state, and subsequently the true L2 state is used to resolve a dispute game.
-*   A Fault Dispute Game, at a high-level, will effectively determine what L2 state is currently agreed-upon, and move through L2 state until the first disagreed-upon state is found. How the Pre-images are determined and populated into the PreimageOracle.sol contract is out-of-scope for this reference document on the MIPS.sol contract, as that contract only consumes Pre-images that have already been populated by the off-chain Cannon implementation.
+*   A Fault Dispute Game, at a high-level, will effectively determine what L2 state is currently agreed-upon, and move through L2 state until the first disagreed-upon state is found. How the Pre-images are determined and populated into the `PreimageOracle.sol` contract is out-of-scope for this reference document on the `MIPS.sol` contract, as that contract only consumes Pre-images that have already been populated by the off-chain Cannon implementation.
 
-The MIPS.sol contract is called by a running instance of a dispute game i.e. by a FaultDisputeGame.sol contract, and is only called once a dispute game reaches a leaf node in the state transition tree that is currently being disputed.
+The `MIPS.sol` contract is called by a running instance of a dispute game i.e. by a `FaultDisputeGame.sol` contract, and is only called once a dispute game reaches a leaf node in the state transition tree that is currently being disputed.
 A leaf node represents a single MIPS instruction (in the case that we're using Cannon as the FPVM) that can then be run onchain. Given a Pre-image, which is the previously agreed-upon L2 state up until this instruction, and the instruction
-state to run in the MIPS.sol contract, the fault dispute game can determine the true post state (or Post-image). This true post state will then be used to determine the outcome of the fault dispute game by comparing the disputed post-state
+state to run in the `MIPS.sol` contract, the fault dispute game can determine the true post state (or Post-image). This true post state will then be used to determine the outcome of the fault dispute game by comparing the disputed post-state
 at the leaf node with the post-state proposed by the disputer.
 
 ## Contract State
 
-The MIPS.sol contract only contains a single immutable variable, which corresponds to the address of the PreimageOracle.sol contract.
-Otherwise, the contract is stateless, meaning that all state related to playing a MIPS instruction onchain comes from either the FaultDisputeGame.sol instance, or the PreimageOracle.sol.
-Having a stateless MIPS.sol contract means that it can be used by any fault dispute game that is using the Cannon FPVM; the MIPS.sol contract does not need to be re-deployed per fault dispute game instance.
-Subsequently, any fault dispute game that is using the same MIPS.sol contract will also share the same PreimageOracle.sol contract.
-Note that the PreimageOracle.sol contract is stateful, but how state is stored in the contract and differentiated between different fault dispute game instances is out-of-scope for this document.
+The `MIPS.sol` contract only contains a single immutable variable, which corresponds to the address of the `PreimageOracle.sol` contract.
+Otherwise, the contract is stateless, meaning that all state related to playing a MIPS instruction onchain comes from either the `FaultDisputeGame.sol` instance, or the `PreimageOracle.sol`.
+Having a stateless `MIPS.sol` contract means that it can be used by any fault dispute game that is using the Cannon FPVM; the `MIPS.sol` contract does not need to be re-deployed per fault dispute game instance.
+Subsequently, any fault dispute game that is using the same `MIPS.sol` contract will also share the same `PreimageOracle.sol` contract.
+Note that the `PreimageOracle.sol` contract is stateful, but how state is stored in the contract and differentiated between different fault dispute game instances is out-of-scope for this document.
 
-While the MIPS.sol contract is stateless, meaning it does not store state in the contract directly, the contract does require up to 3 different types of witness data in order to perform a single MIPS instruction onchain:
+While the `MIPS.sol` contract is stateless, meaning it does not store state in the contract directly, the contract does require up to 3 different types of witness data in order to perform a single MIPS instruction onchain:
 
 *   Packed VM execution state
 *   Memory proofs
 *   Pre-images
 
 The Pre-images have already been discussed above, so we will discuss the packed VM execution state and the memory proofs.
-As a final note on Pre-images during onchain execution, it is entirely possible that the MIPS.sol contract never runs a MIPS instruction onchain that requires the contract to read from PreimageOracle.sol.
-There is no requirement to read from the PreimageOracle.sol during instruction execution, but that doesn't mean the PreimageOracle.sol contract is not being used.
+As a final note on Pre-images during onchain execution, it is entirely possible that the `MIPS.sol` contract never runs a MIPS instruction onchain that requires the contract to read from `PreimageOracle.sol` .
+There is no requirement to read from the `PreimageOracle.sol` during instruction execution, but that doesn't mean the `PreimageOracle.sol`  contract is not being used.
 The Pre-image information that has been read in previous off-chain instructions leading up to the execution of a single instruction onchain may still reside in the constructed VM memory.
-Thus, even when the instruction run onchain does not explicitly read from PreimageOracle.sol, Pre-image data may still influence the merkle root that represents the VM's memory.
+Thus, even when the instruction run onchain does not explicitly read from `PreimageOracle.sol` , Pre-image data may still influence the merkle root that represents the VM's memory.
 
 ### Packed VM Execution State
 
-In order to execute a MIPS instruction onchain, the MIPS.sol contract needs to know important state information such as the instruction to run, the values in each of the general purpose registers, etc.
-More specifically, a tightly-packed `State` struct contains all the relevant information that the MIPS.sol contract needs to know. This struct is passed to the contract from the FaultDisputeGame.sol contract when it invokes the `step` function in MIPS.sol (which in-turn executes a single MIPS instruction onchain).
+In order to execute a MIPS instruction onchain, the `MIPS.sol` contract needs to know important state information such as the instruction to run, the values in each of the general purpose registers, etc.
+More specifically, a tightly-packed `State` struct contains all the relevant information that the `MIPS.sol` contract needs to know. This struct is passed to the contract from the `FaultDisputeGame.sol` contract when it invokes the `step` function in `MIPS.sol` (which in-turn executes a single MIPS instruction onchain).
 The following information is stored in the `State` struct. See [doc reference](https://specs.optimism.io/experimental/fault-proof/cannon-fault-proof-vm.html#state) and [code reference](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/packages/contracts-bedrock/src/cannon/MIPS.sol#L26) for details:
 
 1.  `memRoot` - The merkle root hash of the binary merkle tree that represents the MIPS VM's monolithic 32-bit memory space.
-2.  `preimageKey` - Key that uniquely identifies the Pre-image data to be read (if applicable) from the PreimageOracle.sol contract.
+2.  `preimageKey` - Key that uniquely identifies the Pre-image data to be read (if applicable) from the `PreimageOracle.sol`  contract.
 3.  `preimageOffset` - Each Pre-image is 32 bytes long, however the word size for 32-bit MIPS is 4 bytes. Therefore, only 4 bytes from a Pre-image will be read during a read syscall. The `preimageOffset` serves as the offset into the Pre-image being read, so that an instruction can continue reading a Pre-image 4 bytes at a time.
 4.  `pc` - The program counter, which points to the memory location that contains the MIPS instruction to execute onchain.
 5.  `nextPC` - The next program counter, which functions similarly to the program counter except that it points to the next instruction to be executed onchain. Note that the next instruction may or may not be `PC + 8` in the event of a branch or jump instruction. Additionally, the `nextPC` effectively functions as the [branch delay slot](https://en.wikipedia.org/wiki/MIPS_architecture#cpu_instructions) for the MIPS ISA.
@@ -70,7 +68,7 @@ The following information is stored in the `State` struct. See [doc reference](h
 
 ### State Hash
 
-The state hash is the `bytes32` value returned to the active Fault Dispute Game upon the completion of a single MIPS instruction in the MIPS.sol contract.
+The state hash is the `bytes32` value returned to the active Fault Dispute Game upon the completion of a single MIPS instruction in the `MIPS.sol` contract.
 The hash is derived by taking the `keccak256` of the above packed VM execution `State` struct, and then replacing the first byte of the hash with a value that represents the status of the VM.
 This value is derived from the `exitCode` and `exited` values, and can be:
 
@@ -84,21 +82,21 @@ This in turn prevents a user from disputing an output root during a dispute game
 
 ### Memory Proofs
 
-Using a 32-bit ISA means that the total size of the address space (assuming no virtual address space) is `2^32 = 4GiB`. Additionally, the MIPS.sol contract is stateless, so it does not store the MIPS memory in contract storage. The primary reason for this is because having to load the entire memory into the MIPS.sol contract in order to execute a single instruction onchain is prohibitively expensive. Additionally, the entire memory would need to be loaded per fault proof game, requiring multiple instances of the MIPS.sol contract. Therefore, in order to optimize the amount of data that needs to be provided per onchain instruction execution while still maintaining integrity over the entire 32-bit address space, Optimism has converted the memory into a binary merkle tree.
+Using a 32-bit ISA means that the total size of the address space (assuming no virtual address space) is `2^32 = 4GiB`. Additionally, the `MIPS.sol` contract is stateless, so it does not store the MIPS memory in contract storage. The primary reason for this is because having to load the entire memory into the `MIPS.sol` contract in order to execute a single instruction onchain is prohibitively expensive. Additionally, the entire memory would need to be loaded per fault proof game, requiring multiple instances of the `MIPS.sol` contract. Therefore, in order to optimize the amount of data that needs to be provided per onchain instruction execution while still maintaining integrity over the entire 32-bit address space, Optimism has converted the memory into a binary merkle tree.
 
 The binary merkle tree (or hash tree) used to store the memory of the MIPS VM has leaf values that are 32 bytes and has a fixed depth of 27 levels. This in turn allows the binary merkle tree to span the full 32-bit address space: `2^27 * 32 = 2^32` (See [memory proofs](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/cannon/docs/README.md#memory-proofs) for more details). In order to ensure the integrity of the entire address space each time memory is read or written to, one or more memory proofs are provided by the FaultDisputeGame.sol contract each time a MIPS instruction is executed onchain in MIPS.sol. A memory proof consists of the current leaf value and 27 sibling nodes (28, 32-byte values in total), where the sibling nodes are the `keccak256` hash of its own child nodes. Using the leaf value, its 27 sibling nodes, and the memory address converted to its binary representation as a guide (0 or 1 tells the order to concatenate left and right values), we can calculate a merkle root. This merkle root should be exactly the same as the merkle root stored in the VM execution State struct.
 
-Reading to memory and writing to memory work similarly, both involve calculating the merkle root. In the case of a memory write, MIPS.sol must take care to verify the provided proof for the memory location to write to is correct. Additionally, writing to memory will change the merkle root stored in the VM execution `State` struct.
+Reading to memory and writing to memory work similarly, both involve calculating the merkle root. In the case of a memory write, `MIPS.sol` must take care to verify the provided proof for the memory location to write to is correct. Additionally, writing to memory will change the merkle root stored in the VM execution `State` struct.
 
 ### State Calculation
 
-While the MIPS.sol contract may only execute a single instruction onchain, the off-chain Cannon implementation executes all prerequisite MIPS instructions for all state transitions in the disputed L2 state required to reach the disputed instruction that will be executed onchain. This ensures that the MIPS instruction executed onchain has the correct VM state and necessary Pre-images stored in the PreimageOracle.sol contract to generate the true post-state that can be used to resolve the dispute game.
+While the `MIPS.sol` contract may only execute a single instruction onchain, the off-chain Cannon implementation executes all prerequisite MIPS instructions for all state transitions in the disputed L2 state required to reach the disputed instruction that will be executed onchain. This ensures that the MIPS instruction executed onchain has the correct VM state and necessary Pre-images stored in the `PreimageOracle.sol`  contract to generate the true post-state that can be used to resolve the dispute game.
 
 ## Functions
 
 ### oracle
 
-The external view [`oracle`](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/packages/contracts-bedrock/src/cannon/MIPS.sol#L65) function is a getter function that returns the PreimageOracle address cast as a IPreimageOracle interface.
+The external view [`oracle`](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/packages/contracts-bedrock/src/cannon/MIPS.sol#L65) function is a getter function that returns the PreimageOracle address cast as a `IPreimageOracle` interface.
 
 ### SE
 
@@ -110,15 +108,15 @@ The internal [`outputState`](https://github.com/ethereum-optimism/optimism/blob/
 
 ### handleSyscall
 
-The internal [`handleSyscall`](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/packages/contracts-bedrock/src/cannon/MIPS.sol#L145) function handles the syscall MIPS instruction. Only a subset of all syscall numbers are supported by the MIPS.sol contract; however, any syscall that is not explicitly supported will return 0s instead of reverting. Most syscalls that are supported partially mimic the behavior specified by the linux manual pages. The two most important syscall numbers that are supported are read and write.
+The internal [`handleSyscall`](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/packages/contracts-bedrock/src/cannon/MIPS.sol#L145) function handles the syscall MIPS instruction. Only a subset of all syscall numbers are supported by the `MIPS.sol` contract; however, any syscall that is not explicitly supported will return 0s instead of reverting. Most syscalls that are supported partially mimic the behavior specified by the linux manual pages. The two most important syscall numbers that are supported are read and write.
 
 #### syscall read
 
-When given file descriptor 5 as the target of the read syscall, `handleSyscall` will call the PreimageOracle.sol contract to read a 32-byte Pre-image at the current location determined by the `preimageKey` stored in the VM execution `State` struct. Once the 32-byte Pre-image has been read, the function will then determine the number of bytes to read (up to 4 bytes) and the location in memory to store the bytes. The number of bytes to read may be any value between 1 and 4, depending on the alignment of the offset in the returned Pre-image and the alignment of the memory position to write the data to.
+When given file descriptor 5 as the target of the read syscall, `handleSyscall` will call the `PreimageOracle.sol`  contract to read a 32-byte Pre-image at the current location determined by the `preimageKey` stored in the VM execution `State` struct. Once the 32-byte Pre-image has been read, the function will then determine the number of bytes to read (up to 4 bytes) and the location in memory to store the bytes. The number of bytes to read may be any value between 1 and 4, depending on the alignment of the offset in the returned Pre-image and the alignment of the memory position to write the data to.
 
 #### syscall write
 
-When given the file descriptor 6 as the target of the write syscall, `handleSyscall` will not call the PreimageOracle.sol contract to write a new Pre-image. Only the off-chain Cannon implementation writes to the PreimageOracle.sol contract. Instead, the function computes the new value of the `preimageKey` given the 4-byte value that would be written to the PreimageOracle.sol contract. Additionally, the function resets the `preimageOffset` to 0. It is expected that the off-chain Cannon implementation has already written the data to the PreimageOracle.sol contract at the location of the newly-derived `preimageKey`.
+When given the file descriptor 6 as the target of the write syscall, `handleSyscall` will not call the `PreimageOracle.sol`  contract to write a new Pre-image. Only the off-chain Cannon implementation writes to the `PreimageOracle.sol`  contract. Instead, the function computes the new value of the `preimageKey` given the 4-byte value that would be written to the `PreimageOracle.sol`  contract. Additionally, the function resets the `preimageOffset` to 0. It is expected that the off-chain Cannon implementation has already written the data to the `PreimageOracle.sol`  contract at the location of the newly-derived `preimageKey`.
 
 ### handleBranch
 
