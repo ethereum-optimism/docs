@@ -27,13 +27,13 @@ The [Fjord network upgrade](https://specs.optimism.io/fjord/overview.html) inclu
     *   10x increased values for `MAX_RLP_BYTES_PER_CHANNEL`  and  `MAX_CHANNEL_BANK_SIZE`  ([spec](https://specs.optimism.io/fjord/derivation.html#increasing-max_rlp_bytes_per_channel-and-max_channel_bank_size))
 *   The [Fjord hardfork activation block](https://specs.optimism.io/fjord/derivation.html#network-upgrade-automation-transactions) includes several transactions to perform all L2 contract deployments, upgrades, enablements, and proxy updates.
 *   L1 Gas Cost changes:
-    *   `getL1GasUsed` method of the `GasPriceOracle` contract ([spec 1](https://specs.optimism.io/fjord/predeploys.html#l1-gas-usage-estimation)) is being deprecated
+    *   `getL1GasUsed` method of the `GasPriceOracle` contract ([spec](https://specs.optimism.io/fjord/predeploys.html#l1-gas-usage-estimation)) is being deprecated
     *   the GPO gets a new function `getL1FeeUpperBound` as a cheap new way to calculate an upper bound for the max fee of a new transaction
-    *   `L1GasUsed` field of the transaction receipt ([spec 1](https://specs.optimism.io/fjord/exec-engine.html)) is being deprecated
+    *   `L1GasUsed` field of the transaction receipt ([spec](https://specs.optimism.io/fjord/exec-engine.html)) is being deprecated
 
 ## For Wallets and Front-End Developers
 
-The proposed Fjord upgrade to the OP Stack and OP Mainnet changes the formula for estimating the [L1 Data Fee](https://github.com/ethereum-optimism/docs/blob/main/stack/transactions/fees#l1-data-fee) component of the [OP Stack Transaction Fee](https://docs.optimism.io/stack/transactions/fees).
+The proposed Fjord upgrade to the OP Stack and OP Mainnet changes the formula for estimating the [L1 Data Fee](/stack/transactions/fees#l1-data-fee) component of the [OP Stack Transaction Fee](/stack/transactions/fees).
 
 *   `getL1Fee` on the [GasPriceOracle contract](https://github.com/ethereum-optimism/optimism/blob/0dcb1b2c7dadec98a24f47e2e2d781a25800d9e1/packages/contracts-bedrock/src/L2/GasPriceOracle.sol#L54) has been updated. It now performs FastLZ compression on-chain, which is a better approximation of the compressibility of a transaction. Combined with a linear regression model, this gives a more accurate prediction of L1 data fees.
 *   `getL1GasUsed` and the corresponding `L1GasUsed` field of transaction receipts are being deprecated as they no longer accurately reflect gas usage as of Ecotone. The function and field will remain, however, their usefulness is limited as they still assume calldata batching. `getL1Fee` should be used when trying to predict L1 Data fees.
@@ -43,7 +43,7 @@ Your application may need to be updated to account for this change. Read below t
 
 ### Preparing Your Wallet or Front-End
 
-Changes to the L1 Data Fee formula may affect your application if you are computing this fee component on your own. It's strongly recommended that you use [existing tooling](https://docs.optimism.io/builders/app-developers/transactions/estimates#tooling) to estimate transaction fees instead of computing them yourself.
+Changes to the L1 Data Fee formula may affect your application if you are computing this fee component on your own. It's strongly recommended that you use [existing tooling](/builders/app-developers/transactions/estimates#tooling) to estimate transaction fees instead of computing them yourself.
 
 *   If you cannot use existing tooling, use the `getL1Fee` function on the `GasPriceOracle` smart contract to compute the L1 Data Fee component of the transaction fee. Avoid implementing the formula yourself, as it may change in the future.
 *   Alternatively, you might consider using `getL1FeeUpperBound` if you need to estimate the transaction fee and also need to compute the correct value to set when sending transactions.
@@ -59,19 +59,19 @@ The proposed Fjord upgrade impacts OP chains and requires chain operators to upg
 <Steps>
   ### Prepare `SystemConfig` Transaction
 
-  An onchain transaction will be required to update the scalar for Fjord. This needs to be prepared days in advance before the activation to ensure chain operators don't operate at a loss when Fjord activates. See the [Ecotone encoding tool](https://github.com/ethereum-optimism/optimism/tree/develop/op-chain-ops/cmd/ecotone-scalar) for more details.
+  An onchain transaction will be required to update the scalar for Fjord. This needs to be prepared days in advance before the activation to ensure chain operators don't operate at a loss when Fjord activates.
 
   *   Encode the scalar value using the [ecotone scalar encoding tool](https://github.com/ethereum-optimism/optimism/tree/develop/op-chain-ops/cmd/ecotone-scalar)
   *   Send a `setGasConfig` transaction to the `SystemConfig`
-  *   Set `BaseFeeScalar` and `BlobBaseFeeScalar` values based on the [Fjord calculator.](https://docs.google.com/spreadsheets/d/1V3CWpeUzXv5Iopw8lBSS8tWoSzyR4PDDwV9cu2kKOrs/edit#gid=186414307)
+  *   Set `BaseFeeScalar` and `BlobBaseFeeScalar` values based on the [Fjord calculator](https://docs.google.com/spreadsheets/d/1V3CWpeUzXv5Iopw8lBSS8tWoSzyR4PDDwV9cu2kKOrs/edit#gid=186414307)
 
   ### Prepare Sequencer Node
 
   <Callout type="warning">
-    If you are operating an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json), the Fjord activation date is part of the `op-node` and `op-geth` nodes. So, no action is needed for the sequencer after preparing the `SystemConfig` **t**ransaction. Please skip to [Step 3: Prepare Batcher](https://www.notion.so/Fjord-notice-page-brief-explainer-added-to-readme-section-of-docs-c6b4a7f9f4044baba6bafb6a43ad8846?pvs=21).
+    If you are operating an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json), the Fjord activation date is part of the `op-node` and `op-geth` nodes. So, no action is needed for the sequencer after preparing the `SystemConfig` **t**ransaction. Please skip to [Step 3: Prepare Batcher](#prepare-batcher).
   </Callout>
 
-  Chain operators not in the Superchain Registry will need to manually configure the [activation timestamp](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/mainnet/superchain.yaml). You have two configuration options for your sequencer node:
+  For custom chains not included in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json), you will need to manually configure the [activation timestamp](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/mainnet/superchain.yaml). You have two configuration options for your sequencer node:
 
   *   **Option 1:** In your  `rollup.json`  config file, set `L2GenesisFjordTimeOffset` to the UNIX timestamp of the block you want to activate the Fjord hardfork. You will still need to set the `override.fjord` flag in `op-geth` with the UNIX timestamp.
   *   O**ption 2:** Alternatively, chain operators can use the override flags to configure your sequencer node by specifying a time in the future when Fjord will activate.
@@ -108,7 +108,7 @@ These following steps are necessary for EVERY node operator:
   ### Configure the Fjord Activation Date
 
   <Callout type="warning">
-    If you are operating a node for an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json), the Fjord activation date is part of the `op-node` and `op-geth` nodes. So, no action is needed for the sequencer after upgrading to the latest release. Please skip to [Step 3: Verify Your Configuration](https://www.notion.so/Fjord-notice-page-brief-explainer-added-to-readme-section-of-docs-c6b4a7f9f4044baba6bafb6a43ad8846?pvs=21).
+    If you are operating a node for an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json), the Fjord activation date is part of the `op-node` and `op-geth` nodes. So, no action is needed for the sequencer after upgrading to the latest release. Please skip to [Step 3: Verify Your Configuration](#verify-your-configuration).
   </Callout>
 
   For node operators of custom chains not included in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainids.json), you will need to manually configure the [activation timestamp](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/mainnet/superchain.yaml). This can be done one of two ways:
