@@ -21,14 +21,14 @@ The [Fjord network upgrade](https://specs.optimism.io/fjord/overview.html) inclu
 
 *   [RIP-7212](https://specs.optimism.io/protocol/precompiles.html#P256VERIFY): Precompile for secp256r1 Curve Support, to reduce gas costs of many smart wallet applications.
 *   [Brotli](https://specs.optimism.io/fjord/derivation.html#brotli-channel-compression) as a channel compression option, for \~5-15% lower data availability costs.
-*   [FastLZ](https://specs.optimism.io/fjord/exec-engine.html#fees) based L1 fee [cost calculation](https://specs.optimism.io/fjord/exec-engine.html#fees), including an upgraded [`GasPriceOracle` L2 predeploy](https://specs.optimism.io/fjord/derivation.html#gaspriceoracle-deployment) to compute it.
 *   Parameter changes:
     *   [Max sequencer drift](https://specs.optimism.io/fjord/derivation.html#constant-maximum-sequencer-drift) becomes a constant with value increased to 1800 seconds
     *   10x increased values for `MAX_RLP_BYTES_PER_CHANNEL`  and  `MAX_CHANNEL_BANK_SIZE`  ([spec](https://specs.optimism.io/fjord/derivation.html#increasing-max_rlp_bytes_per_channel-and-max_channel_bank_size))
 *   The [Fjord hardfork activation block](https://specs.optimism.io/fjord/derivation.html#network-upgrade-automation-transactions) includes several transactions to perform all L2 contract deployments, upgrades, enablements, and proxy updates.
 *   L1 Gas Cost changes:
+    *   [FastLZ](https://specs.optimism.io/fjord/exec-engine.html#fees) based L1 fee [cost calculation](https://specs.optimism.io/fjord/exec-engine.html#fees) with an upgraded [`GasPriceOracle` L2 predeploy](https://specs.optimism.io/fjord/derivation.html#gaspriceoracle-deployment) to compute it
+    *   `GasPriceOracle` gets a new function `getL1FeeUpperBound` as a cheap new way to calculate an upper bound for the max fee of a new transaction
     *   `getL1GasUsed` method of the `GasPriceOracle` contract ([spec](https://specs.optimism.io/fjord/predeploys.html#l1-gas-usage-estimation)) is being deprecated
-    *   the GPO gets a new function `getL1FeeUpperBound` as a cheap new way to calculate an upper bound for the max fee of a new transaction
     *   `L1GasUsed` field of the transaction receipt ([spec](https://specs.optimism.io/fjord/exec-engine.html)) is being deprecated
 
 ## For Wallets and Front-End Developers
@@ -82,7 +82,15 @@ The proposed Fjord upgrade impacts OP chains and requires chain operators to upg
 
   Prepare your batcher to activate Brotli compression. This step is optional but recommended to achieve better channel compression.
 
-  *   Run the batcher help to see available options:  `go run ./op-batcher/cmd --help |less`
+    *   You can activate Brotli compression for your batcher by setting the `compression-algo` flag. 
+        *   `brotli-10` is the recommended Brotli level and works fine for most chain configurations.
+        *   However, chain operators can experiment with `brotli-11` if it gives them better compression and their batcher can still keep up with the increased compression computation needs. 
+
+<Callout type="info">
+`brotli` defaults to `brotli-10`. If the flag is unset, it still defaults to `zlib`.
+</Callout>
+
+*   You can also run the batcher help to see available options:  `go run ./op-batcher/cmd --help |less`
 
   ```jsx
   --compression-algo value (default: zlib) ($OP_BATCHER_COMPRESSION_ALGO)
@@ -90,8 +98,11 @@ The proposed Fjord upgrade impacts OP chains and requires chain operators to upg
   brotli-10, brotli-11
   ```
 
-  *   You can activate Brotli compression for your batcher by setting the `compression-algo` flag. `brotli-10` is the recommended Brotli level and works fine for most chain configurations, but chain operators can experiment with `brotli-11` if it gives them better compression and their batcher can still keep up with the increased compression computation needs. `brotli` defaults to `brotli-10`. If the flag is unset, it still defaults to `zlib`.
 </Steps>
+
+<Callout type="info">
+To verify proper configuration, chain operators should confirm in the startup logs of their `op-node` and `op-geth` that the correct Fjord activation timestamps are set.
+</Callout>
 
 ## For Node Operators
 
