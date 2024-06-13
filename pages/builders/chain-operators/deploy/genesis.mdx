@@ -18,11 +18,37 @@ At the time of this page is being written, the preferred genesis generation
 method is to use the foundry script is the monorepo. It can be found at
 [packages/contracts-bedrock/scripts/L2Genesis.s.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/L2Genesis.s.sol).
 
-The `CONTRACT_ADDRESSES_PATH` env var represents the deployment artifact that
-was generated during a contract deployment. The same deploy config JSON file
-should be used for L1 contracts deployment as when generating the L2 genesis
-allocs. The `STATE_DUMP_PATH` env var represents the filepath at which the
-allocs will be written to on disk.
+### Configuration
+
+Create or modify a file `<network-name>.json` inside of the `deploy-config` 
+folder in the monorepo. The script will read the latest active fork from the 
+deploy config and the L2 genesis allocs generated will be compatible with this 
+fork. The automatically detected fork can be overwritten by setting the 
+environment variable `FORK` either to the lower-case fork name (currently 
+`delta`, `ecotone`, or `fjord`) or to `latest`, which will select the latest fork 
+available (currently `fjord`).
+
+By default, the script will dump the L2 genesis allocs of the detected or 
+selected fork only, to the file at `STATE_DUMP_PATH`. The optional environment 
+variable `OUTPUT_MODE` allows to modify this behavior by setting it to one of 
+the following values:
+
+*  `latest` (default) - only dump the selected fork's allocs.
+*  `all` - also dump all intermediary fork's allocs. This only works if 
+`STATE_DUMP_PATH` is not set. In this case, all allocs will be written to files
+`/state-dump-<fork>.json`. Another path cannot currently be specified for this
+use case.
+*  `none` - won't dump any allocs. Only makes sense for internal test usage.
+
+### Creation
+
+*  `CONTRACT_ADDRESSES_PATH` represents the deployment artifact that was 
+generated during a contract deployment. 
+* `DEPLOY_CONFIG_PATH` represents to a path on the filesystem that points to a
+deploy config. The same deploy config JSON file should be used for L1 contracts
+deployment as when generating the L2 genesis allocs.
+*  `STATE_DUMP_PATH` represents the filepath at which the allocs will be 
+written to on disk.
 
 ```bash
 CONTRACT_ADDRESSES_PATH=deployments/artifact.json \
@@ -31,6 +57,7 @@ STATE_DUMP_PATH=<PATH_TO_WRITE_L2_ALLOCS> \
   forge script scripts/L2Genesis.s.sol:L2Genesis \
   --sig 'runWithStateDump()'
 ```
+
 
 ## Subcommand (op-node genesis l2)
 
