@@ -37,7 +37,7 @@ The proposed Fjord upgrade to the OP Stack and OP Mainnet changes the formula fo
 
 *   `getL1Fee` on the [GasPriceOracle contract](https://github.com/ethereum-optimism/optimism/blob/0dcb1b2c7dadec98a24f47e2e2d781a25800d9e1/packages/contracts-bedrock/src/L2/GasPriceOracle.sol#L54) has been updated. It now performs FastLZ compression on-chain, which is a better approximation of the compressibility of a transaction. Combined with a linear regression model, this gives a more accurate prediction of L1 data fees.
 *   `getL1GasUsed` and the corresponding `L1GasUsed` field of transaction receipts are being deprecated as they no longer accurately reflect gas usage as of Ecotone. The function and field will remain; however, their usefulness is limited as they still assume calldata batching. `getL1Fee` should be used when trying to predict L1 Data fees.
-*   `getL1FeeUpperBound` is a new method to estimate fee upper bounds when sending transactions. It is much cheaper, in gas costs, than previous methods. This is what wallets and front-ends should probably use in practice.
+*   `getL1FeeUpperBound` is a new method to estimate fee upper bounds when sending transactions. It is much cheaper, in gas costs, than previous methods. This is what wallets and front-ends should use in practice in most cases.
 
 Your application may need to be updated to account for this change. Read below to learn how you can prepare for the Fjord upgrade.
 
@@ -46,7 +46,7 @@ Your application may need to be updated to account for this change. Read below t
 Changes to the L1 Data Fee formula may affect your application if you are computing this fee component on your own. It's strongly recommended that you use [existing tooling](/builders/app-developers/transactions/estimates#tooling) to estimate transaction fees instead of computing them yourself.
 
 *   If you cannot use existing tooling, use the `getL1Fee` function on the `GasPriceOracle` smart contract to compute the L1 Data Fee component of the transaction fee. Avoid implementing the formula yourself, as it may change in the future.
-*   Alternatively, you might consider using `getL1FeeUpperBound` if you need to estimate the transaction fee and also need to compute the correct value to set when sending transactions.
+*   Alternatively, you should consider using `getL1FeeUpperBound` if you only need to estimate an upper bound of the L1 fee for the purpose of transaction sending.
 
 ## For Chain Operators
 
@@ -80,7 +80,7 @@ The proposed Fjord upgrade impacts OP chains and requires chain operators to upg
 
   ### Prepare Batcher
 
-  Prepare your batcher to be restarted with the updated configuration in advance of the Fjord activation. You will also need to activate Brotli compression for the batcher.
+  Prepare your batcher to activate Brotli compression. This step is optional but recommended to achieve better channel compression.
 
   *   Run the batcher help to see available options:  `go run ./op-batcher/cmd --help |less`
 
@@ -90,7 +90,7 @@ The proposed Fjord upgrade impacts OP chains and requires chain operators to upg
   brotli-10, brotli-11
   ```
 
-  *   Activate Brotli compression for your batcher. `brotli-10` is the default and works fine for most chain configurations, but chain operators can experiment with `brotli-11` if it gives them better compression and their batcher can still keep up with the increased compression computation needs.
+  *   You can activate Brotli compression for your batcher by setting the `compression-algo` flag. `brotli-10` is the recommended Brotli level and works fine for most chain configurations, but chain operators can experiment with `brotli-11` if it gives them better compression and their batcher can still keep up with the increased compression computation needs. `brotli` defaults to `brotli-10`. If the flag is unset, it still defaults to `zlib`.
 </Steps>
 
 ## For Node Operators
@@ -102,8 +102,8 @@ These following steps are necessary for EVERY node operator:
 <Steps>
   ### Update to the Latest Release
 
-  *   [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101315.1)
-  *   [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.7.7-rc.1)
+  *   [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101315.2)
+  *   [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.7.7)
 
   ### Configure the Fjord Activation Date
 
