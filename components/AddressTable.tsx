@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { CHAIN_CONSTANTS, LEGACY_CONTRACT_NAMES } from '@/utils/constants'
 
-interface TableAddresses {
+export interface TableAddresses {
   [contract: string]: string
 }
 
@@ -37,7 +37,7 @@ export function AddressTable({
           Object.entries(filtered)
             .map(([contract, address]) => {
               return (
-                <tr key={`${chain}.${address}`} className="nx-m-0 nx-border-t nx-border-gray-300 nx-p-0 dark:nx-border-gray-600 even:nx-bg-gray-100 even:dark:nx-bg-gray-600/20">
+                <tr key={`${chain}.${contract}.${address}`} className="nx-m-0 nx-border-t nx-border-gray-300 nx-p-0 dark:nx-border-gray-600 even:nx-bg-gray-100 even:dark:nx-bg-gray-600/20">
                   <td className="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 dark:nx-border-gray-600">
                     <code className="nx-border-black nx-border-opacity-[0.04] nx-bg-opacity-[0.03] nx-bg-black nx-break-words nx-rounded-md nx-border nx-py-0.5 nx-px-[.25em] nx-text-[.9em] dark:nx-border-white/10 dark:nx-bg-white/10">
                       {contract}
