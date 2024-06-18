@@ -1,0 +1,36 @@
+---
+title: Integrating a new DA Layer
+lang: en-US
+description: Learn how to add suppoer for a new DA Layer to the OP Stack
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Integrating a new DA Layer
+
+
+<Callout type="warning">
+The Alt-DA Mode feature is a Beta feature of the MIT licensed OP Stack. Features in beta are built and reviewed by the Optimism Collective’s core contributors, and provide developers with early access to highly requested configurations. These features may experience stability issues, and we encourage feedback from our early users.
+</Callout>
+
+[Alt-DA Mode](pages/stack/protocol/features/alt-da-mode.mdx) enables seamless integration of any DA Layer, regardless of their commitment type, into the OP Stack. After a DA Server is built for a DA Layer, any chain operator can launch an OP Stack chain using that DA Layer for sustainably low costs.
+
+### Building your DA Server
+Our suggestion is for every DA Layer to build and maintain their own DA Server, with support from the OP Labs team along the way. The DA Server will need to be run by every node operator, so we highly recommend making your DA Server open sourced and MIT Licensed.
+
+1. Design your commitment binary encoding.
+    1. It must point to the data on your layer (like block height / hash)
+    2. It must be able to validate the data returned from the data (i.e. include a cryptographic commitment to the data like a hash, merkle proof, or polynomial commitment, this could be done against the block hash with a complex proof).
+    3. [Specification here](https://github.com/ethereum-optimism/specs/blob/main/specs/experimental/plasma.md#input-commitment-submission)
+2. Claim your da_layer byte [here](https://github.com/ethereum-optimism/specs/discussions/135)
+3. Implement the DA Server
+    1. Need to write a simple HTTP server which supports `get` and `put`
+    2. `put` is used by the batcher & can return the commitment to the batcher in the body. It should not return until the data is known to be submitted to your DA layer
+    3. `get` should fetch the data. If the data is not be available, it should return a `404` not found. If there are other errors, a different error should be returned.
+    4. [Specification here](https://github.com/ethereum-optimism/specs/blob/main/specs/experimental/plasma.md#da-server)
+4. See an example DA server here: https://github.com/ethereum-optimism/optimism/blob/develop/op-plasma/daserver.go
+
+### Spinning up an Alt-DA Mode chain
+
+Follow [our guide on how to operate an Alt-DA Mode chain](pages/builders/chain-operators/management/alt-da-mode.mdx)
+
