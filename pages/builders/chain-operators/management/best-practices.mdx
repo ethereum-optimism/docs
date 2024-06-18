@@ -11,7 +11,9 @@ import { Callout } from 'nextra/components'
 The following information has some best practices around running the OP Stack's
 off-chain components.
 
-## Correct Release Versions
+## Best Practices
+
+### Correct Release Versions
 
 Chain and node operators should always run the latest production releases of
 the OP Stack's off chain components. Our latest releases, notes, and changelogs
@@ -33,15 +35,23 @@ and `op-geth` releases can be found [here](https://github.com/ethereum-optimism/
     version. Since we cannot left-pad with zeroes, the geth major version is not
     padded.
 
-## Incremental Upgrade Rollouts 
+### Incremental Upgrade Rollouts 
 
 When upgrading your nodes, take a staggered approach. This means deploying the
 upgrade gradually across your infrastructure and ensuring things work as
 expected before making changes to every node.
 
-## Isolate Your Sequencer 
+### Isolate Your Sequencer 
 
 You can isolate your sequencer node, by not connecting it directly to the
 internet. Instead, you could handle your ingress traffic behind a proxy. Have 
 the proxy forward traffic to replicas and have them gossip the transactions 
 internally.
+
+## Assumptions
+
+### op-proposer assumes archive mode 
+
+The `op-proposer` currently assumes that `op-geth` is being run in archive
+mode. This will likely be updated in a future network upgrade, but it is 
+necessary for L2 withdrawals at the moment.
