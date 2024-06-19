@@ -1,7 +1,7 @@
 ---
 title: Oracles
 lang: en-US
-description: Learn about different oracles and how you can use them to access offchain data onchain.
+description: Learn about different oracles and how you can use them to access offchain data onchain as well as random number generation.
 ---
 
 import { Callout } from 'nextra/components'
@@ -34,8 +34,7 @@ There are two types of oracles:
     1.  Double-transaction oracles, which require two transactions.
         The first transaction is the request for information, which usually causes the oracle to emit an event that triggers some offchain mechanism to provide the answer (through its own transaction).
         The second transaction actually reads onchain the result from the oracle and uses it.
-    2.  Single-transaction oracles, which only require one transaction, such as [Chainlink's random number generator](https://docs.chain.link/docs/get-a-random-number/#request-random-values).
-        The way this works is that the transaction that requests the information includes a callback (address and the call data to provide it).
+    2.  Single-transaction oracles, which only require one transaction. The way this works is that the transaction that requests the information includes a callback (address and the call data to provide it).
         When the oracle is updated (which also happens through a transaction, but one that is not sent by the user), the oracle uses the callback to inform a contract of the result.
 
 ## Gas Oracle
@@ -52,6 +51,21 @@ This is a push Oracle.
 OP Mainnet (and the testnets) updates the gas price parameters onchain whenever those parameters change.
 The L1 gas price, which can be volatile, is only pushed once every 5 minutes, and each time can change only by up to 20%.
 
+## Random Number Generation (RGN) 
+
+Random number generation in blockchain applications ensures that smart contracts can access unbiased random values. This is essential for certain use cases like generative NFTs, gaming, commit & reveal schemes and more. Various approaches include using a trusted third party, blockhash-based methods, Verifiable Random Functions (VRF), quantum random numbers to name a few. Each method has trade-offs between simplicity, security, and trust assumptions, allowing developers to select the most suitable option for their use case.
+
+## API3
+
+ The [API3 Market](https://market.api3.org/optimism) provides access to 200+ price feeds on [Optimism Mainnet](https://market.api3.org/optimism) and [Testnet](https://market.api3.org/optimism-sepolia-testnet). The price feeds operate as a native push oracle and can be activated instantly via the Market UI.
+
+ The price feeds are delivered by an aggregate of [first-party oracles](https://docs.api3.org/explore/airnode/why-first-party-oracles.html) using signed data and support [OEV recapture](https://docs.api3.org/explore/introduction/oracle-extractable-value.html).
+
+ Unlike traditional data feeds, reading [API3 price feeds](https://docs.api3.org/guides/dapis/) enables dApps to auction off the right to update the price feeds to searcher bots which facilitates more efficient liquidation processes for users and LPs of DeFi money markets. The OEV recaptured is returned to the dApp.
+
+API3's QRNG provides dApps with truly random numbers based on quantum mechanics at no charge. More details [here](https://api3.org/qrng/)
+
+
 ## Chainlink
 
 [Chainlink](https://chain.link/) is the industry-standard decentralized computing platform powering the verifiable web. 
@@ -66,6 +80,18 @@ Those feeds are available on the production network @ [Op Mainnet](https://docs.
 
 This is a push Oracle. See the [Using Data Feeds guide](https://docs.chain.link/docs/get-the-latest-price/) to learn how to use the Chainlink feeds.
 
+* Chainlink VRF provides cryptographically secure randomness for blockchain-based applications. More details [here](https://chain.link/vrf)
+
+## Chronicle
+
+The first Oracle on Ethereum, Chronicle’s decentralized Oracle network was originally built within MakerDAO for the development of DAI and is now available to builders on OP Mainnet and the Superchain.
+
+ * **Data Feeds**: Builders can choose from 65+ data feeds, including crypto assets, yield rates, and RWAs. Chronicle’s data is sourced via custom-built data models, only utilizing Tier 1 Primary Sources, such as the markets where tokens are actively traded, including Coinbase, Binance, Uniswap, and Curve.
+ * **Transparency & Integrity**: Chronicle’s Oracle network is fully transparent and verifiable. Via [The Chronicle](https://chroniclelabs.org/dashboard/oracle/DAI/USD?blockchain=OPT&txn=0x53e60e6e79eb938e5ca3ca6c56b0795e003dd6b3a17cfd810ca5042b3d33b680&contract=0x104916d38828DA8B83a88A1775Aa058e1F0B1647), the data supply chain for any Oracle can be viewed in real-time and historically, including data sources and the identity of all Validators/Signers. Users can cryptographically challenge the integrity of every Oracle update using the ‘verify’ feature. Data is independently sourced by a [community of Validators](https://chroniclelabs.org/validators), including Gitcoin, Etherscan, Infura, DeFi Saver, and MakerDAO.
+ * **Gas Efficiency:** Pioneering the Schnorr-based Oracle architecture, Chronicle’s Oracles use 60-80% less gas per update than other Oracle providers. This lowest cost per update allows Push Oracle updates to be made more regularly, ensuring more accurate and granular data reporting.
+
+Every Oracle implementation is customized to fit your needs. Implement one of our existing data models or contact Chronicle to develop custom Oracle data feeds via [Discord](https://discord.gg/CjgvJ9EspJ) or [Email](mailto:gm@chroniclelabs.org). Developers can dive deeper into Chronicle Protocol's architecture and unique design choices [via the docs](https://docs.chroniclelabs.org/).
+
 ## Pyth Network
 
 The Pyth Network is a financial oracle network which delivers over 400 low-latency, high-fidelity price feeds across cryptocurrencies, FX pairs, equities, ETFs, and commodities.
@@ -75,6 +101,8 @@ The Pyth Network is a financial oracle network which delivers over 400 low-laten
     -The Pyth [TradingView](https://docs.pyth.network/guides/how-to-create-tradingview-charts) integration allows users to view and display Pyth prices on their own website and UI.
 
 You can explore the full catalog of Pyth Price Feed IDs for [OP Mainnet and Sepolia (EVM Stable)](https://pyth.network/developers/price-feed-ids#pyth-evm-stable).
+
+* Pyth Entropy allows developers to quickly and easily generate secure random numbers on the blockchain More details [here](https://pyth.network/blog/secure-random-numbers-for-blockchains)
 
 ## RedStone
 
