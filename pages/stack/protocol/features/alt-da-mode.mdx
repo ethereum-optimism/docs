@@ -8,33 +8,17 @@ import { Callout } from 'nextra/components'
 
 # Alt-DA Mode Explainer
 
-Alt-DA Mode enables seamless integration of various DA Layers, regardless of their commitment type, into the OP Stack. This allows any chain operator to launch an OP Stack chain using their favorite DA Layer for sustainably low costs.
+Alt-DA Mode enables seamless integration of various Data Availability (DA) Layers, regardless of their commitment type, into the OP Stack. This allows any chain operator to launch an OP Stack chain using their favorite DA Layer for sustainably low costs.
 
 ## Sustainably Low Costs
 
-EIP-4844 has massively reduced Ethereum L1 data costs for OP Stack rollups, but blobspace is on the path to congestion, which will lead to higher blob fees and increased chain operator costs. 
-Alternative DA Layers allow OP Stack chains to post data to a place that is cheap and won't get congested but remains stable and minimizes security and decentralization tradeoffs.
+In order to function securely, OP Stack chains need to ensure that L2 transaction data is available to all node operators. EIP-4844 has massively reduced Ethereum L1 data costs for OP Stack rollups, but blobspace is on the path to congestion, which will lead to higher blob fees and increased chain operator costs. 
+Over the past few years, alternative DA Layers have been built as an alternative place for L2s to post L2 data that is cheap, with more throughput, but remains stable and minimizes security and decentralization tradeoffs.
 
 ## How It Works
 
-Alt-DA Mode introduces a standard interface for reading and writing data to Alt-DA Layers and allows any DA Layer team to build and maintain their own DA Server to enable the OP Stack to communicate with their DA Layer. The DA Server handles any of the custom DA Layer logic, such as key management, interfacing with a DA Layer node, etc.
+Alt-DA Mode introduces a standard interface for reading and writing data to Alt-DA Layers and allows any DA Layer team to build and maintain their own (DA Server)[https://specs.optimism.io/experimental/alt-da.html#da-server] to enable the OP Stack to communicate with their DA Layer. The DA Server handles any of the custom DA Layer logic, such as key management, interfacing with a DA Layer node, etc.
 
-```mermaid
-    sequenceDiagram
-    participant User
-    participant Configuration
-    participant OP Stack
-    participant DA Layer
-    participant Batcher
-
-    User->>Configuration: Add "alt-da-mode" setting
-    Configuration-->>OP Stack: Updated configuration with Alt-DA Mode
-    OP Stack->>+DA Layer: Integrate different DA Layers
-    DA Layer-->>-OP Stack: Provide cost-efficient data availability
-    User->>Batcher: Configure batcher with DA settings
-    Batcher-->>OP Stack: Batching transactions for Alt-DA Mode
-    OP Stack-->>User: Operational Alt-DA Mode for enhanced flexibility
-```
 This abstraction ensures that new features and improvements to Alt-DA Mode will come to all chains using Alt-DA Mode, regardless of the DA Layer they choose to use.
 Although the Data Availability Challenge (DA Challenge) will be disabled at launch, this integration provides a solution compatible with upcoming OP Stack features.
 
@@ -46,6 +30,10 @@ Just like with the Rollup configuration of the OP Stack, core contributors are c
 *   Plasma Data Availability Challenges support for more DA Layers (currently only supports DA Layers with a `keccak256` commitment type)
 *   DA Bridge integrations (like Celestia Blobstream and Eigen DA Cert Verification)
 *   Increasing the amount of data that can be committed to in a single commitment (potentially with merklization)
+
+## Tradeoffs of Alt-DA Mode
+
+Alt-DA Mode will always have more trust assumptions than simply posting data to L1 Ethereum. In its current initial iteration, Alt-DA Mode with generic commitments fully trusts the chain operator to make data available by both posting all data to the DA Layer and posting corresponding commitments to L1 Ethereum. If a chain operator posts incorrect commitments or does not post data to the DA Layer, it will not be accessible by node operators. The future improvements mentioned above are intended to address this trust assumption. After DA Bridges are integrated, then as long as the DA Layer and its DA Bridge are decentralized and functioning as intended, then once data is posted to the DA Layer, the L1 commitments would be bridged without relying on a aingly trusted party. It is important to remember that, even after integrating the DA Bridges and Fault Proofs, there will still be an added trust assumption that the DA Layer and DA Bridge are secure and functioning as intended. 
 
 ## Next Steps
 
