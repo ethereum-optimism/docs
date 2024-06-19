@@ -1,12 +1,12 @@
 ---
-title: Integrating a new DA Layer
+title: Integrating a New DA Layer with Alt-DA
 lang: en-US
 description: Learn how to add support for a new DA Layer within the OP Stack.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Integrating a New DA Layer
+# Integrating a New DA Layer with Alt-DA
 
 <Callout type="warning">
   The Alt-DA Mode feature is a Beta feature of the MIT licensed OP Stack. While it has received initial review from core contributors, it is still undergoing testing and may have bugs or other issues.
@@ -14,7 +14,7 @@ import { Callout, Steps } from 'nextra/components'
 
 [Alt-DA Mode](/stack/protocol/features/alt-da-mode) enables seamless integration of any DA Layer, regardless of their commitment type, into the OP Stack. After a DA Server is built for a DA Layer, any chain operator can launch an OP Stack chain using that DA Layer for sustainably low costs.
 
-## Building Your DA Server
+## Build Your DA Server
 
 Our suggestion is for every DA Layer to build and maintain their own DA Server, with support from the OP Labs team along the way. The DA Server will need to be run by every node operator, so we highly recommend making your DA Server open sourced and MIT Licensed.
 
@@ -22,7 +22,7 @@ Our suggestion is for every DA Layer to build and maintain their own DA Server, 
   ### Design your commitment binary encoding
 
   *   It must point to the data on your layer (like block height / hash).
-  *   It must be able to validate the data returned from the data (i.e. include a cryptographic commitment to the data like a hash, merkle proof, or polynomial commitment, this could be done against the block hash with a complex proof).
+  *   It must be able to validate the data returned from the data (i.e., include a cryptographic commitment to the data like a hash, merkle proof, or polynomial commitment, this could be done against the block hash with a complex proof).
 
   <Callout>
     See the [specs](https://specs.optimism.io/experimental/alt-da.html?highlight=input-commitment-submission#input-commitment-submission) for more info on commitment submission.
@@ -38,12 +38,12 @@ Our suggestion is for every DA Layer to build and maintain their own DA Server, 
   *   `put` is used by the batcher and can return the commitment to the batcher in the body. It should not return until the data is known to be submitted to your DA layer.
   *   `get` should fetch the data. If the data is not be available, it should return a `404` not found. If there are other errors, a different error should be returned.
 
-  <Callout type="info">
-    For  more info on implementing the DA Server, [see the specification](https://specs.optimism.io/experimental/alt-da.html#da-server).
-  </Callout>
 </Steps>
+
+## Run Alt-DA
+Follow our guide on [how to operate an Alt-DA Mode chain](/builders/chain-operators/features/alt-da-mode), except instead of using the S3 DA server, use the DA server that you built.
 
 ## Next Steps
 
 *   Want to explore more? See an [example DA server](https://github.com/ethereum-optimism/optimism/blob/develop/op-plasma/daserver.go)
-*   Ready for next steps? Follow our guide on [how to operate an Alt-DA Mode chain](/builders/chain-operators/features/alt-da-mode)
+*   For more detail on implementing the DA Server, [see the specification](https://specs.optimism.io/experimental/alt-da.html#da-server).
