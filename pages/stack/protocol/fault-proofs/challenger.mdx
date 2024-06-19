@@ -36,9 +36,9 @@ cannon --> op-program[op-program]
 
 ## Fault Detection Responses
 
-`op-challenger` makes a decision on each claim in each game and decides whether to counter it or not based on it's view of the validity of the claim. An honest challenger uses this basic logic:
+`op-challenger` makes a decision on each claim in each game and decides whether to counter it or not based on its view of the validity of the claim. An honest challenger uses this basic logic:
 
-1.  If the trusted node agrees with the output, `op-challenger` takes no action. An honest challenger does nothing because there are no claims it disagrees with. It continues to monitor the game in case someone posts a counter claim to the valid root claim, in which case the challenger will participate in the game to defend the proposal.
+1.  If the trusted node agrees with the output, `op-challenger` takes no action. An honest challenger does nothing because there are no claims it disagrees with. It continues to monitor the game in case someone posts a counter-claim to the valid root claim, in which case the challenger will participate in the game to defend the proposal.
 2.  If the trusted node disagrees, `op-challenger` creates a new dispute game. In contrast to the above, an honest challenger aims to delete any output roots that its trusted node disagrees with in order to claim the bond attached to it. The honest challenger assumes that their rollup node is synced to the canonical state and that the fault proof program is correct, so it is willing to put its money on the line to counter any faults.
 
 ## Fault Dispute Game Responses
@@ -93,15 +93,15 @@ The `FaultDisputeGame` does not put a time cap on resolution - because of the li
 
 ### If I don't have a blob archiver with access to historical data, can I lose the game?
 
-Most likely, yes. If nobody has access to the historical data. All the honest actors work together without needing to coordinate offense because they're all trying to play the same moves. So, if you're the only honest actor and you don't have a blob archiver and you get pushed down to the bottom half of the game (\~ 32 claims deep in the game), then you would just see errors coming out of the challenger and wouldn't be able to respond without the blob archiver. You'd have 3.5 days on your side of the game to fix the problem by switching to a beacon node that does have blobs, and then you'll be able to carry on as usual.
+Most likely, yes. If nobody has access to the historical data. All the honest actors work together without needing to coordinate offense because they're all trying to play the same moves. So, if you're the only honest actor, and you lack a blob archiver, and you get pushed down to the bottom half of the game (\~ 32 claims deep in the game), then you would just see errors coming out of the challenger and wouldn't be able to respond without the blob archiver. You'd have 3.5 days on your side of the game to fix the problem by switching to a beacon node that does have blobs, and then you'll be able to carry on as usual.
 
-Note: You would only be pushed down to the bottom half of the game if the block being disputed is older than the blob retention period (\~18 days).  If valid proposals are resolving regularly, this is not possible because each valid proposal becomes the starting point for newly created dispute games. So if there are regular valid proposals, you're normally only disputing \~3.5 days worth of blocks which is well within the retention period.
+Note: You would only be pushed down to the bottom half of the game if the block being disputed is older than the blob retention period (\~18 days).  If valid proposals are resolving regularly, this is not possible because each valid proposal becomes the starting point for newly created dispute games. So if there are regular valid proposals, you're normally only disputing \~3.5 days worth of blocks, which is well within the retention period.
 
 ### How many CPUs should I run for challenger to work efficiently?
 
 The default value for `--max-concurrency`will work for most chain operators. However, if you are seeing challenger progress too slowly, you might need to increase `--max-concurrency` , and if you're seeing challenger sending too many concurrent requests, then reduce `--max-concurrency`.
 
-For example, you might want to increase `--max-concurrency`, if you have a small number of CPUs by default because most of the time you won't actually need to run Cannon, so it's actually reasonable to put Challenger on quite a small box and it'll be fine. But then, if challenger starts having to execute Cannon, you need to respond and scale up and give more CPUs. Increasing `--max-concurrency` will also allow challenger to be making requests your L1 in parallel. Otherwise, it'll be quite slow to iterate through every game. 
+For example, you might want to increase `--max-concurrency`, if you have a small number of CPUs by default because most of the time you won't actually need to run Cannon, so it's actually reasonable to put Challenger on quite a small box and it'll be fine. But then, if challenger starts having to execute Cannon, you need to respond and scale up and give more CPUs. Increasing `--max-concurrency` will also allow challenger to be making requests your L1 in parallel. Otherwise, it'll be quite slow to iterate through every game.
 Alternatively, you might want to reduce `--max-concurrency` if you have a lot of CPUs, and you find that challenger is flooding the L1 with concurrent requests.
 
 ### How much ETH do you need to challenge in a game?
@@ -120,11 +120,10 @@ Claims that are found to be correct have their bonds refunded. Claims that are f
 *   There is a delay on claiming bonds of 7 days after the claim is resolved.
 *   The 7 day period restarts each time a new bond from that game is paid to the same user. Typically this means that bonds are claimable 7 days after the game is resolved.
 
-The calculation for the bond amounts are hard coded in the [`FaultDisputeGame` contract](https://github.com/ethereum-optimism/optimism/blob/547ea72d9849e13ce169fd31df0f9197651b3f86/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol#L99-L100), and there’s a `getRequiredBond` method on the contract that will tell you what bond to use.
+The calculation for the bond amounts are hard coded in the [`FaultDisputeGame` contract](https://github.com/ethereum-optimism/optimism/blob/547ea72d9849e13ce169fd31df0f9197651b3f86/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol#L99-L100), and there's a `getRequiredBond` method on the contract that will tell you what bond to use.
 
 ### How much ETH is required for the challenger bond?
 
 The dispute game factory has the bond value set. To ensure correct game outcomes, the combined funding of all honest actors must be more than the funding available to an attacker. Otherwise the attacker can just post so many claims that the honest actors run out of funds and can no longer counter them. There isn't a fixed amount that guarantees this, so chain operators should have significant funds available at short notice to respond to claims.
 
 Given the guardian can intervene and reallocate bond payments if needed, attackers who try to outspend the honest actors are guaranteed to lose their funds because the guardian will just intervene and pay all their bonds to the honest actors which is a very strong disincentive against trying to win games by outspending people.
-
