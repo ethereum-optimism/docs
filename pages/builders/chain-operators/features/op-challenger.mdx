@@ -1,0 +1,194 @@
+---
+title: How to Configure Challenger For Your Chain
+lang: en-US
+description: Learn how to configure challenger for your OP Stack chain.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# How to Configure Challenger For Your Chain
+
+This guide provides a walkthrough of setting up the configuration and monitoring options for `op-challenger`. See the [OP-Challenger Explainer](/stack/protocol/fault-proofs/challenger) for a general overview of this fault proofs feature.&#x20;
+
+<Steps>
+  ### Build the Executable
+
+  *   Clone the monorepo
+
+  ```bash
+  git clone https://github.com/ethereum-optimism/optimism.git
+  ```
+
+  *   Checkout the [latest release of `op-challenger`](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.0.1) and use the commit to deploy. Alternatively, you can use the prebuilt [challenger docker images](us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.0.0).
+      If you use a Docker image, it already comes with `op-program` server and an executable for Cannon embedded, so you don't have to specify Cannon bin.
+
+      ```bash
+      git checkout op-challenger/vX.Y.Z
+      ```
+
+  <Callout type="warning">
+    If you're running `op-challenger` outside of Docker, you may need to specify the arguments and `op-program` server, but there's a Cannon server option which points to op-program's executable.
+  </Callout>
+
+  *   Build challenger
+
+  ```bash
+  cd optimism
+  pnpm install
+  make op-challenger
+  ```
+
+  ### Configure Challenger
+
+  *   You will now configure challenger with the required flags. You can use the `op-challenger --help` to view all of the subcommands, command line and environment variable options.
+
+  *   The example config file below shows the flags we will configure in this step:
+
+  ```docker
+  challenger:
+      user: "1000"
+      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v0.2.11
+      command:
+        - "op-challenger"
+        - "--l1-eth-rpc=http://sepolia-el-1:8545"
+        - "--l1-beacon=http://sepolia-cl-1:5051"
+        - "--l2-eth-rpc=http://op-sepolia-el-1:8545"
+        - "--rollup-rpc=http://op-sepolia-cl-1:5051"
+        - "--selective-claim-resolution"
+        - "--private-key=...."
+        - "--network=..."
+        - "--game-factory-address=..."
+        - "--datadir=/data"
+        - "--cannon-prestates-url=..."
+      volumes:
+        - "/mnt/data/docker-data/op-sepolia/data/challenger:/data"
+        - "./cfg:/cfg"
+  ```
+
+  #### `--l1-eth-rpc`
+
+  *   This is the HTTP provider URL for a standard L1 node, can be a full node. OP-Challenger will be sending lots of requests, so you need a node that can easily handle lots of transactions and you really want to trust that node.
+  *   Note: Challenger has lot of money and it will spend it if it needs to interact with games. That might risk not defending games or challenging games correctly, so you want to really trust the nodes that you're pointing the Challenger at.
+
+  #### `--l1-beacon`
+
+  *   This is needed just to get blobs from.
+  *   In some instances, you might need blob archiver or L1 consensus node configured not to prune blobs:
+      *   If the chain is proposing regularly, you don't need the blob archiver. You'll only have a small window in the blob retention period that games can be played.
+      *   If the chain doesn't post a valid output root in 18 days, you may need a blob archiver who is running a challenge game. If you get pushed to the bottom of the game, you could lose if you're the only one protecting the chain.
+
+  #### `--l2-eth-rpc`
+
+  *   This needs to be `op-geth` archive node, with `debug` enabled
+  *   Technically doesn't need to go to bedrock, but needs to have access to the start of any game that is still in progress
+
+  #### `--rollup-rpc`
+
+  *   This needs to be an`op-node` archive node because we need access to output roots from back when the games start
+
+  #### `--private-key`
+
+  *   You must specify a private key or use something else (like `op-signer`)
+  *   This uses the same transaction manager arguments as `op-node` , batcher, and proposer, so chain operators can choose one of the following options:
+      *   a mnemonic
+      *   a private key
+      *   `op-signer` endpoints
+
+  #### `--network`
+
+  *   This is the same as the network argument flag (from `op-node`), but could be taken from the network
+  *   When we execute cannon, we need the roll-up config and the L2 Genesis, which is op-geth's Genesis file. Both files are automatically loaded if you say Cannon Network, but custom networks will need to specify both Cannon L2 Genesis and Cannon rollup config
+  *   For custom networks not in the superchain-registry yet, the rollup must be specified:
+
+      ```
+      --cannon-rollup-config rollup.json  \
+      --cannon-l2-genesis genesis-l2.json \
+      # if you're running it outside of the docker image, you'll need this
+      --cannon-server ./op-program/bin/op-program \
+      # json or url, version of op-program deployed on chain
+      # if you use the wrong one, you will lose the game
+      # if you deploy your own contracts, you specify the hash, the root of the json file
+      # op mainnet are tagged versions of op-program
+      # make reproducable prestate
+      # challenger verifies that onchain
+       --cannon-prestate ./op-program/bin/prestate.json \
+      # max cpus to use, probably best to leave it as default to use the number of
+      # cpus you have. Cannon will use a lot of cpus
+       - "--max-concurrency=20"
+      ```
+
+  #### `--game-factory-address`
+
+  *   You can load the game factory address info from system config or superchain registry. \[Note: In a later release, you will be able to just say network=opmainnet (like you can with op-node), and it will automatically get the game Factory address.]
+  *   If you have a custom network (or it's not inside superchain registry yet), then chain operators will use this game factory address pointed at the dispute game factory proxy
+
+  #### `--datadir`
+
+  *   This is a directory that `op-challenger` can write to and store whatever data it needs.  It will manage this directory to add or remove data as needed under that directory.
+  *   If running in docker, it should point to a docker volume or mountpoint, so the data isn't lost on every restart. The data can be recreated if needed but particularly if the challenger has executed cannon as part of responding to a game it may mean a lot of extra processing.
+
+  #### `--cannon-prestates-url`
+
+  The pre-state is effectively the version of op-program that is deployed on chain. And you must use the right version. If you use the wrong one, you will lose the game. If you're deploying your own contracts, you specify a absolute prestate hash, which is the root of that Json file basically, and then you're just going to make sure whatever you use to get that hash from is what you actually use for the game.
+
+  For everything we do OP Mainnet, there are tagged versions of op-program. So, if you check out the op-program, you can run `make reproducible-prestate`. And, it will build that proof for you in exactly the right way, consistently, and it should give you the exact same hashes we had. The Challenger will verify this on chain by getting the hash from the contract and if the prestate you have doesn't match the hash, it will not play that particular game. Challenger will just log an error because it knows it'll be wrong.
+
+  *   There's two versions of the `--cannon-prestates-url`:
+      *   **prestate (singular):** where you can specify a path to a Cannon pre-state Json file or
+      *   **URL (multiple):** where you can specify the URL and it will load each pre-state, so you can have multiple different versions. For example, if you've upgraded for hard folks, you deploy a new pre-state, and Cannon can just go to that URL and append the hash dot json to that URL and downloads it.
+  *   Example final Url for a prestate:
+      *   [https://storage.googleapis.com/oplabs-network-data/proofs/op-program/cannon/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json](https://storage.googleapis.com/oplabs-network-data/proofs/op-program/cannon/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json)
+      *   if you read this file, it's the cannon memory state
+
+  <Callout type="warning">
+    The challenger will refuse to interact with any games if it doesn't have the matching prestate.
+  </Callout>
+
+  ### Execute Challenger
+
+  You can now execute challenger with the required flags. It will look something like this (but with required flags added):
+
+  ```bash
+  ./op-challenger/bin/op-challenger \
+    --trace-type cannon \
+    --l1-eth-rpc http://localhost:8545 \
+    --rollup-rpc http://localhost:9546 \
+    --game-factory-address $DISPUTE_GAME_FACTORY \
+    --datadir temp/challenger-data \
+    --cannon-rollup-config .devnet/rollup.json  \
+    --cannon-l2-genesis .devnet/genesis-l2.json \
+    --cannon-bin ./cannon/bin/cannon \
+    --cannon-server ./op-program/bin/op-program \
+    --cannon-prestate ./op-program/bin/prestate.json \
+    --l2-eth-rpc http://localhost:9545 \
+    --mnemonic "test test test test test test test test test test test junk" \
+    --hd-path "m/44'/60'/0'/0/8" \
+    --num-confirmations 1
+  ```
+
+  ### Test and Debug Challenger (Optional)
+
+  This is an optional step that walks you through how to use `op-challenger` subcommands, which allow you to interact with the fault proof system onchain for testing and debugging purposes. For example, you can test and explore the system in the following ways:
+
+  *   create games yourself, and it doesn't matter if the games are valid or invalid.
+  *   perform moves in games and then claim and resolve things.
+
+  Here's the list of op-challenger subcommands:
+
+  | subcommand    | description                                              |
+  | ------------- | -------------------------------------------------------- |
+  | list-games    | List the games created by a dispute game factory         |
+  | list-claims   | List the claims in a dispute game                        |
+  | list-credits  | List the credits in a dispute game                       |
+  | create-game   | Creates a dispute game via the factory                   |
+  | move          | Creates and sends a move transaction to the dispute game |
+  | resolve       | Resolves the specified dispute game if possible          |
+  | resolve-claim | Resolves the specified claim if possible                 |
+
+  Additinally, if you're a chain operator, you almost certainly want to run `op-dispute-mon`. It is securities monitoring and is an incredibly useful service to keep an eye on games, basically giving us visibility into all the status of the games for the last 28 days. Chain operators can easily create their grafana dashboard for Dispute Monitor using the following json file:
+</Steps>
+
+Next Steps
+Additional questions? See the FAQ section in the [OP Challenger Explainer](/stack/protocol/fault-proofs/challenger).
+For more detailed info on `op-challenger`, see the [specs](https://specs.optimism.io/fault-proof/stage-one/honest-challenger-fdg.html).
+If you experience any problems, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
