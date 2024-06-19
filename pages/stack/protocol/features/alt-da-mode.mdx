@@ -12,16 +12,33 @@ Alt-DA Mode enables seamless integration of various DA Layers, regardless of the
 
 ## Sustainably Low Costs
 
-EIP-4844 has massively reduced Ethereum L1 data costs for OP Stack rollups, but blobspace is on the path to congestion, which will lead to higher blob fees and increased chain operator costs. Alternative DA Layers allow OP Stack chains to post data to a place that is cheap and won't get congested, but is still stable and minimizes security and decentralization tradeoffs.
+EIP-4844 has massively reduced Ethereum L1 data costs for OP Stack rollups, but blobspace is on the path to congestion, which will lead to higher blob fees and increased chain operator costs. 
+Alternative DA Layers allow OP Stack chains to post data to a place that is cheap and won't get congested but remains stable and minimizes security and decentralization tradeoffs.
 
-## How it works
+## How It Works
 
 Alt-DA Mode introduces a standard interface for reading and writing data to Alt-DA Layers and allows any DA Layer team to build and maintain their own DA Server to enable the OP Stack to communicate with their DA Layer. The DA Server handles any of the custom DA Layer logic, such as key management, interfacing with a DA Layer node, etc.
 
-This abstraction ensures that new features and improvements to Alt-DA Mode will come to all chains using Alt-DA Mode, regardless of the DA Layer they choose to use.
-Although the Data Availability Challenge (DA Challenge) will be disabled at launch, this integration provides a future-proof solution compatible with upcoming OP Stack features.
+```mermaid
+    sequenceDiagram
+    participant User
+    participant Configuration
+    participant OP Stack
+    participant DA Layer
+    participant Batcher
 
-## Future improvements
+    User->>Configuration: Add "alt-da-mode" setting
+    Configuration-->>OP Stack: Updated configuration with Alt-DA Mode
+    OP Stack->>+DA Layer: Integrate different DA Layers
+    DA Layer-->>-OP Stack: Provide cost-efficient data availability
+    User->>Batcher: Configure batcher with DA settings
+    Batcher-->>OP Stack: Batching transactions for Alt-DA Mode
+    OP Stack-->>User: Operational Alt-DA Mode for enhanced flexibility
+```
+This abstraction ensures that new features and improvements to Alt-DA Mode will come to all chains using Alt-DA Mode, regardless of the DA Layer they choose to use.
+Although the Data Availability Challenge (DA Challenge) will be disabled at launch, this integration provides a solution compatible with upcoming OP Stack features.
+
+## Future Improvements
 
 Just like with the Rollup configuration of the OP Stack, core contributors are continuously improving the decentralization, security, and cost-effectiveness of Alt-DA Mode. Some of the future features that core contributors are looking to build are:
 
@@ -32,20 +49,20 @@ Just like with the Rollup configuration of the OP Stack, core contributors are c
 
 ## Next Steps
 
-*   Ready to get started? Read our guide on how to [deploy your Alt-DA Mode chain](/builders/chain-operators/management/alt-da-mode).
+*   Ready to get started? Read our guide on how to [deploy your Alt-DA Mode chain](/builders/chain-operators/features/alt-da-mode).
 *   For more info about how Alt-DA Mode works under the hood, [check out the specs](https://specs.optimism.io/experimental/alt-da.html).
 
 ## FAQs
 
 ### Can I deploy a chain using Ethereum L1 DA and later switch to Alt-DA?
 
-*   While it is a future goal to spec out a migration path from Ethereum L1 DA to Alt-DA Mode, the migration path has not been scoped out yet.
+While it is a future goal to spec out a migration path from Ethereum L1 DA to Alt-DA Mode, the migration path has not been scoped out yet.
 
 ### Can I deploy a chain using Alt-DA and then later switch to Ethereum L1 DA?
 
-*   Same as above, it is a future goal to spec out this migration path, but the migration path has not been scoped out yet.
+Same as above, it is a future goal to spec out this migration path, but the migration path has not been scoped out yet.
 
 ### Can I switch between Alt-DA layers when using Alt-DA Mode?
 
-*   This is technically possible today. A chain operator can start posting data to two DA Layers simultaneously during a transition period and coordinates their node operators to switch the DA Server they operate during that time.
-*   If assistance is needed here, please reach out [via Github](https://github.com/ethereum-optimism/developers/discussions)
+This is technically possible today. A chain operator can start posting data to two DA Layers simultaneously during a transition period and coordinates their node operators to switch the DA Server they operate during that time. 
+If assistance is needed here, please reach out [via Github](https://github.com/ethereum-optimism/developers/discussions)
