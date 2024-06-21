@@ -41,17 +41,25 @@ This is the general flow of how custom gas tokens work on the OP Stack:
 *   Withdrawing the native L2 token results in the unlocking of the custom token on L1.
 *   The native L2 token is used by default to pay for gas fees.
 
+The following diagram represents the typical steps involved in utilizing custom gas tokens to optimize transaction costs. 
+It assumes a simple flow where a user mints gas tokens, uses them in a transaction, and the network applies these tokens to reduce transaction costs.
+
 ```mermaid
-graph TD;
-    A[User] -- 1. Initiates a transaction --> B[Smart Contract]
-    B -- 2. Uses custom gas token --> C[Gas Token Contract]
-    C -- 3. Verifies token validity --> B
-    B -- 4. Executes transaction --> D[Optimism Execution Environment]
-    D -- 5. Processes transaction --> E[Optimism Sequencer]
-    E -- 6. Commits transaction --> F[Optimism L2 Chain]
-    F -- 7. Confirms transaction --> G[User]
+sequenceDiagram
+    participant U as User
+    participant C as Contract
+    participant G as Gas Token Interface
+    participant O as Optimism Network
+
+    U->>G: Request minting of Gas Tokens
+    G-->>U: Gas Tokens minted
+    U->>C: Initiate transaction with Gas Tokens
+    C->>O: Validate transaction
+    O->>C: Apply Gas Tokens to reduce cost
+    C-->>U: Transaction successful with optimized cost
+
 ```
-This flow illustrates how custom gas tokens can optimize transaction costs within the Optimism protocol, reducing fees for users interacting with smart contracts on L2.
+
 ## Benefits
 
 Chain operators get the following benefits by using custom gas tokens:
