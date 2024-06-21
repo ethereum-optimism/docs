@@ -31,7 +31,13 @@ The L1 Proxy Admin is an address that can be used to upgrade most OP Mainnet sys
 
 ## L2 Proxy Admin
 
-The L2 Proxy Admin is an address that can be used to upgrade most OP Mainnet system contracts on L2.
+The L2 Proxy Admin is an address that can be used to upgrade most OP Mainnet system contracts on L2. The L2 Proxy Admin owner is the [aliased address](/chain/differences#address-aliasing) of the L1ProxyAdmin owner, which means the L2 ProxyAdmin Owner is equal to the L1 ProxyAdmin Owner, but due to aliasing it's a different address. Here's how that works:
+
+*   Given an L1 contract address, the aliased L2 address is equal to `L1_contract_address` + `0x1111000000000000000000000000000000001111`.
+*   Using `0x6B1BAE59D09fCcbdDB6C6cceb07B7279367C4E3b` as an example, the `0x6B` address is the L2 address that's been aliased, so to figure out the original L1 address you calculate `0x6B1BAE59D09fCcbdDB6C6cceb07B7279367C4E3b` - `0x1111000000000000000000000000000000001111`.
+*   That result gives an L1 contract address of `0x5a0Aae59D09fccBdDb6C6CcEB07B7279367C3d2A`, which should be the 2/2 Safe owned by Foundation + Security Council that is L1 ProxyAdmin Owner.
+*   No one has the private key for `0x6B1BAE59D09fCcbdDB6C6cceb07B7279367C4E3b` on OP Mainnet, which means the only way for the L2 ProxyAdmin owner to send transactions is via deposit transactions from the L1 `0x5a0Aae59D09fccBdDb6C6CcEB07B7279367C3d2A` address.
+*   For help with the calculations, see the [`AddressAliasHelper` library](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/vendor/AddressAliasHelper.sol).
 
 ### Risks
 
@@ -169,7 +175,7 @@ The Guardian can also manage various aspects of the `OptimismPortal` contract to
 
 ### Addresses
 
-*   **Ethereum**: [`0x9BA6e03D8B90dE867373Db8cF1A58d2F7F006b3A`](https://etherscan.io/address/0x9BA6e03D8B90dE867373Db8cF1A58d2F7F006b3A)
+*   **Ethereum**: [`0x09f7150D8c019BeF34450d6920f6B3608ceFdAf2`](https://etherscan.io/address/0x09f7150D8c019BeF34450d6920f6B3608ceFdAf2)
 *   **Sepolia**: [`0xf64bc17485f0B4Ea5F06A96514182FC4cB561977`](https://sepolia.etherscan.io/address/0xf64bc17485f0B4Ea5F06A96514182FC4cB561977)
 
 ## Mint Manager Owner
