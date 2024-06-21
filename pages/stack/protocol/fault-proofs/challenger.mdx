@@ -9,7 +9,7 @@ import Image from 'next/image'
 
 # OP-Challenger Explainer
 
-The `op-challenger` operates as the *honest actor* in the fault dispute system and defends the chain by securing the `OptimismPortal` and ensuring the game will always resolve to the correct state of the chain. For verifying the legitimacy of claims, `op-challenger` relies on a synced, trusted rollup node as well as a trace provider (e.g., [Cannon](/stack/protocol/fault-proofs/cannon)).
+The `op-challenger` operates as the *honest actor* in the fault dispute system and defends the chain by securing the `OptimismPortal` and ensuring the game always resolves to the correct state of the chain. For verifying the legitimacy of claims, `op-challenger` relies on a synced, trusted rollup node as well as a trace provider (e.g., [Cannon](/stack/protocol/fault-proofs/cannon)).
 
 Specifically, `op-challenger` performs the following actions:
 
@@ -40,14 +40,14 @@ graph TD;
 
 ## Fault Detection Responses
 
-`op-challenger` evaluates each claim's validity in every game, deciding to counter only those it deems invalid. An honest challenger uses this basic logic:
+`op-challenger` assesses each claim's validity, countering only those deemed invalid, following this logic:
 
 1.  If the trusted node agrees with the output, `op-challenger` takes no action. An honest challenger does nothing because there are no claims it disagrees with. It continues to monitor the game in case someone posts a counter-claim to the valid root claim, in which case the challenger will participate in the game to defend the proposal.
 2.  If the trusted node disagrees, `op-challenger` posts a counter-claim to challenge the proposed output. In contrast to the above, an honest challenger aims to delete any output roots that its trusted node disagrees with in order to claim the bond attached to it. The honest challenger assumes that their rollup node is synced to the canonical state and that the fault proof program is correct, so it is willing to put its money on the line to counter any faults.
 
 ## Fault Dispute Game Responses
 
-`op-challenger` determines which claims to counter by iterating through the claims in the order they are stored in the contract. This ordering ensures that a claim's ancestors are processed prior to the claim itself. For each claim, the honest challenger determines and tracks the set of honest responses to all claims, regardless of whether that response already exists in the full game state.
+`op-challenger` iterates through claims as stored in the contract, ensuring ancestors are processed before their descendants. For each claim, the honest challenger determines and tracks the set of honest responses to all claims, regardless of whether that response already exists in the full game state.
 
 ### Root Claim
 
@@ -80,7 +80,7 @@ The challenger monitors each game as new claims are added and reacts according t
 
 When one side of a `FaultDisputeGame`'s chess clock runs out, the honest challenger's responsibility is to resolve each claim in the game by calling the `resolveClaim` function on the `FaultDisputeGame` contract. Once the root claim's subgame is resolved, the challenger then finally calls the `resolve` function to resolve the entire game.
 
-The `FaultDisputeGame` does not put a time cap on resolution - because of the liveness assumption on honest challengers and the bonds attached to the claims they've countered,  challengers are economically incentivized to resolve the game promptly in order to make their funds liquid again and capture their reward(s).
+The `FaultDisputeGame` does not put a time cap on resolution - because of the liveness assumption on honest challengers and the bonds attached to the claims they've countered, challengers are economically motivated to quickly resolve the game, thereby liquidating their funds and securing rewards.
 
 ## Next Steps
 
@@ -97,10 +97,7 @@ Note: An actor would only be pushed down to the bottom half of the game if the b
 
 ### How many CPUs should I run for challenger to work efficiently?
 
-The default value for `--max-concurrency`will work for most chain operators. However, chain operators might need to increase `--max-concurrency` if challenger is progressing too slowly or reduce `--max-concurrency` if challenger is sending too many concurrent requests.
-
-For example, chain operators might want to increase `--max-concurrency` for a small number of CPUs by default because Cannon won't actually need to run most of the time, so it's actually reasonable to put Challenger on quite a small box and it'll be fine. But then, if challenger starts having to execute Cannon, chain operators need to respond and scale up and give more CPUs. Increasing `--max-concurrency` will also allow challenger to be making requests your L1 in parallel. Otherwise, it'll be quite slow to iterate through every game.
-Alternatively, chain operators might want to reduce `--max-concurrency` for a setup with a lot of CPUs where challenger is flooding the L1 with concurrent requests.
+The default `--max-concurrency` setting suits most operators. Increase it if the challenger lags, or decrease it if it overloads with requests.
 
 ### How much ETH do you need to challenge in a game?
 
@@ -118,7 +115,7 @@ Claims that are found to be correct have their bonds refunded. Claims that are f
 *   There is a delay on claiming bonds of 7 days after the claim is resolved.
 *   The 7 day period restarts each time a new bond from that game is paid to the same user. Typically this means that bonds are claimable 7 days after the game is resolved.
 
-The calculation for the bond amounts are hard coded in the [`FaultDisputeGame` contract](https://github.com/ethereum-optimism/optimism/blob/547ea72d9849e13ce169fd31df0f9197651b3f86/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol#L99-L100), and there's a `getRequiredBond` method on the contract that suggests what bond to use.
+The calculation for the bond amounts are hard-coded in the [`FaultDisputeGame` contract](https://github.com/ethereum-optimism/optimism/blob/547ea72d9849e13ce169fd31df0f9197651b3f86/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol#L99-L100), and there's a `getRequiredBond` method on the contract that suggests what bond to use.
 
 ### How much ETH is required for the challenger bond?
 
