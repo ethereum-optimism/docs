@@ -20,14 +20,18 @@ Specifically, `op-challenger` performs the following actions:
 *   claims paid out bonds for both the challenger and proposer
 
 ## Architecture
+This diagram illustrates how `op-challenger` monitors dispute games, defends valid proposals, and challenges invalid ones. It also shows its interaction with the `op-proposer` in resolving claims.
 
 ```mermaid
-graph LR
-L1Rpc[L1 RPC Provider] --> op-dispute-mon[Dispute Mon]
-L1Beacon[L1 Beacon API] --> op-dispute-mon
-L2Rpc[L2 op-node RPC Provider] --> op-dispute-mon
-op-dispute-mon --> cannon[Cannon]
-cannon --> op-program[op-program]
+graph TD;
+    OP[OP-Challenger] -->|Monitors| DG[Dispute Games]
+    OP -->|Defends| ORP[Valid Output Root Proposals]
+    OP -->|Challenges| IORP[Invalid Output Root Proposals]
+    OP -->|Assists| OPP[OP-Proposer]
+    OPP -->|Resolves Claims| DG
+    DG -->|Claims Paid| Bonds[Bonds for Challenger and Proposer]
+
+    classDef default fill:#f9f,stroke:#333,stroke-width:2px;
 ```
 
 <Callout>
@@ -62,21 +66,15 @@ When a new claim is made in a dispute game, the honest challenger processes it a
 
 ### Possible Moves
 
-A move is a challenge against an existing claim and must include an alternate claim asserting a different trace. The honest challenger must first decide if it should counter the existing claim or if it should ignore it. It can wind up ignoring claims either because it agrees with them or because responding to that claim could lead it to have a "poisoned prestate" where it's implicitly agreeing to something false.
-
-Then, once the honest challenger decides to move, it has these options:
-
-*   **Attack** if it sees the value of the claim as incorrect
-*   **Defend** if the value is correct; it's effectively disagreeing with the claim position
-*   **Step** based on the game depth; steps can be attack or defend steps too, and it's the same contract method that gets called
-
-<Callout type="warning">
-  See the [specs](https://specs.optimism.io/fault-proof/stage-one/honest-challenger-fdg.html) for the full scope of the honest actor algorithm.
-</Callout>
+The challenger monitors each game as new claims are added and reacts according to the [honest actor algorithm](https://specs.optimism.io/fault-proof/stage-one/honest-challenger-fdg.html) to defend valid proposals and invalidate invalid proposals. A **move** is a challenge against an existing claim and must include an alternate claim asserting a different trace (e.g., attack, defend, or step).
 
 <br />
 
 <Image src="/img/op-stack/protocol/challenger-moves.png" alt="Challenger Moves flow" width={700} height={600} />
+
+<Callout type="warning">
+  See the [specs](https://specs.optimism.io/fault-proof/stage-one/honest-challenger-fdg.html) for the full scope of the honest actor algorithm.
+</Callout>
 
 ## Resolution
 

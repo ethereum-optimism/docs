@@ -57,12 +57,10 @@ This guide provides a walkthrough of setting up the configuration and monitoring
         - "--selective-claim-resolution"
         - "--private-key=...."
         - "--network=..."
-        - "--game-factory-address=..."
         - "--datadir=/data"
         - "--cannon-prestates-url=..."
       volumes:
         - "./challenger-data:/data"
-        - "./cfg:/cfg"
   ```
 
   #### `--l1-eth-rpc`
@@ -96,9 +94,10 @@ This guide provides a walkthrough of setting up the configuration and monitoring
 
   #### `--network`
 
-  *   This is the same as the network argument flag (from `op-node`), but could be taken from the network
+  *   This identifies the L2 network `op-challenger` is running for, e.g., `op-sepolia` or `op-mainnet`.
+  *   When using the --network flag, the `--game-factory-address` will be automatically pulled from the [superchain-registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainList.json).
   *   When we execute cannon, we need the roll-up config and the L2 Genesis, which is op-geth's Genesis file. Both files are automatically loaded if you say Cannon Network, but custom networks will need to specify both Cannon L2 Genesis and Cannon rollup config
-  *   For custom networks not in the superchain-registry yet, the rollup must be specified:
+  *   For custom networks not in the [superchain-registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/chainList.json) yet, the `--game-factory-address` and rollup must be specified:
 
       ```
       --cannon-rollup-config rollup.json  \
@@ -112,15 +111,14 @@ This guide provides a walkthrough of setting up the configuration and monitoring
       # make reproducable prestate
       # challenger verifies that onchain
        --cannon-prestate ./op-program/bin/prestate.json \
-      # max cpus to use, probably best to leave it as default to use the number of
-      # cpus you have. Cannon will use a lot of cpus
-       - "--max-concurrency=20"
+      # load the game factory address from system config or superchain registry
+      # point the game factory address at the dispute game factory proxy
+      --game-factory-address
       ```
 
-  #### `--game-factory-address`
-
-  *   You can load the game factory address info from system config or superchain registry. \[Note: In a later release, you will be able to just say network=opmainnet (like you can with op-node), and it will automatically get the game Factory address.]
-  *   If you have a custom network (or it's not inside superchain registry yet), then chain operators will use this game factory address pointed at the dispute game factory proxy
+<Callout type="warning">
+These options vary based on which `--network` is specified. Chain operators always need to specify a way to load prestates and must also specify the cannon-server whenever the docker image isn't being used.
+</Callout>
 
   #### `--datadir`
 
@@ -131,7 +129,7 @@ This guide provides a walkthrough of setting up the configuration and monitoring
 
   The pre-state is effectively the version of op-program that is deployed on chain. And you must use the right version. `op-challenger` will refuse to interact with games that have a different absolute prestate hash to avoid making invalid claims. If you're deploying your own contracts, you specify an absolute prestate hash, during contract deployment which should be taken from the `make reproducible-prostate` command which will also build the required prestate json file.
 
-All governance approved releases use a tagged version of op-program. These can be rebuilt by checking out the version tag and running `make reproducible-prestate`.
+All governance approved releases use a tagged version of `op-program`. These can be rebuilt by checking out the version tag and running `make reproducible-prestate`.
 
   *   There's two ways to specify the prestate to use:
       *   `--cannon-prestate`: specifies a path to a single Cannon pre-state Json file
