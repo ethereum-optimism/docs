@@ -61,7 +61,7 @@ This guide provides a walkthrough of setting up the configuration and monitoring
         - "--datadir=/data"
         - "--cannon-prestates-url=..."
       volumes:
-        - "/mnt/data/docker-data/op-sepolia/data/challenger:/data"
+        - "./challenger-data:/data"
         - "./cfg:/cfg"
   ```
 
@@ -129,15 +129,15 @@ This guide provides a walkthrough of setting up the configuration and monitoring
 
   #### `--cannon-prestates-url`
 
-  The pre-state is effectively the version of op-program that is deployed on chain. And you must use the right version. If you use the wrong one, you will lose the game. If you're deploying your own contracts, you specify an absolute prestate hash, which is the root of that Json file basically, and then you're just going to make sure whatever you use to get that hash from is what you actually use for the game.
+  The pre-state is effectively the version of op-program that is deployed on chain. And you must use the right version. `op-challenger` will refuse to interact with games that have a different absolute prestate hash to avoid making invalid claims. If you're deploying your own contracts, you specify an absolute prestate hash, during contract deployment which should be taken from the `make reproducible-prostate` command which will also build the required prestate json file.
 
-  For everything we do OP Mainnet, there are tagged versions of op-program. So, if you check out the op-program, you can run `make reproducible-prestate`. And, it will build that proof for you in exactly the right way, consistently, and it should give you the exact same hashes we had. The Challenger will verify this on chain by getting the hash from the contract and if the prestate you have doesn't match the hash, it will not play that particular game. Challenger will just log an error because it knows it'll be wrong.
+All governance approved releases use a tagged version of op-program. These can be rebuilt by checking out the version tag and running `make reproducible-prestate`.
 
-  *   There's two versions of the `--cannon-prestates-url`:
-      *   **prestate (singular):** where you can specify a path to a Cannon pre-state Json file or
-      *   **URL (multiple):** where you can specify the URL and it will load each pre-state, so you can have multiple different versions. For example, if you've upgraded for hard folks, you deploy a new pre-state, and Cannon can just go to that URL and append the hash dot json to that URL and downloads it.
+  *   There's two ways to specify the prestate to use:
+      *   `--cannon-prestate`: specifies a path to a single Cannon pre-state Json file
+      *   `--cannon-prestates-url`: specifies a URL to load pre-states from. This enables participating in games that use different prestates, for example due to a network upgrade. The prestates are stored in this directory named by their hash.
   *   Example final Url for a prestate:
-      *   [https://storage.googleapis.com/oplabs-network-data/proofs/op-program/cannon/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json](https://storage.googleapis.com/oplabs-network-data/proofs/op-program/cannon/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json)
+      *   [https://example.com/prestates/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json](https://example.com/prestates/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json)
       *   if you read this file, it's the cannon memory state
 
   <Callout type="warning">
@@ -163,7 +163,6 @@ This guide provides a walkthrough of setting up the configuration and monitoring
     --l2-eth-rpc http://localhost:9545 \
     --mnemonic "test test test test test test test test test test test junk" \
     --hd-path "m/44'/60'/0'/0/8" \
-    --num-confirmations 1
   ```
 
   ### Test and Debug Challenger (Optional)
