@@ -80,7 +80,7 @@ The challenger monitors each game as new claims are added and reacts according t
 
 When one side of a `FaultDisputeGame`'s chess clock runs out, the honest challenger's responsibility is to resolve each claim in the game by calling the `resolveClaim` function on the `FaultDisputeGame` contract. Once the root claim's subgame is resolved, the challenger then finally calls the `resolve` function to resolve the entire game.
 
-The `FaultDisputeGame` does not put a time cap on resolution - because of the liveness assumption on honest challengers and the bonds attached to the claims they've countered, challengers are economically motivated to quickly resolve the game, thereby liquidating their funds and securing rewards.
+The `FaultDisputeGame` does not put a time cap on resolution - because of the liveness assumption on honest challengers and the bonds attached to the claims they've countered, challengers are economically motivated to resolve the game quickly, thereby liquidating their funds and securing rewards.
 
 ## Next Steps
 
@@ -91,7 +91,7 @@ The `FaultDisputeGame` does not put a time cap on resolution - because of the li
 
 ### If I don't have a blob archiver with access to historical data, can I lose the game?
 
-Most likely, yes. If nobody has access to the historical data. All the honest actors work together without needing to coordinate offense because they're all trying to play the same moves. So, if there's only one honest actor that lacks a blob archiver, and the actor gets pushed down to the bottom half of the game (\~ 32 claims deep in the game), then challenger would log errors and wouldn't be able to respond without the blob archiver. The actor would have 3.5 days on their side of the game to fix the problem by switching to a beacon node that does have blobs, and could then carry on as usual.
+Most likely, yes. If nobody has access to the historical data. All the honest actors work together without needing to coordinate offense because they're all trying to play the same moves. So, if there's only one honest actor that lacks a blob archiver, and the actor gets pushed down to the bottom half of the game (\~ 32 claims deep in the game), then challenger would log errors and wouldn't be able to respond without the blob archiver. The actor would have 3.5 days on their side of the game to address the problem by switching to a beacon node that does have blobs, and could then proceed as usual.
 
 Note: An actor would only be pushed down to the bottom half of the game if the block being disputed is older than the blob retention period (\~18 days).  If valid proposals are resolving regularly, this is not possible because each valid proposal becomes the starting point for newly created dispute games. So if there are regular valid proposals, then only \~3.5 days worth of blocks are normally being disputed, which is well within the retention period.
 
@@ -113,7 +113,7 @@ Each *claim* pays a bond, including the root claim created when the game is crea
 Claims that are found to be correct have their bonds refunded. Claims that are found to be incorrect have their bonds paid to the account that posted the left-most uncountered child claim of the incorrect claim. More importantly, the bond for invalid claims is paid to whoever successfully counters the claim, but its setup so that the bond is only ever paid to a single person and never shared.
 
 *   There is a delay on claiming bonds of 7 days after the claim is resolved.
-*   The 7 day period restarts each time a new bond from that game is paid to the same user. Typically this means that bonds are claimable 7 days after the game is resolved.
+*   The 7-day period restarts each time a new bond from that game is paid to the same user. Typically this means that bonds are claimable 7 days after the game is resolved.
 
 The calculation for the bond amounts are hard-coded in the [`FaultDisputeGame` contract](https://github.com/ethereum-optimism/optimism/blob/547ea72d9849e13ce169fd31df0f9197651b3f86/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol#L99-L100), and there's a `getRequiredBond` method on the contract that suggests what bond to use.
 
