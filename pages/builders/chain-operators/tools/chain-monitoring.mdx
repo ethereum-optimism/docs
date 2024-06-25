@@ -8,7 +8,7 @@ import { Callout } from 'nextra/components'
 
 # Chain Monitoring Options
 
-This explainer covers the basics of **onchain** and **offchain** monitoring options for your OP Stack chain. Onchain monitoring services allow chain operators to monitor the overall system and onchain events. 
+This explainer covers the basics of **onchain** and **offchain** monitoring options for your OP Stack chain. Onchain monitoring services allow chain operators to monitor the overall system and onchain events.
 Offchain monitoring allows chain operators to monitor the operation and behavior of nodes and other offchain components.
 
 ## Onchain Monitoring Services
@@ -29,14 +29,15 @@ Chain operators can easily create their grafana dashboard for Dispute Monitor us
 Offchain monitoring allows chain operators to monitor the operation and behavior of nodes and other offchain components. Some of the more common components that you'll likely want to monitor include `op-node`, `op-geth`, `op-proposer`, `op-batcher`, and `op-challenger`.
 The general steps for enabling offchain monitoring is pretty consistent for all the OP components:
 
-*   Expose the monitoring port by enabling the `-—metrics.enabled` flag
-*   Use Prometheus to scrape data from the metrics port
-*   Save the data in `influxdb`
-*   Share the data with grafana to build your custom dashboard
+1.  Expose the monitoring port by enabling the `-—metrics.enabled` flag
+2.  Customize the metrics port and address via the `--metrics.port` and `--metrics.addr` flags, respectively
+3.  Use Prometheus to scrape data from the metrics port
+4.  Save the data in `influxdb`
+5.  Share the data with grafana to build your custom dashboard
 
 ### `op-node`
 
-`op-node` metrics and monitoring is detailed in the [Node Metrics and Monitoring](/builders/node-operators/management/metrics) guide. To enable metrics, pass the `--metrics.enabled` flag to the op-node. You can customize the metrics port and address via the `--metrics.port` and `--metrics.addr` flags, respectively.
+`op-node` metrics and monitoring is detailed in the [Node Metrics and Monitoring](/builders/node-operators/management/metrics) guide. To enable metrics, pass the `--metrics.enabled` flag to `op-node` and follow the steps above for customization options.
 See [this curated list](/builders/node-operators/management/metrics#important-metrics) for important metrics to track specifically for `op-node`.
 
 ### `op-geth`
@@ -53,10 +54,10 @@ description of component + how to enable metrics
 
 ### `op-challenger`
 
-The `op-challenger` operates as the *honest actor* in the fault dispute system and defends the chain by securing the `OptimismPortal` and ensuring the game always resolves to the correct state of the chain. 
+The `op-challenger` operates as the *honest actor* in the fault dispute system and defends the chain by securing the `OptimismPortal` and ensuring the game always resolves to the correct state of the chain.
 For verifying the legitimacy of claims, `op-challenger` relies on a synced, trusted rollup node as well as a trace provider (e.g., [Cannon](/stack/protocol/fault-proofs/cannon)). See the [OP-Challenger Explainer](/stack/protocol/fault-proofs/challenger) for more information on this service.
 
-Enable the following metrics flags for `op-challenger`:
+To enable metrics, pass the `--metrics.enabled` flag to `op-challenger` and follow the steps above for customization options.
 
 ```
     --metrics.addr value                (default: "0.0.0.0")               ($OP_CHALLENGER_METRICS_ADDR)
