@@ -4,6 +4,8 @@ lang: en-US
 description: Learn about the privileged roles in OP Mainnet.
 ---
 
+import { Callout } from 'nextra/components'
+
 # Privileged Roles in OP Mainnet
 
 OP Mainnet is on a [Pragmatic Path to Decentralization](https://blog.oplabs.co/decentralization-roadmap/).
@@ -31,7 +33,13 @@ The L1 Proxy Admin is an address that can be used to upgrade most OP Mainnet sys
 
 ## L2 Proxy Admin
 
-The L2 Proxy Admin is an address that can be used to upgrade most OP Mainnet system contracts on L2.
+The L2 Proxy Admin is an address that can be used to upgrade most OP Mainnet system contracts on L2. The L2 Proxy Admin owner is the [aliased address](/chain/differences#address-aliasing) of the L1ProxyAdmin owner, which means the L2 ProxyAdmin Owner is equal to the L1 ProxyAdmin Owner, but due to aliasing it's a different address. Here's how that works:
+
+*   Given an L1 contract address, the aliased L2 address is equal to `L1_contract_address` + `0x1111000000000000000000000000000000001111`.
+*   Using `0x6B1BAE59D09fCcbdDB6C6cceb07B7279367C4E3b` as an example, the `0x6B` address is the L2 address that's been aliased, so to figure out the original L1 address you calculate `0x6B1BAE59D09fCcbdDB6C6cceb07B7279367C4E3b` - `0x1111000000000000000000000000000000001111`.
+*   That result gives an L1 contract address of `0x5a0Aae59D09fccBdDb6C6CcEB07B7279367C3d2A`, which should be the 2/2 Safe owned by Foundation + Security Council that is L1 ProxyAdmin Owner.
+*   No one has the private key for `0x6B1BAE59D09fCcbdDB6C6cceb07B7279367C4E3b` on OP Mainnet, which means the only way for the L2 ProxyAdmin owner to send transactions is via deposit transactions from the L1 `0x5a0Aae59D09fccBdDb6C6CcEB07B7279367C3d2A` address.
+*   For help with the calculations, see the [`AddressAliasHelper` library](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/vendor/AddressAliasHelper.sol).
 
 ### Risks
 
@@ -41,13 +49,18 @@ The L2 Proxy Admin is an address that can be used to upgrade most OP Mainnet sys
 
 ### Mitigations
 
-*   L2 Proxy Admin is a 5-of-7 [multisig](https://optimistic.etherscan.io/address/0x7871d1187a97cbbe40710ac119aa3d412944e4fe#readProxyContract).
-*   L2 Proxy Admin may eventually be operated by a [Security Council](https://gov.optimism.io/t/intro-to-optimisms-security-council/6885).
+*   L2 Proxy Admin is controlled by the same L1 account as the [L1 Proxy Admin](#l1-proxy-admin). This is enabled by [address aliasing](../../connect/resources/glossary.mdx#address-aliasing).
 
 ### Addresses
 
-*   **Ethereum**: [`0x7871d1187a97cbbe40710ac119aa3d412944e4fe`](https://optimistic.etherscan.io/address/0x7871d1187a97cbbe40710ac119aa3d412944e4fe)
-*   **Sepolia**: [`0x1Eb2fFc903729a0F03966B917003800b145F56E2`](https://sepolia-optimism.etherscan.io/address/0x1Eb2fFc903729a0F03966B917003800b145F56E2)
+<Callout>
+  These addresses are controlled by the same L1 Proxy Admin addresses. Please
+  read the descriptions above for more details.
+</Callout> 
+
+*   **OP Mainnet**: [`0x6B1BAE59D09fCcbdDB6C6cceb07B7279367C4E3b`](https://optimistic.etherscan.io/address/0x6B1BAE59D09fCcbdDB6C6cceb07B7279367C4E3b) 
+*   **OP Sepolia:** [`0x2FC3ffc903729a0f03966b917003800B145F67F3`](https://sepolia-optimism.etherscan.io/address/0x2FC3ffc903729a0f03966b917003800B145F67F3)
+
 
 ## System Config Owner
 
@@ -95,9 +108,14 @@ OP Mainnet nodes will look for transactions from this address to find new batche
 
 ### Description
 
-The Proposer is a software service that submits proposals about the state of OP Mainnet to the `L2OutputOracle` contract on Ethereum.
-Proposals submitted to the `L2OutputOracle` contract can be used to execute withdrawal transactions on Ethereum after 7 days.
-Proposer addresses are typically "hot wallets" as they must be available to frequently sign and publish new state proposals.
+The Proposer is a role that is allowed to create instances of the `PermissionedDisputeGame` dispute game type.
+The `PermissionedDisputeGame` can be used as a fallback dispute game in the case that the `FaultDisputeGame` is found to include a critical security vulnerability.
+The Guardian role is responsible for changing the respected dispute game type if necessary.
+
+### Capabilities
+
+*   Can create instances of the `PermissionedDisputeGame` dispute game type.
+*   Can participate in the `PermissionedDisputeGame` dispute game process.
 
 ### Risks
 
@@ -119,7 +137,11 @@ Proposer addresses are typically "hot wallets" as they must be available to freq
 
 ### Description
 
-The Challenger is an address that can be used to challenge invalid state proposals submitted by the [Proposer](#proposer) role.
+The Challenger is an address that can participate in and challenge `PermissionedDisputeGame` instances created by the [Proposer](#proposer) role.
+
+### Capabilities
+
+*   Can participate in the `PermissionedDisputeGame` dispute game process.
 
 ### Risks
 
@@ -140,9 +162,15 @@ The Challenger is an address that can be used to challenge invalid state proposa
 
 ### Description
 
-The Guardian is an address that can be used to pause withdrawals from OP Mainnet.
-This is a backup safety mechanism that allows for a temporary halt in the event of a security concern.
-The Guardian role cannot pause specific withdrawals and can only pause all withdrawals.
+The Guardian is an address that can be used to pause several system contracts on OP Mainnet.
+This is a backup safety mechanism that allows for a temporary halt, particularly of withdrawal logic, in the event of a security concern.
+The Guardian can also manage various aspects of the `OptimismPortal` contract to address active security concerns.
+
+### Capabilities
+
+*   Pause several system contracts on OP Mainnet.
+*   Disable the ability for specific dispute game types from being used to execute withdrawals.
+*   Disable the ability for specific dispute game instances from being used to execute withdrawals.
 
 ### Risks
 
@@ -155,7 +183,7 @@ The Guardian role cannot pause specific withdrawals and can only pause all withd
 
 ### Addresses
 
-*   **Ethereum**: [`0x9BA6e03D8B90dE867373Db8cF1A58d2F7F006b3A`](https://etherscan.io/address/0x9BA6e03D8B90dE867373Db8cF1A58d2F7F006b3A)
+*   **Ethereum**: [`0x09f7150D8c019BeF34450d6920f6B3608ceFdAf2`](https://etherscan.io/address/0x09f7150D8c019BeF34450d6920f6B3608ceFdAf2)
 *   **Sepolia**: [`0xf64bc17485f0B4Ea5F06A96514182FC4cB561977`](https://sepolia.etherscan.io/address/0xf64bc17485f0B4Ea5F06A96514182FC4cB561977)
 
 ## Mint Manager Owner

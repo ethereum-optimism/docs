@@ -36,19 +36,19 @@ Optimism block production is primarily managed by a single party, called the "se
 *   Submitting user transactions to L1.
 
 In Bedrock, the sequencer does have a mempool, similar to L1 Ethereum, but the mempool is private to avoid opening opportunities for MEV.
-In OP Mainnet blocks are produced every two seconds, regardless of whether they are empty (no transactions), filled up to the block gas limit with transactions, or anything in between.
+In OP Mainnet, blocks are produced every two seconds, regardless of whether they are empty (no transactions), filled up to the block gas limit with transactions, or anything in between.
 
 Transactions get to the sequencer in two ways:
 
-1.  Transactions submitted on L1 (called *deposits*) are included in the chain in the appropriate L2 block.
+1.  Transactions submitted directly to the sequencer.
+    These transactions are a lot cheaper to submit, as they do not require the expense of a separate L1 transaction. However, they cannot be made censorship resistant since the sequencer is the only participant that knows about them.
+
+2.  Transactions submitted on L1 (called *deposits*) are included in the chain in the appropriate L2 block.
     Every L2 block is identified by the "epoch" (the L1 block to which it corresponds, which typically has happened a few minutes before the L2 block) and its serial number within that epoch.
     The first block of the epoch includes all the deposits that happened in the L1 block to which it corresponds.
-    If the sequencer attempts to ignore a legitimate L1 transaction it ends up with a state that is inconsistent with the verifiers, same as if the sequencer tried to fake the state by other means.
+    If the sequencer attempts to ignore a legitimate L1 transaction, it ends up with a state that is inconsistent with the verifiers, same as if the sequencer tried to fake the state by other means.
     This provides OP Mainnet with L1 Ethereum level censorship resistance.
     You can read more about this mechanism [in the protocol specifications](https://specs.optimism.io/protocol/derivation.html#deriving-the-transaction-list).
-
-2.  Transactions submitted directly to the sequencer.
-    These transactions are a lot cheaper to submit, as they do not require the expense of a separate L1 transaction. However, they cannot be made censorship resistant since the sequencer is the only participant that knows about them.
 
 For the moment, [The Optimism Foundation](https://www.optimism.io/) runs the only block producer on OP Mainnet. Refer to [Protocol specs](overview) section for more information about how we plan to decentralize the Sequencer role in the future.
 
@@ -70,8 +70,8 @@ Optimism is designed so that users can send arbitrary messages between smart con
 This makes it possible to transfer ETH or tokens, including ERC20 tokens, between the two networks.
 The exact mechanism by which this communication occurs differs depending on the direction in which messages are being sent.
 
-OP Mainnet uses this functionality in the Standard bridge to allow users to deposit tokens from Ethereum to OP Mainnet and also allow withdrawals of the same from OP Mainnet back to Ethereum.
-See the [developer documentation and examples](/builders/app-developers/bridging/standard-bridge) on details on the inner workings of the Standard bridge.
+OP Mainnet uses this functionality in the Standard bridge to allow users to deposit tokens from Ethereum to OP Mainnet and also allow withdrawals of the same tokens from OP Mainnet back to Ethereum.
+See the [developer documentation and examples](/builders/app-developers/bridging/standard-bridge) for details on the inner workings of the Standard bridge.
 
 ### Moving from Ethereum to OP Mainnet
 
