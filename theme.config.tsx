@@ -11,9 +11,11 @@ import '@docsearch/css';
 const config: DocsThemeConfig = {
   search: { 
     component: <DocSearch 
-      apiKey={process.env.NEXT_PUBLIC_ALGOLIA_API_KEY}
-      indexName={process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME}
-      appId={process.env.NEXT_PUBLIC_ALGOLIA_APP_ID}
+      // search api key, okay to be public
+      // https://support.algolia.com/hc/en-us/articles/18966776061329-Can-the-search-API-key-be-public
+      apiKey="702dd042cad3dfd9581e362b36033291"
+      indexName="optimism"
+      appId="P7A16UOSI5"
       searchParameters={{ facets: ["tags:en"] }}
       placeholder="Search documentation..."
     /> 
