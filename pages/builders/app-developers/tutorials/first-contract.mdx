@@ -1,0 +1,369 @@
+---
+title: Deploying Your First Contract on OP Mainnet
+lang: en-US
+description: Learn how to write and deploy your first contract on OP Mainnet using the MetaMask browser extension.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Deploying Your First Contract on OP Mainnet
+
+<Callout type="info">
+**This tutorial is meant for developers who are new to OP Mainnet and Solidity.**
+If you're already familiar with Solidity, consider reading the [OP Mainnet Differences](/chain/differences) guide to understand how OP Mainnet differs from Ethereum.
+OP Mainnet is designed to "just work" with existing Ethereum tooling, so you can use the tools you already know like [Hardhat](https://hardhat.org/) or [Foundry](https://getfoundry.sh) just like you would on Ethereum.
+</Callout>
+
+This tutorial walks you through the process of deploying your first smart contract to OP Mainnet using the [Remix](https://remix.ethereum.org) in-browser Solidity IDE.
+
+## Dependencies
+
+*   Firefox or any Chromium-based browser (Chrome, Brave, Edge, etc.)
+
+## Wallet Setup
+
+You'll need access to an [Ethereum wallet](https://ethereum.org/en/wallets/) if you want to deploy a smart contract.
+This tutorial uses [MetaMask](https://metamask.io), a popular browser extension wallet, just to get you started.
+MetaMask is also available as a mobile application, but it's typically easier to use the browser extension for development.
+If you already have MetaMask installed, you can skip this section.
+
+<Callout>
+Browser-based wallets like MetaMask are convenient for development, but they're not the most secure option.
+You should never store large amounts of ETH or ERC-20 tokens in a browser-based wallet.
+If you're planning to store a significant amount of ETH or ERC-20 tokens, consider using a hardware wallet instead.
+</Callout>
+
+<Steps>
+
+{<h3>Install the MetaMask extension for your browser</h3>}
+
+Head over to [metamask.io](https://metamask.io) and click the "Download" button.
+You'll then be given an option to install the MetaMask extension for your browser.
+If using a Chromium-based browser, you may be prompted to install the MetaMask extension from the Chrome Web Store.
+An onboarding page will pop up once the extension is installed.
+
+![MetaMask download page.](/img/builders/app-developers/tutorials/first-contract/mm-install.png)
+
+{<h3>Continue to create a new wallet</h3>}
+
+MetaMask will ask you to accept their terms of service.
+Read them carefully, then tick the box to accept them.
+Once you've accepted the terms of service, you can create a new wallet by clicking the "Create a new wallet" button.
+
+![MetaMask wallet creation page.](/img/builders/app-developers/tutorials/first-contract/mm-start.png)
+
+{<h3>Decide if you want to share usage data</h3>}
+
+After starting the wallet creation process you'll be asked if you'd like to share usage data with MetaMask.
+This is entirely up to you.
+Select "I agree" or "No thanks" depending on your preference.
+
+{<h3>Create a password</h3>}
+
+You'll be asked to create a password for your wallet.
+This password will be used to encrypt your wallet, so make sure it's a strong one that you won't forget.
+
+You'll be asked to confirm that you understand MetaMask cannot recover your password if you lose it.
+You may want to store this password in a password manager.
+Remember, browser-based wallets are great for development but are not the most secure option.
+Consider looking into a hardware wallet if you're planning to store a significant amount of ETH or ERC-20 tokens.
+
+Once you've written down your password, click "Create a new wallet" to continue.
+
+![MetaMask password creation page.](/img/builders/app-developers/tutorials/first-contract/mm-password.png)
+
+{<h3>Watch the short security video</h3>}
+
+MetaMask will now show you a short video about wallet security.
+If this is your first time using MetaMask or a browser-based wallet, it's recommended that you watch the video.
+
+{<h3>Secure your wallet</h3>}
+
+You'll be presented with the option to "Secure my wallet (recommended)" or "Remind me later (not recommended)".
+It's strongly recommended to continue with the "Secure my wallet (recommended)" option.
+This will prompt you to back up your wallet and might prevent you from losing access to your wallet down the line.
+
+![MetaMask security video page.](/img/builders/app-developers/tutorials/first-contract/mm-secure.png)
+
+{<h3>Write down your secret recovery phrase</h3>}
+
+After continuing with "Secure my wallet (recommended)", you'll be asked to write down a 12 word secret recovery phrase.
+This phrase can be used to recover your wallet if you lose your password or the browser extension somehow becomes corrupted.
+Write these words down somewhere safe and keep them secret.
+For a development wallet, it's fine to keep the phrase in a password manager.
+Just don't place too much importance in this wallet.
+
+![MetaMask recovery phrase page.](/img/builders/app-developers/tutorials/first-contract/mm-seed.png)
+
+{<h3>Confirm your secret recovery phrase</h3>}
+
+After writing down your secret recovery phrase, you'll be asked to confirm it.
+This is to make sure you wrote it down correctly.
+MetaMask will ask you to input a few of the words you wrote down.
+Make sure to input them in the correct order.
+
+![MetaMask recovery confirmation page.](/img/builders/app-developers/tutorials/first-contract/mm-confirm.png)
+
+{<h3>Complete the wallet creation process</h3>}
+
+You're all done!
+Read through the final page to get some more tips from MetaMask, then click "Got it!" when you're ready to continue.
+
+</Steps>
+
+<Callout type="info">
+Want to explore wallets other than MetaMask?
+There are many different kinds of wallets out there.
+You can use [Ethereum.org's "Find a wallet" feature](https://ethereum.org/en/wallets/find-wallet/) to find one that works for you.
+</Callout>
+
+## Add OP Sepolia to MetaMask
+
+This tutorial will show you how to deploy a smart contract to OP Sepolia, the testnet for OP Mainnet.
+Once you know how to deploy a smart contract to OP Sepolia, you'll be able to deploy a smart contract to OP Mainnet in exactly the same way.
+In order to interact with OP Sepolia using MetaMask, you'll need to add it as a custom network.
+
+<Steps>
+
+{<h3>Open the OP Sepolia connection link</h3>}
+
+Click [this link](https://chainid.link/?network=op-sepolia) to open the OP Sepolia connection link.
+This link will show you the connection details for OP Sepolia and give you the option to add it to MetaMask.
+Once you're ready to connect to OP Sepolia, click the "connect" button.
+
+![OP Sepolia connection website content.](/img/builders/app-developers/tutorials/first-contract/net-connect.png)
+
+{<h3>Allow the site to add the network</h3>}
+
+You'll be presented with a popup from MetaMask asking if you'd like to add the network.
+Click "Approve" to add OP Sepolia to MetaMask.
+
+<div className="md-img" style={{height: '600px'}}>
+![MetaMask window with the network approval pane open.](/img/builders/app-developers/tutorials/first-contract/net-approve.png)
+</div>
+
+{<h3>Switch to the OP Sepolia network</h3>}
+
+After you approve the network, MetaMask will automatically try to switch to the OP Sepolia network.
+Click "Switch network" to continue.
+
+<div className="md-img" style={{height: '600px'}}>
+![MetaMask window with the network switching pane open.](/img/builders/app-developers/tutorials/first-contract/net-switch.png)
+</div>
+
+</Steps>
+
+## Get ETH on OP Sepolia
+
+You'll need some ETH on OP Sepolia to pay for the [gas fees](https://ethereum.org/en/developers/docs/gas/) associated with deploying a smart contract.
+You can use the [Optimism Superchain Faucet](https://app.optimism.io/faucet?utm_source=docs) to get some free ETH on OP Sepolia.
+
+<Callout>
+Having issues with the Optimism Superchain Faucet?
+You can try using [other available OP Sepolia faucets](/builders/tools/build/faucets) instead.
+</Callout>
+
+## Check Your Wallet Balance
+
+After you get some ETH on OP Sepolia, you can check your wallet balance in MetaMask.
+Make sure that your balance has updated before continuing.
+If you don't see any ETH in your wallet, double check that your MetaMask is connected to the OP Sepolia network.
+
+## Write Your First Contract
+
+The most popular smart contract development language today is [Solidity](https://docs.soliditylang.org/en/latest/).
+In this tutorial, you'll be using a browser-based integrated development environment (IDE) called [Remix](https://remix.ethereum.org/).
+Remix is a great tool for learning Solidity because it requires minimal setup and runs in your browser.
+
+<Steps>
+
+{<h3>Open Remix</h3>}
+
+Head over to [remix.ethereum.org](https://remix.ethereum.org/) to open Remix.
+You'll be presented with a welcome screen and a popup asking if you'd like to share usage data with Remix.
+Accept or decline this request depending on your preferences.
+
+{<h3>Step through the tutorial</h3>}
+
+Remix has a small built-in tutorial that will walk you through the basics of the IDE.
+Click the "Next" button to step through the tutorial.
+Read through the tips to get a sense of the IDE.
+
+{<h3>Create an empty contract file</h3>}
+
+Click on the "File" icon in the left sidebar to create a new file.
+Name the file "MyFirstContract.sol" and hit enter to create it.
+
+![Remix window displaying the empty MyFirstContract file.](/img/builders/app-developers/tutorials/first-contract/remix-empty.png)
+
+{<h3>Write your first contract</h3>}
+
+This tutorial will show you how to deploy a simple contract that has a storage variable you can read and write.
+You'll be able to update this variable with a transaction and then retrieve the updated value.
+This is just a simple example to get you started.
+Solidity is a powerful language that can be used to write complex smart contracts, check out the [Next Steps](#next-steps) section below after you've finished this tutorial for some more advanced examples!
+
+Copy and paste the following code into the file you just created.
+Remix will detect copy/pasted code and give you a warning about it.
+This is meant to prevent you from accidentally running malicious code.
+Always be careful when copy/pasting code from the internet!
+
+```solidity file=<rootDir>/public/tutorials/first-contract.sol#L1-L10 hash=a008d0629d499be56a6629495bc55910
+```
+
+{<h3>Compile your contract</h3>}
+
+By default, Remix will automatically compile your contract when you save it.
+You can also manually compile your contract by clicking the "Solidity Compiler" icon in the left sidebar and then clicking the "Compile" button.
+It's usually easier to leave automatic compilation enabled.
+You shouldn't see any compilation errors for this contract.
+
+![Remix window with the compilation tab highlighted.](/img/builders/app-developers/tutorials/first-contract/remix-compile.png)
+
+</Steps>
+
+## Deploy Your Contract
+
+Now that you've written your first contract, you can deploy it to OP Sepolia.
+Deploying contracts with Remix is pretty straightforward.
+
+<Steps>
+
+{<h3>Open the Deploy tab</h3>}
+
+Click on the "Deploy & run transactions" icon in the left sidebar to open the Deploy tab (it looks like an Ethereum logo with an arrow pointing to the right).
+You'll see some deployment options and a list of contracts that are currently compiled.
+Since you only have one contract, you should see a single contract called "MyFirstContract" in the list.
+
+![Remix window with the deployment tab highlighted.](/img/builders/app-developers/tutorials/first-contract/remix-deploytab.png)
+
+{<h3>Change your environment</h3>}
+
+By default, Remix will try to deploy your contract to a local, in-memory blockchain.
+This is useful for testing, but you'll need to change your environment to deploy to OP Sepolia for this tutorial.
+Click on the dropdown underneath the "Environment" heading and select "Injected Provider - MetaMask".
+
+![Remix window with the environment dropdown highlighted.](/img/builders/app-developers/tutorials/first-contract/remix-network.png)
+
+{<h3>Accept the connection request</h3>}
+
+Once you've selected the "Injected Provider - MetaMask" option, MetaMask will show you a popup asking if you'd like to connect to Remix.
+Accept this request by clicking the "Connect" button.
+
+{<h3>Deploy your contract</h3>}
+
+You're now ready to deploy your contract!
+Click the orange "Deploy" button to deploy your contract to OP Sepolia.
+You'll be presented with another MetaMask popup asking you to confirm the transaction.
+Click the "Confirm" button to continue.
+
+<div className="md-img" style={{height: '600px'}}>
+![MetaMask contract deployment approval popup.](/img/builders/app-developers/tutorials/first-contract/remix-deploy.png)
+</div>
+
+{<h3>Wait for your transaction to confirm</h3>}
+
+OP Sepolia is relatively fast, so transactions should confirm within just a few seconds.
+Remix will automatically detect when your transaction has confirmed and will show you your newly deployed contract under the "Deployed Contracts" heading within the Deploy tab.
+
+</Steps>
+
+## Interact With Your Contract
+
+Now that you've deployed your contract, you can interact with it.
+Remix makes it easy to interact with your contract by providing a built-in user interface.
+You can use this interface to call functions on your contract and read its state.
+
+<Steps>
+
+{<h3>Expand your contract</h3>}
+
+Click on the arrow next to the name of your contract under the "Deployed Contracts" heading to expand it.
+You should see a list of functions that you can call on your contract.
+
+![Remix window with the deployed contract area highlighted.](/img/builders/app-developers/tutorials/first-contract/remix-deployed.png)
+
+{<h3>Call the setMessage function</h3>}
+
+Now you'll update the message variable in your contract.
+Type a message into the input box next to the orange "setMessage" button and click on the "setMessage" button.
+Just like when you deployed your contract, you'll be presented with a MetaMask popup asking you to confirm the transaction.
+Click the "Confirm" button to continue.
+
+![Remix window with the setMessage function button highlighted.](/img/builders/app-developers/tutorials/first-contract/remix-setmessage.png)
+
+{<h3>Wait for your transaction to confirm</h3>}
+
+Once again, Remix will automatically detect when your transaction has confirmed.
+You'll see a green checkmark appear in the console at the bottom of the screen.
+
+{<h3>Read the updated message variable</h3>}
+
+Click on the "message" button to read the updated message variable.
+You should see the message you set in the previous step appear underneath the "message" button.
+Congrats, you've successfully deployed and interacted with your first smart contract on OP Sepolia!
+
+![Remix window with the message reading function button highlighted.](/img/builders/app-developers/tutorials/first-contract/remix-message.png)
+
+</Steps>
+
+## How Your Contract Works
+
+Now that you've deployed your contract, you might be wondering how it works.
+Let's take a closer look at the code you wrote.
+
+### License Identifier
+
+The first line of most Solidity files is the license identifier.
+This line is used to specify the license under which the code is released.
+In this case, the code written is released under the [MIT license](https://opensource.org/licenses/MIT).
+
+```solidity file=<rootDir>/public/tutorials/first-contract.sol#L1 hash=8384d75c38c570f3edb87cf9f64f2ec2
+```
+
+### Pragma Directive
+
+The next line is a [pragma directive](https://docs.soliditylang.org/en/latest/layout-of-source-files.html#pragma).
+This line tells the Solidity compiler which version of the Solidity language to use.
+In this case, the code is written for Solidity version 0.8.0 or higher.
+
+```solidity file=<rootDir>/public/tutorials/first-contract.sol#L2 hash=70ebe002bc5488bb81baa0504de273c1
+```
+
+### Contract Definition
+
+The next line defines a contract called `MyFirstContract`.
+A contract is a collection of code and data that is stored at a specific address on the blockchain.
+You can think of a contract as a class in an object-oriented programming language.
+The contract definition is followed by a pair of curly braces that contain the contract's code.
+
+```solidity file=<rootDir>/public/tutorials/first-contract.sol#L4 hash=8f3ace25e5f9ea06d8cb388eb3ab1775
+```
+
+### Message Variable
+
+The first thing you'll notice inside the contract definition is a variable called `message`.
+This variable is declared as a `string`, which is a Solidity type that represents a string of characters.
+The `public` keyword means that this variable can be read from outside the contract.
+
+```solidity file=<rootDir>/public/tutorials/first-contract.sol#L5 hash=42a1bdfe81e5b3bba6b99d3255ef4f2b
+```
+
+### Message Update Function
+
+The next thing you'll notice is a function called `setMessage`.
+This function takes a single argument called `_message` of type `string`.
+The `public` keyword means that this function can be called from outside the contract by anyone.
+Since this function doesn't have any access control, anyone can update the `message` variable.
+
+```solidity file=<rootDir>/public/tutorials/first-contract.sol#L7-L9 hash=b7e5531c48425b183e794f9f251c5540
+```
+
+## Next Steps
+
+To learn more about Solidity, check out [this list of resources on the Optimism Help Center](https://help.optimism.io/hc/en-us/articles/4412777835675-Developer-information#h_01FVSVQ5ZQFJDSRYY6WTY18F0N).
+If you learn best by reading source code, check out [this annotated code for an ERC-20 token contract](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/).
+You can also check out the [Solidity documentation](https://docs.soliditylang.org/en/latest/) for more information about the language itself.
+
+Now that you know how to deploy a smart contract to OP Sepolia, you can deploy a smart contract to OP Mainnet in exactly the same way.
+If you're up for a challenge, try [creating a token on Sepolia and OP Sepolia](./standard-bridge-standard-token) and then [using the Optimism SDK](./cross-dom-bridge-erc20) to bridge some tokens between the two networks.
