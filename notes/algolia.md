@@ -14,3 +14,20 @@ The custom React component is provided by Algolia's DocSearch React library
 @/theme.config.tsx. The credentials need to be exposed to the public because 
 they're consumed by the front-end component, which shouldn't be a concern
 because the docs and search are open to the public. 
+
+## Search Insights
+
+New events can be collected following the example in `_app.mdx` and calling `aa`
+with the desired Insights method 
+(https://www.algolia.com/doc/api-client/methods/insights/). For example, to 
+track when users click items in the search results use the 
+'clickedObjectIDsAfterSearch' method like so:
+`aa('clickedObjectIDsAfterSearch', {
+    userToken: string,
+    authenticatedUserToken: string,
+    index: string,
+    eventName: string,
+    queryID: string,
+    objectIDs: array,
+    positions: array
+});`.
