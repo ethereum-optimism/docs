@@ -5,11 +5,8 @@ import { HighlightMatches } from "./highlight-matches";
 import { DocSearch } from "./docsearch";
 import algoliasearch from "algoliasearch";
 
-const client = algoliasearch(
-  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-  process.env.NEXT_PUBLIC_ALGOLIA_API_KEY
-);
-const index = client.initIndex(process.env.NEXT_PUBLIC_ALGOLIA_INDEX);
+const client = algoliasearch("ECJ5AHC7GY", "ebbdaf91def1c90ace0727f95a77c224");
+const index = client.initIndex("algolia");
 
 type AlgoliaHits = {
   hits: AlgoliaHit[];
