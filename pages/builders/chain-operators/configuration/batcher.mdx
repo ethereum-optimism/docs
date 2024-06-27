@@ -1,0 +1,675 @@
+---
+title: Batcher Configuration
+lang: en-US
+description: Learn the OP Stack batcher configurations.
+---
+
+import { Callout, Tabs } from 'nextra/components'
+
+# Batcher Configuration
+
+This page lists all configuration options for the op-batcher. The op-batcher posts
+L2 sequencer data to the L1, to make it available for verifiers. The following
+options are from the `--help` in [v1.7.6](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.6).
+
+## Global Options
+
+### active-sequencer-check-duration
+
+The duration between checks to determine the active sequencer endpoint. The 
+default value is `2m0s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--active-sequencer-check-duration=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--active-sequencer-check-duration=2m0s`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_ACTIVE_SEQUENCER_CHECK_DURATION=2m0s`</Tabs.Tab>
+</Tabs>
+
+### approx-compr-ratio
+
+The approximate compression ratio (`<=1.0`). Only relevant for ratio 
+compressor. The default value is `0.6`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--approx-compr-ratio=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--approx-compr-ratio=0.6`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_APPROX_COMPR_RATIO=0.6`</Tabs.Tab>
+</Tabs>
+
+### batch-type
+
+The batch type. 0 for `SingularBatch` and 1 for `SpanBatch`. The default value
+is `0` for `SingularBatch`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--batch-type=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--batch-type=singular`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_BATCH_TYPE=`</Tabs.Tab>
+</Tabs>
+
+### check-recent-txs-depth
+
+Indicates how many blocks back the batcher should look during startup for a 
+recent batch tx on L1. This can speed up waiting for node sync. It should be 
+set to the verifier confirmation depth of the sequencer (e.g. 4). The default 
+value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--check-recent-txs-depth=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--check-recent-txs-depth=0`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_CHECK_RECENT_TXS_DEPTH=0`</Tabs.Tab>
+</Tabs>
+
+### compression-algo
+
+The compression algorithm to use. Valid options: zlib, brotli, brotli-9, 
+brotli-10, brotli-11. The default value is `zlib`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--compression-algo=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--compression-algo=zlib`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_COMPRESSION_ALGO=zlib`</Tabs.Tab>
+</Tabs>
+
+### compressor
+
+The type of compressor. Valid options: none, ratio, shadow. The default value 
+is `shadow`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--compressor=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--compressor=shadow`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_COMPRESSOR=shadow`</Tabs.Tab>
+</Tabs>
+
+### data-availability-type
+
+The data availability type to use for submitting batches to the L1. Valid 
+options: calldata, blobs. The default value is `calldata`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--data-availability-type=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--data-availability-type=calldata`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_DATA_AVAILABILITY_TYPE=calldata`</Tabs.Tab>
+</Tabs>
+
+### fee-limit-multiplier
+
+The multiplier applied to fee suggestions to put a hard limit on fee increases.
+The default value is `5`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--fee-limit-multiplier=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--fee-limit-multiplier=5`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_TXMGR_FEE_LIMIT_MULTIPLIER=5`</Tabs.Tab>
+</Tabs>
+
+### hd-path
+
+The HD path used to derive the sequencer wallet from the mnemonic. The mnemonic
+flag must also be set.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--hd-path=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--hd-path=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_HD_PATH=`</Tabs.Tab>
+</Tabs>
+
+### l1-eth-rpc
+
+HTTP provider URL for L1.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l1-eth-rpc=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l1-eth-rpc`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_L1_ETH_RPC=`</Tabs.Tab>
+</Tabs>
+
+### l2-eth-rpc
+
+HTTP provider URL for L2 execution engine. A comma-separated list enables the 
+active L2 endpoint provider. Such a list needs to match the number of 
+rollup-rpcs provided.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l2-eth-rpc=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l2-eth-rpc=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_L2_ETH_RPC=`</Tabs.Tab>
+</Tabs>
+
+### log.color
+
+Color the log output if in terminal mode. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--log.color=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--log.color=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_LOG_COLOR=false`</Tabs.Tab>
+</Tabs>
+
+### log.format
+
+Format the log output. Supported formats: 'text', 'terminal', 'logfmt', 'json',
+'json-pretty'. The default value is `text`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--log.format=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--log.format=text`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_LOG_FORMAT=text`</Tabs.Tab>
+</Tabs>
+
+### log.level
+
+The lowest log level that will be output. The default value is `INFO`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--log.level=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--log.level=INFO`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_LOG_LEVEL=INFO`</Tabs.Tab>
+</Tabs>
+
+### max-channel-duration
+
+The maximum duration of L1-blocks to keep a channel open. 0 to disable. The 
+default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--max-channel-duration=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--max-channel-duration=0`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_MAX_CHANNEL_DURATION=0`</Tabs.Tab>
+</Tabs>
+
+### max-l1-tx-size-bytes
+
+The maximum size of a batch tx submitted to L1. Ignored for blobs, where max 
+blob size will be used. The default value is `120000`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--max-l1-tx-size-bytes=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--max-l1-tx-size-bytes=120000`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_MAX_L1_TX_SIZE_BYTES=120000`</Tabs.Tab>
+</Tabs>
+
+### max-pending-tx
+
+The maximum number of pending transactions. 0 for no limit. The default value
+is `1`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--max-pending-tx=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--max-pending-tx=1`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_MAX_PENDING_TX=1`</Tabs.Tab>
+</Tabs>
+
+### metrics.addr
+
+Metrics listening address. The default value is `0.0.0.0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--metrics.addr=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--metrics.addr=0.0.0.0`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_METRICS_ADDR=0.0.0.0`</Tabs.Tab>
+</Tabs>
+
+### metrics.enabled
+
+Enable the metrics server. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--metrics.enabled=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--metrics.enabled=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_METRICS_ENABLED=false`</Tabs.Tab>
+</Tabs>
+
+### metrics.port
+
+Metrics listening port. The default value is `7300`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--metrics.port=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--metrics.port=7300`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_METRICS_PORT=7300`</Tabs.Tab>
+</Tabs>
+
+### mnemonic
+
+The mnemonic used to derive the wallets for either the service.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--mnemonic=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--mnemonic=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_MNEMONIC=`</Tabs.Tab>
+</Tabs>
+
+### network-timeout
+
+Timeout for all network operations. The default value is `10s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--network-timeout=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--network-timeout=10s`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_NETWORK_TIMEOUT=10s`</Tabs.Tab>
+</Tabs>
+
+### num-confirmations
+
+Number of confirmations which we will wait after sending a transaction. The 
+default value is `10`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--num-confirmations=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--num-confirmations=10`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_NUM_CONFIRMATIONS=10`</Tabs.Tab>
+</Tabs>
+
+### plasma.da-server
+
+HTTP address of a DA Server.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--plasma.da-server=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--plasma.da-server=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PLASMA_DA_SERVER=`</Tabs.Tab>
+</Tabs>
+
+### plasma.da-service
+
+Use DA service type where commitments are generated by plasma server. The 
+default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--plasma.da-service=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--plasma.da-service=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PLASMA_DA_SERVICE=false`</Tabs.Tab>
+</Tabs>
+
+### plasma.enabled
+
+Enable plasma mode. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--plasma.enabled=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--plasma.enabled=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PLASMA_ENABLED=false`</Tabs.Tab>
+</Tabs>
+
+### plasma.verify-on-read
+
+Verify input data matches the commitments from the DA storage service. The 
+default value is `true`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--plasma.verify-on-read=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--plasma.verify-on-read=true`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PLASMA_VERIFY_ON_READ=true`</Tabs.Tab>
+</Tabs>
+
+### poll-interval
+
+How frequently to poll L2 for new blocks. The default value is `6s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--poll-interval=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--poll-interval=6s`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_POLL_INTERVAL=6s`</Tabs.Tab>
+</Tabs>
+
+### pprof.addr
+
+pprof listening address. The default value is `0.0.0.0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--pprof.addr=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--pprof.addr=0.0.0.0`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PPROF_ADDR=0.0.0.0`</Tabs.Tab>
+</Tabs>
+
+### pprof.enabled
+
+Enable the pprof server. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--pprof.enabled=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--pprof.enabled=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PPROF_ENABLED=false`</Tabs.Tab>
+</Tabs>
+
+### pprof.path
+
+pprof file path. If it is a directory, the path is `{dir}/{profileType}.prof`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--pprof.path=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--pprof.path=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PPROF_PATH=`</Tabs.Tab>
+</Tabs>
+
+### pprof.port
+
+pprof listening port. The default value is `6060`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--pprof.port=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--pprof.port=6060`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PPROF_PORT=6060`</Tabs.Tab>
+</Tabs>
+
+### pprof.type
+
+pprof profile type. One of cpu, heap, goroutine, threadcreate, block, mutex, 
+allocs.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--pprof.type=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--pprof.type`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PPROF_TYPE=`</Tabs.Tab>
+</Tabs>
+
+### private-key
+
+The private key to use with the service. Must not be used with mnemonic.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--private-key=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--private-key=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_PRIVATE_KEY=`</Tabs.Tab>
+</Tabs>
+
+### resubmission-timeout
+
+Duration we will wait before resubmitting a transaction to L1. The default 
+value is `48s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--resubmission-timeout=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--resubmission-timeout=48s`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_RESUBMISSION_TIMEOUT=48s`</Tabs.Tab>
+</Tabs>
+
+### rollup-rpc
+
+HTTP provider URL for Rollup node. A comma-separated list enables the active L2
+endpoint provider. Such a list needs to match the number of l2-eth-rpcs 
+provided.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rollup-rpc=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--rollup-rpc=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_ROLLUP_RPC=`</Tabs.Tab>
+</Tabs>
+
+### rpc.addr
+
+rpc listening address. The default value is `0.0.0.0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rpc.addr=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--rpc.addr=0.0.0.0`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_RPC_ADDR=0.0.0.0`</Tabs.Tab>
+</Tabs>
+
+### rpc.enable-admin
+
+Enable the admin API. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rpc.enable-admin=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--rpc.enable-admin=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_RPC_ENABLE_ADMIN=false`</Tabs.Tab>
+</Tabs>
+
+### rpc.port
+
+rpc listening port. The default value is `8545`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rpc.port=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--rpc.port=8545`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_RPC_PORT=8545`</Tabs.Tab>
+</Tabs>
+
+### safe-abort-nonce-too-low-count
+
+Number of ErrNonceTooLow observations required to give up on a tx at a 
+particular nonce without receiving confirmation. The default value is `3`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--safe-abort-nonce-too-low-count=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--safe-abort-nonce-too-low-count=3`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_SAFE_ABORT_NONCE_TOO_LOW_COUNT=3`</Tabs.Tab>
+</Tabs>
+
+### sequencer-hd-path
+
+DEPRECATED: The HD path used to derive the sequencer wallet from the mnemonic.
+The mnemonic flag must also be set.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--sequencer-hd-path=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--sequencer-hd-path`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_SEQUENCER_HD_PATH=`</Tabs.Tab>
+</Tabs>
+
+### signer.address
+
+Address the signer is signing transactions for.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.address=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.address=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_SIGNER_ADDRESS=`</Tabs.Tab>
+</Tabs>
+
+### signer.endpoint
+
+Signer endpoint the client will connect to.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.endpoint=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.endpoint=`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_SIGNER_ENDPOINT=`</Tabs.Tab>
+</Tabs>
+
+### signer.tls.ca
+
+tls ca cert path. The default value is `tls/ca.crt`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.tls.ca=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.tls.ca=tls/ca.crt`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_SIGNER_TLS_CA=tls/ca.crt`</Tabs.Tab>
+</Tabs>
+
+### signer.tls.cert
+
+tls cert path. The default value is `tls/tls.crt`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.tls.cert=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.tls.cert=tls/tls.crt`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_SIGNER_TLS_CERT=`</Tabs.Tab>
+</Tabs>
+
+### signer.tls.key
+
+tls key. The default value is `tls/tls.key`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.tls.key=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.tls.key=tls/tls.key`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_SIGNER_TLS_KEY=`</Tabs.Tab>
+</Tabs>
+
+### stopped
+
+Initialize the batcher in a stopped state. The batcher can be started using the
+admin_startBatcher RPC. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--stopped=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--stopped=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_STOPPED=false`</Tabs.Tab>
+</Tabs>
+
+### sub-safety-margin
+
+The batcher tx submission safety margin (in #L1-blocks) to subtract from a
+channel's timeout and sequencing window, to guarantee safe inclusion of a 
+channel on L1. The default value is `10`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--sub-safety-margin=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--sub-safety-margin=10`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_SUB_SAFETY_MARGIN=10s`</Tabs.Tab>
+</Tabs>
+
+### target-num-frames
+
+The target number of frames to create per channel. Controls number of blobs per
+blob tx, if using Blob DA. The default value is `1`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--target-num-frames=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--target-num-frames=1`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_TARGET_NUM_FRAMES=1`</Tabs.Tab>
+</Tabs>
+
+### txmgr.fee-limit-threshold
+
+The minimum threshold (in GWei) at which fee bumping starts to be capped. 
+Allows arbitrary fee bumps below this threshold. The default value is `100`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--txmgr.fee-limit-threshold=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--txmgr.fee-limit-threshold=100`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_TXMGR_FEE_LIMIT_THRESHOLD=100`</Tabs.Tab>
+</Tabs>
+
+### txmgr.min-basefee
+
+Enforces a minimum base fee (in GWei) to assume when determining tx fees. 1 
+GWei by default. The default value is `1`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--txmgr.min-basefee=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--txmgr.min-basefee=1`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_TXMGR_MIN_BASEFEE=1`</Tabs.Tab>
+</Tabs>
+
+### txmgr.min-tip-cap
+
+Enforces a minimum tip cap (in GWei) to use when determining tx fees. 1 GWei by
+default. The default value is `1`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--txmgr.min-tip-cap=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--txmgr.min-tip-cap=1`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_TXMGR_MIN_TIP_CAP=1`</Tabs.Tab>
+</Tabs>
+
+### txmgr.not-in-mempool-timeout
+
+Timeout for aborting a tx send if the tx does not make it to the mempool. The
+default value is `2m0s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--txmgr.not-in-mempool-timeout=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--txmgr.not-in-mempool-timeout=2m0s`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_TXMGR_TX_NOT_IN_MEMPOOL_TIMEOUT=2m0s`</Tabs.Tab>
+</Tabs>
+
+### txmgr.receipt-query-interval
+
+Frequency to poll for receipts. The default value is `12s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--txmgr.receipt-query-interval=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--txmgr.receipt-query-interval=12s`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_TXMGR_RECEIPT_QUERY_INTERVAL=12s`</Tabs.Tab>
+</Tabs>
+
+### txmgr.send-timeout
+
+Timeout for sending transactions. If 0 it is disabled. The default value is 
+`0s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--txmgr.send-timeout=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--txmgr.send-timeout=0s`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_TXMGR_TX_SEND_TIMEOUT=0s`</Tabs.Tab>
+</Tabs>
+
+### wait-node-sync
+
+Indicates if, during startup, the batcher should wait for a recent batcher tx 
+on L1 to finalize (via more block confirmations). This should help avoid 
+duplicate batcher txs. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--wait-node-sync=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--wait-node-sync=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_BATCHER_WAIT_NODE_SYNC=false`</Tabs.Tab>
+</Tabs>
+
+## Miscellaneous
+
+### help
+
+Show help. The default value is false.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--help=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--help=false`</Tabs.Tab>
+</Tabs>
+
+### version
+
+Print the version. The default value is false.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--version=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--version=false`</Tabs.Tab>
+</Tabs>
+
+## Recommendations
+
+### Set Your  `OP_BATCHER_MAX_CHANNEL_DURATION`
+
+<Callout>
+  The default value inside `op-batcher`, if not specified, is still `0`, which means channel duration tracking is disabled.
+  For very low throughput chains, this would mean to fill channels until close to the sequencing window and post the channel to `L1 SUB_SAFETY_MARGIN` L1 blocks before the sequencing window expires.
+</Callout>
+
+To minimize costs, we recommend setting your  `OP_BATCHER_MAX_CHANNEL_DURATION` to target 5 hours, with a value of `1500` L1 blocks. When non-zero, this parameter is the max time (in L1 blocks, which are 12 seconds each) between which batches will be submitted to the L1. If you have this set to 5 for example, then your batcher will send a batch to the L1 every 5\*12=60 seconds. When using blobs, because 130kb blobs need to be purchased in full, if your chain doesn't generate at least \~130kb of data in those 60 seconds, then you'll be posting only partially full blobs and wasting storage.
+
+*   We do not recommend setting any values higher than targeting 5 hours, as batches have to be submitted within the sequencing window which defaults to 12 hours for OP chains, otherwise your chain may experience a 12 hour long chain reorg. 5 hours is the longest length of time we recommend that still sits snugly within that 12 hour window to avoid affecting stability.
+*   If your chain fills up full blobs of data before the `OP_BATCHER_MAX_CHANNEL_DURATION` elapses, a batch will be submitted anyways - (e.g. even if the OP Mainnet batcher sets an `OP_BATCHER_MAX_CHANNEL_DURATION` of 5 hours, it will still be submitting batches every few minutes)
+
+<Callout type="warning">
+  While setting an`OP_BATCHER_MAX_CHANNEL_DURATION` of `1500` results in the cheapest fees, it also means that your [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall for up to 5 hours.
+
+  *   This will negatively impact apps on your chain that rely on the safe head for operation. While many apps can likely operate simply by following the unsafe head, often Centralized Exchanges or third party bridges wait until transactions are marked safe before processing deposits and withdrawal.
+  *   Thus a larger gap between posting batches can result in significant delays in the operation of certain types of high-security applications.
+</Callout>
+
+### Configure Your Batcher to Use Multiple Blobs
+
+The `op-batcher` has the capabilities to send multiple blobs per single blob transaction. This is accomplished by the use of multi-frame channels, see the [specs](https://specs.optimism.io/protocol/derivation.html#frame-format) for more technical details on channels and frames.
+
+A minimal batcher configuration (with env vars) to enable 6-blob batcher transactions is:
+
+```
+  - OP_BATCHER_BATCH_TYPE=1 # span batches, optional
+  - OP_BATCHER_DATA_AVAILABILITY_TYPE=blobs
+  - OP_BATCHER_TARGET_NUM_FRAMES=6 # 6 blobs per tx
+  - OP_BATCHER_TXMGR_MIN_BASEFEE=2.0 # 2 gwei, might need to tweak, depending on gas market
+  - OP_BATCHER_TXMGR_MIN_TIP_CAP=2.0 # 2 gwei, might need to tweak, depending on gas market
+  - OP_BATCHER_RESUBMISSION_TIMEOUT=240s # wait 4 min before bumping fees
+```
+
+This enables blob transactions and sets the target number of frames to 6, which translates to 6 blobs per transaction.
+The minimum tip cap and base fee are also lifted to 2 gwei because it is uncertain how easy it will be to get 6-blob transactions included and slightly higher priority fees should help.
+The resubmission timeout is increased to a few minutes to give more time for inclusion before bumping the fees because current transaction pool implementations require a doubling of fees for blob transaction replacements.
+
+Multi-blob transactions are particularly useful for medium to high-throughput chains, where enough transaction volume exists to fill up 6 blobs in a reasonable amount of time.
+You can use [this calculator](https://docs.google.com/spreadsheets/d/12VIiXHaVECG2RUunDSVJpn67IQp9NHFJqUsma2PndpE/edit) for your chain to determine what number of blobs are right for you, and what gas scalar configuration to use. Please also refer to guide on [Using Blobs](/builders/chain-operators/management/blobs) for chain operators.
