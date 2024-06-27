@@ -18,6 +18,7 @@ const config: DocsThemeConfig = {
       appId="P7A16UOSI5"
       searchParameters={{ facets: ["tags:en"] }}
       placeholder="Search documentation..."
+      insights
     /> 
   },
   logo: (
