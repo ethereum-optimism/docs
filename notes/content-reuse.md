@@ -10,7 +10,7 @@ The content directory contains markdown files that can be imported across the ne
 
 Create a `.md` file in the `/content` directory.
 
-## How to Use Reusable Content
+### How to Use a Single Reusable Content Components
 
 1. Import it at the top of `.mdx` file:
 
@@ -26,4 +26,20 @@ Text before
 <OpProposerDescriptionShort />
 
 Text after
+```
+
+### How to Use a Multiple Reusable Content Components
+
+1. You can create a `index.js` file in the the `content` directories and export 
+the components like this:
+
+```
+export { default as ComponentA } from './ComponentA.md'
+export { default as ComponentB } from './ComponentB.md'
+```
+
+1. Import it at the top of `.mdx` file:
+
+```
+import {ComponentA, ComponentB} from '@/content/index.js' 
 ```
