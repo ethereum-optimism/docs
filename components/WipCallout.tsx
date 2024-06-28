@@ -16,11 +16,11 @@ interface Props {
 export function WipCallout({ context }: Props): ReactElement {
   return (
     <div className="custom-callouts nx-w-full nx-mt-6 nx-flex nx-justify-center nx-items-center nx-bg-white dark:nx-bg-black">
-      <div className="nx-w-full  nx-px-4 nx-text-center nx-font-medium nx-text-sm">
+      <div className="nx-w-full  nx-px-4 nx-text-center nx-font-medium nx-text-sm nx-text-left">
         {context ? (
           context
         ) : (
-          <div>
+          <div className="nx-text-left">
             Please do not rely on the content of this page as it is currently
             undergoing maintenance. Code samples and solutions may not function
             as expected. Please check back for an update or{' '}
