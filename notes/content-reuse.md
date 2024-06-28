@@ -28,7 +28,7 @@ Text before
 Text after
 ```
 
-### How to Use a Multiple Reusable Content Components
+### How to Use Multiple Reusable Content Components
 
 1. You can create a `index.js` file in the `content` directories and export 
 the components like this:
