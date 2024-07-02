@@ -134,6 +134,43 @@ geth \
 
 Consult [Geth's documentation](https://geth.ethereum.org/docs/) for more information on customizing `op-geth`'s behavior.
 
+### Node Log Levels
+
+Node log levels determine the verbosity of log messages, allowing operators to filter
+messages based on importance and detail. The log levels for geth (used in Optimism) are
+as follows:
+
+1. Silent (0): No log messages are displayed. This level is rarely used as it provides no
+feedback on the node's status.
+
+2. Error (1): Only error messages are displayed. Use this level to focus on critical issues
+that need immediate attention.
+
+3. Warn (2): Displays error messages and warnings. This level helps to identify potential
+problems that might not be immediately critical but require attention.
+
+4. Info (3): Displays error messages, warnings, and normal activity logs. This is the
+default level and provides a balanced view of the node's operations without being too
+verbose.
+
+5. Debug (4): All info-level messages plus additional debugging information. Use this
+level when troubleshooting issues or developing the node software.
+
+6. Detail (5): The most verbose level, including detailed debugging information and
+low-level system operations. This level generates a large amount of log data and is
+typically used only for in-depth troubleshooting.
+
+To set the log level, use the --verbosity flag when running the geth command. For
+example, to set the log level to debug:
+
+```bash
+geth --verbosity=4
+```
+
+By adjusting the log level, operators can control the amount and type of information that
+gets logged, helping to manage log data volume and focus on relevant details during
+different operational scenarios.
+
 ### Configuring op-node
 
 `op-node` is a standalone, statically linked binary. It stores no state, and requires no initialization. It consumes configuration parameters either via the command line or environment variables. For some networks, the Rollup Node also requires a configuration file (called `rollup.json` or the "rollup config") that configures network-specific genesis parameters. For official networks like OP Sepolia and OP Mainnet, the genesis config is hardcoded in the `op-node` software and can be specified via a `--network` flag.
