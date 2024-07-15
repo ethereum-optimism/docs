@@ -81,6 +81,25 @@ Choose one of the following options to enable snap sync:
   </Tabs.Tab>
 </Tabs>
 
+## Enabling Execution Layer Sync for Alternative Clients
+In addition to op-geth, you can enable execution-layer syncing with alternative execution clients such as `reth` and `op-erigon`.
+
+Unlike `op-geth`, `reth` and `op-erigon` are designed as archive nodes, which means they require the complete history of the chain. 
+However, these clients can still retrieve block headers and data through the P2P network instead of deriving each individual block, resulting in a faster initial sync.
+
+For OP Mainnet, the [bedrock datadir](snapshots) is required. For other OP Stack networks, no datadir is required. 
+
+To enable execution layer sync for these clients, set the following flags on `op-node`:
+```shell
+# for reth
+--syncmode=execution-layer (not default)
+--l2.enginekind=reth (not default)
+
+# for erigon
+--syncmode=execution-layer (not default)
+--l2.enginekind=erigon (not default)
+```
+
 ## Next Steps
 
 *   See the [Node Configuration](/builders/node-operators/configuration/base-config#configuration) guide for additional explanation or customization. 
