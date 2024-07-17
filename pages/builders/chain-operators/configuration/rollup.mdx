@@ -25,7 +25,10 @@ Optimism repository. You can see example configurations in the
   this [governance thread](https://gov.optimism.io/t/season-6-draft-standard-rollup-charter/8135).
 </Callout>
 
-## Configuration Values
+## Deployment Configuration Values
+
+These values are provided to the deployment configuration JSON file when 
+deploying the L1 contracts.
 
 ### Offset Values
 
@@ -40,6 +43,7 @@ disable Regolith.
 
 *   **Type:** Number of seconds
 *   **Default:** nil
+*   **Recommended value:** "0x0"
 
 ***
 
@@ -51,6 +55,7 @@ disable Canyon.
 
 *   **Type:** Number of seconds
 *   **Default:** nil
+*   **Recommended value:** "0x0"
 
 ***
 
@@ -62,6 +67,7 @@ Delta.
 
 *   **Type:** Number of seconds
 *   **Default:** nil
+*   **Recommended value:** "0x0"
 
 ***
 
@@ -73,6 +79,7 @@ Ecotone.
 
 *   **Type:** Number of seconds
 *   **Default:** nil
+*   **Recommended value:** "0x0"
 
 ***
 
@@ -84,6 +91,7 @@ disable Fjord.
 
 *   **Type:** Number of seconds
 *   **Default:** nil
+*   **Recommended value:** "0x0"
 
 ***
 
@@ -229,7 +237,7 @@ information in L1 block n must be incorporated by L1 block n+10.
 
 *   **Type:** Number of blocks
 *   **Default value:** None
-*   **Notes:* Must not be `0`. 3600 (12 hours) is suggested.
+*   **Notes:** Must not be `0`. 3600 (12 hours) is suggested.
 *   **Standard Config Requirement:**  3\_600 base layer blocks (12 hours for an
     L2 on Ethereum, assuming 12 second L1 blocktime). This is an important value
     for constraining the sequencer's ability to re-order transactions; higher
@@ -265,9 +273,14 @@ Address that Sequencer transaction batches are sent to on L1.
 
 *   **Type:** L1 Address
 *   **Default value:** None
-*   **Standard Config Requirement:** Current convention is
-    `0xff000...000{chainId}`.
-
+*   **Standard Config Requirement:** Convention is `versionByte` || `keccak256(bytes32(chainId))[:19]`, where || denotes concatenation, `versionByte` is `0x00`, and `chainId` is a `uint256`.
+This is to cover the full range of chain ids, to the full `uint256` size. Here's how you can get this address:
+    ```solidity
+    bytes32 hash = keccak256(abi.encodePacked(bytes32(uint256(chainId)))); 
+    # [:19] means taking the first 19 bytes of the hash
+    # then preppending a version byte of zero: 0x00
+    # `0x00{hash[:19]}`
+    ```
 ***
 
 #### batchSenderAddress
@@ -305,7 +318,7 @@ It is generally recommended to use a finalized block to avoid issues with reorgs
 
 *   **Type:** Block hash
 *   **Default value:** None
-*   **Notes:* Must not be `0`.
+*   **Notes:** Must not be `0`.
 
 ***
 
@@ -315,7 +328,7 @@ Chain ID of the L1 chain.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Must not be `0`. 1 for L1 Ethereum mainnet, 11155111 for the
+*   **Notes:** Must not be `0`. 1 for L1 Ethereum mainnet, 11155111 for the
     Sepolia test network, and See [here](https://chainlist.org/?testnets=true)
     for other blockchains.
 
@@ -327,7 +340,7 @@ Chain ID of the L2 chain.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Must not be `0`. For security reasons, should be unique.
+*   **Notes:** Must not be `0`. For security reasons, should be unique.
 *   **Standard Config Requirement:** Foundation-approved, globally unique value
 
 ***
@@ -361,13 +374,29 @@ SuperchainConfig. Has the ability to pause withdrawals.
     operators are driven to maintain a stable and reliable chain. When considering
     a change to this value, careful deliberation is necessary.
 
+#### l2GenesisBlockGasLimit
+
+L2GenesisBlockGasLimit represents the chain's block gas limit. 
+
+*   **Type:** Number
+*   **Default value:** None
+*   **Notes:** Must not be `0`. Must be greater than `MaxResourceLimit` + `SystemTxMaxGas`.
+
+#### l2GenesisBlockBaseFeePerGas
+
+L2GenesisBlockBaseFeePerGas represents the base fee per gas.
+
+*   **Type:** Number
+*   **Default value:** None
+*   **Notes:** L2 genesis block base fee per gas cannot be `nil`.
+
 #### eip1559Elasticity
 
 EIP1559Elasticity is the elasticity of the EIP1559 fee market.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Must not be `0`.
+*   **Notes:** Must not be `0`.
 
 ***
 
@@ -377,7 +406,7 @@ EIP1559Denominator is the denominator of EIP1559 base fee market.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Must not be `0`.
+*   **Notes:** Must not be `0`.
 
 ***
 
@@ -388,7 +417,7 @@ Canyon is active.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Must not be `0` if Canyon is activated.
+*   **Notes:** Must not be `0` if Canyon is activated.
 
 ***
 
@@ -399,7 +428,7 @@ for fee calculations.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Should not be `0`.
+*   **Notes:** Should not be `0`.
 
 ***
 
@@ -410,7 +439,7 @@ scalar used for fee calculations.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Should not be `0`.
+*   **Notes:** Should not be `0`.
 
 ***
 
@@ -429,7 +458,7 @@ proposals.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Should be `0` for new chains.
+*   **Notes:** Should be `0` for new chains.
 
 ***
 
@@ -441,7 +470,7 @@ addition of permissionless proposals.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* his MUST be the timestamp corresponding to the block defined by
+*   **Notes:** his MUST be the timestamp corresponding to the block defined by
     the l1StartingBlockTag.
 
 ***
@@ -453,7 +482,7 @@ the addition of permissionless proposals.
 
 *   **Type:** Number of blocks
 *   **Default value:** None
-*   **Notes:* Must not be `0`. 120 (4 minutes) is suggested.
+*   **Notes:** Must not be `0`. 120 (4 minutes) is suggested.
 
 ***
 
@@ -464,7 +493,7 @@ considered finalized by the OptimismPortal contract.
 
 *   **Type:** Number of seconds
 *   **Default value:** None
-*   **Notes:* Must not be `0`. Recommend 12 on test networks, seven days on
+*   **Notes:** Must not be `0`. Recommend 12 on test networks, seven days on
     production ones.
 *   **Standard Config Requirement:** 7 days. High security. Excessively safe
     upper bound that leaves enough time to consider social layer solutions to a
@@ -730,7 +759,7 @@ before it can be used to finalize a withdrawal.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Should not be `0`.
+*   **Notes:** Should not be `0`.
 
 ***
 
@@ -741,7 +770,7 @@ game must wait before it can be used to finalize a withdrawal.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Notes:* Should not be `0`.
+*   **Notes:** Should not be `0`.
 
 ***
 
@@ -762,7 +791,7 @@ instead of the older output oracle mechanism.
 
 *   **Type:** Boolean
 *   **Default value:** None
-*   **Notes:* You should understand the implications of running a Fault Proof
+*   **Notes:** You should understand the implications of running a Fault Proof
     chain.
 
 ***
