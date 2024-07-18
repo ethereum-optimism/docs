@@ -8,9 +8,12 @@ import { Callout } from 'nextra/components'
 
 # Rollup Configuration
 
-New OP Stack blockchains are currently configured with a JSON file inside the
-Optimism repository. You can see example configurations in the
+New OP Stack blockchains are currently configured with a deployment 
+configuration JSON file inside that is passed into the smart contract 
+[deployment script](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/deploy/Deploy.s.sol).
+You can see example deployment configuration files in the
 [deploy-config directory](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/deploy-config).
+This document highlights the deployment configurations and their values.
 
 <Callout type="warning">
   The Rollup configuration is an active work in progress and will likely evolve
@@ -20,9 +23,10 @@ Optimism repository. You can see example configurations in the
 
 <Callout type="info">
   Standard configuration is the set of requirements for an OP Stack chain to be
-  considered a Standard Chain within the superchain. These requirements are
+  considered a Standard Chain within the Superchain. These requirements are
   currently a draft, pending governance approval. For more details, please see
-  this [governance thread](https://gov.optimism.io/t/season-6-draft-standard-rollup-charter/8135).
+  this [governance thread](https://gov.optimism.io/t/season-6-draft-standard-rollup-charter/8135)
+  and the actual requirements in the [OP Stack Configurability Specification](https://specs.optimism.io/protocol/configurability.html).
 </Callout>
 
 ## Deployment Configuration Values
@@ -42,8 +46,10 @@ Regolith hard fork activates. Set it to 0 to activate at genesis. Nil to
 disable Regolith.
 
 *   **Type:** Number of seconds
-*   **Default:** nil
+*   **Default value:** nil
 *   **Recommended value:** "0x0"
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -54,8 +60,10 @@ Canyon hard fork activates. Set it to 0 to activate at genesis. Nil to
 disable Canyon.
 
 *   **Type:** Number of seconds
-*   **Default:** nil
+*   **Default value:** nil
 *   **Recommended value:** "0x0"
+*   **Notes:** 
+*   **Standard Config Requirement:**
 
 ***
 
@@ -66,8 +74,10 @@ Delta hard fork activates. Set it to 0 to activate at genesis. Nil to disable
 Delta.
 
 *   **Type:** Number of seconds
-*   **Default:** nil
+*   **Default value:** nil
 *   **Recommended value:** "0x0"
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -78,8 +88,10 @@ Ecotone hard fork activates. Set it to 0 to activate at genesis. Nil to disable
 Ecotone.
 
 *   **Type:** Number of seconds
-*   **Default:** nil
+*   **Default value:** nil
 *   **Recommended value:** "0x0"
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -90,8 +102,10 @@ Fjord hard fork activates. Set it to 0 to activate at genesis. Nil to
 disable Fjord.
 
 *   **Type:** Number of seconds
-*   **Default:** nil
+*   **Default value:** nil
 *   **Recommended value:** "0x0"
+*   **Notes:** 
+*   **Standard Config Requirement:**
 
 ***
 
@@ -102,7 +116,10 @@ the Interop hard fork activates. Set it to 0 to activate at genesis. Nil to
 disable Interop.
 
 *   **Type:** Number of seconds
-*   **Default:** nil
+*   **Default value:** nil
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -111,7 +128,10 @@ disable Interop.
 When Cancun activates. Relative to L1 genesis.
 
 *   **Type:** Number of seconds
-*   **Default:** None
+*   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -126,6 +146,7 @@ FinalSystemOwner is the L1 system owner. It owns any ownable L1 contracts.
 *   **Recommended value:** It is recommended to have a single admin
     address to retain a common security model.
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -140,6 +161,7 @@ makes predeployed contracts easily upgradeable.
 *   **Recommended value:** It is recommended to have a single admin
     address to retain a common security model.
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -152,7 +174,9 @@ and is used as part of building the L2 genesis state.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -164,7 +188,9 @@ genesis state.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -175,7 +201,9 @@ used as part of building the L2 genesis state.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -186,7 +214,9 @@ used as part of the derivation pipeline.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -197,7 +227,9 @@ is used as part of the derivation pipeline.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -211,6 +243,7 @@ Number of seconds between each L2 block. Must be \< = L1 block time (12 on mainn
 
 *   **Type:** Number of seconds
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`. Must be less than the L1 blocktime and a whole number.
 *   **Standard Config Requirement:** 2 seconds. High security and
     interoperability compatibility requirement, until de-risked/solved at app
@@ -224,8 +257,10 @@ How far the L2 timestamp can differ from the actual L1 timestamp.
 
 *   **Type:** Number of seconds
 *   **Default value:** None
+*   **Recommended value:** 1800
 *   **Notes:** Must not be `0`. 1800 (30 minutes) is the constant that takes 
 effect with the [Fjord activation](/builders/node-operators/network-upgrades#fjord).
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -237,6 +272,7 @@ information in L1 block n must be incorporated by L1 block n+10.
 
 *   **Type:** Number of blocks
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`. 3600 (12 hours) is suggested.
 *   **Standard Config Requirement:**  3\_600 base layer blocks (12 hours for an
     L2 on Ethereum, assuming 12 second L1 blocktime). This is an important value
@@ -253,7 +289,9 @@ transactions. After the timeout, the frame is dropped.
 
 *   **Type:** Number of blocks
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** 300 (1 hour) is suggested
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -263,7 +301,9 @@ Address of the key that the Sequencer uses to sign blocks on the p2p network.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Sequencer, an address for which you own the private key
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -273,6 +313,8 @@ Address that Sequencer transaction batches are sent to on L1.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
 *   **Standard Config Requirement:** Convention is `versionByte` || `keccak256(bytes32(chainId))[:19]`, where || denotes concatenation, `versionByte` is `0x00`, and `chainId` is a `uint256`.
 This is to cover the full range of chain ids, to the full `uint256` size. Here's how you can get this address:
     ```solidity
@@ -281,6 +323,7 @@ This is to cover the full range of chain ids, to the full `uint256` size. Here's
     # then preppending a version byte of zero: 0x00
     # `0x00{hash[:19]}`
     ```
+
 ***
 
 #### batchSenderAddress
@@ -291,7 +334,9 @@ SystemConfig contract on L1.
 
 *   **Type:** L1 Address
 *   **Default value:** Batcher, an address for which you own the private key.
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -304,6 +349,8 @@ in their storage.
 
 *   **Type:** L2 Block Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
 *   **Standard Config Requirement:** The block where the SystemConfig was
     initialized.
 
@@ -318,7 +365,9 @@ It is generally recommended to use a finalized block to avoid issues with reorgs
 
 *   **Type:** Block hash
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -328,9 +377,11 @@ Chain ID of the L1 chain.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`. 1 for L1 Ethereum mainnet, 11155111 for the
     Sepolia test network, and See [here](https://chainlist.org/?testnets=true)
     for other blockchains.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -340,6 +391,7 @@ Chain ID of the L2 chain.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`. For security reasons, should be unique.
 *   **Standard Config Requirement:** Foundation-approved, globally unique value
 
@@ -352,7 +404,10 @@ L2GenesisBlockExtraData is configurable extradata. Will default to
 
 *   **Type:** Number
 *   **Default value:** \[]byte("BEDROCK")
-
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
+ 
 ***
 
 #### superchainConfigGuardian
@@ -362,7 +417,9 @@ SuperchainConfig. Has the ability to pause withdrawals.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -380,7 +437,11 @@ L2GenesisBlockGasLimit represents the chain's block gas limit.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`. Must be greater than `MaxResourceLimit` + `SystemTxMaxGas`.
+*   **Standard Config Requirement:**  
+
+***
 
 #### l2GenesisBlockBaseFeePerGas
 
@@ -388,7 +449,11 @@ L2GenesisBlockBaseFeePerGas represents the base fee per gas.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** L2 genesis block base fee per gas cannot be `nil`.
+*   **Standard Config Requirement:**  
+
+***
 
 #### eip1559Elasticity
 
@@ -396,7 +461,9 @@ EIP1559Elasticity is the elasticity of the EIP1559 fee market.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -406,7 +473,9 @@ EIP1559Denominator is the denominator of EIP1559 base fee market.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`.
+*   **Standard Config Requirement:**
 
 ***
 
@@ -417,7 +486,9 @@ Canyon is active.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0` if Canyon is activated.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -428,7 +499,9 @@ for fee calculations.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Should not be `0`.
+*   **Standard Config Requirement:**
 
 ***
 
@@ -439,7 +512,9 @@ scalar used for fee calculations.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Should not be `0`.
+*   **Standard Config Requirement:**
 
 ***
 
@@ -458,7 +533,9 @@ proposals.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Should be `0` for new chains.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -470,8 +547,10 @@ addition of permissionless proposals.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** his MUST be the timestamp corresponding to the block defined by
     the l1StartingBlockTag.
+*   **Standard Config Requirement:**
 
 ***
 
@@ -482,7 +561,9 @@ the addition of permissionless proposals.
 
 *   **Type:** Number of blocks
 *   **Default value:** None
-*   **Notes:** Must not be `0`. 120 (4 minutes) is suggested.
+*   **Recommended value:** 
+*   **Notes:** Must not be `0`. 120 (4 minutes) is suggested. 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -493,6 +574,7 @@ considered finalized by the OptimismPortal contract.
 
 *   **Type:** Number of seconds
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `0`. Recommend 12 on test networks, seven days on
     production ones.
 *   **Standard Config Requirement:** 7 days. High security. Excessively safe
@@ -509,7 +591,9 @@ contract. Will be removed when the OP Stack has permissionless proposals.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
+*   **Standard Config Requirement:**
 
 ***
 
@@ -521,8 +605,10 @@ challenges.
 
 *   **Type:** L1 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`. It is recommended to have a single admin
     address to retain a common security model.
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -536,8 +622,10 @@ BaseFeeVaultWithdrawalNetwork value.
 
 *   **Type:** L1 or L2 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`. It is recommended to have a single admin
     address to retain a common security model.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -549,8 +637,10 @@ L1FeeVaultWithdrawalNetwork value.
 
 *   **Type:** L1 or L2 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`. It is recommended to have a single admin
     address to retain a common security model.
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -562,8 +652,10 @@ SequencerFeeVaultWithdrawalNetwork value.
 
 *   **Type:** L1 or L2 Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`. It is recommended to have a single admin
     address to retain a common security model.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -582,6 +674,9 @@ for the BaseFeeVault.
 
 *   **Type:** Number in wei
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -592,6 +687,9 @@ the L1FeeVault.
 
 *   **Type:** Number in wei
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**
 
 ***
 
@@ -601,7 +699,10 @@ SequencerFeeVaultMinimumWithdrawalAmount represents the minimum withdrawal
 amount for the SequencerFeeVault.
 
 *   **Type:** Number in wei
+*   **Recommended value:** 
 *   **Default value:** None
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -617,7 +718,9 @@ a value of 1 will withdraw ETH to the recipient address on L2.
 
 *   **Type:** Number representing network enum
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Withdrawals to Ethereum are more expensive.
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -629,7 +732,9 @@ value of 1 will withdraw ETH to the recipient address on L2.
 
 *   **Type:** Number representing network enum
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Withdrawals to Ethereum are more expensive.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -641,7 +746,9 @@ L1 and a value of 1 will withdraw ETH to the recipient address on L2.
 
 *   **Type:** Number representing network enum
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Withdrawals to Ethereum are more expensive.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -658,6 +765,9 @@ the program.
 
 *   **Type:** Hash
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -670,6 +780,9 @@ that there is always enough room for a full Cannon trace.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -681,6 +794,9 @@ this value at the time of a claim's creation.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -691,6 +807,9 @@ a team's chess clock before they may no longer respond.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -700,6 +819,9 @@ FaultGameGenesisBlock is the block number for genesis.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -709,6 +831,9 @@ FaultGameGenesisOutputRoot is the output root for the genesis block.
 
 *   **Type:** Hash
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -719,6 +844,9 @@ output roots to execution trace claims.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -729,6 +857,9 @@ withdrawing ETH from a fault game.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -739,6 +870,9 @@ preimage oracle proposal can be.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -749,6 +883,9 @@ challenge a large preimage proposal.
 
 *   **Type:** Number of Seconds
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**
 
 ***
 
@@ -759,7 +896,9 @@ before it can be used to finalize a withdrawal.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Should not be `0`.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -770,7 +909,9 @@ game must wait before it can be used to finalize a withdrawal.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Should not be `0`.
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -781,6 +922,9 @@ will respect for finalizing withdrawals.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -791,8 +935,10 @@ instead of the older output oracle mechanism.
 
 *   **Type:** Boolean
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** You should understand the implications of running a Fault Proof
-    chain.
+    chain. 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -806,6 +952,9 @@ UseCustomGasToken is a flag to indicate that a custom gas token should be used.
 
 *   **Type:** boolean
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -816,9 +965,11 @@ gas on L2.
 
 *   **Type:** Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`.
+*   **Standard Config Requirement:**  
 
-### Alt-DA Mode / Plasma Mode
+### Alt-DA Mode
 
 ***
 
@@ -827,8 +978,10 @@ gas on L2.
 UsePlasma is a flag that indicates if the system is using op-plasma
 
 *   **Type:** bool
+*   **Recommended value:** 
 *   **Default value:** None
-*   **Notes:**
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -838,8 +991,10 @@ DACommitmentType specifies the allowed commitment
 
 *   **Type:** string
 *   **Default value:** None
-*   **Notes:** DACommitmentType must be either KeccakCommitment or
-    GenericCommitment
+*   **Notes:** DACommitmentType must be either KeccakCommitment or 
+GenericCommitment. However KeccakCommitment will be deprecated soon.
+*   **Recommended value:** GenericCommitment
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -850,7 +1005,9 @@ of a data commitment can be challenged.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** DAChallengeWindow must not be 0 when using plasma mode
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -861,7 +1018,9 @@ challenge can be resolved.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** DAChallengeWindow must no be 0 when using plasma mode
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -872,6 +1031,9 @@ challenge.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -882,6 +1044,9 @@ be refunded to the resolver such as 100 means 100% refund.
 
 *   **Type:** Number
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -892,7 +1057,9 @@ contract.
 
 *   **Type:** Address
 *   **Default value:** None
+*   **Recommended value:** 
 *   **Notes:** Must not be address(0) when using plasma mode
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -906,6 +1073,9 @@ UseInterop is a flag that indicates if the system is using interop.
 
 *   **Type:** boolean
 *   **Default value:** None
+*   **Recommended value:** false
+*   **Notes:** This is an experiemental feature that is in [developement](https://specs.optimism.io/interop/overview.html)
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -919,6 +1089,9 @@ EnableGovernance determines whether to include governance token predeploy.
 
 *   **Type:** boolean
 *   **Default value:** None
+*   **Recommended value:** false
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -928,6 +1101,9 @@ GovernanceTokenSymbol represents the  ERC20 symbol of the GovernanceToken.
 
 *   **Type**: string
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -937,6 +1113,9 @@ GovernanceTokenName represents the ERC20 name of the GovernanceToken
 
 *   **Type**: string
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
@@ -947,10 +1126,19 @@ ability to mint and burn tokens.
 
 *   **Type**: L2 Address
 *   **Default value:** None
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
 ### Miscellaneous
+
+*   **Type:** Number of blocks
+*   **Default value:** 
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -960,7 +1148,11 @@ FundDevAccounts determines whether to fund the dev accounts. Should only
 be used during devnet deployments.
 
 *   **Type**: Boolean
-
+*   **Default value:** 
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
+ 
 ***
 
 #### requiredProtocolVersion
@@ -969,6 +1161,10 @@ RequiredProtocolVersion indicates the protocol version that nodes are
 recommended to adopt, to stay in sync with the network.
 
 *   **Type**: String
+*   **Default value:** 
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:** 
 
 ***
 
@@ -978,11 +1174,15 @@ RecommendedProtocolVersion indicates the protocol version that nodes are
 recommended to adopt, to stay in sync with the network.
 
 *   **Type**: String
+*   **Default value:** 
+*   **Recommended value:** 
+*   **Notes:** 
+*   **Standard Config Requirement:**  
 
 ***
 
 ### Deprecated
-
+ 
 ***
 
 #### (**DEPRECATED**) gasPriceOracleScalar
