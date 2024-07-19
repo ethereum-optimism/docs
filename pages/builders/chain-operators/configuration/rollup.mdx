@@ -1,12 +1,12 @@
 ---
-title: Rollup Configuration
+title: Rollup Deployment Configuration
 lang: en-US
-description: Learn the OP Stack rollup configurations.
+description: Learn about the OP Stack rollup deployment configurations.
 ---
 
 import { Callout } from 'nextra/components'
 
-# Rollup Configuration
+# Rollup Deployment Configuration
 
 New OP Stack blockchains are currently configured with a deployment 
 configuration JSON file inside that is passed into the smart contract 
@@ -49,7 +49,7 @@ disable Regolith.
 *   **Default value:** nil
 *   **Recommended value:** "0x0"
 *   **Notes:** 
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Network upgrade (hardfork) is activated. 
 
 ***
 
@@ -63,7 +63,7 @@ disable Canyon.
 *   **Default value:** nil
 *   **Recommended value:** "0x0"
 *   **Notes:** 
-*   **Standard Config Requirement:**
+*   **Standard Config Requirement:** Network upgrade (hardfork) is activated.
 
 ***
 
@@ -77,7 +77,7 @@ Delta.
 *   **Default value:** nil
 *   **Recommended value:** "0x0"
 *   **Notes:** 
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Network upgrade (hardfork) is activated. 
 
 ***
 
@@ -91,7 +91,7 @@ Ecotone.
 *   **Default value:** nil
 *   **Recommended value:** "0x0"
 *   **Notes:** 
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Network upgrade (hardfork) is activated. 
 
 ***
 
@@ -105,7 +105,7 @@ disable Fjord.
 *   **Default value:** nil
 *   **Recommended value:** "0x0"
 *   **Notes:** 
-*   **Standard Config Requirement:**
+*   **Standard Config Requirement:** Network upgrade (hardfork) is activated.
 
 ***
 
@@ -118,8 +118,8 @@ disable Interop.
 *   **Type:** Number of seconds
 *   **Default value:** nil
 *   **Recommended value:** 
-*   **Notes:** 
-*   **Standard Config Requirement:** 
+*   **Notes:** Interoperability is still [experimental](https://specs.optimism.io/interop/overview.html). 
+*   **Standard Config Requirement:** Non-standard feature.
 
 ***
 
@@ -129,9 +129,9 @@ When Cancun activates. Relative to L1 genesis.
 
 *   **Type:** Number of seconds
 *   **Default value:** None
-*   **Recommended value:** 
+*   **Recommended value:** "0x0"
 *   **Notes:** 
-*   **Standard Config Requirement:** 
+*   **Standard Config Requirement:** Network upgrade (hardfork) is activated.
 
 ***
 
@@ -146,7 +146,10 @@ FinalSystemOwner is the L1 system owner. It owns any ownable L1 contracts.
 *   **Recommended value:** It is recommended to have a single admin
     address to retain a common security model.
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:**  Must be Chain Governor or Servicer. 
+However, the L1 ProxyAdmin owner must be held by Optimism Security Council.
+At the moment, this is L1 ProxyAdmin owner is transfered from the Chain
+Governor or Servicer to [0x5a0Aae59D09fccBdDb6C6CcEB07B7279367C3d2A](https://etherscan.io/address/0x5a0Aae59D09fccBdDb6C6CcEB07B7279367C3d2A)
 
 ***
 
@@ -176,7 +179,10 @@ and is used as part of building the L2 genesis state.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Implementation contract must the most 
+up-to-date, governance-approved version of the OP Stack codebase, and, if the 
+chain has been upgraded in the past, that the previous versions were a standard
+release of the codebase.
 
 ***
 
@@ -190,7 +196,10 @@ genesis state.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Implementation contract must the most 
+up-to-date, governance-approved version of the OP Stack codebase, and, if the 
+chain has been upgraded in the past, that the previous versions were a standard
+release of the codebase.
 
 ***
 
@@ -203,7 +212,10 @@ used as part of building the L2 genesis state.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:** 
+*   **Standard Config Requirement:** Implementation contract must the most 
+up-to-date, governance-approved version of the OP Stack codebase, and, if the 
+chain has been upgraded in the past, that the previous versions were a standard
+release of the codebase.
 
 ***
 
@@ -216,7 +228,10 @@ used as part of the derivation pipeline.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Implementation contract must the most 
+up-to-date, governance-approved version of the OP Stack codebase, and, if the 
+chain has been upgraded in the past, that the previous versions were a standard
+release of the codebase.
 
 ***
 
@@ -229,7 +244,10 @@ is used as part of the derivation pipeline.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Implementation contract must the most 
+up-to-date, governance-approved version of the OP Stack codebase, and, if the 
+chain has been upgraded in the past, that the previous versions were a standard
+release of the codebase. 
 
 ***
 
@@ -302,8 +320,8 @@ Address of the key that the Sequencer uses to sign blocks on the p2p network.
 *   **Type:** L1 Address
 *   **Default value:** None
 *   **Recommended value:** 
-*   **Notes:** Sequencer, an address for which you own the private key
-*   **Standard Config Requirement:**  
+*   **Notes:** 
+*   **Standard Config Requirement:**  No requirement.
 
 ***
 
@@ -315,8 +333,11 @@ Address that Sequencer transaction batches are sent to on L1.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** 
-*   **Standard Config Requirement:** Convention is `versionByte` || `keccak256(bytes32(chainId))[:19]`, where || denotes concatenation, `versionByte` is `0x00`, and `chainId` is a `uint256`.
-This is to cover the full range of chain ids, to the full `uint256` size. Here's how you can get this address:
+*   **Standard Config Recommendation:** Convention is `versionByte` || 
+`keccak256(bytes32(chainId))[:19]`, where || denotes concatenation, 
+`versionByte` is `0x00`, and `chainId` is a `uint256`.
+This is to cover the full range of chain ids, to the full `uint256` size. 
+Here's how you can get this address:
     ```solidity
     bytes32 hash = keccak256(abi.encodePacked(bytes32(uint256(chainId)))); 
     # [:19] means taking the first 19 bytes of the hash
@@ -336,7 +357,7 @@ SystemConfig contract on L1.
 *   **Default value:** Batcher, an address for which you own the private key.
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:**  No requirement.
 
 ***
 
@@ -381,7 +402,7 @@ Chain ID of the L1 chain.
 *   **Notes:** Must not be `0`. 1 for L1 Ethereum mainnet, 11155111 for the
     Sepolia test network, and See [here](https://chainlist.org/?testnets=true)
     for other blockchains.
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** 1 (Ethereum) 
 
 ***
 
@@ -392,8 +413,9 @@ Chain ID of the L2 chain.
 *   **Type:** Number
 *   **Default value:** None
 *   **Recommended value:** 
-*   **Notes:** Must not be `0`. For security reasons, should be unique.
-*   **Standard Config Requirement:** Foundation-approved, globally unique value
+*   **Notes:** Must not be `0`. For security reasons, should be unique. Chains
+should add their chain IDs to [ethereum-lists/chains](https://github.com/ethereum-lists/chains).
+*   **Standard Config Requirement:** Foundation-approved, globally unique value.
 
 ***
 
@@ -419,7 +441,9 @@ SuperchainConfig. Has the ability to pause withdrawals.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** [0x09f7150D8c019BeF34450d6920f6B3608ceFdAf2](https://etherscan.io/address/0x09f7150D8c019BeF34450d6920f6B3608ceFdAf2)
+A 1/1 Safe owned by the Security Council Safe, with the [Deputy Guardian Module](https://specs.optimism.io/experimental/security-council-safe.html#deputy-guardian-module)
+enabled to allow the Optimism Foundation to act as Guardian.
 
 ***
 
@@ -486,7 +510,7 @@ Canyon is active.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Recommended value:** 
+*   **Recommended value:** 250
 *   **Notes:** Must not be `0` if Canyon is activated.
 *   **Standard Config Requirement:**  
 
@@ -533,7 +557,7 @@ proposals.
 
 *   **Type:** Number
 *   **Default value:** None
-*   **Recommended value:** 
+*   **Recommended value:** 0
 *   **Notes:** Should be `0` for new chains.
 *   **Standard Config Requirement:**  
 
@@ -593,7 +617,10 @@ contract. Will be removed when the OP Stack has permissionless proposals.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`
-*   **Standard Config Requirement:**
+*   **Standard Config Requirement:** No requirement. This role is only active 
+when the OptimismPortal respected game type is `PERMISSIONED_CANNON`. The 
+L1ProxyAdmin sets the implementation of the `PERMISSIONED_CANNON` game type. 
+Thus, it determines the proposer configuration of the permissioned dispute game.
 
 ***
 
@@ -954,7 +981,7 @@ UseCustomGasToken is a flag to indicate that a custom gas token should be used.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** 
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:**  Non-standard feature.
 
 ***
 
@@ -967,7 +994,7 @@ gas on L2.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be `address(0)`.
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:**  Non-standard feature.
 
 ### Alt-DA Mode
 
@@ -981,7 +1008,7 @@ UsePlasma is a flag that indicates if the system is using op-plasma
 *   **Recommended value:** 
 *   **Default value:** None
 *   **Notes:** 
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:**  Non-standard feature.
 
 ***
 
@@ -994,7 +1021,7 @@ DACommitmentType specifies the allowed commitment
 *   **Notes:** DACommitmentType must be either KeccakCommitment or 
 GenericCommitment. However KeccakCommitment will be deprecated soon.
 *   **Recommended value:** GenericCommitment
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:**  Non-standard feature.
 
 ***
 
@@ -1007,7 +1034,7 @@ of a data commitment can be challenged.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** DAChallengeWindow must not be 0 when using plasma mode
-*   **Standard Config Requirement:** 
+*   **Standard Config Requirement:** Non-standard feature.
 
 ***
 
@@ -1020,7 +1047,7 @@ challenge can be resolved.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** DAChallengeWindow must no be 0 when using plasma mode
-*   **Standard Config Requirement:** 
+*   **Standard Config Requirement:** Non-standard feature.
 
 ***
 
@@ -1033,7 +1060,7 @@ challenge.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** 
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Non-standard feature. 
 
 ***
 
@@ -1046,7 +1073,7 @@ be refunded to the resolver such as 100 means 100% refund.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** 
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Non-standard feature. 
 
 ***
 
@@ -1059,7 +1086,7 @@ contract.
 *   **Default value:** None
 *   **Recommended value:** 
 *   **Notes:** Must not be address(0) when using plasma mode
-*   **Standard Config Requirement:**  
+*   **Standard Config Requirement:** Non-standard feature. 
 
 ***
 
@@ -1074,8 +1101,8 @@ UseInterop is a flag that indicates if the system is using interop.
 *   **Type:** boolean
 *   **Default value:** None
 *   **Recommended value:** false
-*   **Notes:** This is an experiemental feature that is in [developement](https://specs.optimism.io/interop/overview.html)
-*   **Standard Config Requirement:**  
+*   **Notes:** Interoperability is still [experimental](https://specs.optimism.io/interop/overview.html). 
+*   **Standard Config Requirement:** Non-standard feature. 
 
 ***
 
@@ -1133,12 +1160,6 @@ ability to mint and burn tokens.
 ***
 
 ### Miscellaneous
-
-*   **Type:** Number of blocks
-*   **Default value:** 
-*   **Recommended value:** 
-*   **Notes:** 
-*   **Standard Config Requirement:** 
 
 ***
 
