@@ -1,6 +1,6 @@
-#  Optimism Docs
+#  Metal L2 Docs
 
-This repo houses the Optimism Docs located at [docs.optimism.io](https://docs.optimism.io/). All documentation-related updates and new content will be tracked and maintained in this repo. 
+This repo houses the Metal L2 Docs forked from Optimism located at [docs.optimism.io](https://docs.optimism.io/). All documentation-related updates and new content will be tracked and maintained in this repo. 
 
 ## Local Development
 
