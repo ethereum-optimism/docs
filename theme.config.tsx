@@ -46,14 +46,6 @@ const config: DocsThemeConfig = {
   editLink: {
     text: '✏️ Edit this page on GitHub'
   },
-  banner: {
-    key: 'fjord-upgrade',
-    text: (
-      <a href="/builders/notices/fjord-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fjord Breaking Changes">
-      📣 NOTICE: The Fjord Upgrade changes the formula for estimating the L1 Data Fee component. Click here for more info. 📣
-      </a>
-    )
-  },
   useNextSeoProps() {
     const { asPath } = useRouter()
     if (asPath !== '/') {
