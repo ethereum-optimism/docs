@@ -47,10 +47,10 @@ const config: DocsThemeConfig = {
     text: '✏️ Edit this page on GitHub'
   },
   banner: {
-    key: 'fp-mainnet-release',
+    key: 'fjord-upgrade',
     text: (
-      <a href="/builders/notices/fp-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fault Proof Breaking Changes">
-      📣📣📣 ATTENTION: Fault Proofs are planned for OP Mainnet. <strong><i>Withdrawal claims submitted after June 3 will need to be reproven after the upgrade</i></strong>, which will be at least 7 days later. Click here for more info. 📣📣📣
+      <a href="/builders/notices/fjord-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fjord Breaking Changes">
+      📣 NOTICE: The Fjord Upgrade changes the formula for estimating the L1 Data Fee component. Click here for more info. 📣
       </a>
     )
   },
