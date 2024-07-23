@@ -79,18 +79,14 @@ const config: DocsThemeConfig = {
   editLink: {
     text: '✏️ Edit this page on GitHub'
   },
-  banner: {
-    key: 'viem/op-stack',
+  /*banner: {
+    key: 'fp-mainnet-release',
     text: (
       <a href="/builders/notices/sdk-deprecation">
         🎉 We are deprecating the Optimism SDK and migrating all tutorials to use viem/op-stack. Read more →
       </a>
     )
-  },
-   search: {
-     component: Search,
-   },
-  navigation: false,
+  },*/
   useNextSeoProps() {
     const { asPath } = useRouter();
     if (asPath !== "/") {
