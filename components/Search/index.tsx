@@ -5,8 +5,8 @@ import { HighlightMatches } from "./highlight-matches";
 import { DocSearch } from "./docsearch";
 import algoliasearch from "algoliasearch";
 
-const client = algoliasearch("ECJ5AHC7GY", "ebbdaf91def1c90ace0727f95a77c224");
-const index = client.initIndex("algolia");
+const client = algoliasearch("JCF9BUJTB9", "cc766a73d4b0004e3059677de49297a2");
+const index = client.initIndex("docs");
 
 type AlgoliaHits = {
   hits: AlgoliaHit[];
