@@ -4,12 +4,16 @@ import matter from "gray-matter";
 const globby = require("globby");
 
 (async () => {
-  const pages = await globby([
-    "pages/",
+  const EXCLUDE_FILES = [
     "!**.json",
     "!pages/404.mdx",
     "!pages/500.mdx",
     "!pages/_app.mdx",
+  ];
+
+  const pages = await globby([
+    "pages/",
+    ...EXCLUDE_FILES,
   ]);
 
   const objects = pages.map((page: string) => {
