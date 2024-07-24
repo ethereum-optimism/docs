@@ -41,7 +41,7 @@ const globby = require("globby");
 
   fs.writeFile("./algolia.json", JSON.stringify(flattenedObjects), (err) => {
     if (err) {
-      console.error(err);
+      console.error("Error writing algolia.json:", err);
     }
   });
 })();
