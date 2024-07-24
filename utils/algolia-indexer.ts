@@ -12,7 +12,7 @@ const globby = require("globby");
     "!pages/_app.mdx",
   ]);
 
-  const objects = pages.map((page: any) => {
+  const objects = pages.map((page: string) => {
     const fileContents = fs.readFileSync(page, "utf8");
     const { data, content } = matter(fileContents);
     const path = page.replace(".mdx", "").replace("pages/", "");
