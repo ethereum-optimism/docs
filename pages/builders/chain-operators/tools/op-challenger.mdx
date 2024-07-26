@@ -82,32 +82,38 @@ This guide provides a walkthrough of setting up the configuration and monitoring
   #### `--rollup-rpc`
 
   *   This needs to be an`op-node` archive node because challenger needs access to output roots from back when the games start.
-      
+
       #### Important Configuration Details
 
-      1. Safe Head Database (SafeDB) Configuration for op-node:
-        *   The `op-node` behind the `op-conductor` must have the SafeDB enabled to ensure it is not stateless.
-        *   **How to Enable SafeDB:**
-            *   Set the `--safedb.path` value in your configuration. This specifies the file path used to persist safe head update data.
-            *   Example:
-                ```
-                --safedb.path <path-to-safe-head-db>   # Replace <path-to-safe-head-db> with your actual path
-                ```
-            *   If this path is not set, the SafeDB feature will be disabled.
-      
-      2. Ensuring Historical Data Availability:
-        *   Both `op-node` and `op-geth` must have data from the start of the games to maintain network consistency and allow nodes to reference historical state and transactions.
-        *   For `op-node`:
-            *   Configure it to maintain a sufficient history of blockchain data locally or use an archive node.
-        *   For `op-geth`:
-            *   Similarly, configure to store or access historical data.
-        
-        **Example Configuration**
-        ```
-        op-node \
-        --rollup-rpc <op-node-archive-node-url> \
-        --safedb.path <path-to-safe-head-db>
-        ```
+      1.  Safe Head Database (SafeDB) Configuration for op-node:
+
+      *   The `op-node` behind the `op-conductor` must have the SafeDB enabled to ensure it is not stateless.
+      *   **How to Enable SafeDB:**
+          *   Set the `--safedb.path` value in your configuration. This specifies the file path used to persist safe head update data.
+
+          *   Example:
+              ```
+              --safedb.path <path-to-safe-head-db>   # Replace <path-to-safe-head-db> with your actual path
+              ```
+
+          *   If this path is not set, the SafeDB feature will be disabled.
+
+      2.  Ensuring Historical Data Availability:
+
+      *   Both `op-node` and `op-geth` must have data from the start of the games to maintain network consistency and allow nodes to reference historical state and transactions.
+      *   For `op-node`:
+          *   Configure it to maintain a sufficient history of blockchain data locally or use an archive node.
+      *   For `op-geth`:
+          *   Similarly, configure to store or access historical data.
+
+      **Example Configuration**
+
+      ```
+      op-node \
+      --rollup-rpc <op-node-archive-node-url> \
+      --safedb.path <path-to-safe-head-db>
+      ```
+
       Replace `<op-node-archive-node-url>` with the URL of your archive node and `<path-to-safe-head-db>` with the desired path for storing SafeDB data.
 
   #### `--private-key`
