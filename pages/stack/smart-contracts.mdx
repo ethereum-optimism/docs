@@ -32,6 +32,31 @@ and contract releases you'll see them tagged as `op-contract/vX.X.X`.
   only, and **DO NOT** include smart contracts.
 </Callout>
 
+#### v1.4.0 - Fault Proofs
+
+This protocol upgrade reduces the trust assumptions for users of the OP Stack 
+by enabling permissionless output proposals and a permissionless fault proof
+system. As part of a responsible and safe rollout of Fault Proofs, it preserves
+the ability for the guardian to override if necessary to maintain security. 
+
+As a result, withdrawals no longer depend on the privileged proposer role 
+posting an output root, allowing the entire withdrawal process to be completed
+without any privileged actions. The trust assumption is reduced to requiring 
+only that the guardian role does not act to intervene. 
+
+Combined with the Guardian, Security Council Threshold and L2 ProxyAdmin 
+Ownership changes 23 proposal, this satisfies the criteria to have OP Chains 
+reach Stage 1 status.
+
+*   [Official - Fault Proof Release](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts/v1.4.0)
+*   [Governance Post](https://gov.optimism.io/t/final-protocol-upgrade-7-fault-proofs/8161)
+
+<details>
+  <summary>**Changelog**</summary>
+  todo: 
+
+</details>
+
 #### v1.3.0 - Multi-Chain Prep (MCP)
 
 This protocol upgrade strengthens the security and upgradeability of the
@@ -40,17 +65,55 @@ chains in a single transaction. This upgrade also extends the `SystemConfig`
 to contain the addresses of the contracts in the network, allowing users to
 discover the system's contract addresses programmatically.
 
-*   [MCP release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.3.0-rc.1)
-*   [Governance post](https://gov.optimism.io/t/upgrade-proposal-6-multi-chain-prep-mcp-l1/7677)
+*   [Official - MCP Release](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.3.0)
+*   [Governance Post](https://gov.optimism.io/t/upgrade-proposal-6-multi-chain-prep-mcp-l1/7677)
 
+<details>
+  <summary>**Changelog**</summary>
+  
+  **Upgraded:**
+  - L1CrossDomainMessenger: [2.3.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/L1CrossDomainMessenger.sol#L24)
+  - L1ERC721Bridge: [2.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/L1ERC721Bridge.sol#L27)
+  - L1StandardBridge: [2.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/L1StandardBridge.sol#L73)
+  - L2OutputOracle: [1.8.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/L2OutputOracle.sol#L59)
+  - OptimismMintableERC20Factory: [1.9.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/universal/OptimismMintableERC20Factory.sol#L46)
+  - OptimismPortal: [2.5.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/OptimismPortal.sol#L94)
+  - SystemConfig: [1.12.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.3.0/packages/contracts-bedrock/src/L1/SystemConfig.sol#L104)
+
+  **No change:**
+  - AddressManager: Latest (this has no version)
+  - SuperchainConfig: [1.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/SuperchainConfig.sol#L38)
+  - ProtocolVersions: [1.0.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/ProtocolVersions.sol#L39)
+</details>
 
 #### v1.2.0 - SuperchainConfig with Extended Pause Functionality
 
 The SuperchainConfig contract is used to manage global configuration values for
 multiple OP Chains within a single Superchain network.
 
-*   [SuperchainConfig and Extended Pause release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.2.0)
+*   [Official - SuperchainConfig and Extended Pause Release](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.2.0)
 *   [Governance post](https://gov.optimism.io/t/upgrade-proposal-4/7534)
+
+<details>
+  <summary>**Changelog**</summary>
+
+  **Added:**
+  - SuperchainConfig: [1.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/SuperchainConfig.sol#L38)
+
+  **Upgraded:**
+  - AddressManager: [Latest](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/legacy/AddressManager.sol) (this has no version)
+  - L1CrossDomainMessenger: [2.2.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/L1CrossDomainMessenger.sol#L25)
+  - L1ERC721Bridge: [2.0.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/L1ERC721Bridge.sol#L26)
+  - L1StandardBridge: [2.0.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/L1StandardBridge.sol#L73)
+  - L2OutputOracle: [1.7.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/L2OutputOracle.sol#L63)
+  - OptimismMintableERC20Factory: [1.8.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/universal/OptimismMintableERC20Factory.sol#L35)
+  - OptimismPortal: [2.4.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/OptimismPortal.sol#L96)
+  - SystemConfig: [1.11.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/SystemConfig.sol#L67)
+  - ProtocolVersions: [1.0.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/ProtocolVersions.sol#L39)
+  
+  **No change:**
+  - AddressManager: Latest (this has no version)
+</details>
 
 #### v1.1.0 - ProtocolVersions
 
@@ -71,7 +134,24 @@ future hardforks, not the activation of said hardforks.
   of the OP-Stack. This is an optional feature.
 </Callout>
 
-*   [ProtocolVersions release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.1.0)
+*   [Official ProtocolVersions Release](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.1.0)
+
+<details>
+  <summary>**Changelog**</summary>
+
+  **Added:**
+  - ProtocolVersions: 1.0.0
+  
+  **No change:**
+  - AddressManager: [Latest](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/legacy/AddressManager.sol) (this has no version)
+  - L1CrossDomainMessenger: [1.4.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/L1CrossDomainMessenger.sol#L23)
+  - L1ERC721Bridge: [1.1.1](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/L1ERC721Bridge.sol#L23)
+  - L1StandardBridge: [1.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/L1StandardBridge.sol#L94)
+  - L2OutputOracle: [1.3.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/L2OutputOracle.sol#L81)
+  - OptimismMintableERC20Factory: [1.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol#L47)
+  - OptimismPortal: [1.6.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L143)
+  - SystemConfig: [1.3.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/SystemConfig.sol#L83)
+</details>
 
 #### v1.0.0 - Bedrock
 
@@ -79,8 +159,23 @@ The Bedrock protocol upgrade was designed to minimize the amount
 of code in the OP Stack, pushed it as close as possible to Ethereum-Equivalence,
 and most importantly making the stack modular.
 
-*   [Bedrock release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.0.0) ...
+*   [Official - Bedrock Release](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.0.0) ...
 *   [Governance post](https://gov.optimism.io/t/final-upgrade-1-bedrock-protocol-upgrade-v2/5548)
+
+<details>
+  <summary>**Changelog**</summary>
+
+  **Added:**
+  - AddressManager: [Latest](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/legacy/AddressManager.sol) (this has no version)
+  - L1CrossDomainMessenger: [1.4.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/L1CrossDomainMessenger.sol#L23)
+  - L1ERC721Bridge: [1.1.1](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/L1ERC721Bridge.sol#L23)
+  - L1StandardBridge: [1.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/L1StandardBridge.sol#L94)
+  - L2OutputOracle: [1.3.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/L2OutputOracle.sol#L81)
+  - OptimismMintableERC20Factory: [1.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/universal/OptimismMintableERC20Factory.sol#L47)
+  - OptimismPortal: [1.6.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L143)
+  - SystemConfig: [1.3.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.0.0/packages/contracts-bedrock/contracts/L1/SystemConfig.sol#L83)
+
+</details>
 
 ### L1 Contract Details
 
