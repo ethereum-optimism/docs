@@ -49,4 +49,10 @@ export const CHAIN_CONSTANTS = {
   11155420: {
     explorer: 'https://sepolia-optimism.etherscan.io',
   },
+  1750: {
+    explorer: 'https://explorer.metall2.com',
+  },
+  1740: {
+    explorer: 'https://testnet.explorer.metall2.com',
+  },
 }
