@@ -341,8 +341,9 @@ instances.
 
 #### FaultDisputeGame 
 
-The `FaultDisputeGame` contract instances that each act as a host to a proposal 
-about the state of the OP Stack chain at a given block number.
+The `FaultDisputeGame` contract is deployed by the `DisputeGameFactory`. Each 
+deployed instance of the contract acts as a host to a proposal about the state 
+of the OP Stack chain at a given block number.
 
 #### PermissionedDisputeGame
 
@@ -456,29 +457,12 @@ user is depositing from L1 to L2 or withdrawing from L2 to L1.
 
 ### GasPriceOracle
 
-In the legacy system, the `GasPriceOracle` was a permissioned contract that was
-pushed the L1 base fee and the L2 gas price by an offchain actor. The offchain
-actor observes the L1 blockheaders to get the L1 base fee as well as the gas
-usage on L2 to compute what the L2 gas price should be based on a congestion
-control algorithm.
-
-After Bedrock, the `GasPriceOracle` is no longer a permissioned contract and
-only exists to preserve the API for offchain gas estimation. The function
-`getL1Fee(bytes)` accepts an unsigned RLP transaction and will return the L1
-portion of the fee. This fee pays for using L1 as a data availability layer
-and should be added to the L2 portion of the fee, which pays for execution,
-to compute the total transaction fee.
-
-The values used to compute the L1 portion of the fee prior to the Ecotone
-upgrade are:
-
-*   `scalar`
-*   `overhead`
-*   `decimals`
-
-After the Bedrock upgrade, these values are instead managed by the
-`SystemConfig` contract on L1. The scalar and overhead values are sent to the
-`L1Block` contract each block, and the decimals value has been hardcoded to 6.
+The `GasPriceOracle` is no longer a permissioned contract like in the legacy
+system. It only exists to preserve the API for offchain gas estimation. The 
+function `getL1Fee(bytes)` accepts an unsigned RLP transaction and will return 
+the L1 portion of the fee. This fee pays for using L1 as a data availability 
+layer and should be added to the L2 portion of the fee, which pays for 
+execution, to compute the total transaction fee.
 
 Following the Ecotone upgrade, the values used for L1 fee computation are:
 
@@ -523,10 +507,6 @@ move to a new epoch.
 
 ### L2ToL1MessagePasser
 
-<Callout>
-  There is a legacy contract under this same name.
-</Callout>
-
 The `L2ToL1MessagePasser` is a dedicated contract where messages that are being
 sent from L2 to L1 can be stored. The storage root of this contract is pulled
 up to the top level of the L2 output to reduce the cost of proving the
@@ -546,9 +526,9 @@ existence of sent messages.
   can be refunded on L2.
 </Callout>
 
-The `L2ERC721Bridge` is a contract which works together with the L1 ERC721 bridge to
+The `L2ERC721Bridge` is a contract which works together with the `L1ERC721Bridge` to
 make it possible to transfer ERC721 tokens from Ethereum to Optimism. This contract
-acts as a minter for new tokens when it hears about deposits into the L1 ERC721 bridge.
+acts as a minter for new tokens when it hears about deposits into the `L1ERC721Bridge`.
 This contract also acts as a burner for tokens being withdrawn.
 
 *   **Address:** `0x4200000000000000000000000000000000000014`
