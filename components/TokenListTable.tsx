@@ -8,6 +8,8 @@ const explorers = {
   '420': 'https://goerli-optimism.etherscan.io',
   '11155111': 'https://sepolia.etherscan.io/',
   '11155420': 'https://sepolia-optimism.etherscan.io/',
+  '1750' : 'https://explorer.metall2.com/',
+  '1740' : 'https://testnet.explorer.metall2.com/',
 }
 
 export function TokenListTable({

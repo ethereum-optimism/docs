@@ -91,8 +91,8 @@ const config: DocsThemeConfig = {
     const { asPath } = useRouter();
     if (asPath !== "/") {
       return {
-        titleTemplate: "%s | Optimism Docs",
-      };
+        titleTemplate: '%s | Metal L2 Docs'
+      }
     }
   },
   head: () => {
