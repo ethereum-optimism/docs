@@ -81,7 +81,38 @@ This guide provides a walkthrough of setting up the configuration and monitoring
 
   #### `--rollup-rpc`
 
-  *   This needs to be an`op-node` archive node because challenger needs access to output roots from back when the games start.
+  *   This needs to be an`op-node` archive node because challenger needs access to output roots from back when the games start. See below for important configuration details:
+
+  1.  Safe Head Database (SafeDB) Configuration for op-node:
+
+      *   The `op-node` behind the `op-conductor` must have the SafeDB enabled to ensure it is not stateless.
+      *   To Enable SafeDB, set the `--safedb.path` value in your configuration. This specifies the file path used to persist safe head update data.
+      *   Example Configuration:
+
+          ```
+          --safedb.path <path-to-safe-head-db>   # Replace <path-to-safe-head-db> with your actual path
+          ```
+
+          <Callout type="info">
+          If this path is not set, the SafeDB feature will be disabled.
+          </Callout>
+
+      2.  Ensuring Historical Data Availability:
+
+      *   Both `op-node` and `op-geth` must have data from the start of the games to maintain network consistency and allow nodes to reference historical state and transactions.
+      *   For `op-node`: Configure it to maintain a sufficient history of blockchain data locally or use an archive node.
+      *   For `op-geth`: Similarly, configure to store or access historical data.
+      *   Example Configuration:
+
+          ```
+          op-node \
+          --rollup-rpc <op-node-archive-node-url> \
+          --safedb.path <path-to-safe-head-db>
+          ```
+
+      <Callout type="info">
+      Replace `<op-node-archive-node-url>` with the URL of your archive node and `<path-to-safe-head-db>` with the desired path for storing SafeDB data.
+      </Callout>
 
   #### `--private-key`
 
@@ -182,7 +213,7 @@ This guide provides a walkthrough of setting up the configuration and monitoring
   | `resolve-claim` | Resolves the specified claim if possible                 |
 
   Additionally, chain operators should consider running `op-dispute-mon`. It's an incredibly useful securities monitoring service to keep an eye on games, basically giving chain operators visibility into all the status of the games for the last 28 days.
-  Chain operators can easily create their grafana dashboard for Dispute Monitor using the following json file: [Download the Dispute Monitor JSON](/grafana/dispute-monitor-1718214549035.json).
+  Chain operators can easily create their grafana dashboard for Dispute Monitor using the following json file: [Download the Dispute Monitor JSON](/resources/grafana/dispute-monitor-1718214549035.json).
 </Steps>
 
 ## Next Steps
