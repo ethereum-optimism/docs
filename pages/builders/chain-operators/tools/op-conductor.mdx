@@ -1,49 +1,84 @@
 ---
-title: How to Setup op-conductor
+title: op-conductor
 lang: en-US
-description: Learn how to setup op-conductor to manage multiple OP Stack sequencers.
+description: Learn what the op-conductor is and how to use it to create a highly available and reliable sequencers.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# How to Setup op-conductor
+# op-conductor
 
-## Overview
+This page will teach you what the `op-conductor` service is and how it works on
+a high level. It will also get you started on setting it up in your own 
+environment.
+
+## op-conductor: Enhancing Sequencer Reliability and Availability
 
 The [op-conductor](https://github.com/ethereum-optimism/optimism/tree/develop/op-conductor) 
-is an auxiliary service designed to enhance the reliability and availability 
-of a sequencer in high-availability setups, thereby minimizing the risks 
-associated with single point of failure. It is important to note, however, that 
-this design does not incorporate Byzantine fault tolerance. This means it 
-operates under the assumption that all participating nodes are honest.
+is an auxiliary service designed to enhance the reliability and availability of
+a sequencer within high-availability setups. By minimizing the risks 
+associated with a single point of failure, the op-conductor ensures that the 
+sequencer remains operational and responsive.
 
-### Summary
+### Assumptions
 
-The design will provide below guarantees:
+It is important to note that the `op-conductor` does not incorporate Byzantine 
+fault tolerance (BFT). This means the system operates under the assumption that 
+all participating nodes are honest and act correctly. 
 
-1. No unsafe reorgs
-2. No unsafe head stall during network partition
-3. 100% uptime with no more than 1 node failure (for a standard 3 node setup)
+### Summary of Guarantees
 
-### Design
+The design of the `op-conductor` provides the following guarantees:
+
+*   **No Unsafe Reorgs** 
+*   **No Unsafe Head Stall During Network Partition**
+*   **100% Uptime with No More Than 1 Node Failure**
+
+## Design
 
 ![op-conductor](/img/builders/chain-operators/op-conductor.svg)
 
-On a high level, op-conductor serves the following functions:
+**On a high level, `op-conductor` serves the following functions:**
 
-1. serves as a (raft) consensus layer participant to determine
-   1. leader of the sequencers
-   2. store latest unsafe block within its state machine.
-2. serves rpc requests for
-   1. admin rpc for manual recovery scenarios such as stop leadership vote, remove itself from cluster, etc
-   2. health rpc for op-node to determine if it should allow publish txs / unsafe blocks
-3. monitor sequencer (op-node) health
-4. control loop => control sequencer (op-node) status (start / stop) based on different scenarios
+### Raft Consensus Layer Participation
 
-### Conductor State Transition
+*   **Leader Determination:** Participates in the Raft consensus algorithm to 
+determine the leader among sequencers.
+*   **State Management:** Stores the latest unsafe block ensuring consistency 
+across the system.
+ 
+
+### RPC Request Handling
+
+*   **Admin RPC:** Provides administrative RPCs for manual recovery scenarios, 
+including, but not limited to: stopping the leadership vote and removing itself 
+from the cluster.
+*   **Health RPC** Offers health RPCs for the `op-node` to determine whether it 
+should allow the publishing of transactions and unsafe blocks.
+
+### Sequencer Health Monitoring
+
+*   Continuously monitors the health of the sequencer (op-node) to ensure 
+optimal performance and reliability.
+
+### Control Loop Management
+
+*   Implements a control loop to manage the status of the sequencer (op-node), 
+including starting and stopping operations based on different scenarios and 
+health checks.
+
+## Conductor State Transition
+
+The following is a state machine diagram of how the op-conductor manages the 
+sequencers Raft consensus.
 
 ![op-conductor-state-transition](/img/builders/chain-operators/op-conductor-state-transition.svg)
 
-Helpful tips:
-To better understand the graph, focus on one node at a time, understand what can be transitioned to this current state and how it can transition to other states.
-This way you could understand how we handle the state transitions.
+**Helpful tips:** To better understand the graph, focus on one node at a time, 
+understand what can be transitioned to this current state and how it can 
+transition to other states. This way you could understand how we handle the 
+state transitions.
+
+## Setup
+
+todo
