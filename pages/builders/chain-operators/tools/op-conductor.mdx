@@ -4,7 +4,7 @@ lang: en-US
 description: Learn what the op-conductor is and how to use it to create a highly available and reliable sequencers.
 ---
 
-import { Callout, Tabs } from 'nextra/components'
+import { Callout, Tabs, Steps } from 'nextra/components'
 
 # op-conductor
 
@@ -83,6 +83,78 @@ state transitions.
 
 At OP Labs, op-conductor is deployed as a kubernetes statefulset because it 
 requires a persistent volume to store the raft log.
+
+### Spin up op-conductor
+
+<Steps>
+
+{<h3>Setup initial state</h3>}
+
+todo: turn into a table and clarify each status
+
+*   `sequencer-0`: follower, active, paused, op-node conductor disabled
+*   `sequencer-1`: follower, stopped, paused, op-node conductor disabled 
+*   `sequencer-2`: leader, stopped, paused, op-node conductor disabled
+
+{<h3>Switch the active sequencer</h3>}
+
+*   Rollout `sequencer-2` as the active sequencer. You can use a blue/green 
+style deployment to activate it.
+*   The `sequencer-2` will now begin to commit unsafe payloads to the raft log
+*   Confirm `sequencer-2` is active and successfully producing unsafe blocks.
+
+{<h3>Enable conductor on sequencers</h3>}
+
+todo: review PR1 in runbook is covered in this step
+
+*   Set `OP_NODE_CONDUCTOR_ENABLED=true` on the sequencers' `op-node` instances
+
+
+{<h3>Add voting nodes to the cluster</h3>}
+
+*   Use [AddServerAsVoter](#conductor_addServerAsVoter) to add followers as
+voters
+
+{<h3>Confirm state</h3>}
+
+todo: turn into table
+
+*   sequencer-0 -> follower, stopped, paused, op-node conductor enabled
+*   sequencer-1 -> follower, stopped, paused, op-node conductor enabled
+*   sequencer-2 -> leader, active, paused, op-node conductor enabled
+
+{<h3>Resume conductor</h3>}
+
+todo: link rpc method and clean up
+
+rpc call to resume conductor on all nodes
+
+{<h3>Confirm conductor has resumed</h3>}
+
+todo: link rpc method and clean up
+
+confirm all conductors successfully resumed
+
+{<h3>Remove paused configuration</h3>}
+
+todo: confirm PR2 is covered and clean up
+
+Remove `OP_CONDUCTOR_PAUSED=true`.
+
+{<h3>Set sequencer-0 to leader</h3>}
+
+todo: confirm zdd workflow sequence
+todo: add zdd workflow to a best practice document
+
+
+{<h3>Set sequencer-0 to leader</h3>}
+confirm final step
+
+</Steps>
+
+todo: see if there are other run books we can document 
+todo: get devinfra's review 
+todo: make proposal, put runbooks in the public and change the codeowner in the docs to the eng owner
 
 ### Configuration Options
 
@@ -431,7 +503,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_addServerAsVoter
+#### conductor_addServerAsNonvoter
 
 <Callout type="info">
   API related to consensus.
@@ -444,13 +516,13 @@ will not participate in leader election.
   <Tabs.Tab>
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"conductor_addServerAsVoter","params":[],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"conductor_addServerAsNonvoter","params":[],"id":1}'  \
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
   <Tabs.Tab>
     ```sh
-    cast rpc conductor_addServerAsVoter --rpc-url http://127.0.0.1:50050
+    cast rpc conductor_addServerAsNonvoter --rpc-url http://127.0.0.1:50050
     ```
   </Tabs.Tab>
 </Tabs>
