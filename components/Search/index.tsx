@@ -10,6 +10,7 @@ const index = client.initIndex("docs");
 
 type AlgoliaHits = {
   hits: AlgoliaHit[];
+  queryID?: string;
 };
 
 export type AlgoliaHit = {
@@ -28,10 +29,15 @@ export function Search({
 }>): ReactElement {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
+  const [queryID, setQueryID] = useState("");
 
   useEffect(() => {
     async function fetchData() {
-      const hits: AlgoliaHits = await index.search(search);
+      const hits: AlgoliaHits = await index.search(search, {
+        clickAnalytics: true,
+      });
+
+      setQueryID(hits.queryID);
 
       const mappedHits = hits?.hits.map((hit) => ({
         id: hit.objectID,
@@ -58,6 +64,7 @@ export function Search({
       className={className}
       overlayClassName="nx-w-screen nx-min-h-[100px] nx-max-w-[min(calc(100vw-2rem),calc(100%+20rem))]"
       results={results}
+      queryID={queryID}
     />
   );
 }

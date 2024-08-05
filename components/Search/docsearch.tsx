@@ -10,8 +10,9 @@ import type {
   ReactElement,
 } from "react";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import { Anchor } from "./anchor";
 import { Input } from "./input";
+import Link from "next/link";
+import * as aa from "search-insights";
 
 type SearchResult = {
   children: ReactNode;
@@ -29,6 +30,7 @@ type SearchProps = {
   loading?: boolean;
   error?: boolean;
   results: SearchResult[];
+  queryID?: string;
 };
 
 const INPUTS = ["input", "select", "button", "textarea"];
@@ -42,6 +44,7 @@ export function DocSearch({
   loading,
   error,
   results,
+  queryID,
 }: SearchProps): ReactElement {
   const [show, setShow] = useState(false);
   const [active, setActive] = useState(0);
@@ -87,11 +90,22 @@ export function DocSearch({
     };
   }, []);
 
-  const finishSearch = useCallback(() => {
+  const finishSearch = (i: number) => {
     input.current?.blur();
+
+    const result = results[i];
+
+    aa.default("clickedObjectIDsAfterSearch", {
+      index: "docs",
+      eventName: "Search Option Clicked",
+      queryID: queryID,
+      objectIDs: [result.id],
+      positions: [results.indexOf(result)],
+    });
+
     onChange("");
     setShow(false);
-  }, [onChange]);
+  };
 
   const handleActive = useCallback(
     (e: { currentTarget: { dataset: DOMStringMap } }) => {
@@ -134,7 +148,7 @@ export function DocSearch({
           const result = results[active];
           if (result && composition) {
             void router.push(result.route);
-            finishSearch();
+            finishSearch(active);
           }
           break;
         }
@@ -278,17 +292,17 @@ export function DocSearch({
                       : "nx-text-gray-800 contrast-more:nx-border-transparent dark:nx-text-gray-300"
                   )}
                 >
-                  <Anchor
+                  <Link
                     className="nx-block nx-scroll-m-12 nx-px-2.5 nx-py-2"
                     href={route}
                     data-index={i}
                     onFocus={handleActive}
                     onMouseMove={handleActive}
-                    onClick={finishSearch}
+                    onClick={() => finishSearch(i)}
                     onKeyDown={handleKeyDown}
                   >
                     {children}
-                  </Anchor>
+                  </Link>
                 </li>
               </Fragment>
             ))
