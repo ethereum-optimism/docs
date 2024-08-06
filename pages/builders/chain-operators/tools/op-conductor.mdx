@@ -90,25 +90,30 @@ requires a persistent volume to store the raft log.
 
 {<h3>Setup initial state</h3>}
 
-todo: turn into a table and clarify each status
+*   Sequencer: the sequencer identifier.
+*   Conductor Role: the op-conductor initial role.
+*   [OP_CONDUCTOR_PAUSED](#conductor_paused)
+*   [OP_NODE_SEQUENCER_ENABLED](/builders/node-operators/configuration/consensus-config#sequencerenabled)
+*   [OP_NODE_CONDUCTOR_ENABLED](/builders/node-operators/configuration/consensus-config#conductorenabled)
 
-*   `sequencer-0`: follower, active, paused, op-node conductor disabled
-*   `sequencer-1`: follower, stopped, paused, op-node conductor disabled 
-*   `sequencer-2`: leader, stopped, paused, op-node conductor disabled
-
-{<h3>Switch the active sequencer</h3>}
-
-*   Rollout `sequencer-2` as the active sequencer. You can use a blue/green 
-style deployment to activate it.
-*   The `sequencer-2` will now begin to commit unsafe payloads to the raft log
-*   Confirm `sequencer-2` is active and successfully producing unsafe blocks.
+| Sequencer   | OP_CONDUCTOR_PAUSED | OP_NODE_SEQUENCER_ENABLED | OP_NODE_CONDUCTOR_ENABLED |
+|-------------|---------------------|---------------------------|---------------------------|
+| sequencer-0 | true                | true                      | false                     |
+| sequencer-1 | true                | false                     | false                     |
+| sequencer-2 | true                | false                     | false                     |
 
 {<h3>Enable conductor on sequencers</h3>}
 
-todo: review PR1 in runbook is covered in this step
-
 *   Set `OP_NODE_CONDUCTOR_ENABLED=true` on the sequencers' `op-node` instances
+*   Ensure configuration persistance is turned off. 
 
+{<h3>Switch the active sequencer and enable conductor</h3>}
+
+*   Rollout `sequencer-2` as the active sequencer. You can use a blue/green 
+style deployment to switch from `sequencer-0` to activate `sequencer-2` without
+any downtime.
+*   The `sequencer-2` will now begin to commit unsafe payloads to the raft log
+*   Confirm `sequencer-2` is active and successfully producing unsafe blocks.
 
 {<h3>Add voting nodes to the cluster</h3>}
 
@@ -117,44 +122,46 @@ voters
 
 {<h3>Confirm state</h3>}
 
-todo: turn into table
+| Sequencer   | Conductor Role | OP_CONDUCTOR_PAUSED | OP_NODE_SEQUENCER_ENABLED | OP_NODE_CONDUCTOR_ENABLED |
+|-------------|----------------|---------------------|---------------------------|---------------------------|
+| sequencer-0 | follower       | true                | **false**                 | **true**                  |
+| sequencer-1 | follower       | true                | false                     | **true**                  |
+| sequencer-2 | leader         | true                | **true**                  | **true**                  |
 
-*   sequencer-0 -> follower, stopped, paused, op-node conductor enabled
-*   sequencer-1 -> follower, stopped, paused, op-node conductor enabled
-*   sequencer-2 -> leader, active, paused, op-node conductor enabled
 
 {<h3>Resume conductor</h3>}
 
-todo: link rpc method and clean up
-
-rpc call to resume conductor on all nodes
+*   Use [resume](#conductor_resume) on all nodes
 
 {<h3>Confirm conductor has resumed</h3>}
 
-todo: link rpc method and clean up
-
-confirm all conductors successfully resumed
+*   Use [paused](#conductor_paused) to confirm all conductors have been 
+successfully resumed
 
 {<h3>Remove paused configuration</h3>}
 
-todo: confirm PR2 is covered and clean up
+*   Remove `OP_CONDUCTOR_PAUSED=true`.
 
-Remove `OP_CONDUCTOR_PAUSED=true`.
+| Sequencer   | Conductor Role | OP_CONDUCTOR_PAUSED | OP_NODE_SEQUENCER_ENABLED | OP_NODE_CONDUCTOR_ENABLED |
+|-------------|----------------|---------------------|---------------------------|---------------------------|
+| sequencer-0 | follower       | **false**           | false                     | true                      |
+| sequencer-1 | follower       | **false**           | false                     | true                      |
+| sequencer-2 | leader         | **false**           | true                      | true                      |
+
 
 {<h3>Set sequencer-0 to leader</h3>}
 
-todo: confirm zdd workflow sequence
-todo: add zdd workflow to a best practice document
+*   Set sequencer-0 to be the leader
+*   Confirm the state
 
+| Sequencer   | Conductor Role | OP_CONDUCTOR_PAUSED | OP_NODE_SEQUENCER_ENABLED | OP_NODE_CONDUCTOR_ENABLED |
+|-------------|----------------|---------------------|---------------------------|---------------------------|
+| sequencer-0 | leader         | false               | false                     | true                      |
+| sequencer-1 | follower       | false               | false                     | true                      |
+| sequencer-2 | follower       | false               | true                      | true                      |
 
-{<h3>Set sequencer-0 to leader</h3>}
-confirm final step
 
 </Steps>
-
-todo: see if there are other run books we can document 
-todo: get devinfra's review 
-todo: make proposal, put runbooks in the public and change the codeowner in the docs to the eng owner
 
 ### Configuration Options
 
@@ -293,7 +300,7 @@ todo: add success output
 
 #### conductor_pause
 
-Pause pauses op-conductor.
+`Pause`, pauses op-conductor.
 
 <Tabs items={['curl', 'cast']}>
   <Tabs.Tab>
@@ -318,7 +325,7 @@ todo: add success output
 
 #### conductor_resume
 
-Resume resumes op-conductor.
+`Resume`, resumes op-conductor.
 
 <Tabs items={['curl', 'cast']}>
   <Tabs.Tab>
