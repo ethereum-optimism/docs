@@ -9,28 +9,28 @@ import { Callout, Tabs, Steps } from 'nextra/components'
 # op-conductor
 
 This page will teach you what the `op-conductor` service is and how it works on
-a high level. It will also get you started on setting it up in your own 
+a high level. It will also get you started on setting it up in your own
 environment.
 
 ## op-conductor: Enhancing Sequencer Reliability and Availability
 
-The [op-conductor](https://github.com/ethereum-optimism/optimism/tree/develop/op-conductor) 
+The [op-conductor](https://github.com/ethereum-optimism/optimism/tree/develop/op-conductor)
 is an auxiliary service designed to enhance the reliability and availability of
-a sequencer within high-availability setups. By minimizing the risks 
-associated with a single point of failure, the op-conductor ensures that the 
+a sequencer within high-availability setups. By minimizing the risks
+associated with a single point of failure, the op-conductor ensures that the
 sequencer remains operational and responsive.
 
 ### Assumptions
 
-It is important to note that the `op-conductor` does not incorporate Byzantine 
-fault tolerance (BFT). This means the system operates under the assumption that 
-all participating nodes are honest and act correctly. 
+It is important to note that the `op-conductor` does not incorporate Byzantine
+fault tolerance (BFT). This means the system operates under the assumption that
+all participating nodes are honest and act correctly.
 
 ### Summary of Guarantees
 
 The design of the `op-conductor` provides the following guarantees:
 
-*   **No Unsafe Reorgs** 
+*   **No Unsafe Reorgs**
 *   **No Unsafe Head Stall During Network Partition**
 *   **100% Uptime with No More Than 1 Node Failure**
 
@@ -42,125 +42,119 @@ The design of the `op-conductor` provides the following guarantees:
 
 ### Raft Consensus Layer Participation
 
-*   **Leader Determination:** Participates in the Raft consensus algorithm to 
-determine the leader among sequencers.
-*   **State Management:** Stores the latest unsafe block ensuring consistency 
-across the system.
- 
+*   **Leader Determination:** Participates in the Raft consensus algorithm to
+    determine the leader among sequencers.
+*   **State Management:** Stores the latest unsafe block ensuring consistency
+    across the system.
 
 ### RPC Request Handling
 
-*   **Admin RPC:** Provides administrative RPCs for manual recovery scenarios, 
-including, but not limited to: stopping the leadership vote and removing itself 
-from the cluster.
-*   **Health RPC** Offers health RPCs for the `op-node` to determine whether it 
-should allow the publishing of transactions and unsafe blocks.
+*   **Admin RPC:** Provides administrative RPCs for manual recovery scenarios,
+    including, but not limited to: stopping the leadership vote and removing itself
+    from the cluster.
+*   **Health RPC** Offers health RPCs for the `op-node` to determine whether it
+    should allow the publishing of transactions and unsafe blocks.
 
 ### Sequencer Health Monitoring
 
-*   Continuously monitors the health of the sequencer (op-node) to ensure 
-optimal performance and reliability.
+*   Continuously monitors the health of the sequencer (op-node) to ensure
+    optimal performance and reliability.
 
 ### Control Loop Management
 
-*   Implements a control loop to manage the status of the sequencer (op-node), 
-including starting and stopping operations based on different scenarios and 
-health checks.
+*   Implements a control loop to manage the status of the sequencer (op-node),
+    including starting and stopping operations based on different scenarios and
+    health checks.
 
 ## Conductor State Transition
 
-The following is a state machine diagram of how the op-conductor manages the 
+The following is a state machine diagram of how the op-conductor manages the
 sequencers Raft consensus.
 
 ![op-conductor-state-transition](/img/builders/chain-operators/op-conductor-state-transition.svg)
 
-**Helpful tips:** To better understand the graph, focus on one node at a time, 
-understand what can be transitioned to this current state and how it can 
-transition to other states. This way you could understand how we handle the 
+**Helpful tips:** To better understand the graph, focus on one node at a time,
+understand what can be transitioned to this current state and how it can
+transition to other states. This way you could understand how we handle the
 state transitions.
 
 ## Setup
 
-At OP Labs, op-conductor is deployed as a kubernetes statefulset because it 
+At OP Labs, op-conductor is deployed as a kubernetes statefulset because it
 requires a persistent volume to store the raft log.
 
 ### Spin up op-conductor
 
 <Steps>
+  {<h3>Setup initial state</h3>}
 
-{<h3>Setup initial state</h3>}
+  *   Sequencer: the sequencer identifier.
+  *   Conductor Role: the op-conductor initial role.
+  *   [OP\_CONDUCTOR\_PAUSED](#conductor_paused)
+  *   [OP\_NODE\_SEQUENCER\_ENABLED](/builders/node-operators/configuration/consensus-config#sequencerenabled)
+  *   [OP\_NODE\_CONDUCTOR\_ENABLED](/builders/node-operators/configuration/consensus-config#conductorenabled)
 
-*   Sequencer: the sequencer identifier.
-*   Conductor Role: the op-conductor initial role.
-*   [OP_CONDUCTOR_PAUSED](#conductor_paused)
-*   [OP_NODE_SEQUENCER_ENABLED](/builders/node-operators/configuration/consensus-config#sequencerenabled)
-*   [OP_NODE_CONDUCTOR_ENABLED](/builders/node-operators/configuration/consensus-config#conductorenabled)
+  | Sequencer   | OP\_CONDUCTOR\_PAUSED | OP\_NODE\_SEQUENCER\_ENABLED | OP\_NODE\_CONDUCTOR\_ENABLED |
+  | ----------- | --------------------- | ---------------------------- | ---------------------------- |
+  | sequencer-0 | true                  | true                         | false                        |
+  | sequencer-1 | true                  | false                        | false                        |
+  | sequencer-2 | true                  | false                        | false                        |
 
-| Sequencer   | OP_CONDUCTOR_PAUSED | OP_NODE_SEQUENCER_ENABLED | OP_NODE_CONDUCTOR_ENABLED |
-|-------------|---------------------|---------------------------|---------------------------|
-| sequencer-0 | true                | true                      | false                     |
-| sequencer-1 | true                | false                     | false                     |
-| sequencer-2 | true                | false                     | false                     |
+  {<h3>Enable conductor on sequencers</h3>}
 
-{<h3>Enable conductor on sequencers</h3>}
+  *   Set `OP_NODE_CONDUCTOR_ENABLED=true` on the sequencers' `op-node` instances
+  *   Ensure configuration persistance is turned off.
 
-*   Set `OP_NODE_CONDUCTOR_ENABLED=true` on the sequencers' `op-node` instances
-*   Ensure configuration persistance is turned off. 
+  {<h3>Switch the active sequencer and enable conductor</h3>}
 
-{<h3>Switch the active sequencer and enable conductor</h3>}
+  *   Rollout `sequencer-2` as the active sequencer. You can use a blue/green
+      style deployment to switch from `sequencer-0` to activate `sequencer-2` without
+      any downtime.
+  *   The `sequencer-2` will now begin to commit unsafe payloads to the raft log
+  *   Confirm `sequencer-2` is active and successfully producing unsafe blocks.
 
-*   Rollout `sequencer-2` as the active sequencer. You can use a blue/green 
-style deployment to switch from `sequencer-0` to activate `sequencer-2` without
-any downtime.
-*   The `sequencer-2` will now begin to commit unsafe payloads to the raft log
-*   Confirm `sequencer-2` is active and successfully producing unsafe blocks.
+  {<h3>Add voting nodes to the cluster</h3>}
 
-{<h3>Add voting nodes to the cluster</h3>}
+  *   Use [AddServerAsVoter](#conductor_addServerAsVoter) to add followers as
+      voters
 
-*   Use [AddServerAsVoter](#conductor_addServerAsVoter) to add followers as
-voters
+  {<h3>Confirm state</h3>}
 
-{<h3>Confirm state</h3>}
+  | Sequencer   | Conductor Role | OP\_CONDUCTOR\_PAUSED | OP\_NODE\_SEQUENCER\_ENABLED | OP\_NODE\_CONDUCTOR\_ENABLED |
+  | ----------- | -------------- | --------------------- | ---------------------------- | ---------------------------- |
+  | sequencer-0 | follower       | true                  | **false**                    | **true**                     |
+  | sequencer-1 | follower       | true                  | false                        | **true**                     |
+  | sequencer-2 | leader         | true                  | **true**                     | **true**                     |
 
-| Sequencer   | Conductor Role | OP_CONDUCTOR_PAUSED | OP_NODE_SEQUENCER_ENABLED | OP_NODE_CONDUCTOR_ENABLED |
-|-------------|----------------|---------------------|---------------------------|---------------------------|
-| sequencer-0 | follower       | true                | **false**                 | **true**                  |
-| sequencer-1 | follower       | true                | false                     | **true**                  |
-| sequencer-2 | leader         | true                | **true**                  | **true**                  |
+  {<h3>Resume conductor</h3>}
 
+  *   Use [resume](#conductor_resume) on all nodes
 
-{<h3>Resume conductor</h3>}
+  {<h3>Confirm conductor has resumed</h3>}
 
-*   Use [resume](#conductor_resume) on all nodes
+  *   Use [paused](#conductor_paused) to confirm all conductors have been
+      successfully resumed
 
-{<h3>Confirm conductor has resumed</h3>}
+  {<h3>Remove paused configuration</h3>}
 
-*   Use [paused](#conductor_paused) to confirm all conductors have been 
-successfully resumed
+  *   Remove `OP_CONDUCTOR_PAUSED=true`.
 
-{<h3>Remove paused configuration</h3>}
+  | Sequencer   | Conductor Role | OP\_CONDUCTOR\_PAUSED | OP\_NODE\_SEQUENCER\_ENABLED | OP\_NODE\_CONDUCTOR\_ENABLED |
+  | ----------- | -------------- | --------------------- | ---------------------------- | ---------------------------- |
+  | sequencer-0 | follower       | **false**             | false                        | true                         |
+  | sequencer-1 | follower       | **false**             | false                        | true                         |
+  | sequencer-2 | leader         | **false**             | true                         | true                         |
 
-*   Remove `OP_CONDUCTOR_PAUSED=true`.
+  {<h3>Set sequencer-0 to leader</h3>}
 
-| Sequencer   | Conductor Role | OP_CONDUCTOR_PAUSED | OP_NODE_SEQUENCER_ENABLED | OP_NODE_CONDUCTOR_ENABLED |
-|-------------|----------------|---------------------|---------------------------|---------------------------|
-| sequencer-0 | follower       | **false**           | false                     | true                      |
-| sequencer-1 | follower       | **false**           | false                     | true                      |
-| sequencer-2 | leader         | **false**           | true                      | true                      |
+  *   Set sequencer-0 to be the leader
+  *   Confirm the state
 
-
-{<h3>Set sequencer-0 to leader</h3>}
-
-*   Set sequencer-0 to be the leader
-*   Confirm the state
-
-| Sequencer   | Conductor Role | OP_CONDUCTOR_PAUSED | OP_NODE_SEQUENCER_ENABLED | OP_NODE_CONDUCTOR_ENABLED |
-|-------------|----------------|---------------------|---------------------------|---------------------------|
-| sequencer-0 | leader         | false               | false                     | true                      |
-| sequencer-1 | follower       | false               | false                     | true                      |
-| sequencer-2 | follower       | false               | true                      | true                      |
-
-
+  | Sequencer   | Conductor Role | OP\_CONDUCTOR\_PAUSED | OP\_NODE\_SEQUENCER\_ENABLED | OP\_NODE\_CONDUCTOR\_ENABLED |
+  | ----------- | -------------- | --------------------- | ---------------------------- | ---------------------------- |
+  | sequencer-0 | leader         | false                 | false                        | true                         |
+  | sequencer-1 | follower       | false                 | false                        | true                         |
+  | sequencer-2 | follower       | false                 | true                         | true                         |
 </Steps>
 
 ### Configuration Options
@@ -169,82 +163,82 @@ It is configured via it's [flags / environment variables](https://github.com/eth
 
 #### --consensus.addr (`CONSENSUS_ADDR`)
 
-- **Usage:** Address to listen for consensus connections
-- **Default Value:** 127.0.0.1
-- **Required:** yes
+*   **Usage:** Address to listen for consensus connections
+*   **Default Value:** 127.0.0.1
+*   **Required:** yes
 
 #### --consensus.port (`CONSENSUS_PORT`)
 
-- **Usage:** Port to listen for consensus connections
-- **Default Value:** 50050
-- **Required:** yes
+*   **Usage:** Port to listen for consensus connections
+*   **Default Value:** 50050
+*   **Required:** yes
 
 #### --raft.bootstrap (`RAFT_BOOTSTRAP`)
 
 <Callout type="info">
-  For bootstrapping a new cluster. This should only be used on the sequencer 
-  that is currently active and can only be started once with this flag, 
-  otherwise the flag has to be removed or the raft log must be deleted before 
+  For bootstrapping a new cluster. This should only be used on the sequencer
+  that is currently active and can only be started once with this flag,
+  otherwise the flag has to be removed or the raft log must be deleted before
   re-bootstrapping the cluster.
 </Callout>
 
-- **Usage:** If this node should bootstrap a new raft cluster
-- **Default Value:** false
-- **Required:** no
+*   **Usage:** If this node should bootstrap a new raft cluster
+*   **Default Value:** false
+*   **Required:** no
 
 #### --raft.server.id (`RAFT_SERVER_ID`)
 
-- **Usage:** Unique ID for this server used by raft consensus
-- **Default Value:** None specified
-- **Required:** yes
+*   **Usage:** Unique ID for this server used by raft consensus
+*   **Default Value:** None specified
+*   **Required:** yes
 
 #### --raft.storage.dir (`RAFT_STORAGE_DIR`)
 
-- **Usage:** Directory to store raft data
-- **Default Value:** None specified
-- **Required:** yes
+*   **Usage:** Directory to store raft data
+*   **Default Value:** None specified
+*   **Required:** yes
 
 #### --node.rpc (`NODE_RPC`)
 
-- **Usage:** HTTP provider URL for op-node
-- **Default Value:** None specified
-- **Required:** yes
+*   **Usage:** HTTP provider URL for op-node
+*   **Default Value:** None specified
+*   **Required:** yes
 
 #### --execution.rpc (`EXECUTION_RPC`)
 
-- **Usage:** HTTP provider URL for execution layer
-- **Default Value:** None specified
-- **Required:** yes
+*   **Usage:** HTTP provider URL for execution layer
+*   **Default Value:** None specified
+*   **Required:** yes
 
 #### --healthcheck.interval (`HEALTHCHECK_INTERVAL`)
 
-- **Usage:** Interval between health checks
-- **Default Value:** None specified
-- **Required:** yes
+*   **Usage:** Interval between health checks
+*   **Default Value:** None specified
+*   **Required:** yes
 
 #### --healthcheck.unsafe-interval (`HEALTHCHECK_UNSAFE_INTERVAL`)
 
-- **Usage:** Interval allowed between unsafe head and now measured in seconds
-- **Default Value:** None specified
-- **Required:** yes
+*   **Usage:** Interval allowed between unsafe head and now measured in seconds
+*   **Default Value:** None specified
+*   **Required:** yes
 
 #### --healthcheck.safe-enabled (`HEALTHCHECK_SAFE_ENABLED`)
 
-- **Usage:** Whether to enable safe head progression checks
-- **Default Value:** false
-- **Required:** no
+*   **Usage:** Whether to enable safe head progression checks
+*   **Default Value:** false
+*   **Required:** no
 
 #### --healthcheck.safe-interval (`HEALTHCHECK_SAFE_INTERVAL`)
 
-- **Usage:** Interval between safe head progression measured in seconds
-- **Default Value:** 1200
-- **Required:** no
+*   **Usage:** Interval between safe head progression measured in seconds
+*   **Default Value:** 1200
+*   **Required:** no
 
 #### --healthcheck.min-peer-count (`HEALTHCHECK_MIN_PEER_COUNT`)
 
-- **Usage:** Minimum number of peers required to be considered healthy
-- **Default Value:** None specified
-- **Required:** yes
+*   **Usage:** Minimum number of peers required to be considered healthy
+*   **Default Value:** None specified
+*   **Required:** yes
 
 #### --paused (`PAUSED`)
 
@@ -253,28 +247,28 @@ It is configured via it's [flags / environment variables](https://github.com/eth
   it will start paused again.
 </Callout>
 
-- **Usage:** Whether the conductor is paused
-- **Default Value:** false
-- **Required:** no
+*   **Usage:** Whether the conductor is paused
+*   **Default Value:** false
+*   **Required:** no
 
 #### --rpc.enable-proxy (`RPC_ENABLE_PROXY`)
 
-- **Usage:** Enable the RPC proxy to underlying sequencer services
-- **Default Value:** true
-- **Required:** no
+*   **Usage:** Enable the RPC proxy to underlying sequencer services
+*   **Default Value:** true
+*   **Required:** no
 
 ### RPCs
 
 Conductor exposes [admin RPCs](https://github.com/ethereum-optimism/optimism/blob/develop/op-conductor/rpc/api.go#L17)
 on the `conductor` namespace.
 
-#### conductor_overrideLeader
+#### conductor\_overrideLeader
 
 `OverrideLeader` is used to override the leader status, this is only used to
-return true for `Leader()` & `LeaderWithID()` calls. It does not impact the 
-actual raft consensus leadership status. It is supposed to be used when the 
-cluster is unhealthy and the node is the only one up, to allow batcher to 
-be able to connect to the node, so that it could download blocks from the 
+return true for `Leader()` & `LeaderWithID()` calls. It does not impact the
+actual raft consensus leadership status. It is supposed to be used when the
+cluster is unhealthy and the node is the only one up, to allow batcher to
+be able to connect to the node, so that it could download blocks from the
 manually started sequencer.
 
 <Tabs items={['curl', 'cast']}>
@@ -285,6 +279,7 @@ manually started sequencer.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_overrideLeader --rpc-url http://127.0.0.1:50050
@@ -298,7 +293,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_pause
+#### conductor\_pause
 
 `Pause`, pauses op-conductor.
 
@@ -310,6 +305,7 @@ todo: add success output
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_pause --rpc-url http://127.0.0.1:50050
@@ -323,7 +319,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_resume
+#### conductor\_resume
 
 `Resume`, resumes op-conductor.
 
@@ -335,6 +331,7 @@ todo: add success output
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_resume --rpc-url http://127.0.0.1:50050
@@ -348,7 +345,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_paused
+#### conductor\_paused
 
 Paused returns true if op-conductor is paused.
 
@@ -360,6 +357,7 @@ Paused returns true if op-conductor is paused.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_paused --rpc-url http://127.0.0.1:50050
@@ -373,7 +371,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_stopped
+#### conductor\_stopped
 
 Stopped returns true if op-conductor is stopped.
 
@@ -385,6 +383,7 @@ Stopped returns true if op-conductor is stopped.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_stopped --rpc-url http://127.0.0.1:50050
@@ -398,7 +397,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_sequencerHealthy
+#### conductor\_sequencerHealthy
 
 SequencerHealthy returns true if the sequencer is healthy.
 
@@ -410,6 +409,7 @@ SequencerHealthy returns true if the sequencer is healthy.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_sequencerHealthy --rpc-url http://127.0.0.1:50050
@@ -423,7 +423,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_leader
+#### conductor\_leader
 
 <Callout type="info">
   API related to consensus.
@@ -439,6 +439,7 @@ Leader returns true if the server is the leader.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_leader --rpc-url http://127.0.0.1:50050
@@ -452,7 +453,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_leaderWithID
+#### conductor\_leaderWithID
 
 <Callout type="info">
   API related to consensus.
@@ -468,6 +469,7 @@ LeaderWithID returns the current leader's server info.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_leaderWithID --rpc-url http://127.0.0.1:50050
@@ -481,7 +483,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_addServerAsVoter
+#### conductor\_addServerAsVoter
 
 <Callout type="info">
   API related to consensus.
@@ -497,6 +499,7 @@ AddServerAsVoter adds a server as a voter to the cluster.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_addServerAsVoter --rpc-url http://127.0.0.1:50050
@@ -510,13 +513,13 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_addServerAsNonvoter
+#### conductor\_addServerAsNonvoter
 
 <Callout type="info">
   API related to consensus.
 </Callout>
 
-AddServerAsNonvoter adds a server as a non-voter to the cluster. non-voter 
+AddServerAsNonvoter adds a server as a non-voter to the cluster. non-voter
 will not participate in leader election.
 
 <Tabs items={['curl', 'cast']}>
@@ -527,6 +530,7 @@ will not participate in leader election.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_addServerAsNonvoter --rpc-url http://127.0.0.1:50050
@@ -540,7 +544,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_removeServer
+#### conductor\_removeServer
 
 <Callout type="info">
   API related to consensus.
@@ -556,6 +560,7 @@ RemoveServer removes a server from the cluster.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_removeServer --rpc-url http://127.0.0.1:50050
@@ -569,7 +574,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_transferLeader
+#### conductor\_transferLeader
 
 <Callout type="info">
   API related to consensus.
@@ -585,6 +590,7 @@ TransferLeader transfers leadership to another server.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_transferLeader --rpc-url http://127.0.0.1:50050
@@ -598,7 +604,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_transferLeaderToServer
+#### conductor\_transferLeaderToServer
 
 <Callout type="info">
   API related to consensus.
@@ -614,6 +620,7 @@ TransferLeaderToServer transfers leadership to a specific server.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_transferLeaderToServer --rpc-url http://127.0.0.1:50050
@@ -627,7 +634,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_clusterMembership
+#### conductor\_clusterMembership
 
 ClusterMembership returns the current cluster membership configuration.
 
@@ -639,6 +646,7 @@ ClusterMembership returns the current cluster membership configuration.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_clusterMembership --rpc-url http://127.0.0.1:50050
@@ -652,7 +660,7 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_active
+#### conductor\_active
 
 <Callout type="info">
   API called by `op-node`.
@@ -668,6 +676,7 @@ Active returns true if op-conductor is active (not paused or stopped).
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_active --rpc-url http://127.0.0.1:50050
@@ -681,13 +690,13 @@ Sample success output:
 todo: add success output
 ```
 
-#### conductor_commitUnsafePayload
+#### conductor\_commitUnsafePayload
 
 <Callout type="info">
   API called by `op-node`.
 </Callout>
 
-CommitUnsafePayload commits an unsafe payload (latest head) to the consensus 
+CommitUnsafePayload commits an unsafe payload (latest head) to the consensus
 layer.
 
 <Tabs items={['curl', 'cast']}>
@@ -698,6 +707,7 @@ layer.
         http://127.0.0.1:50050
     ```
   </Tabs.Tab>
+
   <Tabs.Tab>
     ```sh
     cast rpc conductor_commitUnsafePayload --rpc-url http://127.0.0.1:50050
@@ -714,5 +724,5 @@ todo: add success output
 ## Next Steps
 
 *   Checkout [op-conductor-mon](https://github.com/ethereum-optimism/infra):
-which monitors multiple op-conductor instances and provides a unified interface
-for reporting metrics.
+    which monitors multiple op-conductor instances and provides a unified interface
+    for reporting metrics.
