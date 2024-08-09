@@ -594,7 +594,6 @@ cd ~/optimism/op-node
   --verifier.l1-confs=4 \
   --rollup.config=./rollup.json \
   --rpc.addr=0.0.0.0 \
-  --rpc.port=8547 \
   --p2p.disable \
   --rpc.enable-admin \
   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY \
@@ -662,13 +661,13 @@ cd ~/optimism/op-batcher
   --rpc.addr=0.0.0.0 \
   --rpc.port=8548 \
   --rpc.enable-admin \
-  --max-channel-duration=1 \
+  --max-channel-duration=25 \
   --l1-eth-rpc=$L1_RPC_URL \
   --private-key=$GS_BATCHER_PRIVATE_KEY
 ```
 
 <Callout type="info">
-The `--max-channel-duration=n` setting tells the batcher to write all the data to L1 every `n` L1 blocks.
+The [`--max-channel-duration=n`](/builders/chain-operators/configuration/batcher#set-your--op_batcher_max_channel_duration) setting tells the batcher to write all the data to L1 every `n` L1 blocks.
 When it is low, transactions are written to L1 frequently and other nodes can synchronize from L1 quickly.
 When it is high, transactions are written to L1 less frequently and the batcher spends less ETH.
 If you want to reduce costs, either set this value to 0 to disable it or increase it to a higher value.
@@ -699,7 +698,7 @@ cd ~/optimism/op-proposer
   --poll-interval=12s \
   --rpc.port=8560 \
   --rollup-rpc=http://localhost:8547 \
-  --l2oo-address=$(cat ../packages/contracts-bedrock/deployments/getting-started/L2OutputOracleProxy.json | jq -r .address) \
+  --l2oo-address=$(cat ../packages/contracts-bedrock/deployments/getting-started/.deploy | jq -r .L2OutputOracleProxy) \
   --private-key=$GS_PROPOSER_PRIVATE_KEY \
   --l1-eth-rpc=$L1_RPC_URL
 ```
@@ -728,7 +727,7 @@ cd ~/optimism/packages/contracts-bedrock
 {<h3>Get the address of the L1StandardBridgeProxy contract</h3>}
 
 ```bash
-cat deployments/getting-started/L1StandardBridgeProxy.json | jq -r .address
+cat deployments/getting-started/.deploy | jq -r .L1StandardBridgeProxy
 ```
 
 {<h3>Send some Sepolia ETH to the L1StandardBridgeProxy contract</h3>}
