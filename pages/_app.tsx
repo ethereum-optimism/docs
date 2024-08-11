@@ -1,11 +1,16 @@
 import '../styles/global.css'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import * as gtag from '../utils/gtag'
 import * as aa from "search-insights"
+import AlgoliaContext from '@/utils/contexts/AlgoliaContext'
+import ScrollDispatcher from '@/components/ScrollDispatcher'
 
 export default function App({ Component, pageProps }) {
+  const [queryID, setQueryID] = useState(null);
+  const [objectID, setObjectID] = useState(null);
+
   const router = useRouter()
   useEffect(() => {
     const handleRouteChange = (url) => {
@@ -22,5 +27,19 @@ export default function App({ Component, pageProps }) {
     apiKey: "cc766a73d4b0004e3059677de49297a2"
   })
 
-  return <Component {...pageProps} />
+  return (
+    <AlgoliaContext.Provider 
+      value={{
+        queryID,
+        setQueryID,
+        objectID,
+        setObjectID,
+      }}
+    >
+      <ScrollDispatcher>
+        <Component {...pageProps} />
+      </ScrollDispatcher>
+    </AlgoliaContext.Provider>
+  )
 }
+

@@ -9,10 +9,18 @@ import type {
   KeyboardEvent,
   ReactElement,
 } from "react";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useContext,
+} from "react";
 import { Input } from "./input";
 import Link from "next/link";
 import * as aa from "search-insights";
+import AlgoliaContext from "@/utils/contexts/AlgoliaContext";
 
 type SearchResult = {
   children: ReactNode;
@@ -30,7 +38,6 @@ type SearchProps = {
   loading?: boolean;
   error?: boolean;
   results: SearchResult[];
-  queryID?: string;
 };
 
 const INPUTS = ["input", "select", "button", "textarea"];
@@ -44,7 +51,6 @@ export function DocSearch({
   loading,
   error,
   results,
-  queryID,
 }: SearchProps): ReactElement {
   const [show, setShow] = useState(false);
   const [active, setActive] = useState(0);
@@ -54,6 +60,7 @@ export function DocSearch({
   const [focused, setFocused] = useState(false);
   //  Trigger the search after the Input is complete for languages like Chinese
   const [composition, setComposition] = useState(true);
+  const { queryID, setObjectID } = useContext(AlgoliaContext);
 
   useEffect(() => {
     setActive(0);
@@ -100,9 +107,10 @@ export function DocSearch({
       eventName: "Search Option Clicked",
       queryID: queryID,
       objectIDs: [result.id],
-      positions: [results.indexOf(result)],
+      positions: [results.indexOf(result) + 1],
     });
 
+    setObjectID(result.id);
     onChange("");
     setShow(false);
   };

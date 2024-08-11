@@ -1,9 +1,10 @@
 import type { Item as NormalItem } from "nextra/normalize-pages";
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { HighlightMatches } from "./highlight-matches";
 import { DocSearch } from "./docsearch";
 import algoliasearch from "algoliasearch";
+import AlgoliaContext from "@/utils/contexts/AlgoliaContext";
 
 const client = algoliasearch("JCF9BUJTB9", "cc766a73d4b0004e3059677de49297a2");
 const index = client.initIndex("docs");
@@ -29,7 +30,8 @@ export function Search({
 }>): ReactElement {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
-  const [queryID, setQueryID] = useState("");
+
+  const { queryID, setQueryID } = useContext(AlgoliaContext);
 
   useEffect(() => {
     async function fetchData() {
@@ -64,7 +66,6 @@ export function Search({
       className={className}
       overlayClassName="nx-w-screen nx-min-h-[100px] nx-max-w-[min(calc(100vw-2rem),calc(100%+20rem))]"
       results={results}
-      queryID={queryID}
     />
   );
 }
