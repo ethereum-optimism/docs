@@ -1,0 +1,38 @@
+---
+title: Anatomy of a Cross-Chain Message
+lang: en-US
+description: Learn how cross-chain messaging works with OP Stack interoperability.
+---
+
+import { Callout } from 'nextra/components'
+import Image from 'next/image'
+
+# Anatomy of a Cross-Chain Message
+
+A cross-chain message applies to any asset using the [SuperchainERC20](https://specs.optimism.io/interop/token-bridging.html) token standard. Two transactions are required to complete a cross chain message:
+
+*   **First transaction:** is submitted to the source chain and emits an event that can be consumed on a destination chain.
+*   **Second transaction:** is submitted to a destination chain, where the block builder SHOULD only include it if certain that the first transaction was included in the source chain. NOTE: There is no strict requirement that the executing message is ever submitted.
+
+<Callout type="info">
+  See the specs for details on tracing the [executing message event](https://specs.optimism.io/interop/predeploys.html#executingmessage-event).
+</Callout>
+
+## How It Works
+
+To send a cross-chain message on the Superchain using [native OP Stack interoperability](explainer), these two aspects must be in place:
+
+1.  Each interoperable chain runs a verifying node for each chain in the interoperble set.
+2.  Each cross-chain message has an initiating transaction on the source chain and finalizing transaction on the destination chain.
+
+<br />
+
+<Image src="/img/op-stack/protocol/xchain-message.png" alt="Anatomy of Cross-Chain Message with Interop" width={700} height={600} />
+
+In the example above, `Ox123` sends 1 OP from OP Mainnet to Base, but this applies to any asset using the SuperchainERC20 token standard.
+
+## Next Steps
+
+*   More questions? Check out the FAQ section in the [OP Stack's Native Interop Explainer](explainer#faqs) or check out this [interop design video walk-thru](https://www.youtube.com/watch?v=FKc5RgjtGes).
+*   Ready to get started? Use [SuperSim](https://github.com/ethereum-optimism/supersim), a local dev environment that simulates interop for testing applications against a local version of the Superchain.
+*   For more info about how OP Stack interoperability works under the hood, [check out the specs](https://specs.optimism.io/interop/overview.html).
