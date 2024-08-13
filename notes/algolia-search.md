@@ -10,7 +10,7 @@ This will generate the appropriate indexes based on the repo's content and uploa
 
 ### Required environment variables for indexing
 
-There are 3 required environment variables to update inofmration on Algolia's index:
+There are 3 required environment variables to update information on Algolia's index:
 
 ```
 ALGOLIA_APPLICATION_ID="XXXXXX"
