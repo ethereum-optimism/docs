@@ -260,66 +260,79 @@ export function DocSearch({
         leaveFrom="nx-opacity-100"
         leaveTo="nx-opacity-0"
       >
-        <ul
+        <div
           className={cn(
-            "nextra-scrollbar",
-            // Using bg-white as background-color when the browser didn't support backdrop-filter
-            "nx-border nx-border-gray-200 nx-bg-white nx-text-gray-100 dark:nx-border-neutral-800 dark:nx-bg-neutral-900",
-            "nx-absolute nx-top-full nx-z-20 nx-mt-2 nx-overflow-auto nx-overscroll-contain nx-rounded-xl nx-py-2.5 nx-shadow-xl",
-            "nx-max-h-[min(calc(50vh-11rem-env(safe-area-inset-bottom)),400px)]",
-            "md:nx-max-h-[min(calc(100vh-5rem-env(safe-area-inset-bottom)),400px)]",
-            "nx-inset-x-0 ltr:md:nx-left-auto rtl:md:nx-right-auto",
-            "contrast-more:nx-border contrast-more:nx-border-gray-900 contrast-more:dark:nx-border-gray-50",
+            "nx-absolute nx-top-full nx-z-20 nx-mt-2 nx-inset-x-0 ltr:md:nx-left-auto rtl:md:nx-right-auto",
             overlayClassName
           )}
-          ref={ulRef}
-          style={{
-            transition: "max-height .2s ease", // don't work with tailwindcss
-          }}
         >
-          {error ? (
-            <span className="nx-flex nx-select-none nx-justify-center nx-gap-2 nx-p-8 nx-text-center nx-text-sm nx-text-red-500">
-              <InformationCircleIcon className="nx-h-5 nx-w-5" />
-              {"Error"}
-            </span>
-          ) : loading ? (
-            <span className="nx-flex nx-select-none nx-justify-center nx-gap-2 nx-p-8 nx-text-center nx-text-sm nx-text-gray-400">
-              <SpinnerIcon className="nx-h-5 nx-w-5 nx-animate-spin" />
-              {"Loading"}
-            </span>
-          ) : results.length > 0 ? (
-            results.map(({ route, prefix, children, id }, i) => (
-              <Fragment key={id}>
-                {prefix}
-                <li
-                  className={cn(
-                    "nx-mx-2.5 nx-break-words nx-rounded-md",
-                    "contrast-more:nx-border",
-                    i === active
-                      ? "nx-bg-primary-500/10 nx-text-primary-600 contrast-more:nx-border-primary-500"
-                      : "nx-text-gray-800 contrast-more:nx-border-transparent dark:nx-text-gray-300"
-                  )}
-                >
-                  <Link
-                    className="nx-block nx-scroll-m-12 nx-px-2.5 nx-py-2"
-                    href={route}
-                    data-index={i}
-                    onFocus={handleActive}
-                    onMouseMove={handleActive}
-                    onClick={() => finishSearch(i)}
-                    onKeyDown={handleKeyDown}
+          <ul
+            className={cn(
+              "nextra-scrollbar",
+              // Using bg-white as background-color when the browser didn't support backdrop-filter
+              "nx-border nx-border-gray-200 nx-bg-white nx-text-gray-100 dark:nx-border-neutral-800 dark:nx-bg-neutral-900",
+              "nx-overflow-auto nx-overscroll-contain nx-rounded-xl nx-py-2.5 nx-shadow-xl",
+              "nx-max-h-[min(calc(50vh-11rem-env(safe-area-inset-bottom)),400px)]",
+              "md:nx-max-h-[min(calc(100vh-5rem-env(safe-area-inset-bottom)),400px)]",
+              " ",
+              "contrast-more:nx-border contrast-more:nx-border-gray-900 contrast-more:dark:nx-border-gray-50"
+            )}
+            ref={ulRef}
+            style={{
+              transition: "max-height .2s ease", // don't work with tailwindcss
+            }}
+          >
+            {error ? (
+              <span className="nx-flex nx-select-none nx-justify-center nx-gap-2 nx-p-8 nx-text-center nx-text-sm nx-text-red-500">
+                <InformationCircleIcon className="nx-h-5 nx-w-5" />
+                {"Error"}
+              </span>
+            ) : loading ? (
+              <span className="nx-flex nx-select-none nx-justify-center nx-gap-2 nx-p-8 nx-text-center nx-text-sm nx-text-gray-400">
+                <SpinnerIcon className="nx-h-5 nx-w-5 nx-animate-spin" />
+                {"Loading"}
+              </span>
+            ) : results.length > 0 ? (
+              results.map(({ route, prefix, children, id }, i) => (
+                <Fragment key={id}>
+                  {prefix}
+                  <li
+                    className={cn(
+                      "nx-mx-2.5 nx-break-words nx-rounded-md",
+                      "contrast-more:nx-border",
+                      i === active
+                        ? "nx-bg-primary-500/10 nx-text-primary-600 contrast-more:nx-border-primary-500"
+                        : "nx-text-gray-800 contrast-more:nx-border-transparent dark:nx-text-gray-300"
+                    )}
                   >
-                    {children}
-                  </Link>
-                </li>
-              </Fragment>
-            ))
-          ) : (
-            <span className="nx-block nx-select-none nx-p-8 nx-text-center nx-text-sm nx-text-gray-400">
-              No results found.
-            </span>
-          )}
-        </ul>
+                    <Link
+                      className="nx-block nx-scroll-m-12 nx-px-2.5 nx-py-2"
+                      href={route}
+                      data-index={i}
+                      onFocus={handleActive}
+                      onMouseMove={handleActive}
+                      onClick={() => finishSearch(i)}
+                      onKeyDown={handleKeyDown}
+                    >
+                      {children}
+                    </Link>
+                  </li>
+                </Fragment>
+              ))
+            ) : (
+              <span className="nx-block nx-select-none nx-p-8 nx-text-center nx-text-sm nx-text-gray-400">
+                No results found.
+              </span>
+            )}
+          </ul>
+          <div className="nx-absolute nx-bottom-0 nx-right-0 nx-px-2 nx-py-2">
+            <img
+              src="/logos/algolia-logo-blue.png"
+              style={{ width: "80px" }}
+              alt="Algolia logo"
+            />
+          </div>
+        </div>
       </Transition>
     </div>
   );
