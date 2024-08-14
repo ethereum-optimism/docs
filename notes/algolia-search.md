@@ -6,13 +6,13 @@ Indexes for Algolia can be generated and uploaded by running:
 
 `pnpm index:docs`
 
-This will generate the appropriate indexes based on the repo's content and uploaded to Algolia.
+This will generate the appropriate indexes based on the repo's content and upload them to Algolia.
 
 ### Required environment variables for indexing
 
 There are 3 required environment variables to update information on Algolia's index:
 
-```
+```env
 ALGOLIA_APPLICATION_ID="XXXXXX"
 ALGOLIA_WRITE_API_KEY="XXXXXXXXXX"
 ALGOLIA_INDEX_NAME="XXX"
@@ -42,4 +42,4 @@ There are two events tracked on Algolia:
 - Click on a search result
 - Conversion event when scrolling to bottom of page after clicking on a search result
 
-These can later be used to make adjustments to the recommendations. More info can be found at https://www.algolia.com/doc/guides/sending-events/concepts/event-types/
+These can later be used to make adjustments to the recommendations. More info can be found at [Algolia Events Documentation](https://www.algolia.com/doc/guides/sending-events/concepts/event-types/).
