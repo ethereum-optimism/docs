@@ -40,10 +40,13 @@ Note that the command line directions were verified under Ubuntu 22.04 LTS.
 Other OSes or versions may use different tools.
 
 <Steps>
-  ### Install the command line utilities `make` and `jq`
+  ### Install the command line utilities `make`, `jq`, and `just`. For Docker installation, please refer to the instructions [here](https://docs.docker.com/engine/install/ubuntu/).
 
   ```sh
   sudo apt install -y make jq
+  wget https://github.com/casey/just/releases/download/1.34.0/just-1.34.0-x86_64-unknown-linux-musl.tar.gz
+  tar xvzf just-1.34.0-x86_64-unknown-linux-musl.tar.gz
+  sudo cp just /usr/bin/just
   ```
 
   ### Install [Go programming language](https://go.dev/)
@@ -54,6 +57,7 @@ Other OSes or versions may use different tools.
   tar xvzf go1.21.5.linux-amd64.tar.gz
   sudo cp go/bin/go /usr/bin/go
   sudo mv go /usr/lib
+  echo export PATH=$PATH:/root/go/bin >> ~/.bashrc 
   echo export GOROOT=/usr/lib/go >> ~/.bashrc
   . ~/.bashrc
   ```
@@ -64,31 +68,25 @@ Other OSes or versions may use different tools.
   git clone https://github.com/ethereum-optimism/optimism.git
   cd optimism
   ```
-
-  ### Install dependencies
-
-  ```sh
-  pnpm install
-  ```
   
   ### Install Foundry using monorepo tooling
 
-  The following command will install Foundry if you don't already have it on your system.
+  The following command will install Foundry if it is not already installed on your system. If an error occurs during execution, please run `source /root/.bashrc` and try again.
 
   ```sh
-  pnpm install:foundry
+  just install-foundry
   ```
 
   If you do already have Foundry installed, make sure to run the following to verify your installed version will work with the monorepo tooling as expected.
 
   ```sh
-  pnpm check:foundry
+  just check-foundry
   ```
 
   If you need to, you can run the following to update Foundry to the expected version.
 
   ```sh
-  pnpm update:foundry
+  just update-foundry
   ```
 </Steps>
 
@@ -112,7 +110,7 @@ Other OSes or versions may use different tools.
     | ----------------------------------- | ---------: | ------: |
     | L1 chain ID                         |          1 |     900 |
     | L2 chain ID                         |         10 |     901 |
-    | Time between L1 blocks (in seconds) |         12 |       3 |
+    | Time between L1 blocks (in seconds) |         12 |       6 |
 
 *   Pre-Funded Dev Accounts
 
