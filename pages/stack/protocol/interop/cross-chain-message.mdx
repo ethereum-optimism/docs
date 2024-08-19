@@ -9,13 +9,13 @@ import Image from 'next/image'
 
 # Anatomy of a Cross-Chain Message
 
-A cross-chain message applies to any asset using the [SuperchainERC20](https://specs.optimism.io/interop/token-bridging.html) token standard. Two transactions are required to complete a cross chain message:
+A cross-chain message applies to any message sent across chain. This applies to asset transfers using the [SuperchainERC20](https://specs.optimism.io/interop/token-bridging.html) token standard. Two transactions are required to complete a cross chain message:
 
 *   **First transaction:** is submitted to the source chain and emits an event that can be consumed on a destination chain.
-*   **Second transaction:** is submitted to a destination chain, where the block builder SHOULD only include it if certain that the first transaction was included in the source chain. NOTE: There is no strict requirement that the executing message is ever submitted.
+*   **Second transaction:** is submitted to a destination chain, where the block builder SHOULD only include it if certain that the first transaction was included in the source chain. The block builder can use OP-Supervisor to determine the integrity of the initating message. Anyone can submit the second transaction.
 
-<Callout type="info">
-  See the specs for details on tracing the [executing message event](https://specs.optimism.io/interop/predeploys.html#executingmessage-event).
+<Callout type="default">
+  There is no strict requirement that the executing message is ever submitted. See the specs for details on tracing the [executing message event](https://specs.optimism.io/interop/predeploys.html#executingmessage-event).
 </Callout>
 
 ## How It Works
