@@ -325,10 +325,18 @@ export function DocSearch({
               </span>
             )}
           </ul>
-          <div className="nx-absolute nx-bottom-0 nx-right-0 nx-px-2 nx-py-2">
+          <div
+            className="nx-absolute nx-px-2 nx-py-2 nx-bg-white dark:nx-bg-dark/50"
+            style={{
+              top: "1px",
+              right: "1px",
+              borderBottomLeftRadius: "0.5rem",
+              borderTopRightRadius: "0.5rem",
+            }}
+          >
             <img
               src="/logos/algolia-logo-blue.png"
-              style={{ width: "80px" }}
+              style={{ width: "60px" }}
               alt="Algolia logo"
             />
           </div>
