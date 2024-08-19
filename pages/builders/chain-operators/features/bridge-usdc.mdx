@@ -21,8 +21,8 @@ It utilizes the cross-chain messaging of the canonical OP Stack bridge, allowing
 
 There are two main types of USDC representations on OP Chains:
 
-1. **Bridged USDC**: USDC that is bridged from Ethereum (L1) to your OP Chain (L2).
-2. **Native USDC**: USDC that is issued natively on your OP Chain (L2) by Circle and can be moved between chains using the [CCTP protocol contracts](https://developers.circle.com/stablecoins/docs/cctp-protocol-contract).
+1.  **Bridged USDC**: USDC that is bridged from Ethereum (L1) to your OP Chain (L2).
+2.  **Native USDC**: USDC that is issued natively on your OP Chain (L2) by Circle and can be moved between chains using the [CCTP protocol contracts](https://developers.circle.com/stablecoins/docs/cctp-protocol-contract).
 
 <Callout type="info">
     *   Bridged USDC: [USDC.e on OP Mainnet](https://basescan.org/token/0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca), USDbC on Base
@@ -50,30 +50,30 @@ This option utilizes the Bridged USDC Standard by Circle, allowing for a seamles
 
 
 #### Benefits
-- Reduces the need to migrate liquidity if native USDC is deployed on your chain.
-- Minimizes potential fragmentation from having two types of USDC representations on your OP Chain.
+*   Reduces the need to migrate liquidity if native USDC is deployed on your chain.
+*   Minimizes potential fragmentation from having two types of USDC representations on your OP Chain.
 
 #### Limitations
-- Requires deploying an upgradeable custom bridge that the OP Chain operator custodies (be aware of the security implications)
-- Requires additional work from bridge interface partners and liquidity bridges to index the custom bridge
+*   Requires deploying an upgradeable custom bridge that the OP Chain operator custodies (be aware of the security implications)
+*   Requires additional work from bridge interface partners and liquidity bridges to index the custom bridge
 
 #### Implementation Steps
 
-1. Use the `L1OpUSDCFactory` contract to deploy the necessary contracts on L1 and L2.
-2. Set up the `L1OpUSDCBridgeAdapter` and `L2OpUSDCBridgeAdapter`.
-3. Add token metadata to the Superchain Tokenlist using the custom bridge format.
+1.  Use the `L1OpUSDCFactory` contract to deploy the necessary contracts on L1 and L2.
+2.  Set up the `L1OpUSDCBridgeAdapter` and `L2OpUSDCBridgeAdapter`.
+3.  Add token metadata to the Superchain Tokenlist using the custom bridge format.
 
 ### Standard Bridged USDC Path
 
 This option is suitable for chains that only need Bridged USDC and don't anticipate requiring Native USDC in the near future.
 
 #### Benefits
-- Fastest way to get USDC on an OP Chain
-- Inherits the same security model as the OP Chain rollup
+*   Fastest way to get USDC on an OP Chain
+*   Inherits the same security model as the OP Chain rollup
 
 #### Limitations
-- Requires significant migration effort if the chain operator wants to migrate to native USDC
-- Potential fragmentation with having two types of USDC representations on your OP Chain if the chain operator wants to migrate to native USDC
+*   Requires significant migration effort if the chain operator wants to migrate to native USDC
+*   Potential fragmentation with having two types of USDC representations on your OP Chain if the chain operator wants to migrate to native USDC
 
 #### Implementation Steps
 
@@ -98,8 +98,8 @@ This diagram showcases the deployment process of USDC bridge adapters and the ne
 <Steps>
 
 ### User Initiates Deployment
-- The **User** initiates the deployment by interacting with the `L1OpUSDCFactory` contract. 
-- This factory contract serves as the entry point for deploying necessary contracts on L1 and facilitating setup on L2.
+*   he **User** initiates the deployment by interacting with the `L1OpUSDCFactory` contract. 
+*   This factory contract serves as the entry point for deploying necessary contracts on L1 and facilitating setup on L2.
 
 ### L1 Contracts Deployment
 *   **L1OpUSDCFactory** then deploys the **L1OpUSDCBridgeAdapter**.
@@ -209,9 +209,9 @@ This diagram illustrates the process of migrating USDC. Below is a detailed expl
     The factory that chain operators should use on L1 is at `0x7dB8637A5fd20BbDab1176BdF49C943A96F2E9c6`.
 </Callout>
 
-1. **L1OpUSDCFactory.sol**: Use the factory contract to deploy and set up the `L1OpUSDCBridgeAdapter` contract on L1. Precalculates the addresses of the L2 deployments and trigger their deployment by sending a transaction to L2.
+1.  **L1OpUSDCFactory.sol**: Use the factory contract to deploy and set up the `L1OpUSDCBridgeAdapter` contract on L1. Precalculates the addresses of the L2 deployments and trigger their deployment by sending a transaction to L2.
 
-2. **L2OpUSDCDeploy.sol**: It's a one-time use deployer contract deployed from the L1 factory through a cross-chain deployment. It's used as a utility contract for deploying the L2 USDC Proxy and `L2OpUSDCBridgeAdapter` contract, all at once in its constructor.
+2.  **L2OpUSDCDeploy.sol**: It's a one-time use deployer contract deployed from the L1 factory through a cross-chain deployment. It's used as a utility contract for deploying the L2 USDC Proxy and `L2OpUSDCBridgeAdapter` contract, all at once in its constructor.
 
 3.  **L1OpUSDCBridgeAdapter**: 
 *   This contract allows the transfer of USDC from Ethereum Mainnet to a specific OP Stack chain. 
@@ -219,7 +219,7 @@ This diagram illustrates the process of migrating USDC. Below is a detailed expl
 *   It also receives messages from the other chain and unlocks USDC on Ethereum Mainnet. 
 *   It controls the message flow between layers and supports the requirements for migrating Bridged USDC to Native USDC if the chain operator and Circle desire.
 
-4. **L2OpUSDCBridgeAdapter**: 
+4.  **L2OpUSDCBridgeAdapter**: 
 *   Contract that allows for the transfer of USDC from the specific OP Stack chain to Ethereum Mainnet. 
 *   It burns USDC on the L2 and sends a message to Ethereum Mainnet to unlock the equivalent amount of USDC. 
 *   It also receives messages from Ethereum Mainnet and mints USDC. 
