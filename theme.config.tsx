@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useConfig } from "nextra-theme-docs";
 import { FeelbackYesNo, PRESET_LIKE_DISLIKE } from "@feelback/react";
 import "@feelback/react/styles/feelback.css";
-import { Search } from "./components/Search";
+//import { Search } from "./components/Search";
 
 const config: DocsThemeConfig = {
   logo: (
@@ -28,9 +28,9 @@ const config: DocsThemeConfig = {
     </>
   ),
   darkMode: true,
-  search: {
-    component: Search,
-  },
+  // search: {
+  //   component: Search,
+  // },
   project: {
     link: "https://github.com/ethereum-optimism/docs",
   },
