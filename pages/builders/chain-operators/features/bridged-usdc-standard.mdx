@@ -37,53 +37,6 @@ Chain operators can use the Bridged USDC Standard to:
 1.  Deploy Bridged USDC on the OP Stack chain.
 2.  Provide optionality for Circle to seamlessly upgrade Bridged USDC to Native USDC.
 
-## How It Works
-
-OP Chain operators have two main options for implementing USDC:
-
-### Bridged-to-Native Upgrade Path
-
-This option utilizes the Bridged USDC Standard by Circle, allowing for a seamless upgrade from Bridged USDC to Native USDC.
-
-*   Maintains compatibility with the [Law of Chains](https://gov.optimism.io/t/law-of-chains-v0-1-full-draft/6514).
-*   Enables "in-place" upgrade to Native USDC, preserving contract address, user balances, and DeFi integrations.
-
-#### Benefits
-
-*   Reduces the need to migrate liquidity if native USDC is deployed on your chain.
-*   Minimizes potential fragmentation from having two types of USDC representations on your OP Chain.
-
-#### Limitations
-
-*   Requires deploying an upgradeable custom bridge that the OP Chain operator custodies (be aware of the security implications)
-*   Requires additional work from bridge interface partners and liquidity bridges to index the custom bridge
-
-#### Implementation Steps
-
-1.  Use the `L1OpUSDCFactory` contract to deploy the necessary contracts on L1 and L2.
-2.  Set up the `L1OpUSDCBridgeAdapter` and `L2OpUSDCBridgeAdapter`.
-3.  Add token metadata to the Superchain Tokenlist using the custom bridge format.
-
-### Standard Bridged USDC Path
-
-This option is suitable for chains that only need Bridged USDC and don't anticipate requiring Native USDC in the near future.
-
-#### Benefits
-
-*   Fastest way to get USDC on an OP Chain
-*   Inherits the same security model as the OP Chain rollup
-
-#### Limitations
-
-*   Requires significant migration effort if the chain operator wants to migrate to native USDC
-*   Potential fragmentation with having two types of USDC representations on your OP Chain if the chain operator wants to migrate to native USDC
-
-#### Implementation Steps
-
-1.  Deploy the OVM fiat token compatible with the StandardBridge.
-2.  Add token metadata to the Superchain Tokenlist using the StandardBridge format
-
-
 ## Considerations for Chain Operators
 
 When deciding which USDC implementation to use, consider the following:
