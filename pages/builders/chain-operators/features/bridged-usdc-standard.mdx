@@ -1,41 +1,29 @@
 ---
 title: Bridged USDC Standard on OP Stack
 lang: en-US
-description: This guide explains the different types of USDC representations, their implementations, and considerations for chain operators.
+description: This guide explains the different types of USDC representations and how to get the Bridged USDC Standard on your OP Stack chain.
 ---
 
 import { Callout, Steps  } from 'nextra/components'
 
-# USDC on OP Chains
+# USDC on OP Stack Chains
 
 This explainer provides a high-level overview of USDC implementations on OP Stack, including the types of USDC representations, deployment options, and considerations for chain operators.
-It aims to help OP Chain operators understand and implement the most suitable USDC strategy for their needs, with a focus on the Bridged USDC Standard by Circle.
+It aims to help OP Stack chains operators understand and implement the most suitable USDC strategy for their needs, with a focus on the Bridged USDC Standard by Circle.
 
 ## Bridged USDC Standard
 
 The Bridged USDC Standard by Circle provides an efficient and modular solution for expanding the Bridged USDC Standard across the Superchain ecosystem.
 It utilizes the cross-chain messaging of the canonical OP Stack bridge, allowing for easy access to Bridged USDC liquidity across OP Stack chains.
 
-## Types of USDC
-
-There are two main types of USDC representations on OP Chains:
-
-1.  **Bridged USDC**: USDC that is bridged from Ethereum (L1) to your OP Chain (L2).
-2.  **Native USDC**: USDC that is issued natively on your OP Chain (L2) by Circle and can be moved between chains using the [CCTP protocol contracts](https://developers.circle.com/stablecoins/docs/cctp-protocol-contract).
-  
 <Callout type="info">
   *   Bridged USDC: [USDC.e on OP Mainnet](https://basescan.org/token/0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca), USDbC on Base
   *   Native USDC: [USDC on OP Mainnet](https://basescan.org/token/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913), USDC on Base
 </Callout>
 
 <Callout type="info">
-    OP chain operators can use Bridged USDC at launch, so they can have it available for their users.
+    OP Stack chains operators can use Bridged USDC at launch, so they can have it available for their users.
 </Callout>
-
-Chain operators can use the Bridged USDC Standard to:
-
-1.  Deploy Bridged USDC on the OP Stack chain.
-2.  Provide optionality for Circle to seamlessly upgrade Bridged USDC to Native USDC.
 
 ## Considerations for Chain Operators
 
@@ -47,30 +35,21 @@ When deciding which USDC implementation to use, consider the following:
 
 ## Security Considerations
 
-*   The Bridged USDC Standard for the OP Stack has undergone audits and is recommended for production use.
-*   The Bridged USDC inherits the same security model as the OP Chain rollup.
+*   The Bridged USDC Standard for the OP Stack has undergone [audits](https://github.com/defi-wonderland/opUSDC/blob/main/audits/spearbit.pdf) and is recommended for production use.
+*   The Bridged USDC inherits the same security model as the OP Stack chains rollup.
 
 ## Next Steps
 
 *   Read the [Bridged USDC Standard](https://www.circle.com/blog/bridged-usdc-standard) from Circle.
-*   For technical details on the deployment and bridging processes, as well as information about important contracts, Read [USDC implementation guide](/builders/chain-operators/features/usdc-implementation-guide).
+*   Ready to get started? Read our setup guide on the [Bridged USDC Standard for the OP Stack](https://github.com/defi-wonderland/opUSDC#setup).
+*   If you experience any problems, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
 
 ## FAQs
 
-### What is the StandardBridge?
+### Do custom bridges break an OP Stack chains operator's agreement with the law of chains?
 
-The StandardBridge enables permissionless transferring of ETH and ERC-20 tokens between L1 and L2.
+No, The language in the law of chains associated with security, uptime, and liveness is only focused on the **StandardBridge** and the rest of the rollup contracts. OP Stack chains operators and developers are free to build custom bridges on top of OP Stack chainss.
 
-### Can I deploy a [Bridged USDC Standard by Circle](https://www.circle.com/blog/bridged-usdc-standard) using the StandardBridge?
-
-No, the StandardBridge requires the token contract to adhere to the interface specified in [OptimismMintableERC20.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol) but the Bridged USDC Standard by Circle requires using the `FiatTokenV2_1` and `FiatTokenProxy`, which does not support the required interface.
-In addition, the Bridged USDC Standard by Circle requires the bridge to support additional functionality like the `burnLockedUSDC` on the L1, and transferring ownership to Circle.
-The StandardBridge does not support any of this functionality.
-
-### Do custom bridges break an OP Chain operator's agreement with the law of chains?
-
-No, The language in the law of chains associated with security, uptime, and liveness is only focused on the **StandardBridge** and the rest of the rollup contracts. OP Chain operators and developers are free to build custom bridges on top of OP Chains.
-
-### How does the custom bridge work with interop between OP Chains?
+### How does the custom bridge work with interop between OP Stack chainss?
 
 The standard utilizes the cross-chain messaging of the canonical OP Stack bridge, allowing for easy access to Bridged USDC liquidity across OP Stack chains.
