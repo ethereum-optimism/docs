@@ -5,6 +5,7 @@ description: Learn the basics of interoperability on the OP Stack.
 ---
 
 import { Callout } from 'nextra/components'
+import Image from 'next/image'
 
 # Interoperability Explainer
 
@@ -55,6 +56,10 @@ For additional considerations, join the [Interop discussion](https://github.com/
 If a sequencer does not want to trust another sequencer at all, they can choose to only accept executing messages where the initiating message has been finalized with L1 levels of security. This demonstrates the difference in latency vs speed. The L2 data must be submitted to L1 and then the L1 block containing the transaction with the L2 data must be finalized. It takes about 15 minutes for an L1 block to finalize, and higher throughput OP Stack chains like Base and OP Mainnet submit a batch about every 5 minutes. This means that it could take about 20 minutes for an L2 transaction to be considered final and be able to be trustlessly consumed by another chain. At lower latencies, the sequencer accepting the executing message takes on some amount of equivocation risk. It could be possible to build a bonding system to add economic security to prevent equivocation, but that is not in the scope of the first release.
 
 See this [dune dashboard](https://dune.com/oplabspbc/op-stack-chains-l1-activity#submission-frequency) to see how often OP Stack chains submit batches.
+
+<br />
+
+<Image src="/img/op-stack/protocol/safe-unsafe.png" alt="Safe and Unsafe Security Diagram" width={700} height={500} />
 
 ### What is stopping a sequencer from censoring a cross chain message?
 There is nothing stopping a sequencer from censoring a transaction when it is sent directly to the sequencer. This does not mean the network has no censorship resistance, users can always send a deposit transaction for censorship resistance as strong as L1 guarantees. The tradeoff here is the latency, instead of being confirmed in ~2 seconds, the transaction can be confirmed at the rate of L1 block production. It may be possible to adopt something like [EIP-7547](https://eips.ethereum.org/EIPS/eip-7547) in the future to enable low latency censorship resistance.
