@@ -22,12 +22,12 @@ Native interop includes both the protocol layer message passing and the Supercha
 *   **Message passing protocol:** the initial + finalizing/executing [message](https://specs.optimism.io/interop/messaging.html) that fire events to be consumed by the chains in the [dependency set](https://specs.optimism.io/interop/dependency-set.html)
 *   **SupERC20 token specification**: the [SuperchainERC20](https://specs.optimism.io/interop/token-bridging.html) turns message passing into asset transfer between chains in the interop set
 
-This means ETH and ERC-20s can seamlessly and securely move across L2s, and intent-based protocols, such as bridges, can build better experiences on top of the message passing protocol.
+This means ETH and ERC-20s can seamlessly and securely move across L2s, and intent-based protocols (i.e., bridges) can build better experiences on top of the message passing protocol.
 
 ## Low Latency
-Interoperability allows for horizontally scalable blockchains, a key feature of the Superchain. With native interop, latency can be low (~2 seconds) by optimistically accepting cross chain messages. 
-The fork choice rule enforces eventual consistency, meaning that if an invalid cross chain message is accepted, it will be reorganized out eventually. 
-The fault proof guarantees that all of the cross chain messages are accounted for from the perspective of handling withdrawals through the bridge to L1.
+Interoperability allows for horizontally scalable blockchains, a key feature of the Superchain. With native interop, latency can be low (~2 seconds) by optimistically accepting cross-chain messages. 
+The fork choice rule enforces eventual consistency, meaning that if an invalid cross-chain message is accepted, it will be reorganized out eventually. 
+The fault proof guarantees that all of the cross-chain messages are accounted for from the perspective of handling withdrawals through the bridge to L1.
 
 ## Permissionless Chain Set
 It is permissionless to define a dependency on a chain, so chain operators will be able to choose which chains their chains depend on, and it is not a requirement that chains are in each other's dependency set. 
@@ -38,8 +38,8 @@ However, since the nature of defining a dependency is one way, it is impossible 
 ## Considerations
 Chain operators will need to run additional infrastructure to be part of the interoperable set. 
 *   The Superchain-backend service, `op-supervisor`, will be a requirement for running an OP Stack chain that has interop enabled. 
-`op-supervisor` is responsible for validating all cross chain messages and will need to have an RPC configured for each chain in the dependency set. 
-*   In the future, to reduce infrastructure costs, `op-supervisor` will rely on the P2P network and cryptographic schemes for validating cross chain messages. 
+`op-supervisor` is responsible for validating all cross-chain messages and will need to have an RPC configured for each chain in the dependency set. 
+*   In the future, to reduce infrastructure costs, `op-supervisor` will rely on the P2P network and cryptographic schemes for validating cross-chain messages. 
 
 <Callout type="info">
 For additional considerations, join the [Interop discussion](https://github.com/ethereum-optimism/specs/discussions/128) in our specs repo.
@@ -61,7 +61,7 @@ See this [dune dashboard](https://dune.com/oplabspbc/op-stack-chains-l1-activity
 
 <Image src="/img/op-stack/protocol/safe-unsafe.png" alt="Safe and Unsafe Security Diagram" width={700} height={500} />
 
-### What is stopping a sequencer from censoring a cross chain message?
+### What is stopping a sequencer from censoring a cross-chain message?
 There is nothing stopping a sequencer from censoring a transaction when it is sent directly to the sequencer. This does not mean the network has no censorship resistance, users can always send a deposit transaction for censorship resistance as strong as L1 guarantees. The tradeoff here is the latency, instead of being confirmed in ~2 seconds, the transaction can be confirmed at the rate of L1 block production. It may be possible to adopt something like [EIP-7547](https://eips.ethereum.org/EIPS/eip-7547) in the future to enable low latency censorship resistance.
 
 ### Are callback style transactions possible?
