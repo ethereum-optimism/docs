@@ -46,9 +46,9 @@ The Optimism Documentation team has created a complete style guide for you to ma
 
 To set up the Nextra project on your machine, perform the following steps from a terminal instance:
 
-1. Install pnpm [install pnpm](https://pnpm.io/installation).
-2. First, run `pnpm i` to install the dependencies.
-3. Then, run `pnpm dev` to start the development server and 
+1. [Install just](https://github.com/casey/just)
+2. First, run `just i` to install the dependencies.
+3. Then, run `just dev` to start the development server and 
 4. Visit [localhost:3000](http://localhost:3000) in your browser to view the website.
 
 You can now start changing content and see the website updated live each time you save a new file. 🤓
@@ -57,13 +57,13 @@ You can now start changing content and see the website updated live each time yo
 
 **Important prerequisite**
 
-To prevent building issues upstream, you should build the content locally before submitting a pull request: stop or delete the terminal server if it's running, then run `pnpm dev`.
+To prevent building issues upstream, you should build the content locally before submitting a pull request: stop or delete the terminal server if it's running, then run `just dev`.
 
 - Use the information reported by the terminal to fix any issues (e.g., broken links). 
-- Run `pnpm fix` to automatically fix most linting issues (e.g., formatting and style guide). 
-- Run `pnpm spellcheck:lint` to test your content against the dictionary. Add new words to the dictionary by appending them to `words.txt`.
-- Run `pnpm spellcheck:fix` to add new words to the dictionary automatically.
-- Try another `pnpm dev` and repeat until no issues are reported ("client" and "server compiled successfully").
+- Run `just fix` to automatically fix most linting issues (e.g., formatting and style guide). 
+- Run `just spellcheck:lint` to test your content against the dictionary. Add new words to the dictionary by appending them to `words.txt`.
+- Run `just spellcheck:fix` to add new words to the dictionary automatically.
+- Try another `just dev` and repeat until no issues are reported ("client" and "server compiled successfully").
 
 
 Your pull request should usually target the `main` branch, though the Optimism Documentation team might sometimes ask you to target another branch.

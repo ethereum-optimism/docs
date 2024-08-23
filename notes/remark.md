@@ -8,7 +8,7 @@ Remark is a flexible Markdown processor with a [vibrant plugin ecosystem](https:
 
 ### Adding Rules
 
-To add a linting rule, simply install your desired linting rule via `pnpm` and add the rule to the [`.remarkrc.mjs`](/.remarkrc.mjs) configuration file at the root of this repository.
+To add a linting rule, simply install your desired linting rule via `just` and add the rule to the [`.remarkrc.mjs`](/.remarkrc.mjs) configuration file at the root of this repository.
 You can find a list of rules maintained by the Remark team on the [`remark-lint`](https://github.com/remarkjs/remark-lint#rules) repository.
 If you need to write your own custom plugin, place the plugin inside of [`utils/plugins/remark`](/utils/plugins/remark/)
 

@@ -3,7 +3,7 @@
 ## Linting
 
 The `lint.yml` workflow checks that all Markdown and JavaScript files conform to the linting standards we apply.
-Run `pnpm lint` to lint locally and run `pnpm fix` to fix issues that the linter can fix automatically.
+Run `just lint` to lint locally and run `just fix` to fix issues that the linter can fix automatically.
 All PRs must pass this check.
 Also includes spellchecking via [cspell](https://cspell.org/).
 

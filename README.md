@@ -4,11 +4,11 @@ This repo houses the Optimism Docs located at [docs.optimism.io](https://docs.op
 
 ## Local Development
 
-How to [install pnpm](https://pnpm.io/installation)
+How to [Install just](https://github.com/casey/just)
 
-First, run `pnpm i` to install the dependencies.
+First, run `just i` to install the dependencies.
 
-Then, run `pnpm dev` to start the development server and visit localhost:3000.
+Then, run `just dev` to start the development server and visit localhost:3000.
 
 ## Contributions
 

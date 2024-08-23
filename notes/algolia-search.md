@@ -4,7 +4,7 @@
 
 Indexes for Algolia can be generated and uploaded by running:
 
-`pnpm index:docs`
+`just index:docs`
 
 This will generate the appropriate indexes based on the repo's content and upload them to Algolia.
 
