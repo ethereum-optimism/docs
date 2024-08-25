@@ -79,6 +79,26 @@ The next step is to wait the fault challenge period, to ensure that the L2 outpu
 
 Finally, once the fault challenge period passes, the withdrawal can be finalized and executed on L1.
 
+## Expected Internal Reverts in Withdrawal Transactions
+
+During the withdrawal process, users may observe internal reverts when viewing the transaction on Etherscan. This is a common point of confusion but is expected behavior.
+
+These internal reverts often show up in yellow on the Etherscan UI and may cause concern that something went wrong with the transaction. However, these reverts occur due to the non-standard proxy used in Optimism, specifically the **Chugsplash Proxy**. The Chugsplash Proxy sometimes triggers internal calls that revert as part of the designed flow of the withdrawal process. 
+
+### Why Do These Reverts Happen?
+
+The Chugsplash Proxy operates differently than standard proxies. During a withdrawal transaction, it may trigger internal contract calls that result in reverts, but these reverts do not indicate that the withdrawal has failed. Instead, they are part of the internal logic of the system and are expected in certain scenarios.
+
+### Key Takeaways:
+
+- **Internal Reverts Are Expected**: These reverts are part of the normal operation of the Chugsplash Proxy during withdrawal transactions and do not represent an error.
+- **No Cause for Concern**: Although Etherscan highlights these reverts, they do not affect the final success of the transaction.
+- **User Assurance**: If you encounter these reverts during a withdrawal transaction, rest assured that the withdrawal will still finalize as expected.
+
+For more information about the withdrawal process and how it works on Optimism, refer to the following resources:
+- [Smart Contracts Overview](https://docs.optimism.io/stack/protocol/rollup/smart-contracts)
+- [Withdrawal Flow](https://docs.optimism.io/stack/protocol/rollup/withdrawal-flow#withdrawal-initiating-transaction)
+
 ### Offchain processing
 
 1.  A user calls the SDK's [`CrossDomainMessenger.finalizeMessage()`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/sdk/src/cross-chain-messenger.ts#L1473-L1493) with the hash of the L1 message.
