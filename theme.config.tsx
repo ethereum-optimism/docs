@@ -95,10 +95,6 @@ const config: DocsThemeConfig = {
           content="https://docs.optimism.io/logos/docs-header.png"
         />
         <meta
-          property="og:url"
-          content="https://docs.optimism.io/"
-        />
-        <meta
           name="twitter:card"
           content="summary_large_image"
         />
