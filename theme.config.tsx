@@ -90,6 +90,30 @@ const config: DocsThemeConfig = {
           property="og:description"
           content={frontMatter.description || "Optimism Docs for developers"}
         />
+        <meta
+          property="og:image"
+          content="https://docs.optimism.io/logos/docs-header.png"
+        />
+        <meta
+          property="og:url"
+          content="https://docs.optimism.io/"
+        />
+        <meta
+          name="twitter:card"
+          content="summary_large_image"
+        />
+        <meta
+          name="twitter:title"
+          content={frontMatter.title || "Optimism Docs"}
+        />
+        <meta
+          name="twitter:description"
+          content={frontMatter.description || "Optimism Docs for developers"}
+        />
+        <meta
+          name="twitter:image"
+          content="https://docs.optimism.io/logos/docs-header.png"
+        />
         <link
           rel="icon"
           href="/img/icons/favicon.ico"
