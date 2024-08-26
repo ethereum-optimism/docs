@@ -1,0 +1,48 @@
+---
+title: proxyd
+lang: en-US
+description: Learn about the proxyd service and how to configure it for use in the OP Stack.
+---
+
+# proxyd
+
+`proxyd` is a critical RPC request router and proxy used within the OP Stack infrastructure. It enables operators to efficiently route and manage RPC requests across multiple backend services, ensuring performance, fault tolerance, and security.
+
+## Key Features
+
+* **RPC Method Whitelisting**: Define a list of allowed RPC methods to ensure only authorized requests are processed.
+* **Backend Request Routing**: Routes RPC methods to specific backend service groups.
+* **Automatic Retries**: Automatically retries failed backend requests, improving reliability.
+* **Consensus Tracking**: Monitors backend consensus states, such as latest, safe, and finalized blocks, to ensure consistent responses.
+* **Request/Response Rewriting**: Enforces consensus by rewriting requests and responses to match the resolved consensus state.
+* **Load Balancing**: Distributes traffic evenly across backend services to optimize performance and prevent bottlenecks.
+* **Caching**: Caches immutable responses from backends to reduce redundant processing.
+* **Metrics**: Provides metrics for tracking request latency, error rates, and backend health.
+
+## Usage
+
+To start using `proxyd`, follow these steps:
+
+1. **Build the Binary**:
+    ```bash
+    make proxyd  
+    ```
+This will build the proxyd binary. No additional dependencies are required.
+
+2. Configure `proxyd`: Create a configuration file to define your proxy backends and routing rules. Refer to [example.config.toml](https://github.com/ethereum-optimism/infra/blob/main/proxyd/example.config.toml) for a full list of options with commentary.
+
+3. Start the Service: Once the configuration file is ready, start the proxyd service using:
+```
+proxyd <path-to-config>.toml
+```
+
+## Consensus Awareness
+Starting with version 4.0.0, `proxyd` includes consensus awareness to minimize chain reorganizations for clients. By setting `consensus_aware` to true in the configuration, `proxyd` will:
+
+* Poll backends for consensus data (latest block, safe block, peer count, etc.).
+* Resolve a consensus group based on the healthiest backends.
+* Enforce consensus state across client requests.
+
+## Caching and Metrics
+* **Cacheable Methods:** Certain immutable methods, such as `eth_chainId` and `eth_getBlockByHash`, can be cached using Redis to optimize performance.
+* **Metrics:** Extensive metrics are available to monitor request latency, error rates, backend health, and more. These can be configured via `metrics.port` and `metrics.host` in the configuration file.
