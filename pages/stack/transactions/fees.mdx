@@ -172,7 +172,7 @@ Chain operators can use the [Ecotone fee parameter calculator](https://docs.goog
   The L1 Data Fee formula changed with the Fjord upgrade. Refer to the [Network Upgrade Overview](/builders/node-operators/network-upgrades) for network upgrade activation timestamps for OP Sepolia and OP Mainnet.
 </Callout>
 
-The pricing function changes with Fjord upgrade because of the FastLZ compression estimator, which more accurately charges for L1 data usage on a per transaction basis. 
+The pricing function changes with Fjord upgrade because of the FastLZ compression estimator, which more accurately charges for L1 data usage on a per-transaction basis.
 The updated function uses the following parameters:
 
 *   The FastLZ-compressed size of the signed transaction.
@@ -199,3 +199,26 @@ l1Cost = estimatedSizeScaled * l1FeeScaled / 1e12
 ```
 
 The new cost function takes into account the compression ratio, so chain operators will need to adjust their `baseFeeScalar` and `blobFeeScalar`  to account for any previous compression ratios that they encountered on their chains. Chain operators can use the [Fjord fee parameter calculator](https://docs.google.com/spreadsheets/d/1V3CWpeUzXv5Iopw8lBSS8tWoSzyR4PDDwV9cu2kKOrs/edit#gid=186414307) to get a better estimate of scalar values to use for your chain.
+
+## Sequencer Fee Vault
+
+The Sequencer Fee Vault collects and holds transaction fees paid to the sequencer during block production on OP Mainnet. These fees cover the cost of posting transaction data to L1, ensuring network sustainability and data availability.
+
+### Fee Collection and Distribution
+
+*   **Purpose**: The sequencer deposits collected fees into the Sequencer Fee Vault. These fees reimburse the sequencer for gas costs when submitting transaction batches to L1.
+*   **Vault Address**: The Sequencer Fee Vault is predeployed at the address `0x4200000000000000000000000000000000000011` on the OP Mainnet.
+*   **Fee Usage**: Stored fees are eventually transferred to a designated recipient address (e.g., a treasury or distribution contract).
+
+### How it Works
+
+1.  **Fee Collection**: During the processing of transactions, the sequencer collects fees from users as part of their transaction costs. These fees are primarily used to cover the gas expenses of posting transaction data to Ethereum L1.
+2.  **Storage**: Collected fees are deposited into the Sequencer Fee Vault contract.
+3.  **Distribution**: The fees are later distributed to the appropriate recipient, typically covering operational costs like L1 gas fees for data availability.
+
+This system ensures effective fee management, maintaining the security and operation of the Optimism network.
+
+## Next Steps
+
+*   Read the [differences between Ethereum and OP Stack Chains](/stack/differences) guide.
+*   Read the [L2 to L1 Transactions](/builders/app-developers/bridging/messaging#for-l1-to-l2-transactions) guide.
