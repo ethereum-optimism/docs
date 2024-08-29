@@ -6,7 +6,7 @@ description: Learn about the proxyd service and how to configure it for use in t
 
 # proxyd
 
-`proxyd` is a critical RPC request router and proxy used within the OP Stack infrastructure. It enables operators to efficiently route and manage RPC requests across multiple backend services, ensuring performance, fault tolerance, and security.
+`proxyd` is an important RPC request router and proxy used within the OP Stack infrastructure. It enables operators to efficiently route and manage RPC requests across multiple backend services, ensuring performance, fault tolerance, and security.
 
 ## Key Features
 
@@ -40,14 +40,16 @@ proxyd <path-to-config>.toml
 ```
 
 ## Consensus Awareness
-
-Starting with version 4.0.0, `proxyd` includes consensus awareness to minimize chain reorganizations for clients. By setting `consensus_aware` to true in the configuration, `proxyd` will:
-
-*   Poll backends for consensus data (latest block, safe block, peer count, etc.).
-*   Resolve a consensus group based on the healthiest backends.
-*   Enforce consensus state across client requests.
+Version 4.0.0 and later include consensus awareness to minimize chain reorganizations. Set `consensus_aware` to `true` in the configuration to enable:
+*   Polling backends for consensus data (latest block, safe block, peer count, etc.).
+*   Resolving consensus groups based on healthiest backends
+*   Enforcing consensus state across client requests
 
 ## Caching and Metrics
 
-*   **Cacheable Methods:** Certain immutable methods, such as `eth_chainId` and `eth_getBlockByHash`, can be cached using Redis to optimize performance.
-*   **Metrics:** Extensive metrics are available to monitor request latency, error rates, backend health, and more. These can be configured via `metrics.port` and `metrics.host` in the configuration file.
+### Cacheable Methods
+Certain immutable methods, such as `eth_chainId` and `eth_getBlockByHash`, can be cached using Redis to optimize performance.
+
+### Metrics
+ Extensive metrics are available to monitor request latency, error rates, backend health, and more. These can be configured via `metrics.port` and `metrics.host` in the configuration file.
+ 
