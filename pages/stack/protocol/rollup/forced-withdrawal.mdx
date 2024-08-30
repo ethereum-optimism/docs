@@ -1,0 +1,70 @@
+---
+title: Forced Withdrawal
+description: Learn the forced withdrawals and deposits flow during sequencer downtime.
+---
+
+import { Callout } from 'nextra/components'
+
+## Overview
+
+This guide explains the nuances of forced withdrawals and deposits transactions and their implications during sequencer downtime.
+
+Users are allowed to force-include deposit transactions, which can initiate withdrawals, at any time.
+However, there are important nuances to understand about the chain derivation pipeline and sequencer behavior.
+
+## Key Concepts
+
+*   **Sequencing Window**: A 12-hour rolling window to include L2 transactions based on L1 data.
+*   **Max Time Drift**: 15 minutes, the maximum delay for including a deposit transaction.
+*   **Sequencer Downtime**: Period when the sequencer is offline or not producing blocks.
+
+## Normal Operation
+
+Under normal circumstances:
+
+1.  Deposit transactions are included within 15 minutes.
+2.  The sequencer processes transactions and produces blocks regularly.
+
+## Sequencer Downtime Scenarios
+
+### Short Downtime (< 15 minutes)
+
+*   Deposits are still included within the 15-minute max time drift.
+*   Regular L2 transactions may be delayed.
+
+### Extended Downtime (15 minutes to 12 hours)
+
+1.  Deposits are force-included within 15 minutes.
+2.  The L2 chain state remains uncertain until:
+    *   The sequencer comes back online, or
+    *   The 12-hour sequencing window expires.
+
+### Prolonged Downtime (> 12 hours)
+
+1.  After 12 hours, nodes start generating blocks deterministically.
+2.  These blocks only include deposit transactions.
+3.  When the sequencer returns:
+    *   All deposit transactions are included first.
+    *   Regular L2 transactions resume afterwards.
+
+## Important Considerations
+
+*   Forced deposits ensure timely execution of actions, mitigating risks like DEX price divergence during sequencer downtime.
+*   Actions remain speculative for up to 12 hours due to the sequencing window.
+*   The 12-hour window is a balance between operational reliability and minimizing potential L2 reorganizations.
+
+## Example Scenario
+
+If a deposit is initiated after the 15-minute mark but before the sequencing window expires:
+
+1.  The deposit will be effective when the sequencing window expires (up to \~11 hours later).
+2.  Nodes reading data from L1 will produce a block with the deposit after the sequencing window expires.
+3.  The eventual L2 chain will include the deposit in a block with an onchain timestamp close to the L1 block where the deposit originated.
+
+<Callout type="info">
+  The sequencing window is a rolling 12-hour delay from when an L1 block is first known. This design allows the sequencer a grace period to come back online without causing L2 chain reorganizations.
+</Callout>
+
+## Conclusion
+
+The forced withdrawal/deposit mechanism on OP chains provides a robust way to handle sequencer downtime, ensuring that critical transactions like deposits are included in a timely manner. While the 12-hour sequencer window introduces a degree of uncertainty during downtime, the system is designed to guarantee eventual consistency and transaction inclusion.
