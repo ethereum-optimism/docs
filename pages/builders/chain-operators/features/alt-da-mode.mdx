@@ -26,9 +26,9 @@ You should use at least the following compatible op\* versions when running your
 *   op-node/v1.8.0-rc.1
 *   op-proposer/v1.8.0-rc.1
 *   op-batcher/v1.8.0-rc.1
-*   [Latest version of op-geth](https://github.com/ethereum-optimism/op-geth/releases/latest)
+*   [Latest version of op-geth](https://github.com/ethereum-optimism/optimism/releases/tag/v1.9.1)
 
-For deploying your contracts, use the latest release.
+For deploying your contracts, use `v.1.9.1`.
 
 <Callout type="info">
   If you are trying to launch an Alt-DA Mode Chain using a custom gas token, follow the contract deployment instructions in our [Custom Gas Token docs](/builders/chain-operators/features/custom-gas-token.mdx).
@@ -118,6 +118,118 @@ Alt DA teams who want to be featured on this page must meet the following criter
 *   Functional [DA Server](https://specs.optimism.io/experimental/alt-da.html#da-server), maintained in your own repo
 *   Supporting detailed documentation, to be referenced [here](#setup-your-da-server)
 *   Functioning OP Stack devnet using your DA server with linked configuration, contract addresses, and RPC address
+
+## Breaking Changes for Migrating Plasma to Alt-da
+
+If you are transitioning from Plasma to Alt-da, there are several breaking changes you should be aware of. These include changes to configuration file parameters, environment variables, and CLI commands.
+Before proceeding with the migration, ensure you are using [OP Stack v1.9.1](https://github.com/ethereum-optimism/optimism/releases/tag/v1.9.1) or later.
+
+### Modify `rollup.json` Config:
+
+Update your `rollup.json` configuration file by replacing the old Plasma config with the new Alt-DA config. 
+There are two possible formats for the old Plasma config:
+
+### Legacy Plasma Config
+
+If your config looks like this:
+
+```json
+"use_plasma": true,
+"da_commitment_type": "GenericCommitment",
+"da_challenge_contract_address": "0xAAA",
+"da_challenge_window": 1000,
+"da_resolve_window": 2000,
+```
+
+### Recent Plasma Config
+
+Or if it looks like this:
+
+```json
+"plasma_config": {
+  "da_commitment_type": "GenericCommitment",
+  "da_challenge_contract_address": "0xAAA",
+  "da_challenge_window": 1000,
+  "da_resolve_window": 2000
+}
+```
+
+### New Alt-DA Config
+
+Replace either of the above configurations with:
+
+```json
+"alt_da": {
+  "da_commitment_type": "GenericCommitment",
+  "da_challenge_contract_address": "0xAAA",
+  "da_challenge_window": 1000,
+  "da_resolve_window": 2000
+}
+```
+
+<Callout type="info">
+Only include fields in the new config that were present in your old config.
+</Callout>
+
+## Updating Repository Commits
+
+Ensure you're using the following commits (or more recent ones) to have the latest `op-stack` code compatible with the new Alt-DA config:
+
+- Monorepo: [0bb2ff5](https://github.com/ethereum-optimism/optimism/commit/0bb2ff57c8133f1e3983820c0bf238001eca119b)
+- Superchain-registry: [0c96567](https://github.com/ethereum-optimism/superchain-registry/commit/0c96567855b9a605bd8028b63d86b7296e6ec305)
+
+## Updating OP Stack Runtime Config Parameters
+
+### CLI Parameters
+
+Update the following CLI parameters for both `op-node` and `op-batcher`:
+
+| Former CLI param | Current CLI param |
+|-------------------|-------------------|
+| `--plasma.enabled` | `--altda.enabled` |
+| `--plasma.da-server` | `--altda.da-server` |
+| `--plasma.verify-on-read` | `--altda.verify-on-read` |
+| `--plasma.da-service` | `--altda.da-service` |
+
+### Environment Variables
+
+#### op-node
+
+| Former env var | Current env var |
+|-----------------|------------------|
+| `OP_NODE_PLASMA_ENABLED` | `OP_NODE_ALTDA_ENABLED` |
+| `OP_NODE_PLASMA_DA_SERVER` | `OP_NODE_ALTDA_DA_SERVER` |
+| `OP_NODE_PLASMA_VERIFY_ON_READ` | `OP_NODE_ALTDA_VERIFY_ON_READ` |
+| `OP_NODE_PLASMA_DA_SERVICE` | `OP_NODE_ALTDA_DA_SERVICE` |
+
+#### op-batcher
+
+| Former env var | Current env var |
+|-----------------|------------------|
+| `OP_BATCHER_PLASMA_ENABLED` | `OP_BATCHER_ALTDA_ENABLED` |
+| `OP_BATCHER_PLASMA_DA_SERVER` | `OP_BATCHER_ALTDA_DA_SERVER` |
+| `OP_BATCHER_PLASMA_VERIFY_ON_READ` | `OP_BATCHER_ALTDA_VERIFY_ON_READ` |
+| `OP_BATCHER_PLASMA_DA_SERVICE` | `OP_BATCHER_ALTDA_DA_SERVICE` |
+
+#### op-alt-da (formerly op-plasma) daserver
+
+| Former env var | Current env var |
+|-----------------|------------------|
+| `OP_PLASMA_DA_SERVER_ADDR` | `OP_ALTDA_SERVER_ADDR` |
+| `OP_PLASMA_DA_SERVER_PORT` | `OP_ALTDA_SERVER_PORT` |
+| `OP_PLASMA_DA_SERVER_FILESTORE_PATH` | `OP_ALTDA_SERVER_FILESTORE_PATH` |
+| `OP_PLASMA_DA_SERVER_GENERIC_COMMITMENT` | `OP_ALTDA_SERVER_GENERIC_COMMITMENT` |
+| `OP_PLASMA_DA_SERVER_S3_BUCKET` | `OP_ALTDA_SERVER_S3_BUCKET` |
+| `OP_PLASMA_DA_SERVER_S3_ENDPOINT` | `OP_ALTDA_SERVER_S3_ENDPOINT` |
+| `OP_PLASMA_DA_SERVER_S3_ACCESS_KEY_ID` | `OP_ALTDA_SERVER_S3_ACCESS_KEY_ID` |
+| `OP_PLASMA_DA_SERVER_S3_ACCESS_KEY_SECRET` | `OP_ALTDA_SERVER_S3_ACCESS_KEY_SECRET` |
+
+After making these changes, your system should be properly configured to use the new Alt-DA Mode.
+
+<Callout type="warning">
+Remember to thoroughly test your configuration in testnet before going mainnet.
+</Callout>
+
 
 ## Next Steps
 

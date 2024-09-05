@@ -58,3 +58,20 @@ export function InfoCallout({ context }: Props): ReactElement {
     </div>
   );
 }
+
+export function AltCallout({ context }: Props): ReactElement {
+  return (
+    <div className="custom-callouts nx-w-full nx-mt-6 nx-flex nx-justify-center nx-items-center nx-bg-white dark:nx-bg-black">
+      <div className="nx-w-full  nx-px-4 nx-text-center nx-font-medium nx-text-sm nx-text-left">
+        {context ? (
+          context
+        ) : (
+          <div className="nx-text-left">
+            The Alt-DA Mode feature is currently in <strong>Beta</strong> within the MIT-licensed OP Stack.
+            While it has undergone initial review by core contributors, it remains in testing and may still contain bugs or other issues.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
