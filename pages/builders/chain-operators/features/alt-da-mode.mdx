@@ -16,7 +16,7 @@ This guide provides a walkthrough for chain operators who want to run an Alt-DA 
 An Alt-DA Mode OP Stack chain enables a chain operator to post and read data to any alternative data availability layer that has built a functioning OP Stack DA Server.
 
 <Callout>
-  This page includes providers that meet specific [inclusion criteria](#inclusion-criteria), as outlined below. 
+  This page includes providers that meet specific [inclusion criteria](#inclusion-criteria), as outlined below.
 </Callout>
 
 ## Prerequisite
@@ -46,7 +46,6 @@ For deploying your contracts, use `v.1.9.1`.
   *   Avail's docs on how to run the [AvailDA DA Server](https://docs.availproject.org/docs/build-with-avail/Optimium/op-stack/op-stack#setup-avail-da-server)
   *   0gDA's docs on how to run the [0gDA DA Server](https://github.com/0glabs/0g-da-op-plasma/blob/op0g/README.md)
   *   Near DA's docs on how to run the [Near DA Server](https://github.com/Nuffle-Labs/data-availability/blob/84b484de98f58a91bf12c8abe8df27f5e753f63a/docs/OP-Alt-DA.md)
-
 
   ### Configure Your `op-node`
 
@@ -126,7 +125,7 @@ Before proceeding with the migration, ensure you are using [OP Stack v1.9.1](htt
 
 ### Modify `rollup.json` Config:
 
-Update your `rollup.json` configuration file by replacing the old Plasma config with the new Alt-DA config. 
+Update your `rollup.json` configuration file by replacing the old Plasma config with the new Alt-DA config.
 There are two possible formats for the old Plasma config:
 
 ### Legacy Plasma Config
@@ -168,15 +167,15 @@ Replace either of the above configurations with:
 ```
 
 <Callout type="info">
-Only include fields in the new config that were present in your old config.
+  Only include fields in the new config that were present in your old config.
 </Callout>
 
 ## Updating Repository Commits
 
 Ensure you're using the following commits (or more recent ones) to have the latest `op-stack` code compatible with the new Alt-DA config:
 
-- Monorepo: [0bb2ff5](https://github.com/ethereum-optimism/optimism/commit/0bb2ff57c8133f1e3983820c0bf238001eca119b)
-- Superchain-registry: [0c96567](https://github.com/ethereum-optimism/superchain-registry/commit/0c96567855b9a605bd8028b63d86b7296e6ec305)
+*   Monorepo: [0bb2ff5](https://github.com/ethereum-optimism/optimism/commit/0bb2ff57c8133f1e3983820c0bf238001eca119b)
+*   Superchain-registry: [0c96567](https://github.com/ethereum-optimism/superchain-registry/commit/0c96567855b9a605bd8028b63d86b7296e6ec305)
 
 ## Updating OP Stack Runtime Config Parameters
 
@@ -184,52 +183,51 @@ Ensure you're using the following commits (or more recent ones) to have the late
 
 Update the following CLI parameters for both `op-node` and `op-batcher`:
 
-| Former CLI param | Current CLI param |
-|-------------------|-------------------|
-| `--plasma.enabled` | `--altda.enabled` |
-| `--plasma.da-server` | `--altda.da-server` |
+| Former CLI param          | Current CLI param        |
+| ------------------------- | ------------------------ |
+| `--plasma.enabled`        | `--altda.enabled`        |
+| `--plasma.da-server`      | `--altda.da-server`      |
 | `--plasma.verify-on-read` | `--altda.verify-on-read` |
-| `--plasma.da-service` | `--altda.da-service` |
+| `--plasma.da-service`     | `--altda.da-service`     |
 
 ### Environment Variables
 
 #### op-node
 
-| Former env var | Current env var |
-|-----------------|------------------|
-| `OP_NODE_PLASMA_ENABLED` | `OP_NODE_ALTDA_ENABLED` |
-| `OP_NODE_PLASMA_DA_SERVER` | `OP_NODE_ALTDA_DA_SERVER` |
+| Former env var                  | Current env var                |
+| ------------------------------- | ------------------------------ |
+| `OP_NODE_PLASMA_ENABLED`        | `OP_NODE_ALTDA_ENABLED`        |
+| `OP_NODE_PLASMA_DA_SERVER`      | `OP_NODE_ALTDA_DA_SERVER`      |
 | `OP_NODE_PLASMA_VERIFY_ON_READ` | `OP_NODE_ALTDA_VERIFY_ON_READ` |
-| `OP_NODE_PLASMA_DA_SERVICE` | `OP_NODE_ALTDA_DA_SERVICE` |
+| `OP_NODE_PLASMA_DA_SERVICE`     | `OP_NODE_ALTDA_DA_SERVICE`     |
 
 #### op-batcher
 
-| Former env var | Current env var |
-|-----------------|------------------|
-| `OP_BATCHER_PLASMA_ENABLED` | `OP_BATCHER_ALTDA_ENABLED` |
-| `OP_BATCHER_PLASMA_DA_SERVER` | `OP_BATCHER_ALTDA_DA_SERVER` |
+| Former env var                     | Current env var                   |
+| ---------------------------------- | --------------------------------- |
+| `OP_BATCHER_PLASMA_ENABLED`        | `OP_BATCHER_ALTDA_ENABLED`        |
+| `OP_BATCHER_PLASMA_DA_SERVER`      | `OP_BATCHER_ALTDA_DA_SERVER`      |
 | `OP_BATCHER_PLASMA_VERIFY_ON_READ` | `OP_BATCHER_ALTDA_VERIFY_ON_READ` |
-| `OP_BATCHER_PLASMA_DA_SERVICE` | `OP_BATCHER_ALTDA_DA_SERVICE` |
+| `OP_BATCHER_PLASMA_DA_SERVICE`     | `OP_BATCHER_ALTDA_DA_SERVICE`     |
 
 #### op-alt-da (formerly op-plasma) daserver
 
-| Former env var | Current env var |
-|-----------------|------------------|
-| `OP_PLASMA_DA_SERVER_ADDR` | `OP_ALTDA_SERVER_ADDR` |
-| `OP_PLASMA_DA_SERVER_PORT` | `OP_ALTDA_SERVER_PORT` |
-| `OP_PLASMA_DA_SERVER_FILESTORE_PATH` | `OP_ALTDA_SERVER_FILESTORE_PATH` |
-| `OP_PLASMA_DA_SERVER_GENERIC_COMMITMENT` | `OP_ALTDA_SERVER_GENERIC_COMMITMENT` |
-| `OP_PLASMA_DA_SERVER_S3_BUCKET` | `OP_ALTDA_SERVER_S3_BUCKET` |
-| `OP_PLASMA_DA_SERVER_S3_ENDPOINT` | `OP_ALTDA_SERVER_S3_ENDPOINT` |
-| `OP_PLASMA_DA_SERVER_S3_ACCESS_KEY_ID` | `OP_ALTDA_SERVER_S3_ACCESS_KEY_ID` |
+| Former env var                             | Current env var                        |
+| ------------------------------------------ | -------------------------------------- |
+| `OP_PLASMA_DA_SERVER_ADDR`                 | `OP_ALTDA_SERVER_ADDR`                 |
+| `OP_PLASMA_DA_SERVER_PORT`                 | `OP_ALTDA_SERVER_PORT`                 |
+| `OP_PLASMA_DA_SERVER_FILESTORE_PATH`       | `OP_ALTDA_SERVER_FILESTORE_PATH`       |
+| `OP_PLASMA_DA_SERVER_GENERIC_COMMITMENT`   | `OP_ALTDA_SERVER_GENERIC_COMMITMENT`   |
+| `OP_PLASMA_DA_SERVER_S3_BUCKET`            | `OP_ALTDA_SERVER_S3_BUCKET`            |
+| `OP_PLASMA_DA_SERVER_S3_ENDPOINT`          | `OP_ALTDA_SERVER_S3_ENDPOINT`          |
+| `OP_PLASMA_DA_SERVER_S3_ACCESS_KEY_ID`     | `OP_ALTDA_SERVER_S3_ACCESS_KEY_ID`     |
 | `OP_PLASMA_DA_SERVER_S3_ACCESS_KEY_SECRET` | `OP_ALTDA_SERVER_S3_ACCESS_KEY_SECRET` |
 
 After making these changes, your system should be properly configured to use the new Alt-DA Mode.
 
 <Callout type="warning">
-Remember to thoroughly test your configuration in testnet before going mainnet.
+  Remember to thoroughly test your configuration in testnet before going mainnet.
 </Callout>
-
 
 ## Next Steps
 
