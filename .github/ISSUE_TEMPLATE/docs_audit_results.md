@@ -15,7 +15,8 @@ labels: 'docs-audit-2024-Q4,op-labs'
 
 > Choose the appropriate github issue labels for each page.
 
-**Content evaluation:**
+<details>
+<summary>Content evaluation</summary>
 
 - `a-delete`: don't need this page 
 - `a-duplicate`: some content lives elsewhere 
@@ -23,7 +24,10 @@ labels: 'docs-audit-2024-Q4,op-labs'
 - `a-moderate`: needs moderate revisions 
 - `a-critical`: needs a lot of work
 
-**Priority:**
+</details>
+
+<details>
+<summary>Priority</summary>
 
 - `p-on-hold`: (Defer) Tasks that are currently not actionable due to various reasons like waiting for external inputs, dependencies, or resource constraints. These are reviewed periodically to decide if they can be moved to a more active status.
 - `p-low`: (Nice to do) Tasks that have minimal impact on core operations and no immediate deadlines. These tasks are often more about quality of life improvements rather than essential needs.
@@ -31,7 +35,10 @@ labels: 'docs-audit-2024-Q4,op-labs'
 - `p-high`: (Should do) Important tasks that contribute significantly to long-term goals but may not have an immediate deadline. Delaying these tasks could have considerable negative effects but are not as immediate as critical tasks.
 - `p-critical`: Tasks that have immediate deadlines or significant consequences if not completed on time. These are non-negotiable and often linked to core business functions or legal requirements. 
 
-**T-shirt size:**
+</details>
+
+<details>
+<summary>T-shirt size</summary>
 
 - `s-XS`: (< 1 day) Very simple tasks that require minimal time and effort.
 - `s-S`: (few days) Tasks that are straightforward but require a bit more time to complete.
@@ -39,6 +46,7 @@ labels: 'docs-audit-2024-Q4,op-labs'
 - `s-L`: (several weeks) Complex tasks that require significant time investment and coordination across multiple teams. 
 - `s-XL`: (> 1 month) Very large and complex projects that involve extensive planning, execution, and testing. 
 
+</details>
 
 ## MDX Metadata format
 
