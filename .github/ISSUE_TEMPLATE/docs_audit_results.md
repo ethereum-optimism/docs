@@ -43,11 +43,13 @@ labels: 'docs-audit-2024-Q4,op-labs'
 > If I was actively searching for this page on google and this description was the search result, would I know it's the correct page?
 > Parse the component and feature tags to add.
 
+```mdx
 ---
 title: "Your Title Here"
 tags: ["tag1", "tag2"]
 description: "A short description of the content."
 ---
+```
 
 <details>
 <summary>Component tags</summary>
