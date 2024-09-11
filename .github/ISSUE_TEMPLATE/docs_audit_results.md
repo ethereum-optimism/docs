@@ -16,17 +16,6 @@ labels: 'docs-audit-2024-Q4,op-labs'
 > Choose the appropriate github issue labels for each page.
 
 <details>
-<summary>Content evaluation</summary>
-
-- `a-delete`: don't need this page 
-- `a-duplicate`: some content lives elsewhere 
-- `a-minor`: needs small revisions 
-- `a-moderate`: needs moderate revisions 
-- `a-critical`: needs a lot of work
-
-</details>
-
-<details>
 <summary>Priority</summary>
 
 - `p-on-hold`: (Defer) Tasks that are currently not actionable due to various reasons like waiting for external inputs, dependencies, or resource constraints. These are reviewed periodically to decide if they can be moved to a more active status.
