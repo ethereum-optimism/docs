@@ -67,8 +67,8 @@ export function AltCallout({ context }: Props): ReactElement {
           context
         ) : (
           <div className="nx-text-left">
-            The Alt-DA Mode feature is currently in <strong>Beta</strong> within the MIT-licensed OP Stack.
-            While it has undergone initial review by core contributors, it remains in testing and may still contain bugs or other issues.
+            The Alt-DA Mode feature is currently in <strong>Beta</strong>  within the MIT-licensed OP Stack. Beta features are built and reviewed by the Optimism Collective’s core contributors, and provide developers with early access to highly requested configurations.
+These features may experience stability issues, and we encourage feedback from our early users.
           </div>
         )}
       </div>
