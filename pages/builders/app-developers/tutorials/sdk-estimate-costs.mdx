@@ -1,17 +1,17 @@
 ---
 title: Estimating Transaction Costs on OP Mainnet
 lang: en-US
-description: Learn how to use the Optimism SDK to estimate the cost of a transaction on OP Mainnet.
+description: Learn how to use the Viem/op-stack to estimate the cost of a transaction on OP Mainnet.
 ---
 
-import { Callout, Steps } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
 import { WipCallout } from '@/components/WipCallout'
 
 <WipCallout />
 # Estimating Transaction Costs on OP Mainnet
 
 
-In this tutorial, you'll learn how to use the [Optimism SDK](https://sdk.optimism.io) to estimate the cost of a transaction on OP Mainnet.
+In this tutorial, you'll learn how to use the [Viem](https://viem.sh/op-stack/) to estimate the cost of a transaction on OP Mainnet.
 You'll learn how to estimate the [execution gas fee](/builders/app-developers/transactions/fees#execution-gas-fee) and the [L1 data fee](/builders/app-developers/transactions/fees#l1-data-fee) independently.
 You'll also learn how to estimate the total cost of the transaction all at once.
 
@@ -19,49 +19,83 @@ You'll also learn how to estimate the total cost of the transaction all at once.
 Check out the full explainer on [OP Mainnet transaction fees](/builders/app-developers/transactions/fees) for more information on how OP Mainnet charges fees under the hood.
 </Callout>
 
-## Dependencies
+## Prerequisites
+
+Before you begin, ensure you have the following:
+
+*   Node.js (version 14 or later)
+*   An understanding of the [viem library](https://viem.sh/op-stack/)
+*   `pnpm` installed for managing packages.
+
+## Required Dependencies
 
 *   [node](https://nodejs.org/en/)
 *   [pnpm](https://pnpm.io/installation)
+*   [viem](https://viem.sh/op-stack/)
+
+Install `pnpm` if you haven't already:
+
+```bash
+npm install -g pnpm
+
+```
 
 ## Create a Demo Project
 
-You're going to use the Optimism SDK for this tutorial.
-Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
-
 <Steps>
+  {<h3>Project Setup</h3>}
 
-{<h3>Make a Project Folder</h3>}
+  Let's create a new project and install the necessary dependencies.
 
-```bash
-mkdir op-sample-project
-cd op-sample-project
-```
+  <Steps>
+    {<h4>Create a folder</h4>}
 
-{<h3>Initialize the Project</h3>}
+    ```bash
+    mkdir op-sample-project
+    cd op-sample-project
+    ```
 
-```bash
-pnpm init
-```
+    {<h4>Initialize the project</h4>}
 
-{<h3>Install the Optimism SDK</h3>}
+    ```bash
+    pnpm init
+    ```
 
-```bash
-pnpm add @eth-optimism/sdk
-```
+    {<h4>Install dependencies</h4>}
+    
+    Install `viem`, and `dotenv` for managing environment variables.
 
-{<h3>Install ethers.js</h3>}
+    ```bash
+    pnpm add viem dotenv
+    ```
+  </Steps>
 
-```bash
-pnpm add ethers@^5
-```
 
+  {<h3>Configure Environment Variables</h3>}
+
+  You need a private key in order to sign transactions.
+  Create a `.env` file to securely store your environment variables
+  Set your private key as an environment variable with the `export` command.
+  Make sure this private key corresponds to an address that has ETH on Sepolia.
+
+  ```bash
+  touch .env
+  ```
+
+    Add your wallet private key in the `.env` file.
+    You need a private key in order to sign transactions.
+    Make sure this private key corresponds to an address that has ETH on OP Sepolia.
+
+    ```bash
+    RPC_URL=https://optimism-mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID
+    TUTORIAL_PRIVATE_KEY=0x...
+    ```
 </Steps>
 
-<Callout type="info">
-Want to create a new wallet for this tutorial?
-If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
+<Callout type="warning">
+  Never share your private key and avoid committing this file to version control.
 </Callout>
+
 
 ## Get ETH on OP Sepolia
 
@@ -72,19 +106,9 @@ You will need to get some ETH on OP Sepolia in order to run the code in this tut
 You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
 </Callout>
 
-## Add a Private Key to Your Environment
-
-You need a private key in order to sign transactions.
-Set your private key as an environment variable with the `export` command.
-Make sure this private key corresponds to an address that has ETH on OP Sepolia.
-
-```bash
-export TUTORIAL_PRIVATE_KEY=0x...
-```
-
 ## Start the Node REPL
 
-You're going to use the Node REPL to interact with the Optimism SDK.
+You're going to use the Node REPL to interact with the Viem library.
 To start the Node REPL run the following command in your terminal:
 
 ```bash
@@ -96,17 +120,23 @@ This will bring up a Node REPL prompt that allows you to run javascript code.
 ## Import Dependencies
 
 You need to import some dependencies into your Node REPL session.
+With `viem`, we will create an account using the private key and create the RPC provider
+
 
 <Steps>
 
-{<h3>Import the Optimism SDK</h3>}
+{<h3>Import the Viem</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
-```
+```js
 
-{<h3>Import ethers.js</h3>}
-
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
+// Import required modules
+import { createPublicClient, http } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
+import { optimismSepolia } from 'viem/chains'
+import { publicActionsL2 } from 'viem/op-stack'
+import * as dotenv from 'dotenv';
+// Load environment variables
+dotenv.config();
 ```
 
 </Steps>
@@ -116,59 +146,85 @@ You need to import some dependencies into your Node REPL session.
 You'll need a few variables throughout this tutorial.
 Let's set those up now.
 
-<Steps>
+<Tabs items={['Create the wallet instance', 'Create the RPC provider']}>
+  <Tabs.Tab>
+    To create the wallet instance, load your private key, using `privateKeyToAccount`. [`privateKeyToAccount`](https://viem.sh/docs/accounts/local/privateKeyToAccount#privatekeytoaccount) is a viem method used to sign transactions by passing a private key.
 
-{<h3>Load your private key</h3>}
+    ```js
+    const account = privateKeyToAccount(process.env.PRIVATE_KEY);
+    ```
+  </Tabs.Tab>
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L6 hash=755b77a7ffc7dfdc186f36c37d3d847a
-```
+  <Tabs.Tab>
+    Set up our Viem Clients for the L1(Sepolia) and L2(optimismSepolia)
 
-{<h3>Create the RPC provider</h3>}
+    ```js
+        const publicClient = createPublicClient({
+            chain: optimismSepolia,
+            transport: http(process.env.RPC_URL),
+        }).extend(publicActionsL2());
+    ```
 
-Here you're creating a standard Ethers RPC provider and wrapping it as an `L2Provider`, a class provided by the Optimism SDK.
-This will add a few extra functions to the provider object that you'll use later in this tutorial.
+  </Tabs.Tab>
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L8 hash=1db780739476f924536f5fa58794b67f
-```
-
-{<h3>Create the wallet instance</h3>}
-
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L9 hash=d315a1ba59b2ee3f43d178bab816e930
-```
-
-</Steps>
+</Tabs>
 
 ## Estimate Transaction Costs
 
-You're now going to use the Optimism SDK to estimate the cost of a transaction on OP Mainnet.
+You're now going to estimate the cost of a transaction on OP Mainnet.
 Here you'll estimate the cost of a simple transaction that sends a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`.
 
 <Steps>
 
 {<h3>Create the unsigned transaction</h3>}
 
-Ethers makes it easy to create unsigned transactions so you can estimate the cost of a transaction before you a user to sign it.
+Viem makes it easy to create unsigned transactions so you can estimate the cost of a transaction before you sign it.
 Here you'll create an unsigned transaction that sends a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`.
-You can also create unsigned transactions that interact with contracts using [`Contract.populateTransaction`](https://docs.ethers.org/v5/api/contract/contract/#contract-populateTransaction).
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L11-L15 hash=22d44a7322d2d378e886a0ba5a0c6fec
-```
+    ```js 
+        const tx = await publicClient.sendUnsignedTransaction({
+            from: <from_address>, 
+            to: <receiver_address>,
+            gasPrice: parseGwei('20'), 
+            value: parseEther('1') 
+        })
+    ```
+{<h3>Estimate Gas for a Transaction</h3>}
 
-{<h3>Estimate the execution gas fee</h3>}
+Now that you have created an unsigned transaction that sends a small amount of ETH, we can estimate the gas for that transaction. We will use the `estimateGas` method from viem.
 
-You can estimate the execution gas fee the same way you'd estimate the gas fee for any transaction on Ethereum.
-Simply multiply the gas limit by the effective gas price.
+    ```js
+        const fromAddress = '0xYourAddress';
+        const toAddress = '0xRecipientAddress';
+        const value = 0.1n * 10n ** 18n; // 0.1 ETH in wei
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L18-L21 hash=8090c6513655722e1194d4d9f0f794af
-```
+        const gasEstimate = await client.estimateGas({
+        from: fromAddress,
+        to: toAddress,
+        value: value,
+        });
+        console.log(`Estimated Gas: ${gasEstimate}`);
+    ```
+
+
+{<h3>Fetch Current Gas Price</h3>}
+
+You can also fetch the current gas price on Op stack using the `getGasPrice` method from Viem.
+
+    ```js
+        const gasPrice = await client.getGasPrice();
+        console.log(`Current Gas Price: ${gasPrice}`);
+    ```
+
 
 {<h3>Estimate the L1 data fee</h3>}
 
-You can estimate the L1 data fee with the [`estimateL1GasCost`](https://sdk.optimism.io/modules#estimateL1GasCost) function.
-Under the hood, this function is estimating the amount of Ethereum gas required to publish this transaction on Ethereum and multiplying it by the current Ethereum gas price (as tracked by the L2).
-This function returns the current cost estimate in wei.
+On Op stack, transactions also incur an L1 Data Fee (or calldata fee) because data is posted to Ethereum (Layer 1). 
+This fee depends on the size of the calldata used by the transaction.
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L24-L25 hash=c5b1b1754aede507d071419fa051e3d7
+```js
+    
+
 ```
 
 {<h3>Estimate the total cost</h3>}
