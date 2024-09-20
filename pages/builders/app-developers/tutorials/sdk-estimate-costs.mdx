@@ -8,13 +8,12 @@ import { Callout, Steps, Tabs } from 'nextra/components'
 
 # Estimating Transaction Costs on OP Stack
 
-
 In this tutorial, you'll learn how to use the [Viem](https://viem.sh/op-stack/) to estimate the cost of a transaction on OP Mainnet.
 You'll learn how to estimate the [execution gas fee](/builders/app-developers/transactions/fees#execution-gas-fee) and the [L1 data fee](/builders/app-developers/transactions/fees#l1-data-fee) independently.
 You'll also learn how to estimate the total cost of the transaction all at once.
 
 <Callout>
-Check out the full explainer on [OP Stack transaction fees](/builders/app-developers/transactions/fees) for more information on how OP Mainnet charges fees under the hood.
+  Check out the full explainer on [OP Stack transaction fees](/builders/app-developers/transactions/fees) for more information on how OP Mainnet charges fees under the hood.
 </Callout>
 
 ## Prerequisites
@@ -60,14 +59,13 @@ npm install -g pnpm
     ```
 
     {<h4>Install dependencies</h4>}
-    
+
     Install `viem`, and `dotenv` for managing environment variables.
 
     ```bash
     pnpm add viem dotenv
     ```
   </Steps>
-
 
   {<h3>Configure Environment Variables</h3>}
 
@@ -80,20 +78,19 @@ npm install -g pnpm
   touch .env
   ```
 
-    Add your wallet private key in the `.env` file.
-    You need a private key in order to sign transactions.
-    Make sure this private key corresponds to an address that has ETH on OP Sepolia.
+  Add your wallet private key in the `.env` file.
+  You need a private key in order to sign transactions.
+  Make sure this private key corresponds to an address that has ETH on OP Sepolia.
 
-    ```bash
-    RPC_URL=https://optimism-mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID
-    TUTORIAL_PRIVATE_KEY=0x...
-    ```
+  ```bash
+  RPC_URL=https://optimism-mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID
+  TUTORIAL_PRIVATE_KEY=0x...
+  ```
 </Steps>
 
 <Callout type="warning">
   Never share your private key and avoid committing this file to version control.
 </Callout>
-
 
 ## Get ETH on OP Sepolia
 
@@ -101,7 +98,7 @@ This tutorial explains how estimate transaction costs on OP Sepolia.
 You will need to get some ETH on OP Sepolia in order to run the code in this tutorial.
 
 <Callout type="info">
-You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
+  You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
 </Callout>
 
 ## Start the Node REPL
@@ -120,23 +117,20 @@ This will bring up a Node REPL prompt that allows you to run javascript code.
 You need to import some dependencies into your Node REPL session.
 With `viem`, we will create an account using the private key and create the RPC provider
 
-
 <Steps>
+  {<h3>Import the Viem</h3>}
 
-{<h3>Import the Viem</h3>}
+  ```js
 
-```js
-
-// Import required modules
-import { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
-import { optimismSepolia } from 'viem/chains'
-import { publicActionsL2, walletActionsL2 } from 'viem/op-stack'
-import * as dotenv from 'dotenv';
-// Load environment variables
-dotenv.config();
-```
-
+  // Import required modules
+  import { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } from 'viem'
+  import { privateKeyToAccount } from 'viem/accounts'
+  import { optimismSepolia } from 'viem/chains'
+  import { publicActionsL2, walletActionsL2 } from 'viem/op-stack'
+  import * as dotenv from 'dotenv';
+  // Load environment variables
+  dotenv.config();
+  ```
 </Steps>
 
 ## Set Session Variables
@@ -153,7 +147,7 @@ Let's set those up now.
     ```
   </Tabs.Tab>
 
-    <Tabs.Tab>
+  <Tabs.Tab>
     Set up our Wallet Clients for L2(optimismSepolia)
 
     ```js
@@ -162,7 +156,6 @@ Let's set those up now.
         transport: http(process.env.L2_RPC_URL),
       }).extend(walletActionsL2())
     ```
-
   </Tabs.Tab>
 
   <Tabs.Tab>
@@ -174,127 +167,141 @@ Let's set those up now.
             transport: http(process.env.L2_RPC_URL),
         }).extend(publicActionsL2());
     ```
-
   </Tabs.Tab>
-
 </Tabs>
 
 ## Estimate Transaction Costs
 
 You're now going to estimate the cost of a transaction on OP Mainnet.
+
 <Steps>
+  {<h3>Creating a Transaction in Viem</h3>}
 
-{<h3>Creating a Transaction in Viem</h3>}
+  Viem makes it easy to prepare a transactions so you can estimate the cost of a transaction before you sign it.
+  Here you'll define an object with the required transaction fields and send a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`.
 
-Viem makes it easy to prepare a transactions so you can estimate the cost of a transaction before you sign it.
-Here you'll define an object with the required transaction fields and send a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`.
+  ```js
+      const transaction = {
+      account,
+      to: '0x1000000000000000000000000000000000000000',
+      value: parseEther('0.1'),  
+      gasPrice: parseGwei('20')
+    };
+  ```
 
-    ```js 
-        const transaction = {
-        account,
-        to: '0x1000000000000000000000000000000000000000',
-        value: parseEther('0.1'),  
-        gasPrice: parseGwei('20')
-      };
-    ```
-{<h3>Estimate the execution gas fee</h3>}
+  {<h3>Estimate the execution gas fee</h3>}
 
+  Now that you have prepared a transaction that sends a small amount of ETH, we can estimate the gas for that transaction by using the `estimateGas` method from viem.
 
-Now that you have prepared a transaction that sends a small amount of ETH, we can estimate the gas for that transaction by using the `estimateGas` method from viem.
+  ```js
+      const gasLimit = await publicClient.estimateGas(transaction);
+      console.log(`Estimated Gas Limit: ${gasLimit}`);
+  ```
 
-    ```js
-        const gasLimit = await publicClient.estimateGas(transaction);
-        console.log(`Estimated Gas Limit: ${gasLimit}`);
-    ```
-<Steps>
+  <Steps>
+    {<h3>Retrieve the current gas price</h3>}
 
-{<h3>Retrieve the current gas price</h3>} 
-
-Retrieve the current gas price (effective gas price), Alternatively, given that you already set the gas price manually, you can use the `getGasPrice` method from viem.
+    Retrieve the current gas price (effective gas price), Alternatively, given that you already set the gas price manually, you can use the `getGasPrice` method from viem.
 
     ```js
     const effectiveGasPrice = await publicClient.getGasPrice();
+    console.log(`effective Gas Price, ${effectiveGasPrice}`);
     ```
-{<h3>Calculate the execution gas fee</h3>} 
 
-To calculate the execution gas fee simply multiply the gas limit by the effective gas price.
+    {<h3>Calculate the execution gas fee</h3>}
+
+    To calculate the execution gas fee simply multiply the gas limit by the effective gas price.
 
     ```js
     const l2CostEstimate = gasLimit * effectiveGasPrice;
-    console.log(`Estimated Execution Gas Fee: ${formatEther(l2CostEstimate)} wei`);
+    console.log(`Estimated Execution Gas Fee: ${formatEther(l2CostEstimate)}`);
     ```
+  </Steps>
 
-</Steps>
+  {<h3>Estimate the L1 data fee</h3>}
 
-{<h3>Estimate the L1 data fee</h3>}
+  You can estimate the L1 data fee with the [estimateL1GasCost](https://viem.sh/op-stack/actions/estimateL1Gas) function.
+  Under the hood, this function is estimating the amount of Ethereum gas required to publish this transaction on Ethereum and multiplying it by the current Ethereum gas price (as tracked by the L2).
+  This function returns the current cost estimate in wei.
 
-You can estimate the L1 data fee with the [estimateL1GasCost](https://viem.sh/op-stack/actions/estimateL1Gas) function. 
-Under the hood, this function is estimating the amount of Ethereum gas required to publish this transaction on Ethereum and multiplying it by the current Ethereum gas price (as tracked by the L2). 
-This function returns the current cost estimate in wei.
+  ```js
+  const l1CostEstimate = await publicClient.estimateL1Gas(transaction)
+  console.log(`Estimated L1 data Fee: ${formatEther(l1CostEstimate)}`);
+  ```
 
-    ```js
-    const l1CostEstimate = await publicClient.estimateL1Gas(transaction)
-    console.log(`Estimated L1 data Fee: ${formatEther(l1CostEstimate)}`);
-    ```
+  {<h3>Estimate the total cost</h3>}
 
+  Once you've individually estimated the execution gas fee and the L1 data fee, you can sum these two values together to get the total cost of the transaction.
 
-
-{<h3>Estimate the total cost</h3>}
-
-Once you've individually estimated the execution gas fee and the L1 data fee, you can sum these two values together to get the total cost of the transaction.
-
-  ```js 
+  ```js
     const totalSum = l2CostEstimate + l1CostEstimate;
     console.log(`Estimated Total Cost: ${formatEther(totalSum)} `);
   ```
 
-{<h3>Send the transaction</h3>}
+  {<h3>Send the transaction</h3>}
 
-Now that you've estimated the total cost of the transaction, go ahead and send it to the network.
-This will make it possible to see the actual cost of the transaction to compare to your estimate.
+  Now that you've estimated the total cost of the transaction, go ahead and send it to the network.
+  This will make it possible to see the actual cost of the transaction to compare to your estimate.
 
-```js 
-    const txHash = await walletClient.sendTransaction(transaction)
-```
+  ```js
+      const txHash = await walletClient.sendTransaction(transaction)
+      console.log(`Transaction Hash: ${tx}`);
+  ```
 
-{<h3>Check the actual execution gas fee</h3>}
+  {<h3>Check the actual execution gas fee</h3>}
 
-Once you get back the transaction receipt, check the actual execution gas fee.
+  Once you get back the transaction receipt, check the actual execution gas fee.
+  You can do so by accessing the `gasUsed` and `effectiveGasPrice` from the transaction receipt.
+  You can then multiply these values to get the actual L2 cost of the transaction
 
-```js 
-const l2CostActual = await publicClient.estimateL2Fee(txHash)
-  console.log(`l2CostActual gas fee: ${formatEther(l2CostActual)}`);
-```
+  ```js
+      const receipt = await publicClient.getTransactionReceipt({ hash: txHash });
+      console.log('Transaction receipt:', receipt);
 
-{<h3>Check the actual L1 data fee</h3>}
+      const l2CostActual = receipt.gasUsed * receipt.effectiveGasPrice;
+      console.log(`L2 Actual Cost: ${formatEther(l2CostActual)}`);
+  ```
 
-You can also check the actual L1 data fee.
+  {<h3>Check the actual L1 data fee</h3>}
 
-```js 
-  const l1CostActual = await publicClient.estimateL1Fee(txHash)
-  console.log(`l1CostActual gas fee: ${formatEther(l1CostActual)}`);
+  You can also check the actual L1 data fee.
 
-```
+  ```js
+    const l1CostActual = await publicClient.estimateL1Fee(txHash)
+    console.log(`l1CostActual gas fee: ${formatEther(l1CostActual)}`);
 
-{<h3>Check the actual total cost</h3>}
+  ```
 
-Sum these two together to get the actual total cost of the transaction.
+  {<h3>Check the actual total cost</h3>}
 
-```js 
-    const totalActual = l2CostActual + l1CostActual;
-    console.log(`Total Actual Cost: ${formatEther(totalActual)}`);
-```
+  Sum these two together to get the actual total cost of the transaction.
 
-{<h3>Check the difference</h3>}
+  ```js
+      const totalActual = l2CostActual + l1CostActual;
+      console.log(`Total Actual Cost: ${formatEther(totalActual)}`);
+  ```
 
-Finally, check the difference between the estimated total cost and the actual total cost.
-This will give you a sense of how accurate your estimate was.
-Estimates will never be entirely accurate, but they should be close!
+  {<h3>Check the difference</h3>}
 
-```js 
-    const difference =  totalSum - totalActual
-    console.log(`The difference - ${formatEther(difference)}`) 
+  Finally, check the difference between the estimated total cost and the actual total cost.
+  This will give you a sense of how accurate your estimate was.
+  Estimates will never be entirely accurate, but they should be close!
 
-```
-
+  ```js
+      const difference =  totalSum - totalActual
+      console.log(`The difference - ${formatEther(difference)}`) 
+  ```
 </Steps>
+
+<Callout type="info">
+Estimates will never be entirely accurate due to network conditions and gas price fluctuations, but they should be close to the actual costs.
+</Callout>
+
+## Next Steps
+
+*   Always estimate before sending: Estimating costs before sending a transaction helps prevent unexpected fees and failed transactions.
+*   Account for gas price volatility: Gas prices can change rapidly. Consider adding a buffer to your estimates or implementing a gas price oracle for more accurate pricing.
+*   Optimize transaction data: Minimize the amount of data in your transactions to reduce L1 data fees.
+*   Monitor network conditions: Keep an eye on network congestion and adjust your estimates accordingly.
+*   Use appropriate gas limits: Setting too low a gas limit can cause transactions to fail, while setting it too high can result in unnecessary costs.
+*   Implement retry mechanisms: If a transaction fails due to underestimated gas, implement a retry mechanism with adjusted gas parameters.
