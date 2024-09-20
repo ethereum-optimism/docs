@@ -1,52 +1,81 @@
-(async () => {
+import { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
+import { optimismSepolia } from 'viem/chains'
+import { publicActionsL2, walletActionsL2 } from 'viem/op-stack'
+import * as dotenv from 'dotenv'
 
-const optimism = require("@eth-optimism/sdk")
-const ethers = require("ethers")
+// Load environment variables
+dotenv.config()
 
-const privateKey = process.env.TUTORIAL_PRIVATE_KEY
+// Set up the account
+const account = privateKeyToAccount(process.env.PRIVATE_KEY)
 
-const provider = optimism.asL2Provider(new ethers.providers.StaticJsonRpcProvider("https://sepolia.optimism.io"))
-const wallet = new ethers.Wallet(privateKey, provider)
+// Set up the public client
+const publicClient = createPublicClient({
+  chain: optimismSepolia,
+  transport: http(process.env.L2_RPC_URL),
+}).extend(publicActionsL2())
 
-const tx = await wallet.populateTransaction({
-  to: '0x1000000000000000000000000000000000000000',
-  value: ethers.utils.parseEther('0.00069420'),
-  gasPrice: await provider.getGasPrice(),
-})
+// Set up the wallet client
+const walletClient = createWalletClient({
+  chain: optimismSepolia,
+  transport: http(process.env.L2_RPC_URL),
+}).extend(walletActionsL2())
 
-console.log('Estimating L2 cost...')
-const gasLimit = tx.gasLimit
-const gasPrice = tx.maxFeePerGas
-const l2CostEstimate = gasLimit.mul(gasPrice)
-console.log(ethers.utils.formatEther(l2CostEstimate))
+async function estimateTransactionCosts() {
+  try {
+    // Prepare the transaction
+    const transaction = {
+      account,
+      to: '0x1000000000000000000000000000000000000000',
+      value: parseEther('0.1'),
+      gasPrice: parseGwei('20')
+    }
 
-console.log('Estimating L1 cost...')
-const l1CostEstimate = await provider.estimateL1GasCost(tx)
-console.log(ethers.utils.formatEther(l1CostEstimate))
+    // Estimate gas limit
+    const gasLimit = await publicClient.estimateGas(transaction)
+    console.log(`Estimated Gas Limit: ${gasLimit}`)
 
-console.log('Summing total cost...')
-const totalSum = l2CostEstimate.add(l1CostEstimate)
-console.log(ethers.utils.formatEther(totalSum))
+    // Get current gas price
+    const effectiveGasPrice = await publicClient.getGasPrice()
+    console.log(`Effective Gas Price: ${formatEther(effectiveGasPrice)} ETH`)
 
-console.log('Sending transaction...')
-const res = await wallet.sendTransaction(tx)
-const receipt = await res.wait()
-console.log(receipt.transactionHash)
+    // Calculate execution gas fee
+    const l2CostEstimate = gasLimit * effectiveGasPrice
+    console.log(`Estimated Execution Gas Fee: ${formatEther(l2CostEstimate)} ETH`)
 
-console.log('Actual L2 cost:')
-const l2CostActual = receipt.gasUsed.mul(receipt.effectiveGasPrice)
-console.log(ethers.utils.formatEther(l2CostActual))
+    // Estimate L1 data fee
+    const l1CostEstimate = await publicClient.estimateL1Gas(transaction)
+    console.log(`Estimated L1 Data Fee: ${formatEther(l1CostEstimate)} ETH`)
 
-console.log('Actual L1 cost:')
-const l1CostActual = receipt.l1Fee
-console.log(ethers.utils.formatEther(l1CostActual))
+    // Calculate total estimated cost
+    const totalEstimate = l2CostEstimate + l1CostEstimate
+    console.log(`Estimated Total Cost: ${formatEther(totalEstimate)} ETH`)
 
-console.log('Actual total cost:')
-const totalActual = l2CostActual.add(l1CostActual)
-console.log(ethers.utils.formatEther(totalActual))
+    // Send the transaction
+    const txHash = await walletClient.sendTransaction(transaction)
+    console.log(`Transaction Hash: ${txHash}`)
 
-console.log('Difference:')
-const difference = totalActual.sub(totalSum).abs()
-console.log(ethers.utils.formatEther(difference))
+    // Wait for the transaction to be mined
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
 
-})()
+    // Calculate actual costs
+    const l2CostActual = receipt.gasUsed * receipt.effectiveGasPrice
+    console.log(`Actual Execution Gas Fee: ${formatEther(l2CostActual)} ETH`)
+
+    const l1CostActual = await publicClient.estimateL1Fee({ hash: txHash })
+    console.log(`Actual L1 Data Fee: ${formatEther(l1CostActual)} ETH`)
+
+    const totalActual = l2CostActual + l1CostActual
+    console.log(`Actual Total Cost: ${formatEther(totalActual)} ETH`)
+
+    // Compare estimated vs actual costs
+    const difference = totalEstimate - totalActual
+    console.log(`Estimation Difference: ${formatEther(difference)} ETH`)
+
+  } catch (error) {
+    console.error('Error:', error)
+  }
+}
+
+estimateTransactionCosts()
