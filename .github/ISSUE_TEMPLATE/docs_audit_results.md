@@ -111,6 +111,7 @@ zdd-service
 snapman
 security-tools
 superchain-ops
+op-deployer
 ```
 </details>
 
