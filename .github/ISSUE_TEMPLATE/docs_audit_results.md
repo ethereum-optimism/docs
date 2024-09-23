@@ -23,7 +23,6 @@ labels: 'docs-audit-2024-Q4,op-labs'
 - `p-medium`: (Could do) Tasks that need to be done but are less critical than high-priority tasks. These often improve processes or efficiency but can be postponed if necessary without immediate severe repercussions.
 - `p-high`: (Should do) Important tasks that contribute significantly to long-term goals but may not have an immediate deadline. Delaying these tasks could have considerable negative effects but are not as immediate as critical tasks.
 - `p-critical`: Tasks that have immediate deadlines or significant consequences if not completed on time. These are non-negotiable and often linked to core business functions or legal requirements. 
-
 </details>
 
 <details>
@@ -34,7 +33,15 @@ labels: 'docs-audit-2024-Q4,op-labs'
 - `s-M`: (1-2 weeks) Tasks that involve a moderate level of complexity and collaboration.
 - `s-L`: (several weeks) Complex tasks that require significant time investment and coordination across multiple teams. 
 - `s-XL`: (> 1 month) Very large and complex projects that involve extensive planning, execution, and testing. 
+</details>
 
+<details>
+<summary>Content evaluation</summary>
+- `a-delete`: don't need this page 
+- `a-duplicate`: some content lives elsewhere 
+- `a-minor`: needs small revisions 
+- `a-moderate`: needs moderate revisions 
+- `a-critical`: needs a lot of work
 </details>
 
 ## MDX Metadata format
