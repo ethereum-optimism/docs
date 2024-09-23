@@ -16,6 +16,7 @@ labels: 'docs-audit-2024-Q4,op-labs'
 > Choose the appropriate github issue labels for each page.
 
 <details>
+
 <summary>Priority</summary>
 
 - `p-on-hold`: (Defer) Tasks that are currently not actionable due to various reasons like waiting for external inputs, dependencies, or resource constraints. These are reviewed periodically to decide if they can be moved to a more active status.
@@ -26,6 +27,7 @@ labels: 'docs-audit-2024-Q4,op-labs'
 </details>
 
 <details>
+
 <summary>T-shirt size</summary>
 
 - `s-XS`: (< 1 day) Very simple tasks that require minimal time and effort.
@@ -36,6 +38,7 @@ labels: 'docs-audit-2024-Q4,op-labs'
 </details>
 
 <details>
+
 <summary>Content evaluation</summary>
 - `a-delete`: don't need this page 
 - `a-duplicate`: some content lives elsewhere 
@@ -60,6 +63,7 @@ description: "A short description of the content."
 
 <details>
 <summary>Component tags</summary>
+
 ```
 op-node
 op-geth
@@ -117,6 +121,7 @@ op-deployer
 
 <details>
 <summary>Engineering tags</summary>
+
 ```
 eng-platforms
 eng-growth
