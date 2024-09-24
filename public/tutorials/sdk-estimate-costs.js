@@ -34,7 +34,7 @@ async function estimateTransactionCosts() {
     const transaction = {
       account,
       to: '0x1000000000000000000000000000000000000000',
-      value: parseEther('0.1'),
+      value: parseEther('0.005'),
       gasPrice: parseGwei('20')
     }
 
