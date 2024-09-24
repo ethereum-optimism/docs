@@ -1,74 +1,66 @@
-(async () => {
+import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
+import { sepolia, optimismSepolia } from "viem/chains";
+import { privateKeyToAccount } from 'viem/accounts';
+import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2, getL2TransactionHashes } from 'viem/op-stack';
 
-const optimism = require("@eth-optimism/sdk")
-const ethers = require("ethers")
+// Replace with your actual private key (Keep this secure!)
+const PRIVATE_KEY = '0x....'
+const account = privateKeyToAccount(PRIVATE_KEY);
 
-const privateKey = process.env.TUTORIAL_PRIVATE_KEY
+// Create L1 public client for reading from the Sepolia network
+const publicClientL1 = createPublicClient({
+    chain: sepolia,
+    transport: http(),
+});
 
-const l1Provider = new ethers.providers.StaticJsonRpcProvider("https://rpc.ankr.com/eth_sepolia")
-const l2Provider = new ethers.providers.StaticJsonRpcProvider("https://sepolia.optimism.io")
-const l1Wallet = new ethers.Wallet(privateKey, l1Provider)
-const l2Wallet = new ethers.Wallet(privateKey, l2Provider)
+// Create L1 wallet client for sending transactions on Sepolia
+const walletClientL1 = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http(),
+}).extend(walletActionsL1());
 
-console.log('L1 balance:')
-console.log((await l1Wallet.getBalance()).toString())
+// Create L2 public client for interacting with OP Sepolia
+const publicClientL2 = createPublicClient({
+    chain: optimismSepolia,
+    transport: http('https://rpc.ankr.com/eth_sepolia'),
+}).extend(publicActionsL2());
 
-const messenger = new optimism.CrossChainMessenger({
-  l1ChainId: 11155111, // 11155111 for Sepolia, 1 for Ethereum
-  l2ChainId: 11155420, // 11155420 for OP Sepolia, 10 for OP Mainnet
-  l1SignerOrProvider: l1Wallet,
-  l2SignerOrProvider: l2Wallet,
-})
+// Create L2 wallet client for sending transactions on OP Sepolia
+const walletClientL2 = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http('https://rpc.ankr.com/eth_sepolia'),
+}).extend(walletActionsL2());
 
-console.log('Depositing ETH...')
-tx = await messenger.depositETH(ethers.utils.parseEther('0.006942'))
-await tx.wait()
+async function depositETH(amount) {
+try {
+    // Build the deposit transaction parameters
+    const args = await publicClientL2.buildDepositTransaction({
+        mint: parseEther(amount), // Convert amount to wei
+        to: account.address, // Recipient on L2 (same as sender in this case)
+    });
 
-console.log('Waiting for deposit to be relayed...')
-await messenger.waitForMessageStatus(tx.hash, optimism.MessageStatus.RELAYED)
+    // Execute the deposit transaction on L1
+    const hash = await walletClientL1.depositTransaction(args);
+    console.log(`Deposit transaction hash on L1: ${hash}`);
 
-console.log('L1 balance:')
-console.log((await l1Wallet.getBalance()).toString())
+    // Wait for the L1 transaction to be confirmed
+    const receipt = await publicClientL1.waitForTransactionReceipt({ hash });
+    console.log('L1 transaction confirmed:', receipt);
 
-console.log('L2 balance:')
-console.log((await l2Wallet.getBalance()).toString())
+    // Extract the corresponding L2 transaction hash
+    const l2Hashes = getL2TransactionHashes(receipt);
+    console.log(`Corresponding L2 transaction hash: ${l2Hashes}`);
 
-console.log('Withdrawing ETH...')
-const withdrawal = await messenger.withdrawETH(ethers.utils.parseEther('0.004269'))
-await withdrawal.wait()
+    // Wait for the L2 transaction to be confirmed
+    const l2Receipt = await publicClientL2.waitForTransactionReceipt({
+        hash: l2Hashes,
+    });
+    console.log('L2 transaction confirmed:', l2Receipt);
 
-console.log('L2 balance:')
-console.log((await l2Wallet.getBalance()).toString())
-
-console.log('Waiting for withdrawal to be provable...')
-await messenger.waitForMessageStatus(withdrawal.hash, optimism.MessageStatus.READY_TO_PROVE)
-
-console.log('Proving withdrawal...')
-await messenger.proveMessage(withdrawal.hash)
-
-console.log('Waiting for withdrawal to be relayable...')
-await messenger.waitForMessageStatus(withdrawal.hash, optimism.MessageStatus.READY_FOR_RELAY)
-
-// Wait for the next block to be produced, only necessary for CI because messenger can return
-// READY_FOR_RELAY before the RPC we're using is caught up to the latest block. Waiting for an
-// additional block ensures that the RPC is caught up and the message can be relayed. Users
-// should not need to do this when running the tutorial.
-const maxWaitTime = Date.now() + 120000 // 2 minutes in milliseconds
-const currentBlock = await l1Provider.getBlockNumber()
-while (await l1Provider.getBlockNumber() < currentBlock + 1) {
-  if (Date.now() > maxWaitTime) {
-    throw new Error('Timed out waiting for block to be produced')
-  }
-  await new Promise(resolve => setTimeout(resolve, 1000))
+    console.log('Deposit completed successfully!');
+    } catch (error) {
+        console.error('Error during deposit:', error);
+    }
 }
-
-console.log('Relaying withdrawal...')
-await messenger.finalizeMessage(withdrawal.hash)
-
-console.log('Waiting for withdrawal to be relayed...')
-await messenger.waitForMessageStatus(withdrawal.hash, optimism.MessageStatus.RELAYED)
-
-console.log('L1 balance:')
-console.log((await l1Wallet.getBalance()).toString())
-
-})()
