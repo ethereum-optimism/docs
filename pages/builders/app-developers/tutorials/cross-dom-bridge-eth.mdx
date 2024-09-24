@@ -8,8 +8,6 @@ import { Callout, Steps, Tabs } from 'nextra/components'
 
 # Bridging ETH to OP Mainnet With Viem
 
-This tutorial guides you through transferring ETH between Ethereum Mainnet (L1) and Optimism (L2) using the viem/op-stack library. This updated tutorial replaces the deprecated @eth-optimism/sdk with the latest and most efficient methods available in the viem/op-stack
-
 This tutorial explains how you can use the [Viem](https://viem.sh/op-stack/) to bridge ETH from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
 The `viem/op-stack` library is an easy way to add bridging functionality to your JavaScript-based application.
 It also provides some safety rails to prevent common mistakes that could cause ETH or ERC-20 tokens to be made inaccessible.
@@ -20,7 +18,6 @@ Make sure to check out the [Standard Bridge guide](/builders/app-developers/brid
 
 Before you begin, ensure you have the following:
 
-*   Metamask or another Ethereum-compatible wallet installed
 *   Node.js (version 14 or later)
 *   Familiarity with bridging concepts between L1 and L2.
 *   An understanding of the [viem library](https://viem.sh/op-stack/)
@@ -90,8 +87,9 @@ npm install -g pnpm
 ## Import Dependencies
 
 You need to import some dependencies into your project.
+Create a new file named `bridge-eth.ts` in your project directory and add the following code:
 
-Using `viem`, we will create an account using the private key and initialize L1 and L2 clients to interact with Sepolia and optimismSepolia.
+Using `viem`, we will create an account using the private key and initialize L1 and L2 clients to interact with `Sepolia` and `optimismSepolia`.
 
 ```js
 
@@ -109,6 +107,11 @@ dotenv.config();
 
 You'll need a few variables throughout this tutorial.
 Let's set those up now.
+
+<Steps>
+
+
+</Steps>
 
 <Tabs items={['Create an account', 'Create RPC providers', 'Wallet Clients']}>
   <Tabs.Tab>
@@ -395,17 +398,17 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
       Build parameters to prove the withdrawal on the L2.
 
       ```js
-          const proveArgs = await publicClientL2.buildProveWithdrawal({
-              output,
-              withdrawal,
-          })
+      const proveArgs = await publicClientL2.buildProveWithdrawal({
+        output,
+        withdrawal,
+      })
       ```
 
       {<h3>Prove the withdrawal on the L1</h3>}
       Once the withdrawal is ready to be proven, you'll send an L1 transaction to prove that the withdrawal happened on L2.
 
       ```js
-          const proveHash = await walletClientL1.proveWithdrawal(proveArgs)
+      const proveHash = await walletClientL1.proveWithdrawal(proveArgs)
       ```
     
       ```js
@@ -418,9 +421,9 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
       This can only happen after the fault proof period has elapsed. On OP Mainnet, this takes 7 days.
 
       ```js
-          const awaitWithdrawal = await publicClientL1.waitToFinalize({
-          targetChain: walletClientL2.chain,
-          withdrawalHash: withdrawal.withdrawalHash,
+      const awaitWithdrawal = await publicClientL1.waitToFinalize({
+        targetChain: walletClientL2.chain,
+        withdrawalHash: withdrawal.withdrawalHash,
       })
 
       ```
@@ -434,8 +437,8 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
 
       ```js
       const finalizeHash = await walletClientL1.finalizeWithdrawal({
-      targetChain: walletClientL2.chain,
-      withdrawal,
+        targetChain: walletClientL2.chain,
+        withdrawal,
       })
       ```
 
@@ -443,17 +446,17 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
 
       ```js
       const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
-      hash: finalizeHash
+        hash: finalizeHash
       })
       ```
 
       {<h3>Check the withdrawal status</h3>}
 
       ```js
-            const status = await publicClientL1.getWithdrawalStatus({
-            receipt,
-            targetChain: walletClientL2.chain
-            })
+      const status = await publicClientL1.getWithdrawalStatus({
+        receipt,
+        targetChain: walletClientL2.chain
+      })
       ```
     </Steps>
   </Tabs.Tab>
