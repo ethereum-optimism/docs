@@ -145,9 +145,17 @@ Let's set those up now.
     To create the wallet instance, load your private key, using `privateKeyToAccount`. [`privateKeyToAccount`](https://viem.sh/docs/accounts/local/privateKeyToAccount#privatekeytoaccount) is a viem method used to sign transactions by passing a private key.
 
     ```js
+    if (!process.env.PRIVATE_KEY) {
+      throw new Error('Error: PRIVATE_KEY is not defined in the environment variables.')
+    }
     const account = privateKeyToAccount(process.env.PRIVATE_KEY);
     ```
   </Tabs.Tab>
+
+<Callout type="info">
+  To ensure that `process.env.PRIVATE_KEY` is defined before using it. If they are undefined, we add a check to provide a error messages when the environment variable is missing.
+</Callout>
+
 
   <Tabs.Tab>
     Set up our Wallet Clients for L2(optimismSepolia)
@@ -227,7 +235,7 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   This function returns the current cost estimate in wei.
 
   ```js
-  const l1CostEstimate = await publicClient.estimateL1Gas(transaction)
+  const l1CostEstimate = await publicClient.estimateL1Fee(transaction)
   console.log(`Estimated L1 data Fee: ${formatEther(l1CostEstimate)}`);
   ```
 
@@ -290,8 +298,8 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   Estimates will never be entirely accurate, but they should be close!
 
   ```js
-      const difference =  totalSum - totalActual
-      console.log(`The difference - ${formatEther(difference)}`) 
+      const difference = totalEstimate >= totalActual ? totalEstimate - totalActual : totalActual - totalEstimate
+    console.log(`Estimation Difference: ${formatEther(difference)} ETH`)
   ```
 </Steps>
 

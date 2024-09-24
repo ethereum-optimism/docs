@@ -8,6 +8,12 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 // Set up the account
+if (!process.env.PRIVATE_KEY) {
+    throw new Error('Error: PRIVATE_KEY is not defined in the environment variables.')
+  }
+  if (!process.env.L2_RPC_URL) {
+    throw new Error('Error: L2_RPC_URL is not defined in the environment variables.')
+  }
 const account = privateKeyToAccount(process.env.PRIVATE_KEY)
 
 // Set up the public client
@@ -45,7 +51,7 @@ async function estimateTransactionCosts() {
     console.log(`Estimated Execution Gas Fee: ${formatEther(l2CostEstimate)} ETH`)
 
     // Estimate L1 data fee
-    const l1CostEstimate = await publicClient.estimateL1Gas(transaction)
+    const l1CostEstimate = await publicClient.estimateL1Fee(transaction)
     console.log(`Estimated L1 Data Fee: ${formatEther(l1CostEstimate)} ETH`)
 
     // Calculate total estimated cost
@@ -70,7 +76,7 @@ async function estimateTransactionCosts() {
     console.log(`Actual Total Cost: ${formatEther(totalActual)} ETH`)
 
     // Compare estimated vs actual costs
-    const difference = totalEstimate - totalActual
+    const difference = totalEstimate >= totalActual ? totalEstimate - totalActual : totalActual - totalEstimate
     console.log(`Estimation Difference: ${formatEther(difference)} ETH`)
 
   } catch (error) {
