@@ -18,16 +18,10 @@ Make sure to check out the [Standard Bridge guide](/builders/app-developers/brid
 
 Before you begin, ensure you have the following:
 
-*   Node.js (version 14 or later)
 *   Familiarity with bridging concepts between L1 and L2.
 *   An understanding of the [viem library](https://viem.sh/op-stack/)
-*   `pnpm` installed for managing packages.
-
-## Required Dependencies
-
-*   [node](https://nodejs.org/en/)
-*   [pnpm](https://pnpm.io/installation)
-*   [viem](https://viem.sh/op-stack/)
+*   [Node.js](https://nodejs.org/en/) (version 14 or later)
+*   [pnpm](https://pnpm.io/installation) installed for managing packages.
 
 Install `pnpm` if you haven't already:
 
@@ -41,11 +35,12 @@ npm install -g pnpm
 
   Let's create a new project and install the necessary dependencies.
 
-  *   Create a folder
+  *   Create a folder and a file
 
   ```bash
   mkdir op-sample-project
   cd op-sample-project
+  touch bridge-eth.js
   ```
 
   *   Initialize the project:
@@ -63,8 +58,7 @@ npm install -g pnpm
   {<h3>Configure Environment Variables</h3>}
 
   You need a private key in order to sign transactions.
-  Create a `.env` file to securely store your environment variables
-  Set your private key as an environment variable with the `export` command.
+  Create a `.env` file in your parent directory to securely store your environment variables
   Make sure this private key corresponds to an address that has ETH on Sepolia.
 
   ```bash
@@ -74,8 +68,8 @@ npm install -g pnpm
   Add your Ethereum Layer 1 (L1) and Optimism Layer 2 (L2) RPC endpoints, and wallet private key in the `.env` file:
 
   ```bash
-  L1_RPC_URL=https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID
-  L2_RPC_URL=https://optimism-mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID
+  L1_RPC_URL=https://rpc.ankr.com/eth_sepolia
+  L2_RPC_URL=https://sepolia.optimism.io
   TUTORIAL_PRIVATE_KEY=0x...
   ```
 </Steps>
@@ -86,18 +80,16 @@ npm install -g pnpm
 
 ## Import Dependencies
 
-You need to import some dependencies into your project.
-Create a new file named `bridge-eth.ts` in your project directory and add the following code:
+{<h3>Import the necessary packages</h3>}
 
-Using `viem`, we will create an account using the private key and initialize L1 and L2 clients to interact with `Sepolia` and `optimismSepolia`.
-
+  In the `bridge-eth.js` file, import the `viem` package at the top:
 ```js
 
 // Import required modules
 import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
 import { sepolia, optimismSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts'
-import { getL2TransactionHashes, publicActionsL2, walletActionsL1 } from 'viem/op-stack'
+import { getL2TransactionHashes, publicActionsL2, walletActionsL1, getL2TransactionHashes } from 'viem/op-stack'
 import * as dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
@@ -108,14 +100,12 @@ dotenv.config();
 You'll need a few variables throughout this tutorial.
 Let's set those up now.
 
-<Steps>
-
-
-</Steps>
 
 <Tabs items={['Create an account', 'Create RPC providers', 'Wallet Clients']}>
   <Tabs.Tab>
     Create an account from the private key. [`privateKeyToAccount`](https://viem.sh/docs/accounts/local/privateKeyToAccount#privatekeytoaccount) is a viem method used to sign transactions by passing a private key.
+
+    Load your private key with `privateKeyToAccount`, after the imports above.
 
     ```js
     const account = privateKeyToAccount(process.env.PRIVATE_KEY);
@@ -123,7 +113,7 @@ Let's set those up now.
   </Tabs.Tab>
 
   <Tabs.Tab>
-    Set up our Viem Clients for the L1(Sepolia) and L2(optimismSepolia)
+    Next, set up our viem clients for the L1(Sepolia) and L2(optimismSepolia)
 
     <Steps>
       {<h3>L1 (Sepolia) publicClientL1 </h3>}
@@ -147,7 +137,7 @@ Let's set those up now.
   </Tabs.Tab>
 
   <Tabs.Tab>
-    Set up wallet clients for L1 and L2.
+    Also set up wallet clients for L1 and L2.
 
     <Steps>
       {<h3>L1 (Sepolia) walletClientL1</h3>}
@@ -186,48 +176,45 @@ You will need to get some ETH on Sepolia to follow along.
 You're going to need some ETH on L1 that you can bridge to L2.
 You can get some Sepolia ETH from [this faucet](https://sepoliafaucet.com).
 
-### Check your wallet balance on L1 and L2
-
-Before initiating the bridge, you can check the ETH balance on both L1 and L2.
-
-```js
-const checkBalances = async () => {
-    const l1Balance = await publicClientL1.getBalance({ address: account.address });
-    const l2Balance = await publicClientL2.getBalance({ address: account.address });
-
-    console.log(`L1 Balance: ${l1Balance} wei`);
-    console.log(`L2 Balance: ${l2Balance} wei`);
-};
-
-checkBalances();
-```
-
-<Callout type="info">
-  Balances will be returned in wei. You can convert them to ether if needed.
-</Callout>
-
 ## Deposit ETH
 
-Now you can deposit your ETH into the Standard Bridge contract.
-You'll deposit a small amount of ETH just to demonstrate the process.
+Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBridge` contract. You'll then receive the same number of ETH on L2 in return.
 
 <Tabs items={['depositETH', 'Full Code']}>
   <Tabs.Tab>
     <Steps>
+
+      {<h3>Check your wallet balance on L1</h3>}
+
+      See how much ETH you have on L1 so you can confirm that the deposit worked later on.
+
+      ```js
+        const checkBalances = async () => {
+            const l1Balance = await publicClientL1.getBalance({ address: account.address });
+            console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`); 
+        };
+        checkBalances();
+      ```
+
+        <Callout type="info">
+        We used `formatEther` method from `viem` to format the balance to ether.
+        </Callout>
+
+
       {<h3>Create the deposit transaction</h3>}
 
-      Use `buildDepositTransaction` to create the deposit transaction parameters on L2
+      Use `buildDepositTransaction` to build the deposit transaction parameters on the L2.
 
       ```js
       const args = await publicClientL2.buildDepositTransaction({
-      mint: parseEther(amount), // Specifies the amount of ETH to deposit, converted to wei.
-      to: account.address, // Sets the recipient address on L2 (same as the sender in this case).
+        mint: parseEther('0.006942'), // Specify the amount of ETH to deposit.
+        to: account.address, // Sets the recipient address on L2 (same as the sender in this case).
       });
       ```
 
-      {<h3>Sends the deposit transaction</h3>}
+      {<h3>Send the deposit transaction</h3>}
 
-      Sends the deposit transaction on L1 and logs the L1 transaction hash.
+      Send the deposit transaction on L1 and log the L1 transaction hash.
 
       ```js
       const hash = await walletClientL1.depositTransaction(args);
@@ -236,7 +223,7 @@ You'll deposit a small amount of ETH just to demonstrate the process.
 
       {<h3>Wait for L1 transaction</h3>}
 
-      Wait for the L1 transaction to be confirmed and logs the receipt.
+      Wait for the L1 transaction to be processed and log the receipt.
 
       ```js
       const receipt = await publicClientL1.waitForTransactionReceipt({ hash });
@@ -249,8 +236,8 @@ You'll deposit a small amount of ETH just to demonstrate the process.
       This hash represents the deposit transaction on L2.
 
       ```js
-      const [l2Hash] = getL2TransactionHashes(receipt);
-      console.log(`Corresponding L2 transaction hash: ${l2Hash}`);
+      const l2Hashes = getL2TransactionHashes(receipt);
+      console.log(`Corresponding L2 transaction hash: ${l2Hashes}`);
       ```
 
       {<h3>Wait for the L2 transaction to be processed</h3>}
@@ -259,7 +246,7 @@ You'll deposit a small amount of ETH just to demonstrate the process.
 
       ```js
       const l2Receipt = await publicClientL2.waitForTransactionReceipt({
-          hash: l2Hash,
+        hash: l2Hashes,
       });
       console.log('L2 transaction confirmed:', l2Receipt);
       console.log('Deposit completed successfully!');
@@ -272,7 +259,7 @@ You'll deposit a small amount of ETH just to demonstrate the process.
     import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
     import { sepolia, optimismSepolia } from "viem/chains";
     import { privateKeyToAccount } from 'viem/accounts';
-    import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } from 'viem/op-stack';
+    import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2, getL2TransactionHashes } from 'viem/op-stack';
 
     // Replace with your actual private key (Keep this secure!)
     const PRIVATE_KEY = '0x....'
@@ -294,14 +281,14 @@ You'll deposit a small amount of ETH just to demonstrate the process.
     // Create L2 public client for interacting with OP Sepolia
     const publicClientL2 = createPublicClient({
         chain: optimismSepolia,
-        transport: http('https://opt-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY'),
+        transport: http('https://rpc.ankr.com/eth_sepolia'),
     }).extend(publicActionsL2());
 
     // Create L2 wallet client for sending transactions on OP Sepolia
     const walletClientL2 = createWalletClient({
         account,
         chain: optimismSepolia,
-        transport: http('https://opt-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY'),
+        transport: http('https://rpc.ankr.com/eth_sepolia'),
     }).extend(walletActionsL2());
 
     async function depositETH(amount) {
@@ -321,12 +308,12 @@ You'll deposit a small amount of ETH just to demonstrate the process.
         console.log('L1 transaction confirmed:', receipt);
 
         // Extract the corresponding L2 transaction hash
-        const [l2Hash] = getL2TransactionHashes(receipt);
-        console.log(`Corresponding L2 transaction hash: ${l2Hash}`);
+        const l2Hashes = getL2TransactionHashes(receipt);
+        console.log(`Corresponding L2 transaction hash: ${l2Hashes}`);
 
         // Wait for the L2 transaction to be confirmed
         const l2Receipt = await publicClientL2.waitForTransactionReceipt({
-            hash: l2Hash,
+            hash: l2Hashes,
         });
         console.log('L2 transaction confirmed:', l2Receipt);
 
@@ -488,14 +475,14 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
     // Create L2 public client for interacting with OP Sepolia
     const publicClientL2 = createPublicClient({
         chain: optimismSepolia,
-        transport: http('https://opt-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY'),
+        transport: http('https://rpc.ankr.com/eth_sepolia'),
     }).extend(publicActionsL2());
 
     // Create L2 wallet client for sending transactions on OP Sepolia
     const walletClientL2 = createWalletClient({
         account,
         chain: optimismSepolia,
-        transport: http('https://opt-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY'),
+        transport: http('https://rpc.ankr.com/eth_sepolia'),
     }).extend(walletActionsL2());
 
     async function withdrawETH(amount) {
