@@ -1,7 +1,7 @@
 import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
 import { sepolia, optimismSepolia } from "viem/chains";
 import { privateKeyToAccount } from 'viem/accounts';
-import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2, getL2TransactionHashes } from 'viem/op-stack';
+import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } from 'viem/op-stack';
 
 // Replace with your actual private key (Keep this secure!)
 const PRIVATE_KEY = '0x....'
