@@ -3,8 +3,8 @@ import { sepolia, optimismSepolia } from "viem/chains";
 import { privateKeyToAccount } from 'viem/accounts';
 import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } from 'viem/op-stack';
 
-// Replace with your actual private key (Keep this secure!)
-const PRIVATE_KEY = '0x....'
+// Load private key from environment variable
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const account = privateKeyToAccount(PRIVATE_KEY);
 
 // Create L1 public client for reading from the Sepolia network
