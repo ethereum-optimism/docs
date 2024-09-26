@@ -23,14 +23,14 @@ const walletClientL1 = createWalletClient({
 // Create L2 public client for interacting with OP Sepolia
 const publicClientL2 = createPublicClient({
     chain: optimismSepolia,
-    transport: http('https://rpc.ankr.com/eth_sepolia'),
+    transport: http(process.env.L2_RPC_URL),
 }).extend(publicActionsL2());
 
 // Create L2 wallet client for sending transactions on OP Sepolia
 const walletClientL2 = createWalletClient({
     account,
     chain: optimismSepolia,
-    transport: http('https://rpc.ankr.com/eth_sepolia'),
+    transport: http(process.env.L2_RPC_URL),
 }).extend(walletActionsL2());
 
 async function depositETH(amount) {
