@@ -257,14 +257,14 @@ Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBr
     // Create L1 public client for reading from the Sepolia network
     const publicClientL1 = createPublicClient({
         chain: sepolia,
-        transport: http(),
+        transport: http(process.env.L1_RPC_URL),
     });
 
     // Create L1 wallet client for sending transactions on Sepolia
     const walletClientL1 = createWalletClient({
         account,
         chain: sepolia,
-        transport: http(),
+        transport: http(process.env.L1_RPC_URL),
     }).extend(walletActionsL1());
 
     // Create L2 public client for interacting with OP Sepolia
@@ -452,27 +452,27 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
     // Create L1 public client for reading from the Sepolia network
     const publicClientL1 = createPublicClient({
         chain: sepolia,
-        transport: http(),
+        transport: http(process.env.L1_RPC_URL),
     });
 
     // Create L1 wallet client for sending transactions on Sepolia
     const walletClientL1 = createWalletClient({
         account,
         chain: sepolia,
-        transport: http(),
+        transport: http(process.env.L1_RPC_URL),
     }).extend(walletActionsL1());
 
     // Create L2 public client for interacting with OP Sepolia
     const publicClientL2 = createPublicClient({
         chain: optimismSepolia,
-        transport: http(process.env.L1_RPC_URL),
+        transport: http(process.env.L2_RPC_URL),
     }).extend(publicActionsL2());
 
     // Create L2 wallet client for sending transactions on OP Sepolia
     const walletClientL2 = createWalletClient({
         account,
         chain: optimismSepolia,
-        transport: http(process.env.L1_RPC_URL),
+        transport: http(process.env.L2_RPC_URL),
     }).extend(walletActionsL2());
 
     async function withdrawETH(amount) {
