@@ -6,11 +6,12 @@ type Props = {
   data: any[];
   otherProps?: any;
   description?: string;
+  labelClass?: string;
   onSelect?: (e: any) => void;
 };
 
 export const SelectInput: React.FC<Props> = React.memo(
-  ({ className, description, otherProps, label, data, onSelect }) => {
+  ({ className, labelClass, description, otherProps, label, data, onSelect }) => {
     const handleSelect = (e: any) => {
       const value = e.target.value
       onSelect(value)
@@ -18,9 +19,13 @@ export const SelectInput: React.FC<Props> = React.memo(
     return (
       <div className="flex flex-col ">
         {label && (
-          <label className="font-semibold text-sm md:text-xl ">{label}</label>
+          <label className={`font-semibold text-sm md:text-xl ${labelClass}`}>
+            {label}
+          </label>
         )}
-        <p className="text-xs my-1">{description}</p>
+        <p className="text-xs my-1 calcularor-label_description">
+          {description}
+        </p>
         <div className="grid">
           <select
             {...otherProps}

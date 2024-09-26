@@ -3,13 +3,13 @@ import { useState } from "react";
 import { TextInput, SelectInput, CheckboxInput } from "./Inputs";
 import { ResultsTable } from "./ResultsTable";
 import {
-  calculateImpliedStateProposalsPerDay,
-  getAvgEstimatedSizePerTx,
+  displayL1BaseFeeScalar,
   displayL1BlobBaseFeeScalar,
+  calculateTotalAltDAPlasmaModeCommitmentCostsInETH,
 } from "@/utils/calculator-helpers";
+
 type ComparableTransactionType = "Base" | "Zora" | "Mint" | "Mode";
 type DataAvailabilityType = "Ethereum" | "AltDA Plasma Mode";
-
 
 export function ChainParametersForm(): ReactElement {
   const [transactionsPerDay, setTransactionsPerDay] = useState(500000);
@@ -22,7 +22,6 @@ export function ChainParametersForm(): ReactElement {
   const [maxChannelDuration, setMaxChannelDuration] = useState(5);
   const [outputRootPostFrequency, setOutputRootPostFrequency] = useState(1  );
   const [isIncludeOutputRootCosts, setIsIncludeOutputRootCosts] = useState("yes");
-  const [isAdvancedInputs, setIsAdvancedInputs] = useState<boolean>(false);
 
   const comparableTransactionTypeOptions = [
     "General OP Mainnet",
@@ -60,141 +59,125 @@ export function ChainParametersForm(): ReactElement {
       targetDataFeeMargin
     );
 
-    // const result2 = calculateTotalAltDAPlasmaModeCommitmentL1Gas(
-    //   transactionsPerDay,
-    //   maxChannelDuration,
-    //   comparableTransactionType
-    // );
-    // const result4 = calculateImpliedStateProposalsPerDay(outputRootPostFrequency);
-    
-    // const result5 = calculateImpliedDataGasFeePerTxUsingL1Calldata(
-    //   isIncludeOutputRootCosts,
-    //   isFaultProofEnabled,
-    //   outputRootPostFrequency,
-    //   transactionsPerDay,
-    //   maxChannelDuration,
-    //   comparableTransactionType,
-    //   dataAvailabilityType,
-    //   targetDataFeeMargin
-    // );
+    const result2 = await displayL1BaseFeeScalar(
+      isIncludeOutputRootCosts,
+      isFaultProofEnabled,
+      outputRootPostFrequency,
+      transactionsPerDay,
+      maxChannelDuration,
+      comparableTransactionType,
+      targetDataFeeMargin,
+      dataAvailabilityType
+    );
+    const res = await calculateTotalAltDAPlasmaModeCommitmentCostsInETH (
+      transactionsPerDay,
+      maxChannelDuration,
+      comparableTransactionType
+    )
 
-    // const xyz = calculateL1BaseFeeScalarUsingBlobs(
-    //   isIncludeOutputRootCosts,
-    //   isFaultProofEnabled,
-    //   outputRootPostFrequency,
-    //   transactionsPerDay,
-    //   maxChannelDuration,
-    //   comparableTransactionType,
-    //   targetDataFeeMargin
-    // )
-
-    // const result5  = getL1GasBaseFee();
-    // console.log("RESULT2:::", result2);
     console.log("RESULT5:::e37", result);
-    // console.log("xyz:::", xyz);
+    console.log("RESULT5:::e38", result2);
+    console.log("RESULT6:::", res);
   };
-
-  const handleToggle = (val: any) => {
-    setIsAdvancedInputs(val);
-  };
-
-  // console.log("WHEW::", transactionsPerDay)
-  // console.log("JEDDB::", comparableTransactionType);
-  // console.log("XXAAB::", dataAvailabilityType);
-  // console.log("FFFAULTPRFF::", isFaultProofEnabled);
-  // console.log("OUTROOCOST::", isIncludeOutputRootCosts);
 
   const stringToBoolean = (value: string): boolean => {
     return value === "yes" ? true : false
   }
 
- 
   return (
     <div>
-      <form className="chain-inputs-form" onSubmit={handleSubmit}>
-        <TextInput
-          otherProps={{ value: transactionsPerDay }}
-          onInputChange={setTransactionsPerDay}
-          type="number"
-          className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-          label="Transactions per Day"
-        />
+      <form className="calculator-form" onSubmit={handleSubmit}>
+        <div className="calculator-chain-inputs">
+          <h2 className="calculator-heading_sub">Chain Inputs</h2>
+          <TextInput
+            otherProps={{ value: transactionsPerDay }}
+            onInputChange={setTransactionsPerDay}
+            labelClass="calculator-label"
+            description="Txs / Day, excluding Internal system transactions"
+            type="number"
+            className="calculator-input mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="Transactions per Day"
+          />
 
-        <SelectInput
-          data={comparableTransactionTypeOptions}
-          onSelect={setComparableTransactionType}
-          className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-          label="Comparable Transaction Type"
-        />
+          <SelectInput
+            labelClass="calculator-label"
+            data={comparableTransactionTypeOptions}
+            onSelect={setComparableTransactionType}
+            description="What are the transaction types are similar to"
+            className="calculator-select t-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="Comparable Transaction Type"
+          />
 
-        <SelectInput
-          data={dataAvailabilityTypeOptions}
-          onSelect={setDataAvailabilityType}
-          className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-          label="Data Availability Type"
-        />
+          <SelectInput
+            labelClass="calculator-label"
+            data={dataAvailabilityTypeOptions}
+            onSelect={setDataAvailabilityType}
+            description="Ethereum (Blobs or Calldata) or AltDA Plasma Mode (Alt-DA)"
+            className="calculator-select t-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="Data Availability Type"
+          />
 
-        <SelectInput
-          data={booleanOptions}
-          onSelect={setIsFaultProofEnabled}
-          className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-          label="Fault Proofs Enabled"
-        />
+          <SelectInput
+            labelClass="calculator-label"
+            data={booleanOptions}
+            onSelect={setIsFaultProofEnabled}
+            description="Are Fault Proofs enabled on the chain? (Note: Ethereum DA Only)"
+            className="calculator-select t-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="Fault Proofs Enabled"
+          />
 
-        <TextInput
-          otherProps={{ value: targetDataFeeMargin }}
-          onInputChange={setTargetDataFeeMargin}
-          type="number"
-          className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-          label="Target Data Fee Margin"
-        />
-        <div>
-          <div className="flex justify-between items-center">
-            <p
-              className={`font-semibold text-sm md:text-xl ${
-                !isAdvancedInputs ? "text-gray-500" : ""
-              }`}
-            >
-              Advanced Inputs
-            </p>
-            <CheckboxInput handleToggle={handleToggle} />
-          </div>
+          <TextInput
+            otherProps={{ value: targetDataFeeMargin }}
+            onInputChange={setTargetDataFeeMargin}
+            description="Buffer charged on top of L1 & Blob Data costs"
+            labelClass="calculator-label"
+            type="number"
+            className="calculator-input mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="Target Data Fee Margin"
+          />
         </div>
-        {isAdvancedInputs && (
-          <div className="advanced-settings">
-            <h2>Advanced Inputs</h2>
-            <TextInput
-              otherProps={{ value: maxBlobsPerL1Transaction }}
-              onInputChange={setMaxBlobsPerL1Transaction}
-              type="number"
-              className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-              label="Max # of Blobs per L1 Transaction"
-            />
+        <div className="calculator-advanced-inputs">
+          <h2 className="calculator-heading_sub">Advanced Inputs</h2>
+          <TextInput
+            otherProps={{ value: maxBlobsPerL1Transaction }}
+            onInputChange={setMaxBlobsPerL1Transaction}
+            labelClass="calculator-label"
+            description="Maximum amount of blobs submitted per L1 Transaction (max: 6)"
+            type="number"
+            className="calculator-input mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="Max # of Blobs per L1 Transaction"
+          />
 
-            <TextInput
-              otherProps={{ value: maxChannelDuration }}
-              onInputChange={setMaxChannelDuration}
-              type="number"
-              className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-              label="op-batcher Max Channel Duration (hours)"
-            />
-            <TextInput
-              otherProps={{ value: outputRootPostFrequency }}
-              onInputChange={setOutputRootPostFrequency}
-              type="number"
-              className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-              label="Output Root Post Frequency (hours)"
-            />
-            <SelectInput
-              data={booleanOptions}
-              onSelect={setIsIncludeOutputRootCosts}
-              className="mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
-              label="Include Root Costs in User Fees?"
-            />
-          </div>
-        )}
-
-        <button type="submit">Calculate</button>
+          <TextInput
+            description="Max hours are we willing to wait between batch submissions"
+            otherProps={{ value: maxChannelDuration }}
+            onInputChange={setMaxChannelDuration}
+            labelClass="calculator-label"
+            type="number"
+            className="calculator-input mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="op-batcher Max Channel Duration (hours)"
+          />
+          <TextInput
+            description="Hours between each state proposals on L1 (0 if chain doesn't pay)"
+            otherProps={{ value: outputRootPostFrequency }}
+            onInputChange={setOutputRootPostFrequency}
+            labelClass="calculator-label"
+            type="number"
+            className="calculator-input mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="Output Root Post Frequency (hours)"
+          />
+          <SelectInput
+            description="Is the cost of state/output proposals passed on to L2 users?"
+            labelClass="calculator-label"
+            data={booleanOptions}
+            onSelect={setIsIncludeOutputRootCosts}
+            className="calculator-select mt-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
+            label="Include Root Costs in User Fees?"
+          />
+        </div>
+        <button className="calculator-button" type="submit">
+          Calculate
+        </button>
       </form>
       <ResultsTable />
     </div>

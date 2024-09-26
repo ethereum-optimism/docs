@@ -166,7 +166,11 @@ export async function getEthToUsdRate(): Promise<number> {
 // targetDataMargin === E18: number
 // maxChannelDuration === E22: number
 // outputRootPostFrequency === E23: number
-// isStateEnabled: string, === E24: string
+// isStateEnabled: boolean, === E24: string
+
+// ModeledExpectedStateCostsOnL1: number === e120 = n40 == e56
+// ModeledDACostsOnL1: number === e119 = e55
+// ModeledDAPlusStateRevenueOnL2: number === e118
 
 /**
  * Advanced Input -
@@ -280,7 +284,6 @@ const _determineDAInUse = (dataAvailabilityType: string): string => {
     ? "L1 Calldata"
     : "EIP-4844";
 };
-
 
 // =INDEX($A$20:$G$32,MATCH('Chain Estimator'!$E$15,$A$20:$A$32,0),MATCH($B8,$A$20:$G$20,0))
 export const getAvgEstimatedSizePerTx = (comparableTxnType: string) => {
@@ -522,6 +525,22 @@ export const calculateTotalAltDAPlasmaModeCommitmentL1Gas = (
   return output;
 }; // n31 done
 
+// N22 * N5
+export const calculateTotalBlobgas = (
+  transactionsPerDay: number,
+  maxChannelDuration: number,
+  comparableTxnType: string
+) => {
+  const n22 = calculateImpliedBlobsPerDay(
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType
+  );
+  const output = n22 * Total_Blobgas_Per_Blob;
+  console.log("n32::", output)
+  return output;
+}; // n32
+
 // =IF('Chain Estimator'!E23=0,0,24/'Chain Estimator'!E23)
 export const calculateImpliedStateProposalsPerDay = (
   outputRootPostFrequency: number
@@ -561,6 +580,76 @@ export const calculateTotalStateProposalL1GasCoveredByUsers = (
   console.log("n35::", output);
   return output;
 }; // n35 done
+
+
+// =N30*'Chain Estimator'!E76/1000000000 
+export const calculateTotalBlobCommitmentCostsInETH = async (
+ transactionsPerDay: number,
+  maxChannelDuration: number,
+  comparableTxnType: string
+) => {
+  const n30 = calculateTotalBlobCommitmentL1Gas(
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType
+  )
+  const e76 = await getL1GasBaseFee();
+  const output = (n30 * e76) / 1000000000;
+  console.log("n36::", output)
+  return output;
+} // n36
+
+
+// =N31*'Chain Estimator'!E76/1000000000 
+export const calculateTotalAltDAPlasmaModeCommitmentCostsInETH = async (
+   transactionsPerDay: number,
+  maxChannelDuration: number,
+  comparableTxnType: string
+) => {
+  const n31 = calculateTotalAltDAPlasmaModeCommitmentL1Gas(
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType
+  )
+  const e76 = await getL1GasBaseFee();
+  const output = n31 * e76 / 1000000000;
+  console.log("n37::", output)
+  return output;
+} // n37 done
+
+// =N32*'Chain Estimator'!E78/1000000000
+const calculateTotalBlobgasCostsInETH = async (
+  transactionsPerDay: number,
+  maxChannelDuration: number,
+  comparableTxnType: string
+) => {
+  const n32 = calculateTotalBlobgas(
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType
+  )
+  const e78 = await getBlobBaseFee(); 
+  const output = (n32 * e78) / 1000000000;
+    console.log("n38::", output);
+    return output;
+} // n38
+
+// =N23*'Chain Estimator'!E76/1000000000
+const calculateTotalL1CalldataCostsInETHIfL1 = async (
+  comparableTxnType: string,
+  transactionsPerDay: number,
+  maxChannelDuration: number
+) => {
+  const n23 = calculateImpliedCalldataGasUsedIfL1(
+    comparableTxnType,
+    transactionsPerDay,
+    maxChannelDuration
+  ) 
+  const e76 = await getL1GasBaseFee();
+  const output = (n23 * e76) / 1000000000;
+  console.log("n39::", output);
+  return output;
+} // n39
 
 const _calculateL1BlobBaseFeeScalar = (
   determinedDAInUse: string,
@@ -891,6 +980,48 @@ export const calculateImpliedDataGasFeePerTxUsingBlobs = async (
   return output
 }; // e64 done
 
+// =('Advanced Inputs'!C8*(16*F98*E76+E98*E78)/1000000/1000000000)*E77
+export const calculateImpliedDataGasFeePerTxUsingAltDAPlasmaMode = async (
+  isStateEnabled: boolean,
+  isFaultProofsEnabled: boolean,
+  outputRootPostFrequency: number,
+  transactionsPerDay: number,
+  maxChannelDuration: number,
+  comparableTxnType: string,
+  dataAvailabilityType: string,
+  targetDataMargin: number
+) => {
+  const { c8, e76, e77, e78} =
+    await _getCalculateImpliedDataGasFeePerTxParams(
+      isStateEnabled,
+      isFaultProofsEnabled,
+      outputRootPostFrequency,
+      transactionsPerDay,
+      maxChannelDuration,
+      comparableTxnType,
+      targetDataMargin,
+      dataAvailabilityType
+    );
+  const { f98, e98 } = await _getBaseFeeScalarCalculationParams(
+    isStateEnabled,
+    isFaultProofsEnabled,
+    outputRootPostFrequency,
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType,
+    targetDataMargin,
+    dataAvailabilityType
+  );
+
+  const part1 = 16 * f98 * e76;
+  const part2 = e98 * e78;
+  const sum = part1 + part2;
+  const result = sum / 1000000 / 1000000000;
+  const output = c8 * result * e77;
+  console.log("e66::", output);
+  return output;
+}; // e66
+
 export const calculateImpliedDataGasFeePerTxUsingL1Calldata = async (
   isStateEnabled: boolean,
   isFaultProofsEnabled: boolean,
@@ -917,6 +1048,21 @@ export const calculateImpliedDataGasFeePerTxUsingL1Calldata = async (
    console.log("e67::", output);
    return output;
 }; // e67 done
+
+// =N34*'Chain Estimator'!E76/1000000000
+export const calculateTotalL1StateProposalCostsInETH = async (
+  outputRootPostFrequency: number,
+  isFaultProofsEnabled: boolean
+) => {
+  const n34 = calculateTotalStateProposalL1Gas(
+    outputRootPostFrequency,
+    isFaultProofsEnabled
+  );
+  const e76 = await getL1GasBaseFee();
+  const output = (n34 * e76) / 1000000000;
+  console.log("n40::", output)
+  return output;
+}; // n40 done
 
 export async function displayL1BlobBaseFeeScalar(
   isStateEnabled: boolean,
@@ -969,7 +1115,93 @@ export async function displayL1BaseFeeScalar(
     dataAvailabilityType
   );
   return calculateAltDAOrL1TransactionCost(dataAvailabilityType, f98, e64, e67, f96, f94);
-} // e38
+} // e38 done
+
+// =E118-(E56+E55) | OverallL1DataAndStateCostsMargin
+export const calculateOverallL1DataAndStateCostsMargin = async (
+  transactionsPerDay: number,
+  comparableTxnType: string,
+  displayL1BlobBaseFeeScalar: number,
+  displayL1BaseFeeScalar: number,
+   dataAvailabilityType: string,
+  maxChannelDuration: number,
+  outputRootPostFrequency: number,
+  isFaultProofsEnabled: boolean
+) => {
+  const e118 = await calculateModeledDAPlusStateRevenueOnL2(transactionsPerDay, comparableTxnType, displayL1BlobBaseFeeScalar, displayL1BaseFeeScalar)
+  const e55 = await calculateModeledDACostsOnL1(
+    dataAvailabilityType,
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType
+  )
+  const e56 = await calculateTotalL1StateProposalCostsInETH(
+    outputRootPostFrequency,
+    isFaultProofsEnabled
+  )
+    const output = e118 - (e56 + e55);
+    console.log("e58::", output);
+    return output;
+} // e58
+
+// =(E14*'Advanced Inputs'!C8*(16*G38*E76/1000000000+G37*E78/1000000000))
+export const calculateModeledDAPlusStateRevenueOnL2 = async (
+  e14: number,
+  e15: string,
+  e37: number,
+  e38: number
+) => {
+  const c8 = getAvgEstimatedSizePerTx(e15);
+  const g38 = convertToMillionUnits(e38);
+  const g37 = convertToMillionUnits(e37)
+  const e76 = await getL1GasBaseFee();
+  const e78 = await getBlobBaseFee();
+  const part1 = (16 * g38 * e76) / 1000000000;
+  const part2 = (g37 * e78) / 1000000000;
+  const output = e14 * c8 * (part1 + part2);
+  console.log("e118::", output)
+  return output
+} // e118
+
+async function calculateModeledDACostsOnL1(
+  dataAvailabilityType: string,
+  transactionsPerDay: number,
+  maxChannelDuration: number,
+  comparableTxnType: string
+): Promise<number> {
+  let output = 0;
+  const f35 = _determineDAInUse(dataAvailabilityType);
+  const n36 = await calculateTotalBlobCommitmentCostsInETH(
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType
+  );
+  const n37 = await calculateTotalAltDAPlasmaModeCommitmentCostsInETH(
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType
+  )
+  const n38 = await calculateTotalBlobgasCostsInETH(
+    transactionsPerDay,
+    maxChannelDuration,
+    comparableTxnType
+  )
+  const n39 = await calculateTotalL1CalldataCostsInETHIfL1(
+    comparableTxnType,
+    transactionsPerDay,
+    maxChannelDuration
+  ) 
+  if (dataAvailabilityType === "AltDA Plasma Mode") {
+    output = n37;
+  } else if (f35 === "EIP-4844") {
+    output = n36 + n38;
+  } else {
+    output = n39;
+  }
+  console.log("e119::", output)
+  return output
+} // e119
+
 
 export const Total_Blobgas_Per_Blob = 131072; // N5
 export const Overhead_Blobgas_per_Blob = 1028; // N6

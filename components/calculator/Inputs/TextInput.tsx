@@ -31,11 +31,11 @@ export const TextInput = ({
   return (
     <div className="flex flex-col">
       {label && (
-        <label className={`${labelClass}font-semibold text-sm md:text-xl`}>
+        <label className={`${labelClass} font-semibold text-sm md:text-xl`}>
           {label}
         </label>
       )}
-      <p className="text-xs my-1">{description}</p>
+      <p className="text-xs my-1 calcularor-label_description">{description}</p>
 
       <input
         {...otherProps}
