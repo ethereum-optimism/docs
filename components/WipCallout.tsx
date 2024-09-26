@@ -10,12 +10,19 @@
  * `context` is not provided, it will display a default maintenance message.
  */
 import type { ReactElement } from 'react';
+import { useState } from 'react';
+
 interface Props {
   context?: string;
 }
 export function WipCallout({ context }: Props): ReactElement {
+  const [closeCallout, setCloseCallout] = useState(false);
   return (
-    <div className="custom-callouts nx-w-full nx-mt-6 nx-flex nx-justify-center nx-items-center nx-bg-white dark:nx-bg-black">
+    <div
+      className={`custom-callouts nx-w-full nx-mt-6 nx-flex nx-justify-center nx-items-center nx-bg-white dark:nx-bg-black ${
+        closeCallout && 'nx-hidden'
+      }`}
+    >
       <div className="nx-w-full  nx-px-4 nx-text-center nx-font-medium nx-text-sm nx-text-left">
         {context ? (
           context
@@ -34,6 +41,12 @@ export function WipCallout({ context }: Props): ReactElement {
           </div>
         )}
       </div>
+      <button
+        className="callout-close-btn"
+        onClick={() => setCloseCallout(true)}
+      >
+        x
+      </button>
     </div>
   );
 }
@@ -46,11 +59,12 @@ export function InfoCallout({ context }: Props): ReactElement {
           context
         ) : (
           <div className="nx-text-left">
-            Interop is currently in <strong>active development</strong> and not yet ready for production use. 
-            The information provided here may change frequently. 
+            Interop is currently in <strong>active development</strong> and not
+            yet ready for production use. The information provided here may
+            change frequently.
             <p>
-            We recommend checking back 
-            regularly for the most up-to-date information.
+              We recommend checking back regularly for the most up-to-date
+              information.
             </p>
           </div>
         )}
@@ -67,8 +81,12 @@ export function AltCallout({ context }: Props): ReactElement {
           context
         ) : (
           <div className="nx-text-left">
-            The Alt-DA Mode feature is currently in <strong>Beta</strong>  within the MIT-licensed OP Stack. Beta features are built and reviewed by the Optimism Collective’s core contributors, and provide developers with early access to highly requested configurations.
-These features may experience stability issues, and we encourage feedback from our early users.
+            The Alt-DA Mode feature is currently in <strong>Beta</strong> within
+            the MIT-licensed OP Stack. Beta features are built and reviewed by
+            the Optimism Collective’s core contributors, and provide developers
+            with early access to highly requested configurations. These features
+            may experience stability issues, and we encourage feedback from our
+            early users.
           </div>
         )}
       </div>
