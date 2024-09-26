@@ -1,36 +1,97 @@
+import { convertToMillionUnits } from "@/utils/calculator-helpers";
 import type { ReactElement } from "react";
-// import { useState } from "react";
-// import { TextInput, SelectInput, CheckboxInput } from "./Inputs";
-// type Props = {
-//   isStateEnabled: boolean;
-//   isFaultProofsEnabled: boolean;
-//   outputRootPostFrequency: number;
-//   transactionsPerDay: number;
-//   maxChannelDuration: number;
-//   comparableTxnType: string;
-//   targetDataMargin: number;
-//   dataAvailabilityType: string;
-// };
 
-// export function ResultsTable({
-//   isStateEnabled,
-//   isFaultProofsEnabled,
-//   outputRootPostFrequency,
-//   transactionsPerDay,
-//   targetDataMargin, 
-//   dataAvailabilityType
-// }: Props): ReactElement {
-export function ResultsTable(): ReactElement {
-  let var1, var2, var3
+export type ResultsParams = {
+  data: {
+    dataAvailabilityType: string; // e16
+    l1BlobBaseFeeScalar: number; // e37
+    l1BaseFeeScalar: number; // e38
+    overallL1DataAndStateCostsMargin: number; // e58
+    totalL1StateProposalCostsInETH: number; // e56
+    modeledDAPlusStateRevenueOnL2: number; // e118
+    dataAvailabilityInUse: string; // f35
+    impliedDataGasFeePerTxUsingBlobs: number; // e64
+    impliedDataGasFeePerTxUsingL1Calldata: number; // e67
+    impliedDataGasFeePerTxUsingAltDAPlasmaMode: number; // e66,
+    assumedFeeScalarMessage: string;
+    impliedDataGasFeeMessage: string;
+  };
+};
+
+export function ResultsTable({
+  data
+}: ResultsParams): ReactElement {
+
+  const {
+    dataAvailabilityType,
+    l1BlobBaseFeeScalar,
+    l1BaseFeeScalar,
+    overallL1DataAndStateCostsMargin,
+    totalL1StateProposalCostsInETH,
+    modeledDAPlusStateRevenueOnL2,
+    dataAvailabilityInUse,
+    impliedDataGasFeePerTxUsingBlobs,
+    impliedDataGasFeePerTxUsingAltDAPlasmaMode,
+    impliedDataGasFeePerTxUsingL1Calldata,
+    assumedFeeScalarMessage,
+    impliedDataGasFeeMessage,
+  } = data;
+
+  function calculateConstructionMessage(
+    _overallL1DataAndStateCostsMargin: number, // Corresponds to E58
+    _totalL1StateProposalCostsInETH: number, // Corresponds to E56
+    _modeledDAPlusStateRevenueOnL2: number // Corresponds to E118
+  ): string {
+    const roundedE58IfNegative =
+      Math.round(_overallL1DataAndStateCostsMargin * -1000) / 1000;
+    const roundedE56 =
+      Math.round(_totalL1StateProposalCostsInETH * 1000) / 1000;
+    const roundedE58IfPositive =
+      Math.round(_overallL1DataAndStateCostsMargin * 1000) / 1000; 
+    const marginPercentage =
+      Math.round(100 * (_overallL1DataAndStateCostsMargin / _modeledDAPlusStateRevenueOnL2) * 10) / 10;
+    const messageIfE58Negative = `This construction has <span>${roundedE58IfNegative}</span> ETH / day of estimated State Output root costs, not covered by Data Margin (${roundedE56} ETH Total Output Root Cost / Day) at inputted Blob/L1 Gas Prices.`;
+    const messageIfE58Positive = `This construction is expected to have +${roundedE58IfPositive} ETH Margin on Data Costs (${marginPercentage}% Margin) at inputted L1 Gas Prices.`;
+    return _overallL1DataAndStateCostsMargin < 0 ? messageIfE58Negative : messageIfE58Positive
+  }
+
+  function calculateDataGasFee(
+    _dataAvailabilityType: string, // Corresponds to E16
+    _dataAvailabilityInUse: string, // Corresponds to F35
+    _impliedDataGasFeePerTxUsingAltDAPlasmaMode: number, // Corresponds to E66
+    _impliedDataGasFeePerTxUsingBlobs: number, // Corresponds to E64
+    _impliedDataGasFeePerTxUsingL1Calldata: number // Corresponds to E67
+  ): string {
+    let gasFee: number;
+    _dataAvailabilityType === "AltDA Plasma Mode"
+      ? (gasFee = _impliedDataGasFeePerTxUsingAltDAPlasmaMode)
+      : _dataAvailabilityInUse === "EIP-4844"
+      ? (gasFee = _impliedDataGasFeePerTxUsingBlobs)
+      : (gasFee = _impliedDataGasFeePerTxUsingL1Calldata);
+
+    // Round the gas fee to 4 decimal places
+    const roundedGasFee = Math.round(gasFee * 10000) / 10000;
+    return `Implied Data Gas Fee per User Transaction: $${roundedGasFee}`;
+  }
+
   return (
     <div className="calculator-results-wrap">
       <div className="construction-info">
         <p>
-          This construction is expected to have <span>+0.006</span> ETH Margin
-          on Data Costs (<span>5% Margin</span>) at inputted L1 Gas Prices{" "}
+          {calculateConstructionMessage(
+            overallL1DataAndStateCostsMargin,
+            totalL1StateProposalCostsInETH,
+            modeledDAPlusStateRevenueOnL2
+          )}
         </p>
         <p>
-          Implied Data Gas Fee per User Transaction: $<span>0.0006</span>{" "}
+          {calculateDataGasFee(
+            dataAvailabilityType,
+            dataAvailabilityInUse,
+            impliedDataGasFeePerTxUsingAltDAPlasmaMode,
+            impliedDataGasFeePerTxUsingBlobs,
+            impliedDataGasFeePerTxUsingL1Calldata
+          )}
         </p>
       </div>
       <div className="results-container">
@@ -61,7 +122,11 @@ export function ResultsTable(): ReactElement {
             <thead>
               <tr>
                 <th colSpan={2}>DA Recommendation:</th>
-                <th>Blobs (EIP-4844)</th>
+                <th>{`${
+                  dataAvailabilityInUse === "EIP-4844"
+                    ? `Blobs (EIP-4844)`
+                    : dataAvailabilityInUse
+                }`}</th>
               </tr>
               <tr className="sub-header">
                 <th>Scalar Type</th>
@@ -72,13 +137,13 @@ export function ResultsTable(): ReactElement {
             <tbody>
               <tr>
                 <td>l1BlobBaseBaseScalar</td>
-                <td>810831</td>
-                <td>0.810831</td>
+                <td>{l1BlobBaseFeeScalar}</td>
+                <td>{convertToMillionUnits(l1BlobBaseFeeScalar)}</td>
               </tr>
               <tr>
                 <td>l1BaseFeeScalar</td>
-                <td>4244</td>
-                <td>0.004244</td>
+                <td>{l1BaseFeeScalar}</td>
+                <td>{convertToMillionUnits(l1BaseFeeScalar)}</td>
               </tr>
             </tbody>
           </table>
@@ -90,15 +155,10 @@ export function ResultsTable(): ReactElement {
           </div>
           <div className="additional-info calculator-text">
             <p>
-              Fees Scalars Assume:
-              <span>100%</span> Blob Fullness and <span>5</span> Blobs per L1 Tx (Avg),
-              Target a <span>5</span>% Margin on DA and State, <span>5</span> hour Max Submission Window.
+              {assumedFeeScalarMessage}
             </p>
             <p>
-              Implied Data Gas Fee Assumes:{" "}
-              <span>
-                0 gwei Blobgas Base Fee, 7.2 gwei L1 Base Fee, 2370 ETH/USD
-              </span>
+              {impliedDataGasFeeMessage}
             </p>
           </div>
         </div>
