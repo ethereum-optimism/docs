@@ -24,9 +24,8 @@ export const TextInput = ({
   labelClass,
   onInputChange,
 }: Props) => {
-  const handleInputChange = (e: any) => {
-    const val = e.target.value;
-    onInputChange(val);
+  const handleInputChange = ({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange?.(value);
   };
   return (
     <div className="flex flex-col">
@@ -35,14 +34,19 @@ export const TextInput = ({
           {label}
         </label>
       )}
-      <p className="text-xs my-1 calcularor-label_description">{description}</p>
+      <p className="text-xs my-1 calculator-label_description">{description}</p>
 
       <input
         {...otherProps}
         onChange={handleInputChange}
         type={type}
         disabled={isDisabled}
-        className={`${className} border-custom-puple focus:border-custom-puple outline-custom-puple bg-transparent  placeholder:text-sm placeholder:text-faded-white border  w-full rounded-lg text-base`}
+        className={`
+          border-custom-purple focus:border-custom-purple outline-custom-purple
+          bg-transparent placeholder:text-sm placeholder:text-faded-white
+          border w-full rounded-lg text-base
+          ${className}
+        `}
         placeholder={placeholder}
       />
     </div>
