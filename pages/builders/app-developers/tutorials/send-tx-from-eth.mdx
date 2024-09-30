@@ -5,17 +5,13 @@ description: Learn how to force transaction inclusion without the OP Mainnet Seq
 ---
 
 import { Callout, Steps } from 'nextra/components'
-import { WipCallout } from '@/components/WipCallout'
 
-<WipCallout />
 # Triggering OP Mainnet Transactions from Ethereum using Viem
 
 OP Mainnet currently uses a single-Sequencer block production model. 
-
 This means that there is only one Sequencer active on the network at any given time. Single-Sequencer models are simpler than their highly decentralized counterparts but they are also more vulnerable to potential downtime.
 
 Sequencer downtime must not be able to prevent users from transacting on the network. As a result, OP Mainnet includes a mechanism for "forcing" transactions to be included in the blockchain. This mechanism involves triggering a transaction on OP Mainnet by sending a transaction on Ethereum.
-
 In this tutorial you'll learn how to trigger a transaction on OP Mainnet from Ethereum using Viem. You'll use the OP Sepolia testnet, but the same logic will apply to OP Mainnet.
 
 ## Dependencies
@@ -115,10 +111,10 @@ const privateKey = process.env.TUTORIAL_PRIVATE_KEY;
 {<h3>Create the RPC providers and wallets</h3>}
 
 ```js
-const l1PublicClient = createPublicClient({ chain: sepolia, transport: http() });
-const l2PublicClient = createPublicClient({ chain: optimismSepolia, transport: http() });
-const l1WalletClient = createWalletClient({ chain: sepolia, transport: http() });
-const l2WalletClient = createWalletClient({ chain: optimismSepolia, transport: http() });
+const l1PublicClient = createPublicClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") });
+const l2PublicClient = createPublicClient({ chain: optimismSepolia, transport: http("https://sepolia.optimism.io") });
+const l1WalletClient = createWalletClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") });
+const l2WalletClient = createWalletClient({ chain: optimismSepolia, transport: http("https://sepolia.optimism.io") });
 ```
 
 </Steps>
