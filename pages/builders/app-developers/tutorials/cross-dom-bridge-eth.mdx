@@ -114,7 +114,7 @@ const publicClientL1 = createPublicClient({
 const walletClientL1 = createWalletClient({
     account,
     chain: sepolia,
-    transport: http("https://sepolia.optimism.io"),
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
 }).extend(walletActionsL1());
 
 // Create L2 public client for interacting with OP Sepolia
@@ -164,7 +164,7 @@ Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBr
       ```js
       const args = await publicClientL2.buildDepositTransaction({
         mint: parseEther('0.00010'), 
-        to: "0x1000000000000000000000000000000000000000",
+        to: account.address,
       });
       ```
 
@@ -303,8 +303,8 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
       Converts the withdrawal amount to `wei` and specifies the recipient on L1.
 
       ```js
-      const args = await publicClientL2.buildWithdrawalTransaction({
-          withdrawalAmount: parseEther(amount), 
+      const withdrawArgs = await publicClientL1.buildInitiateWithdrawal({
+          withdrawalAmount: parseEther('0.0001'), 
           to: account.address,
       });
       ```
