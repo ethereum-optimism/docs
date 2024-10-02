@@ -6,7 +6,6 @@ description: Learn how to use Viem to transfer ETH between Layer 1 (Ethereum or 
 
 import { Callout, Steps, Tabs } from 'nextra/components'
 
-
 # Bridging ETH to OP Mainnet With Viem
 
 This tutorial explains how you can use [Viem](https://viem.sh) to bridge ETH from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
@@ -24,8 +23,8 @@ If you want to use a network that isn't included by default, you can add it to V
 
 ## Dependencies
 
-* [node](https://nodejs.org/en/)
-* [pnpm](https://pnpm.io/installation)
+*   [node](https://nodejs.org/en/)
+*   [pnpm](https://pnpm.io/installation)
 
 ## Create a Demo Project
 
@@ -33,33 +32,31 @@ You're going to use Viem for this tutorial.
 Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
-{<h3>Make a Project Folder</h3>}
+  {<h3>Make a Project Folder</h3>}
 
-```bash
-mkdir op-sample-project
-cd op-sample-project
-```
+  ```bash
+  mkdir op-sample-project
+  cd op-sample-project
+  ```
 
-{<h3>Initialize the Project</h3>}
+  {<h3>Initialize the Project</h3>}
 
-```bash
-pnpm init
-```
+  ```bash
+  pnpm init
+  ```
 
-{<h3>Install the Optimism SDK</h3>}
+  {<h3>Install the Optimism SDK</h3>}
 
-Install `viem`, and `dotenv` for managing environment variables.
+  Install `viem`, and `dotenv` for managing environment variables.
 
-```bash
-pnpm add viem dotenv
-```
-
+  ```bash
+  pnpm add viem dotenv
+  ```
 </Steps>
 
 <Callout type="info">
-Want to create a new wallet for this tutorial?
-If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
-
+  Want to create a new wallet for this tutorial?
+  If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
 </Callout>
 
 ## Get ETH on Sepolia
@@ -68,7 +65,7 @@ This tutorial explains how to bridge ETH from Sepolia to OP Sepolia.
 You will need to get some ETH on Sepolia to follow along.
 
 <Callout type="info">
-You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
+  You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
 </Callout>
 
 ## Add a Private Key to Your Environment
@@ -80,6 +77,7 @@ Make sure this private key corresponds to an address that has ETH on Sepolia.
 ```bash
 export TUTORIAL_PRIVATE_KEY=0x...
 ```
+
 ## Start the Node REPL
 
 You're going to use the Node REPL to interact with Viem.
@@ -88,6 +86,7 @@ To start the Node REPL run the following command in your terminal:
 ```bash
 node
 ```
+
 This will bring up a Node REPL prompt that allows you to run JavaScript code.
 
 ## Import Dependencies
@@ -98,7 +97,7 @@ You need to import some dependencies into your Node REPL session.
 const { createPublicClient, http, createWalletClient, parseEther, formatEther } = require('viem');
 const { sepolia, optimismSepolia } = require('viem/chains');
 const { privateKeyToAccount } = require('viem/accounts');
-const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
+const { getL2TransactionHashes, publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
 // Load private key from environment variable
 const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
@@ -108,7 +107,7 @@ const account = privateKeyToAccount(PRIVATE_KEY);
 const publicClientL1 = createPublicClient({
     chain: sepolia,
     transport: http("https://rpc.ankr.com/eth_sepolia"),
-});
+}).extend(publicActionsL1())
 
 // Create L1 wallet client for sending transactions on Sepolia
 const walletClientL1 = createWalletClient({
@@ -130,7 +129,6 @@ const walletClientL2 = createWalletClient({
     transport: http("https://sepolia.optimism.io"),
 }).extend(walletActionsL2());
 ```
-
 
 ## Get ETH on Sepolia
 
@@ -213,39 +211,39 @@ Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBr
   <Tabs.Tab>
     ```js
     const { createPublicClient, http, createWalletClient, parseEther } = require('viem');
-const { sepolia, optimismSepolia } = require('viem/chains');
-const { privateKeyToAccount } = require('viem/accounts');
-const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
+    const { sepolia, optimismSepolia } = require('viem/chains');
+    const { privateKeyToAccount } = require('viem/accounts');
+    const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
-// Load private key from environment variable
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const account = privateKeyToAccount(PRIVATE_KEY);
+    // Load private key from environment variable
+    const PRIVATE_KEY = process.env.PRIVATE_KEY;
+    const account = privateKeyToAccount(PRIVATE_KEY);
 
-// Create L1 public client for reading from the Sepolia network
-const publicClientL1 = createPublicClient({
+    // Create L1 public client for reading from the Sepolia network
+    const publicClientL1 = createPublicClient({
     chain: sepolia,
     transport: http("https://rpc.ankr.com/eth_sepolia"),
-});
+    }).extend(publicActionsL1())
 
-// Create L1 wallet client for sending transactions on Sepolia
-const walletClientL1 = createWalletClient({
+    // Create L1 wallet client for sending transactions on Sepolia
+    const walletClientL1 = createWalletClient({
     account,
     chain: sepolia,
     transport: http("https://sepolia.optimism.io"),
-}).extend(walletActionsL1());
+    }).extend(walletActionsL1());
 
-// Create L2 public client for interacting with OP Sepolia
-const publicClientL2 = createPublicClient({
+    // Create L2 public client for interacting with OP Sepolia
+    const publicClientL2 = createPublicClient({
     chain: optimismSepolia,
     transport: http("https://sepolia.optimism.io"),
-}).extend(publicActionsL2());
+    }).extend(publicActionsL2());
 
-// Create L2 wallet client for sending transactions on OP Sepolia
-const walletClientL2 = createWalletClient({
+    // Create L2 wallet client for sending transactions on OP Sepolia
+    const walletClientL2 = createWalletClient({
     account,
     chain: optimismSepolia,
     transport: http("https://sepolia.optimism.io"),
-}).extend(walletActionsL2());
+    }).extend(walletActionsL2());
 
     async function depositETH(amount) {
     try {
@@ -314,7 +312,7 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
       This sends the withdrawal transaction on L2, which initiates the withdrawal process on L2 and logs a transaction hash for tracking the withdrawal.
 
       ```js
-      const hash = await walletClientL2.initiateWithdrawal(args);
+      const hash = await walletClientL2.initiateWithdrawal(withdrawArgs);
       console.log(`Withdrawal transaction hash on L2: ${hash}`);
       ```
 
@@ -407,91 +405,93 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
 
   <Tabs.Tab>
     ```js
-  const { createPublicClient, http, createWalletClient, parseEther } = require('viem');
-  const { sepolia, optimismSepolia } = require('viem/chains');
-  const { privateKeyToAccount } = require('viem/accounts');
-  const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
+    const { createPublicClient, http, createWalletClient, parseEther } = require('viem');
+    const { sepolia, optimismSepolia } = require('viem/chains');
+    const { privateKeyToAccount } = require('viem/accounts');
+    const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
-    // Replace with your actual private key (Keep this secure!)
-    const PRIVATE_KEY = '0x....'
+
+    // Load private key from environment variable
+    const PRIVATE_KEY = process.env.PRIVATE_KEY;
     const account = privateKeyToAccount(PRIVATE_KEY);
 
     // Create L1 public client for reading from the Sepolia network
     const publicClientL1 = createPublicClient({
-        chain: sepolia,
-        transport: http(process.env.L1_RPC_URL),
-    });
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+    }).extend(publicActionsL1())
 
     // Create L1 wallet client for sending transactions on Sepolia
     const walletClientL1 = createWalletClient({
-        account,
-        chain: sepolia,
-        transport: http(process.env.L1_RPC_URL),
+    account,
+    chain: sepolia,
+    transport: http("https://sepolia.optimism.io"),
     }).extend(walletActionsL1());
 
     // Create L2 public client for interacting with OP Sepolia
     const publicClientL2 = createPublicClient({
-        chain: optimismSepolia,
-        transport: http(process.env.L2_RPC_URL),
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
     }).extend(publicActionsL2());
 
     // Create L2 wallet client for sending transactions on OP Sepolia
     const walletClientL2 = createWalletClient({
-        account,
-        chain: optimismSepolia,
-        transport: http(process.env.L2_RPC_URL),
+    account,
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
     }).extend(walletActionsL2());
 
+
     async function withdrawETH(amount) {
-        try {
-            const args = await publicClientL2.buildWithdrawalTransaction({
-            withdrawalAmount: parseEther(amount),
-            to: account.address,
-            });
+    try {
+        const args = await publicClientL2.buildWithdrawalTransaction({
+        withdrawalAmount: parseEther(amount),
+        to: account.address,
+        });
 
-            const hash = await walletClientL2.initiateWithdrawal(args);
-            console.log(`Withdrawal transaction hash on L2: ${hash}`);
+        const hash = await walletClientL2.initiateWithdrawal(args);
+        console.log(`Withdrawal transaction hash on L2: ${hash}`);
 
-            const receipt = await publicClientL2.waitForTransactionReceipt({ hash });
-            console.log('L2 transaction confirmed:', receipt);
+        const receipt = await publicClientL2.waitForTransactionReceipt({ hash });
+        console.log('L2 transaction confirmed:', receipt);
 
-            const { output, withdrawal } = await publicClientL1.waitToProve({
-            receipt,
-            targetChain: walletClientL2.chain
-            });
+        const { output, withdrawal } = await publicClientL1.waitToProve({
+        receipt,
+        targetChain: walletClientL2.chain
+        });
 
-            const proveArgs = await publicClientL2.buildProveWithdrawal({
-            output,
-            withdrawal,
-            });
+        const proveArgs = await publicClientL2.buildProveWithdrawal({
+        output,
+        withdrawal,
+        });
 
-            const proveHash = await walletClientL1.proveWithdrawal(proveArgs);
+        const proveHash = await walletClientL1.proveWithdrawal(proveArgs);
 
-            const proveReceipt = await publicClientL1.waitForTransactionReceipt({ hash: proveHash });
+        const proveReceipt = await publicClientL1.waitForTransactionReceipt({ hash: proveHash });
 
-            const awaitWithdrawal = await publicClientL1.waitToFinalize({
-            targetChain: walletClientL2.chain,
-            withdrawalHash: withdrawal.withdrawalHash,
-            });
+        const awaitWithdrawal = await publicClientL1.waitToFinalize({
+        targetChain: walletClientL2.chain,
+        withdrawalHash: withdrawal.withdrawalHash,
+        });
 
-            const finalizeHash = await walletClientL1.finalizeWithdrawal({
-            targetChain: walletClientL2.chain,
-            withdrawal,
-            });
+        const finalizeHash = await walletClientL1.finalizeWithdrawal({
+        targetChain: walletClientL2.chain,
+        withdrawal,
+        });
 
-            const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
-            hash: finalizeHash
-            });
+        const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
+        hash: finalizeHash
+        });
 
-            const status = await publicClientL1.getWithdrawalStatus({
-            receipt,
-            targetChain: walletClientL2.chain
-            })
+        const status = await publicClientL1.getWithdrawalStatus({
+        receipt,
+        targetChain: walletClientL2.chain
+        })
 
-            console.log('Withdrawal completed successfully!');
-        } catch (error) {
-            console.error('Error during withdrawal:', error);
-        }
+        console.log('Withdrawal completed successfully!');
+    } catch (error) {
+        console.error('Error during withdrawal:', error);
+    }
     }
     ```
   </Tabs.Tab>
