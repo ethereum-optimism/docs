@@ -6,7 +6,7 @@ description: Learn how bridging works between L1 and L2, how to use it, and what
 
 import { Callout } from 'nextra/components'
 
-# Sending Data Between L1 and L2
+# Sending data between L1 and L2
 
 Smart contracts on L1 (Ethereum) can interact with smart contracts on L2 (OP Mainnet) through a process called "bridging".
 This page explains how bridging works, how to use it, and what to watch out for.
@@ -16,7 +16,7 @@ This page explains how bridging works, how to use it, and what to watch out for.
   For a step-by-step tutorial on how to send data between L1 and L2, check out the [Solidity tutorial](/builders/app-developers/tutorials/cross-dom-solidity).
 </Callout>
 
-## Understanding Contract Calls
+## Understanding contract calls
 
 It can be easier to understand bridging if you first have a basic understanding of how contracts on EVM-based blockchains like OP Mainnet and Ethereum communicate within the *same* network.
 The interface for sending messages *between* Ethereum and OP Mainnet is designed to mimic the standard contract communication interface as much as possible.
@@ -57,7 +57,7 @@ Here you're using the [low-level "call" function](https://docs.soliditylang.org/
 Although these two code snippets look a bit different, they're doing the exact same thing.
 Because of limitations of Solidity, **the OP Stack's bridging interface is designed to look like the second code snippet**.
 
-## Basics of Communication Between Layers
+## Basics of communication between layers
 
 At a high level, the process for sending data between L1 and L2 is pretty similar to the process for sending data between two contracts on Ethereum (with a few caveats).
 Communication between L1 and L2 is made possible by a pair of special smart contracts called the "messenger" contracts.
@@ -121,17 +121,17 @@ contract MyContract {
   You can find the addresses of the `L1CrossDomainMessenger` and the `L2CrossDomainMessenger` contracts on OP Mainnet and OP Sepolia on the [Contract Addresses](/chain/addresses) page.
 </Callout>
 
-## Communication Speed
+## Communication speed
 
 Unlike calls between contracts on the same blockchain, calls between Ethereum and OP Mainnet are *not* instantaneous.
 The speed of a cross-chain transaction depends on the direction in which the transaction is sent.
 
-### For L1 to L2 Transactions
+### For L1 to L2 transactions
 
 Transactions sent from L1 to L2 take **approximately 1-3 minutes** to get from Ethereum to OP Mainnet, or from Sepolia to OP Sepolia.
 This is because the Sequencer waits for a certain number of L1 blocks to be created before including L1 to L2 transactions to avoid potentially annoying [reorgs](https://www.alchemy.com/overviews/what-is-a-reorg).
 
-### For L2 to L1 Transactions
+### For L2 to L1 transactions
 
 Transactions sent from L2 to L1 take **approximately 7 days** to get from OP Mainnet to Ethereum, or from OP Sepolia to Sepolia.
 This is because the bridge contract on L1 must wait for the L2 state to be *proven* to the L1 chain before it can relay the message.
@@ -177,9 +177,9 @@ modifier onlyOwner() {
 }
 ```
 
-## Fees For Sending Data Between L1 and L2
+## Fees for sending data between L1 and L2
 
-### For L1 to L2 Transactions
+### For L1 to L2 transactions
 
 The majority of the cost of an L1 to L2 transaction comes from the smart contract execution on L1.
 When sending an L1 to L2 transaction, you send to the [`L1CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/111f3f3a3a2881899662e53e0f1b2f845b188a38/packages/contracts-bedrock/src/L1/L1CrossDomainMessenger.sol) contract, which then sends a call to the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/111f3f3a3a2881899662e53e0f1b2f845b188a38/packages/contracts-bedrock/src/L1/OptimismPortal.sol) contract.
@@ -195,7 +195,7 @@ The amount of L1 gas charged increases when more people are sending L1 to L2 tra
   You should always add a buffer of at least 20% to the gas limit for your L1 to L2 transaction to avoid running out of gas.
 </Callout>
 
-### For L2 to L1 Transactions
+### For L2 to L1 transactions
 
 Each message from L2 to L1 requires three transactions:
 
@@ -211,7 +211,7 @@ Each message from L2 to L1 requires three transactions:
 The total cost of an L2 to L1 transaction is therefore the combined cost of the L2 initialization transaction and the two L1 transactions.
 The L1 proof and finalization transactions are typically significantly more expensive than the L2 initialization transaction.
 
-## Understanding the Challenge Period
+## Understanding the challenge period
 
 One of the most important things to understand about L1 ⇔ L2 interaction is that **mainnet messages sent from Layer 2 to Layer 1 cannot be relayed for at least 7 days**.
 This means that any messages you send from Layer 2 will only be received on Layer 1 after this one week period has elapsed.
