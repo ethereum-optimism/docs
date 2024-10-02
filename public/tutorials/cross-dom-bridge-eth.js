@@ -1,43 +1,45 @@
-import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
-import { sepolia, optimismSepolia } from "viem/chains";
-import { privateKeyToAccount } from 'viem/accounts';
-import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } from 'viem/op-stack';
+(async () => {
+
+const { createPublicClient, http, createWalletClient, parseEther, formatEther } = require('viem');
+const { sepolia, optimismSepolia } = require('viem/chains');
+const { privateKeyToAccount } = require('viem/accounts');
+const { getL2TransactionHashes, publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
 // Load private key from environment variable
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
 const account = privateKeyToAccount(PRIVATE_KEY);
 
 // Create L1 public client for reading from the Sepolia network
 const publicClientL1 = createPublicClient({
     chain: sepolia,
-    transport: http(),
-});
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+}).extend(publicActionsL1()) 
 
 // Create L1 wallet client for sending transactions on Sepolia
 const walletClientL1 = createWalletClient({
     account,
     chain: sepolia,
-    transport: http(),
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
 }).extend(walletActionsL1());
 
 // Create L2 public client for interacting with OP Sepolia
 const publicClientL2 = createPublicClient({
     chain: optimismSepolia,
-    transport: http(process.env.L2_RPC_URL),
+    transport: http("https://sepolia.optimism.io"),
 }).extend(publicActionsL2());
 
 // Create L2 wallet client for sending transactions on OP Sepolia
 const walletClientL2 = createWalletClient({
     account,
     chain: optimismSepolia,
-    transport: http(process.env.L2_RPC_URL),
+    transport: http("https://sepolia.optimism.io"),
 }).extend(walletActionsL2());
 
-async function depositETH(amount) {
+async function depositETH() {
 try {
     // Build the deposit transaction parameters
     const args = await publicClientL2.buildDepositTransaction({
-        mint: parseEther(amount), // Convert amount to wei
+        mint: parseEther("0.0001"), // Convert amount to wei
         to: account.address, // Recipient on L2 (same as sender in this case)
     });
 
@@ -64,3 +66,61 @@ try {
         console.error('Error during deposit:', error);
     }
 }
+
+depositETH()
+
+async function withdrawETH() {
+    try {
+        const args = await publicClientL2.buildWithdrawalTransaction({
+        withdrawalAmount: parseEther("0.0001"),
+        to: account.address,
+        });
+
+        const hash = await walletClientL2.initiateWithdrawal(args);
+        console.log(`Withdrawal transaction hash on L2: ${hash}`);
+
+        const receipt = await publicClientL2.waitForTransactionReceipt({ hash });
+        console.log('L2 transaction confirmed:', receipt);
+
+        const { output, withdrawal } = await publicClientL1.waitToProve({
+        receipt,
+        targetChain: walletClientL2.chain
+        });
+
+        const proveArgs = await publicClientL2.buildProveWithdrawal({
+        output,
+        withdrawal,
+        });
+
+        const proveHash = await walletClientL1.proveWithdrawal(proveArgs);
+
+        const proveReceipt = await publicClientL1.waitForTransactionReceipt({ hash: proveHash });
+
+        const awaitWithdrawal = await publicClientL1.waitToFinalize({
+        targetChain: walletClientL2.chain,
+        withdrawalHash: withdrawal.withdrawalHash,
+        });
+
+        const finalizeHash = await walletClientL1.finalizeWithdrawal({
+        targetChain: walletClientL2.chain,
+        withdrawal,
+        });
+
+        const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
+        hash: finalizeHash
+        });
+
+        const status = await publicClientL1.getWithdrawalStatus({
+        receipt,
+        targetChain: walletClientL2.chain
+        })
+
+        console.log('Withdrawal completed successfully!');
+    } catch (error) {
+        console.error('Error during withdrawal:', error);
+    }
+    }
+
+    withdrawETH()
+
+})()
