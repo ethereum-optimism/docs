@@ -1,34 +1,26 @@
-import { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
-import { optimismSepolia } from 'viem/chains'
-import { publicActionsL2, walletActionsL2 } from 'viem/op-stack'
-import * as dotenv from 'dotenv'
+(async () => {
 
-// Load environment variables
-dotenv.config()
+const { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } = require('viem');
+const { privateKeyToAccount } = require('viem/accounts');
+const { optimismSepolia } = require('viem/chains');
+const { publicActionsL2, walletActionsL2 } = require('viem/op-stack');
 
-// Set up the account
-if (!process.env.PRIVATE_KEY) {
-    throw new Error('Error: PRIVATE_KEY is not defined in the environment variables.')
-  }
-  if (!process.env.L2_RPC_URL) {
-    throw new Error('Error: L2_RPC_URL is not defined in the environment variables.')
-  }
-const account = privateKeyToAccount(process.env.PRIVATE_KEY)
+const privateKey = process.env.TUTORIAL_PRIVATE_KEY
+
+const account = privateKeyToAccount(privateKey)
 
 // Set up the public client
 const publicClient = createPublicClient({
   chain: optimismSepolia,
-  transport: http(process.env.L2_RPC_URL),
+  transport: http("https://sepolia.optimism.io"),
 }).extend(publicActionsL2())
 
 // Set up the wallet client
 const walletClient = createWalletClient({
   chain: optimismSepolia,
-  transport: http(process.env.L2_RPC_URL),
+  transport: http("https://sepolia.optimism.io"),
 }).extend(walletActionsL2())
 
-async function estimateTransactionCosts() {
   try {
     // Prepare the transaction
     const transaction = {
@@ -82,6 +74,6 @@ async function estimateTransactionCosts() {
   } catch (error) {
     console.error('Error:', error)
   }
-}
 
-estimateTransactionCosts()
+
+})()

@@ -16,82 +16,78 @@ You'll also learn how to estimate the total cost of the transaction all at once.
   Check out the full explainer on [OP Stack transaction fees](/builders/app-developers/transactions/fees) for more information on how OP Mainnet charges fees under the hood.
 </Callout>
 
-## Prerequisites
+## Supported Networks
 
-Before you begin, ensure you have the following:
+Viem supports any of the [Superchain networks](/chain/networks).
+The OP Stack networks are included in Viem by default.
+If you want to use a network that isn't included by default, you can add it to Viem's chain configurations.
 
-*   Node.js (version 14 or later)
-*   An understanding of the [viem library](https://viem.sh/op-stack/)
-*   `pnpm` installed for managing packages.
-
-## Required Dependencies
+## Dependencies
 
 *   [node](https://nodejs.org/en/)
 *   [pnpm](https://pnpm.io/installation)
-*   [viem](https://viem.sh/op-stack/)
-
-Install `pnpm` if you haven't already:
-
-```bash
-npm install -g pnpm
-
-```
 
 ## Create a Demo Project
 
+You're going to use Viem for this tutorial.
+Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
+
 <Steps>
-  {<h3>Project Setup</h3>}
-
-  Let's create a new project and install the necessary dependencies.
-
-  <Steps>
-    {<h4>Create a folder and new file</h4>}
-
-    ```bash
-    mkdir op-sample-project
-    cd op-sample-project
-    touch estimate-costs.js
-    ```
-
-    {<h4>Initialize the project</h4>}
-
-    ```bash
-    pnpm init
-    ```
-
-    {<h4>Install dependencies</h4>}
-
-    Install `viem`, and `dotenv` for managing environment variables.
-
-    ```bash
-    pnpm add viem dotenv
-    ```
-  </Steps>
-
-  {<h3>Configure Environment Variables</h3>}
-
-  You need a private key in order to sign transactions.
-  Create a `.env` file to securely store your environment variables
-  Set your private key as an environment variable with the `export` command.
-  Make sure this private key corresponds to an address that has ETH on Sepolia.
+  {<h3>Make a Project Folder</h3>}
 
   ```bash
-  touch .env
+  mkdir op-sample-project
+  cd op-sample-project
   ```
 
-  Add your wallet private key in the `.env` file.
-  You need a private key in order to sign transactions.
-  Make sure this private key corresponds to an address that has ETH on OP Sepolia.
+  {<h3>Initialize the Project</h3>}
 
   ```bash
-  RPC_URL=https://optimism-mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID
-  TUTORIAL_PRIVATE_KEY=0x...
+  pnpm init
+  ```
+
+  {<h3>Install the viem library</h3>}
+
+  ```bash
+  pnpm add viem
   ```
 </Steps>
 
-<Callout type="warning">
-  Never share your private key and avoid committing this file to version control.
+<Callout type="info">
+  Want to create a new wallet for this tutorial?
+  If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
 </Callout>
+
+## Get ETH on Sepolia
+
+This tutorial explains how to bridge ETH from Sepolia to OP Sepolia.
+You will need to get some ETH on Sepolia to follow along.
+
+<Callout type="info">
+  You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
+</Callout>
+
+## Add a Private Key to Your Environment
+
+You need a private key in order to sign transactions.
+Set your private key as an environment variable with the export command.
+Make sure this private key corresponds to an address that has ETH on Sepolia.
+
+```bash
+export TUTORIAL_PRIVATE_KEY=0x...
+```
+
+## Start the Node REPL
+
+You're going to use the Node REPL to interact with Viem.
+To start the Node REPL run the following command in your terminal:
+
+```bash
+node
+```
+
+This will bring up a Node REPL prompt that allows you to run JavaScript code.
+
 
 ## Get ETH on OP Sepolia
 
@@ -102,90 +98,55 @@ You will need to get some ETH on OP Sepolia in order to run the code in this tut
   You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
 </Callout>
 
-## Start the Node REPL
-
-You're going to use the Node REPL to interact with the Viem library.
-To start the Node REPL run the following command in your terminal:
-
-```bash
-node
-```
-
 This will bring up a Node REPL prompt that allows you to run javascript code.
-
-## Import Dependencies
-
-You need to import some dependencies into your Node REPL session.
-
-<Steps>
-  {<h3>Import the necessary packages</h3>}
-
-  In your project directory and add the following code in `estimate-costs.js`:
-
-  ```js
-
-  // Import required modules
-  import { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } from 'viem'
-  import { privateKeyToAccount } from 'viem/accounts'
-  import { optimismSepolia } from 'viem/chains'
-  import { publicActionsL2, walletActionsL2 } from 'viem/op-stack'
-  import * as dotenv from 'dotenv';
-  // Load environment variables
-  dotenv.config();
-  ```
-</Steps>
 
 ## Set Session Variables
 
 You'll need a few variables throughout this tutorial.
 Let's set those up now.
 
-<Tabs items={['Create the wallet instance', 'Wallet clients', 'Create the RPC provider']}>
-  <Tabs.Tab>
-    To create the wallet instance, load your private key, using `privateKeyToAccount`. [`privateKeyToAccount`](https://viem.sh/docs/accounts/local/privateKeyToAccount#privatekeytoaccount) is a viem method used to sign transactions by passing a private key.
+<Steps>
 
-    ```js
-    if (!process.env.PRIVATE_KEY) {
-      throw new Error('Error: PRIVATE_KEY is not defined in the environment variables.')
-    }
-    const account = privateKeyToAccount(process.env.PRIVATE_KEY);
-    ```
-  </Tabs.Tab>
+{<h3>Import Viem and other necessary modules</h3>}
 
-<Callout type="info">
-  To ensure that `process.env.PRIVATE_KEY` is defined before using it. If they are undefined, we add a check to provide a error messages when the environment variable is missing.
-</Callout>
+```js
 
+const { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } = require('viem');
+const { privateKeyToAccount } = require('viem/accounts');
+const { optimismSepolia } = require('viem/chains');
+const { publicActionsL2, walletActionsL2 } = require('viem/op-stack');
+```
 
-  <Tabs.Tab>
-    Set up our Wallet Clients for L2(optimismSepolia)
+{<h3>Set up the account</h3>}
 
-    ```js
-        const walletClient = createWalletClient({
-        chain: optimismSepolia,
-        transport: http(process.env.L2_RPC_URL),
-      }).extend(walletActionsL2())
-    ```
-  </Tabs.Tab>
+```js
+const account = privateKeyToAccount(process.env.TUTORIAL_PRIVATE_KEY);
+```
+{<h3>Create the public client</h3>}
 
-  <Tabs.Tab>
-    Set up our Viem Clients for the L1(Sepolia) and L2(optimismSepolia)
+```js
+const publicClientL2 = createPublicClient({
+  chain: optimismSepolia,
+  transport: http("https://sepolia.optimism.io"),
+}).extend(publicActionsL2());
+```
 
-    ```js
-        const publicClient = createPublicClient({
-            chain: optimismSepolia,
-            transport: http(process.env.L2_RPC_URL),
-        }).extend(publicActionsL2());
-    ```
-  </Tabs.Tab>
-</Tabs>
+{<h3>Create the wallet client</h3>}
+
+```js
+const walletClientL2 = createWalletClient({
+  chain: optimismSepolia,
+  transport: http("https://sepolia.optimism.io"),
+}).extend(walletActionsL2());
+```
+</Steps>
 
 ## Estimate Transaction Costs
 
 You're now going to estimate the cost of a transaction on OP Mainnet.
 
 <Steps>
-  {<h3>Creating a Transaction in Viem</h3>}
+  {<h3>Define the transaction</h3>}
 
   Viem makes it easy to prepare a transactions so you can estimate the cost of a transaction before you sign it.
   Here you'll define an object with the required transaction fields and send a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`.
@@ -198,13 +159,14 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
       gasPrice: parseGwei('20')
     };
   ```
+  This transaction will send `0.005` ETH to the specified address with a gas price of 20 Gwei.
 
   {<h3>Estimate the execution gas fee</h3>}
 
-  Now that you have prepared a transaction that sends a small amount of ETH, we can estimate the gas for that transaction by using the `estimateGas` method from viem.
+  Now, let's estimate the gas limit for our transaction.
 
   ```js
-      const gasLimit = await publicClient.estimateGas(transaction);
+      const gasLimit = await publicClientL2.estimateGas(transaction);
       console.log(`Estimated Gas Limit: ${gasLimit}`);
   ```
 
@@ -214,7 +176,7 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
     Retrieve the current gas price (effective gas price), Alternatively, given that you already set the gas price manually, you can use the `getGasPrice` method from viem.
 
     ```js
-    const effectiveGasPrice = await publicClient.getGasPrice();
+    const effectiveGasPrice = await publicClientL2.getGasPrice();
     console.log(`effective Gas Price, ${effectiveGasPrice}`);
     ```
 
@@ -235,7 +197,7 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   This function returns the current cost estimate in wei.
 
   ```js
-  const l1CostEstimate = await publicClient.estimateL1Fee(transaction)
+  const l1CostEstimate = await publicClientL2.estimateL1Fee(transaction)
   console.log(`Estimated L1 data Fee: ${formatEther(l1CostEstimate)}`);
   ```
 
@@ -244,8 +206,8 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   Once you've individually estimated the execution gas fee and the L1 data fee, you can sum these two values together to get the total cost of the transaction.
 
   ```js
-    const totalSum = l2CostEstimate + l1CostEstimate;
-    console.log(`Estimated Total Cost: ${formatEther(totalSum)} `);
+    const totalEstimate = l2CostEstimate + l1CostEstimate;
+    console.log(`Estimated Total Cost: ${formatEther(totalEstimate)} `);
   ```
 
   {<h3>Send the transaction</h3>}
@@ -254,8 +216,8 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   This will make it possible to see the actual cost of the transaction to compare to your estimate.
 
   ```js
-      const txHash = await walletClient.sendTransaction(transaction)
-      console.log(`Transaction Hash: ${tx}`);
+      const txHash = await walletClientL2.sendTransaction(transaction)
+      console.log(`Transaction Hash: ${txHash}`);
   ```
 
   {<h3>Check the actual execution gas fee</h3>}
@@ -265,7 +227,7 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   You can then multiply these values to get the actual L2 cost of the transaction
 
   ```js
-      const receipt = await publicClient.getTransactionReceipt({ hash: txHash });
+      const receipt = await publicClientL2.getTransactionReceipt({ hash: txHash });
       console.log('Transaction receipt:', receipt);
 
       const l2CostActual = receipt.gasUsed * receipt.effectiveGasPrice;
@@ -277,7 +239,7 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   You can also check the actual L1 data fee.
 
   ```js
-    const l1CostActual = await publicClient.estimateL1Fee(txHash)
+    const l1CostActual = await publicClientL2.estimateL1Fee(txHash)
     console.log(`l1CostActual gas fee: ${formatEther(l1CostActual)}`);
 
   ```
