@@ -1,166 +1,140 @@
 ---
-title: Bridging ETH to OP Mainnet With Viem
+title: Bridging ETH with Viem
 lang: en-US
-description: Learn how to use viem to transfer ETH between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
+description: Learn how to use Viem to transfer ETH between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
 ---
 
-import { Callout, Steps, Tabs } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
+
 
 # Bridging ETH to OP Mainnet With Viem
 
-This tutorial explains how you can use the [Viem](https://viem.sh/op-stack/) to bridge ETH from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
-The `viem/op-stack` library is an easy way to add bridging functionality to your JavaScript-based application.
-It also provides some safety rails to prevent common mistakes that could cause ETH or ERC-20 tokens to be made inaccessible.
+This tutorial explains how you can use [Viem](https://viem.sh) to bridge ETH from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
+Viem is a TypeScript interface for Ethereum that provides low-level stateless primitives for interacting with Ethereum.
+It offers an easy way to add bridging functionality to your JavaScript-based application.
 
+Behind the scenes, Viem uses the [Standard Bridge](/builders/app-developers/bridging/standard-bridge) contracts to transfer ETH and ERC-20 tokens.
 Make sure to check out the [Standard Bridge guide](/builders/app-developers/bridging/standard-bridge) if you want to learn more about how the bridge works under the hood.
 
-## Prerequisites
+## Supported Networks
 
-Before you begin, ensure you have the following:
+Viem supports any of the [Superchain networks](/chain/networks).
+The OP Stack networks are included in Viem by default.
+If you want to use a network that isn't included by default, you can add it to Viem's chain configurations.
 
-*   Familiarity with bridging concepts between L1 and L2.
-*   An understanding of the [viem library](https://viem.sh/op-stack/)
-*   [Node.js](https://nodejs.org/en/) (version 14 or later)
-*   [pnpm](https://pnpm.io/installation) installed for managing packages.
+## Dependencies
 
-Install `pnpm` if you haven't already:
+* [node](https://nodejs.org/en/)
+* [pnpm](https://pnpm.io/installation)
 
-```bash
-npm install -g pnpm
+## Create a Demo Project
 
-```
+You're going to use Viem for this tutorial.
+Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
-  {<h3>Project Setup</h3>}
+{<h3>Make a Project Folder</h3>}
 
-  Let's create a new project and install the necessary dependencies.
+```bash
+mkdir op-sample-project
+cd op-sample-project
+```
 
-  *   Create a folder and a file
+{<h3>Initialize the Project</h3>}
 
-  ```bash
-  mkdir op-sample-project
-  cd op-sample-project
-  touch bridge-eth.js
-  ```
+```bash
+pnpm init
+```
 
-  *   Initialize the project:
+{<h3>Install the Optimism SDK</h3>}
 
-  ```bash
-  pnpm init
-  ```
+```bash
+pnpm add @eth-optimism/sdk
+```
 
-  *   Install dependencies: Install `viem`, and `dotenv` for managing environment variables.
+{<h3>Install ethers.js</h3>}
 
-  ```bash
-  pnpm add viem dotenv
-  ```
+```bash
+pnpm add ethers@^5
+```
 
-  {<h3>Configure Environment Variables</h3>}
-
-  You need a private key in order to sign transactions.
-  Create a `.env` file in your parent directory to securely store your environment variables
-  Make sure this private key corresponds to an address that has ETH on Sepolia.
-
-  ```bash
-  touch .env
-  ```
-
-  Add your Ethereum Layer 1 (L1) and Optimism Layer 2 (L2) RPC endpoints, and wallet private key in the `.env` file:
-
-  ```bash
-  L1_RPC_URL=https://rpc.ankr.com/eth_sepolia
-  L2_RPC_URL=https://sepolia.optimism.io
-  TUTORIAL_PRIVATE_KEY=0x...
-  ```
 </Steps>
 
-<Callout type="warning">
-  Never share your private key and avoid committing this file to version control.
+<Callout type="info">
+Want to create a new wallet for this tutorial?
+If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
+
 </Callout>
+
+## Get ETH on Sepolia
+
+This tutorial explains how to bridge ETH from Sepolia to OP Sepolia.
+You will need to get some ETH on Sepolia to follow along.
+
+<Callout type="info">
+You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
+</Callout>
+
+## Add a Private Key to Your Environment
+
+You need a private key in order to sign transactions.
+Set your private key as an environment variable with the export command.
+Make sure this private key corresponds to an address that has ETH on Sepolia.
+
+```bash
+export TUTORIAL_PRIVATE_KEY=0x...
+```
+## Start the Node REPL
+
+You're going to use the Node REPL to interact with Viem.
+To start the Node REPL run the following command in your terminal:
+
+```bash
+node
+```
+This will bring up a Node REPL prompt that allows you to run JavaScript code.
 
 ## Import Dependencies
 
-{<h3>Import the necessary packages</h3>}
-
-In the `bridge-eth.js` file, import the `viem` package at the top:
+You need to import some dependencies into your Node REPL session.
 
 ```js
+const { createPublicClient, http, createWalletClient, parseEther } = require('viem');
+const { sepolia, optimismSepolia } = require('viem/chains');
+const { privateKeyToAccount } = require('viem/accounts');
+const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
-// Import required modules
-import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
-import { sepolia, optimismSepolia } from 'viem/chains';
-import { privateKeyToAccount } from 'viem/accounts'
-import { getL2TransactionHashes, publicActionsL2, walletActionsL1 } from 'viem/op-stack'
-import * as dotenv from 'dotenv';
-// Load environment variables
-dotenv.config();
+// Load private key from environment variable
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const account = privateKeyToAccount(PRIVATE_KEY);
+
+// Create L1 public client for reading from the Sepolia network
+const publicClientL1 = createPublicClient({
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+});
+
+// Create L1 wallet client for sending transactions on Sepolia
+const walletClientL1 = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(walletActionsL1());
+
+// Create L2 public client for interacting with OP Sepolia
+const publicClientL2 = createPublicClient({
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(publicActionsL2());
+
+// Create L2 wallet client for sending transactions on OP Sepolia
+const walletClientL2 = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(walletActionsL2());
 ```
 
-## Set Session Variables
-
-You'll need a few variables throughout this tutorial.
-Let's set those up now.
-
-<Tabs items={['Create an account', 'Create RPC providers', 'Wallet Clients']}>
-  <Tabs.Tab>
-    Create an account from the private key. [`privateKeyToAccount`](https://viem.sh/docs/accounts/local/privateKeyToAccount#privatekeytoaccount) is a viem method used to sign transactions by passing a private key.
-
-    Load your private key with `privateKeyToAccount`, after the imports above.
-
-    ```js
-    const account = privateKeyToAccount(process.env.PRIVATE_KEY);
-    ```
-  </Tabs.Tab>
-
-  <Tabs.Tab>
-    Next, set up our viem clients for the L1(Sepolia) and L2(optimismSepolia)
-
-    <Steps>
-      {<h3>L1 (Sepolia) publicClientL1 </h3>}
-
-      ```js
-      const publicClientL1 = createPublicClient({
-          chain: sepolia,
-          transport: http(process.env.L1_RPC_URL),
-      });
-      ```
-
-      {<h3>L2 (optimismSepolia) publicClientL2</h3>}
-
-      ```js
-          const publicClientL2 = createPublicClient({
-              chain: optimismSepolia,
-              transport: http(process.env.L2_RPC_URL),
-          }).extend(publicActionsL2());
-      ```
-    </Steps>
-  </Tabs.Tab>
-
-  <Tabs.Tab>
-    Also set up wallet clients for L1 and L2.
-
-    <Steps>
-      {<h3>L1 (Sepolia) walletClientL1</h3>}
-
-      ```js
-      const walletClientL1 = createWalletClient({
-          account,
-          chain: sepolia, /* or mainnet */
-          transport: http(process.env.L1_RPC_URL),
-      }).extend(walletActionsL1());
-      ```
-
-      {<h3>L2 (optimismSepolia) walletClientL2</h3>}
-
-      ```js
-          const walletClientL2 = createWalletClient({
-              chain: optimismSepolia,
-              transport: http(process.env.L2_RPC_URL),
-          }).extend(walletActionsL1());
-      ```
-    </Steps>
-  </Tabs.Tab>
-</Tabs>
 
 ## Get ETH on Sepolia
 
@@ -179,11 +153,8 @@ Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBr
       See how much ETH you have on L1 so you can confirm that the deposit worked later on.
 
       ```js
-        const checkBalances = async () => {
             const l1Balance = await publicClientL1.getBalance({ address: account.address });
             console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`); 
-        };
-        checkBalances();
       ```
 
       <Callout type="info">
@@ -244,41 +215,41 @@ Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBr
   </Tabs.Tab>
 
   <Tabs.Tab>
-    ```javascript
-    import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
-    import { sepolia, optimismSepolia } from "viem/chains";
-    import { privateKeyToAccount } from 'viem/accounts';
-    import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } from 'viem/op-stack';
+    ```js
+    const { createPublicClient, http, createWalletClient, parseEther } = require('viem');
+const { sepolia, optimismSepolia } = require('viem/chains');
+const { privateKeyToAccount } = require('viem/accounts');
+const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
-    // Replace with your actual private key (Keep this secure!)
-    const PRIVATE_KEY = '0x....'
-    const account = privateKeyToAccount(PRIVATE_KEY);
+// Load private key from environment variable
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const account = privateKeyToAccount(PRIVATE_KEY);
 
-    // Create L1 public client for reading from the Sepolia network
-    const publicClientL1 = createPublicClient({
-        chain: sepolia,
-        transport: http(process.env.L1_RPC_URL),
-    });
+// Create L1 public client for reading from the Sepolia network
+const publicClientL1 = createPublicClient({
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+});
 
-    // Create L1 wallet client for sending transactions on Sepolia
-    const walletClientL1 = createWalletClient({
-        account,
-        chain: sepolia,
-        transport: http(process.env.L1_RPC_URL),
-    }).extend(walletActionsL1());
+// Create L1 wallet client for sending transactions on Sepolia
+const walletClientL1 = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(walletActionsL1());
 
-    // Create L2 public client for interacting with OP Sepolia
-    const publicClientL2 = createPublicClient({
-        chain: optimismSepolia,
-        transport: http(process.env.L1_RPC_URL),
-    }).extend(publicActionsL2());
+// Create L2 public client for interacting with OP Sepolia
+const publicClientL2 = createPublicClient({
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(publicActionsL2());
 
-    // Create L2 wallet client for sending transactions on OP Sepolia
-    const walletClientL2 = createWalletClient({
-        account,
-        chain: optimismSepolia,
-        transport: http(process.env.L1_RPC_URL),
-    }).extend(walletActionsL2());
+// Create L2 wallet client for sending transactions on OP Sepolia
+const walletClientL2 = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(walletActionsL2());
 
     async function depositETH(amount) {
     try {
@@ -440,10 +411,10 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
 
   <Tabs.Tab>
     ```js
-    import { createPublicClient, http, createWalletClient, parseEther } from 'viem';
-    import { sepolia, optimismSepolia } from "viem/chains";
-    import { privateKeyToAccount } from 'viem/accounts';
-    import { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } from 'viem/op-stack';
+  const { createPublicClient, http, createWalletClient, parseEther } = require('viem');
+  const { sepolia, optimismSepolia } = require('viem/chains');
+  const { privateKeyToAccount } = require('viem/accounts');
+  const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
     // Replace with your actual private key (Keep this secure!)
     const PRIVATE_KEY = '0x....'
