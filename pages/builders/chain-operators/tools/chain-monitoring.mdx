@@ -13,15 +13,55 @@ Offchain monitoring allows chain operators to monitor the operation and behavior
 
 ## Onchain Monitoring Services
 
-Onchain monitoring services provide insights into the overall system and helps chain operators track and monitor onchain events. Some examples of onchain monitoring services include `chain-mon` and `dispute-mon`.
+Onchain monitoring services provide insights into the overall system and helps chain operators track and monitor onchain events. Some examples of onchain monitoring services include `monitorism` and `dispute-mon`.
 
-### `chain-mon`
+### `monitorism`
 
-description of service + how to enable metrics
+Monitorism is a tooling suite that supports monitoring and active remediation actions for the OP Stack chain. Monitorism uses monitors as passive security providing automated monitoring for the OP Stack. They are used to monitor the OP stack and alert on specific events that could be a sign of a security incident.
+
+Currently. the list of monitors includes:
+
+- Global Events Monitor: made for to taking YAML rules as configuration and monitoring the events that are emitted on the chain.
+- Liveness Expiration Monitor: monitors the liveness expiration on Safes.
+- Withdrawals Monitor: checks for new withdrawals that have been proven to the OptimismPortal contract. Each withdrawal is checked against the `L2ToL1MessagePasser` contract.
+- Balances Monitor: emits a metric reporting the balances for the configured accounts.
+- Fault Monitor: checks for changes in output roots posted to the `L2OutputOracle` contract. On change, reconstructing the output root from a trusted L2 source and looking for a match.
+- Multisig Monitor: The multisig monitor reports the paused status of the OptimismPortal contract. If set, the latest nonce of the configued Safe address. And also if set, the latest presigned nonce stored in One Password. The latest presigned nonce is identifyed by looking for items in the configued vault that follow a `ready-<nonce>.json` name. The highest nonce of this item name format is reported.
+- Drippie Monitor: tracks the execution and executability of drips within a Drippie contract.
+- Secrets Monitor: takes a Drippie contract as a parameter and monitors for any drips within that contract that use the `CheckSecrets` dripcheck contract. `CheckSecrets` is a dripcheck that allows a drip to begin once a specific secret has been revealed (after a delay period) and cancels the drip if a second secret is revealed. It's important to monitor for these secrets being revealed as this could be a sign that the secret storage platform has been compromised and someone is attempting to exflitrate the ETH controlled by that drip.
+- Faultproof Withdrawal: The Faultproof Withdrawal component monitors `ProvenWithdrawals` events on the `OptimismPortal` contract and performs checks to detect any violations of invariant conditions on the chain. If a violation is detected, it logs the issue and sets a Prometheus metric for the event. This component is designed to work exclusively with chains that are already utilizing the Fault Proofs system. This is a new version of the deprecated chain-mon faultproof-wd-mon. For detailed information on how the component works and the algorithms used, please refer to the component README.
+
+For more information on these monitors and how to use them, [check out the repo](https://github.com/ethereum-optimism/monitorism?tab=readme-ov-file#monitorism).
 
 ### `dispute-mon`
 
 Chain operators should consider running `op-dispute-mon`. It's an incredibly useful securities monitoring service to keep an eye on games, basically giving visibility into all the status of the games for the last 28 days.
+
+`dispute-mon` is set up and built the same way as `op-challenger`. This means that you can run it the same way (run `make op-dispute-mon` in the directory).
+
+A basic configuration option would look like this:
+
+```
+OP_DISPUTE_MON_LOG_FORMAT=logfmt
+OP_DISPUTE_MON_METRICS_ENABLED=true
+OP_DISPUTE_MON_METRICS_ADDR=0.0.0.0
+OP_DISPUTE_MON_METRICS_PORT=7300
+
+OP_DISPUTE_MON_L1_ETH_RPC=..
+OP_DISPUTE_MON_ROLLUP_RPC=..
+OP_DISPUTE_MON_GAME_FACTORY_ADDRESS=..
+
+OP_DISPUTE_MON_HONEST_ACTORS=..
+```
+`OP_DISPUTE_MON_HONEST_ACTORS` is a CSV (no spacing) list of addresses that are used for the honest op-challenger instance(s).
+
+Additional flags:
+- `OP_DISPUTE_MON_GAME_WINDOW`: This is the window of time to report on games. It should leave a buffer beyond the max game duration for bond claiming. If Fault Proof game parameters are not changes (e.g. MAX_CLOCK_DURATION), it is recommended to leave this as the default.
+- `OP_DISPUTE_MON_MONITOR_INTERVAL`: The interval at which to check for new games. Defaults to 30 seconds currently.
+- `OP_DISPUTE_MON_MAX_CONCURRENCY`: The max thread count. Defaults to 5 currently.
+
+You can find more info on `op-dispute-mon` on [the repo](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon).
+
 Chain operators can easily create their grafana dashboard for Dispute Monitor using the following json file: [Download the Dispute Monitor JSON](/grafana/dispute-monitor-1718214549035.json).
 
 ## Offchain Component Monitoring
@@ -31,9 +71,9 @@ The general steps for enabling offchain monitoring is pretty consistent for all 
 
 1.  Expose the monitoring port by enabling the `-—metrics.enabled` flag
 2.  Customize the metrics port and address via the `--metrics.port` and `--metrics.addr` flags, respectively
-3.  Use Prometheus to scrape data from the metrics port
+3.  Use [Prometheus](https://prometheus.io/) to scrape data from the metrics port
 4.  Save the data in `influxdb`
-5.  Share the data with grafana to build your custom dashboard
+5.  Share the data with [Grafana](https://grafana.com/) to build your custom dashboard
 
 ### `op-node`
 
@@ -42,15 +82,19 @@ See [this curated list](/builders/node-operators/management/metrics#important-me
 
 ### `op-geth`
 
-description of component + how to enable metrics
+To enable metrics, pass the `--metrics.enabled` flag to the op-geth. You can customize the metrics port and address via the `--metrics.port` and `--metrics.addr` flags, respectively.
 
 ### `op-proposer`
 
-description of component + how to enable metrics
+To enable metrics, pass the `--metrics.enabled` flag to the op-proposer. You can customize the metrics port and address via the `--metrics.port` and `--metrics.addr` flags, respectively.
+
+You can find more information about these flags in our [Proposer configuration doc](https://docs.optimism.io/builders/chain-operators/configuration/proposer#metricsenabled).
 
 ### `op-batcher`
 
-description of component + how to enable metrics
+To enable metrics, pass the `--metrics.enabled` flag to the op-batcher. You can customize the metrics port and address via the `--metrics.port` and `--metrics.addr` flags, respectively.
+
+You can find more information about these flags in our [Batcher configuration doc](https://docs.optimism.io/builders/chain-operators/configuration/batcher#metricsenabled).
 
 ### `op-challenger`
 
