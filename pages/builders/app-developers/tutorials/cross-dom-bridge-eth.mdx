@@ -4,7 +4,7 @@ lang: en-US
 description: Learn how to use Viem to transfer ETH between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
 ---
 
-import { Callout, Steps } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
 
 
 # Bridging ETH to OP Mainnet With Viem
@@ -48,14 +48,10 @@ pnpm init
 
 {<h3>Install the Optimism SDK</h3>}
 
-```bash
-pnpm add @eth-optimism/sdk
-```
-
-{<h3>Install ethers.js</h3>}
+Install `viem`, and `dotenv` for managing environment variables.
 
 ```bash
-pnpm add ethers@^5
+pnpm add viem dotenv
 ```
 
 </Steps>
@@ -99,13 +95,13 @@ This will bring up a Node REPL prompt that allows you to run JavaScript code.
 You need to import some dependencies into your Node REPL session.
 
 ```js
-const { createPublicClient, http, createWalletClient, parseEther } = require('viem');
+const { createPublicClient, http, createWalletClient, parseEther, formatEther } = require('viem');
 const { sepolia, optimismSepolia } = require('viem/chains');
 const { privateKeyToAccount } = require('viem/accounts');
 const { getL2TransactionHashes, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
 // Load private key from environment variable
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
 const account = privateKeyToAccount(PRIVATE_KEY);
 
 // Create L1 public client for reading from the Sepolia network
@@ -167,9 +163,10 @@ Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBr
 
       ```js
       const args = await publicClientL2.buildDepositTransaction({
-        mint: parseEther('0.006942'), // Specify the amount of ETH to deposit.
+        mint: parseEther('0.00010'), // Specify the amount of ETH to deposit.
         to: account.address, // Sets the recipient address on L2 (same as the sender in this case).
       });
+      console.log(`Deposit transaction args ${args}`);
       ```
 
       {<h3>Send the deposit transaction</h3>}
