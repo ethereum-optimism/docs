@@ -50,9 +50,7 @@ toolchain installed, you can install `op-deployer` by following these steps:
 
 ### Configuring your Chain
 
-The first step to using `op-deployer` is to create an intent file. The intent file describes how you want your chain
-to look when it is done being deployed. `op-deployer` has a utility for this. Run the following command to generate
-an example intent file for a development chain:
+To get started with `op-deployer`, you need to create an intent file that outlines your desired chain configuration. You can use the built-in `op-deployer` utility to generate this file. Just run the following command to create an example intent file for a development chain:
 
 ```
 op-deployer init --l1-chain-id 11155111 --l2-chain-ids 12345 --workdir .deployer
@@ -85,23 +83,22 @@ proposer = "0x86dfafe0689e20685f7872e0cb264868454627bc"
 challenger = "0xf1658da627dd0738c555f9572f658617511c49d5"
 ```
 
-See the comments for what each field does. By default, `op-deployer` will fill in all other configuration variables
+See the code comments above for explanations of each field. By default, `op-deployer` will fill in all other configuration variables
 with those that match our standard config. You can override these defaults by adding them to your intent file, but
 that won't be covered here.
 
 ### Applying your Intent
 
-Now that you've created your intent file, you can apply it to your chain. Run the following command to do so:
+Now that you've created your intent file, you can apply it to your chain:
 
 ```
 op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
 ```
 
-Using a hardware wallet is currently not supported, but this deployer key has no privileges so an ephemeral hot wallet
-can be used.
+Hardware wallets are not supported, but you can use ephemeral hot wallets since this deployer key has no privileges.
 
 This command will deploy the OP Stack to L1. It will deploy all L2s specified in the intent file. Superchain
-configuration will be set to the Superchain-wide defaults - i.e., your chain will be opted into the Superchain pause
+configuration will be set to the Superchain-wide defaults - i.e., your chain will be opted into the [Superchain pause](https://specs.optimism.io/protocol/superchain-configuration.html#pausability)
 and will use the same [protocol versions](https://github.com/ethereum-optimism/specs/blob/main/specs/protocol/superchain-upgrades.md)
 address as other chains on the Superchain.
 
@@ -113,8 +110,8 @@ With the contracts deployed, you can generate a genesis file for any of your L2s
 ./bin/op-deployer inspect genesis <l2-chain-id> --outfile genesis.json
 ```
 
-This will write the genesis file to genesis.json. You can change the `--outfile` parameter to write it somewhere
-else. You can run another member of the `inspect` family, `rollup`, to get the rollup.json file:
+This will write the genesis file to `genesis.json`. You can change the `--outfile` parameter to write it somewhere
+else. You can run another member of the `inspect` family, `rollup`, to get the `rollup.json` file:
 
 ```
 ./bin/op-deployer inspect rollup <l2-chain-id> --outfile rollup.json
