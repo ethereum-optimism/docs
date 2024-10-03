@@ -109,35 +109,22 @@ Let's set those up now.
 
 {<h3>Import Viem and other necessary modules</h3>}
 
-```js
-
-const { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } = require('viem');
-const { privateKeyToAccount } = require('viem/accounts');
-const { optimismSepolia } = require('viem/chains');
-const { publicActionsL2, walletActionsL2 } = require('viem/op-stack');
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L3-L6 hash=32ecaac58846bfe7e785e2cc35562120
 ```
 
 {<h3>Set up the account</h3>}
 
-```js
-const account = privateKeyToAccount(process.env.TUTORIAL_PRIVATE_KEY);
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L8-L9 hash=165490e75b825c786a937fba7b8e159d
 ```
+
 {<h3>Create the public client</h3>}
 
-```js
-const publicClientL2 = createPublicClient({
-  chain: optimismSepolia,
-  transport: http("https://sepolia.optimism.io"),
-}).extend(publicActionsL2());
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L11-L14 hash=42293ff382c932f806beb7252803a848
 ```
 
 {<h3>Create the wallet client</h3>}
 
-```js
-const walletClientL2 = createWalletClient({
-  chain: optimismSepolia,
-  transport: http("https://sepolia.optimism.io"),
-}).extend(walletActionsL2());
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L16-L19 hash=e7b6423850765242512e71589382791b
 ```
 </Steps>
 
@@ -151,43 +138,31 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   Viem makes it easy to prepare a transactions so you can estimate the cost of a transaction before you sign it.
   Here you'll define an object with the required transaction fields and send a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`.
 
-  ```js
-      const transaction = {
-      account,
-      to: '0x1000000000000000000000000000000000000000',
-      value: parseEther('0.005'),  
-      gasPrice: parseGwei('20')
-    };
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L21-L26 hash=583ee48142f33686188a7bf1cc312a1c
+```
   This transaction will send `0.005` ETH to the specified address with a gas price of 20 Gwei.
 
   {<h3>Estimate the execution gas fee</h3>}
 
   Now, let's estimate the gas limit for our transaction.
 
-  ```js
-      const gasLimit = await publicClientL2.estimateGas(transaction);
-      console.log(`Estimated Gas Limit: ${gasLimit}`);
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L28-L29 hash=014939607bf2444d5f2e5a7babb02a46
+```
 
   <Steps>
     {<h3>Retrieve the current gas price</h3>}
 
     Retrieve the current gas price (effective gas price), Alternatively, given that you already set the gas price manually, you can use the `getGasPrice` method from viem.
 
-    ```js
-    const effectiveGasPrice = await publicClientL2.getGasPrice();
-    console.log(`effective Gas Price, ${effectiveGasPrice}`);
-    ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L31-L32 hash=b43ae2cb1a7471de55858fbc7f7fe5a6
+```
 
     {<h3>Calculate the execution gas fee</h3>}
 
     To calculate the execution gas fee simply multiply the gas limit by the effective gas price.
 
-    ```js
-    const l2CostEstimate = gasLimit * effectiveGasPrice;
-    console.log(`Estimated Execution Gas Fee: ${formatEther(l2CostEstimate)}`);
-    ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L34-L35 hash=3e536e97b83458d3d3c7545b2c74ffd6
+```
   </Steps>
 
   {<h3>Estimate the L1 data fee</h3>}
@@ -196,29 +171,23 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   Under the hood, this function is estimating the amount of Ethereum gas required to publish this transaction on Ethereum and multiplying it by the current Ethereum gas price (as tracked by the L2).
   This function returns the current cost estimate in wei.
 
-  ```js
-  const l1CostEstimate = await publicClientL2.estimateL1Fee(transaction)
-  console.log(`Estimated L1 data Fee: ${formatEther(l1CostEstimate)}`);
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L37-L38 hash=b1ef73988e0876529a72b61d5822cbe1
+```
 
   {<h3>Estimate the total cost</h3>}
 
   Once you've individually estimated the execution gas fee and the L1 data fee, you can sum these two values together to get the total cost of the transaction.
 
-  ```js
-    const totalEstimate = l2CostEstimate + l1CostEstimate;
-    console.log(`Estimated Total Cost: ${formatEther(totalEstimate)} `);
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L40-L41 hash=8685f586913b87a5881cc6f917d0de50
+```
 
   {<h3>Send the transaction</h3>}
 
   Now that you've estimated the total cost of the transaction, go ahead and send it to the network.
   This will make it possible to see the actual cost of the transaction to compare to your estimate.
 
-  ```js
-      const txHash = await walletClientL2.sendTransaction(transaction)
-      console.log(`Transaction Hash: ${txHash}`);
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L43-L44 hash=a0a19fa7fc17165d934cc9f7af075464
+```
 
   {<h3>Check the actual execution gas fee</h3>}
 
@@ -226,32 +195,22 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   You can do so by accessing the `gasUsed` and `effectiveGasPrice` from the transaction receipt.
   You can then multiply these values to get the actual L2 cost of the transaction
 
-  ```js
-      const receipt = await publicClientL2.getTransactionReceipt({ hash: txHash });
-      console.log('Transaction receipt:', receipt);
-
-      const l2CostActual = receipt.gasUsed * receipt.effectiveGasPrice;
-      console.log(`L2 Actual Cost: ${formatEther(l2CostActual)}`);
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L46-L49 hash=e128f21d2c994f42bdc7f5fb51eb127d
+```
 
   {<h3>Check the actual L1 data fee</h3>}
 
   You can also check the actual L1 data fee.
 
-  ```js
-    const l1CostActual = await publicClientL2.estimateL1Fee(txHash)
-    console.log(`l1CostActual gas fee: ${formatEther(l1CostActual)}`);
-
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L51-L52 hash=ea1801a7618fa2a21f02a97717380f42
+```
 
   {<h3>Check the actual total cost</h3>}
 
   Sum these two together to get the actual total cost of the transaction.
 
-  ```js
-      const totalActual = l2CostActual + l1CostActual;
-      console.log(`Total Actual Cost: ${formatEther(totalActual)}`);
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L54-L56 hash=6f7943da9d70654dc040b5561b3b360d
+```
 
   {<h3>Check the difference</h3>}
 
@@ -259,10 +218,8 @@ You're now going to estimate the cost of a transaction on OP Mainnet.
   This will give you a sense of how accurate your estimate was.
   Estimates will never be entirely accurate, but they should be close!
 
-  ```js
-      const difference = totalEstimate >= totalActual ? totalEstimate - totalActual : totalActual - totalEstimate
-    console.log(`Estimation Difference: ${formatEther(difference)} ETH`)
-  ```
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L57-L58 hash=20c8c60af1cc39e842b207cfd2dfa2cb
+```
 </Steps>
 
 <Callout type="info">
