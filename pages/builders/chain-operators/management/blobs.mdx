@@ -22,7 +22,7 @@ This guide walks you through how to switch to using blobs for your chain after E
 
   The first step to switching to submit data with Blobs is to calculate the
   scalar values you wish to set for the formula to charge users fees.
-  To determine the scalar values to use for your chain, you can utilize this [fee parameter calculator](https://docs.google.com/spreadsheets/d/12VIiXHaVECG2RUunDSVJpn67IQp9NHFJqUsma2PndpE/edit)
+  To determine the scalar values to use for your chain, you can utilize this [fee parameter calculator](https://docs.google.com/spreadsheets/d/1V3CWpeUzXv5Iopw8lBSS8tWoSzyR4PDDwV9cu2kKOrs/edit)
   to get a better estimate for scalar values on your chain. Input the average transaction per day your chain is processing, the types of transactions that occur on your chain, the [`OP_BATCHER_MAX_CHANNEL_DURATION`](/builders/chain-operators/configuration/batcher#setting-your--op_batcher_max_channel_duration) you have parameterized on your `op-batcher`, and the target margin you wish to charge users on top of your L1 costs. The following
   information is tuned to a network like OP Mainnet.
   For more details on fee scalar, see [Transaction Fees, Ecotone section](/stack/transactions/fees#ecotone).
@@ -43,28 +43,15 @@ This guide walks you through how to switch to using blobs for your chain after E
 
   Once you have determined your ideal `BaseFeeScalar` and `BlobBaseFeeScalar`, you will need to apply those values for your chain. The first step is to encode both values into a single value to be set in your L1 Config:
 
-  The [ecotone-scalar utility](https://github.com/ethereum-optimism/optimism/tree/develop/op-chain-ops/cmd/ecotone-scalar) converts a desired `BaseFeeScalar` and `BlobBaseFeeScalar` into a single value that can be provided to the L1 `SystemConfigProxy.setGasConfig` method through its "scalar" argument.
-  Here is an example of what you might see when using the utility:
+  You can set your Scalar Values to send transaction to the L1 SystemConfigProxy.setGasConfigEcotone 
 
-  ```js
-  ./bin/ecotone-scalar --scalar=1100 --blob-scalar=655000
-  # base fee scalar     : 1100
-  # blob base fee scalar: 655000
-  # v1 hex encoding  : 0x0100000000000000000000000000000000000000000000000009fe980000044c
-  # uint value for the 'scalar' parameter in SystemConfigProxy.setGasConfig():
-  452312848583266388373324160190187140051835877600158453279134000734489543756
-  ```
-
-  You will get a value that looks something like: `0x0100000000000000000000000000000000000000000000000009fe980000044c`
-  Note that the `0x01` byte at the start indicates the version of the scalar, and the hex value at the end are the encoded scalars.
-  Depending on the tool used, you may have to input the uint representation or the hex version, but both Foundry's `cast` and Gnosis's Safe UI accept the hex value.
-
-  This value has to be set on Layer 1 by the `owner` of the `SystemConfigProxy` L1 Contract. Note that when calling `setGasConfig(uint256,uint256)`, the first parameter is a deprecated value that can just be set to `0` and the second parameter is where you will paste your encoded scalar value.
-
-  An exemplary way to create the calldata for your update transaction to the SystemConfigProxy is:
-
-  ```shell
-  cast calldata 'setGasConfig(uint256,uint256)' 0 0x0100000000000000000000000000000000000000000000000009fe980000044c`
+  ```bash
+  cast send \
+  --private-key $GS_ADMIN_PRIVATE_KEY \
+  --rpc-url $ETH_RPC_URL \
+  <CONTRACT_ADDRESS> \
+  "setGasConfigEcotone(uint32,uint32)" \
+  <basefeeScalar> <blobbasefeeScalar> 
   ```
 
   Check that the gas price oracle on L2 returns the expected values for `baseFeeScalar` and `blobBaseFeeScalar` (wait \~1 minute):
@@ -76,13 +63,13 @@ This guide walks you through how to switch to using blobs for your chain after E
   <Tabs items={['baseFeeScalar', 'blobBaseFeeScalar']}>
     <Tabs.Tab>
       ```shell
-      cast call 0x420000000000000000000000000000000000000F 'baseFeeScalar()(uint256)' --gas-price 10000000 --rpc-url YOUR_L2_RPC_URL
+      cast call 0x420000000000000000000000000000000000000F 'baseFeeScalar()(uint256)' --rpc-url YOUR_L2_RPC_URL
       ```
     </Tabs.Tab>
 
     <Tabs.Tab>
       ```shell
-      cast call 0x420000000000000000000000000000000000000F 'blobBaseFeeScalar()(uint256)' --gas-price 10000000 --rpc-url YOUR_L2_RPC_URL
+      cast call 0x420000000000000000000000000000000000000F 'blobBaseFeeScalar()(uint256)' --rpc-url YOUR_L2_RPC_URL
       ```
     </Tabs.Tab>
   </Tabs>

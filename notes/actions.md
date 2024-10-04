@@ -16,4 +16,4 @@ Runs once per day.
 
 The `tutorials.yml` workflow runs several of the tutorials within these docs.
 Most tutorials take the form of JavaScript files that are imported within the content of the docs.
-Same files can be executed individually to make sure that the tutorial actually works and isn't broken for one reason or another.
+The same files can be executed individually to make sure that the tutorial actually works and isn't broken for one reason or another.

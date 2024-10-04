@@ -35,6 +35,10 @@ Below are the storage needs as of April 2024:
 
 Based on these trends, node operators should plan for future storage needs and choose SSDs that can handle these increasing requirements.
 
+<Callout type="info">
+  Geth supports a "freezer" feature to store older chain data on HDDs, saving SSD space. Configure this for OP Mainnet using the `--datadir.ancient` flag. See [Geth docs](https://geth.ethereum.org/docs/fundamentals/databases) and [OP docs](https://docs.optimism.io/builders/node-operators/configuration/execution-config#datadirancient) for details.
+</Callout>
+
 ## Full Nodes
 
 ### Assess Blob Archiver
@@ -126,9 +130,9 @@ Once you've started `op-geth`, you can start `op-node`.
   Set the following environment variables:
 
   ```bash
-  export L1_RPC_URL=...  # URL for the L1 node to sync from
+  export L1_RPC_URL=...  # URL for the L1 node to sync from. If your L1 RPC is a local node, the most common URL is http://127.0.0.1:8545
   export L1_RPC_KIND=... # RPC type (alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any)
-  export L1_BEACON_URL=... # URL address for the L1 Beacon-node HTTP endpoint to use.
+  export L1_BEACON_URL=... # URL address for the L1 Beacon-node HTTP endpoint to use. If your L1 Beacon is a local node, the most common URL is http://127.0.0.1:3500
   ```
 
   {<h3>Start op-node</h3>}
@@ -154,7 +158,8 @@ Once you've started `op-geth`, you can start `op-node`.
     --l2=ws://localhost:8551 \
     --l2.jwt-secret=./jwt.txt \
     --network=op-mainnet \
-    --syncmode=execution-layer
+    --syncmode=execution-layer \
+    --l2.enginekind=geth
   ```
 
   <Callout>

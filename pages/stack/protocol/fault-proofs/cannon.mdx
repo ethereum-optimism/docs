@@ -35,7 +35,7 @@ single L2 block state transition that they disagree on.
 
 ### OP-Challenger \<> Cannon
 
-Once an active fault dispute game reaches a depth below attacking / defending L2 block state transitions, OP-Challenger will run
+Once an active fault dispute game reaches a depth below attacking / defending L2 block state transitions, [OP-Challenger](/stack/protocol/fault-proofs/challenger) will run
 Cannon to begin processing MIPS instructions within the FPVM. As part of processing MIPS instructions, Cannon will generate state
 witness hashes, which are the commitment to the results of the MIPS instructions' computation within the FPVM. Now, in the bisection game, OP-Challenger will provide the generated hashes
 until a single MIPS instruction is identified as the root disagreement between participants in the active dispute. Cannon will then
@@ -72,8 +72,8 @@ For the `mipsevm`, how memory is stored isn't important, as it can hold the enti
 In this way, how memory is represented is abstracted away from the VM itself. However, it is important for memory to be represented
 such that only small portions are needed in order to run a MIPS instruction onchain. This is because it is infeasible to represent the
 entire 32-bit memory space onchain due to cost. Therefore, memory is stored in a binary Merkle tree data structure, with the implementation
-spread across [`memory.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/memory.go) and
-[`page.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/page.go).
+spread across [`memory.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/memory/memory.go) and
+[`page.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/memory/page.go).
 The tree has a fixed-depth of 27 levels, with leaf values of 32 bytes each. This spans the full 32-bit address space: `2**27 * 32 = 2**32`.
 Each leaf contains the memory for that part of the tree.
 
@@ -141,7 +141,7 @@ witness proof is generated after running the instruction offchain, the state tha
 Once the execution trace portion of the bisection game begins, the ELF file containing OP-Program compiled into MIPS instructions will
 be run within Cannon. However, getting OP-Program into Cannon so that it can be run requires
 a binary loader. The binary loader is composed of [`load_elf.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/cmd/load_elf.go)
-and [`patch.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/patch.go). `load_elf.go` parses
+and [`patch.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/program/patch.go). `load_elf.go` parses
 the top-level arguments and reads, loads, and patches the ELF binary such that it can be run by Cannon.
 
 `patch.go` is responsible for actually parsing the headers of the ELF file, which among other information specifies what programs
@@ -150,7 +150,7 @@ for the `mipsevm` and load each program into memory at the expected location. Ad
 state, `patch.go` sets the values of `PC`, `NextPC`, the initial Heap location of `0x20000000`, the initial stack location of `0x7fffd000`,
 and also sets the arguments required for the Go runtime above the stack pointer location.
 
-While loading the ELF file into Cannon, [`metadata.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/metadata.go)
+While loading the ELF file into Cannon, [`metadata.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/program/metadata.go)
 is used to parse all the symbols stored in the ELF file. Understanding which ELF symbols exist and at which regions of memory
 they are located is important for other functionality, such as understanding if the current `PC` is running within a specific function.
 
@@ -175,13 +175,13 @@ Actions to be performed are instantiated and checked by [`matcher.go`](https://g
 which generates a match function that triggers when the configured regular expression is true.
 
 Within `run.go`, the `StepFn` is the wrapper that initiates the MIPS instruction to be run.
-[`instrumented.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/instrumented.go) implements `Step` as the
+[`instrumented.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/singlethreaded/instrumented.go) implements `Step` as the
 interface to be initiated for each MIPS instruction. Additionally, `instrumented.go` handles encoding information for the witness proof
 and Pre-image information (if required for the MIPS instruction).
 
 ### `mips.go`
 
-[`mips.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/mips.go) implements all the required MIPS
+[`mips.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/mipsevm/singlethreaded/mips.go) implements all the required MIPS
 instructions, and also tracks additional memory access for the instruction currently being run.
 This is important to make sure that the second memory proof is encoded correctly for instructions that use it, such as loads, stores, and
 certain syscalls. The full list of instructions supported can be found [here](mips#table-of-supported-mips-instructions).

@@ -17,15 +17,31 @@ Below you will find a list of relevant schemas that are being used on OP Mainnet
 
 ## Schemas related to project creation and Retro Funding application
 
-### [Project Identifier](https://optimism.easscan.org/schema/view/0x7ae9f4adabd9214049df72f58eceffc48c4a69e920882f5b06a6c69a3157e5bd)
+### [Project and Organization identifier](https://optimism.easscan.org/schema/view/0xff0b916851c1c5507406cfcaa60e5d549c91b7f642eb74e33b88143cae4b47d0)
 
-Used as the unique identifier for projects created in the Collective.
+Used as the unique identifier for projects and organizations created on or after 23 August 2024. For projects created earlier, please see the archived section at the bottom of this page.
 
-| Schema UID  | `0x7ae9f4adabd9214049df72f58eceffc48c4a69e920882f5b06a6c69a3157e5bd`                                            |
+| Schema UID  | `0xff0b916851c1c5507406cfcaa60e5d549c91b7f642eb74e33b88143cae4b47d0`                                            |
 | ----------- | --------------------------------------------------------------------------------------------------------------- |
 | Issuer      | Attestations issued as part of Retro Funding sign up are issued by `0xF6872D315CC2E1AfF6abae5dd814fd54755fE97C` |
-| Recipient   | Null                                                                                                            |
-| farcasterID | The Farcaster id of the individual who created the project                                                      |
+| farcasterID | The Farcaster id of the individual who created the project or organization                                      |
+| type        | "Project" or "Organization"                                                                                     |
+
+### [Organization Metadata](https://optimism.easscan.org/schema/view/0xc2b376d1a140287b1fa1519747baae1317cf37e0d27289b86f85aa7cebfd649f)
+
+Used to associate metadata to an organization. Re-issued each time there is a change to metadata
+
+| Schema UID   | `0xc2b376d1a140287b1fa1519747baae1317cf37e0d27289b86f85aa7cebfd649f`                                            |
+| ------------ | --------------------------------------------------------------------------------------------------------------- |
+| Issuer       | Attestations issued as part of Retro Funding sign up are issued by `0xF6872D315CC2E1AfF6abae5dd814fd54755fE97C` |
+| Recipient    | Null                                                                                                            |
+| RefUID       | The attestation UID of the organization this metadata relates to                                                |
+| farcasterID  | The Farcaster id of the individual who published the organization metadata                                      |
+| name         | The name of the organization                                                                                    |
+| projects     | The array of projects that belong to this organization                                                          |
+| parentOrgUID | The attestation UID of this organizations's parent, in case it has one                                          |
+| metadataType | How the metadata can be accessed. 1 for ipfs, 2 for http                                                        |
+| metadataUrl  | The storage location where the metadata can be retrieved                                                        |
 
 ### [Project Metadata](https://optimism.easscan.org/schema/view/0xe035e3fe27a64c8d7291ae54c6e85676addcbc2d179224fe7fc1f7f05a8c6eac)
 
@@ -39,36 +55,71 @@ Used to associate metadata to a project. Re-issued each time there is a change t
 | farcasterID          | The Farcaster id of the individual who published the project metadata                                           |
 | name                 | The name of the project                                                                                         |
 | category             | The category of the project                                                                                     |
-| parentProject RefUID | The attestation UID of this project's parent project, in case it has a parent.                                  |
+| parentProject RefUID | The attestation UID of this project's parent project, in case it has a parent                                   |
 | metadataType         | How the metadata can be accessed. 1 for ipfs, 2 for http                                                        |
 | metadataUrl          | The storage location where the metadata can be retrieved                                                        |
 
-### [Retro Funding Application](https://optimism.easscan.org/schema/view/0x88b62595c76fbcd261710d0930b5f1cc2e56758e155dea537f82bf0baadd9a32)
+### [Retro Funding Application](https://optimism.easscan.org/schema/view/0x2169b74bfcb5d10a6616bbc8931dc1c56f8d1c305319a9eeca77623a991d4b80)
 
-Used to identify a project's application to a specific Retro Funding Round.
+Used to identify a project's application to a specific Retro Funding Round. This attestation is used for Retro Funding Round 6 and beyond.
 
-| Schema UID              | `0x88b62595c76fbcd261710d0930b5f1cc2e56758e155dea537f82bf0baadd9a32`                                             |
+| Schema UID              | `0x2169b74bfcb5d10a6616bbc8931dc1c56f8d1c305319a9eeca77623a991d4b80`                                             |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Issuer                  | Attestations issued as part of Retro Funding sign up are issued by: `0xF6872D315CC2E1AfF6abae5dd814fd54755fE97C` |
 | Recipient               | Null                                                                                                             |
 | round                   | The round number for which this application was submitted                                                        |
-| projectRefUID           | The unique identifier of the project that submitted this application                                             |
-| farcasterID             | The individual that submitted this application on behalf of the project                                          |
-| metadataSnapshot RefUID | The project metadata at the time the application was submitted                                                   |
+| metadataType            | How the metadata can be accessed. 1 for ipfs, 2 for http                                                         |
+| metadataUrl             | The storage location where the metadata can be retrieved                                                         |
+| farcasterID             | The individual that submitted this application on behalf of the project.                                         |
+| metadataSnapshot RefUID | The project metadata at the time the application was submitted.                                                  |
+
+### [Retro Funding Application Approval/Rejection](https://optimism.easscan.org/schema/view/0x683b1b399d47aabed79c9aa8f2674729021174b6e5cce1e20675eab404fc82d6)
+
+Used to identify which Retro Funding applications have been approved or rejected.
+
+| Schema UID            | `0x683b1b399d47aabed79c9aa8f2674729021174b6e5cce1e20675eab404fc82d6`                                                                                                  |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Issuer                | Currently, the Optimism Foundation issues these from the following address: `0xE4553b743E74dA3424Ac51f8C1E586fd43aE226F`                                              |
+| Recipient             | Null                                                                                                                                                                  |
+| projectApplicationUID | The unique identifier of the projects Retro Funding application.                                                                                                      |
+| Status                | The status of the Retro Funding application.                                                                                                                          |
+| Reason                | Identifier for the reason an application was rejected.  1 = "Duplicate Application", 2 = "Deceiving Badgeholders", 3 = "Spam", 4 = "Not meeting eligibility criteria" |
+
+### [Retro Funding Rewards](https://optimism.easscan.org/schema/view/0x670ad6e6ffb842d37e050ea6d3a5ab308195c6f584cf2121076067e0d8adde18)
+
+Used to identify the reward amount each approved project received in a Retro Funding round
+
+| Schema UID    | `0x670ad6e6ffb842d37e050ea6d3a5ab308195c6f584cf2121076067e0d8adde18`                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Issuer        | Currently, the Optimism Foundation issues these from one the following address: `0xE4553b743E74dA3424Ac51f8C1E586fd43aE226F` |
+| Recipient     | Null                                                                                                                         |
+| refUID        | The UID of the Retro Funding application                                                                                     |
+| projectRefUID | The unique identifier of the project                                                                                         |
+| round         | The retro round for which the project was rewarded                                                                           |
+| OPamount      | The amount of OP awarded to the project                                                                                      |
 
 ## Schemas related to roles and contributions
 
-### [Retro Funding Badgeholders](https://optimism.easscan.org/schema/view/0xfdcfdad2dbe7489e0ce56b260348b7f14e8365a8a325aef9834818c00d46b31b)
+### [Citizens](https://optimism.easscan.org/schema/view/0xc35634c4ca8a54dce0a2af61a9a9a5a3067398cb3916b133238c4f6ba721bc8a)
 
-These attestations are considered "voting Badges" and allow an individual to vote in any given iteration of Retro Funding.
+Citizen attestations were first issued in Season 6 and are used to represent Citizenship separately from the ability to vote in a specific Retro Round. The resolver contract checks that the issuer is the Foundation with following address `0xE4553b743E74dA3424Ac51f8C1E586fd43aE226F`
 
-| Schema UID     | `0xfdcfdad2dbe7489e0ce56b260348b7f14e8365a8a325aef9834818c00d46b31b`                                                                                                              |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Issuer         | Currently, the Optimism Foundation issues these from one of the following addresses: `0x621477dBA416E12df7FF0d48E14c4D20DC85D7D9` or `0xE4553b743E74dA3424Ac51f8C1E586fd43aE226F` |
-| Recipient      | The Badgeholder's address                                                                                                                                                         |
-| rpgfRound      | The round number for which this voting Badge was valid                                                                                                                            |
-| referredBy     | In early rounds, new Badges were issued by referral. This field captures the address of the referrer, if there was one                                                            |
-| referredMethod | If this voting Badge was issued by referral, this field captures the referral method                                                                                              |
+| Schema UID      | `0xc35634c4ca8a54dce0a2af61a9a9a5a3067398cb3916b133238c4f6ba721bc8a`                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FarcasterID     | The Citizen's unique identifier                                                                                                                               |
+| SelectionMethod | A Code representing the method through which the Citizen was selected. Codes beginning with the number 1 refer to various flavours of Web of Trust selection. |
+
+### [Retro Funding Voters](https://optimism.easscan.org/schema/view/0x41513aa7b99bfea09d389c74aacedaeb13c28fb748569e9e2400109cbe284ee5)
+
+These attestations are voting Badges issued for Retro Round 5 and beyond. They are different from the [previous schema](https://optimism.easscan.org/schema/view/0xfdcfdad2dbe7489e0ce56b260348b7f14e8365a8a325aef9834818c00d46b31b) to include new fields like votingGroup, used to assign voters to sub-categories in the round.
+
+| Schema UID      | `0x41513aa7b99bfea09d389c74aacedaeb13c28fb748569e9e2400109cbe284ee5`       |
+| --------------- | -------------------------------------------------------------------------- |
+| FarcasterID     | The voter's unique identifier                                              |
+| Round           | The round number for which this voting Badge was valid                     |
+| voterType       | Guest or Citizen                                                           |
+| votingGroup     | Used to assign voters to subcategories in case the Round has subcategories |
+| selectionMethod | The method in which this voter was selected                                |
 
 ### [Retro Funding Governance contribution](https://optimism.easscan.org/schema/view/0x3743be2afa818ee40304516c153427be55931f238d961af5d98653a93192cdb3)
 
@@ -95,6 +146,41 @@ Issued to those who held governance roles in the Collective, such as Grants Coun
 ## Archived Schemas
 
 These schemas are no longer being actively issued, but capture valuable historical data.
+
+### [Retro Funding Application](https://optimism.easscan.org/schema/view/0x88b62595c76fbcd261710d0930b5f1cc2e56758e155dea537f82bf0baadd9a32)
+
+Used to identify a project's application to a specific Retro Funding Round. This attestation was used for Retro Funding Rounds 4 and 5.
+
+| Schema UID              | `0x88b62595c76fbcd261710d0930b5f1cc2e56758e155dea537f82bf0baadd9a32`                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Issuer                  | Attestations issued as part of Retro Funding sign up are issued by: `0xF6872D315CC2E1AfF6abae5dd814fd54755fE97C` |
+| Recipient               | Null                                                                                                             |
+| round                   | The round number for which this application was submitted                                                        |
+| projectRefUID           | The unique identifier of the project that submitted this application                                             |
+| farcasterID             | The individual that submitted this application on behalf of the project.                                         |
+| metadataSnapshot RefUID | The project metadata at the time the application was submitted.                                                  |
+
+### [Retro Funding Badgeholders](https://optimism.easscan.org/schema/view/0xfdcfdad2dbe7489e0ce56b260348b7f14e8365a8a325aef9834818c00d46b31b)
+
+These attestations are considered "voting Badges" and allow an individual to vote in any given iteration of Retro Funding. They were used up to and including Retro Round 4.
+
+| Schema UID     | `0xfdcfdad2dbe7489e0ce56b260348b7f14e8365a8a325aef9834818c00d46b31b`                                                                                                              |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Issuer         | Currently, the Optimism Foundation issues these from one of the following addresses: `0x621477dBA416E12df7FF0d48E14c4D20DC85D7D9` or `0xE4553b743E74dA3424Ac51f8C1E586fd43aE226F` |
+| Recipient      | The Badgeholder's address                                                                                                                                                         |
+| rpgfRound      | The round number for which this voting Badge was valid                                                                                                                            |
+| referredBy     | In early rounds, new Badges were issued by referral. This field captures the address of the referrer, if there was one                                                            |
+| referredMethod | If this voting Badge was issued by referral, this field captures the referral method                                                                                              |
+
+### [Project Identifier](https://optimism.easscan.org/schema/view/0x7ae9f4adabd9214049df72f58eceffc48c4a69e920882f5b06a6c69a3157e5bd)
+
+Used as the unique identifier for projects created in the Collective before 23 August 2024. Attestations issued from this schema prior to 23 August 2024 are still used as the unique identifier for projects. New projects created after 23 August 2024 use the new entity identifier (see above).
+
+| Schema UID  | `0x7ae9f4adabd9214049df72f58eceffc48c4a69e920882f5b06a6c69a3157e5bd`                                            |
+| ----------- | --------------------------------------------------------------------------------------------------------------- |
+| Issuer      | Attestations issued as part of Retro Funding sign up are issued by `0xF6872D315CC2E1AfF6abae5dd814fd54755fE97C` |
+| Recipient   | Null                                                                                                            |
+| farcasterID | The Farcaster id of the individual who created the project                                                      |
 
 *   **[RetroPGF 3 Approved Application schema UID](https://optimism.easscan.org/schema/view/0xebbf697d5d3ca4b53579917ffc3597fb8d1a85b8c6ca10ec10039709903b9277):**`0xebbf697d5d3ca4b53579917ffc3597fb8d1a85b8c6ca10ec10039709903b9277`. Important: Remember to verify the attester address is `0x621477dBA416E12df7FF0d48E14c4D20DC85D7D9`
 *   **[RetroPGF 3 Application schema UID](https://optimism.easscan.org/schema/view/0x76e98cce95f3ba992c2ee25cef25f756495147608a3da3aa2e5ca43109fe77cc):** `0x76e98cce95f3ba992c2ee25cef25f756495147608a3da3aa2e5ca43109fe77cc`
