@@ -10,11 +10,11 @@ import { Tabs } from 'nextra/components'
 # Consensus Layer Configuration Options (op-node)
 
 <Callout type="info">
-You can configure your node using the command line options below (also called flags). 
-There are also sub-commands, which can be used to invoke functionality such as the console or blockchain import/export.
+  You can configure your node using the command line options below (also called flags).
+  There are also sub-commands, which can be used to invoke functionality such as the console or blockchain import/export.
 </Callout>
 
-This page list all configuration options for `op-node`. `op-node` implements most rollup-specific functionality as Consensus-Layer, similar to a L1 beacon-node. 
+This page list all configuration options for `op-node`. `op-node` implements most rollup-specific functionality as Consensus-Layer, similar to a L1 beacon-node.
 The following options are from the `--help` in [v1.7.5](https://github.com/ethereum-optimism/optimism/releases/tag/op-node/v1.7.5).
 
 ## Global Options
@@ -49,36 +49,6 @@ Conductor service rpc timeout. The default value is `1s`.
   <Tabs.Tab>`OP_NODE_CONDUCTOR_RPC_TIMEOUT=1s`</Tabs.Tab>
 </Tabs>
 
-### heartbeat.enabled
-
-Enables or disables heartbeating. The default value is `false`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--heartbeat.enabled=<boolean>`</Tabs.Tab>
-  <Tabs.Tab>`--heartbeat.enabled=false`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_HEARTBEAT_ENABLED=false`</Tabs.Tab>
-</Tabs>
-
-### heartbeat.moniker
-
-Sets a moniker for this node.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--heartbeat.moniker=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--heartbeat.moniker=soyboy`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_HEARTBEAT_MONIKER=soyboy`</Tabs.Tab>
-</Tabs>
-
-### heartbeat.url
-
-Sets the URL to heartbeat to. The default value is `"https://heartbeat.optimism.io"`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--heartbeat.url=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--heartbeat.url="https://heartbeat.optimism.io"`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_HEARTBEAT_URL="https://heartbeat.optimism.io"`</Tabs.Tab>
-</Tabs>
-
 ### l1
 
 Address of L1 User JSON-RPC endpoint to use (eth namespace required). The default value is `"http://127.0.0.1:8545"`.
@@ -91,12 +61,12 @@ Address of L1 User JSON-RPC endpoint to use (eth namespace required). The defaul
 
 ### l1.beacon
 
-Address of L1 Beacon-node HTTP endpoint to use. 
+Address of L1 Beacon-node HTTP endpoint to use.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--l1.beacon=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--l1.beacon="127.0.0.1:3500"`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_L1_BEACON="127.0.0.1:3500"`</Tabs.Tab>
+  <Tabs.Tab>`--l1.beacon="http://127.0.0.1:3500"`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L1_BEACON="http://127.0.0.1:3500"`</Tabs.Tab>
 </Tabs>
 
 ### l1.beacon.fetch-all-sidecars
@@ -180,7 +150,7 @@ The kind of RPC provider, used to inform optimal transactions receipts fetching,
 </Tabs>
 
 <Callout type="info">
-For details on additional values, see [RPC Receipts](https://github.com/ethereum-optimism/optimism/blob/844cc20084a2e9716631b4092ce7eca4804a8e0a/op-service/sources/receipts_rpc.go#L239-L322).
+  For details on additional values, see [RPC Receipts](https://github.com/ethereum-optimism/optimism/blob/844cc20084a2e9716631b4092ce7eca4804a8e0a/op-service/sources/receipts_rpc.go#L239-L322).
 </Callout>
 
 ### l1.runtime-config-reload-interval
@@ -211,7 +181,7 @@ Trust the L1 RPC, sync faster at risk of malicious/buggy RPC providing bad or in
 
 ### l2
 
-Address of L2 Engine JSON-RPC endpoints to use (engine and eth namespace required).
+Address of L2 Engine JSON-RPC endpoints to use (engine and eth namespace required). This is referred to as `authrpc` by Geth and Reth.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--l2=<value>`</Tabs.Tab>
@@ -227,6 +197,16 @@ Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will
   <Tabs.Tab>`--l2.jwt-secret=<value>`</Tabs.Tab>
   <Tabs.Tab>`--l2.jwt-secret=/path/to/jwt/secret`</Tabs.Tab>
   <Tabs.Tab>`OP_NODE_L2_ENGINE_AUTH=/path/to/jwt/secret`</Tabs.Tab>
+</Tabs>
+
+### l2.enginekind
+
+The kind of engine client, used to control the behavior of optimism in respect to different types of engine clients. Valid options: `geth`, `reth`, `erigon`. The default value is `geth`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l2.enginekind=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l2.enginekind=geth`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L2_ENGINE_KIND=geth`</Tabs.Tab>
 </Tabs>
 
 ### log.color
@@ -258,6 +238,42 @@ The lowest log level that will be output. The default value is `info`.
   <Tabs.Tab>`--log.level=info`</Tabs.Tab>
   <Tabs.Tab>`OP_NODE_LOG_LEVEL=info`</Tabs.Tab>
 </Tabs>
+
+### Node Log Levels
+
+Node log levels determine the verbosity of log messages, allowing operators to filter messages based on importance and detail. The log levels for the `op-node` (used in Optimism)
+are as follows:
+
+1.  Silent (0): No log messages are displayed. This level is rarely used as it provides
+    no feedback on the node's status.
+
+2.  Error (1): Only error messages are displayed. Use this level to focus on critical
+    issues that need immediate attention.
+
+3.  Warn (2): Displays error messages and warnings. This level helps to identify
+    potential problems that might not be immediately critical but require attention.
+
+4.  Info (3): Displays error messages, warnings, and normal activity logs. This is the
+    default level and provides a balanced view of the node's operations without being too
+    verbose.
+
+5.  Debug (4): All info-level messages plus additional debugging information. Use this
+    level when troubleshooting issues or developing the node software.
+
+6.  Detail (5): The most verbose level, including detailed debugging information and
+    low-level system operations. This level generates a large amount of log data and is
+    typically used only for in-depth troubleshooting.
+
+To set the log level, use the `--log.level` flag when running the op-node command. For
+example, to set the log level to debug:
+
+```bash
+op-node --log.level=debug
+```
+
+By adjusting the log level, operators can control the amount and type of information that
+gets logged, helping to manage log data volume and focus on relevant details during
+different operational scenarios.
 
 ### metrics.addr
 
@@ -609,7 +625,7 @@ Enable the pprof server. Default is `false`.
 
 ### pprof.path
 
-pprof file path. If it is a directory, the path is \{dir\}/\{profileType\}.prof
+pprof file path. If it is a directory, the path is \{dir}/\{profileType}.prof
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--pprof.path=<path>`</Tabs.Tab>
@@ -727,6 +743,10 @@ Number of L1 blocks to keep distance from the L1 head as a sequencer for picking
   <Tabs.Tab>`OP_NODE_SEQUENCER_L1_CONFS=4`</Tabs.Tab>
 </Tabs>
 
+<Callout type="warning">
+The maximum value for `sequencer.l1-confs` cannot exceed the sequencer drift, currently set to 30 minutes (1800 seconds or 150 blocks). Setting a value higher than this limit will prevent the sequencer from producing blocks within the sequence window.
+</Callout>
+
 ### sequencer.max-safe-lag
 
 Maximum number of L2 blocks for restricting the distance between L2 safe and unsafe. Disabled if 0. Default is `0`.
@@ -767,6 +787,10 @@ Number of L1 blocks to keep distance from the L1 head before deriving L2 data fr
   <Tabs.Tab>`OP_NODE_VERIFIER_L1_CONFS=0`</Tabs.Tab>
 </Tabs>
 
+<Callout type="info">
+While `verifier.l1-confs` has no strict limit, it's recommended to keep this value within 12-13 minutes (typically 10-20 blocks) for optimal performance. Exceeding this range may impact the verifier's data processing efficiency.
+</Callout>
+
 ## Miscellaneous
 
 ### --help, -h
@@ -781,7 +805,7 @@ Show help. The default value is `false`.
 ### --version, -v
 
 <Callout type="info">
-  Nodes built from source do not output the correct version numbers that are reported on 
+  Nodes built from source do not output the correct version numbers that are reported on
   the GitHub release page.
 </Callout>
 
@@ -791,4 +815,3 @@ Print the version. The default value is `false`.
   <Tabs.Tab>`--version` OR `-v`</Tabs.Tab>
   <Tabs.Tab>`--version`</Tabs.Tab>
 </Tabs>
-

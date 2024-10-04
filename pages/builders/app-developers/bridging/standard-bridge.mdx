@@ -87,7 +87,7 @@ The process for bridging a native token involves a few steps.
   {<h3>The Standard Bridge locks the transferred tokens</h3>}
 
   When the user triggers the `bridgeERC20To` function while transferring a native token, the Standard Bridge will pull the `_amount` of `_localToken` tokens from the user's address and lock them inside of the bridge contract.
-  A record of all locked tokens are stored within a [`deposits` mapping](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L41-L42) that keeps track of the total number of tokens deposited for a given `_localToken` and `_remoteToken` pair.
+  A record of all locked tokens is stored within a [`deposits` mapping](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L41-L42) that keeps track of the total number of tokens deposited for a given `_localToken` and `_remoteToken` pair.
 
   Since a native token may have more than one bridged representation, the `deposits` token must keep track of the deposit pools for each `_localToken`/`_remoteToken` pair independently.
 
@@ -190,6 +190,12 @@ The process for bridging a non-native, bridged representation of a token involve
 The Standard Bridge contracts can also be used to bridge ETH from Ethereum to OP Mainnet and vice versa.
 The ETH bridging process is generally less complex than the ERC-20 bridging process.
 Users simply need to trigger and send ETH to the [`bridgeETH`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L143-L150) or [`bridgeETHTo`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L152-L166) functions on either blockchain.
+
+  <Callout>
+    Users can also deposit ETH from Ethereum to OP Mainnet by sending a basic ETH transfer from an EOA to the `L1StandardBridgeProxy`. 
+    This works because the `L1StandardBridgeProxy` contains a [`receive`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L119-L121) function.
+    You can find the mainnet and testnet addresses on the [Contract Addresses](/chain/addresses) page.
+  </Callout>
 
 ## Tutorials
 

@@ -5,13 +5,12 @@ description: This tutorial walks you through spinning up an OP Stack testnet cha
 ---
 
 import { Callout, Steps } from 'nextra/components'
+import { WipCallout } from '@/components/WipCallout'
 
+<WipCallout />
 # Creating Your Own L2 Rollup Testnet
 
-<Callout type="error">
-Please **do not rely** on the content of this page as it is currently undergoing maintenance. **Code samples and solutions may not function as expected.**  
-Please check back for an update or [signup to help us revise this page](https://github.com/ethereum-optimism/docs/labels/tutorial). We welcome your contribution! ❤️
-</Callout>
+
 
 <Callout type="info">
 Please **be prepared to set aside approximately one hour** to get everything running properly and **make sure to read through the guide carefully**.
@@ -276,6 +275,8 @@ It's recommended to fund the addresses with the following amounts when using Sep
 *   `Proposer` — 0.2 Sepolia ETH
 *   `Batcher` — 0.1 Sepolia ETH
 
+**To get the required Sepolia ETH to fund the addresses, we recommend using the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs)** together with [Coinbase verification](https://help.coinbase.com/en/coinbase/getting-started/getting-started-with-coinbase/id-doc-verification).
+
 </Steps>
 
 ## Load Environment variables
@@ -532,7 +533,7 @@ cd ~/op-geth
 <Callout type="info">
 You're using `--gcmode=archive` to run `op-geth` here because this node will act as your Sequencer.
 It's useful to run the Sequencer in archive mode because the `op-proposer` requires access to the full state.
-Feel free to run other (non-Sequencer) nodes in full mode if you'd like to save disk space.
+Feel free to run other (non-Sequencer) nodes in full mode if you'd like to save disk space. Just make sure at least one other archive node exists and the `op-proposer` points to it.
 </Callout>
 
 <Callout type="info">
@@ -595,7 +596,6 @@ cd ~/optimism/op-node
   --verifier.l1-confs=4 \
   --rollup.config=./rollup.json \
   --rpc.addr=0.0.0.0 \
-  --rpc.port=8547 \
   --p2p.disable \
   --rpc.enable-admin \
   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY \
@@ -654,7 +654,7 @@ cd ~/optimism/op-batcher
 ```bash
 ./bin/op-batcher \
   --l2-eth-rpc=http://localhost:8545 \
-  --rollup-rpc=http://localhost:8547 \
+  --rollup-rpc=http://localhost:9545 \
   --poll-interval=1s \
   --sub-safety-margin=6 \
   --num-confirmations=1 \
@@ -663,13 +663,13 @@ cd ~/optimism/op-batcher
   --rpc.addr=0.0.0.0 \
   --rpc.port=8548 \
   --rpc.enable-admin \
-  --max-channel-duration=1 \
+  --max-channel-duration=25 \
   --l1-eth-rpc=$L1_RPC_URL \
   --private-key=$GS_BATCHER_PRIVATE_KEY
 ```
 
 <Callout type="info">
-The `--max-channel-duration=n` setting tells the batcher to write all the data to L1 every `n` L1 blocks.
+The [`--max-channel-duration=n`](/builders/chain-operators/configuration/batcher#set-your--op_batcher_max_channel_duration) setting tells the batcher to write all the data to L1 every `n` L1 blocks.
 When it is low, transactions are written to L1 frequently and other nodes can synchronize from L1 quickly.
 When it is high, transactions are written to L1 less frequently and the batcher spends less ETH.
 If you want to reduce costs, either set this value to 0 to disable it or increase it to a higher value.
@@ -699,8 +699,8 @@ cd ~/optimism/op-proposer
 ./bin/op-proposer \
   --poll-interval=12s \
   --rpc.port=8560 \
-  --rollup-rpc=http://localhost:8547 \
-  --l2oo-address=$(cat ../packages/contracts-bedrock/deployments/getting-started/L2OutputOracleProxy.json | jq -r .address) \
+  --rollup-rpc=http://localhost:9545 \
+  --l2oo-address=$(cat ../packages/contracts-bedrock/deployments/getting-started/.deploy | jq -r .L2OutputOracleProxy) \
   --private-key=$GS_PROPOSER_PRIVATE_KEY \
   --l1-eth-rpc=$L1_RPC_URL
 ```
@@ -729,7 +729,7 @@ cd ~/optimism/packages/contracts-bedrock
 {<h3>Get the address of the L1StandardBridgeProxy contract</h3>}
 
 ```bash
-cat deployments/getting-started/L1StandardBridgeProxy.json | jq -r .address
+cat deployments/getting-started/.deploy | jq -r .L1StandardBridgeProxy
 ```
 
 {<h3>Send some Sepolia ETH to the L1StandardBridgeProxy contract</h3>}

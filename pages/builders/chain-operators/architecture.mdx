@@ -5,6 +5,8 @@ description: Learn about the OP chain architecture.
 ---
 
 import Image from 'next/image'
+import { Callout } from 'nextra/components'
+import {OpProposerDescriptionShort} from '@/content/index.js' 
 
 # Chain Architecture
 
@@ -45,9 +47,7 @@ amount of data required to reproduce L2 blocks.
 
 ### op-proposer
 
-`op-proposer` is the service that submits the output roots to the L1. This is to enable
-trustless execution of L2-to-L1 messaging and creates the view into the L2 state from
-the L1's perspective.
+<OpProposerDescriptionShort />
 
 ## Ingress Traffic
 
@@ -81,6 +81,10 @@ This tool is a RPC request router and proxy. It does the following things:
 The Sequencer node works with the batcher and proposer to create new blocks. So it should
 handle the state changing RPC request `eth_sendRawTransaction`. It can be peered with
 replica nodes to gossip new `unsafe` blocks to the rest of the network.
+
+<Callout type="info">
+To run a rollup, you need a minimum of one archive node. This is required by the proposer as the the data that it needs can be older than the data available to a full node.  Note that since the proposer doesn't care what archive node it points to, you can technically point it towards an archive node that isn't the sequencer. 
+</Callout>
 
 <Image src="/img/builders/chain-operators/sequencer-node.png" alt="Sequencer Node Diagram" width={400} height={400} />
 

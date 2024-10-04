@@ -8,14 +8,21 @@ import { Callout } from 'nextra/components'
 
 # OP Stack Genesis Creation
 
-The following guide shows you how to generate the L2 allocs. This is a JSON
-file that represents the L2 genesis state. You will provide this file to the
-execution client (op-geth) to initialize your network.
+The following guide shows you how to generate the L2 genesis file `genesis.json`. This is a JSON
+file that represents the L2 genesis. You will provide this file to the
+execution client (op-geth) to initialize your network. There is also the rollup configuration file, `rollup.json`, which will be
+provided to the consensus client (op-node).
 
 ## Solidity Script
 
-At the time of this writing, the preferred method for genesis generation is to use the foundry script located in the monorepo. It can be found at
+At the time of this writing, the preferred method for genesis generation is to use the foundry script 
+located in the monorepo to generate an "L2 state dump" and then pass this into the op-node genesis subcommand. 
+The foundry script can be found at
 [packages/contracts-bedrock/scripts/L2Genesis.s.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/L2Genesis.s.sol).
+
+<Callout type="info">
+When generating the genesis file, please use the same `op-contracts/vX.Y.Z` release commit used for L1 contract deployments.
+</Callout>
 
 ### Configuration
 
@@ -27,7 +34,7 @@ environment variable `FORK` either to the lower-case fork name (currently
 `delta`, `ecotone`, or `fjord`) or to `latest`, which will select the latest fork
 available (currently `fjord`).
 
-By default, the script will dump the L2 genesis allocs of the detected or
+By default, the script will dump the L2 genesis allocs (aka "state dump") of the detected or
 selected fork only, to the file at `STATE_DUMP_PATH`. The optional environment
 variable `OUTPUT_MODE` allows you to modify this behavior by setting it to one of
 the following values:
@@ -50,7 +57,7 @@ the following values:
     written to on disk.
 
 ```bash
-CONTRACT_ADDRESSES_PATH=deployments/artifact.json \
+CONTRACT_ADDRESSES_PATH=<CONTRACT_ADDRESSES_PATH> \
 DEPLOY_CONFIG_PATH=<PATH_TO_MY_DEPLOY_CONFIG> \
 STATE_DUMP_PATH=<PATH_TO_WRITE_L2_ALLOCS> \
   forge script scripts/L2Genesis.s.sol:L2Genesis \
@@ -59,26 +66,25 @@ STATE_DUMP_PATH=<PATH_TO_WRITE_L2_ALLOCS> \
 
 ## Subcommand (op-node genesis l2)
 
-Historically, the genesis file creation was handled by the `genesis l2`
+The genesis file creation is handled by the `genesis l2`
 subcommand, provided by the `op-node`. The following is an example of its usage
-from [v1.7.6](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.6).
+from [v1.7.6](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.6) --
+note that you need to pass the path to the l2 genesis state dump file output by
+the foundry script above:
 
 ```bash
 go run cmd/main.go genesis l2 \
   --deploy-config=<Path to deploy config file> \
-  --l1-deployments value=<Path to L1 deployments JSON file as in superchain-registry> \
+  --l1-deployments=<Path to L1 deployments JSON file as in superchain-registry> \
+  --l2-allocs=<Path to L2 genesis state dump> \
   --outfile.l2=<Path to L2 genesis output file: i.e. ./genesis.json> \
   --outfile.rollup=<Path to rollup output file: i.e. ./rollup.json> \
   --l1-rpc=<RPC URL for an Ethereum L1 node. Cannot be used with --l1-starting-bloc>>
 ```
 
-Alternatively, you can omit `--l1-rpc` and use `--l1-starting-block`. This option
-lets you provide a path to a JSON file containing the L1 starting block. This
-overrides the need for using an L1 RPC to fetch the block. It cannot be used
-with `--l1-rpc`.
-
 ## Next Steps
 
 *   Learn how to [initialize](/builders/node-operators/configuration/base-config#initialization-via-genesis-file)
-    `op-geth` with your genesis file
+    `op-geth` with your `genesis.json` file.
+*   Learn how to [initialize](https://docs.optimism.io/builders/node-operators/configuration/base-config#configuring-op-node) `op-node` with your `rollup.json` file.
 *   Learn more about the off chain [architecture](/builders/chain-operators/architecture).
