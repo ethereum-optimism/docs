@@ -103,9 +103,21 @@ export function convertToMillionUnits(value: number): number {
 }
 
 export async function getEthToUsdRate(): Promise<number> {
-  const response = await fetch(ethToUsdRate);
-  const rate = await response.text();
-  return parseFloat(rate);
+  try {
+    const response = await fetch(ethToUsdRate);
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+    }
+    const rateText = await response.text();
+    const rate = parseFloat(rateText);
+    if (isNaN(rate)) {
+      throw new Error(`Failed to parse ETH to USD rate: ${rateText}`);
+    }
+    return rate;
+  } catch (error) {
+    console.error('Error fetching ETH to USD rate:', error);
+    throw error;
+  }
 }
 
 export const determineDAInUse = (dataAvailabilityType: string): string => {
@@ -508,13 +520,24 @@ const _calculateL1BlobBaseFeeScalar = (
 };
 
 async function getL1GasBaseFee(): Promise<number> {
-  const response = await fetch(L1GasBaseFee);
-  const baseFee = await response.text();
-  console.log("L1GasBaseFee_response::",baseFee);
-  const output = parseFloat(baseFee);
-  console.log("e76:::", output);
-  return output;
-} // e76 done
+  try {
+    const response = await fetch(L1GasBaseFee);
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+    }
+    const baseFeeText = await response.text();
+    console.log("L1GasBaseFee_response::", baseFeeText);
+    const output = parseFloat(baseFeeText);
+    if (isNaN(output)) {
+      throw new Error(`Failed to parse L1 Gas Base Fee: ${baseFeeText}`);
+    }
+    console.log("e76:::", output);
+    return output;
+  } catch (error) {
+    console.error('Error fetching L1 Gas Base Fee:', error);
+    throw error;
+  }
+}
 
 const getBlobBaseFee = async (): Promise<number> => {
   const response = await fetch(blobBaseFee);
