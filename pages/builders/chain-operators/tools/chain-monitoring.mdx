@@ -27,7 +27,7 @@ Security integrity monitors: These are monitors necessary for making sure Bridge
     *   Fault Monitor: checks for changes in output roots posted to the L2OutputOracle contract. When a change is detected, it reconstructs the output root from a trusted L2 source and looks for a match..
     *   Withdrawals Monitor: checks for new withdrawals that have been proven to the OptimismPortal contract. Each withdrawal is checked against the `L2ToL1MessagePasser` contract.
 *   Faultproof chain monitors:
-    *   Faultproof Withdrawal: The Faultproof Withdrawal component monitors `ProvenWithdrawals` events on the `OptimismPortal` contract and performs checks to detect any violations of invariant conditions on the chain. If a violation is detected, it logs the issue and sets a Prometheus metric for the event. This component is designed to work exclusively with chains that are already utilizing the Fault Proofs system. This is a new version of the deprecated chain-mon faultproof-wd-mon. For detailed information on how the component works and the algorithms used, please refer to the component README.
+    *   Faultproof Withdrawal: The Faultproof Withdrawal component monitors `ProvenWithdrawals` events on the `OptimismPortal` contract and performs checks to detect any violations of invariant conditions on the chain. If a violation is detected, the issue is logged, and a Prometheus metric is set for the event. This component is designed to work exclusively with chains that are already utilizing the Fault Proofs system. This is a new version of the deprecated `chain-mon`,  `faultproof-wd-mon`. For detailed information on how the component works and the algorithms used, please refer to the component README.
 
 Security monitors: Those tools monitor other aspects of several contracts used in optimism:
 
@@ -36,13 +36,13 @@ Security monitors: Those tools monitor other aspects of several contracts used i
 *   Balances Monitor: emits a metric reporting the balances for the configured accounts.
 *   Multisig Monitor: The multisig monitor reports the paused status of the OptimismPortal contract. "If set, reports the latest nonce of the configured Safe address and the latest presigned nonce stored in One Password.. The latest presigned nonce is identified by looking for items in the configured vault that follow a `ready-<nonce>.json` name. The highest nonce of this item name format is reported.
 *   Drippie Monitor: tracks the execution and executability of drips within a Drippie contract.
-*   Secrets Monitor: takes a Drippie contract as a parameter and monitors for any drips within that contract that use the `CheckSecrets` dripcheck contract. `CheckSecrets` is a dripcheck that allows a drip to begin once a specific secret has been revealed (after a delay period) and cancels the drip if a second secret is revealed. It's important to monitor for these secrets being revealed as this could be a sign that the secret storage platform has been compromised and someone is attempting to exfiltrate the ETH controlled by that drip.
+*   Secrets Monitor: takes a Drippie contract as a parameter and monitors for any drips within that contract that use the `CheckSecrets` dripcheck contract. `CheckSecrets` is a dripcheck that allows a drip to begin once a specific secret has been revealed (after a delay period) and cancels the drip if a second secret is revealed. Monitoring these secrets is important, as their revelation may indicate that the secret storage platform has been compromised and someone is attempting to exfiltrate the ETH controlled by the drip.
 
 For more information on these monitors and how to use them, [check out the repo](https://github.com/ethereum-optimism/monitorism?tab=readme-ov-file#monitorism).
 
 ### `dispute-mon`
 
-Chain operators should consider running `op-dispute-mon`. It's an incredibly useful securities monitoring service to keep an eye on games, basically giving visibility into all the status of the games for the last 28 days.
+Chain operators should consider running `op-dispute-mon`. It’s an essential security monitoring service that tracks game statuses, providing visibility over the last 28 days.
 
 `dispute-mon` is set up and built the same way as `op-challenger`. This means that you can run it the same way (run `make op-dispute-mon` in the directory).
 
