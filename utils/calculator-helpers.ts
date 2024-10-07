@@ -130,6 +130,9 @@ export const determineDAInUse = (dataAvailabilityType: string): string => {
 
 // =INDEX($A$20:$G$32,MATCH('Chain Estimator'!$E$15,$A$20:$A$32,0),MATCH($B8,$A$20:$G$20,0))
 const getAvgEstimatedSizePerTx = (comparableTxnType: string) => {
+    if (!transactionTypes[comparableTxnType]) {
+      throw new Error(`Invalid transaction type: ${comparableTxnType}`);
+    }
   const output = transactionTypes[comparableTxnType].AvgEstimatedSizePerTx;
   console.log("c8::", output);
   return output;
@@ -540,13 +543,24 @@ async function getL1GasBaseFee(): Promise<number> {
 }
 
 const getBlobBaseFee = async (): Promise<number> => {
-  const response = await fetch(blobBaseFee);
-  const fee = await response.text();
-  console.log("BlobBaseFee_response::", fee);
-  const output = parseFloat(fee);
-  console.log("e78:::", output);
-  return output;
-}; // e78 done
+  try {
+    const response = await fetch(blobBaseFee);
+   if (!response.ok) {
+     throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+   }
+    const feeText = await response.text();
+    console.log("BlobBaseFee_response::", feeText);
+    const output = parseFloat(feeText);
+  if (isNaN(output)) {
+     throw new Error(`Failed to parse Blob Base Fee: ${feeText}`);
+  }
+    console.log("e78:::", output);
+    return output;
+  } catch (error) {
+    console.error('Error fetching Blob Base Fee:', error);
+    throw error;
+  }
+};
 
 // =ROUND((('Advanced Inputs'!C10/'Advanced Inputs'!N25/(1-E18))*1000000),0)
 const calculateL1BlobBaseFeeScalarUsingBlob = (
@@ -998,19 +1012,19 @@ export const calculateOverallL1DataAndStateCostsMargin = async (
 
 // =(E14*'Advanced Inputs'!C8*(16*G38*E76/1000000000+G37*E78/1000000000))
 export const calculateModeledDAPlusStateRevenueOnL2 = async (
-  e14: number,
-  e15: string,
-  e37: number,
-  e38: number
+  transactionsPerDay: number,
+  comparableTxnType: string,
+  displayL1BlobBaseFeeScalar: number,
+  displayL1BaseFeeScalar: number
 ) => {
-  const c8 = getAvgEstimatedSizePerTx(e15);
-  const g38 = convertToMillionUnits(e38);
-  const g37 = convertToMillionUnits(e37)
+  const c8 = getAvgEstimatedSizePerTx(comparableTxnType);
+  const g38 = convertToMillionUnits(displayL1BaseFeeScalar);
+  const g37 = convertToMillionUnits(displayL1BlobBaseFeeScalar);
   const e76 = await getL1GasBaseFee();
   const e78 = await getBlobBaseFee();
   const part1 = (16 * g38 * e76) / 1000000000;
   const part2 = (g37 * e78) / 1000000000;
-  const output = e14 * c8 * (part1 + part2);
+  const output = transactionsPerDay * c8 * (part1 + part2);
   console.log("e118::", output)
   return output
 } // e118
