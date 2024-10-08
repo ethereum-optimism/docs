@@ -41,22 +41,22 @@ console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`);
 async function depositETH() {
 
 
-const args = await publicClientL2.buildDepositTransaction({
+const depositArgs = await publicClientL2.buildDepositTransaction({
     mint: parseEther("0.0001"),
     to: account.address,
 });
 
-const hash = await walletClientL1.depositTransaction(args);
+const hash = await walletClientL1.depositTransaction(depositArgs);
 console.log(`Deposit transaction hash on L1: ${hash}`);
 
 const receipt = await publicClientL1.waitForTransactionReceipt({ hash });
 console.log('L1 transaction confirmed:', receipt);
 
-const l2Hashes = getL2TransactionHashes(receipt);
-console.log(`Corresponding L2 transaction hash: ${l2Hashes}`);
+const [l2Hash] = getL2TransactionHashes(receipt);
+console.log(`Corresponding L2 transaction hash: ${l2Hash}`);
 
 const l2Receipt = await publicClientL2.waitForTransactionReceipt({
-    hash: l2Hashes,
+    hash: l2Hash,
 });
 console.log('L2 transaction confirmed:', l2Receipt);
 console.log('Deposit completed successfully!');
@@ -66,12 +66,12 @@ console.log('Deposit completed successfully!');
 async function withdrawETH() {
     
 //Add the same imports used in DepositETH function
-const args = await publicClientL2.buildWithdrawalTransaction({
+const withdrawalArgs = await publicClientL2.buildWithdrawalTransaction({
 withdrawalAmount: parseEther("0.0001"),
 to: account.address,
 });
 
-const hash = await walletClientL2.initiateWithdrawal(args);
+const hash = await walletClientL2.initiateWithdrawal(withdrawalArgs);
 console.log(`Withdrawal transaction hash on L2: ${hash}`);
 
 const receipt = await publicClientL2.waitForTransactionReceipt({ hash });
