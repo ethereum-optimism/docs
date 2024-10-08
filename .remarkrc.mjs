@@ -1,4 +1,5 @@
 import remarkLintNoBlockedCharacters from './utils/plugins/remark/remark-lint-no-blocked-characters.mjs'
+import remarkLintSentenceCaseHeaders from './utils/plugins/remark/sentence-case-headers.mjs'
 
 export default {
   plugins: [
@@ -10,6 +11,7 @@ export default {
     "remark-lint-table-cell-padding",
     "remark-lint-table-pipe-alignment",
     "remark-lint-table-pipes",
+    remarkLintSentenceCaseHeaders,
     "@double-great/remark-lint-alt-text",
     [
       "remark-lint-heading-style",
