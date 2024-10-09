@@ -19,10 +19,10 @@ const walletClientL2 = createWalletClient({
 }).extend(walletActionsL2())
 
   const transaction = {
-    account,
-    to: '0x1000000000000000000000000000000000000000',
-    value: parseEther('0.005'),
-    gasPrice: parseGwei('20')
+  account,
+  to: '0x1000000000000000000000000000000000000000',
+  value: parseEther('0.005'),
+  gasPrice: parseGwei('20')
   }
 
   const gasLimit = await publicClient.estimateGas(transaction)
