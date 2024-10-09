@@ -89,9 +89,7 @@ You need to import some dependencies into your Node REPL session.
 
 {<h3>Import Viem</h3>}
 
-```js
-const { createPublicClient, createWalletClient, http, parseEther, formatEther } = require('viem');
-const { optimismSepolia, sepolia } = require('viem/chains');
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L3-L5 hash=7a906fc04fa87f91fc33049240e8e0f8
 ```
 
 </Steps>
@@ -104,17 +102,12 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 
 {<h3>Load your private key</h3>}
 
-```js
-const privateKey = process.env.TUTORIAL_PRIVATE_KEY;
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L7-L8 hash=46ba01375a5d8844b2315f0e579dfac3
 ```
 
 {<h3>Create the RPC providers and wallets</h3>}
 
-```js
-const l1PublicClient = createPublicClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") });
-const l2PublicClient = createPublicClient({ chain: optimismSepolia, transport: http("https://sepolia.optimism.io") });
-const l1WalletClient = createWalletClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") });
-const l2WalletClient = createWalletClient({ chain: optimismSepolia, transport: http("https://sepolia.optimism.io") });
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L10-L13 hash=a364c906d788d0614588c8db059cfcca
 ```
 
 </Steps>
@@ -123,10 +116,7 @@ const l2WalletClient = createWalletClient({ chain: optimismSepolia, transport: h
 
 You'll be sending a small amount of ETH as part of this tutorial. Quickly check your balance on OP Sepolia so that you know how much you had at the start of the tutorial.
 
-```js
-const address = await l2WalletClient.account.address;
-const initialBalance = await l2PublicClient.getBalance({ address });
-console.log(`Initial balance: ${formatEther(initialBalance)} ETH`);
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L15-L17 hash=5b95f18440ad72b6200ed7b5df00ca8f
 ```
 
 ## Trigger the Transaction
@@ -137,74 +127,35 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 
 {<h3>Create the OptimismPortal object</h3>}
 
-```js
-const optimismPortalAbi = [
-  {
-    inputs: [
-      { internalType: 'uint256', name: '_gasLimit', type: 'uint256' },
-      { internalType: 'bytes', name: '_data', type: 'bytes' },
-    ],
-    name: 'depositTransaction',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-];
-
-const optimismPortalAddress = '0x16fc5058f25648194471939df75cf27a2fdc48bc';
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L19-L30 hash=bb10ed96a0eed859d491afc1929001ce
 ```
 
 {<h3>Estimate the required gas</h3>}
 
 When sending transactions via the `OptimismPortal` contract it's important to always include a gas buffer. This is because the `OptimismPortal` charges a variable amount of gas depending on the current demand for L2 transactions triggered via L1. If you do not include a gas buffer, your transactions may fail.
 
-```js
-const gasLimit = 100000n;
-const data = '0x';
-const value = parseEther('0.000001');
-
-const gasEstimate = await l1PublicClient.estimateContractGas({
-  address: optimismPortalAddress,
-  abi: optimismPortalAbi,
-  functionName: 'depositTransaction',
-  args: [gasLimit, data],
-  value,
-});
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L32-L43 hash=ae495cba1a72841059a32edaf20f854d
 ```
 
 {<h3>Send the transaction</h3>}
 
 Now you'll send the transaction. Note that you are including a buffer of 20% on top of the gas estimate.
 
-```js
-const { hash: l1TxHash } = await l1WalletClient.writeContract({
-  address: optimismPortalAddress,
-  abi: optimismPortalAbi,
-  functionName: 'depositTransaction',
-  args: [gasLimit, data],
-  value,
-  gas: gasEstimate * 120n / 100n, // 20% buffer
-});
-
-console.log(`L1 transaction hash: ${l1TxHash}`);
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L45-L54 hash=6fb0ba06fb29be7ee2c945fca75a50f4
 ```
 
 {<h3>Wait for the L1 transaction</h3>}
 
 First you'll need to wait for the L1 transaction to be mined.
 
-```js
-const l1Receipt = await l1PublicClient.waitForTransactionReceipt({ hash: l1TxHash });
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L56 hash=3c0301f8a9ca78bd8bfbff6aef807c77
 ```
 
 {<h3>Wait for the L2 transaction</h3>}
 
 Now you'll need to wait for the corresponding L2 transaction to be included in a block. This transaction is automatically created as a result of your L1 transaction. Here you'll determine the hash of the L2 transaction and then wait for that transaction to be included in the L2 blockchain.
 
-```js
-const l2TxHash = l1Receipt.logs[0].topics[1];
-const l2Receipt = await l2PublicClient.waitForTransactionReceipt({ hash: l2TxHash });
-console.log(`L2 transaction hash: ${l2TxHash}`);
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L58-L60 hash=cdd456e54b0f8507f96365dae05b8856
 ```
 
 </Steps>
@@ -213,16 +164,12 @@ console.log(`L2 transaction hash: ${l2TxHash}`);
 
 You should have a little less ETH on OP Sepolia now. Check your balance to confirm.
 
-```js
-const finalBalance = await l2PublicClient.getBalance({ address });
-console.log(`Final balance: ${formatEther(finalBalance)} ETH`);
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L62-L63 hash=7cac2670afeb0fcc88346bc59b90466c
 ```
 
 Make sure that the difference is equal to the amount you were expecting to send.
 
-```js
-const difference = initialBalance - finalBalance;
-console.log(`Difference: ${formatEther(difference)} ETH`);
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L65-L66 hash=e2ef73867c6d755ca89b9d3381522208
 ```
 
 ## Next Steps
