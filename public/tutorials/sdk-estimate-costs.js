@@ -34,7 +34,7 @@ const walletClientL2 = createWalletClient({
   const l2CostEstimate = gasLimit * effectiveGasPrice
   console.log(`Estimated Execution Gas Fee: ${formatEther(l2CostEstimate)} ETH`)
 
-  const l1CostEstimate = await publicClient.estimateL1Fee(transaction)
+  const l1CostEstimate = await publicClient.estimateL1Gas(transaction)
   console.log(`Estimated L1 Data Fee: ${formatEther(l1CostEstimate)} ETH`)
 
   const totalEstimate = l2CostEstimate + l1CostEstimate
