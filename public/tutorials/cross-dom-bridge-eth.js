@@ -46,10 +46,10 @@ const depositArgs = await publicClientL2.buildDepositTransaction({
     to: account.address,
 });
 
-const hash = await walletClientL1.depositTransaction(depositArgs);
-console.log(`Deposit transaction hash on L1: ${hash}`);
+const Deposithash = await walletClientL1.depositTransaction(depositArgs);
+console.log(`Deposit transaction hash on L1: ${Deposithash}`);
 
-const receipt = await publicClientL1.waitForTransactionReceipt({ hash });
+const receipt = await publicClientL1.waitForTransactionReceipt({ Deposithash });
 console.log('L1 transaction confirmed:', receipt);
 
 const [l2Hash] = getL2TransactionHashes(receipt);
@@ -57,7 +57,7 @@ console.log(`Corresponding L2 transaction hash: ${l2Hash}`);
 
 const l2Receipt = await publicClientL2.waitForTransactionReceipt({
     hash: l2Hash,
-});
+}); 
 console.log('L2 transaction confirmed:', l2Receipt);
 console.log('Deposit completed successfully!');
 } 
@@ -71,14 +71,14 @@ withdrawalAmount: parseEther("0.0001"),
 to: account.address,
 });
 
-const hash = await walletClientL2.initiateWithdrawal(withdrawalArgs);
-console.log(`Withdrawal transaction hash on L2: ${hash}`);
+const withdrawalHash = await walletClientL2.initiateWithdrawal(withdrawalArgs);
+console.log(`Withdrawal transaction hash on L2: ${withdrawalHash}`);
 
-const receipt = await publicClientL2.waitForTransactionReceipt({ hash });
-console.log('L2 transaction confirmed:', receipt);
+const withdrawalReceipt = await publicClientL2.waitForTransactionReceipt({ withdrawalHash });
+console.log('L2 transaction confirmed:', withdrawalReceipt);
 
 const { output, withdrawal } = await publicClientL1.waitToProve({
-receipt,
+withdrawalReceipt,
 targetChain: walletClientL2.chain
 });
 
