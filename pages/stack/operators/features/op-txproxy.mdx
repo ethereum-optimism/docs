@@ -8,39 +8,35 @@ import { Callout, Steps } from 'nextra/components'
 
 # op-txproxy
 
-A [passthrough proxy](https://github.com/ethereum-optimism/infra/tree/main/op-txproxy) for the execution engine endpoint. This proxy does not forward all rpc traffic and only exposes a specific set of methods. Operationally, the ingress router should only re-route request for these methods.
+A [passthrough proxy](https://github.com/ethereum-optimism/infra/tree/main/op-txproxy) for the execution engine endpoint. This proxy does not forward all rpc traffic and only exposes a specific set of methods. Operationally, the ingress router should only re-route requests for these methods.
 
 <Callout type="info">
   [proxyd](./proxyd) as an ingress router supports the mapping of specific methods to unique backends.
 </Callout>
-
 ## Methods
 
 ### **eth_sendRawTransactionConditional**
 
 To safely expose this endpoint publicly, additional stateless constraints are applied to horizontally scale validation rules and preemptively reject conditional transactions prior to reaching the sequencer.
 
-A variety of metrics are emitted for to inform adjustments to be made.
-
+A variety of metrics are emitted to inform necessary adjustments.
 #### Authentication
 
 The caller authenticates themselves with any valid ECDSA-secp256k1 key, like an Ethereum key. The computed signature is over the [EIP-191](https://eips.ethereum.org/EIPS/eip-191) hash of the request body. This calling address does **not need to hold an ethereum balance**. It simply is used for identification.
 
 With the signature and signing address, the request is authenticated under the `X-Optimism-Signature` header with the value `<public key address>: <signature>`.
 
-*   Requests with missing a missing authentication header fail with the `-32003` (transaction rejected) json rpc error code.
+*   Requests with a missing authentication header fail with the `-32003` (transaction rejected) json rpc error code.
 *   Requests with a mismatch in recovered signer and supplied public key will have the http request failed with status code `400 - Bad Request`.
 
-As of today, no authorization policies are implemented on this endpoint. This has preemptively in place allow for new policies (allowlist, localized rate limits, etc)
-
+As of today, no authorization policies are implemented on this endpoint. However, the authentication mechanism is in place to allow for future implementation of policies such as allowlists, localized rate limits, etc.
 #### Runtime Shutoff
 
-This service can be rolled with a flag/env switch to reject conditional transaction without needing to interrupt the execution engine. Useful in diagnosing issues.
+This service can be configured with a flag or environment variable to reject conditional transactions without needing to interrupt the execution engine. This feature is useful for diagnosing issues.
 
 `--sendRawTxConditional.enabled (default: true) ($OP_TXPROXY_SENDRAWTXCONDITIONAL_ENABLED)`
 
 When disabled, requests will fail with the `-32003` (transaction rejected) json rpc error code with a message stating that the method is disabled.
-
 #### Rate Limits
 
 Even though the op-geth implementation of this endpoint includes rate limits, it is instead applied here to terminate these requests early.
