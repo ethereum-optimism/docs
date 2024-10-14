@@ -1,0 +1,61 @@
+---
+title: SuperchainERC20 Token Standard
+lang: en-US
+description: Learn basic details about the SuperchainERC20 token standard.
+---
+
+import { Callout } from 'nextra/components'
+
+# SuperchainERC20 Token Standard
+
+<Callout>
+  Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
+</Callout>
+
+`SuperchainERC20` is a token standard specifically designed for the Superchain ecosystem. It serves as the foundation for interoperable tokens within the Superchain, including `GovToken`, `WETH` (Wrapped Ether), and migrated `OptimismMintableERC20Tokens`. This standard is crucial for enabling a more interconnected and efficient token ecosystem within the Superchain, balancing the needs for interoperability, security, and simplified governance.
+
+## Features and benefits
+
+*   **Interoperability**: Enables seamless token transfers between different chains within the Superchain ecosystem.
+*   **Built-in bridging**: The bridging interface exists on the token itself, eliminating the need for a central bridge predeploy (e.g., `bridgeERC20`, `bridgeERC20To`).
+*   **Consistency**: Provides a unified standard for tokens across all Superchain-compatible networks.
+*   **Governance minimized**: Designed to keep tokens within the Superchain ecosystem with minimal governance intervention.
+*   **Superchain-specific**: Tailored for internal use cases within the Superchain, addressing specific needs that other standards may not cover.
+
+## Major components
+
+*   **Token Contract**: implements the `SuperchainERC20` standard with bridging functionality.
+*   **Factory Predeploy**: uses a `create3`-based factory for deploying `SuperchainERC20` tokens consistently across chains.
+*   **Bridging Functions**: using methods like `bridgeERC20` and `bridgeERC20To` for cross-chain transfers.
+*   **Minting Role**: modifies the definition to be minting role-based rather than interface-based.
+
+## Comparison to other standards
+
+`SuperchainERC20` differs from other token standards in its focus and implementation:
+
+*   `SuperchainERC20` is tailored for the Superchain, while other token standards might aim for broader cross-chain compatibility.
+*   `SuperchainERC20` is governance-minimized and designed to keep tokens within the Superchain ecosystem.
+*   The bridging functionality in `SuperchainERC20` is part of the token itself, not relying on external bridges.
+
+<Callout type="info">
+  Projects moving from other token standards may need to adapt to the `SuperchainERC20` specification.
+</Callout>
+
+## Implementation details
+
+Application developers must complete two tasks to enable `SuperchainERC20`. This advance setup ensures that `SuperchainERC20` goes live when the interop upgrade happens and your token becomes interoperable.
+
+1.  Deployment at same address on each chain using `create2` function
+2.  Permission `crosschainMint` and `crosschainBurn` to the Superchain bridge address
+
+For now, application developers should view `SuperchainERC20`as standard ERC20 tokens with additional built-in functions that will be enabled once interop goes live.
+
+<Callout type="warning">
+  The `SuperchainERC20` token must give access to the address where the future interop bridge will live.
+</Callout>
+
+## Next steps
+
+*   Join the discussion! `SuperchainERC20` implementation is being developed in partnership with Wonderland, with discussions taking place in the [#interop-evm](https://discord.gg/3zvcEFj6Nu) Discord channel.
+*   For more info about how `SuperchainERC20` works under the hood, [check out the specs](https://specs.optimism.io/interop/token-bridging.html).
+*   Questions about Interop? Visit the [Superchain Interop Explainer](explainer) or check out this [Superchain interop design video walk-thru](https://www.youtube.com/watch?v=FKc5RgjtGes).
