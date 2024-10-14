@@ -1,0 +1,89 @@
+---
+title: Transaction Finality 
+lang: en-US
+description: Learn the concept of finality in blockchain systems and the steps involved in achieving transaction settlement.
+---
+
+import { Callout } from 'nextra/components'
+
+## Key Concepts
+
+*   Transaction finality: The point at which a transaction is considered irreversible.
+*   Challenge period: A period during which withdrawals from L2 to L1 can be contested.
+*   Reorg: A situation where part of the blockchain is replaced, discarding previously confirmed blocks.
+
+# Transaction Finality
+
+Transaction finality refers to the point at which a transaction is considered irreversible and is permanently recorded on the blockchain.
+
+## Finality on Ethereum
+
+Ethereum is designed to provide strong transaction finality guarantees. Here's how it works:
+
+*   Time Frame: Under typical network conditions, transactions on Ethereum achieves finality in about 15 minutes.
+*   Consensus Cycles: This finality period is reached after 2 [epochs](https://info.etherscan.com/epoch-in-ethereum/)
+*   Block Confirmations: During this time, multiple blocks are added to the chain, each providing additional confirmation of the transactions in previous blocks.
+
+This timeframe ensures enough block confirmations to safeguard against reorgs and guarantees secure settlement of transactions.
+
+## OP Stack Finality
+
+OP Stack derive security from Ethereum. Finality occurs when transaction data is posted to Ethereum's data availability (DA) layer, i.e., **Layer 1 (L1)**.
+At this point, the state of the rollup becomes finalized, similar to L1 transaction finality, preventing reorgs at the L2 level.
+
+In OP Stack, transaction finality involves three main stages:
+
+*   Unsafe: The L2 sequencer creates a block containing the transaction, but the transaction data hasn't been posted to L1 yet. It's circulated to the L2 network for speed.
+
+*   Safe: The sequencer's batcher posts transaction data to L1. Any L2 node can now derive this transaction.
+
+*   Finalized: Same as safe, but enough L1 blocks (>65) have passed to ensure the L1 data won't be reorged. This prevents L1 reorgs from affecting the rollup's state and transaction history.
+
+    <Callout type="info">
+      The OP Stack ensures that even if an L2 sequencer produces invalid transactions, the network nodes will reject them, maintaining consensus and security.
+    </Callout>
+
+## The Settlement Layer
+
+This mechanism allows Ethereum to establish a view of the state on an OP Stack chain:
+
+*   Rollup nodes post data to and monitor Ethereum.
+*   Ethereum processes transactions based on its consensus rules, without knowledge of the L2.
+*   For L2 to L1 messages (usually withdrawals), the L2 must prove its state's validity.
+
+To ensure the finality of an OP Stack chain's state, wait for transaction finalization on L1.
+
+## Sequencer Reliability
+
+Sequencers are centralized, raising concerns about potential equivocation (lying about block state). However:
+
+*   Sequencers and all L2 nodes must follow consensus rules.
+*   Invalid transactions are rejected by all network nodes.
+*   This process is similar to how Ethereum and Bitcoin handle transactions.
+
+The L2 state is considered final once a batch is posted to L1 and enough blocks have passed to prevent reorgs.
+
+## Challenge Period
+
+OP Stack rollups use a 7-day withdrawal challenge period for a specific reason:
+
+*   L1 has no inherent knowledge of L2.
+*   For L2 to L1 withdrawals, L1 needs to verify the withdrawal's validity.
+*   The 7-day period allows time to dispute withdrawal claims.
+*   The challenge process uses L2 transaction history to verify claim validity.
+
+A successful challenge (a failed withdrawal claim):
+
+*   Doesn't impact the L2 state.
+*   Doesn't cause an L2 reorg.
+*   Only determines the validity of the specific withdrawal claim.
+
+    <Callout type="info">
+      It's important to understand transaction finality and the challenge period as distinct concepts:
+
+      *   The 7-day challenge period verifies the validity of L2 transactions during withdrawals to L1. It does not apply to general L2 transaction finality.
+      *   Users can dispute a withdrawal claim by submitting a fraud proof. This ensures invalid withdrawals are identified before the state is finalized on L1.
+      *   A successful challenge impacts only the withdrawal claim and does not delay L2 transaction finality.
+      *   L2 transaction finality is achieved within minutes after data is posted on L1 and confirmed by approximately 65 blocks (\~10 minutes).
+      *   Even if a challenge is successful, it does not cause a reorg or affect transaction finality on the L2.
+    </Callout>
