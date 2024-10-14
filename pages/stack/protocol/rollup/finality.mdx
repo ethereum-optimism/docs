@@ -4,6 +4,7 @@ lang: en-US
 description: Learn the concept of finality in blockchain systems and the steps involved in achieving transaction settlement.
 ---
 
+import Image from 'next/image'
 import { Callout } from 'nextra/components'
 
 # Transaction Finality
@@ -36,6 +37,10 @@ In OP Stack, transaction finality involves three main stages:
 *   Safe: The sequencer's batcher posts transaction data to L1. Any L2 node can now derive this transaction.
 
 *   Finalized: Same as safe, but enough L1 blocks (>65) have passed to ensure the L1 data won't be reorged. This prevents L1 reorgs from affecting the rollup's state and transaction history.
+
+
+<Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
+
 
     <Callout type="info">
       The OP Stack ensures that even if an L2 sequencer produces invalid transactions, the network nodes will reject them, maintaining consensus and security.
@@ -76,12 +81,12 @@ A successful challenge (a failed withdrawal claim):
 *   Doesn't cause an L2 reorg.
 *   Only determines the validity of the specific withdrawal claim.
 
-    <Callout type="info">
-      It's important to understand transaction finality and the challenge period as distinct concepts:
+## Conclusion
+    It's important to understand transaction finality and the challenge period as distinct concepts:
 
-      *   The 7-day challenge period verifies the validity of L2 transactions during withdrawals to L1. It does not apply to general L2 transaction finality.
-      *   Users can dispute a withdrawal claim by submitting a fraud proof. This ensures invalid withdrawals are identified before the state is finalized on L1.
-      *   A successful challenge impacts only the withdrawal claim and does not delay L2 transaction finality.
-      *   L2 transaction finality is achieved within minutes after data is posted on L1 and confirmed by approximately 65 blocks (\~10 minutes).
-      *   Even if a challenge is successful, it does not cause a reorg or affect transaction finality on the L2.
-    </Callout>
+    *   The 7-day challenge period verifies the validity of L2 transactions during withdrawals to L1. It does not apply to general L2 transaction finality.
+    *   Users can dispute a withdrawal claim by submitting a fraud proof. This ensures invalid withdrawals are identified before the state is finalized on L1.
+    *   A successful challenge impacts only the withdrawal claim and does not delay L2 transaction finality.
+    *   L2 transaction finality is achieved within minutes after data is posted on L1 and confirmed by approximately `65 blocks (\~10 minutes).
+    *   Even if a challenge is successful, it does not cause a reorg or affect transaction finality on the L2.
+
