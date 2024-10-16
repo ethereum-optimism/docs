@@ -1,29 +1,29 @@
-# Contributing to Optimism Docs
+# Contributing to Metal L2 Docs
 
 Thanks for taking the time to contribute! ❤️
 
-Optimism's documentation is open-source, hosted on GitHub in the `ethereum-optimism/docs` repository which renders on the corresponding official website hosted at [docs.optimism.io](https://docs.optimism.io). This guide will give you an overview of the contribution workflow from opening an issue, creating a PR, reviewing, and merging the PR. Please note that contributions, pull requests, and issues should be written in English at this time. We will be running a dedicated project in the future to add language support to the technical docs, so please reach out via our [developer support channel](https://github.com/ethereum-optimism/developers/) if you are interested in helping with that project.
+Metal L2's documentation is open-source, hosted on GitHub in the `MetalPay/metal-l2-docs` repository which renders on the corresponding official website hosted at [docs.metall2.com](https://docs.metall2.com). This guide will give you an overview of the contribution workflow from opening an issue, creating a PR, reviewing, and merging the PR. Please note that contributions, pull requests, and issues should be written in English at this time.
 
-The Optimism Documentation team reviews pull requests and either merges, requests changes, or comments and closes the pull request. You can open a documentation pull request by:
+The Metal L2 Documentation team reviews pull requests and either merges, requests changes, or comments and closes the pull request. You can open a documentation pull request by:
 
 - forking the `docs` repository and working locally,
 - or, for smaller updates, clicking the `Edit this page` link on the right side of any documentation page to directly edit in GitHub.
 
-Contributing to the Optimism documentation implies 2 steps:
+Contributing to the Metal L2 documentation implies 2 steps:
 
-1. Learn how to use [Nextra](#learn-how-to-use-nextra), the tool used to write and generate Optimism's documentation.
+1. Learn how to use [Nextra](#learn-how-to-use-nextra), the tool used to write and generate Metal L2's documentation.
 
 2. [Submit a pull request](#send-pull-request) for review.
 
 ## Learn How to Use Nextra
 
-Optimism's documentation is built with the React and Markdown-based [Nextra](https://nextra.site/docs) framework. We are using the docs theme (as opposed to the blog theme), which has specialized features.
+Metal L2's documentation is built with the React and Markdown-based [Nextra](https://nextra.site/docs) framework. We are using the docs theme (as opposed to the blog theme), which has specialized features.
 
-To start contributing to Optimism's documentation using Nextra, you need to understand the [files and branches architecture](#understand-file-architecture-and-branch-names) and use the proper [syntax to format content](#use-proper-formatting-and-syntax). Additionally, if you want to work locally from a repository fork, you should [set up the Nextra project](#set-up-the-project-and-test-locally) on your machine.
+To start contributing to Metal L2's documentation using Nextra, you need to understand the [files and branches architecture](#understand-file-architecture-and-branch-names) and use the proper [syntax to format content](#use-proper-formatting-and-syntax). Additionally, if you want to work locally from a repository fork, you should [set up the Nextra project](#set-up-the-project-and-test-locally) on your machine.
 
 ### Understand File Architecture and Branch Names
 
-Optimism's documentation includes two major sections with each section living in a different folder. 
+Metal L2's documentation includes two major sections with each section living in a different folder. 
 
 | Section name      | Target content                                                    | Folder                        |
 | ------------------| ----------------------------------------------------------------- | ----------------------------- | 
@@ -32,15 +32,15 @@ Optimism's documentation includes two major sections with each section living in
 
 **Warning**
 The `public` folder also stores the `robots.txt` and `sitemap.xml` files used for SEO. Please do not modify these pages. 
-The Optimism Documentation team will modify these pages, when necessary, after your PR is merged.
+The Metal L2 Documentation team will modify these pages, when necessary, after your PR is merged.
 
 ### Use Proper Formatting and Syntax
 
 Nextra is MDX-based, meaning the content you write is [Markdown](https://daringfireball.net/projects/markdown/syntax) that accepts [React](https://reactjs.org/) components.
 
-The Optimism Documentation team has created a complete style guide for you to make the best out of the various options available:
+The Metal L2 Documentation team has created a complete style guide for you to make the best out of the various options available:
 
-[Optimism Documentation Style Guide](/pages/connect/contribute/style-guide.mdx) 
+[Metal L2 Documentation Style Guide](/pages/connect/contribute/style-guide.mdx) 
 
 ### Set Up the Project and Test Locally
 
@@ -66,32 +66,32 @@ To prevent building issues upstream, you should build the content locally before
 - Try another `pnpm dev` and repeat until no issues are reported ("client" and "server compiled successfully").
 
 
-Your pull request should usually target the `main` branch, though the Optimism Documentation team might sometimes ask you to target another branch.
+Your pull request should usually target the `main` branch, though the Metal L2 Documentation team might sometimes ask you to target another branch.
 
 To submit your contribution for review:
 
-1. Create a new [pull request on GitHub](https://github.com/ethereum-optimism/docs/issues/new/choose).
+1. Create a new [pull request on GitHub](https://github.com/MetalPay/metal-l2-docs/issues/new/choose).
 2. Select a PR type from the list or choose **Open a blank issue** at the bottom of the page.
 3. Complete the form as requested. For blank PR issues, please provide a clear title and accurate description/context.
 4. Click the "Create pull request" button to create the pull request effectively.
     
->If your pull request is not ready for review yet, choose the "[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)"in the dropdown. The Optimism documentation team will review your pull request only when you mark it as "[Ready for review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request)".
+>If your pull request is not ready for review yet, choose the "[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)"in the dropdown. The Metal L2 documentation team will review your pull request only when you mark it as "[Ready for review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request)".
    
 5. Add GitHub labels for the pull request. Add `documentation` to all pull requests in this repo **AND** additional labels based on the type of update or request.
      - `tutorial`, `faq`, or `troubleshooting` for specific content types, 
      - `oracle`, `rpc-provider`, `faucet`, or `attestation` for ecosystem offerings,
      - `user feedback` for general feedback about one or more pages, or 
      - `bug` if something isn't working as expected. 
->If label for type of update is not set, the Optimism Documentation team will set or update this for you<br/>
+>If label for type of update is not set, the Metal L2 Documentation team will set or update this for you<br/>
     
 **Warning**
-Approved pull requests are usually merged immediately into the `main` branch, automatically triggering a deployment on docs.optimism.io. Please add the `flag:merge-pending-release` label if the pull request content should only be released publicly in sync with a product release.
+Approved pull requests are usually merged immediately into the `main` branch, automatically triggering a deployment on docs.metall2.com. Please add the `flag:merge-pending-release` label if the pull request content should only be released publicly in sync with a product release.
 
-That's it! 🥳 Once the pull request is [reviewed and approved](#review-and-management-of-pull-requests), the Optimism Documentation team will merge it, and the content will be live on [docs.optimism.io](http://docs.optimism.io) a few minutes later. 🚀
+That's it! 🥳 Once the pull request is [reviewed and approved](#review-and-management-of-pull-requests), the Metal L2 Documentation team will merge it, and the content will be live on [docs.metall2.com](http://docs.metall2.com) a few minutes later. 🚀
 
 ## Review and Management of Pull Requests
 
-The pull request review process and timeline are based on the availability of the Optimism Documentation team to handle community contributions. The workflow is as follows:
+The pull request review process and timeline are based on the availability of the Metal L2 Documentation team to handle community contributions. The workflow is as follows:
 
 1. The pull request is assigned to a member of the Documentation team.
 2. At least 1 member of the Documentation team will review the pull request for:
@@ -101,7 +101,7 @@ The pull request review process and timeline are based on the availability of th
    - alignment with the documentation scope.
 
 3. Reviewers will either approve, ask for changes, or reject the pull request.
-4. Accepted pull requests will be merged and automatically deployed on [docs.optimism.io](https://docs.optimism.io) a few minutes later. 
+4. Accepted pull requests will be merged and automatically deployed on [docs.metall2.com](https://docs.metall2.com) a few minutes later. 
 
 ## Other Ways to Support the Project
 All types of contributions are encouraged and valued. 
