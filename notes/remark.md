@@ -1,6 +1,6 @@
-# How the Optimism Docs Use Remark
+# How the Metal L2 Docs Use Remark
 
-The Optimism Docs use [Nextra](https://nextra.site) as a documentation framework which uses [Remark](https://github.com/remarkjs/remark) as a markdown processor under the hood.
+The Metal L2 Docs use [Nextra](https://nextra.site) as a documentation framework which uses [Remark](https://github.com/remarkjs/remark) as a markdown processor under the hood.
 This repository also uses [ESLint](https://eslint.org) in combination with [`eslint-plugin-mdx`](https://www.npmjs.com/package/eslint-plugin-mdx) as this plugin also uses Remark under the hood.
 Remark is a flexible Markdown processor with a [vibrant plugin ecosystem](https://github.com/remarkjs/remark/blob/main/doc/plugins.md#list-of-plugins).
 
