@@ -11,6 +11,16 @@ import { Callout } from 'nextra/components'
 OP Mainnet is designed to be [EVM equivalent](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306) and introduces as few changes as possible to the Ethereum protocol.
 However, there are some minor differences between the behavior of Ethereum and OP Mainnet that developers should be aware of.
 
+## Bridging
+
+### Bridging - Deposit Transactions
+
+Deposit transactions don't exist on L1's, and are how transactions on an L2 can be initiated from the L1. Importantly, this is how bridge applications can get L1 ETH or tokens into an L2 OP-Stack chain. You can read more on deposit transactions [here](/stack/protocol/rollup/deposit-flow).
+
+### Bridging - Withdrawal Transactions and Fault Proofs
+
+Withdrawal transactions are how the state of the L2 rollup can be proven to the L1. Often this involves users withdrawing tokens or ETH to the L1. Fault proofs are the mechanism by which withdrawal transactions are currently proven to the L1. You can read more about fault proofs [here](/stack/protocol/fault-proofs/explainer).
+
 ## Opcodes
 
 | Opcode       | Solidity Equivalent | Behavior                                                                                                                                                                                                                                                |
@@ -55,6 +65,8 @@ In all other cases, the transaction sender address is set according to the same 
 Transactions on OP Mainnet must pay for an [L1 data fee](/stack/transactions/fees#the-l1-data-fee) on top of the standard [execution gas fee](/stack/transactions/fees#execution-gas-fee) you would expect on Ethereum.
 Refer to the guide on [OP Mainnet Transaction Fees](/stack/transactions/fees) for more information.
 
+You can use the [JS library viem](https://viem.sh/op-stack) to estimate the entire transaction gas costs, including the L1 Data Fee.
+
 ### EIP-1559 Parameters
 
 The base fee on OP Mainnet is, like Ethereum, computed via the [EIP-1559](https://notes.ethereum.org/@vbuterin/eip-1559-faq) mechanism.
@@ -75,3 +87,15 @@ The EIP-1559 parameters used by OP Mainnet differ from those used by Ethereum as
 Unlike Ethereum, OP Mainnet does not have a large public mempool.
 The OP Mainnet Sequencer mempool is currently only visible to the Sequencer.
 The Sequencer executes transactions from the mempool in priority fee order (highest fee first).
+
+## Chain Finality
+
+Unlike L1s such as Ethereum OP-Stack chains have Unsafe, Safe, and Finalized Heads which indicate the state of finality for a given L2 block. Fault proofs do not impact the finalization of the L2 rollup, only the finalization of withdrawal transactions to the L1. You can read more about these [in the docs glossary](/resources/glossary#unsafe-l2-block).
+
+## What's Next
+
+There are various useful tools linked above. Here are a few more tools and links you may want to check out:
+
+*   [OP-viem](https://viem.sh/op-stack): JS framework that can handle many of these unique functions on OP-Chains. It is similar to Ethers.js for op-stack chains. We had an SDK but that is deprecated now.
+
+*   [Specs](https://specs.optimism.io/root.html): For more in-depth technical explanations and examples.
