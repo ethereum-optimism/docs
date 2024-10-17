@@ -18,8 +18,9 @@ This standard is crucial for enabling a more interconnected and efficient token 
 
 ## Features and benefits
 
-*   **Interoperability**: Enables seamless token transfers between different chains within the Superchain ecosystem.
-*   **Consistency**: Provides a unified standard for tokens across all Superchain-compatible networks and a common crosschain interface for the EVM ecosystem at large.
+*   **Interoperability**: Enables seamless token transfers between different chains within the Superchain ecosystem, which decreases fragmentation of liquidity.
+*   **Simplifies deployments**: Provides a consistent, unified standard for tokens across all Superchain-compatible networks and a common crosschain interface for the EVM ecosystem at large.
+*   **Permissionless propagation**: Easily clone an existing token contract to a new OP Stack chain using `create2` without requiring the original owner, which enables movement of assets to the new chain once Interop goes live. Importantly, permissionless propagation retains the integrity of the original owner on the contract and preserves security but proliferates the contract's availability to new chains.
 *   **Superchain-specific**: Tailored for internal use cases within the Superchain, addressing specific needs that other standards may not cover.
 
 ## Major components
@@ -33,7 +34,7 @@ This standard is crucial for enabling a more interconnected and efficient token 
 
 `SuperchainERC20` differs from other token standards in its focus and implementation:
 
-*   `SuperchainERC20` has minimal differentiation from a standard ERC20 deployment, only requires a minimal crosschain mint/burn interface, which aims to be a common pattern for the EVM ecosystem.
+*   `SuperchainERC20` has minimal differentiation from a standard ERC20 deployment, only requiring a minimal crosschain mint/burn interface, which aims to be a common pattern for the EVM ecosystem.
 *   `SuperchainERC20` shares trust assumptions across all chains in the superchain, such that custom assumptions around security and latency are not required to account for when executing transfers.
 
 <Callout type="info">
@@ -42,15 +43,15 @@ This standard is crucial for enabling a more interconnected and efficient token 
 
 ## Implementation details
 
-Application developers must complete two tasks to enable `SuperchainERC20`. This advance setup ensures that `SuperchainERC20` goes live when the interop upgrade happens and tokens becomes interoperable.
+Application developers must complete two tasks to enable `SuperchainERC20`. This advance setup ensures that `SuperchainERC20` goes live when the Interop upgrade happens and tokens becomes interoperable.
 
-1.  Permission only `SuperchainERC20Bridge` to call `crosschainMint` and `crosschainBurn`
-2.  Deployment at same address on every chain in the Superchain using `create2` function
+1.  Permission only `SuperchainERC20Bridge` to call `crosschainMint` and `crosschainBurn`.
+2.  Deployment at same address on every chain in the Superchain using `create2` function.
 
-For now, application developers should view `SuperchainERC20`as standard ERC20 tokens with additional built-in functions that will be enabled once interop goes live.
+For now, application developers should view `SuperchainERC20`as standard ERC20 tokens with additional built-in functions that will be enabled once Interop goes live.
 
 <Callout type="warning">
-  The `SuperchainERC20` token must give access to the address where the future interop bridge will live.
+  `SuperchainERC20` token must give access to the address where the future Interop bridge will live.
 </Callout>
 
 ## Next steps
