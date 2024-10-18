@@ -7,12 +7,42 @@ const rootDir: string = path.join(__dirname, '..', 'pages');
 interface FileInfo {
   title: string;
   url: string;
+  content: string;
 }
 
 function toTitleCase(str: string): string {
   return str.split('-').map(word => 
     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
   ).join(' ');
+}
+
+function uniqueArray(arr: string[]): string[] {
+  return arr.filter((value, index, self) => self.indexOf(value) === index);
+}
+
+function generateOverview(fileInfos: FileInfo[]): string {
+  const topics = fileInfos.map(file => file.title.toLowerCase());
+  const uniqueTopics = uniqueArray(topics);
+  
+  let overview = `This section provides information on ${uniqueTopics.slice(0, -1).join(', ')}`;
+  if (uniqueTopics.length > 1) {
+    overview += ` and ${uniqueTopics[uniqueTopics.length - 1]}`;
+  }
+  overview += '. ';
+
+  const keywordRegex = /\b(guide|tutorial|overview|introduction|tool|concept|api|reference)\b/i;
+  const keywords = uniqueArray(
+    fileInfos.flatMap(file => {
+      const matches = file.content.match(keywordRegex);
+      return matches ? matches.map(keyword => keyword.toLowerCase()) : [];
+    })
+  );
+
+  if (keywords.length > 0) {
+    overview += `You'll find ${keywords.join(', ')} to help you understand and work with these topics.`;
+  }
+
+  return overview;
 }
 
 const createMdxFile = async (parentFolderPath: string, folderName: string): Promise<void> => {
@@ -25,20 +55,6 @@ const createMdxFile = async (parentFolderPath: string, folderName: string): Prom
   
   const title = toTitleCase(folderName);
   
-  let content = `---
-title: ${title}
-lang: en-US
----
-
-import { Card, Cards } from 'nextra/components'
-
-# ${title}
-
-Welcome to the ${title} section. Here you'll find resources and information related to ${title}.
-
-<Cards>
-`;
-
   const fileInfos: FileInfo[] = [];
 
   for (const file of mdFiles) {
@@ -49,9 +65,25 @@ Welcome to the ${title} section. Here you'll find resources and information rela
     const relativeUrl = `/${path.relative(rootDir, folderPath)}/${path.basename(file, path.extname(file))}`.replace(/\\/g, '/');
     
     if (!fileInfos.some(info => info.url === relativeUrl)) {
-      fileInfos.push({ title: fileTitle, url: relativeUrl });
+      fileInfos.push({ title: fileTitle, url: relativeUrl, content: fileContent });
     }
   }
+
+  const overview = generateOverview(fileInfos);
+
+  let content = `---
+title: ${title}
+lang: en-US
+---
+
+import { Card, Cards } from 'nextra/components'
+
+# ${title}
+
+${overview}
+
+<Cards>
+`;
 
   fileInfos.forEach(({ title, url }) => {
     content += `  <Card title="${title}" href="${url}" />\n`;
