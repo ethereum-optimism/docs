@@ -21,34 +21,23 @@ const walletClientL2 = createWalletClient({
   const transaction = {
   account,
   to: '0x1000000000000000000000000000000000000000',
-  value: parseEther('0.005'),
-  gasPrice: parseGwei('20')
+  value: parseEther('0.00069420'),
+  gasPrice: await publicClient.getGasPrice() 
   }
 
-  const gasLimit = await publicClient.estimateGas(transaction)
-  console.log(`Estimated Gas Limit: ${gasLimit}`)
-
-  const effectiveGasPrice = await publicClient.getGasPrice()
-  console.log(`Effective Gas Price: ${formatEther(effectiveGasPrice)} ETH`)
-
-  const l2CostEstimate = gasLimit * effectiveGasPrice
-  console.log(`Estimated Execution Gas Fee: ${formatEther(l2CostEstimate)} ETH`)
-
-  const l1CostEstimate = await publicClient.estimateL1Gas(transaction)
-  console.log(`Estimated L1 Data Fee: ${formatEther(l1CostEstimate)} ETH`)
-
-  const totalEstimate = l2CostEstimate + l1CostEstimate
+  const totalEstimate = await publicClient.estimateTotalFee(transaction)
   console.log(`Estimated Total Cost: ${formatEther(totalEstimate)} ETH`)
 
   const txHash = await walletClientL2.sendTransaction(transaction)
   console.log(`Transaction Hash: ${txHash}`)
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
+  console.log('receipt', receipt);
 
   const l2CostActual = receipt.gasUsed * receipt.effectiveGasPrice
   console.log(`Actual Execution Gas Fee: ${formatEther(l2CostActual)} ETH`)
 
-  const l1CostActual = await publicClient.estimateL1Fee({ hash: txHash })
+  const l1CostActual = receipt.l1Fee
   console.log(`Actual L1 Data Fee: ${formatEther(l1CostActual)} ETH`)
 
   const totalActual = l2CostActual + l1CostActual
