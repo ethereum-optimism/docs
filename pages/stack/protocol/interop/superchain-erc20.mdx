@@ -31,24 +31,24 @@ Additional features:
 ```mermaid
 sequenceDiagram
 		box rgba(255, 4, 32, 0.1) ChainA
-		  participant User-op
-		  participant SuperchainERC20-op
-	    participant SuperchainERC20Bridge-op
+		  participant User-chainA
+		  participant SuperchainERC20-chainA
+	    participant SuperchainERC20Bridge-chainA
 		end
 		box rgba(248, 61, 213, 0.1) ChainB
-			participant SuperchainERC20Bridge-uni
-	    participant SuperchainERC20-uni
-	    participant User-uni
+			participant SuperchainERC20Bridge-chainB
+	    participant SuperchainERC20-chainB
+	    participant User-chainB
 		end
   
     
-    User-op->>SuperchainERC20-op: Initiate token transfer
-    SuperchainERC20-op->>SuperchainERC20Bridge-op: Bridge to Uni
-    SuperchainERC20Bridge-op->>SuperchainERC20-op: Burn tokens
-    SuperchainERC20Bridge-op-->>SuperchainERC20Bridge-op: Emit cross-chain event
-    SuperchainERC20Bridge-uni-->>SuperchainERC20Bridge-uni: Validates message
-    SuperchainERC20Bridge-uni-->>SuperchainERC20-uni: Mint tokens
-    SuperchainERC20-uni->>User-uni: User receives tokens
+    User-chainA->>SuperchainERC20-chainA: Initiate token transfer
+    SuperchainERC20-chainA->>SuperchainERC20Bridge-chainA: Bridge to chainB
+    SuperchainERC20Bridge-chainA->>SuperchainERC20-chainA: Burn tokens
+    SuperchainERC20Bridge-chainA-->>SuperchainERC20Bridge-chainA: Emit cross-chain event
+    SuperchainERC20Bridge-chainB-->>SuperchainERC20Bridge-chainB: Validates message
+    SuperchainERC20Bridge-chainB-->>SuperchainERC20-chainB: Mint tokens
+    SuperchainERC20-chainB->>User-chainB: User receives tokens
 ```
 
 This diagram illustrates the process where tokens are burned on the source chain and minted on the destination chain, enabling seamless cross-chain transfers without the need for asset wrapping or liquidity pools.
