@@ -9,9 +9,13 @@ interface FileInfo {
   url: string;
 }
 
-const createMdxFile = async (folderPath: string, folderName: string): Promise<void> => {
+const createMdxFile = async (parentFolderPath: string, folderName: string): Promise<void> => {
+  const folderPath = path.join(parentFolderPath, folderName);
   const files = await fs.readdir(folderPath);
-  const mdFiles = files.filter(file => file.endsWith('.md') || file.endsWith('.mdx'));
+  const mdFiles = files.filter(file => 
+    (file.endsWith('.md') || file.endsWith('.mdx')) && 
+    !file.startsWith('_')
+  );
   
   const title = folderName.charAt(0).toUpperCase() + folderName.slice(1);
   
@@ -29,16 +33,18 @@ Welcome to the ${title} section. Here you'll find resources and information rela
 <Cards>
 `;
 
-  const filePromises: Promise<FileInfo>[] = mdFiles.map(async (file) => {
+  const fileInfos: FileInfo[] = [];
+
+  for (const file of mdFiles) {
     const filePath = path.join(folderPath, file);
     const fileContent = await fs.readFile(filePath, 'utf-8');
-    const fileTitle = fileContent.match(/^#\s+(.+)/m)?.[1] || path.basename(file, '.md');
+    const fileTitle = fileContent.match(/^#\s+(.+)/m)?.[1] || path.basename(file, path.extname(file));
     const relativeUrl = `/${path.relative(rootDir, folderPath)}/${path.basename(file, path.extname(file))}`.replace(/\\/g, '/');
     
-    return { title: fileTitle, url: relativeUrl };
-  });
-
-  const fileInfos = await Promise.all(filePromises);
+    if (!fileInfos.some(info => info.url === relativeUrl)) {
+      fileInfos.push({ title: fileTitle, url: relativeUrl });
+    }
+  }
 
   fileInfos.forEach(({ title, url }) => {
     content += `  <Card title="${title}" href="${url}" />\n`;
@@ -47,8 +53,21 @@ Welcome to the ${title} section. Here you'll find resources and information rela
   content += '</Cards>';
 
   const mdxFileName = `${folderName}.mdx`;
-  await fs.writeFile(path.join(folderPath, mdxFileName), content);
-  console.log(`Created ${mdxFileName} in ${folderPath}`);
+  const mdxFilePath = path.join(parentFolderPath, mdxFileName);
+
+  // Check if the file already exists and has the same content
+  try {
+    const existingContent = await fs.readFile(mdxFilePath, 'utf-8');
+    if (existingContent.trim() === content.trim()) {
+      console.log(`${mdxFileName} in ${parentFolderPath} is up to date. Skipping.`);
+      return;
+    }
+  } catch (error) {
+    // File doesn't exist, we'll create it
+  }
+
+  await fs.writeFile(mdxFilePath, content);
+  console.log(`Created/Updated ${mdxFileName} in ${parentFolderPath}`);
 };
 
 const processFolder = async (folderPath: string): Promise<void> => {
@@ -60,7 +79,7 @@ const processFolder = async (folderPath: string): Promise<void> => {
       const stats = await fs.stat(filePath);
       
       if (stats.isDirectory()) {
-        await createMdxFile(filePath, file);
+        await createMdxFile(folderPath, file);
         await processFolder(filePath);
       }
     }
