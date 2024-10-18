@@ -93,3 +93,24 @@ export function AltCallout({ context }: Props): ReactElement {
     </div>
   );
 }
+
+export function CGTCallout({ context }: Props): ReactElement {
+  return (
+    <div className="custom-callouts nx-w-full nx-mt-6 nx-flex nx-justify-center nx-items-center nx-bg-white dark:nx-bg-black">
+      <div className="nx-w-full  nx-px-4 nx-text-center nx-font-medium nx-text-sm nx-text-left">
+        {context ? (
+          context
+        ) : (
+          <div className="nx-text-left">
+            The Custom Gas Token feature is currently in <strong>Beta</strong> within
+            the MIT-licensed OP Stack. Beta features are built and reviewed by
+            the Optimism Collective’s core contributors, and provide developers
+            with early access to highly requested configurations. These features
+            may experience stability issues, and we encourage feedback from our
+            early users.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
