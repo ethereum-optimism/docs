@@ -9,6 +9,12 @@ interface FileInfo {
   url: string;
 }
 
+function toTitleCase(str: string): string {
+  return str.split('-').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
+}
+
 const createMdxFile = async (parentFolderPath: string, folderName: string): Promise<void> => {
   const folderPath = path.join(parentFolderPath, folderName);
   const files = await fs.readdir(folderPath);
@@ -17,7 +23,7 @@ const createMdxFile = async (parentFolderPath: string, folderName: string): Prom
     !file.startsWith('_')
   );
   
-  const title = folderName.charAt(0).toUpperCase() + folderName.slice(1);
+  const title = toTitleCase(folderName);
   
   let content = `---
 title: ${title}
@@ -28,7 +34,7 @@ import { Card, Cards } from 'nextra/components'
 
 # ${title}
 
-Welcome to the ${title} section. Here you'll find resources and information related to ${folderName}.
+Welcome to the ${title} section. Here you'll find resources and information related to ${title}.
 
 <Cards>
 `;
@@ -38,7 +44,8 @@ Welcome to the ${title} section. Here you'll find resources and information rela
   for (const file of mdFiles) {
     const filePath = path.join(folderPath, file);
     const fileContent = await fs.readFile(filePath, 'utf-8');
-    const fileTitle = fileContent.match(/^#\s+(.+)/m)?.[1] || path.basename(file, path.extname(file));
+    let fileTitle = fileContent.match(/^#\s+(.+)/m)?.[1] || path.basename(file, path.extname(file));
+    fileTitle = toTitleCase(fileTitle);
     const relativeUrl = `/${path.relative(rootDir, folderPath)}/${path.basename(file, path.extname(file))}`.replace(/\\/g, '/');
     
     if (!fileInfos.some(info => info.url === relativeUrl)) {
