@@ -9,9 +9,9 @@ interface FileInfo {
   url: string;
 }
 
-const createIndexFile = async (folderPath: string, folderName: string): Promise<void> => {
+const createMdxFile = async (folderPath: string, folderName: string): Promise<void> => {
   const files = await fs.readdir(folderPath);
-  const mdFiles = files.filter(file => file.endsWith('.md') && file !== 'index.md');
+  const mdFiles = files.filter(file => file.endsWith('.md') || file.endsWith('.mdx'));
   
   const title = folderName.charAt(0).toUpperCase() + folderName.slice(1);
   
@@ -33,7 +33,7 @@ Welcome to the ${title} section. Here you'll find resources and information rela
     const filePath = path.join(folderPath, file);
     const fileContent = await fs.readFile(filePath, 'utf-8');
     const fileTitle = fileContent.match(/^#\s+(.+)/m)?.[1] || path.basename(file, '.md');
-    const relativeUrl = `/${path.relative(rootDir, folderPath)}/${path.basename(file, '.md')}`.replace(/\\/g, '/');
+    const relativeUrl = `/${path.relative(rootDir, folderPath)}/${path.basename(file, path.extname(file))}`.replace(/\\/g, '/');
     
     return { title: fileTitle, url: relativeUrl };
   });
@@ -46,8 +46,9 @@ Welcome to the ${title} section. Here you'll find resources and information rela
 
   content += '</Cards>';
 
-  await fs.writeFile(path.join(folderPath, 'index.md'), content);
-  console.log(`Created index.md in ${folderPath}`);
+  const mdxFileName = `${folderName}.mdx`;
+  await fs.writeFile(path.join(folderPath, mdxFileName), content);
+  console.log(`Created ${mdxFileName} in ${folderPath}`);
 };
 
 const processFolder = async (folderPath: string): Promise<void> => {
@@ -59,7 +60,7 @@ const processFolder = async (folderPath: string): Promise<void> => {
       const stats = await fs.stat(filePath);
       
       if (stats.isDirectory()) {
-        await createIndexFile(filePath, file);
+        await createMdxFile(filePath, file);
         await processFolder(filePath);
       }
     }
@@ -77,4 +78,5 @@ const main = async (): Promise<void> => {
 
 main().catch(console.error);
 
+// Log the root directory for debugging
 console.log('Root directory:', rootDir);
