@@ -1,5 +1,5 @@
 ---
-title: Fault Proof VM - MIPS.sol
+title: Fault proof VM - MIPS.sol
 lang: en-US
 description: Learn about the `MIPS.sol` smart contract that works as part of Optimism's Fault Proof Virtual Machine.
 ---
@@ -7,14 +7,14 @@ description: Learn about the `MIPS.sol` smart contract that works as part of Opt
 import Image from 'next/image'
 import { Callout } from 'nextra/components'
 
-# Fault Proof VM: MIPS.sol
+# Fault proof VM: MIPS.sol
 
 The `MIPS.sol` smart contract is an onchain implementation of a virtual machine (VM) that encompasses the 32-bit, Big-Endian, MIPS III Instruction Set Architecture (ISA).
 This smart contract is the counterpart to the off-chain MIPSEVM golang implementation of the same ISA. Together, the onchain and off-chain VM implementations make up [Cannon](cannon),
 Optimism's Fault Proof Virtual Machine (FPVM). Cannon is a singular instance of a FPVM that can be used as part of the Dispute Game for Optimism's (and Base's) optimistic rollup L2 blockchain.
 The Dispute Game itself is modular, allowing for any FPVM to be used in a dispute; however, Cannon is currently the only FPVM implemented and thus will be used in all disputes.
 
-## Control Flow
+## Control flow
 
 The `FaultDisputeGame.sol` interacts with `MIPS.sol` and then `MIPS.sol` calls into `PreimageOracle.sol`. `MIPS.sol` is only called at the max depth of the game when someone needs to call `step`.
 `FaultDisputeGame.sol` is the deployed instance of a Fault Dispute Game for an active dispute, and `PreimageOracle.sol` stores Pre-images.
@@ -27,7 +27,7 @@ A leaf node represents a single MIPS instruction (in the case that we're using C
 state to run in the `MIPS.sol` contract, the fault dispute game can determine the true post state (or Post-image). This true post state will then be used to determine the outcome of the fault dispute game by comparing the disputed post-state
 at the leaf node with the post-state proposed by the disputer.
 
-## Contract State
+## Contract state
 
 The `MIPS.sol` contract only contains a single immutable variable, which corresponds to the address of the `PreimageOracle.sol` contract.
 Otherwise, the contract is stateless, meaning that all state related to playing a MIPS instruction onchain comes from either the `FaultDisputeGame.sol` instance, or the `PreimageOracle.sol`.
@@ -47,7 +47,7 @@ There is no requirement to read from the `PreimageOracle.sol` during instruction
 The Pre-image information that has been read in previous off-chain instructions leading up to the execution of a single instruction onchain may still reside in the constructed VM memory.
 Thus, even when the instruction run onchain does not explicitly read from `PreimageOracle.sol` , Pre-image data may still influence the merkle root that represents the VM's memory.
 
-### Packed VM Execution State
+### Packed VM execution state
 
 In order to execute a MIPS instruction onchain, the `MIPS.sol` contract needs to know important state information such as the instruction to run, the values in each of the general purpose registers, etc.
 More specifically, a tightly-packed `State` struct contains all the relevant information that the `MIPS.sol` contract needs to know. This struct is passed to the contract from the `FaultDisputeGame.sol` contract when it invokes the `step` function in `MIPS.sol` (which in-turn executes a single MIPS instruction onchain).
@@ -66,7 +66,7 @@ The following information is stored in the `State` struct. See [doc reference](h
 11. `step` - Counts the total number of instructions that have been executed.
 12. `registers` - Array of 32, 32-bit values that represent the general purpose registers for the MIPS ISA.
 
-### State Hash
+### State hash
 
 The state hash is the `bytes32` value returned to the active Fault Dispute Game upon the completion of a single MIPS instruction in the `MIPS.sol` contract.
 The hash is derived by taking the `keccak256` of the above packed VM execution `State` struct, and then replacing the first byte of the hash with a value that represents the status of the VM.
@@ -80,7 +80,7 @@ This value is derived from the `exitCode` and `exited` values, and can be:
 The reason for adding the VM status to the state hash is to communicate to the dispute game whether the VM determined the proposed output root was valid or not.
 This in turn prevents a user from disputing an output root during a dispute game, but provides the state hash from a cannon trace that actually proves the output root is valid.
 
-### Memory Proofs
+### Memory proofs
 
 Using a 32-bit ISA means that the total size of the address space (assuming no virtual address space) is `2^32 = 4GiB`. Additionally, the `MIPS.sol` contract is stateless, so it does not store the MIPS memory in contract storage. The primary reason for this is because having to load the entire memory into the `MIPS.sol` contract in order to execute a single instruction onchain is prohibitively expensive. Additionally, the entire memory would need to be loaded per fault proof game, requiring multiple instances of the `MIPS.sol` contract. Therefore, in order to optimize the amount of data that needs to be provided per onchain instruction execution while still maintaining integrity over the entire 32-bit address space, Optimism has converted the memory into a binary merkle tree.
 
@@ -88,7 +88,7 @@ The binary merkle tree (or hash tree) used to store the memory of the MIPS VM ha
 
 Reading to memory and writing to memory work similarly, both involve calculating the merkle root. In the case of a memory write, `MIPS.sol` must take care to verify the provided proof for the memory location to write to is correct. Additionally, writing to memory will change the merkle root stored in the VM execution `State` struct.
 
-### State Calculation
+### State calculation
 
 While the `MIPS.sol` contract may only execute a single instruction onchain, the off-chain Cannon implementation executes all prerequisite MIPS instructions for all state transitions in the disputed L2 state required to reach the disputed instruction that will be executed onchain. This ensures that the MIPS instruction executed onchain has the correct VM state and necessary Pre-images stored in the `PreimageOracle.sol`  contract to generate the true post-state that can be used to resolve the dispute game.
 
@@ -177,7 +177,7 @@ The public [`step`](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a
 
 The internal pure [`execute`](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/packages/contracts-bedrock/src/cannon/MIPS.sol#L793) function handles the execution of MIPS instructions that are not handled by other functions. The `execute` function primarily handles R-type instructions according to the MIPS specification, however other instructions will pass through this function. Instructions handled by other functions will simply return. Invalid or unsupported instructions will cause the `execute` function to revert.
 
-## Common Bitwise Operation Use Cases
+## Common bitwise operation use cases
 
 1.  Isolating certain bits from a number can be done using the & operator (and(x,y) in Yul), this is also known as generating a bitmask.
 2.  Combining bits from two numbers together can be done using the | operator (or(x, y) in Yul).
@@ -185,7 +185,7 @@ The internal pure [`execute`](https://github.com/ethereum-optimism/optimism/blob
 4.  Multiplication using a value with a base of 2 can be expressed using the following bitwise operation: `x * y = x << z, where y = 2^z`
     Ex. `x * 8 = x << 3, where 8 = 2^3`
 
-## Table Of Supported MIPS Instructions
+## Table of supported MIPS instructions
 
 | Instruction Name                               | Opcode Num. | Funct Num. | Other Num. |
 | ---------------------------------------------- | ----------- | ---------- | ---------- |
@@ -253,7 +253,7 @@ The internal pure [`execute`](https://github.com/ethereum-optimism/optimism/blob
 | SC (Store Conditional Word)                    | 0x38        | -          | -          |
 | SYNC (Synchronize Shared Memory)               | 0x00        | 0x0F       | -          |
 
-## Further Reading
+## Further reading
 
 *   [Cannon Overview](https://github.com/ethereum-optimism/optimism/blob/546fb2c7a5796b7fe50b0b7edc7666d3bd281d6f/cannon/docs/README.md)
 *   [Cannon FPVM Specification](https://specs.optimism.io/experimental/fault-proof/cannon-fault-proof-vm.html)

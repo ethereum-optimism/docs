@@ -1,24 +1,24 @@
 ---
-title: Rollup Protocol Overview
+title: Rollup protocol overview
 lang: en-US
 description: Learn how Optimistic Rollups work at a high level.
 ---
 
-# Rollup Protocol Overview
+# Rollup protocol overview
 
 The big idea that makes Optimism possible is the Optimistic Rollup.
 We'll go through a brief explainer of *how* Optimistic Rollups work at a high level.
 Then we'll explain *why* Optimism is built as an Optimistic Rollup and why we believe it's the best option for a system that addresses all of our design goals.
 Check out the [protocol specs](https://specs.optimism.io/), if you want to more detail about the rollup protocol.
 
-## Optimistic Rollups TL;DR
+## Optimistic rollups TL;DR
 
 Optimism is an "Optimistic Rollup," which is basically just a fancy way of describing a blockchain that piggy-backs off of the security of another "parent" blockchain.
 Specifically, Optimistic Rollups leverage the consensus mechanism (like PoW or PoS) of their parent chain instead of providing their own. In OP Mainnet's case, this parent blockchain is Ethereum.
 
 ![Ethereum and Optimism Forever Doodle.](/img/op-stack/protocol/ethereum-optimism-forever.png)
 
-## Block Storage
+## Block storage
 
 In Bedrock, L2 blocks are saved to the Ethereum blockchain using a non-contract address ([`0xff00..0010` on Ethereum](https://etherscan.io/address/0xff00000000000000000000000000000000000010)) to minimize the L1 gas expense.
 As these blocks are submitted as transactions using EIP-4844 [blobs](/builders/chain-operators/management/blobs), there is no way to modify or censor them after the "transaction" is included in a block that has enough attestations.
@@ -27,7 +27,7 @@ This is the way that OP Mainnet inherits the availability and integrity guarante
 Blocks are written to L1 in [a compressed format](https://specs.optimism.io/protocol/derivation.html#batch-submission-wire-format) to reduce costs.
 This is important because writing to L1 is [the major cost of OP Mainnet transactions](/stack/transactions/fees).
 
-## Block Production
+## Block production
 
 Optimism block production is primarily managed by a single party, called the "sequencer," which helps the network by providing the following services:
 
@@ -52,7 +52,7 @@ Transactions get to the sequencer in two ways:
 
 For the moment, [The Optimism Foundation](https://www.optimism.io/) runs the only block producer on OP Mainnet. Refer to [Protocol specs](overview) section for more information about how we plan to decentralize the Sequencer role in the future.
 
-## Block Execution
+## Block execution
 
 The execution engine (implemented as the `op-geth` component) receive blocks using two mechanisms:
 
@@ -64,7 +64,7 @@ The execution engine (implemented as the `op-geth` component) receive blocks usi
     This mechanism is slower, but censorship resistant.
     You can read more about it [in the specs](https://specs.optimism.io/protocol/exec-engine.html#worst-case-sync).
 
-## Bridging ETH or Tokens Between Layers
+## Bridging ETH or tokens between layers
 
 Optimism is designed so that users can send arbitrary messages between smart contracts on L2 (OP Mainnet, OP Sepolia, etc.) and the underlying L1 (Ethereum mainnet, Sepolia, etc.).
 This makes it possible to transfer ETH or tokens, including ERC20 tokens, between the two networks.
@@ -96,7 +96,7 @@ Withdrawals (the term is used for any OP Mainnet to Ethereum message) have three
 
 [You can read the full withdrawal specifications here](https://specs.optimism.io/protocol/withdrawals.html)
 
-## Fault Proofs
+## Fault proofs
 
 In an Optimistic Rollup, state commitments are published to L1 (Ethereum in the case of OP Mainnet) without any direct proof of the validity of these commitments.
 Instead, these commitments are considered pending for a period of time (called the "challenge window").
@@ -110,7 +110,7 @@ The ordering of transactions and the state of OP Mainnet is unchanged by a fault
 
 The fault proof process is currently undergoing major redevelopment as a side-effect of the November 11th, 2021 [EVM Equivalence](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306) update.
 
-## Next Steps
+## Next steps
 
 *   If you want to learn more about rollup protocol, check out the guides on [deposit flow](deposit-flow), [withdrawal flow](withdrawal-flow), or [transaction flow](transaction-flow).
 *   To learn about operating your own L2 rollup, see the guide on [starting a self-hosted chain](/builders/chain-operators/self-hosted) or go directly to the tutorial on [creating your own L2 rollup](/builders/chain-operators/tutorials/create-l2-rollup).

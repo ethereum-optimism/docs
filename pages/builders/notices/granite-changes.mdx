@@ -1,12 +1,12 @@
 ---
-title: Preparing for Granite Breaking Changes
+title: Preparing for Granite breaking changes
 lang: en-US
 description: Learn how to prepare for Granite upgrade breaking changes.
 ---
 
 import { Steps, Callout } from 'nextra/components'
 
-# Preparing for Granite Breaking Changes
+# Preparing for Granite breaking changes
 
 This page outlines breaking changes related to the Granite network upgrade for chain operators and node operators.
 If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
@@ -15,7 +15,7 @@ If you experience difficulty at any stage of this process, please reach out to [
   The Granite upgrade for OP Sepolia was activated on **1723478400 - Mon Aug 12 16:00:00 UTC**.  The Granite OP Mainnet upgrade will be activated at **1726070401 - Wed 11 Sep 2024 16:00:01 UTC**, here is the [governance vote](https://vote.optimism.io/proposals/46514799174839131952937755475635933411907395382311347042580299316635260952272).
 </Callout>
 
-## What's Included in Granite
+## What's included in Granite
 
 This upgrade is proposed in response to security vulnerabilities identified during a series of third-party security audits by Spearbit, Cantina, and Code4rena. None of the vulnerabilities have been exploited, and user assets are not and were never at risk. However, out of an abundance of caution, the permissioned fallback mechanism has been activated in order to avoid any potential instability while the vulnerabilities are patched. For more information on the permissioned fallback mechanism and the OP Stack's defense-in-depth approach to Fault Proof security, see the [fault proof documentation](https://docs.optimism.io/stack/protocol/fault-proofs/fp-security).
 
@@ -23,13 +23,13 @@ The upgrade includes both a set of smart contract upgrades to fix the vulnerabil
 
 Please refer to the [governance proposal](https://gov.optimism.io/t/upgrade-proposal-10-granite-network-upgrade/8733) for the full details.
 
-## For Chain Operators
+## For chain operators
 
 The proposed Granite upgrade impacts OP chains and requires chain operators to upgrade their chain and configure the sequencer for Granite.
 
 <Steps>
 
-  ### Prepare Sequencer Node
+  ### Prepare sequencer node
 
   <Callout type="warning">
     If you are operating an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json), the Granite activation date is part of the `op-node` and `op-geth` nodes, and are using the [--network](/builders/node-operators/configuration/consensus-config#network) and [--op-network](/builders/node-operators/configuration/execution-config#op-network-betaop-network) flags. No action is needed for the sequencer after preparing the `SystemConfig` transaction. 
@@ -42,7 +42,7 @@ The proposed Granite upgrade impacts OP chains and requires chain operators to u
       *   Set  `override.granite`  in both `op-node` and `op-geth` to the UNIX timestamp of the block you want to activate the Granite hardfork or corresponding env vars for this.
       *   In general, run `op-node --help` or `op-geth --help` to see flags, their descriptions and environment variables.
 
-  ### Rollup Configuration Breaking Changes 
+  ### Rollup configuration breaking changes 
   
   Alt-DA mode has had a name change. What was formerly known as Plasma Mode has been renamed and you may need to [update your rollup configuration file](/builders/chain-operators/features/alt-da-mode#breaking-changes-renaming-plasma-mode-to-alt-da-mode).
 </Steps>
@@ -51,7 +51,7 @@ The proposed Granite upgrade impacts OP chains and requires chain operators to u
   To verify proper configuration, chain operators should confirm in the startup logs of their `op-node` and `op-geth` that the correct Granite activation timestamps are set.
 </Callout>
 
-## For Node Operators
+## For node operators
 
 Node operators will need to upgrade to Granite before the activation date. 
 The op-node release [v1.9.1](https://github.com/ethereum-optimism/optimism/releases/tag/v1.9.1) 
@@ -60,12 +60,12 @@ and op-geth release [v1.101408.0](https://github.com/ethereum-optimism/op-geth/r
 These following steps are necessary for every node operator:
 
 <Steps>
-  ### Update to the Latest Release
+  ### Update to the latest release
 
   *   [`op-node`](https://github.com/ethereum-optimism/optimism/releases/tag/v1.9.1)
   *   [`op-geth`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101408.0)
 
-  ### Configure the Granite Activation Date
+  ### Configure the Granite activation date
 
   <Callout type="warning">
     If you are operating a node for an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json), the Granite activation date is part of the `op-node` and `op-geth` nodes. So, no action is needed for the sequencer after upgrading to the latest release. Please skip to [Step 3: Verify Your Configuration](#verify-your-configuration).
@@ -76,7 +76,7 @@ These following steps are necessary for every node operator:
   *   **Option 1:** Set the activation time in the `rollup.json` for `op-node`. You will still need to set the `override.granite` flag in `op-geth` if you use this option.
   *   **Option 2:** Set the activation time via overrides (CLI) in both `op-node` and `op-geth`. These will need to be set on `op-node` and `op-geth` for the sequencer and all other nodes.
 
-  ### Verify Your Configuration
+  ### Verify your configuration
 
   Make the following checks to verify that your node is properly configured.
 
