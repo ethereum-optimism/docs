@@ -27,12 +27,27 @@ Additional features:
 *   Initiating message where token is **burned** on the source chain. A user initiates a transfer of token from one blockchain to another and specifies the recipient wallet address on the destination chain. A specified amount of token is burned on the source chain.
 *   Executing message where token is **minted** on the destination chain. The specified amount of token is minted on the destination chain and sent to the recipient wallet address.
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant SourceChain
+    participant SuperchainERC20Bridge
+    participant DestinationChain
+
+    User->>SourceChain: Initiate token transfer
+    SourceChain->>SourceChain: Burn tokens
+    SourceChain-->>SuperchainERC20Bridge: Emit cross-chain event
+    SuperchainERC20Bridge-->>DestinationChain: Relay event
+    DestinationChain->>DestinationChain: Mint tokens
+    DestinationChain->>User: User receives tokens
+```
+This diagram illustrates the process where tokens are burned on the source chain and minted on the destination chain, enabling seamless cross-chain transfers without the need for asset wrapping or liquidity pools.
+
 ## Major components
 
 *   **Token Contract**: implements the `SuperchainERC20` standard with bridging functionality.
 *   **Factory Predeploy**: uses a `create2`-based factory for deploying `SuperchainERC20` tokens consistently across chains.
 *   **Bridging Functions**: using methods like `sendERC20` and `relayERC20` for cross-chain transfers.
-*   **Minting Role**: modifies the definition to be minting role-based rather than interface-based.
 
 ## Comparison to other standards
 
