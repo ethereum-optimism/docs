@@ -20,7 +20,7 @@ const l1Client = createPublicClient({
 
 
 const l2Client = createPublicClient({
-  chain: optimism,
+  chain: optimismSepolia,
   transport: http(l2RpcUrl),
 });
 
