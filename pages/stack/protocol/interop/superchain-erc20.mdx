@@ -17,7 +17,7 @@ Asset interoperability allows for tokens to securely move across chains without 
 
 Additional features: 
 *   **Simplified deployments**: Provides a consistent, unified standard for tokens across all Superchain-compatible networks and a common crosschain interface for the EVM ecosystem at large.
-*   **Permissionless propagation**: Easily clone an existing token contract to a new OP Stack chain using `create2` without requiring the original owner, which enables movement of assets to the new chain once Interop goes live. Importantly, permissionless propagation retains the integrity of the original owner on the contract and preserves security but proliferates the contract's availability to new chains.
+*   **Permissionless propagation**: Easily clone an existing token contract to a new OP Stack chain using `create2` without requiring the original deployer, which enables movement of assets to the new chain once Interop goes live. Importantly, permissionless propagation retains the integrity of the original owner on the contract and preserves security but proliferates the contract's availability to new chains.
 *   **Ethereum-aligned**: Intentionally designed to be generic and supported as an Ethereum-wide standard (RIP coming soon).
 
 ## How it works
@@ -25,7 +25,7 @@ Additional features:
 `SuperchainERC20` token standard facilitates secure token transfers between chains in the Superchain networks via native burning and minting.
 
 *   Initiating message where token is **burned** on the source chain. A user initiates a transfer of token from one blockchain to another and specifies the recipient wallet address on the destination chain. A specified amount of token is burned on the source chain.
-*   Executing message where token is **minted** on the destination chain. The specified amount of token is minted on the destination chain and sent to the recipient wallet address.
+*   Executing message where token is **minted** on the destination chain. The specified amount of token is minted on the destination chain directly to the recipient wallet address.
 
 ```mermaid
 sequenceDiagram
@@ -67,7 +67,7 @@ Application developers must do two things to make their tokens `SuperchainERC20`
 1.  Permission only `SuperchainERC20Bridge` to call `crosschainMint` and `crosschainBurn`.
 2.  Deployment at same address on every chain in the Superchain using `create2` function.
 
-For now, application developers should view `SuperchainERC20`as standard ERC20 tokens with additional built-in functions that allow cross-chain asset movement that will be enabled once Interop goes live.
+For now, application developers should view `SuperchainERC20` as standard ERC20 tokens with additional built-in functions that allow cross-chain asset movement that will be enabled once Interop goes live.
 
 <Callout type="warning">
   To enable asset interoperability, `SuperchainERC20` token must give access to the address where the future `SuperchainERC20Bridge` will live.
