@@ -102,7 +102,6 @@ ${overview}
       return;
     }
   } catch (error) {
-    // File doesn't exist, we'll create it
   }
 
   await fs.writeFile(mdxFilePath, content);
@@ -136,5 +135,4 @@ const main = async (): Promise<void> => {
 
 main().catch(console.error);
 
-// Log the root directory for debugging
 console.log('Root directory:', rootDir);
