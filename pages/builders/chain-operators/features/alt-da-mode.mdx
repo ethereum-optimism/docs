@@ -1,12 +1,12 @@
 ---
-title: How to Run an Alt-DA Mode Chain
+title: How to run an Alt-DA mode chain
 lang: en-US
 description: Learn how to configure and run an Alt-DA mode chain within the OP Stack.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# How to Run an Alt-DA Mode Chain
+# How to run an Alt-DA mode chain
 
 <Callout type="warning">
   The Alt-DA Mode feature is currently in <strong>Beta</strong>  within the MIT-licensed OP Stack. Beta features are built and reviewed by Optimism Collective core contributors, and provide developers with early access to highly requested configurations.
@@ -35,7 +35,7 @@ You should use at least the following compatible op\* versions when running your
 </Callout>
 
 <Steps>
-  ### Setup Your DA Server
+  ### Setup your DA server
 
   <Callout type="warning">
     DA Servers are not built or maintained by Optimism Collective Core Contributors. DA servers are maintained by third parties and run at your own risk. Please reach out to the team who built the DA Server you are trying to run with any questions or issues.
@@ -47,7 +47,7 @@ You should use at least the following compatible op\* versions when running your
   *   0gDA's docs on how to run the [0gDA DA Server](https://github.com/0glabs/0g-da-op-plasma/blob/op0g/README.md)
   *   Near DA's docs on how to run the [Near DA Server](https://github.com/Nuffle-Labs/data-availability/blob/84b484de98f58a91bf12c8abe8df27f5e753f63a/docs/OP-Alt-DA.md)
 
-  ### Configure Your `op-node`
+  ### Configure your `op-node`
 
   *   Spin up your OP chain as usual but set `--altda.enabled=true` and point both `op-batcher` and `op-node` to the DA server.
   *   No configuration changes are required for `op-geth` or `op-proposer`.
@@ -67,7 +67,7 @@ You should use at least the following compatible op\* versions when running your
 
   ```
 
-  ### Configure Your Batcher
+  ### Configure your batcher
 
   *   Set `--altda.enabled=true` and `--altda.da-service=true`.
   *   Provide the URL for `--atlda.da-server=$DA_SERVER_HTTP_URL`.
@@ -88,7 +88,7 @@ You should use at least the following compatible op\* versions when running your
 
   After completing steps 1-3 above, you will have an Alt-DA mode chain up and running.
 
-  ### Set Your Fee Configuration
+  ### Set your fee configuration
 
   *   Chain operators are not posting everything to Ethereum, just commitments, so chain operators will need to determine fee scalars values to charge users. The fee scalar values are network throughput dependent, so values will need to be adjusted by chain operators as needed.
   *   Cost structure for Alt-DA Mode: The transaction data is split up into 128kb chunks and then submitted to your DA Layer. Then, 32 byte commitments are submitted (goes to batch inbox address) to L1 for each 128kb chunk. Then, figure out how much that costs relative to the amount of transactions your chain is putting through.
@@ -105,12 +105,12 @@ You should use at least the following compatible op\* versions when running your
   </Callout>
 </Steps>
 
-## For Node Operators (Full and Archive Nodes)
+## For node operators (full and archive nodes)
 
 *   Run a DA server as laid out in [Step 1](#setup-your-da-server)
 *   Provide the same  `--altda.enabled=true, --altda.da-server...` on `op-node` as listed in [Step 2](#configure-your-op-node)
 
-## Inclusion Criteria
+## Inclusion criteria
 
 Alt DA teams who want to be featured on this page must meet the following criteria:
 
@@ -118,17 +118,17 @@ Alt DA teams who want to be featured on this page must meet the following criter
 *   Supporting detailed documentation, to be referenced [here](#setup-your-da-server)
 *   Functioning OP Stack devnet using your DA server with linked configuration, contract addresses, and RPC address
 
-## Breaking Changes: Renaming Plasma Mode to Alt-DA Mode
+## Breaking changes: renaming Plasma Mode to Alt-DA Mode
 
 This feature has been renamed from Plasma Mode to Alt-DA Mode in the monorepo at: [0bb2ff5](https://github.com/ethereum-optimism/optimism/commit/0bb2ff57c8133f1e3983820c0bf238001eca119b). There are several breaking changes you should be aware of. These include changes to configuration file parameters, environment variables, and CLI commands.
 Before proceeding with the migration, ensure you are using [OP Stack v1.9.1](https://github.com/ethereum-optimism/optimism/releases/tag/v1.9.1) or later.
 
-### Modify `rollup.json` Config:
+### Modify `rollup.json` config:
 
 Update your `rollup.json` configuration file by replacing the old Plasma config with the new Alt-DA config.
 There are two possible formats for the old Plasma config:
 
-### Legacy Plasma Config
+### Legacy plasma config
 
 If your config looks like this:
 
@@ -140,7 +140,7 @@ If your config looks like this:
 "da_resolve_window": 2000,
 ```
 
-### Recent Plasma Config
+### Recent plasma config
 
 Or if it looks like this:
 
@@ -153,7 +153,7 @@ Or if it looks like this:
 }
 ```
 
-### New Alt-DA Config
+### New Alt-DA config
 
 Replace either of the above configurations with:
 
@@ -170,9 +170,9 @@ Replace either of the above configurations with:
   Only include fields in the new config that were present in your old config.
 </Callout>
 
-## Updating OP Stack Runtime Config Parameters
+## Updating OP Stack runtime config parameters
 
-### CLI Parameters
+### CLI parameters
 
 Update the following CLI parameters for both `op-node` and `op-batcher`:
 
@@ -183,7 +183,7 @@ Update the following CLI parameters for both `op-node` and `op-batcher`:
 | `--plasma.verify-on-read` | `--altda.verify-on-read` |
 | `--plasma.da-service`     | `--altda.da-service`     |
 
-### Environment Variables
+### Environment variables
 
 #### op-node
 
@@ -222,7 +222,7 @@ After making these changes, your system should be properly configured to use the
   Remember to thoroughly test your configuration in testnet before going mainnet.
 </Callout>
 
-## Next Steps
+## Next steps
 
 *   Additional questions? See the FAQ section in the [Alt-DA Mode Explainer](/stack/protocol/features/alt-da-mode#faqs).
 *   For more detailed info on Alt-DA Mode, see the [specs](https://specs.optimism.io/experimental/alt-da.html).
