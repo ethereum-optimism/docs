@@ -67,7 +67,7 @@ async function withdrawETH() {
     
 //Add the same imports used in DepositETH function
 const withdrawalArgs = await publicClientL2.buildWithdrawalTransaction({
-withdrawalAmount: parseEther("0.0001"),
+value: parseEther('0.0001'),
 to: account.address,
 });
 
