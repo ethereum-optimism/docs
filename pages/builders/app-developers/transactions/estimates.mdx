@@ -41,38 +41,18 @@ This means you can feed your transaction to the [`eth_estimateGas`](https://ethe
 
 {<h3>Estimate the max fee per gas</h3>}
 
-Like Ethereum, OP Mainnet uses an EIP-1559 style fee market to determine the current base fee per gas.
+Like Ethereum, OP Mainnet uses an `EIP-1559` style fee market to determine the current base fee per gas.
 You can then additionally specify a priority fee (also known as a tip) to incentivize the Sequencer to include your transaction more quickly.
 Make sure to check out the guide on [Setting Transaction Gas Parameters on OP Mainnet](./parameters) to learn more about how to select an appropriate max fee per gas for your transaction.
-
-{<h3>Calculate the execution gas fee</h3>}
-
-Once you've estimated the gas limit and the max fee per gas for your transaction, you can calculate the execution gas fee by multiplying these two values together.
-
-For instance, suppose that your transaction has a gas limit of `420000 gas`, a base fee of `0.05 gwei`, and a priority fee of `0.1 gwei`.
-The execution gas fee for your transaction would be:
-
-```javascript
-// Start with your parameters
-gas_limit = 420000
-base_fee_per_gas = 0.05 gwei
-priority_fee_per_gas = 0.1 gwei
-
-// Max fee per gas is the sum of the base fee and the priority fee
-max_fee_per_gas = base_fee_per_gas + priority_fee_per_gas = 0.15 gwei
-
-// Execution gas fee is the product of the gas limit and the max fee per gas
-execution_gas_fee = gas_limit * max_fee_per_gas = 420000 * 0.15 gwei = 0.000063 ETH
-```
 
 </Steps>
 
 ## L1 Data Fee
 
 <Callout type="info">
-The Optimism SDK provides a convenient method for estimating the L1 data fee for a transaction.
-Check out the tutorial on [Estimating Transaction Costs on OP Mainnet](/builders/app-developers/tutorials/sdk-estimate-costs) to learn how to use the Optimism SDK to estimate the L1 data fee for your transaction.
-Keep reading if you'd like to learn how to estimate the L1 data fee without the Optimism SDK.
+The Viem library provides a convenient method for estimating the L1 data fee for a transaction.
+Check out the tutorial on [Estimating Transaction Costs on OP Mainnet](/builders/app-developers/tutorials/sdk-estimate-costs) to learn how to use the Viem library to estimate the L1 data fee for your transaction.
+Keep reading if you'd like to learn how to estimate the L1 data fee without the Viem library.
 </Callout>
 
 The L1 data fee is a fee paid to the Sequencer for the cost of publishing your transaction to Ethereum.
@@ -116,8 +96,6 @@ Several tools are available to help you estimate the L1 Data Fee for your transa
 Selecting the right tool for your use case will depend on your specific needs.
 
 *   [Viem](https://viem.sh/op-stack#getting-started-with-op-stack) provides first-class support for OP Stack chains, including OP Mainnet. You can use Viem to estimate gas costs and send cross-chain transactions (like transactions through the Standard Bridge system). It's strongly recommended to use Viem if you are able to do so as it will provide the best native support at the moment.
-*   If you are using Ethers v5, the [Optimism SDK](https://sdk.optimism.io/) provides methods for estimating the L1 Data Fee for your transactions and for sending cross-chain transactions. The Optimism SDK is designed to be used alongside Ethers v5 and does not yet support Ethers v6.
-*   If you are using Ethers v6, the [Optimistic Utilities Extension](https://github.com/ethers-io/ext-utils-optimism) provides methods for estimating the L1 Data Fee. The Ethers v6 extension does not yet support sending cross-chain transactions. Use Viem or the Optimism SDK if you need to send cross-chain transactions.
 
 ### Future Proofing
 
