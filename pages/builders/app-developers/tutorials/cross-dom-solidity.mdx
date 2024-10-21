@@ -5,9 +5,7 @@ description: Learn how to write Solidity contracts on OP Mainnet and Ethereum th
 ---
 
 import { Steps, Callout, Tabs } from 'nextra/components'
-import { WipCallout } from '@/components/WipCallout'
 
-<WipCallout />
 # Communicating Between OP Mainnet and Ethereum in Solidity
 
 
@@ -82,8 +80,8 @@ It will take a few minutes for your message to reach L2.
 Feel free to take a quick break while you wait.
 
 <Callout type="info">
-You can use the Optimism SDK to programmatically check the status of any message between L1 and L2.
-Later on in this tutorial you'll learn how to use the Optimism SDK and the `waitForMessageStatus` function to wait for various message statuses.
+You can use Viem to programmatically check the status of any message between L1 and L2.
+Later on in this tutorial you'll learn how to use Viem and the `waitToProve` function to wait for various message statuses.
 This same function can be used to wait for a message to be relayed from L1 to L2.
 </Callout>
 
@@ -145,20 +143,12 @@ Set up the project as a basic Node.js project with `pnpm` or your favorite packa
 pnpm init
 ```
 
-{<h3>Install the Optimism SDK</h3>}
+{<h3>Install Viem</h3>}
 
-Install the Optimism SDK with `pnpm` or your favorite package manager.
-
-```bash
-pnpm add @eth-optimism/sdk
-```
-
-{<h3>Install ethers.js</h3>}
-
-Install `ethers` with `pnpm` or your favorite package manager.
+Install Viem with `pnpm` or your favorite package manager.
 
 ```bash
-pnpm add ethers@^5
+pnpm add viem
 ```
 
 {<h3>Add your private key to your environment</h3>}
@@ -189,46 +179,32 @@ Start the Node.js REPL with the `node` command.
 node
 ```
 
-{<h3>Import the Optimism SDK</h3>}
+{<h3>Import Viem</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
-```
-
-{<h3>Import ethers.js</h3>}
-
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L3-L5 hash=ed24e2f752f8c16ded84de74af10589d
 ```
 
 {<h3>Load your private key</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L6 hash=755b77a7ffc7dfdc186f36c37d3d847a
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L7 hash=f5211d75b2d19d7fd6da17ef02449e4b
 ```
 
 {<h3>Load your transaction hash</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L8 hash=320cd4f397d7bed8d914d4be0c99f8dc
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L9 hash=320cd4f397d7bed8d914d4be0c99f8dc
 ```
 
 {<h3>Create the RPC providers and wallets</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L10-L13 hash=9afdce50665ae93bce602068071ffaa1
-```
-
-{<h3>Create a CrossChainMessenger instance</h3>}
-
-The Optimism SDK exports a `CrossChainMessenger` class that makes it easy to prove and relay cross-chain messages.
-
-Create an instance of the `CrossChainMessenger` class:
-
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L15-L20 hash=997b9c4cdd5fb1f9d4e0882a683ae016
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L11-L12 hash=cedcc56e3200a039274dda506a897cb6
 ```
 
 {<h3>Wait until the message is ready to prove</h3>}
 
-The second step to send messages from L2 to L1 is to prove that the message was sent on L2.
+Next, you will send messages from L2 to L1 is to prove that the message was sent on L2.
 You first need to wait until the message is ready to prove.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L23 hash=25a072666b6147f8d8983d8223f045b8
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L17-L20 hash=be084e2a13c2cad44f6354feeb2bcbcb
 ```
 
 <Callout type="info">
@@ -240,7 +216,7 @@ Feel free to take a quick break while you wait.
 
 Once the message is ready to be proven, you'll send an L1 transaction to prove that the message was sent on L2.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L26 hash=17922abea43b3d379404fedd87422dde
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L23-L27 hash=1af494e8b4c1533bc9d1ce981f7ec88c
 ```
 
 {<h3>Wait until the message is ready for relay</h3>}
@@ -253,21 +229,21 @@ On OP Mainnet, this takes 7 days.
 We're currently testing fault proofs on OP Sepolia, so withdrawal times reflect Mainnet times.
 </Callout>
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L29 hash=45d995aab47ec29afee4bb4577ae9303
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L30-L33 hash=ef3598d29f837b59cfb89e7bbbc0645d
 ```
 
 {<h3>Relay the message on L1</h3>}
 
 Once the withdrawal is ready to be relayed you can finally complete the message sending process.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L32 hash=b5515811ffcf8b9ada15dea8ae666e44
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L36-L40 hash=c3e5c5d15c048c231397aebcb92eef2c
 ```
 
 {<h3>Wait until the message is relayed</h3>}
 
 Now you simply wait until the message is relayed.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L35 hash=d6e7f89e929eea0ac3217a6751b7e578
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L43-L46 hash=e9da5a2b27185b0b948ac45b2d42a7f9
 ```
 
 {<h3>Check the L1 Greeter</h3>}
