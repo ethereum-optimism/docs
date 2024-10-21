@@ -2,18 +2,18 @@
 title: Deployer
 lang: en-US
 tags: ["op-deployer","eng-platforms"]
-description: Learn how op-deployer can simplify deployment of the OP Stack.
+description: Learn how op-deployer can simplify deployment of the standard OP Stack.
 ---
 
 import {Callout, Steps} from 'nextra/components'
 
 # Deployer
 
-`op-deployer` simplifies the process of deploying the OP Stack. It works similarly to [Terraform](https://www.terraform.io). Like Terraform, you define a declarative config file called an "intent," then run a
-command to apply the intent to your chain. `op-deployer` will compare the state of your chain against the intent,
-and make whatever changes are necessary for them to match.
+`op-deployer` simplifies the process of deploying the OP Stack. It works similarly to [Terraform](https://www.terraform.io). Like Terraform, you define a declarative config file called an "intent," then run a command to apply the intent to your chain. `op-deployer` will compare the state of your chain against the intent, and make whatever changes are necessary for them to match. In its current state, it is intended to deploy new standard chains. Upgrade funcionality and beta-feature support will likely come in the future.
 
 ## Installation
+
+todo: we need to link a production ready release of op-deployer
 
 `op-deployer` is currently under active development, and must be compiled from source. Assuming you have the Go
 toolchain installed, you can install `op-deployer` by following these steps:
@@ -32,28 +32,19 @@ toolchain installed, you can install `op-deployer` by following these steps:
     Run the following commands to build the binary:
 
     ```bash
-    cd op-chain-ops
-    make op-deployer
-    ```
-
-    ### (Optional) Move `op-deployer` Into `$PATH`
-
-    Run the following command to move the `op-deployer` binary into your `$PATH`. Note that the path for your system
-    may be different:
-
-    ```bash
-    sudo mv ./bin/op-deployer /usr/local/bin/op-deployer
+    cd op-deployer
+    just build
     ```
 </Steps>
 
 ## Usage
 
-### Configuring your Chain
+### Configuring your chain
 
 To get started with `op-deployer`, you need to create an intent file that outlines your desired chain configuration. You can use the built-in `op-deployer` utility to generate this file. Just run the following command to create an example intent file for a development chain:
 
 ```
-op-deployer init --l1-chain-id 11155111 --l2-chain-ids 12345 --workdir .deployer
+./bin/op-deployer init --l1-chain-id 11155111 --l2-chain-ids 12345 --workdir .deployer
 ```
 
 This command will create a directory called `.deployer` in your current working directory containing the intent file
@@ -62,37 +53,66 @@ be edited directly.
 
 Your intent file will look something like this:
 
+todo: update the toml file for the latest output
+todo: add annotations on each of the chains.roles
+
 ```toml
+deploymentStrategy = "live" # todo: add description
 l1ChainID = 11155111 # The chain ID of the L1 chain you'll be deploying to
 fundDevAccounts = true # Whether or not to fund dev accounts using the test... junk mnemonic on L2.
-contractsRelease = "op-contracts/v1.6.0" # The version of the smart contracts to deploy.
+l1ContractsLocator = "tag://op-contracts/v1.6.0" # The version of the L1 smart contracts to deploy.
+l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts" # The version of the L2 smart contracts to encode into genesis
+
+# todo: add comment on this section
+[superchainRoles]
+  proxyAdminOwner = "0xb9cdf788704088a4c0191d045c151fcbe2db14a4" # todo: whose address is this?
+  protocolVersionsOwner = "0x85d646ed26c3f46400ede51236d8d7528196849b" # todo: add comment
+  guardian = "0x8c7e4a51acb17719d225bd17598b8a94b46c8767" # todo: is this the guardian on the superchain config contract?
 
 # List of L2s to deploy. op-deployer can deploy multiple L2s at once
 [[chains]]
-# Your chain's ID, encoded as a 32-byte hex string
-id = "0x0000000000000000000000000000000000000000000000000000000000003039"
-# Various ownership roles for your chain. When you use op-deployer init, these roles are generated using the
-# test... junk mnemonic. You should replace these with your own addresses for production chains.
-[chains.roles]
-proxyAdminOwner = "0x7759a8a43aa6a7ee9434ddb597beed64180c40fd"
-systemConfigOwner = "0x8e35d9523a0c4c9ac537d254079c2398c6f3b35f"
-governanceTokenOwner = "0x7759a8a43aa6a7ee9434ddb597beed64180c40fd"
-unsafeBlockSigner = "0xbb19dce4ce51f353a98dbab31b5fa3bc80dc7769"
-batcher = "0x0e9c62712ab826e06b16b2236ce542f711eaffaf"
-proposer = "0x86dfafe0689e20685f7872e0cb264868454627bc"
-challenger = "0xf1658da627dd0738c555f9572f658617511c49d5"
+  # Your chain's ID, encoded as a 32-byte hex string
+  id = "0x0000000000000000000000000000000000000000000000000000000000003039"
+  # todo: comments on these values 
+  baseFeeVaultRecipient = "0x0000000000000000000000000000000000000000"
+  l1FeeVaultRecipient = "0x0000000000000000000000000000000000000000"
+  sequencerFeeVaultRecipient = "0x0000000000000000000000000000000000000000"
+  eip1559Denominator = 50
+  eip1559Elasticity = 6
+  # Various ownership roles for your chain. When you use op-deployer init, these roles are generated using the
+  # test... junk mnemonic. You should replace these with your own addresses for production chains.
+  [chains.roles]
+    proxyAdminOwner = "0x7759a8a43aa6a7ee9434ddb597beed64180c40fd" # todo: highlight the difference between this and the one in the [superchainRoles]
+    systemConfigOwner = "0x8e35d9523a0c4c9ac537d254079c2398c6f3b35f" # todo: mention that the chain operator should retain this role for system behavior modifications
+    governanceTokenOwner = "0x7759a8a43aa6a7ee9434ddb597beed64180c40fd" # todo: what guidance should we have on this
+    unsafeBlockSigner = "0xbb19dce4ce51f353a98dbab31b5fa3bc80dc7769"
+    batcher = "0x0e9c62712ab826e06b16b2236ce542f711eaffaf"
+    proposer = "0x86dfafe0689e20685f7872e0cb264868454627bc"
+    challenger = "0xf1658da627dd0738c555f9572f658617511c49d5" # todo: what address should this be?
 ```
 
 See the code comments above for explanations of each field. By default, `op-deployer` will fill in all other configuration variables
 with those that match our standard config. You can override these defaults by adding them to your intent file, but
 that won't be covered here.
 
-### Applying your Intent
+### Overriding default values
+
+The default values that op-deployer utilizes are defined [here](todo: add link). If you'd like to override these values, you need to add the following stanza to your intent file like this:
+
+```toml
+todo: add override examples
+```
+
+todo: reference the default values 
+todo: figure our if we should use the global overrides or the chain overrides
+todo: give example of 1s blocktime override
+
+### Applying your intent
 
 Now that you've created your intent file, you can apply it to your chain:
 
 ```
-op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
+./bin/op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
 ```
 
 Hardware wallets are not supported, but you can use ephemeral hot wallets since this deployer key has no privileges.
@@ -102,7 +122,7 @@ configuration will be set to the Superchain-wide defaults - i.e., your chain wil
 and will use the same [protocol versions](https://github.com/ethereum-optimism/specs/blob/main/specs/protocol/superchain-upgrades.md)
 address as other chains on the Superchain.
 
-### Generating Genesis Files
+### Generating genesis files
 
 With the contracts deployed, you can generate a genesis file for any of your L2s. Run the following command to do so:
 
@@ -116,10 +136,6 @@ else. You can run another member of the `inspect` family, `rollup`, to get the `
 ```
 ./bin/op-deployer inspect rollup <l2-chain-id> --outfile rollup.json
 ```
-
-## More Information
-
-`op-deployer` uses the OP Contracts Manager (OPCM) under the hood to deploy contracts.
 
 ## Next Steps
 
