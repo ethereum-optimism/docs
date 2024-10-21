@@ -1,12 +1,12 @@
 ---
-title: Superchain Explainer
+title: Superchain explainer
 lang: en-US
 description: Learn about Optimism Superchain components, features, and roadmap.
 ---
 
 import { Callout } from 'nextra/components'
 
-# Superchain Explainer
+# Superchain explainer
 
 <Callout type="info">
   Stay up to date on the Superchain and the OP Stack by subscribing to the [Optimism Developer Blog](https://blog.oplabs.co/)
@@ -22,7 +22,7 @@ This is the detailed explanation. [Click here for a less technical introduction]
   Today, the Superchain is a concept and in-flight project, not a concrete reality.  This documentation represents our best current guess as to what the Superchain's components, features, and roadmap will be. Ultimately, its actualization will depend on (and change alongside) contributions from across the entire Optimism Collective. We cannot wait to see where it goes.
 </Callout>
 
-## The Scalability Vision
+## The scalability vision
 
 ### Blockchain tech today is insufficient for the decentralized web
 
@@ -54,7 +54,7 @@ This hypothetical isn't a dream, it's a tangible vision for the future which has
 
 With the support of the industry, we think a clear picture for how to architect a truly scalable blockchain is beginning to come into view. We call it the "Superchain". This document lays out the core technical principles underlying the Superchain architecture, as well as a set of tangible projects which, when complete, we believe will finally realize the blockchain scalability vision. It will be a multi-year (if not decade) journey. However, if we know roughly where we're going, we'll get there a little faster.
 
-## Foundational Superchain Concepts
+## Foundational Superchain concepts
 
 ### Horizontal scalability requires multiple chains…
 
@@ -85,7 +85,7 @@ By using L2 chains to comprise the multi-chain ecosystem, it becomes possible to
   A decentralized blockchain platform which consists of many chains that share security and a technology stack (OP Stack). The interoperability and standardization enables individual chains to be treated identically by tools and wallets.
 </Callout>
 
-## Superchain Overview
+## Superchain overview
 
 ### The Superchain at a glance
 
@@ -113,7 +113,7 @@ In order for Optimism to upgrade to a Superchain, it must have the following pro
 
 Once Optimism has satisfied these properties, it may be considered a Superchain.
 
-## Upgrading Optimism to Become a Superchain
+## Upgrading Optimism to become a Superchain
 
 We believe the following changes (after the Bedrock release) are required to create an initial Superchain that makes it possible to deploy and upgrade many chains with the same bridge:
 
@@ -217,9 +217,9 @@ If each one of these pain points were addressed, it could be possible to build d
 
 The following is an overview of potential future enhancements, which when combined, addresses each one of these pain points.
 
-### Multi-Proof Security
+### Multi-proof security
 
-#### Pain Point:
+#### Pain point:
 
 1.  Withdrawal claims rely on a trusted set of chain attestors.
 
@@ -227,13 +227,13 @@ The following is an overview of potential future enhancements, which when combin
 
 It is possible to replace the trusted set of chain attestors by introducing permissionless proofs—such as Cannon—where dispute resolution is entirely onchain. However, the challenge with entirely onchain proofs is there is no fallback mechanism if they were to break. To ensure that they will never fail, it is possible to introduce a multi-proof system which provides safety through redundancy. For more information on the multi-proof design click [here](https://web.archive.org/web/20230331065342/https://medium.com/ethereum-optimism/our-pragmatic-path-to-decentralization-cb5805ca43c1).
 
-### Low Latency L2 to L2 Message Passing
+### Low latency L2 to L2 message passing
 
-#### Pain Point:
+#### Pain point:
 
 2.  Cross-chain transactions are slow because they require waiting a challenge period.
 
-#### Proposed Solution:
+#### Proposed solution:
 
 Fault proofs introduce a UX burden because they require waiting a challenge period in order to safely finalize. This means that, depending on the length of your challenge period, users may need to wait a long time before their ETH and tokens are migrated from one OP Chain to the next.
 
@@ -250,13 +250,13 @@ This heterogeneous bridging system means that developers can build their applica
 
 Mixing multiple proof systems enables developers to provide low-latency bridging for low value state and high-latency for high value state. It is even possible to turn low-security state which was instantly bridged into high-security state by proving the state's validity using a high-security high-latency bridge. This building block enables developers to make interesting security tradeoffs such as using a high threshold attestation proof with a high-security, high-latency fault proof fallback.
 
-### Synchronous Cross-Chain Transactions
+### Synchronous cross-chain transactions
 
-#### Pain Point:
+#### Pain point:
 
 3.  Cross-chain transactions are asynchronous, breaking the ability to perform atomic cross-chain transactions (like flash loans).
 
-#### Proposed Solution:
+#### Proposed solution:
 
 Traditional cross-chain messaging is done asynchronously, which means that cross-chain transactions are *not* atomic. For example, if a user would like to execute a cross-chain arbitrage transaction—buying token A on chain A, and selling token B on chain B—there is no guarantee that their transaction executes in its entirety. The user might end up buying token A without having sold token B.
 
@@ -264,13 +264,13 @@ It is possible to introduce synchronous cross-chain messaging and enable atomic 
 
 With the combination of low-latency L2 to L2 message passing as well as shared sequencing, it is possible to perform complex transactions such as cross-chain flash loans. It is even possible to go further and create an EVM abstraction where individual smart contracts (or even individual storage slots) exist on different chains.
 
-### Alt-Data Availability Layer — Plasma Protocol
+### Alt-Data availability layer — Plasma Protocol
 
-#### Pain Point:
+#### Pain point:
 
 4.  Posting transactions to the Superchain is not-scalable because the transaction data must be submitted to L1 which has limited capacity.
 
-#### Proposed Solution:
+#### Proposed solution:
 
 Today L1 data availability (DA) does not scale nearly enough to be able to support internet-level scale. However, it is possible to extend the amount of data availability accessible to OP Chains by using a Plasma protocol which enables alternative DA providers to supplement the more limited L1 DA.
 
@@ -294,15 +294,15 @@ A generic Plasma protocol is able to scale beyond what is possible on L1 because
 
 Because of the ability for hashes to reduce arbitrary size data into a constant size commitment, and the ability to parallelize transaction data hashing, it is possible to achieve near-perfect horizontal scalability of data commitments using Plasma DA. This means that it is possible to put massively scalable applications such as games or social media on Plasma chains.
 
-### Multi-Chain App Frameworks
+### Multi-chain app frameworks
 
-#### Pain Points:
+#### Pain points:
 
 5.  There are no easy-to-use frameworks for building scalable apps which utilize many OP Chains.
 
 6.  There is no easy-to-use wallet for managing ETH and tokens and apps across many OP Chains.
 
-#### Proposed Solution (Sketch):
+#### Proposed solution (Sketch):
 
 This is not a core protocol change, but instead tooling which can be built on top of the core Superchain protocols. The suggestions here are intended to give rough intuitions for how to build tools which improve the experience of deploying to the Superchain.
 
@@ -320,7 +320,7 @@ These are some tools which could make developing on the Superchain a better expe
 
 With robust multi-chain app frameworks, it may become as easy to deploy cross-chain apps as it is to deploy apps which target a single chain.
 
-## Get Involved
+## Get involved
 
 We believe scaling blockchains will radically decentralize the internet and make it easy to create horizontally scalable, secure, and decentralized web applications. We think the Superchain release of the OP Stack could mark a major step towards realizing this vision. However, after the release, it will still take an enormous amount of work to realize the scalability vision.
 
