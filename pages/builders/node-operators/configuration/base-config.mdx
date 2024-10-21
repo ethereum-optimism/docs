@@ -1,12 +1,12 @@
 ---
-title: Node Base Configuration
+title: Node base configuration
 lang: en-US
 description: Learn the node base configuration and recommended flags for op-node, op-geth, and legacy geth.
 ---
 
 import { Callout } from 'nextra/components'
 
-# Node Base Configuration
+# Node base configuration
 
 <Callout type="warning">
   Always run `op-node` and `op-geth` in a one-to-one configuration. Don't run multiple `op-geth` instances behind one `op-node`, or vice versa.
@@ -37,14 +37,14 @@ Regardless of how `op-geth` is initialized, you'll need to ensure that you have 
 ### Initialize `op-geth`
 Instructions for each initialization method are below. If you're spinning up an OP Mainnet, use the [Initialization via Data Directory](#initialization-via-data-directory) path. If you're spinning up an OP Sepolia node, use the [Initialization via Network Flags](#initialization-via-network-flags) path.
 
-#### Initialization via Network Flags
+#### Initialization via network flags
 
 To initialize `op-geth` with the network flags, you simply need to set the 
 `--op-network=<value>` and `--network=<value>` on `op-node`. To see the latest
 support networks, you can consult the `--help` output for the `op-network` 
 option.
 
-#### Initialization via Genesis File
+#### Initialization via genesis file
 
 `op-geth` uses JSON files to encode a network's genesis information. For 
 networks that are initialized in this way, you'll receive a URL to the genesis 
@@ -65,7 +65,7 @@ else
 fi
 ```
 
-#### Initialization via Data Directory
+#### Initialization via data directory
 
 To initialize `op-geth` with a preconfigured data directory, simply download and extract the data directory to a place of your choosing. The data directory is exported as a tar file. An example command to do this is below:
 
@@ -96,7 +96,7 @@ Then, specify the following flags:
 *   `--authrpc.port`: Sets the port `op-geth`'s authenticated RPC should listen on. The default value is `8551`.
 *   `--authrpc.jwtsecret`: Sets the path to a JWT secret file you generated above.
 
-### Recommended Flags for `op-geth` Configuration
+### Recommended flags for `op-geth` configuration
 
 You may also want to specify the following flags based on your configuration:
 
@@ -106,7 +106,7 @@ You may also want to specify the following flags based on your configuration:
 *   `--ws`, `--ws.addr`, and `--ws.port`: Enables the WebSocket API.
 *   `--verbosity`: Configures Geth's log level. This is a number between 0 and 5, with 5 being the most verbose. Defaults to 3.
 
-### Working Base Configuration
+### Working base configuration
 
 A valid command that runs `op-geth` and enables RPC over HTTP and WebSockets looks like:
 
@@ -147,7 +147,7 @@ from a Beacon node.
   accidentally expose admin controls to the public internet.
 </Callout>
 
-### Working Base Configuration
+### Working base configuration
 
 A minimal valid configuration that runs `op-node` looks like:
 
@@ -167,7 +167,7 @@ You can manually specify a path to a rollup config with the `--rollup.config` fl
 
 Each of the above flags can also be defined via an environment variable. Run `op-node --help` to see a list of all available flags and environment variables.
 
-### Configuring Peer-to-Peer Networking
+### Configuring peer-to-peer networking
 
 Unlike the previous system, the `op-node` participates in a peer-to-peer network. This network is used to distribute blocks that have not been submitted to L1 yet. The `op-node` will automatically discover and connect to peers using a hardcoded set of bootnodes. You can also manually specify peers to connect to via the `--p2p.static` flag.
 
@@ -201,7 +201,7 @@ As mentioned above, don't forget to specify `--rollup.historicalrpc` on `op-geth
 
 Since Legacy Geth is read-only, it is safe to run multiple Legacy Geth nodes behind a load balancer.
 
-### Historical Execution vs. Historical Data Routing
+### Historical execution vs. historical data routing
 
 Only requests for historical execution will be routed to Legacy Geth.
 Everything else will be served by `op-geth` directly.
@@ -216,7 +216,7 @@ The term *historical execution* refers to RPC methods that need to execute trans
 
 If you do not need these RPC methods for historical data, then you do not need to run Legacy Geth at all.
 
-## Next Steps
+## Next steps
 *   See the [op-node configuration](/builders/node-operators/configuration/consensus-config) guide for additional configuration options for `op-node` and the Consensus-Layer.
 *   Similarly, visit the [op-geth configuration](/builders/node-operators/configuration/execution-config) guide for additional configuration options for `op-geth` and Execution-Layer.
 *   If you run into any problems, please reach out to our [developer support forum](https://github.com/ethereum-optimism/developers/discussions) for help.

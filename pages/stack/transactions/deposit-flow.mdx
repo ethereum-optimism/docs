@@ -1,5 +1,5 @@
 ---
-title: Deposit Flow
+title: Deposit flow
 lang: en-US
 description: Learn the deposit flow process for L2 deposit transactions, triggered by events on L1.
 ---
@@ -7,7 +7,7 @@ description: Learn the deposit flow process for L2 deposit transactions, trigger
 import Image from 'next/image'
 import { Callout } from 'nextra/components'
 
-# Deposit Flow
+# Deposit flow
 
 This guide explains the deposit flow process for L2 deposit transactions, triggered by transactions or events on L1. In Optimism terminology, "*deposit transaction*" refers to any L2 transaction that is triggered by a transaction or event on L1.
 
@@ -16,7 +16,7 @@ Information is encapsulated in lower layer packets on the sending side and then 
 
 ![Deposit Flow Diagram.](/img/op-stack/protocol/deposit-flow.svg)
 
-## L1 Processing
+## L1 processing
 
 1.  An L1 entity, either a smart contract or an externally owned account (EOA), sends a deposit transaction to [`L1CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/L1CrossDomainMessenger.sol), using [`sendMessage`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol#L249-L289).
     This function accepts three parameters:
@@ -44,7 +44,7 @@ Information is encapsulated in lower layer packets on the sending side and then 
 
 4.  [The `depositTransaction` function](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L422-L483) runs a few sanity checks, and then emits a [`TransactionDeposited`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L85-L99) event.
 
-## L2 Processing
+## L2 processing
 
 1.  The `op-node` component [looks for `TransactionDeposited` events on L1](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/op-node/rollup/derive/deposits.go#L13-L33).
     If it sees any such events, it [parses](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/op-node/rollup/derive/deposit_log.go) them.
