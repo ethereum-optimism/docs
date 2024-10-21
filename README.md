@@ -20,5 +20,5 @@ You can track documentation [issues](https://github.com/ethereum-optimism/docs/i
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](https://github.com/ethereum-optimism/optimism/blob/develop/LICENSE).
 
