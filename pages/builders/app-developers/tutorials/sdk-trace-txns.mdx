@@ -6,7 +6,6 @@ description: Learn how to use the viem library to trace deposits and withdrawals
 
 import { Callout, Steps } from 'nextra/components'
 
-
 # Tracing Deposits and Withdrawals
 
 In this tutorial, you'll learn how to use the [viem](https://viem.sh) library to trace a [Standard Bridge](../bridging/standard-bridge) deposit or withdrawal between L1 and L2.
@@ -23,25 +22,24 @@ You're going to use the viem library for this tutorial.
 Since viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
+  {<h3>Make a Project Folder</h3>}
 
-{<h3>Make a Project Folder</h3>}
+  ```bash
+  mkdir op-sample-project
+  cd op-sample-project
+  ```
 
-```bash
-mkdir op-sample-project
-cd op-sample-project
-```
+  {<h3>Initialize the Project</h3>}
 
-{<h3>Initialize the Project</h3>}
+  ```bash
+  pnpm init
+  ```
 
-```bash
-pnpm init
-```
+  {<h3>Install viem and ethers.js</h3>}
 
-{<h3>Install viem and ethers.js</h3>}
-
-```bash
-pnpm add viem 
-```
+  ```bash
+  pnpm add viem 
+  ```
 </Steps>
 
 ## Add RPC URLs to Your Environment
@@ -56,11 +54,13 @@ export L2_RPC_URL="https://sepolia.optimism.io"
 ```
 
 ## Start the Node REPL
+
 You're going to use the Node REPL to interact with viem. To start the Node REPL, run the following command in your terminal:
 
 ```bash
 node
 ```
+
 This will bring up a Node REPL prompt that allows you to run JavaScript code.
 
 ## Import Dependencies
@@ -73,98 +73,102 @@ You need to import some dependencies into your Node REPL session.
 ```
 
 ## Set Session Variables
+
 You'll need a few variables throughout this tutorial. Let's set those up now.
 
 <Steps>
-{<h3>Import RPC URLs</h3>}
+  {<h3>Import RPC URLs</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L9-L10 hash=0badc18f525e56b36406e7be8ad1104e
-```
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L9-L10 hash=0badc18f525e56b36406e7be8ad1104e
+  ```
 
-{<h3>Set the deposit to trace</h3>}
+  {<h3>Set the deposit to trace</h3>}
 
-You'll be tracing a specific deposit in this tutorial. Deposit tracing is generally based on the transaction hash of the transaction that triggered the deposit. You can replace this transaction hash with your own if you'd like.
+  You'll be tracing a specific deposit in this tutorial. Deposit tracing is generally based on the transaction hash of the transaction that triggered the deposit. You can replace this transaction hash with your own if you'd like.
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L13 hash=367c797c3e9746addedf43857f789eeb
-```
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L13 hash=367c797c3e9746addedf43857f789eeb
+  ```
 
-{<h3>Set the withdrawal to trace</h3>}
+  {<h3>Set the withdrawal to trace</h3>}
 
-You'll also be tracing a specific withdrawal in this tutorial. Like with deposits, withdrawal tracing is generally based on the transaction hash of the transaction that triggered the withdrawal. You can replace this transaction hash with your own if you'd like.
+  You'll also be tracing a specific withdrawal in this tutorial. Like with deposits, withdrawal tracing is generally based on the transaction hash of the transaction that triggered the withdrawal. You can replace this transaction hash with your own if you'd like.
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L14 hash=545d1eed00ad0a235e2c79c8a87efd30
-```
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L14 hash=545d1eed00ad0a235e2c79c8a87efd30
+  ```
 
-{<h3>Create the RPC providers</h3>}
+  {<h3>Create the RPC providers</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L16-L25 hash=b44b43868a421156320884045294f7ca
-```
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L16-L25 hash=b44b43868a421156320884045294f7ca
+  ```
 </Steps>
 
 ## Trace a Deposit
+
 You can use viem to trace a deposit.
 
 <Steps>
-{<h3>Get the deposit status</h3>}
+  {<h3>Get the deposit status</h3>}
 
-You can query for the deposit status using the transaction hash of the deposit.
+  You can query for the deposit status using the transaction hash of the deposit.
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L28-L29 hash=1c546e5f36d33c0709f865843449073d
-```
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L28-L29 hash=1c546e5f36d33c0709f865843449073d
+  ```
 
-{<h3>Get the deposit transaction receipt</h3>}
+  {<h3>Get the deposit transaction receipt</h3>}
 
-Retrieve the transaction receipt for the deposit using the viem client.
+  Retrieve the transaction receipt for the deposit using the viem client.
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L32-L33 hash=7edb6da67c87b3f5738ccc6aee3ba41d
-```
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L32-L33 hash=7edb6da67c87b3f5738ccc6aee3ba41d
+  ```
 
-{<h3>Parse deposit logs</h3>}
+  {<h3>Parse deposit logs</h3>}
 
-Parse the logs from the deposit receipt for more detailed information.
+  Parse the logs from the deposit receipt for more detailed information.
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L35-L38 hash=984c08d1c0bc06932389d95e8d0b1c12
-```
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L35-L38 hash=984c08d1c0bc06932389d95e8d0b1c12
+  ```
 
-{<h3>Get the deposit transaction</h3>}
+  {<h3>Get the deposit transaction</h3>}
 
-You can directly query for the L2 transaction that executed the deposit.
+  You can directly query for the L2 transaction that executed the deposit.
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L41-L42 hash=6d21745010ed82b60681ecb86b0ce99f
-```
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L41-L42 hash=6d21745010ed82b60681ecb86b0ce99f
+  ```
 </Steps>
 
 ## Trace a Withdrawal
+
 You can use viem's functions to trace a withdrawal.
 
 <Steps>
-{<h3>Get the withdrawal status</h3>}
+  {<h3>Get the withdrawal status</h3>}
 
-Like deposits, withdrawals can have multiple statuses depending on where they are in the process.
+  Like deposits, withdrawals can have multiple statuses depending on where they are in the process.
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L45-L46 hash=5b6da897415978c20691dff09f27f139
-```
-{<h3>Get the withdrawal transaction receipt</h3>}
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L45-L46 hash=5b6da897415978c20691dff09f27f139
+  ```
 
-Retrieve the L1 transaction receipt for the withdrawal.
+  {<h3>Get the withdrawal transaction receipt</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L49-L50 hash=a8727db53f18639ab5e7e27f962a3783
-```
+  Retrieve the L1 transaction receipt for the withdrawal.
 
-{<h3>Parse withdrawal logs</h3>}
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L49-L50 hash=a8727db53f18639ab5e7e27f962a3783
+  ```
 
-Parse the logs from the withdrawal receipt to get more details.
+  {<h3>Parse withdrawal logs</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L52-L55 hash=91d31964daa5ce53cf4e61b25b6fade6
-```
+  Parse the logs from the withdrawal receipt to get more details.
 
-{<h3>Get the withdrawal transaction</h3>}
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L52-L55 hash=91d31964daa5ce53cf4e61b25b6fade6
+  ```
 
-Directly query for the L1 transaction that executed the withdrawal.
+  {<h3>Get the withdrawal transaction</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L58-L59 hash=626e0ec238266d05c295056f80f0a6da
-```
-</Steps> 
+  Directly query for the L1 transaction that executed the withdrawal.
+
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L58-L59 hash=626e0ec238266d05c295056f80f0a6da
+  ```
+</Steps>
 
 ## Next Steps
 
