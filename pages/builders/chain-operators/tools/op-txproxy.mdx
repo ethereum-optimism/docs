@@ -30,20 +30,20 @@ With the signature and signing address, the request is authenticated under the `
 *   Requests with a mismatch in recovered signer and supplied public key will have the http request failed with status code `400 - Bad Request`.
 
 Currently, no authorization policies are implemented on this endpoint. However, the authentication mechanism is in place to allow for future implementation of policies such as allowlists, localized rate limits, and other potential restrictions.
-#### Runtime Shutoff
+#### Runtime shutoff
 
 This service can be configured with a flag or environment variable to reject conditional transactions without needing to interrupt the execution engine. This feature is useful for diagnosing issues.
 
 `--sendRawTxConditional.enabled (default: true) ($OP_TXPROXY_SENDRAWTXCONDITIONAL_ENABLED)`
 
 When disabled, requests will fail with the `-32003` (transaction rejected) json rpc error code with a message stating that the method is disabled.
-#### Rate Limits
+#### Rate limits
 
 Even though the op-geth implementation of this endpoint includes rate limits, it is instead applied here to terminate these requests early.
 
 `--sendRawTxConditional.ratelimit (default: 5000) ($OP_TXPROXY_SENDRAWTXCONDITIONAL_RATELIMIT)`
 
-#### Stateless Validation
+#### Stateless validation
 
 *   Conditional cost is below the max
 *   Conditional values are valid (i.e min \< max)
@@ -61,7 +61,7 @@ When the request passes validation, it is passed through to the configured backe
 
 
 <Callout type="warning">
-  Per the [specification](/stack/protocol/features/send-raw-transaction-conditional), conditional transactions are not gossiped between peers. Thus, if you use replicas in an active/passive sequencer setup, this request must be broadcasted to all replicas.
+  Per the [specification](/stack/features/send-raw-transaction-conditional), conditional transactions are not gossiped between peers. Thus, if you use replicas in an active/passive sequencer setup, this request must be broadcasted to all replicas.
 
   [proxyd](./proxyd) as an egress router for this method supports this broadcasting functionality.
 </Callout>
@@ -71,7 +71,7 @@ When the request passes validation, it is passed through to the configured backe
 To start using `op-txproxy`, follow these steps:
 
 <Steps>
-  ### Build the Binary or Pull the Docker Image
+  ### Build the binary or pull the Docker image
 
   1.  Run the following command to build the binary
   ```bash
