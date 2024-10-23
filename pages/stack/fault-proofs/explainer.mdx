@@ -1,5 +1,5 @@
 ---
-title: Fault Proofs Explainer
+title: Fault proofs explainer
 lang: en-US
 description: Learn about the OP Stack's fault proof system.
 ---
@@ -7,7 +7,7 @@ description: Learn about the OP Stack's fault proof system.
 import { Callout } from 'nextra/components'
 import Image from 'next/image'
 
-# Fault Proofs Explainer
+# Fault proofs explainer
 
 Fault Proofs are an important part of an Optimistic Rollup system like the OP Stack.
 Users withdraw ETH and tokens from OP Stack chains like OP Mainnet by submitting a withdrawal proof that shows the withdrawal was actually included in the OP Stack chain.
@@ -25,7 +25,7 @@ Although the fault proof game is permissionless, the Optimism Security Council a
 Each proposal must wait for a delay period during which the Guardian can prevent invalid proposals from being used to withdraw ETH or tokens through a number of safety hatches.
 The Guardian can also choose to shift the system to use a PermissionedDisputeGame, in which only specific `PROPOSER` and `CHALLENGER` roles can submit and challenge proposals.
 
-## Permissionless Proposals
+## Permissionless proposals
 
 "Proposals" or "State Proposals" are claims about the state of an OP Stack chain that are submitted to Ethereum through the `DisputeGameFactory` contract.
 Proposals can be used for many things but are most commonly used by end-users to prove that they created a withdrawal on an OP Stack chain.
@@ -36,28 +36,28 @@ See the permissionless fault proofs diagram below for more details:
 <br />
 <Image src="/img/op-stack/protocol/fp-permissionless.png" alt="Permissionless Fault Proofs flow" width={700} height={600} />
 
-## Permissionless Challenges
+## Permissionless challenges
 
 Because anyone can submit a proposal, it's important that invalid proposals can be challenged.
-In [Optimistic Rollups like OP Stack Chains](/stack/protocol/rollup/overview) there is a \~1 week challenge period during which users can challenge a proposal if they believe it to be incorrect.
+In [Optimistic Rollups like OP Stack Chains](/stack/rollup/overview) there is a \~1 week challenge period during which users can challenge a proposal if they believe it to be incorrect.
 With the Fault Proofs upgrade to the OP Stack, challenges become permissionless and can be submitted by anyone.
 Any user can run a node for the OP Stack chain in question and use the `op-challenger` tool to participate in the dispute process.
 
-## Modular Design and Multi-layer Security
+## Modular design and multi-layer security
 
-The OP Stack Fault Proof system is [modular in design](/stack/protocol/fault-proofs/fp-components#system-design--modularity) and lays the groundwork for achieving a "multi-proof" system. This allows the OP Stack to support multiple proof systems alongside the initial [Cannon](/stack/protocol/fault-proofs/cannon) proof system.
+The OP Stack Fault Proof system is [modular in design](/stack/fault-proofs/fp-components#system-design--modularity) and lays the groundwork for achieving a "multi-proof" system. This allows the OP Stack to support multiple proof systems alongside the initial [Cannon](/stack/fault-proofs/cannon) proof system.
 With multiple proof systems in place, the OP Stack can be more resilient to potential attacks and bugs in any one proof system.
 
-Additionally, the following [security safeguards](/stack/protocol/fault-proofs/fp-security) have been built around the game, as follows:
+Additionally, the following [security safeguards](/stack/fault-proofs/fp-security) have been built around the game, as follows:
 
 *   An off chain monitoring system has been set up to monitor all proposed roots and ensure they align with the correct state. See [`op-dispute-mon`](https://github.com/ethereum-optimism/optimism/blob/develop/op-dispute-mon/README.md?plain=1) for more details.
 *   After a root is finalized through a game, an additional delay called the "airgap window" has been added before withdrawals can occur. During this period, the `GUARDIAN` role can reject the root.
 *   A contract called `DelayedWETH` has been set up to hold the bonds and only allow payouts after a delay, so that bonds can be redirected towards the correct recipient in the case that a game resolves incorrectly.
 
-## Next Steps
+## Next steps
 
 *   Ready to get started? Review the [FP Components](fp-components) to learn how the different components work together to enhance decentralization in the Optimism ecosystem.
-*   See the [Fault Proof Mainnet Security](/stack/protocol/fault-proofs/fp-security) to understand changes to `OptimismPortal` and `FaultDisputeGame` contracts.
+*   See the [Fault Proof Mainnet Security](/stack/fault-proofs/fp-security) to understand changes to `OptimismPortal` and `FaultDisputeGame` contracts.
 *   For more info about how the FP system works under the hood, [check out the specs](https://specs.optimism.io/fault-proof/index.html).
 
 ## FAQs

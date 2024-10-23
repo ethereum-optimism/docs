@@ -1,5 +1,5 @@
 ---
-title: OP-Challenger Explainer
+title: OP-Challenger explainer
 lang: en-US
 description: Learn about OP-Challenger and how it operates within the OP Stack's fault proof system.
 ---
@@ -7,9 +7,9 @@ description: Learn about OP-Challenger and how it operates within the OP Stack's
 import { Callout } from 'nextra/components'
 import Image from 'next/image'
 
-# OP-Challenger Explainer
+# OP-Challenger explainer
 
-The `op-challenger` operates as the *honest actor* in the fault dispute system and defends the chain by securing the `OptimismPortal` and ensuring the game always resolves to the correct state of the chain. For verifying the legitimacy of claims, `op-challenger` relies on a synced, trusted rollup node as well as a trace provider (e.g., [Cannon](/stack/protocol/fault-proofs/cannon)).
+The `op-challenger` operates as the *honest actor* in the fault dispute system and defends the chain by securing the `OptimismPortal` and ensuring the game always resolves to the correct state of the chain. For verifying the legitimacy of claims, `op-challenger` relies on a synced, trusted rollup node as well as a trace provider (e.g., [Cannon](/stack/fault-proofs/cannon)).
 
 Specifically, `op-challenger` performs the following actions:
 
@@ -38,22 +38,22 @@ graph TD;
   The `cannon` and `op-program` executables are run in the `op-challenger` docker container as sub-processes when required to generate game trace data.
 </Callout>
 
-## Fault Detection Responses
+## Fault detection responses
 
 `op-challenger` assesses each claim's validity, countering only those deemed invalid, following this logic:
 
 1.  If the trusted node agrees with the output, `op-challenger` takes no action. An honest challenger does nothing because there are no claims it disagrees with. It continues to monitor the game in case someone posts a counter-claim to the valid root claim, in which case the challenger will participate in the game to defend the proposal.
 2.  If the trusted node disagrees, `op-challenger` posts a counter-claim to challenge the proposed output. In contrast to the above, an honest challenger aims to delete any output roots that its trusted node disagrees with in order to claim the bond attached to it. The honest challenger assumes that their rollup node is synced to the canonical state and that the fault proof program is correct, so it is willing to put its money on the line to counter any faults.
 
-## Fault Dispute Game Responses
+## Fault dispute game responses
 
 `op-challenger` iterates through claims as stored in the contract, ensuring ancestors are processed before their descendants. For each claim, the honest challenger determines and tracks the set of honest responses to all claims, regardless of whether that response already exists in the full game state.
 
-### Root Claim
+### Root claim
 
 The root claim is considered to be an honest claim if and only if it has a [state witness Hash](https://specs.optimism.io/fault-proof/stage-one/fault-dispute-game.html#claims) that agrees with the honest challenger's state witness hash for the root claim.
 
-### Counter Claims
+### Counter claims
 
 When a new claim is made in a dispute game, the honest challenger processes it and performs a response. The honest challenger should counter a claim if and only if:
 
@@ -64,7 +64,7 @@ When a new claim is made in a dispute game, the honest challenger processes it a
   This implies the honest challenger never counters its own claim, since there is at most one honest counter to each claim, so an honest claim never has an honest sibling.
 </Callout>
 
-### Possible Moves
+### Possible moves
 
 The challenger monitors each game as new claims are added and reacts according to the [honest actor algorithm](https://specs.optimism.io/fault-proof/stage-one/honest-challenger-fdg.html) to defend valid proposals and invalidate invalid proposals. A **move** is a challenge against an existing claim and must include an alternate claim asserting a different trace (e.g., attack, defend, or step).
 
@@ -82,7 +82,7 @@ When one side of a `FaultDisputeGame`'s chess clock runs out, the honest challen
 
 The `FaultDisputeGame` does not put a time cap on resolution - because of the liveness assumption on honest challengers and the bonds attached to the claims they've countered, challengers are economically motivated to resolve the game quickly, thereby liquidating their funds and securing rewards.
 
-## Next Steps
+## Next steps
 
 *   Ready to get started? Read our guide on how to [configure `op-challenger` on your OP Stack chain](/builders/chain-operators/tools/op-challenger).
 *   For more info about how `op-challenger` works under the hood, [check out the specs](https://specs.optimism.io/fault-proof/stage-one/honest-challenger-fdg.html).
