@@ -14,21 +14,21 @@ This guide explains how transaction finality works in OP Stack, covering the fun
 OP Stack is an extension of Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack leverages Ethereum's consensus. 
 This enables it to take advantage of Ethereum's transaction ordering mechanism and finalize its own blocks without requiring a new consensus layer.
 
-## State Machines and Transaction Processing
+## Transaction Processing
 
 State machines, such as the Ethereum Virtual Machine (EVM), rely on input lists (transactions) to evolve from one state to another. The order of the transactions is critical because incorrect ordering can lead to an invalid state.
 
 For example, if a user attempts to send 1 ETH to two different parties at the same time, only one transaction can be valid. The order determines which transaction succeeds, making transaction ordering an essential aspect of consensus.
 
-## Commutative vs. Non-Commutative Operations
+### Commutative vs. Non-Commutative Operations
 
 Commutative operations allow the order of inputs to change without affecting the outcome. However, non-commutative operations (like sending funds) require strict ordering. Therefore, both the availability and the order of the transaction list are fundamental to ensuring the system's integrity.
 
-## Consensus and Ordering
+### Consensus and Ordering
 
 Consensus determines the valid chain or list of transactions. In the OP Stack, Ethereum's Proof of Stake (PoS) consensus mechanism is used to achieve transaction ordering and finality.
 
-## Why Use Ethereum's Consensus?
+### Why Use Ethereum's Consensus?
 
 By publishing blocks on Ethereum, the OP Stack effectively outsources its consensus mechanism. Instead of creating a separate consensus protocol, the OP Stack relies on Ethereum's ordering and finality guarantees.
 
@@ -74,7 +74,7 @@ In the OP Stack, transaction finality progresses through three key stages:
 
 <Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
 
-## Block and Transaction Validity in the OP Stack
+### Transaction Validity
 
 When a block is submitted to Ethereum, it is either valid or invalid. If the block is valid, the state is updated accordingly. If it is invalid, the block is discarded. Nodes execute valid blocks and update the state as required.
 
@@ -103,6 +103,16 @@ A claim in the context of OP Stack is a statement asserting the state of the sys
 
 Challenges focus on proving whether a given claim is valid. The outcome of a challenge does not impact the underlying chain. For example, if a claim about the transaction state at a specific block is proven wrong, it only affects the app-level functionality and does not alter the OP Stack protocol.
 
+## 7-Day Challenge Period in OP Stack
+
+The 7-day challenge period provides time for challenges to be raised and resolved. 
+Although OP Stack finalizes transactions quickly (within 20 minutes), withdrawals from L2 are delayed to allow for fault-proof validation. 
+This delay ensures that any malicious activity can be detected and addressed before it impacts the system.
+
+### Why Seven Days?
+
+The 7-day challenge period is a reasonable time frame that allows participants to organize a response, potentially even initiating a L1 hard fork to address critical issues. In the OP Stack, this challenge period also serves as a safeguard for app-level bridges and custom designs that may be built on top of the core protocol.
+
 ### Bridge Independence
 
 Key aspects of bridge systems include:
@@ -115,16 +125,6 @@ Key aspects of bridge systems include:
 ### Example: Custom Bridges in OP Stack
 
 A custom bridge might be developed by a user to allow ERC-20 tokens to move between layers. However, this bridge is application-level and not native to the OP Stack. If there is an issue with the bridge, such as incorrect proof validation, it does not impact the protocol itself but affects the subjective value of the bridged assets.
-
-## 7-Day Challenge Period in OP Stack
-
-The 7-day challenge period provides time for challenges to be raised and resolved. 
-Although OP Stack finalizes transactions quickly (within 20 minutes), withdrawals from L2 are delayed to allow for fault-proof validation. 
-This delay ensures that any malicious activity can be detected and addressed before it impacts the system.
-
-### Why Seven Days?
-
-The 7-day challenge period is a reasonable time frame that allows participants to organize a response, potentially even initiating a L1 hard fork to address critical issues. In the OP Stack, this challenge period also serves as a safeguard for app-level bridges and custom designs that may be built on top of the core protocol.
 
 ### Withdrawal Delays vs. Finality
 
