@@ -7,9 +7,11 @@ description: Learn about finality in OP Stack and the steps to achieve transacti
 import Image from 'next/image'
 import { Callout } from 'nextra/components'
 
-# The OP Stack consensus mechanism
+# Overview
 
-The OP Stack is an extension of Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack leverages Ethereum's consensus. 
+This guide explains how transaction finality works in OP Stack, covering the fundamental concepts of Fault Proofs and Challenges.
+
+OP Stack is an extension of Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack leverages Ethereum's consensus. 
 This enables it to take advantage of Ethereum's transaction ordering mechanism and finalize its own blocks without requiring a new consensus layer.
 
 ## State Machines and Transaction Processing
@@ -36,29 +38,17 @@ By publishing blocks on Ethereum, the OP Stack effectively outsources its consen
 *   It simplifies the design and development process by eliminating the need for a separate consensus protocol.
 *   Attack vectors, such as double-spends, are mitigated by Ethereum's security mechanisms.
 
-## Transaction Finality States
-
-In the OP Stack, transaction finality progresses through three key stages:
-
-1.  **Unsafe:** The L2 sequencer creates a block containing the transaction, but the transaction data has not yet been posted to Ethereum (L1). The block is circulated within the L2 network for speed.
-
-2.  **Safe:** The sequencer's batcher posts the transaction data to L1. At this point, any L2 node can derive the transaction.
-
-3.  **Finalized:** Transactions are finalized once more than 65 Ethereum blocks (approximately 20 minutes) have passed, ensuring that the L1 data is secure and cannot be reorganized.
-
-<Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
-
 ## Sequencer Operations
 
-The **sequencer** (block producer) processes transactions in the following steps:
+The sequencer (block producer) processes transactions in the following steps:
 
-1.  **Pre-publishing Distribution:**
+1.  Pre-publishing Distribution:
     *   The sequencer receives transactions from users.
     *   It creates blocks containing these transactions.
     *   It distributes these blocks to network nodes before L1 publication.
     *   Nodes mark these blocks as "unsafe."
 
-2.  **L1 Publication:**
+2.  L1 Publication:
     *   The sequencer publishes the blocks to Ethereum (L1).
     *   Once included in L1, the blocks are marked as "safe."
     *   Blocks achieve "finalized" status after L1 finalization (approximately 20 minutes).
@@ -71,6 +61,18 @@ The sequencer operates with the following trust assumptions:
 *   It may attempt to reorder transactions before L1 publication.
 *   Once transactions are published on L1, the sequencer cannot modify or censor them.
 *   The sequencer cannot affect finalized transactions.
+
+## Transaction Finality States
+
+In the OP Stack, transaction finality progresses through three key stages:
+
+1.  **Unsafe:** The L2 sequencer creates a block containing the transaction, but the transaction data has not yet been posted to Ethereum (L1). The block is circulated within the L2 network for speed.
+
+2.  **Safe:** The sequencer's batcher posts the transaction data to L1. At this point, any L2 node can derive the transaction.
+
+3.  **Finalized:** Transactions are finalized once more than 65 Ethereum blocks (approximately 20 minutes) have passed, ensuring that the L1 data is secure and cannot be reorganized.
+
+<Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
 
 ## Block and Transaction Validity in the OP Stack
 
