@@ -7,9 +7,10 @@ description: Learn about finality in OP Stack and the steps to achieve transacti
 import Image from 'next/image'
 import { Callout } from 'nextra/components'
 
-# OP Stack Rollups
+# The OP Stack consensus mechanism
 
-The **OP Stack** rollup is an extension of Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack rollup leverages Ethereum's consensus. This enables the rollup to take advantage of Ethereum's transaction ordering mechanism and finalize its own blocks without requiring a new consensus layer.
+The OP Stack is an extension of Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack leverages Ethereum's consensus. 
+This enables it to take advantage of Ethereum's transaction ordering mechanism and finalize its own blocks without requiring a new consensus layer.
 
 ## State Machines and Transaction Processing
 
@@ -27,7 +28,7 @@ Consensus determines the valid chain or list of transactions. In the OP Stack, E
 
 ## Why Use Ethereum's Consensus?
 
-By publishing rollup blocks on Ethereum, the OP Stack effectively outsources its consensus mechanism. Instead of creating a separate consensus protocol, the OP Stack relies on Ethereum's ordering and finality guarantees.
+By publishing blocks on Ethereum, the OP Stack effectively outsources its consensus mechanism. Instead of creating a separate consensus protocol, the OP Stack relies on Ethereum's ordering and finality guarantees.
 
 ### Key benefits of this approach:
 
@@ -73,11 +74,11 @@ The sequencer operates with the following trust assumptions:
 
 ## Block and Transaction Validity in the OP Stack
 
-When a block is submitted to Ethereum, it is either valid or invalid. If the block is valid, the state is updated accordingly. If it is invalid, the block is discarded. Nodes execute valid blocks and update the rollup state as required.
+When a block is submitted to Ethereum, it is either valid or invalid. If the block is valid, the state is updated accordingly. If it is invalid, the block is discarded. Nodes execute valid blocks and update the state as required.
 
 ### Reorgs and Finality
 
-Once a rollup block is included in a finalized Ethereum block, it cannot be reorganized. Therefore, rollup blocks enjoy the same finality guarantees as Ethereum blocks, and this finality is managed by the OP Stack architecture.
+Once a block is included in a finalized Ethereum block, it cannot be reorganized. Therefore, blocks enjoy the same finality guarantees as Ethereum blocks, and this finality is managed by the OP Stack architecture.
 
 ### Handling Reorgs
 
@@ -90,38 +91,38 @@ If an Ethereum reorganization (reorg) occurs:
 
 ## The Role of the Proof System
 
-The proof system is entirely separate from the core OP Stack protocol. It is an application-level validation system designed to ensure the accuracy of certain claims about the rollup's state.
+The proof system is entirely separate from the core OP Stack protocol. It is an application-level validation system designed to ensure the accuracy of certain claims about the transaction state.
 
 ### What Is a Claim?
 
-A claim in the context of OP Stack rollups is a statement asserting the state of the system at a specific block height. For instance, a claim might assert that at block 1,000,000, the state hash is `XYZ`. If other participants believe this claim to be incorrect, they can challenge it.
+A claim in the context of OP Stack is a statement asserting the state of the system at a specific block height. For instance, a claim might assert that at block 1,000,000, the state hash is `XYZ`. If other participants believe this claim to be incorrect, they can challenge it.
 
 ### Fault Proofs and Challenges
 
-Challenges focus on proving whether a given claim is valid. The outcome of a challenge does not impact the underlying chain. For example, if a claim about the rollup's state at a specific block is proven wrong, it only affects the app-level functionality and does not alter the OP Stack protocol.
+Challenges focus on proving whether a given claim is valid. The outcome of a challenge does not impact the underlying chain. For example, if a claim about the transaction state at a specific block is proven wrong, it only affects the app-level functionality and does not alter the OP Stack protocol.
 
 ### Bridge Independence
 
 Key aspects of bridge systems include:
 
 *   Bridges are application-level constructs.
-*   They operate independently from the core rollup protocol.
+*   They operate independently from the core OP Stack protocol.
 *   Bridge security does not affect the validity of L2 transactions.
 *   Bridge failures do not cause L2 reorgs or state changes.
 
 ### Example: Custom Bridges in OP Stack
 
-A custom bridge might be developed by a user to allow ERC-20 tokens to move between layers. However, this bridge is application-level and not native to the OP Stack rollup. If there is an issue with the bridge, such as incorrect proof validation, it does not impact the rollup itself but affects the subjective value of the bridged assets.
+A custom bridge might be developed by a user to allow ERC-20 tokens to move between layers. However, this bridge is application-level and not native to the OP Stack. If there is an issue with the bridge, such as incorrect proof validation, it does not impact the protocol itself but affects the subjective value of the bridged assets.
 
 ## 7-Day Challenge Period in OP Stack
 
 The 7-day challenge period provides time for challenges to be raised and resolved. 
-Although the rollup chain finalizes transactions quickly (within 20 minutes), withdrawals from L2 are delayed to allow for fault-proof validation. 
+Although OP Stack finalizes transactions quickly (within 20 minutes), withdrawals from L2 are delayed to allow for fault-proof validation. 
 This delay ensures that any malicious activity can be detected and addressed before it impacts the system.
 
 ### Why Seven Days?
 
-The 7-day challenge period is a reasonable time frame that allows participants to organize a response, potentially even initiating a L1 hard fork to address critical issues. In the OP Stack, this challenge period also serves as a safeguard for app-level bridges and custom rollup designs that may be built on top of the core protocol.
+The 7-day challenge period is a reasonable time frame that allows participants to organize a response, potentially even initiating a L1 hard fork to address critical issues. In the OP Stack, this challenge period also serves as a safeguard for app-level bridges and custom designs that may be built on top of the core protocol.
 
 ### Withdrawal Delays vs. Finality
 
@@ -134,4 +135,4 @@ One common misconception is confusing withdrawal delays with transaction finalit
 
 ## Conclusion
 
-Transaction finality in the OP Stack relies on Ethereum's consensus mechanism. The OP Stack ensures that rollups inherit Ethereum's finality guarantees, while the proof system adds an additional layer of validation for app-level functionality. While rollup blocks finalize quickly, the proof system introduces a delay for withdrawals to ensure the security of bridging mechanisms.
+Transaction finality in the OP Stack relies on Ethereum's consensus mechanism. The OP Stack inherit Ethereum's finality guarantees, while the proof system adds an additional layer of validation for app-level functionality. While blocks finalize quickly, the proof system introduces a delay for withdrawals to ensure the security of bridging mechanisms.
