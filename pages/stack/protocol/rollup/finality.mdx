@@ -9,7 +9,7 @@ import { Callout } from 'nextra/components'
 
 # OP Stack rollups
 
-OP Stack rollup is an extension of the consensus mechanism in Ethereum, where instead of running an entirely separate consensus protocol, we piggyback off Ethereum’s consensus. This way, OP Stack rollup can take advantage of Ethereum’s ordering mechanism and finalize its own blocks without needing to create a new consensus layer.
+OP Stack rollup is an extension of the consensus mechanism in Ethereum, where instead of running an entirely separate consensus protocol, we piggyback off Ethereum's consensus. This way, OP Stack rollup can take advantage of Ethereum's ordering mechanism and finalize its own blocks without needing to create a new consensus layer.
 
 ## State Machines and Transaction Processing
 
@@ -23,7 +23,7 @@ Commutative operations allow input order to change without affecting the outcome
 
 ## Consensus and Ordering
 
-Consensus determines the valid chain or list of transactions. In OP Stack, Ethereum’s consensus (via Proof of Stake) is used to achieve transaction ordering and finality.
+Consensus determines the valid chain or list of transactions. In OP Stack, Ethereum's consensus (via Proof of Stake) is used to achieve transaction ordering and finality.
 
 ## Why piggybacking on Ethereum?
 
@@ -31,9 +31,9 @@ By publishing rollup blocks on Ethereum, OP Stack effectively outsource it's con
 
 Key benefits of this approach include:
 
-*   OP Stack inherit Ethereum’s security and ordering properties.
+*   OP Stack inherit Ethereum's security and ordering properties.
 *   The OP Stack simplifies the design and development process by removing the need for a separate consensus protocol.
-*   Attack vectors such as double-spends are mitigated by Ethereum’s inherent mechanisms.
+*   Attack vectors such as double-spends are mitigated by Ethereum's inherent mechanisms.
 
 ### Transaction finality states
 
@@ -51,25 +51,25 @@ In OP Stack, transaction finality involves three main stages:
 
 The sequencer (block producer) handles transaction processing through the following steps:
 
-1. **Pre-publishing Distribution:**
-   - Sequencer receives transactions from users
-   - Creates blocks containing these transactions
-   - Distributes blocks to network nodes before L1 publication
-   - Nodes mark these blocks as "unsafe"
+1.  Pre-publishing Distribution:
+    *   Sequencer receives transactions from users
+    *   Creates blocks containing these transactions
+    *   Distributes blocks to network nodes before L1 publication
+    *   Nodes mark these blocks as "unsafe"
 
-2. **L1 Publication:**
-   - Sequencer publishes blocks to Ethereum
-   - Blocks become "safe" once included in L1
-   - Blocks achieve "finalized" status after L1 finalization (approximately 20 minutes)
+2.  L1 Publication:
+    *   Sequencer publishes blocks to Ethereum
+    *   Blocks become "safe" once included in L1
+    *   Blocks achieve "finalized" status after L1 finalization (approximately 20 minutes)
 
 ### Sequencer Trust
 
 The sequencer's role involves certain trust assumptions:
 
-- Can temporarily withhold transactions.
-- May attempt to reorder transactions before L1 publication.
-- Cannot modify or censor transactions once published to L1.
-- Cannot affect finalized transactions.
+*   Can temporarily withhold transactions.
+*   May attempt to reorder transactions before L1 publication.
+*   Cannot modify or censor transactions once published to L1.
+*   Cannot affect finalized transactions.
 
 ## Block and transaction validity in the OP Stack
 
@@ -83,10 +83,10 @@ A block's inclusion in a finalized Ethereum block ensures its finality. If a rol
 
 When L1 reorgs occur:
 
-1. Nodes detect the L1 reorg
-2. Affected L2 blocks return to "unsafe" status
-3. Sequencer typically republishes the same transactions
-4. System returns to consistent state after reprocessing
+1.  Nodes detect the L1 reorg
+2.  Affected L2 blocks return to "unsafe" status
+3.  Sequencer typically republishes the same transactions
+4.  System returns to consistent state after reprocessing
 
 ## The role of the proof system
 
@@ -104,14 +104,14 @@ Challenges revolve around proving whether a given claim is valid. However, the o
 
 Important points about bridge systems:
 
-- Bridges are application-level constructs
-- They operate independently of the core rollup protocol
-- Bridge security doesn't affect L2 transaction validity
-- Bridge failures don't cause L2 reorgs or state changes
+*   Bridges are application-level constructs
+*   They operate independently of the core rollup protocol
+*   Bridge security doesn't affect L2 transaction validity
+*   Bridge failures don't cause L2 reorgs or state changes
 
 ### Example: Custom bridges in OP Stack
 
-A custom bridge might be developed by a user to allow ERC-20 tokens to move between layers. However, this bridge is app-level and not native to the OP Stack rollup. If there’s an issue with the bridge, such as incorrect proof validation, it doesn’t affect the rollup itself but impacts the subjective value of the bridged assets.
+A custom bridge might be developed by a user to allow ERC-20 tokens to move between layers. However, this bridge is app-level and not native to the OP Stack rollup. If there's an issue with the bridge, such as incorrect proof validation, it doesn't affect the rollup itself but impacts the subjective value of the bridged assets.
 
 ## 7 days challenge period in OP Stack
 
@@ -125,11 +125,11 @@ The 7 day period is a reasonable time frame to allow participants to organize a 
 
 One common misconception is confusing withdrawal delays with transaction finality:
 
-- Transaction finality occurs in approximately 20 minutes
-- Withdrawal delays (often 7 days) are separate from transaction finality
-- Withdrawal delays are application-level security features
-- These delays affect only L1 withdrawals, not L2 transaction finality
+*   Transaction finality occurs in approximately 20 minutes
+*   Withdrawal delays (often 7 days) are separate from transaction finality
+*   Withdrawal delays are application-level security features
+*   These delays affect only L1 withdrawals, not L2 transaction finality
 
 ## Conclusion
 
-Transaction finality on the OP Stack depends heavily on Ethereum’s consensus mechanism. The OP Stack ensures that rollups inherit Ethereum’s finality guarantees, while the proof system adds an additional layer of validation for app-level functionality. While finality occurs quickly for rollup blocks, the proof system introduces a delay for withdrawals to ensure the security of bridging mechanisms.
+Transaction finality on the OP Stack depends heavily on Ethereum's consensus mechanism. The OP Stack ensures that rollups inherit Ethereum's finality guarantees, while the proof system adds an additional layer of validation for app-level functionality. While finality occurs quickly for rollup blocks, the proof system introduces a delay for withdrawals to ensure the security of bridging mechanisms.
