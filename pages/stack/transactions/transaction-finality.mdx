@@ -7,29 +7,14 @@ description: Learn about finality in OP Stack and the steps to achieve transacti
 import Image from 'next/image'
 import { Callout } from 'nextra/components'
 
-# Transaction finality
+# Overview
 
-This guide explains how transaction finality works in the OP Stack and addresses common misconceptions around transaction finality and the Fault Proof System.
-The OP Stack derives its security from Ethereum by utilizing Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack derives a layer 2 blockchain by reading the finalized state on Ethereum.
+This guide explains how transaction finality works in OP Stack, covering the fundamental concepts of Fault Proofs and Challenges.
+
+OP Stack is an extension of Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack leverages Ethereum's consensus.
 This enables it to take advantage of Ethereum's transaction ordering mechanism and finalize its own blocks without requiring a new consensus layer.
 
-
-## Sequencer Operations
-
-The sequencer (block producer) processes transactions in the following steps:
-
-1.  Pre-publishing Distribution:
-    *   The sequencer receives transactions from users.
-    *   It creates blocks containing these transactions.
-    *   It distributes these blocks to network nodes before L1 publication.
-    *   Nodes mark these blocks as "unsafe."
-
-2.  L1 Publication:
-    *   The sequencer publishes the blocks to Ethereum (L1).
-    *   Once included in L1, the blocks are marked as "safe."
-    *   Blocks achieve "finalized" status after L1 finalization (approximately 20 minutes).
-
-### Sequencer Trust Assumptions
+## Sequencer trust assumptions
 
 The sequencer operates with the following trust assumptions:
 
@@ -38,7 +23,7 @@ The sequencer operates with the following trust assumptions:
 *   Once transactions are published on L1, the sequencer cannot modify or censor them.
 *   The sequencer cannot affect finalized transactions.
 
-## Transaction Finality States
+## Transaction finality states
 
 In the OP Stack, transaction finality progresses through three key stages:
 
@@ -50,15 +35,16 @@ In the OP Stack, transaction finality progresses through three key stages:
 
 <Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
 
-### Transaction Validity
+## Common misconceptions
 
-When a block is submitted to Ethereum, it is either valid or invalid. If the block is valid, the state is updated accordingly. If it is invalid, the block is discarded. Nodes execute valid blocks and update the state as required.
+The biggest misconception about transaction finality is that a transaction needs to wait for the entire challenge window to become finalized. The reality is the OP Stack transaction finality takes minutes, not 7-days. 
+This section detangles the concept of transaction finality and the Fault Proof System's challenger mechanism
 
-### Reorgs and Finality
+### Transaction validity
+When a transaction is submitted to the network, it is either valid or invalid. If the transaction is valid, the sequencer puts it in a block. If it is invalid, the transaction is discarded. There is no way the sequencer can write an invalid transaction to a new block.
 
-Once a block is included in a finalized Ethereum block, it cannot be reorganized. Therefore, blocks enjoy the same finality guarantees as Ethereum blocks, and this finality is managed by the OP Stack architecture.
-
-### Handling Reorgs
+### Reorgs and finality
+Once a transaction is included in a finalized Ethereum block, it cannot be reorganized. 
 
 If an Ethereum reorganization (reorg) occurs:
 
@@ -66,10 +52,6 @@ If an Ethereum reorganization (reorg) occurs:
 2.  Affected L2 blocks revert to an "unsafe" status.
 3.  The sequencer typically republishes the same transactions.
 4.  The system returns to a consistent state after reprocessing.
-
-## The Role of the Proof System
-
-The proof system is entirely separate from the core OP Stack protocol. It is an application-level validation system designed to ensure the accuracy of certain claims about the transaction state.
 
 ### What Is a Claim?
 
