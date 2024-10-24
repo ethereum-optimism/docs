@@ -7,12 +7,11 @@ description: Learn about finality in OP Stack and the steps to achieve transacti
 import Image from 'next/image'
 import { Callout } from 'nextra/components'
 
-# Overview
+# Transaction finality
 
-This guide explains how transaction finality works in OP Stack, covering the fundamental concepts of Fault Proofs and Challenges.
+This guide explains how transaction finality works in the OP Stack and addresses common misconceptions around transaction finality and the Fault Proof System.
 
-OP Stack is an extension of Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack leverages Ethereum's consensus.
-This enables it to take advantage of Ethereum's transaction ordering mechanism and finalize its own blocks without requiring a new consensus layer.
+The OP Stack derives its security from Ethereum by utilizing Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack derives a layer 2 blockchain by reading the finalized state on Ethereum.
 
 ## Sequencer trust assumptions
 
@@ -39,6 +38,11 @@ In the OP Stack, transaction finality progresses through three key stages:
 
 When a transaction is submitted to the network, it is either valid or invalid. If the transaction is valid, the sequencer puts it in a block. If it is invalid, the transaction is discarded. There is no way the sequencer can write an invalid transaction to a new block.
 
+## Common misconceptions
+
+The biggest misconception about transaction finality is that a transaction needs to wait for the entire challenge window to become finalized. 
+The reality is the OP Stack transaction finality takes minutes, not over a week. This section detangles the concept of transaction finality and the Fault Proof System's challenger mechanism.
+
 ### Reorgs and finality
 Once a transaction is included in a finalized Ethereum block, it cannot be reorganized. 
 
@@ -49,13 +53,9 @@ If an Ethereum reorganization (reorg) occurs:
 3.  The sequencer typically republishes the same transactions.
 4.  The system returns to a consistent state after reprocessing.
 
-## Common misconceptions
-
-The proof system is entirely separate from the core OP Stack protocol. It is an application-level validation system designed to ensure the accuracy of certain claims about the transaction state.
-
 ### The role of proof system
 
-The following is a quick refresher on the Fault Proof System. It is a system designed to ensure the accuracy of certain claims about the transaction state on the L2.
+The Fault Proof System is designed to ensure the accuracy of certain claims about the transaction state on the L2.
 
 A claim in the context of OP Stack is a statement asserting the state of the system at a specific block height. For instance, a claim might assert that at block 1,000,000, the state hash is `XYZ`. If other participants believe this claim to be incorrect, they can challenge it.
 
@@ -67,6 +67,15 @@ Although OP Stack finalizes transactions quickly (within 20 minutes), the 7-day 
 1.  It allows time to dispute the correctness of output state roots posted to Ethereum by the proposer.
 2.  It provides a security period for withdrawal processing, ensuring the integrity of cross-chain operations.
 
+### Withdrawal delays vs. finality
+
+One common misconception is confusing withdrawal delays with transaction finality:
+
+*   Transaction finality occurs in approximately 20 minutes.
+*   Withdrawal delays (often 7 days) are separate from transaction finality.
+*   Withdrawal delays are application-level security features.
+*   These delays affect only L1 withdrawals, not L2 transaction finality.
+
 ### Bridge independence
 
 Key aspects of bridge systems include:
@@ -77,15 +86,6 @@ Key aspects of bridge systems include:
 *   Bridge failures do not cause L2 reorgs or state changes.
 
 For example, a custom bridge might be developed to allow ERC-20 tokens to move between layers. However, this bridge is application-level and not native to the OP Stack. If there is an issue with the bridge, such as incorrect proof validation, it does not impact the protocol itself but affects the subjective value of the bridged assets.
-
-### Withdrawal delays vs. finality
-
-One common misconception is confusing withdrawal delays with transaction finality:
-
-*   Transaction finality occurs in approximately 20 minutes.
-*   Withdrawal delays (often 7 days) are separate from transaction finality.
-*   Withdrawal delays are application-level security features.
-*   These delays affect only L1 withdrawals, not L2 transaction finality.
 
 ## Conclusion
 
