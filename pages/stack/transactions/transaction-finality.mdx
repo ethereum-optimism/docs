@@ -27,20 +27,16 @@ The sequencer operates with the following trust assumptions:
 
 In the OP Stack, transaction finality progresses through three key stages:
 
-1.  **Unsafe:** The L2 sequencer creates a block containing the transaction, but the transaction data has not yet been posted to Ethereum (L1). The block is circulated within the L2 network for speed.
+1.  **Unsafe:** The sequencer creates a block containing the transaction, but the transaction data has not yet been posted to Ethereum (L1). The block is circulated within the L2 network for speed.
 
-2.  **Safe:** The sequencer's batcher posts the transaction data to L1. At this point, any L2 node can derive the transaction.
+2.  **Safe:** The batcher posts the transaction data to L1. At this point, any L2 node can derive the transaction.
 
-3.  **Finalized:** Transactions are finalized once more than 65 Ethereum blocks (approximately 20 minutes) have passed, ensuring that the L1 data is secure and cannot be reorganized.
+3.  **Finalized:** Transactions are finalized once more than 65 Ethereum blocks (approximately 10-15 minutes) have passed, ensuring that the L1 data is secure and cannot be reorganized.
 
 <Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
 
-## Common misconceptions
-
-The biggest misconception about transaction finality is that a transaction needs to wait for the entire challenge window to become finalized. The reality is the OP Stack transaction finality takes minutes, not 7-days. 
-This section detangles the concept of transaction finality and the Fault Proof System's challenger mechanism
-
 ### Transaction validity
+
 When a transaction is submitted to the network, it is either valid or invalid. If the transaction is valid, the sequencer puts it in a block. If it is invalid, the transaction is discarded. There is no way the sequencer can write an invalid transaction to a new block.
 
 ### Reorgs and finality
@@ -53,27 +49,25 @@ If an Ethereum reorganization (reorg) occurs:
 3.  The sequencer typically republishes the same transactions.
 4.  The system returns to a consistent state after reprocessing.
 
-### What Is a Claim?
+## Common misconceptions
+
+The proof system is entirely separate from the core OP Stack protocol. It is an application-level validation system designed to ensure the accuracy of certain claims about the transaction state.
+
+### The role of proof system
+
+The following is a quick refresher on the Fault Proof System. It is a system designed to ensure the accuracy of certain claims about the transaction state on the L2.
 
 A claim in the context of OP Stack is a statement asserting the state of the system at a specific block height. For instance, a claim might assert that at block 1,000,000, the state hash is `XYZ`. If other participants believe this claim to be incorrect, they can challenge it.
 
-### Fault Proofs and Challenges
+Challenges focus on proving whether a given claim is valid. The outcome of a challenge does not impact the underlying chain. For example, if a claim about the transaction state at a specific block is proven wrong, it only affects the application level functionality and does not alter the OP Stack protocol.
 
-Challenges focus on proving whether a given claim is valid. The outcome of a challenge does not impact the underlying chain. For example, if a claim about the transaction state at a specific block is proven wrong, it only affects the app-level functionality and does not alter the OP Stack protocol.
-
-## 7-Day Challenge Period in OP Stack
-
-The 7-day challenge period provides time for challenges to be raised and resolved.
+The challenge period provides time for challenges to be raised and resolved.
 Although OP Stack finalizes transactions quickly (within 20 minutes), the 7-day challenge window serves two critical purposes:
 
-1.  It allows time to validate and dispute the correctness of batches posted to Ethereum by the op-batcher, particularly important in scenarios like 51% attacks.
+1.  It allows time to dispute the correctness of output state roots posted to Ethereum by the proposer.
 2.  It provides a security period for withdrawal processing, ensuring the integrity of cross-chain operations.
 
-### Why Seven Days?
-
-The 7-day challenge period is a reasonable time frame that allows participants to organize a response, potentially even initiating a L1 hard fork to address critical issues. In the OP Stack, this challenge period also serves as a safeguard for app-level bridges and custom designs that may be built on top of the core protocol.
-
-### Bridge Independence
+### Bridge independence
 
 Key aspects of bridge systems include:
 
