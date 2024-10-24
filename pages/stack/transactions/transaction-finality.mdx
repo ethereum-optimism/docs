@@ -13,15 +13,6 @@ This guide explains how transaction finality works in the OP Stack and addresses
 
 The OP Stack derives its security from Ethereum by utilizing Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack derives a layer 2 blockchain by reading the finalized state on Ethereum.
 
-## Sequencer trust assumptions
-
-The sequencer operates with the following trust assumptions:
-
-*   It can temporarily withhold transactions.
-*   It may attempt to reorder transactions before L1 publication.
-*   Once transactions are published on L1, the sequencer cannot modify or censor them.
-*   The sequencer cannot affect finalized transactions.
-
 ## Transaction finality states
 
 In the OP Stack, transaction finality progresses through three key stages:
@@ -37,6 +28,15 @@ In the OP Stack, transaction finality progresses through three key stages:
 ### Transaction validity
 
 When a transaction is submitted to the network, it is either valid or invalid. If the transaction is valid, the sequencer puts it in a block. If it is invalid, the transaction is discarded. There is no way the sequencer can write an invalid transaction to a new block.
+
+## Sequencer trust assumptions
+
+The sequencer operates with the following trust assumptions:
+
+*   It can temporarily withhold transactions.
+*   It may attempt to reorder transactions before L1 publication.
+*   Once transactions are published on L1, the sequencer cannot modify or censor them.
+*   The sequencer cannot affect finalized transactions.
 
 ## Common misconceptions
 
@@ -55,11 +55,11 @@ If an Ethereum reorganization (reorg) occurs:
 
 ### The role of proof system
 
-The Fault Proof System is designed to ensure the accuracy of certain claims about the transaction state on the L2.
+The Fault Proof System is designed to ensure the accuracy of certain claims about the transaction state on the L2. It provides a way to prove messages from L2 to L1 are correct. It does not have to do with transaction finality.
 
-A claim in the context of OP Stack is a statement asserting the state of the system at a specific block height. For instance, a claim might assert that at block 1,000,000, the state hash is `XYZ`. If other participants believe this claim to be incorrect, they can challenge it.
+A claim in the context of OP Stack is a statement asserting the state of the system at a specific block height. For instance, a claim might assert that at block 1,000,000 a certain address has all of the ether on the entire L2. If other participants believe this claim to be incorrect, they can challenge it.
 
-Challenges focus on proving whether a given claim is valid. The outcome of a challenge does not impact the underlying chain. For example, if a claim about the transaction state at a specific block is proven wrong, it only affects the application level functionality and does not alter the OP Stack protocol.
+Challenges focus on proving whether a given claim is valid. The outcome of a challenge does not impact the underlying chain. For example, if a claim about a certain address owning all the ether on the L2 is proven wrong, that address would not be able to move the ether from L2 to their address on L1.
 
 The challenge period provides time for challenges to be raised and resolved.
 Although OP Stack finalizes transactions quickly (within 20 minutes), the 7-day challenge window serves two critical purposes:
