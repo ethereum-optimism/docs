@@ -12,7 +12,7 @@ This page will teach you what the `op-conductor` service is and how it works on
 a high level. It will also get you started on setting it up in your own
 environment.
 
-## Enhancing Sequencer Reliability and Availability
+## Enhancing sequencer reliability and availability
 
 The [op-conductor](https://github.com/ethereum-optimism/optimism/tree/develop/op-conductor)
 is an auxiliary service designed to enhance the reliability and availability of
@@ -26,7 +26,7 @@ It is important to note that the `op-conductor` does not incorporate Byzantine
 fault tolerance (BFT). This means the system operates under the assumption that
 all participating nodes are honest and act correctly.
 
-### Summary of Guarantees
+### Summary of guarantees
 
 The design of the `op-conductor` provides the following guarantees:
 
@@ -40,14 +40,14 @@ The design of the `op-conductor` provides the following guarantees:
 
 **On a high level, `op-conductor` serves the following functions:**
 
-### Raft Consensus Layer Participation
+### Raft consensus layer participation
 
-*   **Leader Determination:** Participates in the Raft consensus algorithm to
+*   **Leader determination:** Participates in the Raft consensus algorithm to
     determine the leader among sequencers.
-*   **State Management:** Stores the latest unsafe block ensuring consistency
+*   **State management:** Stores the latest unsafe block ensuring consistency
     across the system.
 
-### RPC Request Handling
+### RPC request handling
 
 *   **Admin RPC:** Provides administrative RPCs for manual recovery scenarios,
     including, but not limited to: stopping the leadership vote and removing itself
@@ -55,18 +55,18 @@ The design of the `op-conductor` provides the following guarantees:
 *   **Health RPC:** Offers health RPCs for the `op-node` to determine whether it
     should allow the publishing of transactions and unsafe blocks.
 
-### Sequencer Health Monitoring
+### Sequencer health monitoring
 
 *   Continuously monitors the health of the sequencer (op-node) to ensure
     optimal performance and reliability.
 
-### Control Loop Management
+### Control loop management
 
 *   Implements a control loop to manage the status of the sequencer (op-node),
     including starting and stopping operations based on different scenarios and
     health checks.
 
-## Conductor State Transition
+## Conductor state transition
 
 The following is a state machine diagram of how the op-conductor manages the
 sequencers Raft consensus.
@@ -83,6 +83,8 @@ state transitions.
 At OP Labs, op-conductor is deployed as a kubernetes statefulset because it
 requires a persistent volume to store the raft log. This guide describes
 setting up conductor on an existing network without incurring downtime.
+
+You can utilize the [op-conductor-ops](https://github.com/ethereum-optimism/infra/tree/main/op-conductor-ops) tool to confirm the conductor status between the steps.
 
 ### Assumptions
 
@@ -138,7 +140,7 @@ This setup guide has the following assumptions:
 
   {<h3>Pause two conductors</h3>}
 
-  Pause `sequencer-0` &` sequencer-1` conductors with [conductor\_pause](#conductor_pause)
+  Pause `sequencer-0` &` sequencer-2` conductors with [conductor_pause](#conductor_pause)
   RPC request.
 
   {<h3>Update op-node configuration and switch the active sequencer</h3>}
@@ -150,7 +152,7 @@ This setup guide has the following assumptions:
   *   all sequencer op-node configs:
 
       ```yaml
-      OP_NODE_CONDUCTOR_ENABLED: "true"
+      OP_NODE_CONDUCTOR_ENABLED: "true" # this is what commits unsafe blocks to the raft logs
       OP_NODE_RPC_ADMIN_STATE: "" # this flag cant be used with conductor
       ```
 
@@ -162,7 +164,7 @@ This setup guide has the following assumptions:
 
   {<h3>Add voting nodes</h3>}
 
-  Add voting nodes to cluster using [conductor\_AddServerAsVoter](#conductor_addServerAsVoter)
+  Add voting nodes to cluster using [conductor_AddServerAsVoter](#conductor_addserverasvoter)
   RPC request to the leader conductor (`sequencer-1`)
 
   {<h3>Confirm state</h3>}
@@ -188,11 +190,11 @@ This setup guide has the following assumptions:
 
   {<h3>Confirm state</h3>}
 
-  Confirm all conductors successfully resumed with [conductor\_paused](#conductor_paused)
+  Confirm all conductors successfully resumed with [conductor_paused](#conductor_paused)
 
   {<h3>Tranfer leadership</h3>}
 
-  Trigger leadership transfer to `sequencer-0` using [conductor\_transferLeaderToServer](#conductor_transferLeaderToServer)
+  Trigger leadership transfer to `sequencer-0` using [conductor_transferLeaderToServer](#conductor_transferleadertoserver)
 
   {<h3>Confirm state</h3>}
 
@@ -214,7 +216,7 @@ This setup guide has the following assumptions:
   `OP_CONDUCTOR_PAUSED: true` flag and `OP_CONDUCTOR_RAFT_BOOTSTRAP` flag.
 </Steps>
 
-#### Blue/Green Deployment
+#### Blue/green deployment
 
 In order to ensure there is no downtime when setting up conductor, you need to
 have a deployment script that can update sequencers without network downtime.
@@ -238,7 +240,7 @@ An example of this workflow might look like:
 5.  Deploy the change to the original sequencer, wait for it to sync to the
     chain head. Execute health checks.
 
-#### Post-Conductor Launch Deployments
+#### Post-conductor launch deployments
 
 After conductor is live, a similar canary style workflow is used to ensure
 minimal downtime in case there is an issue with deployment:
@@ -252,7 +254,7 @@ minimal downtime in case there is an issue with deployment:
     1.  If not, then there is likely an issue with the deployment. Roll back.
 5.  Upgrade the remaining sequencers, run healthchecks.
 
-### Configuration Options
+### Configuration options
 
 It is configured via its [flags / environment variables](https://github.com/ethereum-optimism/optimism/blob/develop/op-conductor/flags/flags.go)
 
@@ -357,7 +359,7 @@ It is configured via its [flags / environment variables](https://github.com/ethe
 Conductor exposes [admin RPCs](https://github.com/ethereum-optimism/optimism/blob/develop/op-conductor/rpc/api.go#L17)
 on the `conductor` namespace.
 
-#### conductor\_overrideLeader
+#### conductor_overrideLeader
 
 `OverrideLeader` is used to override the leader status, this is only used to
 return true for `Leader()` & `LeaderWithID()` calls. It does not impact the
@@ -382,7 +384,7 @@ manually started sequencer.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_pause
+#### conductor_pause
 
 `Pause` pauses op-conductor.
 
@@ -402,7 +404,7 @@ manually started sequencer.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_resume
+#### conductor_resume
 
 `Resume` resumes op-conductor.
 
@@ -422,7 +424,7 @@ manually started sequencer.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_paused
+#### conductor_paused
 
 Paused returns true if the op-conductor is paused.
 
@@ -442,7 +444,7 @@ Paused returns true if the op-conductor is paused.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_stopped
+#### conductor_stopped
 
 Stopped returns true if the op-conductor is stopped.
 
@@ -482,7 +484,7 @@ SequencerHealthy returns true if the sequencer is healthy.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_leader
+#### conductor_leader
 
 <Callout type="info">
   API related to consensus.
@@ -506,7 +508,7 @@ Leader returns true if the server is the leader.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_leaderWithID
+#### conductor_leaderWithID
 
 <Callout type="info">
   API related to consensus.
@@ -530,13 +532,13 @@ LeaderWithID returns the current leader's server info.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_addServerAsVoter
+#### conductor_addServerAsVoter
 
 <Callout type="info">
-  API related to consensus.
+  API related to consensus. The address parameter is the raft consensus address, not the RPC address.
 </Callout>
 
-AddServerAsVoter adds a server as a voter to the cluster.
+AddServerAsVoter adds a server as a voter to the cluster. 
 
 <Tabs items={['curl', 'cast']}>
   <Tabs.Tab>
@@ -549,12 +551,12 @@ AddServerAsVoter adds a server as a voter to the cluster.
 
   <Tabs.Tab>
     ```sh
-    cast rpc conductor_addServerAsVoter --rpc-url http://127.0.0.1:50050 <id> <addr> <version>
+    cast rpc conductor_addServerAsVoter --rpc-url http://127.0.0.1:50050 <id> <raft-consensus-addr> <version>
     ```
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_addServerAsNonvoter
+#### conductor_addServerAsNonvoter
 
 <Callout type="info">
   API related to consensus.
@@ -579,7 +581,7 @@ The non-voter will not participate in the leader election.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_removeServer
+#### conductor_removeServer
 
 <Callout type="info">
   API related to consensus.
@@ -603,7 +605,7 @@ RemoveServer removes a server from the cluster.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_transferLeader
+#### conductor_transferLeader
 
 <Callout type="info">
   API related to consensus.
@@ -627,7 +629,7 @@ TransferLeader transfers leadership to another server.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_transferLeaderToServer
+#### conductor_transferLeaderToServer
 
 <Callout type="info">
   API related to consensus.
@@ -651,7 +653,7 @@ TransferLeaderToServer transfers leadership to a specific server.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_clusterMembership
+#### conductor_clusterMembership
 
 ClusterMembership returns the current cluster membership configuration.
 
@@ -671,7 +673,7 @@ ClusterMembership returns the current cluster membership configuration.
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_active
+#### conductor_active
 
 <Callout type="info">
   API called by `op-node`.
@@ -695,7 +697,7 @@ Active returns true if the op-conductor is active (not paused or stopped).
   </Tabs.Tab>
 </Tabs>
 
-#### conductor\_commitUnsafePayload
+#### conductor_commitUnsafePayload
 
 <Callout type="info">
   API called by `op-node`.
@@ -720,8 +722,9 @@ layer.
   </Tabs.Tab>
 </Tabs>
 
-## Next Steps
+## Next steps
 
 *   Checkout [op-conductor-mon](https://github.com/ethereum-optimism/infra):
     which monitors multiple op-conductor instances and provides a unified interface
     for reporting metrics.
+*   Get familiar with [op-conductor-ops](https://github.com/ethereum-optimism/infra/tree/main/op-conductor-ops)to interact with op-conductor.

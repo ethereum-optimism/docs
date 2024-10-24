@@ -1,10 +1,10 @@
 ---
-title: Pausing the Bridge
+title: Pausing the bridge
 lang: en-US
 description: Learn how the OP Stack bridge can be paused as backup safety mechanism.
 ---
 
-# Pausing the Bridge
+# Pausing the bridge
 
 The [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/L1/OptimismPortal.sol) is the low-level L1 message passing contract present on all standard OP Stack chains.
 This contract handles the L1 side of the communication channel between an OP Stack chain and its L1 parent chain.
@@ -15,7 +15,7 @@ This is a backup safety mechanism that can be used to help mitigate potential ac
 
 Pause functionality and [two-step withdrawals](https://web.archive.org/web/20230608050641/https://blog.oplabs.co/two-step-withdrawals/) were introduced to the OP Stack to mitigate the risk of withdrawal bugs that have led to exploits in other bridging systems.
 
-## Pause Functionality
+## Pause functionality
 
 The `OptimismPortal` can be configured to allow a `GUARDIAN` address to pause and unpause L2-to-L1 transactions from being executed.
 L2-to-L1 transactions allow users and smart contracts on the OP Stack chain to send messages to the L1 parent chain.
@@ -25,12 +25,12 @@ L1-to-L2 transactions are not affected by pause functionality.
 Pauses by the `GUARDIAN` impact all L2-to-L1 transactions for the OP Stack chain in question and cannot be targeted to specific users, smart contracts, or transactions.
 Pauses are designed to be a backup safety mechanism and are expected to be used only in the event of an active pressing security concern.
 
-## Pause and Unpause Functions
+## Pause and unpause functions
 
 The `GUARDIAN` can pause and unpause L2-to-L1 transactions at any time by calling the [`pause`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/L1/OptimismPortal.sol#L151-L156) and [`unpause`](https://github.com/ethereum-optimism/optimism/blob/v1.1.4/packages/contracts-bedrock/src/L1/OptimismPortal.sol#L158-L163) functions on the `OptimismPortal` contract.
 Additional controls on the `GUARDIAN` address can be implemented by configuring the `GUARDIAN` as a smart contract.
 
-## Guardian Address
+## Guardian address
 
 The `GUARDIAN` address is initially configured when the OP Stack chain is deployed and can be modified by the network's administrative address or smart contract.
 A chain can choose to remove the `GUARDIAN` role by configuring the `GUARDIAN` to be an inaccessible address such as the [zero address](https://etherscan.io/address/0x0000000000000000000000000000000000000000).
