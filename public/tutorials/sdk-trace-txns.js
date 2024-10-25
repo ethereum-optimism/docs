@@ -33,11 +33,6 @@ console.log('Grabbing deposit receipt...')
 const depositReceipt = await l2Client.getTransaction({ hash: depositHash });
 console.log(depositReceipt);
 
-const depositLogs = depositReceipt.logs;
-depositLogs.forEach(log => {
-  console.log(log);
-});
-
 console.log('Grabbing deposit txn...')
 const depositTransaction = await l2Client.getTransaction({ hash: depositHash });
 console.log(depositTransaction);
@@ -49,11 +44,6 @@ console.log(withdrawalStatus);
 console.log('Grabbing withdrawal receipt...')
 const withdrawalReceipt = await l1Client.getTransaction({ hash: withdrawalHash });
 console.log(withdrawalReceipt);
-
-const withdrawalLogs = withdrawalReceipt.logs;
-withdrawalLogs.forEach(log => {
-  console.log(log);
-});
 
 console.log('Grabbing withdrawal txn...')
 const withdrawalTransaction = await l1Client.getTransaction({ hash: withdrawalHash });
