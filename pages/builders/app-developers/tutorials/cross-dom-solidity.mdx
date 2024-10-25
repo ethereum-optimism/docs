@@ -1,5 +1,5 @@
 ---
-title: Communicating Between OP Mainnet and Ethereum in Solidity
+title: Communicating between OP Mainnet and Ethereum in Solidity
 lang: en-US
 description: Learn how to write Solidity contracts on OP Mainnet and Ethereum that can talk to each other.
 ---
@@ -8,9 +8,7 @@ import { Steps, Callout, Tabs } from 'nextra/components'
 import { WipCallout } from '@/components/WipCallout'
 
 <WipCallout />
-# Communicating Between OP Mainnet and Ethereum in Solidity
-
-
+# Communicating between OP Mainnet and Ethereum in Solidity
 
 This tutorial explains how to write Solidity contracts on OP Mainnet and Ethereum that can talk to each other.
 Here you'll use a contract on OP Mainnet that can set a "greeting" variable on a contract on Ethereum, and vice-versa.
@@ -25,7 +23,7 @@ Just looking to bridge tokens between OP Mainnet and Ethereum?
 Check out the tutorial on [Bridging ERC-20 Tokens to OP Mainnet With the Optimism SDK](./cross-dom-bridge-erc20).
 </Callout>
 
-## Message Passing Basics
+## Message passing basics
 
 OP Mainnet uses a smart contract called the `CrossDomainMessenger` to pass messages between OP Mainnet and Ethereum.
 Both chains have a version of this contract (the `L1CrossDomainMessenger` and the `L2CrossDomainMessenger`).
@@ -48,7 +46,7 @@ You can use [this faucet](https://sepoliafaucet.com/) to get ETH on Sepolia.
 You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
 </Callout>
 
-## Review the Contracts
+## Review the contracts
 You're about to use two contracts that have already been deployed to Sepolia and OP Sepolia, the `Greeter` contracts.
 You can review the source code for the L1 `Greeter` contract [here on Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#code).
 You can review the source code for the L2 `Greeter` contract [here on Etherscan](https://sepolia-optimism.etherscan.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#code).
@@ -57,7 +55,7 @@ Both contracts have exactly the same source code.
 Feel free to review the source code for these two contracts now if you'd like.
 This tutorial will explain how these contracts work in detail later on in the [How It Works](#how-it-works) section below.
 
-## Interact With the L1 Greeter
+## Interact with the L1 Greeter
 
 You're first going to use the L1 `Greeter` contract to set the greeting on the L2 `Greeter` contract.
 You'll send a transaction directly to the L1 `Greeter` contract which will ask the `L1CrossDomainMessenger` to send a message to the L2 `Greeter` contract.
@@ -102,7 +100,7 @@ L2 transactions triggered on L1 are typically processed within one minute but ca
 
 </Steps>
 
-## Interact With the L2 Greeter
+## Interact with the L2 Greeter
 
 Now you're going to use the L2 `Greeter` contract to set the greeting on the L1 `Greeter` contract.
 You'll send a transaction directly to the L2 `Greeter` contract which will ask the `L2CrossDomainMessenger` to send a message to the L1 `Greeter` contract.
@@ -279,14 +277,14 @@ You should see the message you sent from L2.
 
 </Steps>
 
-## How It Works
+## How it works
 
 Congratulations!
 You've successfully sent a message from L1 to L2 and from L2 to L1.
 This section will explain how the `Greeter` contracts work so you can follow the same pattern to deploy your own contracts.
 Luckily, both `Greeter` contracts are exactly the same so it's easy to see how everything comes together.
 
-### The Messenger Variable
+### The Messenger variable
 
 The `Greeter` contract has a `MESSENGER` variable that keeps track of the `CrossDomainMessenger` contract on the current chain.
 Check out the [Contract Addresses page](/chain/addresses) to see the addresses of the `CrossDomainMessenger` contracts on whichever network you'll be using.
@@ -294,7 +292,7 @@ Check out the [Contract Addresses page](/chain/addresses) to see the addresses o
 ```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L14 hash=ce8be857d4b4e1992cd3c16b8f2864b9
 ```
 
-### The Other Greeter Variable
+### The other Greeter variable
 
 The `Greeter` contract also has an `OTHER_GREETER` variable that keeps track of the `Greeter` contract on the other chain.
 On L1, this variable is set to the address of the L2 `Greeter` contract, and vice-versa.
@@ -302,7 +300,7 @@ On L1, this variable is set to the address of the L2 `Greeter` contract, and vic
 ```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L15 hash=eedd8c3050a83e56f37f367c6faa6f5d
 ```
 
-### The Greetings Mapping
+### The Greetings mapping
 
 The `Greeter` contract keeps track of the different greetings that users have sent inside a `greetings` mapping.
 By using a mapping, this contract can keep track of greetings from different users at the same time.
@@ -317,7 +315,7 @@ The `Greeter` has a simple constructor that sets the `MESSENGER` and `OTHER_GREE
 ```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L18-L24 hash=718f3dc498975548eec30da99e47adf2
 ```
 
-### The Send Greeting Function
+### The sendGreeting function
 
 The `sendGreeting` function is the most important function in the `Greeter` contract.
 This is what you called earlier to send messages in both directions.
@@ -330,7 +328,7 @@ The final parameter is the gas limit that gets used when the message is relayed 
 ```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L26-L38 hash=3104a6775fe3a505cf2f84b71b078aee
 ```
 
-### The Set Greeting Function
+### The setGreeting function
 
 The `setMessage` function is the function that actually sets the greeting.
 This function is called by the `CrossDomainMessenger` contract on the other chain.
