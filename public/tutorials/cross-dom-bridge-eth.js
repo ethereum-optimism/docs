@@ -74,7 +74,7 @@ to: account.address,
 const withdrawalHash = await walletClientL2.initiateWithdrawal(withdrawalArgs);
 console.log(`Withdrawal transaction hash on L2: ${withdrawalHash}`);
 
-const withdrawalReceipt = await publicClientL2.waitForTransactionReceipt({ withdrawalHash });
+const withdrawalReceipt = await publicClientL2.waitForTransactionReceipt({ hash: withdrawalHash });
 console.log('L2 transaction confirmed:', withdrawalReceipt);
 
 const { output, withdrawal } = await publicClientL1.waitToProve({
