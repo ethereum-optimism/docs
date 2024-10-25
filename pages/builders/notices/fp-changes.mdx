@@ -1,12 +1,12 @@
 ---
-title: Preparing for Fault Proofs Breaking Changes
+title: Preparing for fault proofs breaking changes
 lang: en-US
 description: Learn how to prepare for Fault Proofs changes.
 ---
 
 import { Steps, Callout } from 'nextra/components'
 
-# Preparing for Fault Proofs Breaking Changes
+# Preparing for fault proofs breaking changes
 
 OP Labs has submitted a [proposal to governance](https://gov.optimism.io/t/upgrade-proposal-fault-proofs/8161) to upgrade OP Mainnet to support Fault Proofs. If this proposal passes, fault proofs would launch on OP Mainnet approximately June 2024. This document details changes that apply to users, bridges, and centralized exchanges, as well as any custom solutions that use withdrawals. This page outlines changes for OP Mainnet and OP Sepolia only. Details for other OP Chains are forthcoming.
 
@@ -33,7 +33,7 @@ If you experience difficulty at any stage of this process, please reach out to [
   As of the Fault Proofs update to OP Sepolia in March 2024, **OP Sepolia withdrawals are no longer instant.** This is because the Fault Proof mechanism now applies to OP Sepolia transactions.
 </Callout>
 
-## Overview of Changes
+## Overview of changes
 
 If you are operating a custom bridge, review this section for changes you need to make. If you are using Optimism SDK or Viem for your bridging, you can [skip to the next section](#for-bridges-and-centralized-exchanges).
 
@@ -56,7 +56,7 @@ Now, developers must look at the `OptimismPortal` contract to determine the `res
 It is recommended that developers search for a reasonable number of recent games, say 100 games, and pick the first proposal with a sufficient block number.
 Developers should then verify this proposal locally as the default game type will allow for permissionless proposals and there is no longer a strong guarantee that proposals will be valid.
 
-## For Bridges and Centralized Exchanges
+## For bridges and centralized exchanges
 
 The proposed Fault Proof upgrade requires developers to enable Fault Proof changes before the Op Mainnet release. This impacts bridges, centralized exchanges, and custom solutions that use withdrawals.
 
@@ -66,7 +66,7 @@ The proposed Fault Proof upgrade requires developers to enable Fault Proof chang
 </Callout>
 
 <Steps>
-  ### Update Logic to Support Fault Proofs
+  ### Update logic to support fault proofs
 
   <Callout type="info">
     Most teams use the Optimism SDK or Viem to handle this logic under the hood and will simply need to update their software version ahead of the upgrade. However, any project performing withdrawals programmatically will need to update their client code (see [`OptimismPortal`](#optimismportal) for details).
@@ -76,7 +76,7 @@ The proposed Fault Proof upgrade requires developers to enable Fault Proof chang
       The Optimism SDK changes do not break the API and require no changes other than updating to the correct software version to support the new `OptimismPortal` logic. The Optimism SDK will automatically begin to use the new logic once it detects that the FPM update has gone live.
   *   **Option 2: Viem Update.** Update to the latest version of Viem (version of >=2.9.0). Viem will automatically begin to use the new logic once it detects that the FPM update has gone live.
 
-  ### Update Withdrawal Monitor
+  ### Update withdrawal monitor
 
   The Withdrawal Monitor service is an important part of the two-step withdrawal system that checks if anyone has been able to prove withdrawals that do not actually appear on L2.
   The Withdrawal Monitor is now slightly slower at startup time but is more reliable, simpler, and compatible with more infrastructure to more easily support any OP Stack chain.
@@ -85,7 +85,7 @@ The proposed Fault Proof upgrade requires developers to enable Fault Proof chang
   *   **Option 1: Withdrawal from source.** If building or using withdrawal-monitor from source, make sure that you are using the latest develop branch. All withdrawal monitor changes are fully backwards compatible.
   *   **Option 2: Docker image.** If using docker, use the latest chain-mon docker image.
 
-  ### Update Dispute Monitor
+  ### Update dispute monitor
 
   The Dispute Monitor service detects when invalid outputs have been proposed. Given the large number of changes to the output proposal system, the current Fault Monitor is being replaced in favor of a new Dispute Monitor purposely built for the fault proof monitor system.
 
@@ -94,7 +94,7 @@ The proposed Fault Proof upgrade requires developers to enable Fault Proof chang
   </Callout>
 </Steps>
 
-## Next Steps
+## Next steps
 
 *   See the [Fault Proofs Explainer](/stack/fault-proofs/explainer) to learn more about the three main components of the Fault Proof System.
 *   You can also read more about [Cannon FPVM](/stack/fault-proofs/cannon) and [Mips.sol](/stack/fault-proofs/mips), the onchain smart contract implementation of Cannon.
