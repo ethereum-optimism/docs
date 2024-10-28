@@ -18,7 +18,7 @@ The recommended way to install `op-deployer` is to download the latest release f
 for your platform then extract it somewhere on your `PATH`. The rest of this tutorial will assume that you have
 installed `op-deployer` using this method.
 
-To install from source, follow the steps below. You will need to install the Go toolchain and `just` as prerequisites.
+To alternatively install from source, follow the steps below. You will need to install the Go toolchain and `just` as prerequisites.
 
 <Steps>
     ### **Clone the monorepo**:
@@ -47,9 +47,9 @@ The base use case for `op-deployer` is deploying new OP Chains. This process is 
 
 <Steps>
 
-### `init`: configuring your chain
+### `init`: configure your chain
 
-To get started with `op-deployer`, you need to create an intent file that outlines your desired chain configuration. You can use the built-in `op-deployer` utility to generate this file. Just run the following command to create an example intent file for a development chain:
+To get started with `op-deployer`, create an intent file that defines your desired chain configuration. Use the built-in `op-deployer` utility to generate this file:
 
 ```
 ./bin/op-deployer init --l1-chain-id 11155111 --l2-chain-ids <l2-chain-id> --workdir .deployer
@@ -102,7 +102,7 @@ l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts" # L2 smart 
 
 ```
 
-By default, `op-deployer` will fill in all other configuration variables with those that match the [standard configuration](https://specs.optimism.io/protocol/configurability.html). You can override these defaults by adding them to your intent file by adding the following table: 
+By default, `op-deployer` will fill in all other configuration variables with those that match the [standard configuration](https://specs.optimism.io/protocol/configurability.html). You can override these default settings by adding them to your intent file using the table below:
 
 ```toml
 [globalDeployOverrides]
@@ -128,7 +128,7 @@ configuration will be set to the Superchain-wide defaults - i.e., your chain wil
 and will use the same [protocol versions](https://github.com/ethereum-optimism/specs/blob/main/specs/protocol/superchain-upgrades.md)
 address as other chains on the Superchain.
 
-### `inspect`: generating genesis files and chain information
+### `inspect`: generate genesis files and chain information
 
 <Callout type="info">
   You will need to write the output of these commands to files to make an addition to the [Superchain Registry](https://github.com/ethereum-optimism/superchain-registry).
@@ -153,11 +153,9 @@ op-deployer --workdir .deployer inspect l2-semvers <l2-chain-id> # outputs the s
 
 ## Bootstrap Usage
 
-`op-deployer` can also be used to deploy the contracts it needs to run the `init`... `apply` flow on new chains.
-This process is called "bootstrapping," and is useful for when you want to use `op-deployer` with L3s, new testnets,
-or other custom settlement chains.
+You can also use `op-deployer` to deploy the contracts needed to run the `init`... `apply` flow on new chains. This process, called 'bootstrapping,' is useful when you want to use `op-deployer` with L3s, new testnets, or other custom settlement chains.
 
-### OPCM Bootstrap
+### OPCM bootstrap
 
 To deploy OPCM to a new chain, run the following command:
 
