@@ -1,0 +1,97 @@
+---
+title: How to use general message passing on OP Stack
+lang: en-US
+description: Learn how to use general message passing on OP Stack using OP Stack cross-chain messaging standards.
+---
+
+import { Steps } from 'nextra/components'
+
+# How to use general message passing on OP Stack
+
+Optimism supports cross-chain message passing, allowing communication between Ethereum and Optimism chains. This guide provides step-by-step instructions for general message passing without using Supersim, following Optimism's cross-chain messaging standards.
+
+## Overview of cross-chain messaging
+
+Cross-chain messaging on Optimism allows messages to be sent from one chain (e.g., Ethereum) to another (e.g., Optimism) using specific contracts:
+
+*   **MessagePasser contract** on the source chain.
+*   **MessageReceiver contract** on the destination chain.
+
+For more information, refer to the [Optimism Messaging Specification](https://specs.optimism.io/interop/messaging.html) and the [Cross-Chain Message Documentation](https://docs.optimism.io/stack/protocol/interop/cross-chain-message).
+
+## Step 1: Prepare the cross-chain message
+
+To send a message from one chain to another, follow these steps to prepare and send a message.
+
+1.  Define the Message Content
+
+Define the data you want to pass across the chains. This message may include function calls, values, or arbitrary data.
+
+```typescript
+const messageData = "0xYourMessageData"; // Replace with your actual data
+```
+
+2.  Specify the Target Contract and Function
+      Identify the target contract and function you want to call on the destination chain. Ensure this contract is deployed on both chains if you need bi-directional communication.
+
+## Step 2: Send the Message
+
+1.  Call the MessagePasser Contract
+      On the source chain, call the MessagePasser contract with the message data. This contract serves as an entry point for cross-chain messages on Optimism.
+
+```typescript
+import { viem } from 'viem';
+
+const tx = await viem.writeContract({
+  address: '0xYourMessagePasserAddress', // Replace with the MessagePasser contract address
+  abi: MessagePasserABI, // The ABI of the MessagePasser contract
+  functionName: 'sendMessage',
+  args: [targetAddress, messageData],
+});
+```
+
+2.  Confirm the transaction
+    Once you send the message, wait for the transaction confirmation. This confirmation ensures that the message has been successfully sent and recorded on the source chain.
+
+```typescript
+await tx.wait();
+console.log('Message sent successfully');
+```
+
+## Step 3: Receive the message on the destination chain
+
+After the message is sent, it will need to be relayed and processed on the destination chain.
+
+1.  Relay the message
+    Relay the message manually or use an automatic relay solution. To relay manually, use the MessageReceiver contract's function to receive and process the message.
+
+```typescript
+const relayTx = await viem.writeContract({
+  address: '0xYourMessageReceiverAddress', // Replace with the MessageReceiver contract address
+  abi: MessageReceiverABI, // The ABI of the MessageReceiver contract
+  functionName: 'receiveMessage',
+  args: [messageData],
+});
+```
+
+2.  Confirm the message reception
+    Wait for the message reception transaction to confirm.
+
+```typescript
+await relayTx.wait();
+console.log('Message received on destination chain');
+```
+
+## Error Handling and troubleshooting
+
+*   Ensure Contract Compatibility: Verify that both MessagePasser and MessageReceiver contracts are compatible and have matching function signatures on each chain.
+
+*   Gas Fees: Check that you have enough funds to cover the gas fees for message passing on both chains.
+
+*   Event Logs: Use event logs to debug and confirm message delivery at each stage.
+
+## Additional Resources
+
+For further guidance on interop messaging and cross-chain message handling, see:
+*   
+*   
