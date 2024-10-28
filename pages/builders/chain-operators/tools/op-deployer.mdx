@@ -13,7 +13,12 @@ import {Callout, Steps} from 'nextra/components'
 
 ## Installation
 
-You can find the latest releases in the monorepo's [release page](https://github.com/ethereum-optimism/optimism/releases). The following guide is how to complie it from source. Assuming you have the Go toolchain installed, you can install `op-deployer` by following these steps:
+The recommended way to install `op-deployer` is to download the latest release from the monorepo's
+[release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
+for your platform then extract it somewhere on your `PATH`. The rest of this tutorial will assume that you have
+installed `op-deployer` using this method.
+
+To install from source, follow the steps below. You will need to install the Go toolchain and `just` as prerequisites.
 
 <Steps>
     ### **Clone the monorepo**:
@@ -32,9 +37,13 @@ You can find the latest releases in the monorepo's [release page](https://github
     cd op-deployer
     just build
     ```
+
+    The binary will be in the `bin` directory.
 </Steps>
 
-## Usage
+## Deployment Usage
+
+The base use case for `op-deployer` is deploying new OP Chains. This process is broken down into three steps:
 
 <Steps>
 
@@ -48,7 +57,13 @@ To get started with `op-deployer`, you need to create an intent file that outlin
 
 This command will create a directory called `.deployer` in your current working directory containing the intent file and an empty `state.json` file. `state.json` is populated with the results of your deployment, and never needs to be edited directly.
 
-Your intent file will need to be modified to your parameters, but it will initally look something like this:
+Your intent file will need to be modified to your parameters, but it will initially look something like this:
+
+<Callout type="warning">
+    Do not use the default addresses in the intent for a production chain! They are generated from the `test... junk`
+    mnemonic. **Any funds they hold will be stolen on a live chain.**
+</Callout>
+
 
 ```toml
 deploymentStrategy = "live" # Deploying a chain to a live network i.e. Sepolia
@@ -105,7 +120,7 @@ You can also do chain by chain configurations in the `chains` table.
 Now that you've created your intent file, you can apply it to your chain to deploy the L1 smart contracts:
 
 ```
-./bin/op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
+op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
 ```
 
 This command will deploy the OP Stack to L1. It will deploy all L2s specified in the intent file. Superchain
@@ -119,23 +134,35 @@ You'll be inspecting the `state.json` file, so you need to navigate into your wo
 
 ```
 cd .deployer
-../bin/op-deployer inspect genesis <l2-chain-id> > genesis.json
-../bin/op-deployer inspect rollup <l2-chain-id> > rollup.json
+op-deployer --workdir .deployer inspect genesis <l2-chain-id> > genesis.json
+op-deployer --workdir .deployer inspect rollup <l2-chain-id> > rollup.json
 ```
 
 Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network. You can also use the following inspect subcommands to get additional data:
 
 ```
-../bin/op-deployer inspect l1 <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
-../bin/op-deployer inspect deploy-config <l2-chain-id> # outputs the deploy config for an L2 chain
-../bin/op-deployer inspect l2-semvers <l2-chain-id> # outputs the semvers for all L2 chains
+op-deployer --workdir .deployer inspect l1 <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
+op-deployer --workdir .deployer inspect deploy-config <l2-chain-id> # outputs the deploy config for an L2 chain
+op-deployer --workdir .deployer inspect l2-semvers <l2-chain-id> # outputs the semvers for all L2 chains
 ```
-
 </Steps>
 
-## `bootstrap`
+## Bootstrap Usage
 
-todo: how does this work?
+`op-deployer` can also be used to deploy the contracts it needs to run the `init`... `apply` flow on new chains.
+This process is called "bootstrapping," and is useful for when you want to use `op-deployer` with L3s, new testnets,
+or other custom settlement chains.
+
+### OPCM Bootstrap
+
+To deploy OPCM to a new chain, run the following command:
+
+```bash
+op-deployer bootstrap opcm \
+    --l1-rpc-url <mainnet-rpc-url> \
+    --private-key <deployer-private-key> \
+    --artifacts-locator tag://op-contracts/v1.6.0
+```
 
 ## Next steps
 
