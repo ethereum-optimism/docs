@@ -1,97 +1,261 @@
 ---
-title: How to use general message passing on OP Stack
+title: 'Message Passing with Interop'
 lang: en-US
-description: Learn how to use general message passing on OP Stack using OP Stack cross-chain messaging standards.
+description: 'Learn how to implement cross-chain message passing using interop messaging.'
 ---
 
 import { Steps } from 'nextra/components'
 
-# How to use general message passing on OP Stack
+# Message passing with Interop
 
-Optimism supports cross-chain message passing, allowing communication between Ethereum and Optimism chains. This guide provides step-by-step instructions for general message passing without using Supersim, following Optimism's cross-chain messaging standards.
+This guide explains how to implement cross-chain message passing using interop messaging.
+You'll learn the core concepts and implementation details independent of specific tooling.
 
-## Overview of cross-chain messaging
+## Message passing concepts
 
-Cross-chain messaging on Optimism allows messages to be sent from one chain (e.g., Ethereum) to another (e.g., Optimism) using specific contracts:
+Before diving into implementation, it's crucial to understand the core concepts of interop message passing:
 
-*   **MessagePasser contract** on the source chain.
-*   **MessageReceiver contract** on the destination chain.
+### Message structure
 
-For more information, refer to the [Optimism Messaging Specification](https://specs.optimism.io/interop/messaging.html) and the [Cross-Chain Message Documentation](https://docs.optimism.io/stack/protocol/interop/cross-chain-message).
+A message is a broadcast payload emitted from an identified source. It consists of:
 
-## Step 1: Prepare the cross-chain message
+*   **Message Payload**: Raw bytes representing a Log, created by concatenating topics and data
+*   **Unique Identifier**: A structure that points to a specific log emission
+*   **Execution Context**: Information about where and how the message should be processed
 
-To send a message from one chain to another, follow these steps to prepare and send a message.
-
-1.  Define the Message Content
-
-Define the data you want to pass across the chains. This message may include function calls, values, or arbitrary data.
+### Message payload construction
 
 ```typescript
-const messageData = "0xYourMessageData"; // Replace with your actual data
+// Message payload is constructed by concatenating:
+// 1. All event topics (each 32 bytes)
+// 2. The event data
+messagePayload = eventTopics.concat(eventData)
 ```
 
-2.  Specify the Target Contract and Function
-      Identify the target contract and function you want to call on the destination chain. Ensure this contract is deployed on both chains if you need bi-directional communication.
+### Message identifier components
 
-## Step 2: Send the Message
-
-1.  Call the MessagePasser Contract
-      On the source chain, call the MessagePasser contract with the message data. This contract serves as an entry point for cross-chain messages on Optimism.
-
-```typescript
-import { viem } from 'viem';
-
-const tx = await viem.writeContract({
-  address: '0xYourMessagePasserAddress', // Replace with the MessagePasser contract address
-  abi: MessagePasserABI, // The ABI of the MessagePasser contract
-  functionName: 'sendMessage',
-  args: [targetAddress, messageData],
-});
+```solidity
+struct Identifier {
+    address origin;      // Contract that emitted the log
+    uint256 blockNumber; // Block number of emission
+    uint256 logIndex;    // Position in block's logs array
+    uint256 timestamp;   // Emission timestamp
+    uint256 chainId;     // Chain identifier where message originated
+}
 ```
 
-2.  Confirm the transaction
-    Once you send the message, wait for the transaction confirmation. This confirmation ensures that the message has been successfully sent and recorded on the source chain.
+## How It works
 
-```typescript
-await tx.wait();
-console.log('Message sent successfully');
-```
+### Message lifecycle
 
-## Step 3: Receive the message on the destination chain
+The cross-chain messaging process follows a specific lifecycle:
 
-After the message is sent, it will need to be relayed and processed on the destination chain.
+1.  **Message Creation**: Events on source chain become initiating messages
+2.  **Message Serialization**: Converting log data into a standardized format
+3.  **Identifier Creation**: Generating unique identifiers for message tracking
+4.  **Message Execution**: Processing messages on destination chain
 
-1.  Relay the message
-    Relay the message manually or use an automatic relay solution. To relay manually, use the MessageReceiver contract's function to receive and process the message.
+### Message processing flow
 
-```typescript
-const relayTx = await viem.writeContract({
-  address: '0xYourMessageReceiverAddress', // Replace with the MessageReceiver contract address
-  abi: MessageReceiverABI, // The ABI of the MessageReceiver contract
-  functionName: 'receiveMessage',
-  args: [messageData],
-});
-```
+1.  **Source chain**:
+    *   Event emission triggers message creation
+    *   System generates unique identifier
+    *   Message is serialized and prepared for transmission
 
-2.  Confirm the message reception
-    Wait for the message reception transaction to confirm.
+2.  **Cross-Chain transit**:
+    *   Message payload is prepared for relay
+    *   System validates message structure
+    *   Cross-chain proof is generated
 
-```typescript
-await relayTx.wait();
-console.log('Message received on destination chain');
-```
+3.  **Destination chain**:
+    *   Message receipt and validation
+    *   Execution of message content
+    *   Verification of successful processing
 
-## Error Handling and troubleshooting
+## Implementation guide
 
-*   Ensure Contract Compatibility: Verify that both MessagePasser and MessageReceiver contracts are compatible and have matching function signatures on each chain.
+<Steps>
+  ### Prepare message sending
 
-*   Gas Fees: Check that you have enough funds to cover the gas fees for message passing on both chains.
+  The [CrossChainMessenger](https://github.com/ethereum-optimism/optimism/blob/92ed64e171c6eb9c6a080c626640e8836f0653cc/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract serves as the primary interface for cross-chain communication. 
+  It initializes the connection to the L2 messenger contract and provides the base functionality for sending messages across chains.
 
-*   Event Logs: Use event logs to debug and confirm message delivery at each stage.
+  Key components:
 
-## Additional Resources
+  *   L2\_MESSENGER: The address of the L2 cross-domain messenger contract
+  *   sendCrossChainMessage: Function to initiate cross-chain message sending
 
-For further guidance on interop messaging and cross-chain message handling, see:
-*   
-*   
+  ```solidity
+  contract CrossChainMessenger {
+      address public immutable L2_MESSENGER = 0x4200000000000000000000000000000000000023;
+      
+      function sendCrossChainMessage(
+          address _target,     // Destination contract address
+          bytes memory _message, // Message content to be sent
+          uint32 _gasLimit      // Gas limit for execution on destination
+      ) external {
+          IL2CrossDomainMessenger(L2_MESSENGER).sendMessage(
+              _target,
+              _message,
+              _gasLimit
+          );
+      }
+  }
+  ```
+
+  ### Send the message
+
+  This function handles the actual transmission of your message to the destination chain. It manages:
+
+  *   Contract interaction with the messenger
+  *   Gas limit settings for the transaction
+  *   Error handling during transmission
+  *   Returns the transaction hash for tracking
+
+  ```typescript
+  async function sendMessage(
+    messenger: address,   // Address of the messenger contract
+    target: address,      // Destination contract address
+    message: bytes,       // Message content to be transmitted
+    gasLimit: number      // Execution gas limit
+  ): Promise<string> {
+    // Send the message with appropriate gas settings
+    const tx = await contract.sendMessage(
+      target,
+      message,
+      gasLimit,
+      { gasLimit: 200000 } // Transaction gas limit for sending
+    );
+    
+    return tx.hash;
+  }
+  ```
+
+  ### Create message identifier
+
+  Creates a unique identifier for tracking your message across chains. This function:
+
+  *   Retrieves transaction details
+  *   Locates the specific message event
+  *   Constructs the identifier structure with:
+      *   Origin address
+      *   Block information
+      *   Chain details
+      *   Timing data
+
+  ```typescript
+  async function createMessageIdentifier(
+    txHash: string,    // Transaction hash of the sent message
+    provider: Provider // Network provider for accessing chain data
+  ): Promise<Identifier> {
+    // Get transaction and block information
+    const receipt = await provider.getTransactionReceipt(txHash);
+    const block = await provider.getBlock(receipt.blockNumber);
+    
+    // Find the message sent event
+    const sentEvent = receipt.logs.find(log => 
+      log.address === L2_MESSENGER_ADDRESS &&
+      log.topics[0] === SENT_MESSAGE_EVENT_SIGNATURE
+    );
+    
+    if (!sentEvent) throw new Error("Message event not found");
+    
+    // Construct and return the identifier
+    return {
+      origin: L2_MESSENGER_ADDRESS,
+      blockNumber: receipt.blockNumber,
+      logIndex: sentEvent.logIndex,
+      timestamp: block.timestamp,
+      chainId: provider.network.chainId
+    };
+  }
+  ```
+
+  ### Construct message payload
+
+  Assembles the complete message payload for transmission. This function:
+
+  *   Concatenates event topics and data
+  *   Formats the payload for cross-chain transmission
+  *   Ensures proper byte alignment
+  *   Maintains data integrity
+
+  ```typescript
+  function constructMessagePayload(
+    topics: string[],  // Event topics to include
+    data: string       // Additional message data
+  ): string {
+    // Combine topics and data into a single payload
+    return ethers.utils.hexConcat([
+      ...topics,
+      data
+    ]);
+  }
+  ```
+
+  ### Relay the message
+
+  Executes the message on the destination chain. This function:
+
+  *   Creates a messenger contract instance
+  *   Sends the relay transaction
+  *   Handles gas estimation
+  *   Manages transaction confirmation
+  *   Returns the transaction hash
+
+  ```typescript
+  async function relayMessage(
+    identifier: Identifier, // Message identifier from source chain
+    payload: string,       // Constructed message payload
+    provider: Provider     // Network provider for destination chain
+  ): Promise<string> {
+    // Initialize messenger contract
+    const messenger = new Contract(
+      L2_MESSENGER_ADDRESS,
+      L2_MESSENGER_ABI,
+      provider.getSigner()
+    );
+    
+    // Send relay transaction with appropriate gas limit
+    const tx = await messenger.relayMessage(
+      identifier,
+      payload,
+      { gasLimit: 500000 }
+    );
+    
+    return tx.hash;
+  }
+  ```
+
+  ### Verify message receipt
+
+  Confirms that your message was successfully processed on the destination chain. This function:
+
+  *   Retrieves the transaction receipt
+  *   Checks for the relay event
+  *   Verifies processing status
+  *   Returns success/failure status
+
+  ```typescript
+  async function verifyMessageRelayed(
+    txHash: string,    // Transaction hash of the relay transaction
+    provider: Provider // Network provider for destination chain
+  ): Promise<boolean> {
+    // Get transaction receipt
+    const receipt = await provider.getTransactionReceipt(txHash);
+    
+    // Check for successful relay event
+    return receipt.logs.some(log => 
+      log.address === L2_MESSENGER_ADDRESS &&
+      log.topics[0] === RELAYED_MESSAGE_EVENT_SIGNATURE
+    );
+  }
+  ```
+</Steps>
+
+## Next steps
+
+*   More questions? Read our guide on the anatomy of a [cross-chain message](cross-chain-message)
+*   Use [Supersim](supersim), a local dev environment that simulates Superchain interop for testing applications against a local version of the Superchain.
+*   Use [viem bindings/actions](https://supersim.pages.dev/guides/interop/relay-using-viem.html)the guide will show you how to use viem bindings/actions to fetch identifiers and relay messages.
+*   Read how to manually [relay interop messages](https://supersim.pages.dev/guides/interop/manually-relaying-interop-messages-cast) with cast and `L2ToL2CrossDomainMessenger`
