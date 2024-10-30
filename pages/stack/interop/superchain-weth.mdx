@@ -1,7 +1,7 @@
 ---
 title: SuperchainWETH (Interoperable ETH)
 lang: en-US
-description: Learn basic details about the SuperchainWETH or Interoperable ETH.
+description: Learn basic details about SuperchainWETH or Interoperable ETH.
 ---
 
 import { Callout } from 'nextra/components'
@@ -17,22 +17,23 @@ Superchain WETH or Interoperable ETH is a specialized version of the standard WE
 ## Features and benefits
 
 *   Enables seamless ETH transfers across different chains in the Superchain
-*   Minimizes protocol complexity by treating ETH as an ERC-20 token
 *   Maintains fungibility of ETH across the Superchain
 *   Provides liquidity for cross-chain transactions
-*   Supports interoperability between chains with different native assets (i.e., gas tokens)
 *   Improves user experience by abstracting complex bridging processes
-
-<Callout type="warning">
-  `SuperchainWETH` requires `SuperchainTokenBridge` integration for full interoperable, cross-chain functionality.
-</Callout>
 
 ## How it works
 
-Interoperable ETH (Superchain WETH) facilitates secure movement of ETH across the Superchain via `crosschainBurn` and `crosschainMint`.
+Superchain WETH (Interoperable ETH) facilitates secure movement of ETH across the Superchain via `crosschainBurn` and `crosschainMint`.
 
-*   **`crosschainBurn`**: Facilitates cross-chain transfers by **burning** WETH. The user sends ETH to the `SuperchainWETH` contract. `SuperchainWETH` interacts with `ETHLiquidity` to burn the ETH and sends a cross-chain message via the `L2ToL2CrossDomainMessenger` to the destination chain.
-*   **`crosschainMint`**: Mints WETH on the destination chain after a cross-chain transfer. The user receives ETH or WETH on the destination chain. If the destination is a non-custom gas token chain, ETH is sourced from the `ETHLiquidity` contract.
+*   **`crosschainBurn`**: Facilitates cross-chain transfers by **burning** WETH. The cross-chain message is created using the `SendERC20` function on `SuperchainTokenBridge`. 
+    *   In the deposit step, the user sends their ETH to the `SuperchainWETH` contract, which calls the deposit function on `SuperchainWETH`. This results in the user being given the amount of `SuperchainWETH` equivalent to the amount of ETH they sent (this step is also known as "wrapping" your ETH). 
+    *   After depositing, the user can call `SuperchainTokenBridge#SendERC20` to transfer any amount of `SuperchainWETH` (within their SuperchainWETH balance) to a recipient on the destination chain.
+    *   In `SendERC20`, the `SuperchainTokenBridge` calls `crosschainBurn` and sends a cross-chain message via the `L2ToL2CrossDomainMessenger` to the destination chain. 
+*   **`crosschainMint`**: Mints WETH on the destination chain after a cross-chain transfer. User first receives WETH then will need to unwrap to standard ETH through a manual call or more automatically using a wrapper contract. After the cross-chain message is processed on the destination chain, `crosschainMint` is called which provides the recipient with `SuperchainWETH` on the destination chain. If the destination is a non-custom gas token chain, ETH is sourced from the `ETHLiquidity` contract.
+
+<Callout type="warning">
+  `crosschainBurn` and `crosschainMint`can only be called by the `SuperchainTokenBridge`.
+</Callout>
 
 ```mermaid
 sequenceDiagram
@@ -62,7 +63,7 @@ This contract implements the core functionality for wrapping, unwrapping, and cr
 
 ### `ETHLiquidity` Contract
 
-A predeploy contract with a large pool of ETH that provides liquidity for cross-chain transfers. It allows "burning" and "minting" of ETH for cross-chain transfers. 
+A predeploy contract with a large pool of ETH that provides liquidity for cross-chain transfers. It allows "burning" and "minting" of ETH for cross-chain transfers. ETH is associated with bridge ETH from the L1 lockbox, making ETH available to interop chains through a shared lockbox rather than fragemented amongst the existing portal contracts.
 *   Contract address: `0x4200000000000000000000000000000000000025`
 
 ### `L2ToL2CrossDomainMessenger` Contract
