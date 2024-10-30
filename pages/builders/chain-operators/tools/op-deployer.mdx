@@ -1,0 +1,172 @@
+---
+title: Deployer
+lang: en-US
+tags: ["op-deployer","eng-platforms"]
+description: Learn how op-deployer can simplify deploying a standard OP Stack Chain.
+---
+
+import {Callout, Steps} from 'nextra/components'
+
+# Deployer
+
+`op-deployer` simplifies the process of deploying the OP Stack. It works similarly to [Terraform](https://www.terraform.io). Like Terraform, you define a declarative config file called an "intent," then run a command to apply the intent to your chain. `op-deployer` will compare the state of your chain against the intent, and make whatever changes are necessary for them to match. In its current state, it is intended to deploy new standard chains that utilize the Superchain wide contracts.
+
+## Installation
+
+The recommended way to install `op-deployer` is to download the latest release from the monorepo's
+[release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
+for your platform then extract it somewhere on your `PATH`. The rest of this tutorial will assume that you have
+installed `op-deployer` using this method.
+
+To alternatively install from source, follow the steps below. You will need to install the Go toolchain and `just` as prerequisites.
+
+<Steps>
+    ### **Clone the monorepo**:
+
+    Run the following command to clone the monorepo:
+
+    ```bash
+    git clone https://github.com/ethereum-optimism/optimism.git
+    ```
+
+    ### **Build the binary**:
+
+    Run the following commands to build the binary:
+
+    ```bash
+    cd op-deployer
+    just build
+    ```
+
+    The binary will be in the `bin` directory.
+</Steps>
+
+## Deployment usage
+
+The base use case for `op-deployer` is deploying new OP Chains. This process is broken down into three steps:
+
+<Steps>
+
+### `init`: configure your chain
+
+To get started with `op-deployer`, create an intent file that defines your desired chain configuration. Use the built-in `op-deployer` utility to generate this file:
+
+```
+./bin/op-deployer init --l1-chain-id 11155111 --l2-chain-ids <l2-chain-id> --workdir .deployer
+```
+
+This command will create a directory called `.deployer` in your current working directory containing the intent file and an empty `state.json` file. `state.json` is populated with the results of your deployment, and never needs to be edited directly.
+
+Your intent file will need to be modified to your parameters, but it will initially look something like this:
+
+<Callout type="warning">
+    Do not use the default addresses in the intent for a production chain! They are generated from the `test... junk`
+    mnemonic. **Any funds they hold will be stolen on a live chain.**
+</Callout>
+
+
+```toml
+deploymentStrategy = "live" # Deploying a chain to a live network i.e. Sepolia
+l1ChainID = 11155111 # The chain ID of the L1 chain you'll be deploying to
+fundDevAccounts = true # Whether or not to fund dev accounts using the test... junk mnemonic on L2.
+l1ContractsLocator = "tag://op-contracts/v1.6.0" # L1 smart contracts versions
+l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts" # L2 smart contracts versions
+
+# Delete this table if you are using the shared Superchain contracts on the L1
+# If you are deploying your own SuperchainConfig and ProtocolVersions contracts, fill in these details
+[superchainRoles]
+  proxyAdminOwner = "0xb9cdf788704088a4c0191d045c151fcbe2db14a4" 
+  protocolVersionsOwner = "0x85d646ed26c3f46400ede51236d8d7528196849b" 
+  guardian = "0x8c7e4a51acb17719d225bd17598b8a94b46c8767" 
+
+# List of L2s to deploy. op-deployer can deploy multiple L2s at once
+[[chains]]
+  # Your chain's ID, encoded as a 32-byte hex string
+  id = "0x0000000000000000000000000000000000000000000000000000000000003039"
+  # Update the fee receipiant contract  
+  baseFeeVaultRecipient = "0x0000000000000000000000000000000000000000"
+  l1FeeVaultRecipient = "0x0000000000000000000000000000000000000000"
+  sequencerFeeVaultRecipient = "0x0000000000000000000000000000000000000000"
+  eip1559Denominator = 50
+  eip1559Elasticity = 6
+  # Various ownership roles for your chain. When you use op-deployer init, these roles are generated using the
+  # test... junk mnemonic. You should replace these with your own addresses for production chains.
+  [chains.roles]
+    l1ProxyAdminOwner = "0x1a66b55a4f0139c32eddf4f8c60463afc3832e76"
+    l2ProxyAdminOwner = "0x7759a8a43aa6a7ee9434ddb597beed64180c40fd"
+    systemConfigOwner = "0x8e35d9523a0c4c9ac537d254079c2398c6f3b35f"
+    unsafeBlockSigner = "0xbb19dce4ce51f353a98dbab31b5fa3bc80dc7769"
+    batcher = "0x0e9c62712ab826e06b16b2236ce542f711eaffaf"
+    proposer = "0x86dfafe0689e20685f7872e0cb264868454627bc"
+    challenger = "0xf1658da627dd0738c555f9572f658617511c49d5"
+
+```
+
+By default, `op-deployer` will fill in all other configuration variables with those that match the [standard configuration](https://specs.optimism.io/protocol/configurability.html). You can override these default settings by adding them to your intent file using the table below:
+
+```toml
+[globalDeployOverrides]
+  l2BlockTime = 1  # 1s L2blockTime is also standard, op-deployer defaults to 2s
+```
+
+You can also do chain by chain configurations in the `chains` table.
+
+### `apply`: deploy your chain
+
+<Callout type="info">
+  Hardware wallets are not supported, but you can use ephemeral hot wallets since this deployer key has no privileges.
+</Callout>
+
+Now that you've created your intent file, you can apply it to your chain to deploy the L1 smart contracts:
+
+```
+op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
+```
+
+This command will deploy the OP Stack to L1. It will deploy all L2s specified in the intent file. Superchain
+configuration will be set to the Superchain-wide defaults - i.e., your chain will be opted into the [Superchain pause](https://specs.optimism.io/protocol/superchain-configuration.html#pausability)
+and will use the same [protocol versions](https://github.com/ethereum-optimism/specs/blob/main/specs/protocol/superchain-upgrades.md)
+address as other chains on the Superchain.
+
+### `inspect`: generate genesis files and chain information
+
+<Callout type="info">
+  To add your chain to the [Superchain Registry](https://github.com/ethereum-optimism/superchain-registry) you will need to provide the chain artifacts. To get these chain artifacts, you will need to write the output of these commands to new files.
+</Callout>
+
+Inspect the `state.json` file by navigating to your working directory. With the contracts deployed, generate the genesis and rollup configuration files by running the following commands:"
+
+```
+cd .deployer
+op-deployer --workdir .deployer inspect genesis <l2-chain-id> > genesis.json
+op-deployer --workdir .deployer inspect rollup <l2-chain-id> > rollup.json
+```
+
+Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network. You can also use the following inspect subcommands to get additional data:
+
+```
+op-deployer --workdir .deployer inspect l1 <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
+op-deployer --workdir .deployer inspect deploy-config <l2-chain-id> # outputs the deploy config for an L2 chain
+op-deployer --workdir .deployer inspect l2-semvers <l2-chain-id> # outputs the semvers for all L2 chains
+```
+</Steps>
+
+## Bootstrap usage
+
+You can also use `op-deployer` to deploy the contracts needed to run the `init`... `apply` flow on new chains. This process, called 'bootstrapping,' is useful when you want to use `op-deployer` with L3s, new testnets, or other custom settlement chains.
+
+### OPCM bootstrap
+
+To deploy OPCM to a new chain, run the following command:
+
+```bash
+op-deployer bootstrap opcm \
+    --l1-rpc-url <mainnet-rpc-url> \
+    --private-key <deployer-private-key> \
+    --artifacts-locator tag://op-contracts/v1.6.0
+```
+
+## Next steps
+
+*   For more details, check out the tool and documentation in the [op-deployer repository](https://github.com/ethereum-optimism/optimism/tree/develop/op-deployer/cmd/op-deployer).
+*   For more information on OP Contracts Manager, refer to the [OPCM documentation](/stack/opcm).

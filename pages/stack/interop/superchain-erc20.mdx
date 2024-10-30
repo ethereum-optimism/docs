@@ -1,0 +1,90 @@
+---
+title: SuperchainERC20 Token Standard
+lang: en-US
+description: Learn basic details about the SuperchainERC20 token standard.
+---
+
+import { Callout } from 'nextra/components'
+
+# SuperchainERC20 Token Standard
+
+<Callout>
+  Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
+</Callout>
+
+`SuperchainERC20` is a token standard designed to enable asset interoperability in the Superchain.
+Asset interoperability allows for tokens to securely move across chains without asset wrapping or liquidity pools for maximal capital efficiency, thus unifying liquidity and simplifying the user experience.
+
+Additional features:
+
+*   **Simplified deployments**: Provides a consistent, unified standard for tokens across all Superchain-compatible networks and a common crosschain interface for the EVM ecosystem at large.
+*   **Permissionless propagation**: Easily clone an existing token contract to a new OP Stack chain using `create2` without requiring the original owner, which enables movement of assets to the new chain once Interop goes live. Importantly, permissionless propagation retains the integrity of the original owner on the contract and preserves security but proliferates the contract's availability to new chains.
+*   **Ethereum-aligned**: Intentionally designed to be generic and supported as an Ethereum-wide standard (RIP coming soon).
+
+## How it works
+
+`SuperchainERC20` token standard facilitates secure token transfers between chains in the Superchain networks via native burning and minting.
+
+*   **Token Burning**: Initiating message where token is **burned** on the source chain. A user initiates a transfer of token from one blockchain to another and specifies the recipient wallet address on the destination chain. A specified amount of token is burned on the source chain.
+*   **Token Minting**: Executing message where token is **minted** on the destination chain. The specified amount of token is minted on the destination chain directly to the recipient wallet address.
+
+```mermaid
+sequenceDiagram
+		box rgba(255, 4, 32, 0.1) ChainA
+		  participant User-chainA
+		  participant SuperchainERC20-chainA
+	    participant SuperchainERC20Bridge-chainA
+		end
+		box rgba(248, 61, 213, 0.1) ChainB
+			participant SuperchainERC20Bridge-chainB
+	    participant SuperchainERC20-chainB
+	    participant User-chainB
+		end
+  
+    
+    User-chainA->>SuperchainERC20-chainA: Initiate token transfer
+    SuperchainERC20-chainA->>SuperchainERC20Bridge-chainA: Bridge to chainB
+    SuperchainERC20Bridge-chainA->>SuperchainERC20-chainA: Burn tokens
+    SuperchainERC20Bridge-chainA-->>SuperchainERC20Bridge-chainA: Emit cross-chain event
+    SuperchainERC20Bridge-chainB-->>SuperchainERC20Bridge-chainB: Validates message
+    SuperchainERC20Bridge-chainB-->>SuperchainERC20-chainB: Mint tokens
+    SuperchainERC20-chainB->>User-chainB: User receives tokens
+```
+
+This diagram illustrates the process where tokens are burned on the source chain and minted on the destination chain, enabling seamless cross-chain transfers without the need for asset wrapping or liquidity pools.
+
+## Major components
+
+*   **Token Contract**: implements the `SuperchainERC20` standard with bridging functionality.
+*   **Factory Predeploy**: uses a `create2`-based factory for deploying `SuperchainERC20` tokens consistently across chains.
+*   **Bridging Functions**: using methods like `sendERC20` and `relayERC20` for cross-chain transfers.
+
+## Comparison to other standards
+
+`SuperchainERC20` differs from other token standards in its focus and implementation:
+
+*   `SuperchainERC20` has minimal differentiation from a standard ERC20 deployment, only requiring a minimal crosschain mint/burn interface, which aims to be a common pattern for the EVM ecosystem (RIP coming soon).
+*   `SuperchainERC20` shares trust assumptions across all chains in the Superchain, such that custom assumptions around security and latency are not required to account for when executing transfers.
+
+<Callout type="info">
+  Projects moving from other token standards may need to adapt to the `SuperchainERC20` specification.
+</Callout>
+
+## Implementation details
+
+Application developers must do two things to make their tokens `SuperchainERC20` compatible. Doing this setup now ensures that tokens can benefit from Interop once the Interop upgrade happens.
+
+1.  Permission only `SuperchainERC20Bridge` to call `crosschainMint` and `crosschainBurn`.
+2.  Deployment at same address on every chain in the Superchain using `create2` function.
+
+For now, application developers should view `SuperchainERC20`as standard ERC20 tokens with additional built-in functions that allow cross-chain asset movement that will be enabled once Interop goes live.
+
+<Callout type="warning">
+  To enable asset interoperability, `SuperchainERC20` token must give access to the address where the future `SuperchainERC20Bridge` will live.
+</Callout>
+
+## Next steps
+
+*   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
+*   Watch the [Superchain interop design video walkthrough](https://www.youtube.com/watch?v=FKc5RgjtGes) for a visual explanation of the concepts.
+*   Review the [Superchain Interop Explainer](explainer) for answers to common questions about interoperability.
