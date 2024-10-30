@@ -1,63 +1,63 @@
 ---
-title: OP-Supervisor
+title: OP Supervisor
 lang: en-US
 description: Learn the basics of OP-Supervisor.
 ---
 
 import { Callout, Tabs, Steps } from 'nextra/components'
 
-# OP-Supervisor
+# OP Supervisor
 
 <Callout>
   Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
 </Callout>
 
-`op-supervisor` is a critical service designed to verify cross-chain messages and manage the safety of interoperability between different chains in the OP Stack. It acts as a hub for indexing data that every `op-node` needs to cross-verify with other chains.
-
-## Features and benefits
+OP Supervisor is a critical service designed to verify cross-chain messages and manage the safety of interoperability between different chains in the OP Stack. It acts as a hub for indexing data that every `op-node` needs to cross-verify with other chains.
+Some features and benefits include:
 
 *   Enables secure cross-chain message passing on the Superchain
 *   Provides a centralized point for managing interoperability data
-*   Reduces the complexity and cost of operating individual nodes
 *   Supports multiple networks simultaneously
 *   Offers potential for public endpoints to aid in node synchronization
 
-## Major components
+## Cross-chain message verification
 
-### Cross-chain message verification
+Verifies messages between different chains in the OP Stack, reducing the risk of invalid or malicious cross-chain interactions.⁠ It centralizes the verification process, which reduces the complexity of operating individual nodes⁠.⁠
 
-Verifies messages between different chains in the OP Stack, reducing the risk of invalid or malicious cross-chain interactions.⁠ It centralizes the verification process, which reduces the complexity and cost of operating individual nodes⁠.⁠
-
-*   `op-geth`: queries `op-supervisor` during block-building to verify if a message is sufficiently safe to include. This process involves checking each executing message and potentially undoing transactions if conflicts or unknown states are encountered.
+*   `op-geth`: queries `op-supervisor` during block-building to verify if a message is sufficiently safe to include. This process involves checking each executing message and potentially undoing transactions if conflicts or unknown states are encountered. `op-geth` also queries `op-supervisor` when taking new items into the mempool as an [early filter mechanism](https://github.com/ethereum-optimism/op-geth/pull/422).
 *   `op-node`: queries cross-chain safety information and coordinates safety updates between OP stack nodes and `op-supervisor`. It uses the API provided by `op-supervisor` to perform actions like:
     *   Updating and retrieving various safety levels
     *   Checking and returning the `cross-unsafe` head for a given chain
     *   Attempting to promote a block to `cross-safe` status
     *   Attempting to finalize an L2 block based on L1 finality
 
-### Safe data indexing and management
+## Log data indexing and management
 
 Acts as a hub for indexing data that every `op-node` needs to cross-verify with other chains, centralizing the process of managing interoperability data. Maintains the integrity of cross-chain interactions by tracking safety changes⁠ across the Superchain, ensuring consistent application of invalid dependency resolutions. ⁠
 
 `op-supervisor` indexes two types of cross-chain dependencies:
 
-*   Interop messages (events): `op-supervisor`maintains an events-index per L2 chain, which determines message-dependencies to check if blocks are safe
-*   L1 DA (data availability) batches: `op-supervisor`maintains a DA safety-index per L2 chain, which helps determine how to rewind L2 chains to resolve invalid dependencies
+*   Interop messages (events): `op-supervisor` maintains an events-index per L2 chain, which determines message-dependencies to check if blocks are safe
+*   L1 DA (data availability): `op-supervisor` tracks the L1 DA for L2 blocks and maintains a DA safety-index per L2 chain, which helps determine how to rewind L2 chains to resolve invalid dependencies
 
-### API for cross-chain safety
+## API for cross-chain safety
 
 Provides an interface for `op-node` to query cross-chain safety information and coordinate safety updates between OP stack nodes and `op-supervisor⁠⁠`. OP-Supervisor uses a global read API to determine **message safety** and **block safety,** utilizing both the events index and the safety index (See op-supervisor's [safe data indexing](#safe-data-indexing-and-management)). The API is designed to handle potential L1 reorgs that can affect the validity of cross-chain messages⁠.
 
 Key API methods include:
 
-| Method               | Description                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------------- |
-| `ExchangeSyncStatus` | Updates and retrieves various safety levels (LocalUnsafe, CrossUnsafe, LocalSafe, etc.)⁠ |
-| `TryCrossUnsafe`     | Checks and returns the cross-unsafe head for a given chain⁠⁠​                            |
-| `TryCrossSafe`       | Attempts to promote a block to cross-safe status⁠⁠​                                      |
-| `TryFinalize`        | Attempts to finalize an L2 block based on L1 finality⁠                                   |
+| Method                                    | Description                                                                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| `UnsafeView` and `SafeView`               | Returns the Local and Cross heads for their respective levels                         |
+| `DerivedFrom`                             | OP Nodes use to check the L1 source of the Supervisor (needed for Safe Head tracking) |
+| `UpdateLocalSafe` and `UpdateLocalUnsafe` | Tells the Supervisor when the Node's heads change                                     |
+| `Finalized`                               | Returns the Finalized Head                                                            |
+| `UpdateFinalizedL1`                       | Signals to the Supervisor new finality signals                                        |
+| `CheckMessage`                            | Checks logs in the DB directly in tests, can also use `CheckMessages` in geth         |
 
-### RPC access to all chains
+For a full listing of API names, see the [`op-supervisor` client](https://github.com/ethereum-optimism/optimism/blob/develop/op-service/sources/supervisor_client.go).
+
+## RPC access to all chains
 
 The `op-supervisor` requires RPC access to all chains in the dependency set. This allows `op-supervisor` to verify cross-chain messages and sync data across multiple networks simultaneously, such as OP Mainnet and Base nodes using the same instance.
 
