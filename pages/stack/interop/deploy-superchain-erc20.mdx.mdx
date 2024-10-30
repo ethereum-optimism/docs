@@ -1,0 +1,89 @@
+---
+title: Deploy assets using SuperchainERC20
+lang: en-US
+description: Learn about the basic details of deploying assets on SuperchainERC20
+---
+
+import { Callout } from 'nextra/components'
+
+# Issuing new assets with SuperchainERC20
+
+## Overview
+
+This guide explains how to issue new assets with the `SuperchainERC20` standard and bridge them effectively using the `SuperchainERC20Bridge`. If you want more information about the `SuperchainERC20 standard`, see our [`SuperchainERC20` standard explainer](/stack/interop/superchain-erc20)
+
+An important thing to note, is that bridging assets through the Superchain using SuperchainERC20 never affects the supply of your asset. Supply is always fixed; bridging and moving your asset across the superchain only affects which chain its located on. 
+
+
+## Steps to issue and bridge assets
+
+<Steps>
+### Deploy the `SuperchainERC20` Token Contract
+
+To ensure fungibility across chains, the SuperchainERC20 assets need to have the same contract address on all chains. Achieving this requires deterministic deployment methods, such as:
+
+`Create2Deployer`: A smart contract that enables deploying contracts with predictable addresses.
+`OptimismSuperchainERC20Factory`: A factory contract designed for L1-native tokens to ensure uniform deployments across chains.
+
+There are [many ways to do this](https://github.com/Arachnid/deterministic-deployment-proxy), but here's an example smart contract to start:
+
+```solidity
+// Example token deployment using Create2Deployer
+bytes32 salt = keccak256(abi.encodePacked("SuperchainToken"));
+address tokenAddress = Create2Deployer.deploy(salt, bytecode, constructorArgs);
+```
+
+By deploying assets at identical addresses across multiple chains, we abstract away the complexity of cross-chain validation.
+
+### Implement the ICrosschainERC20 interface
+
+Ensure that your token contract conforms to the ICrosschainERC20 interface to support cross-chain minting and burning. 
+
+```solidity
+interface ICrosschainERC20 {
+    function crosschainMint(address _account, uint256 _amount) external; /// Mints _amount of token to address _account.
+    function crosschainBurn(address _account, uint256 _amount) external; /// Burns _amount of token from address _account.
+
+    event CrosschainMint(address indexed _to, uint256 _amount); /// MUST trigger when crosschainMint is called
+    event CrosschainBurn(address indexed _from, uint256 _amount); /// MUST trigger when crosschainBurn is called
+}
+```
+
+### Use the `SuperchainERC20Bridge` for cross-chain transfers
+
+The `SuperchainERC20Bridge` relies on the `L2ToL2CrossDomainMessenger` to securely relay messages between chains and provide replay protection, domain binding and access to additional message information.
+
+We'll use two function for bridging:
+
+* `sendERC20`: initializes a cross-chain transfer of a `SuperchainERC20` by burning the tokens locally and sending a message to the `SuperchainERC20Bridge` on the target chain using the `L2toL2CrossDomainMessenger`. This ensures that asset supply never changes; sending an asset moves it from one chain to another, it does not "create" an additional asset in regards to supply.
+* `relayERC20`: process incoming messages from the L2toL2CrossDomainMessenger and mints the corresponding amount of the SuperchainERC20.
+
+Here's an example implementation of the `SuperchainERC20Bridge`
+
+```solidity
+function sendERC20(SuperchainERC20 _token, address _to, uint256 _amount, uint256 _chainId) external returns (bytes32 msgHash_) {
+  _token.crosschainBurn(msg.sender, _amount);
+
+  bytes memory _message = abi.encodeCall(this.relayERC20, (_token, msg.sender, _to, _amount));
+
+  msgHash_ = L2ToL2CrossDomainMessenger.sendMessage(_chainId, address(this), _message);
+  
+  emit SentERC20(address(_token), msg.sender, _to, _amount, _chainId);
+}
+
+function relayERC20(SuperchainERC20 _token, address _from, address _to, uint256 _amount) external {
+  require(msg.sender == address(L2ToL2CrossChainMessenger));
+  require(L2ToL2CrossChainMessenger.crossDomainMessageSender() == address(this));
+  
+  uint256 _source = L2ToL2CrossChainMessenger.crossDomainMessageSource();
+
+  _token.crosschainMint(_to, _amount);
+
+  emit RelayedERC20(address(_token), _from, _to, _amount, _source);
+}
+```
+
+## Next steps
+*   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
+*   Watch the [Superchain interop design video walkthrough](https://www.youtube.com/watch?v=FKc5RgjtGes) for a visual explanation of the concepts.
+*   Review the [Superchain Interop Explainer](explainer) for answers to common questions about interoperability.
