@@ -17,45 +17,45 @@ The OP Stack derives its security from Ethereum by utilizing Ethereum's consensu
 
 In the OP Stack, transaction finality progresses through three key stages:
 
-1.  **Unsafe:** The sequencer creates a block containing the transaction, but the transaction data has not yet been posted to Ethereum (L1). The block is circulated within the L2 network for speed.
+1.  **Unsafe:** The Sequencer creates a block containing the transaction, but the transaction data has not yet been posted to Ethereum (L1). The block is circulated within the L2 network for speed.
 
-2.  **Safe:** The batcher posts the transaction data to L1. At this point, any L2 node can derive the transaction.
+2.  **Safe:** The Sequencer posts the transaction data to L1. At this point, any L2 node can derive the transaction.
 
-3.  **Finalized:** Transactions are finalized once more than 65 Ethereum blocks (approximately 10-15 minutes) have passed, ensuring that the L1 data is secure and cannot be reorganized.
+3.  **Finalized:** Transactions are generally finalized on Ethereum when 2/3 of validators sign off on two consecutive checkpoints. This typically occurs within approximately two epochs, or around 65 blocks (10-15 minutes), but may take longer under adverse network conditions. This ensures that L1 data remains secure and unlikely to be reorganized.
 
 <Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
 
 ### Transaction validity
 
-When a transaction is submitted to the network, it is either valid or invalid. If the transaction is valid, the sequencer puts it in a block. If it is invalid, the transaction is discarded. There is no way the sequencer can write an invalid transaction to a new block.
+When a transaction is submitted to the network, it undergoes validation. If the transaction is valid, the Sequencer includes it in a block. If it is invalid, it may still be proposed by the Sequencer, but the rest of the network will reject the block containing the invalid transaction, ensuring only valid transactions are finalized.
 
 ## Sequencer trust assumptions
 
-The sequencer operates with the following trust assumptions:
+The Sequencer operates with the following trust assumptions:
 
 *   It can temporarily withhold transactions.
 *   It may attempt to reorder transactions before L1 publication.
-*   Once transactions are published on L1, the sequencer cannot modify or censor them.
-*   The sequencer cannot affect finalized transactions.
+*   Once transactions are published on L1 and finality is reached, the Sequencer cannot modify or censor them. However, until finality, transactions are theoretically subject to reorgs.
 
 ## Common misconceptions
 
-The biggest misconception about transaction finality is that a transaction needs to wait for the entire challenge window to become finalized. 
+The biggest misconception about transaction finality is that a transaction needs to wait for the entire challenge window to become finalized.
 The reality is the OP Stack transaction finality takes minutes, not over a week. This section explains transaction finality and the Fault Proof System's challenge mechanism.
 
 ### Reorgs and finality
-Once a transaction is included in a finalized Ethereum block, it cannot be reorganized. 
 
-If an Ethereum reorganization (reorg) occurs:
+Once a transaction is included in a finalized Ethereum block, it cannot be reorganized.
 
-1.  L2 nodes detect the L1 reorg.
-2.  Affected L2 blocks revert to an "unsafe" status.
-3.  The sequencer typically republishes the same transactions.
-4.  The system returns to a consistent state after reprocessing.
+If an Ethereum reorganization (reorg) occurs, it affects applications on the OP Stack, such as the Optimism bridge, which uses the OP Stack's proof system to ensure transaction integrity:
+
+1.  Detection: L2 nodes detect the L1 reorg, flagging the Optimism bridge's related transactions for re-evaluation.
+2.  State Adjustment: The L2 blocks impacted by the reorg revert to an "unsafe" status.
+3.  Transaction Re-publication: The Sequencer typically republishes the same transactions for the bridge, using the proof system to re-establish transaction validity.
+4.  System Restoration: After reprocessing, the system stabilizes, restoring a consistent state for bridge-related operations without impacting the rollup's core finalized state.1
 
 ### The role of proof system
 
-The Fault Proof System is designed to ensure the accuracy of certain claims about the transaction state on the L2. It provides a way to prove messages from L2 to L1 are correct. It does not have to do with transaction finality.
+The Fault Proof System is used by bridge contracts on L1 to verify claims that users make about the state of L2 for the purpose of facilitating user withdrawals of certain bridged assets from L2 to L1.
 
 A claim in the context of OP Stack is a statement asserting the state of the system at a specific block height. For instance, a claim might assert that at block 1,000,000 a certain address has all of the ether on the entire L2. If other participants believe this claim to be incorrect, they can challenge it.
 
@@ -67,13 +67,26 @@ Although OP Stack finalizes transactions quickly (within 20 minutes), the 7-day 
 1.  It allows time to dispute the correctness of output state roots posted to Ethereum by the proposer.
 2.  It provides a security period for withdrawal processing, ensuring the integrity of cross-chain operations.
 
+During this 7-day period:
+
+*   If no challenge is raised: The posted state root is confirmed as valid, and users can proceed with their withdrawals or related transactions on Ethereum, completing the cross-chain process smoothly.
+
+*   If a successful challenge occurs: The claim on the state root is invalidated, blocking any withdrawals based on that incorrect state root. This ensures that any invalid state does not impact the L2 chain's integrity or user assets.
+    Notably, this challenge mechanism is app-level and does not trigger reorganization or alter the core L2 chain's finalized state.
+
 ### Withdrawal delays vs. finality
 
 One common misconception is confusing withdrawal delays with transaction finality:
 
 *   Transaction finality occurs in approximately 20 minutes.
+
+*   Withdrawal delays are an application-level security feature specific to the Optimism bridge. These delays impact only L1 withdrawals and do not affect the L2 protocol's transaction finality.
+    This distinction ensures that the core protocol maintains efficiency and quick finalization for Layer 2 transactions.
+
 *   Withdrawal delays (often 7 days) are separate from transaction finality.
+
 *   Withdrawal delays are application-level security features.
+
 *   These delays affect only L1 withdrawals, not L2 transaction finality.
 
 ### Bridge independence
