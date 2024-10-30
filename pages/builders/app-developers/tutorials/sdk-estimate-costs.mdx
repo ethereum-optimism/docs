@@ -1,23 +1,26 @@
 ---
-title: Estimating transaction costs on OP Mainnet
+title: Estimating transaction costs on OP Stack
 lang: en-US
-description: Learn how to use the Optimism SDK to estimate the cost of a transaction on OP Mainnet.
+description: Learn how to use viem to estimate the cost of a transaction on OP Stack.
 ---
 
-import { Callout, Steps } from 'nextra/components'
-import { WipCallout } from '@/components/WipCallout'
+import { Callout, Steps, Tabs } from 'nextra/components'
 
-<WipCallout />
-# Estimating transaction costs on OP Mainnet
+# Estimating transaction costs on OP Stack
 
-
-In this tutorial, you'll learn how to use the [Optimism SDK](https://sdk.optimism.io) to estimate the cost of a transaction on OP Mainnet.
+In this tutorial, you'll learn how to use [viem](https://viem.sh/op-stack/) to estimate the cost of a transaction on OP Mainnet.
 You'll learn how to estimate the [execution gas fee](/builders/app-developers/transactions/fees#execution-gas-fee) and the [L1 data fee](/builders/app-developers/transactions/fees#l1-data-fee) independently.
 You'll also learn how to estimate the total cost of the transaction all at once.
 
 <Callout>
-Check out the full explainer on [OP Mainnet transaction fees](/builders/app-developers/transactions/fees) for more information on how OP Mainnet charges fees under the hood.
+  Check out the full explainer on [OP Stack transaction fees](/builders/app-developers/transactions/fees) for more information on how OP Mainnet charges fees under the hood.
 </Callout>
+
+## Supported networks
+
+Viem supports any of the [Superchain networks](/chain/networks).
+The OP Stack networks are included in Viem by default.
+If you want to use a network that isn't included by default, you can add it to Viem's chain configurations.
 
 ## Dependencies
 
@@ -26,41 +29,42 @@ Check out the full explainer on [OP Mainnet transaction fees](/builders/app-deve
 
 ## Create a demo project
 
-You're going to use the Optimism SDK for this tutorial.
-Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
+You're going to use Viem for this tutorial.
+Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
+  {<h3>Make a project folder</h3>}
 
-{<h3>Make a Project Folder</h3>}
+  ```bash
+  mkdir op-est-cost-tutorial
+  cd op-est-cost-tutorial
+  ```
 
-```bash
-mkdir op-sample-project
-cd op-sample-project
-```
+  {<h3>Initialize the project</h3>}
 
-{<h3>Initialize the Project</h3>}
+  ```bash
+  pnpm init
+  ```
 
-```bash
-pnpm init
-```
+  {<h3>Install viem</h3>}
 
-{<h3>Install the Optimism SDK</h3>}
-
-```bash
-pnpm add @eth-optimism/sdk
-```
-
-{<h3>Install ethers.js</h3>}
-
-```bash
-pnpm add ethers@^5
-```
-
+  ```bash
+  pnpm add viem
+  ```
 </Steps>
 
 <Callout type="info">
-Want to create a new wallet for this tutorial?
-If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
+  Want to create a new wallet for this tutorial?
+  If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
+</Callout>
+
+## Get ETH on Sepolia
+
+This tutorial explains how to bridge ETH from Sepolia to OP Sepolia.
+You will need to get some ETH on Sepolia to follow along.
+
+<Callout type="info">
+  You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
 </Callout>
 
 ## Get ETH on OP Sepolia
@@ -69,14 +73,14 @@ This tutorial explains how estimate transaction costs on OP Sepolia.
 You will need to get some ETH on OP Sepolia in order to run the code in this tutorial.
 
 <Callout type="info">
-You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
+  You can use the [Superchain faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
 </Callout>
 
 ## Add a private key to your environment
 
 You need a private key in order to sign transactions.
 Set your private key as an environment variable with the `export` command.
-Make sure this private key corresponds to an address that has ETH on OP Sepolia.
+Make sure this private key corresponds to an address that has ETH on Sepolia.
 
 ```bash
 export TUTORIAL_PRIVATE_KEY=0x...
@@ -84,32 +88,14 @@ export TUTORIAL_PRIVATE_KEY=0x...
 
 ## Start the Node REPL
 
-You're going to use the Node REPL to interact with the Optimism SDK.
+You're going to use the Node REPL to interact with Viem.
 To start the Node REPL run the following command in your terminal:
 
 ```bash
 node
 ```
 
-This will bring up a Node REPL prompt that allows you to run javascript code.
-
-## Import dependencies
-
-You need to import some dependencies into your Node REPL session.
-
-<Steps>
-
-{<h3>Import the Optimism SDK</h3>}
-
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
-```
-
-{<h3>Import ethers.js</h3>}
-
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
-```
-
-</Steps>
+This will bring up a Node REPL prompt that allows you to run JavaScript code.
 
 ## Set session variables
 
@@ -118,102 +104,98 @@ Let's set those up now.
 
 <Steps>
 
-{<h3>Load your private key</h3>}
+{<h3>Import viem and other necessary modules</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L6 hash=755b77a7ffc7dfdc186f36c37d3d847a
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L3-L6 hash=32ecaac58846bfe7e785e2cc35562120
 ```
 
-{<h3>Create the RPC provider</h3>}
+{<h3>Set up the account</h3>}
 
-Here you're creating a standard Ethers RPC provider and wrapping it as an `L2Provider`, a class provided by the Optimism SDK.
-This will add a few extra functions to the provider object that you'll use later in this tutorial.
-
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L8 hash=1db780739476f924536f5fa58794b67f
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L8-L9 hash=165490e75b825c786a937fba7b8e159d
 ```
 
-{<h3>Create the wallet instance</h3>}
+{<h3>Create the public client</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L9 hash=d315a1ba59b2ee3f43d178bab816e930
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L11-L14 hash=42293ff382c932f806beb7252803a848
 ```
 
+{<h3>Create the wallet client</h3>}
+
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L16-L19 hash=e7b6423850765242512e71589382791b
+```
 </Steps>
 
 ## Estimate transaction costs
 
-You're now going to use the Optimism SDK to estimate the cost of a transaction on OP Mainnet.
+You're now going to use the Viem to estimate the cost of a transaction on OP Mainnet. 
 Here you'll estimate the cost of a simple transaction that sends a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`.
 
 <Steps>
+  {<h3>Create the unsigned transaction</h3>}
 
-{<h3>Create the unsigned transaction</h3>}
+  Viem makes it easy to create unsigned transactions so you can estimate the cost of a transaction before you a user to sign it. 
+  Here you'll create an unsigned transaction that sends a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`. 
 
-Ethers makes it easy to create unsigned transactions so you can estimate the cost of a transaction before you a user to sign it.
-Here you'll create an unsigned transaction that sends a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`.
-You can also create unsigned transactions that interact with contracts using [`Contract.populateTransaction`](https://docs.ethers.org/v5/api/contract/contract/#contract-populateTransaction).
-
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L11-L15 hash=22d44a7322d2d378e886a0ba5a0c6fec
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L21-L26 hash=d2f3fc3df8298253bd45a226dd171dcf
 ```
 
-{<h3>Estimate the execution gas fee</h3>}
+  {<h3>Estimate the total cost</h3>}
 
-You can estimate the execution gas fee the same way you'd estimate the gas fee for any transaction on Ethereum.
-Simply multiply the gas limit by the effective gas price.
+  With Viem you can estimate the total cost of a transaction using the [estimateTotalFee](https://viem.sh/op-stack/actions/estimateTotalFee) method.
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L18-L21 hash=8090c6513655722e1194d4d9f0f794af
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L28-L29 hash=db562f050d0affe866e2114779656d3a
 ```
 
-{<h3>Estimate the L1 data fee</h3>}
+  {<h3>Send the transaction</h3>}
 
-You can estimate the L1 data fee with the [`estimateL1GasCost`](https://sdk.optimism.io/modules#estimateL1GasCost) function.
-Under the hood, this function is estimating the amount of Ethereum gas required to publish this transaction on Ethereum and multiplying it by the current Ethereum gas price (as tracked by the L2).
-This function returns the current cost estimate in wei.
+  Now that you've estimated the total cost of the transaction, go ahead and send it to the network.
+  This will make it possible to see the actual cost of the transaction to compare to your estimate.
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L24-L25 hash=c5b1b1754aede507d071419fa051e3d7
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L31-L35 hash=419162648c0c6c0d5e82ca8f6d4942d5
 ```
 
-{<h3>Estimate the total cost</h3>}
+  {<h3>Check the actual execution gas fee</h3>}
 
-Once you've individually estimated the execution gas fee and the L1 data fee, you can sum these two values together to get the total cost of the transaction.
+  Once you get back the transaction receipt, check the actual execution gas fee.
+  You can do so by accessing the `gasUsed` and `effectiveGasPrice` from the transaction receipt.
+  You can then multiply these values to get the actual L2 cost of the transaction
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L28-L29 hash=f7315f3dbf96423569a42c902eeee45c
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L37-L38 hash=57dba68f78481bea90e7629270a1f58b
 ```
 
-{<h3>Send the transaction</h3>}
+  {<h3>Check the actual L1 data fee</h3>}
 
-Now that you've estimated the total cost of the transaction, go ahead and send it to the network.
-This will make it possible to see the actual cost of the transaction to compare to your estimate.
+  You can also check the actual L1 data fee.
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L32-L34 hash=f0cc7ae37a28a884aa7f47f13b381681
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L40-L41 hash=e728708954c71fe52c55912dbe778042
 ```
 
-{<h3>Check the actual execution gas fee</h3>}
+  {<h3>Check the actual total cost</h3>}
 
-Once you get back the transaction receipt, check the actual execution gas fee.
+  Sum these two together to get the actual total cost of the transaction.
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L37-L38 hash=3b3ce48412906a44c1d2f6861a99c8a0
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L43-L44 hash=38a1eadb48d89d476ea51658514d23c0
 ```
 
-{<h3>Check the actual L1 data fee</h3>}
+  {<h3>Check the difference</h3>}
 
-You can also check the actual L1 data fee.
+  Finally, check the difference between the estimated total cost and the actual total cost.
+  This will give you a sense of how accurate your estimate was.
+  Estimates will never be entirely accurate, but they should be close!
 
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L41-L42 hash=3438ad167823b837f3511759a06e73f3
+```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L46-L47 hash=20c8c60af1cc39e842b207cfd2dfa2cb
 ```
-
-{<h3>Check the actual total cost</h3>}
-
-Sum these two together to get the actual total cost of the transaction.
-
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L45-L46 hash=d23b6db1b716cba154932fd3d261995e
-```
-
-{<h3>Check the difference</h3>}
-
-Finally, check the difference between the estimated total cost and the actual total cost.
-This will give you a sense of how accurate your estimate was.
-Estimates will never be entirely accurate, but they should be close!
-
-```js file=<rootDir>/public/tutorials/sdk-estimate-costs.js#L49-L50 hash=358adb5552c9f00484a6bb0580109fd8
-```
-
 </Steps>
+
+<Callout type="info">
+Estimates will never be entirely accurate due to network conditions and gas price fluctuations, but they should be close to the actual costs.
+</Callout>
+
+## Next steps
+
+*   Always estimate before sending: Estimating costs before sending a transaction helps prevent unexpected fees and failed transactions.
+*   Account for gas price volatility: Gas prices can change rapidly. Consider adding a buffer to your estimates or implementing a gas price oracle for more accurate pricing.
+*   Optimize transaction data: Minimize the amount of data in your transactions to reduce L1 data fees.
+*   Monitor network conditions: Keep an eye on network congestion and adjust your estimates accordingly.
+*   Use appropriate gas limits: Setting too low a gas limit can cause transactions to fail, while setting it too high can result in unnecessary costs.
+*   Implement retry mechanisms: If a transaction fails due to underestimated gas, implement a retry mechanism with adjusted gas parameters.

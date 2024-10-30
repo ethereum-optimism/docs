@@ -1,52 +1,49 @@
 (async () => {
 
-const optimism = require("@eth-optimism/sdk")
-const ethers = require("ethers")
+const { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } = require('viem');
+const { privateKeyToAccount } = require('viem/accounts');
+const { optimismSepolia } = require('viem/chains');
+const { publicActionsL2, walletActionsL2 } = require('viem/op-stack');
 
 const privateKey = process.env.TUTORIAL_PRIVATE_KEY
+const account = privateKeyToAccount(privateKey)
 
-const provider = optimism.asL2Provider(new ethers.providers.StaticJsonRpcProvider("https://sepolia.optimism.io"))
-const wallet = new ethers.Wallet(privateKey, provider)
+const publicClient = createPublicClient({
+  chain: optimismSepolia,
+  transport: http("https://sepolia.optimism.io"),
+}).extend(publicActionsL2())
 
-const tx = await wallet.populateTransaction({
+const walletClientL2 = createWalletClient({
+  chain: optimismSepolia,
+  transport: http("https://sepolia.optimism.io"),
+}).extend(walletActionsL2())
+
+  const transaction = {
+  account,
   to: '0x1000000000000000000000000000000000000000',
-  value: ethers.utils.parseEther('0.00069420'),
-  gasPrice: await provider.getGasPrice(),
-})
+  value: parseEther('0.00069420'),
+  gasPrice: await publicClient.getGasPrice() 
+  }
 
-console.log('Estimating L2 cost...')
-const gasLimit = tx.gasLimit
-const gasPrice = tx.maxFeePerGas
-const l2CostEstimate = gasLimit.mul(gasPrice)
-console.log(ethers.utils.formatEther(l2CostEstimate))
+  const totalEstimate = await publicClient.estimateTotalFee(transaction)
+  console.log(`Estimated Total Cost: ${formatEther(totalEstimate)} ETH`)
 
-console.log('Estimating L1 cost...')
-const l1CostEstimate = await provider.estimateL1GasCost(tx)
-console.log(ethers.utils.formatEther(l1CostEstimate))
+  const txHash = await walletClientL2.sendTransaction(transaction)
+  console.log(`Transaction Hash: ${txHash}`)
 
-console.log('Summing total cost...')
-const totalSum = l2CostEstimate.add(l1CostEstimate)
-console.log(ethers.utils.formatEther(totalSum))
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
+  console.log('receipt', receipt);
 
-console.log('Sending transaction...')
-const res = await wallet.sendTransaction(tx)
-const receipt = await res.wait()
-console.log(receipt.transactionHash)
+  const l2CostActual = receipt.gasUsed * receipt.effectiveGasPrice
+  console.log(`Actual Execution Gas Fee: ${formatEther(l2CostActual)} ETH`)
 
-console.log('Actual L2 cost:')
-const l2CostActual = receipt.gasUsed.mul(receipt.effectiveGasPrice)
-console.log(ethers.utils.formatEther(l2CostActual))
+  const l1CostActual = receipt.l1Fee
+  console.log(`Actual L1 Data Fee: ${formatEther(l1CostActual)} ETH`)
 
-console.log('Actual L1 cost:')
-const l1CostActual = receipt.l1Fee
-console.log(ethers.utils.formatEther(l1CostActual))
+  const totalActual = l2CostActual + l1CostActual
+  console.log(`Actual Total Cost: ${formatEther(totalActual)} ETH`)
 
-console.log('Actual total cost:')
-const totalActual = l2CostActual.add(l1CostActual)
-console.log(ethers.utils.formatEther(totalActual))
-
-console.log('Difference:')
-const difference = totalActual.sub(totalSum).abs()
-console.log(ethers.utils.formatEther(difference))
+  const difference = totalEstimate >= totalActual ? totalEstimate - totalActual : totalActual - totalEstimate
+  console.log(`Estimation Difference: ${formatEther(difference)} ETH`)
 
 })()
