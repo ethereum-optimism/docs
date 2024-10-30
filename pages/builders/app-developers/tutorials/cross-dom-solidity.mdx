@@ -1,34 +1,34 @@
 ---
-title: Communicating Between OP Mainnet and Ethereum in Solidity
+title: Communicating Between OP Stack and Ethereum in Solidity
 lang: en-US
-description: Learn how to write Solidity contracts on OP Mainnet and Ethereum that can talk to each other.
+description: Learn how to write Solidity contracts on OP Stack and Ethereum that can talk to each other.
 ---
 
 import { Steps, Callout, Tabs } from 'nextra/components'
 
-# Communicating Between OP Mainnet and Ethereum in Solidity
+# Communicating Between OP Stack and Ethereum in Solidity
 
 
 
-This tutorial explains how to write Solidity contracts on OP Mainnet and Ethereum that can talk to each other.
-Here you'll use a contract on OP Mainnet that can set a "greeting" variable on a contract on Ethereum, and vice-versa.
+This tutorial explains how to write Solidity contracts on OP Stack and Ethereum that can talk to each other.
+Here you'll use a contract on OP Stack that can set a "greeting" variable on a contract on Ethereum, and vice-versa.
 This is a simple example, but the same technique can be used to send any kind of message between the two chains.
 
 You won't actually be deploying any smart contracts as part of this tutorial.
-Instead, you'll reuse existing contracts that have already been deployed to OP Mainnet and Ethereum.
+Instead, you'll reuse existing contracts that have already been deployed to OP Stack and Ethereum.
 Later in the tutorial you'll learn exactly how these contracts work so you can follow the same pattern to deploy your own contracts.
 
 <Callout type="info">
-Just looking to bridge tokens between OP Mainnet and Ethereum?
-Check out the tutorial on [Bridging ERC-20 Tokens to OP Mainnet With the Optimism SDK](./cross-dom-bridge-erc20).
+Just looking to bridge tokens between OP Stack and Ethereum?
+Check out the tutorial on [Bridging ERC-20 Tokens to OP Stack With the viem](./cross-dom-bridge-erc20).
 </Callout>
 
 ## Message Passing Basics
 
-OP Mainnet uses a smart contract called the `CrossDomainMessenger` to pass messages between OP Mainnet and Ethereum.
+OP Stack uses a smart contract called the `CrossDomainMessenger` to pass messages between OP Stack and Ethereum.
 Both chains have a version of this contract (the `L1CrossDomainMessenger` and the `L2CrossDomainMessenger`).
-Messages sent from Ethereum to OP Mainnet are automatically relayed behind the scenes.
-Messages sent from OP Mainnet to Ethereum must be explicitly relayed with a second transaction on Ethereum.
+Messages sent from Ethereum to OP Stack are automatically relayed behind the scenes.
+Messages sent from OP Stack to Ethereum must be explicitly relayed with a second transaction on Ethereum.
 Read more about message passing in the guide to [Sending Data Between L1 and L2](/builders/app-developers/bridging/messaging).
 
 ## Dependencies
@@ -127,15 +127,14 @@ Feel free to keep this tab open so you can easily copy the transaction hash late
 
 {<h3>Create a demo project folder</h3>}
 
-You're going to use the Optimism SDK to prove and relay your message to L1.
-Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
+You're going to use the viem to prove and relay your message to L1.
 
 ```bash
-mkdir op-sample-project
-cd op-sample-project
+mkdir cross-dom
+cd cross-dom
 ```
 
-{<h3>Initialize the Project</h3>}
+{<h3>Initialize the project</h3>}
 
 Set up the project as a basic Node.js project with `pnpm` or your favorite package manager.
 
@@ -143,7 +142,7 @@ Set up the project as a basic Node.js project with `pnpm` or your favorite packa
 pnpm init
 ```
 
-{<h3>Install Viem</h3>}
+{<h3>Install viem</h3>}
 
 Install Viem with `pnpm` or your favorite package manager.
 
@@ -181,22 +180,17 @@ node
 
 {<h3>Import Viem</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L3-L5 hash=ed24e2f752f8c16ded84de74af10589d
-```
-
-{<h3>Load your private key</h3>}
-
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L7 hash=f5211d75b2d19d7fd6da17ef02449e4b
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L3-L5 hash=65b9a5ad5b634bc2e424f5664e6e1f84
 ```
 
 {<h3>Load your transaction hash</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L9 hash=320cd4f397d7bed8d914d4be0c99f8dc
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L7 hash=320cd4f397d7bed8d914d4be0c99f8dc
 ```
 
 {<h3>Create the RPC providers and wallets</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L11-L12 hash=cedcc56e3200a039274dda506a897cb6
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L8-L9 hash=d47e4991c5153e1e1dc55de5047a8a3e
 ```
 
 {<h3>Wait until the message is ready to prove</h3>}
@@ -204,7 +198,7 @@ node
 Next, you will send messages from L2 to L1 is to prove that the message was sent on L2.
 You first need to wait until the message is ready to prove.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L17-L20 hash=be084e2a13c2cad44f6354feeb2bcbcb
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L12-L16 hash=df275e659d954eb72b8c5765d9baf6de
 ```
 
 <Callout type="info">
@@ -216,34 +210,34 @@ Feel free to take a quick break while you wait.
 
 Once the message is ready to be proven, you'll send an L1 transaction to prove that the message was sent on L2.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L23-L27 hash=1af494e8b4c1533bc9d1ce981f7ec88c
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L18-L23 hash=e4d608ac2c2ceb5a744c8474679bd8cb
 ```
 
 {<h3>Wait until the message is ready for relay</h3>}
 
 The final step to sending messages from L2 to L1 is to relay the messages on L1.
 This can only happen after the fault proof period has elapsed.
-On OP Mainnet, this takes 7 days.
+On OP Stack, this takes 7 days.
 
 <Callout>
 We're currently testing fault proofs on OP Sepolia, so withdrawal times reflect Mainnet times.
 </Callout>
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L30-L33 hash=ef3598d29f837b59cfb89e7bbbc0645d
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L25-L29 hash=88cec1db2fde515ea9008eaa1bbdfd73
 ```
 
 {<h3>Relay the message on L1</h3>}
 
 Once the withdrawal is ready to be relayed you can finally complete the message sending process.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L36-L40 hash=c3e5c5d15c048c231397aebcb92eef2c
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L31-L33 hash=d7e47c9787d92e2140622a6bdcc6d7bb
 ```
 
 {<h3>Wait until the message is relayed</h3>}
 
 Now you simply wait until the message is relayed.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L43-L46 hash=e9da5a2b27185b0b948ac45b2d42a7f9
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L35-L36 hash=4ff3cdc48f17cfd7de4a6ef2d2671dc2
 ```
 
 {<h3>Check the L1 Greeter</h3>}
@@ -326,10 +320,10 @@ You can follow a similar pattern in your own smart contracts.
 ## Conclusion
 
 You just learned how you can write Solidity contracts on Sepolia and OP Sepolia that can talk to each other.
-You can follow the same pattern to write contracts that can talk to each other on Ethereum and OP Mainnet.
+You can follow the same pattern to write contracts that can talk to each other on Ethereum and OP Stack.
 
 This sort of cross-chain communication is useful for a variety of reasons.
-For example, the [Standard Bridge](/builders/app-developers/bridging/standard-bridge) contracts use this same system to bridge ETH and ERC-20 tokens between Ethereum and OP Mainnet.
+For example, the [Standard Bridge](/builders/app-developers/bridging/standard-bridge) contracts use this same system to bridge ETH and ERC-20 tokens between Ethereum and OP Stack.
 
-One cool way to take advantage of cross-chain communication is to do most of your heavy lifting on OP Mainnet and then send a message to Ethereum only when you have important results to share.
-This way you can take advantage of the low gas costs on OP Mainnet while still being able to use Ethereum when you need it.
+One cool way to take advantage of cross-chain communication is to do most of your heavy lifting on OP Stack and then send a message to Ethereum only when you have important results to share.
+This way you can take advantage of the low gas costs on OP Stack while still being able to use Ethereum when you need it.

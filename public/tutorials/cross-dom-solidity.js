@@ -2,9 +2,7 @@
 
 const { createPublicClient, http } = require('viem');
 const { optimismSepolia } = require('viem/chains');
-const { publicActionsL2 } = require('viem/op-stack');
-
-const privateKey = process.env.TUTORIAL_PRIVATE_KE
+const {  publicActionsL1, publicActionsL2} = require('viem/op-stack');
 
 const transactionHash = process.env.TUTORIAL_TRANSACTION_HASH
 
@@ -32,16 +30,10 @@ await l1Provider.getWithdrawalStatus({
 
 console.log('Relaying message...')
 const [message] = getWithdrawals(receipt)
-await l1Provider.waitToFinalize({ 
-  withdrawalHash: message.withdrawalHash, 
-  targetChain: l2Provider.chain 
-}) 
+await l1Provider.waitToFinalize({ withdrawalHash: message.withdrawalHash, targetChain: l2Provider.chain }) 
 
 console.log('Waiting for message to be relayed...')
-await l1Provider.getWithdrawalStatus({ 
-  receipt, 
-  targetChain: l2Provider.chain, 
-}) 
+await l1Provider.getWithdrawalStatus({ receipt, targetChain: l2Provider.chain }) 
 
 
 })()
