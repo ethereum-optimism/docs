@@ -10,8 +10,8 @@
 // because it uses Ankr. Maybe the SDK should be updated to use smaller block ranges depending
 // on the RPC but that's a separate issue.
 
-const l1RpcUrl = L1_RPC_URL;
-const l2RpcUrl = L2_RPC_URL;
+const l1RpcUrl = process.env.L1_RPC_URL;
+const l2RpcUrl = process.env.L2_RPC_URL;
 
 // Docs CI wallet, will have deposits and withdrawals.
 const depositHash = '0x5896d6e4a47b465e0d925723bab838c62ef53468139a5e9ba501efd70f90cccb'
