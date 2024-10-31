@@ -22,7 +22,7 @@ Superchain WETH or Interoperable ETH is a specialized version of the standard WE
 *   Improves user experience by abstracting complex bridging processes
 
 <Callout>
-`SuperchainTokenBridge` only has the ability to rebalance the asset across chains. It cannot mint or increase/decrease the total circulating supply.
+  The `SuperchainTokenBridge` can only rebalance assets across chains. It cannot mint or increase/decrease the total circulating supply.
 </Callout>
 
 ## How it works
@@ -50,7 +50,7 @@ sequenceDiagram
     Cross-Chain Messenger->>Destination Chain: 3. Mint SuperchainWETH to recipient
     User->>Destination Chain: 4. Unwrap SuperchainWETH to ETH
 ```
-_Figure 1: Superchain WETH Transfer Process between two interoperable L2 chains._
+_Figure 1: Superchain WETH transfer process between two interoperable L2 chains._
 
 <Callout type="warning">
   `crosschainBurn` and `crosschainMint`can only be called by the `SuperchainTokenBridge`. 
@@ -58,19 +58,19 @@ _Figure 1: Superchain WETH Transfer Process between two interoperable L2 chains.
 
 ## Major components
 
-### `SuperchainWETH` Contract
+### `SuperchainWETH` contract
 
 This contract implements the core functionality for wrapping, unwrapping, and cross-chain transfer of ETH. It integrates with the `SuperchainTokenBridge` for interoperable actions.
 
 *   Contract address: `0x4200000000000000000000000000000000000024`
 
-### `ETHLiquidity` Contract
+### `ETHLiquidity` contract
 
 A predeploy contract with a large pool of ETH that provides liquidity for cross-chain transfers. It allows "burning" and "minting" of ETH for cross-chain transfers. ETH is associated with bridge ETH from the L1 lockbox, making ETH available to interop chains through a shared lockbox rather than fragmented amongst the existing portal contracts.
 
 *   Contract address: `0x4200000000000000000000000000000000000025`
 
-### `L2ToL2CrossDomainMessenger` Contract
+### `L2ToL2CrossDomainMessenger` contract
 
 This predeploy contract facilitates general message passing between different chains in the Superchain. It also securely transfers ERC20 tokens between L2 chains.
 
