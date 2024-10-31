@@ -31,6 +31,10 @@ Transferring SuperchainERC20 tokens between chains involves two main phases:
 
 ## How it works
 
+This diagram illustrates the process of a SuperchainERC20 token transfer between chains. 
+Through the `L2ToL2CrossDomainMessenger` contract, tokens are burned on the source chain and a transfer message is emitted. 
+This message must then be relayed to the destination chain, where an equivalent amount of tokens will be minted to the specified recipient address - ensuring secure cross-chain transfers while maintaining the total token supply across all chains.
+
 ```mermaid
 sequenceDiagram
     actor User
@@ -40,7 +44,7 @@ sequenceDiagram
     
     Note over User,DestChain: Step 1: Prepare Tokens
     User->>SourceChain: Check token balance
-    alt Needs tokens
+    alt
         User->>SourceChain: Mint or acquire tokens
     end
     
