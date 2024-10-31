@@ -77,8 +77,7 @@ The cross-chain messaging process follows a specific lifecycle:
 <Steps>
   ### Prepare message sending
 
-  The [CrossChainMessenger](https://github.com/ethereum-optimism/optimism/blob/92ed64e171c6eb9c6a080c626640e8836f0653cc/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract serves as the primary interface for cross-chain communication. 
-  It initializes the connection to the L2 messenger contract and provides the base functionality for sending messages across chains.
+  The [CrossDomainMessenger](https://github.com/ethereum-optimism/optimism/blob/92ed64e171c6eb9c6a080c626640e8836f0653cc/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract serves as a standalone sender that emits an event. 
 
   Key components:
 
@@ -92,12 +91,10 @@ The cross-chain messaging process follows a specific lifecycle:
       function sendCrossChainMessage(
           address _target,     // Destination contract address
           bytes memory _message, // Message content to be sent
-          uint32 _gasLimit      // Gas limit for execution on destination
       ) external {
           IL2CrossDomainMessenger(L2_MESSENGER).sendMessage(
               _target,
               _message,
-              _gasLimit
           );
       }
   }
@@ -117,14 +114,11 @@ The cross-chain messaging process follows a specific lifecycle:
     messenger: address,   // Address of the messenger contract
     target: address,      // Destination contract address
     message: bytes,       // Message content to be transmitted
-    gasLimit: number      // Execution gas limit
   ): Promise<string> {
     // Send the message with appropriate gas settings
     const tx = await contract.sendMessage(
       target,
       message,
-      gasLimit,
-      { gasLimit: 200000 } // Transaction gas limit for sending
     );
     
     return tx.hash;
@@ -219,8 +213,7 @@ The cross-chain messaging process follows a specific lifecycle:
     // Send relay transaction with appropriate gas limit
     const tx = await messenger.relayMessage(
       identifier,
-      payload,
-      { gasLimit: 500000 }
+      payload
     );
     
     return tx.hash;
@@ -257,5 +250,5 @@ The cross-chain messaging process follows a specific lifecycle:
 
 *   More questions? Read our guide on the anatomy of a [cross-chain message](cross-chain-message)
 *   Use [Supersim](supersim), a local dev environment that simulates Superchain interop for testing applications against a local version of the Superchain.
-*   Use [viem bindings/actions](https://supersim.pages.dev/guides/interop/relay-using-viem.html)the guide will show you how to use viem bindings/actions to fetch identifiers and relay messages.
+*   Use [viem bindings/actions](https://supersim.pages.dev/guides/interop/relay-using-viem.html) - The guide shows how to use viem bindings/actions to fetch identifiers and relay messages.
 *   Read how to manually [relay interop messages](https://supersim.pages.dev/guides/interop/manually-relaying-interop-messages-cast) with cast and `L2ToL2CrossDomainMessenger`
