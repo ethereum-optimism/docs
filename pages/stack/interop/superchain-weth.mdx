@@ -30,7 +30,23 @@ Currently, L2-to-L2 ETH transfers between two interoperable chains require four 
 3.  Execute the message on the destination chain, triggering `SuperchainTokenBridge#RelayERC20` to mint `SuperchainWETH` to the recipient (`crosschainMint` is used). If the destination is a non-custom gas token chain, ETH is sourced from the `ETHLiquidity` contract.
 4.  Unwrap the received `SuperchainWETH` to `ETH`.
 
+<Callout type="info">
 Abstraction is a possible future consideration to reduce this process to two transactions, which can be followed in the [design docs](https://github.com/ethereum-optimism/design-docs/pull/146/files).
+</Callout>
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Source Chain
+    participant Cross-Chain Messenger
+    participant Destination Chain
+
+    User->>Source Chain: 1. Wrap ETH to SuperchainWETH
+    Source Chain->>Cross-Chain Messenger: 2. Burn SuperchainWETH and relay message
+    Cross-Chain Messenger->>Destination Chain: 3. Mint SuperchainWETH to recipient
+    User->>Destination Chain: 4. Unwrap SuperchainWETH to ETH
+```
+_Figure 1: Superchain WETH Transfer Process between two interoperable L2 chains._
 
 <Callout type="warning">
   `crosschainBurn` and `crosschainMint`can only be called by the `SuperchainTokenBridge`.
