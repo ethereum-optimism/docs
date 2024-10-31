@@ -23,36 +23,18 @@ Superchain WETH or Interoperable ETH is a specialized version of the standard WE
 
 ## How it works
 
-Superchain WETH (Interoperable ETH) facilitates secure movement of ETH across the Superchain via `crosschainBurn` and `crosschainMint`.
+Currently, L2-to-L2 ETH transfers between two interoperable chains require four separate transactions:
 
-*   **`crosschainBurn`**: Facilitates cross-chain transfers by **burning** WETH. The cross-chain message is created using the `SendERC20` function on `SuperchainTokenBridge`. 
-    *   In the deposit step, the user sends their ETH to the `SuperchainWETH` contract, which calls the deposit function on `SuperchainWETH`. This results in the user being given the amount of `SuperchainWETH` equivalent to the amount of ETH they sent (this step is also known as "wrapping" your ETH). 
-    *   After depositing, the user can call `SuperchainTokenBridge#SendERC20` to transfer any amount of `SuperchainWETH` (within their SuperchainWETH balance) to a recipient on the destination chain.
-    *   In `SendERC20`, the `SuperchainTokenBridge` calls `crosschainBurn` and sends a cross-chain message via the `L2ToL2CrossDomainMessenger` to the destination chain. 
-*   **`crosschainMint`**: Mints WETH on the destination chain after a cross-chain transfer. User first receives WETH then will need to unwrap to standard ETH through a manual call or more automatically using a wrapper contract. After the cross-chain message is processed on the destination chain, `crosschainMint` is called which provides the recipient with `SuperchainWETH` on the destination chain. If the destination is a non-custom gas token chain, ETH is sourced from the `ETHLiquidity` contract.
+1. Wrap `ETH` to `SuperchainWETH`.
+2. Call `SuperchainTokenBridge#SendERC20` to burn `SuperchainWETH` on source chain and relay a message to the destination chain that mints `SuperchainWETH` to the recipient (`crosschainBurn` is used).
+3. Execute the message on the destination chain, triggering `SuperchainTokenBridge#RelayERC20` to mint `SuperchainWETH` to the recipient (`crosschainMint` is used). If the destination is a non-custom gas token chain, ETH is sourced from the `ETHLiquidity` contract.
+4. Unwrap the received `SuperchainWETH` to `ETH`. 
+
+Abstraction is a possible future consideration to reduce this process to two transactions, which can be followed in the [design docs](https://github.com/ethereum-optimism/design-docs/pull/146/files).
 
 <Callout type="warning">
   `crosschainBurn` and `crosschainMint`can only be called by the `SuperchainTokenBridge`.
 </Callout>
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant SuperchainWETH
-    participant ETHLiquidity
-    participant L2ToL2CrossDomainMessenger
-    participant DestinationChain
-
-    User->>SuperchainWETH: Send ETH
-    SuperchainWETH->>ETHLiquidity: Burn ETH
-    SuperchainWETH->>L2ToL2CrossDomainMessenger: Send cross-chain message
-    L2ToL2CrossDomainMessenger->>DestinationChain: Relay message
-    DestinationChain->>SuperchainWETH: Call relayETH/relayERC20
-    SuperchainWETH->>ETHLiquidity: Source ETH (if non-custom gas token chain)
-    SuperchainWETH->>User: Receive ETH/WETH on destination chain
-```
-
-This diagram illustrates the process where the user sends ETH to the `SuperchainWETH` contract which burns the ETH and sends a cross-chain message to the destination chain, enabling seamless cross-chain ETH transfers without the need for asset wrapping.
 
 ## Major components
 
