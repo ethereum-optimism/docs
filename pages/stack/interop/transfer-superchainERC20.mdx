@@ -8,112 +8,51 @@ import { Callout, Steps } from 'nextra/components'
 
 # How to transfer a SuperchainERC20
 
-This guide walks you through transferring SuperchainERC20 tokens between chains using the `L2ToL2CrossDomainMessenger` contract.
-
-## Prerequisites
-
-Before you begin, ensure you have:
-
-*   Access to source and destination chain RPC endpoints.
-*   A private key with funds on both chains.
-*   The `cast` command-line tool installed.
-
-<Callout type="info">
-  All commands in this guide use the `cast` CLI tool. Make sure you have it properly configured with your RPC endpoints.
+<Callout>
+  Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
 </Callout>
 
-## Contract addresses
+This guide provides an overview of transferring SuperchainERC20 tokens between chains. For detailed technical steps and commands, see the [technical reference guide](https://supersim.pages.dev/guides/interop/manually-relaying-interop-messages-cast).
 
-The following contracts are used in this guide:
+## Overview
 
-*   L2NativeSuperchainERC20: `0x420beeF000000000000000000000000000000001`
-*   L2ToL2CrossDomainMessenger: `0x4200000000000000000000000000000000000023`
+Transferring SuperchainERC20 tokens between chains involves two main phases:
 
-## How it works
-
-Transferring tokens involves two main phases:
-
-1.  **Source chain operations**: Mint tokens and initiate the transfer.
-2.  **Destination chain operations**: Relay the message to complete the transfer.
+1. **Source Chain Operations**
+   - Mint tokens if needed
+   - Initiate the transfer using the bridge
+   
+2. **Destination Chain Operations**
+   - Relay the transfer message
+   - Verify the transfer completion
 
 <Callout type="warning">
   Always verify your addresses and amounts before sending transactions. Cross-chain transfers cannot be reversed.
 </Callout>
 
+## How it works
+
 <Steps>
 
-### Step 1: Mint tokens
+### Step 1: Prepare your tokens
 
-First, mint tokens on the source chain:
+First, ensure you have tokens on the source chain. You can mint new tokens if needed using the [L2NativeSuperchainERC20](https://github.com/ethereum-optimism/supersim/blob/main/contracts/src/L2NativeSuperchainERC20.sol) contract.
 
-```bash
-cast send 0x420beeF000000000000000000000000000000001 \
-"mint(address _to, uint256 _amount)" \
-YOUR_ADDRESS 1000 \
---rpc-url SOURCE_CHAIN_RPC \
---private-key YOUR_PRIVATE_KEY
-```
+### Step 2: Initiate the transfer
 
-<Callout type="default">
-  Replace `YOUR_ADDRESS`, `SOURCE_CHAIN_RPC`, and `YOUR_PRIVATE_KEY` with your actual values.
-</Callout>
+Use the bridge contract to start the transfer process. This will lock or burn your tokens on the source chain.
 
-### Step 2: Initiate transfer
+### Step 3: Complete the transfer
 
-After minting, initiate the bridge transfer:
+Relay the transfer message on the destination chain to complete the process. This will mint or unlock your tokens.
 
-```bash
-cast send 0x4200000000000000000000000000000000000028 \
-"sendERC20(address _token, address _to, uint256 _amount, uint256 _chainId)" \
-0x420beeF000000000000000000000000000000001 \
-RECIPIENT_ADDRESS 1000 DESTINATION_CHAIN_ID \
---rpc-url SOURCE_CHAIN_RPC \
---private-key YOUR_PRIVATE_KEY
-```
+### Step 4: Verify completion
 
-<Callout type="important">
-  The transfer isn't complete until you relay the message on the destination chain.
-</Callout>
+Check your balance on the destination chain to confirm the transfer was successful.
 
-### Step 3: Get message details
-
-Retrieve the message details from the L2ToL2CrossDomainMessenger:
-
-```bash
-cast logs \
---address 0x4200000000000000000000000000000000000023 \
---rpc-url SOURCE_CHAIN_RPC
-```
-
-<Callout type="info">
-  Note down the `blockNumber`, `logIndex`, and timestamp - you'll need these for relaying.
-</Callout>
-
-### Step 4: Relay the message
-
-Complete the transfer by relaying the message on the destination chain:
-
-```bash
-cast send 0x4200000000000000000000000000000000000023 \
---gas-limit 200000 \
-"relayMessage((address, uint256, uint256, uint256, uint256), bytes)" \
-"(0x4200000000000000000000000000000000000023, BLOCK_NUMBER, LOG_INDEX, TIMESTAMP, SOURCE_CHAIN_ID)" \
-MESSAGE_PAYLOAD \
---rpc-url DESTINATION_CHAIN_RPC \
---private-key YOUR_PRIVATE_KEY
-```
-
-### Step 5: Verify transfer
-
-Check the balance on the destination chain:
-
-```bash
-cast balance \
---erc20 0x420beeF000000000000000000000000000000001 \
-RECIPIENT_ADDRESS \
---rpc-url DESTINATION_CHAIN_RPC
-```
 </Steps>
+
+For detailed technical instructions including contract addresses, specific commands, and message relaying details, refer to our [technical reference guide](https://supersim.pages.dev/guides/interop/manually-relaying-interop-messages-cast).
 
 ## Alternative methods
 
@@ -124,5 +63,5 @@ You can also use:
 
 ## Next steps
 
-*   Read the [Superchain Interop Explainer](/stack/interop/explainer#faqs) or check out this [Superchain interop design video walk-thru](https://www.youtube.com/watch?v=FKc5RgjtGes).
-*   Use [Supersim](supersim), a local dev environment that simulates Superchain interop for testing applications against a local version of the Superchain.
+*   Read the [Superchain Interop Explainer](/stack/interop/explainer#faqs) or check out this [Superchain interop design video walk-thru](https://www.youtube.com/watch?v=FKc5RgjtGes)
+*   Use [Supersim](supersim), a local dev environment that simulates Superchain interop for testing applications against a local version of the Superchain
