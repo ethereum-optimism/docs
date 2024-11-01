@@ -26,7 +26,7 @@ pnpm create-breadcrumbs
 
 2. **After Running**
    *   Review generated `.mdx` files in each folder
-   *   Check updated descriptions
+   *   Check updated descriptions, plese update the description.
    *   Verify Card components and links
 
 ## Common Issues
