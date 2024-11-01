@@ -1,44 +1,28 @@
 ---
-title: Best practices for deploying new assets with SuperchainERC20
+title: Best practices for managing SuperchainERC20 tokens
 lang: en-US
-description: Essential best practices for deploying and managing SuperchainERC20 assets across the Superchain
+description: Essential best practices for deploying and managing SuperchainERC20 assets across Superchain-compatible networks.
 ---
 
-# Best practices for deploying new assets with SuperchainERC20
+# Best practices for managing SuperchainERC20 tokens
 
-The following best practices are essential for deploying and managing `SuperchainERC20` assets across Superchain-compatible networks. These guidelines help ensure optimal cross-chain functionality, consistent metadata, and efficient resource utilization.
+The following best practices are essential for deploying and managing `SuperchainERC20` assets across the Superchain. These guidelines help ensure optimal cross-chain functionality.
+
+Note that the total supply of your tokens never fluctuates across the Superchain. Cross-chain burning and minting only affects the location of a token across the Superchain. 
 
 ## Consistent addressing across chains
 
-* Use predefined addresses: Assign and verify unique addresses for each `SuperchainERC20` instance on every chain. Predefined addresses reduce deployment conflicts and ensure tokens are accurately recognized across chains.
+* Use predefined addresses: Assign and verify the same address for each `SuperchainERC20` instance on every chain. Predefined addresses reduce deployment conflicts and ensure tokens are accurately recognized across chains. Otherwise, the SuperchainERC20Bridge would need a way to verify if the tokens they mint on destination correspond to the tokens that were burned on source. Consider using `Create2Deployer` or one of our [predeploys](https://specs.optimism.io/interop/predeploys.html) to ensure this.
 
 ## Token metadata consistency
 
 * Standardize token metadata: Use identical values for `name`, `symbol`, and `decimals` across all chain instances. Inconsistent metadata can lead to display errors and transaction rejections during cross-chain operations.
-  
-* Implement metadata verification: Add checks to ensure that metadata (e.g., `decimals`) matches across chains.
-
-## Efficient cross-chain transfers with crosschainBurn and crosschainMint
-
-* Maintain supply consistency: Use `crosschainBurn` to decrement token balances on the originating chain and `crosschainMint` to increase balances on the destination chain. These functions should mirror asset movement across chains without altering the total supply.
-
-* Implement error handling in transfer functions: Validate addresses and amounts before initiating cross-chain transfers. Cross-chain transfers are irreversible, so checks help prevent unrecoverable asset loss.
-
-## Optimizing gas usage for high-volume transfers
-
-* Minimize storage access: Use memory variables instead of storage where possible in high-frequency functions. Reduced storage access lowers gas fees, improving efficiency for high-volume transactions.
-
-* Batch transfers within gas limits: For batch transfers, ensure that gas limits are optimized to accommodate transaction volumes. Where possible, split large transactions to prevent them from failing due to gas constraints.
-
-## Sequence for deployment and bridging
-
-* Deploy on the origin chain first: Start with deployment on the primary chain to serve as the authoritative ledger for total supply. Subsequent chain instances should use this origin to track and verify supply.
-
-* Bridge tokens sequentially: When deploying across multiple chains, bridge tokens in a consistent, sequential order from the origin chain. This helps prevent supply misalignment and ensures accurate tracking.
 
 ## Comprehensive testing before mainnet deployment
 
-- **Test with production-like conditions**: Deploy to staging environments that simulate mainnet conditions, especially for functions like `crosschainBurn` and `crosschainMint`. Test under realistic transaction loads to validate performance. We recommend using [Supersim](https://supersim.pages.dev/introduction) as an easy way to simulate the Superchain and test your SuperchainERC20 deployment.
+* Test with production-like conditions: Deploy to staging environments that simulate mainnet conditions, especially for functions like `crosschainBurn` and `crosschainMint`. Test under realistic transaction loads to validate performance. We recommend using [Supersim](https://supersim.pages.dev/introduction) as an easy way to simulate the Superchain and test your SuperchainERC20 deployment.
+
+* Validate transfer handling: Test edge cases such as maximum balance transfers and inter-chain latency to ensure asset reliability across different scenarios.
 
 ## Next steps
 
