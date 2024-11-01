@@ -1,7 +1,7 @@
 ---
 title: Transaction Finality
 lang: en-US
-description: Learn about finality in OP Stack and the steps to achieve transaction settlement.
+description: Learn when transactions on OP Stack chains can be considered finalized.
 ---
 
 import Image from 'next/image'
@@ -9,94 +9,77 @@ import { Callout } from 'nextra/components'
 
 # Transaction finality
 
-This guide explains how transaction finality works in the OP Stack and addresses common misconceptions around transaction finality and the Fault Proof System.
+This page explains when transactions on OP Stack chains can be considered "finalized" and addresses common misconceptions about transaction finality on the OP Stack.
 
-The OP Stack derives its security from Ethereum by utilizing Ethereum's consensus mechanism. Instead of running an entirely separate consensus protocol, the OP Stack derives a L2 blockchain by reading the finalized state on Ethereum.
+## Basics of finality
 
-## Transaction finality states
+Transaction "finality" is a term used to describe the point at which a transaction is irreversible under certain assumptions. For example, Ethereum transactions are considered finalized when certain conditions in Ethereum's consensus mechanism are met. Many applications built on top of Ethereum make use of this property when making certain decisions, like crediting a user's account when the user makes a deposit to an exchange.
 
-In the OP Stack, transaction finality progresses through three key stages:
+## OP Stack finality
 
-1.  **Unsafe:** The Sequencer creates a block containing the transaction, but the transaction data has not yet been posted to Ethereum (L1). The block is circulated within the L2 network for speed.
+OP Stack chains in the Standard Configuration are Rollups that utilize Ethereum's consensus mechanism to order and finalize transactions instead of running an entirely separate consensus protocol. As a result, chains using the OP Stack inherit the ordering and finality properties of Ethereum.
 
-2.  **Safe:** The Sequencer posts the transaction data to L1. At this point, any L2 node can derive the transaction.
+## Steps to finality
 
-3.  **Finalized:** Transactions are generally finalized on Ethereum when 2/3 of validators sign off on two consecutive checkpoints. This typically occurs within approximately two epochs, or around 65 blocks (10-15 minutes), but may take longer under adverse network conditions. This ensures that L1 data remains secure and unlikely to be reorganized.
+Transactions on OP Stack chains follow a simple process to finality:
+
+1.  A user submits a transaction to the network, which is forwarded to the Sequencer.
+1.  The Sequencer includes the transaction in a block and distributes the block over a public p2p network. The user's transaction is now considered to be in a known but **"unsafe"** state. Here, "unsafe" is a technical term used to describe the fact that the transaction has been included in a block whose data has not yet been posted to Ethereum. This typically takes just a few seconds.
+1.  The Sequencer publishes the data for this block to Ethereum either as [blob data](https://www.eip4844.com/) or as calldata attached to a standard Ethereum transaction. Once this transaction is included in an Ethereum block, the user's transaction is considered to be in a **"safe"** state. This step typically takes 5-10 minutes.
+1.  The Ethereum block containing the Sequencer's transaction is finalized. At this point, the user's transaction is considered to be in a **"finalized"** state. Ethereum finalization typically takes ~65 Ethereum blocks or ~13 minutes but may take longer under certain network conditions. Finality here is entirely dependent on [Ethereum's consensus mechanism](https://ethereum.org/en/developers/docs/consensus-mechanisms/pos/#finality).
+
+TODO: Fix this so it has the right numbers
 
 <Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
 
-### Transaction validity
-
-When a transaction is submitted to the network, it undergoes validation. If the transaction is valid, the Sequencer includes it in a block. If it is invalid, it may still be proposed by the Sequencer, but the rest of the network will reject the block containing the invalid transaction, ensuring only valid transactions are finalized.
-
-## Sequencer trust assumptions
-
-The Sequencer operates with the following trust assumptions:
-
-*   It can temporarily withhold transactions.
-*   It may attempt to reorder transactions before L1 publication.
-*   Once transactions are published on L1 and finality is reached, the Sequencer cannot modify or censor them. However, until finality, transactions are theoretically subject to reorgs.
-
 ## Common misconceptions
 
-The biggest misconception about transaction finality is that a transaction needs to wait for the entire challenge window to become finalized.
-The reality is the OP Stack transaction finality takes minutes, not over a week. This section explains transaction finality and the Fault Proof System's challenge mechanism.
+### Misconception: transactions take 7 days to finalize
 
-### Reorgs and finality
+It's common to hear that transactions on OP Stack chains take 7 days to finalize. **This is incorrect.** Transactions on OP Stack chains become finalized when their data is included in a finalized Ethereum block. This typically takes ~20-30 minutes from the time the transaction is submitted. To reorg a finalized OP Stack chain transaction, you would have to be able to reorg the finalized Ethereum block that transaction's data is included within.
 
-Once a transaction is included in a finalized Ethereum block, it cannot be reorganized.
+Confusion about this fact commonly stems from the OP Stack's Standard Bridge design which includes a 7 day delay on *withdrawals* of ETH and other ERC-20 tokens from the bridge. This means that it takes a minimum of 7 days to move tokens from an OP Stack chain to Ethereum when using the Standard Bridge. The 7 day withdrawal delay applies to only to these withdrawals and has no impact the speed of finality on the OP Stack chain.
 
-If an Ethereum reorganization (reorg) occurs, it affects applications on the OP Stack, such as the Optimism bridge, which uses the OP Stack's proof system to ensure transaction integrity:
+### Misconception: challenges in the Standard Bridge can cause a chain reorg
 
-1.  Detection: L2 nodes detect the L1 reorg, flagging the Optimism bridge's related transactions for re-evaluation.
-2.  State Adjustment: The L2 blocks impacted by the reorg revert to an "unsafe" status.
-3.  Transaction Re-publication: The Sequencer typically republishes the same transactions for the bridge, using the proof system to re-establish transaction validity.
-4.  System Restoration: After reprocessing, the system stabilizes, restoring a consistent state for bridge-related operations without impacting the rollup's core finalized state.1
+Another common misconception related to the misconception that [finalization takes 7 days](#misconception-transactions-take-7-days-to-finalize) is the idea that **Fault Proof challenges** created in response to withdrawals within the Standard Bridge can cause an OP Stack chain to reorganize itself (reorg). **This is not correct.** OP Stack transactions are never reorganized in response to any Fault Proof challenge.
 
-### The role of proof system
+The Standard Bridge is a bridge application that is included by default with any OP Stack chain and connects the chain to its "parent" blockchain (usually Ethereum). The Standard Bridge takes advantage of the special relationship between a Rollup and its parent blockchain to be able to provide a high level of security for any ETH and ERC-20 tokens moved through the bridge.
 
-The Fault Proof System is used by bridge contracts on L1 to verify claims that users make about the state of L2 for the purpose of facilitating user withdrawals of certain bridged assets from L2 to L1.
+Users that want to send ETH or ERC-20 tokens from the OP Stack chain to Ethereum through the Standard Bridge must first *burn* these ETH or ERC-20 tokens on the OP Stack chain. The user can then create a **withdrawal claim** on Ethereum that *claims* that they have indeed burned these tokens on the OP Stack chain.
 
-A claim in the context of OP Stack is a statement asserting the state of the system at a specific block height. For instance, a claim might assert that at block 1,000,000 a certain address has all of the ether on the entire L2. If other participants believe this claim to be incorrect, they can challenge it.
+Since the Standard Bridge is a smart contract on Ethereum and smart contracts can't run a whole node for an OP Stack chain, it has no way to immediately determine if a given withdrawal claim actually corresponds to real tokens being burned on the OP Stack chain. Instead, the Standard Bridge delays a claim by 7 days to allow time for the OP Stack Fault Proof system to filter out any "bad" withdrawal claims.
 
-Challenges focus on proving whether a given claim is valid. The outcome of a challenge does not impact the underlying chain. For example, if a claim about a certain address owning all the ether on the L2 is proven wrong, that address would not be able to move the ether from L2 to their address on L1.
+Anyone can make any sort of withdrawal claim at any time because the bridge has no way to immediately distinguish a good claim from a bad one. Challenges simply remove a bad withdrawal claim without any other impact to the Standard Bridge or the underlying OP Stack chain.
 
-The challenge period provides time for challenges to be raised and resolved.
-Although OP Stack finalizes transactions quickly (within 20 minutes), the 7-day challenge window serves two critical purposes:
+TODO: It'd be really fun to have a button that (for the bond cost of 0.08 ETH) creates a bad withdrawal claim for all of the ETH in the bridge. Users would be able to see first hand how their claim gets deleted and nothing else happens.
 
-1.  It allows time to dispute the correctness of output state roots posted to Ethereum by the proposer.
-2.  It provides a security period for withdrawal processing, ensuring the integrity of cross-chain operations.
+### Misconception: the Sequencer can always reorg the chain
 
-During this 7-day period:
+Sequencers play an important role in an OP Stack chain. The Sequencer acts as the block producer for the chain and quickly creates blocks as it receives user transactions. Here we'll address the common misconception that the Sequencer can cause reorganizations of the OP Stack chain over long periods of time.
 
-*   If no challenge is raised: The posted state root is confirmed as valid, and users can proceed with their withdrawals or related transactions on Ethereum, completing the cross-chain process smoothly.
+The OP Stack expects the Sequencer to produce a block every 1 or 2 seconds depending on the configuration of the chain. Since this 1 or 2 second block time is less than Ethereum's 12 second block time, there will always be some time before a Sequencer's block can be published to Ethereum.
 
-*   If a successful challenge occurs: The claim on the state root is invalidated, blocking any withdrawals based on that incorrect state root. This ensures that any invalid state does not impact the L2 chain's integrity or user assets.
-    Notably, this challenge mechanism is app-level and does not trigger reorganization or alter the core L2 chain's finalized state.
+Sequencers **can** reorganize blocks *before* they are published to Ethereum, which is why OP Stack chain nodes consider these blocks to be **"unsafe"**. Although "unsafe" blocks are typically not reorganized, it is important for applications to understand that a reorganization is always possible. Reorgs of "unsafe" blocks *have* previously occurred during temporary Sequencer outages.
 
-### Withdrawal delays vs. finality
+Reorganization becomes significantly more difficult once the Sequencer publishes block data to Ethereum. At this point, the Sequencer would have to *intentionally* cause a reorg of Ethereum itself. Given the difficulty required to trigger such a reorg, OP Stack nodes are programmed to consider transactions to be **"safe"** when this condition is reached.
 
-One common misconception is confusing withdrawal delays with transaction finality:
+Once block data for the OP Stack chain is included in a finalized Ethereum block, the Sequencer **cannot** cause a reorganization of the OP Stack chain without violating finality in Ethereum itself. Applications built on top of Ethereum typically operate under the assumption that such a violation is not possible.
 
-*   Transaction finality occurs in approximately 20 minutes.
+In summary:
 
-*   Withdrawal delays are an application-level security feature specific to the Optimism bridge. 
+*   The Sequencer **can** cause a reorganization of **"unsafe"** blocks that have not yet been published to Ethereum (within ~5-10 minutes).
+*   The Sequencer **could** cause a reorgnization of **"safe** blocks that have been published to Ethereum but not yet included in a finalized Ethereum block (within ~15-30 minutes). To do this, the Sequencer would need to be able to intentionally cause a reorganization of Ethereum itself.
+*   The Sequencer **cannot** cause a reorganizaton of **"finalized"** blocks that have been included in a finalized Ethereum block (after ~15-30 minutes) without violating Ethereum's finality guarantees.
 
-*   These delays impact only L1 withdrawals and do not affect the L2 protocol's transaction finality.
-    
-*   This distinction ensures that the core protocol maintains efficiency and quick finalization for L2 transactions.
+### Misconception: Ethereum reorgs will cause reorgs on the OP Stack chain
 
-### Bridge independence
+When we touched on the misconception that the [Sequencer can always reorganize the chain](#misconception-the-sequencer-can-always-reorganize-the-chain) above we noted that transactions that are **"unsafe"** or **"safe"** could be impacted by reorganizations of Ethereum itself. Although it's unlikely for the Sequencer to be able to affect such a reorganization intentionally, Ethereum reorganizations *do* occur from time to time.
 
-Key aspects of bridge systems include:
+When a reorganization occurs on Ethereum, assuming that the Sequencer is not intentionally triggering this reorg, the OP Stack chain will attempt to gracefully recover. OP Stack nodes will automatically downgrade **"safe"** transactions back into **"unsafe"** transactions if necessary. At the same time, the Sequencer will begin the process of publishing transaction data again to re-establish the original chain.
 
-*   Bridges are application-level constructs.
-*   They operate independently of the core OP Stack protocol.
-*   Bridge security does not affect the validity of L2 transactions.
-*   Bridge failures do not cause L2 reorgs or state changes.
-
-For example, a custom bridge might be developed to allow ERC-20 tokens to move between layers. However, this bridge is application-level and not native to the OP Stack. If there is an issue with the bridge, such as incorrect proof validation, it does not impact the protocol itself but affects the subjective value of the bridged assets.
+Graceful handling of Ethereum reorgs means that an OP Stack chain will typically recover without experiencing any sort of reorganization itself. In rare cases, extreme Ethereum network conditions *could* cause reorganizations of an OP Stack chain, but **"finalized"** OP Stack chain transactions can **never** be reorganized.
 
 ## Conclusion
 
-Transaction finality in the OP Stack relies on Ethereum's consensus mechanism. The OP Stack inherits Ethereum's finality guarantees, while the proof system adds a layer of validation for app-level functionality.
+Transaction finality in the OP Stack is a lot simpler than it seems. OP Stack chains utilize Ethereum for consensus and inherit Ethereum's finality guarantees as a result. Once your node reports an OP Stack chain transaction as **"finalized"**, it can't be reversed.
