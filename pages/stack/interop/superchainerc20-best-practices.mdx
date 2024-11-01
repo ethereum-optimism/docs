@@ -1,7 +1,7 @@
 ---
 title: Best practices for managing SuperchainERC20 tokens
 lang: en-US
-description: Essential best practices for deploying and managing SuperchainERC20 assets across Superchain-compatible networks.
+description: Essential best practices for deploying and managing SuperchainERC20 assets across Superchain networks.
 ---
 
 # Best practices for managing SuperchainERC20 tokens
@@ -10,19 +10,23 @@ The following best practices are essential for deploying and managing `Superchai
 
 Note that the total supply of your tokens never fluctuates across the Superchain. Cross-chain burning and minting only affects the location of a token across the Superchain.
 
-## Consistent addressing across chains
+## Consistent addresses across chains
 
-*   Use predefined addresses: Assign and verify the same address for each `SuperchainERC20` instance on every chain. Predefined addresses reduce deployment conflicts and ensure tokens are accurately recognized across chains. Otherwise, the SuperchainERC20Bridge would need a way to verify if the tokens they mint on destination correspond to the tokens that were burned on source. Consider using `Create2Deployer` or one of our [predeploys](https://specs.optimism.io/interop/predeploys.html) to ensure this.
+Use predefined addresses: Assign and verify the same address for each `SuperchainERC20` instance on every chain. Predefined addresses reduce deployment conflicts and ensure tokens are accurately recognized across chains. Otherwise, the SuperchainERC20Bridge would need a way to verify if the tokens they mint on destination correspond to the tokens that were burned on source.
+
+Consider using `Create2Deployer` or one of our [predeploys](https://specs.optimism.io/interop/predeploys.html) to ensure this.
 
 ## Token metadata consistency
 
-*   Standardize token metadata: Use identical values for `name`, `symbol`, and `decimals` across all chain instances. Inconsistent metadata can lead to display errors and transaction rejections during cross-chain operations.
+Standardize token metadata: Use identical values for `name`, `symbol`, and `decimals` across all chain instances. Inconsistent metadata can lead to display errors and transaction rejections during cross-chain operations.
 
-## Comprehensive testing before mainnet deployment
+##  Testing before mainnet deployment
 
-*   Test with production-like conditions: Deploy to staging environments that simulate mainnet conditions, especially for functions like `crosschainBurn` and `crosschainMint`. Test under realistic transaction loads to validate performance. We recommend using [Supersim](https://supersim.pages.dev/introduction) as an easy way to simulate the Superchain and test your SuperchainERC20 deployment.
+Test with production-like conditions: Deploy to staging environments that simulate mainnet conditions, especially for functions like `crosschainBurn` and `crosschainMint`. Test under realistic transaction loads to validate performance. 
 
-*   Validate transfer handling: Test edge cases such as maximum balance transfers and inter-chain latency to ensure asset reliability across different scenarios.
+We recommend using [Supersim](https://supersim.pages.dev/introduction) as an easy way to simulate the Superchain and test your SuperchainERC20 deployment.
+
+Test edge cases such as maximum balance transfers and inter-chain latency to ensure asset reliability across different scenarios.
 
 ## Next steps
 
