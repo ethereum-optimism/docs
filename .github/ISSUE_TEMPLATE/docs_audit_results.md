@@ -9,7 +9,25 @@ labels: 'docs-audit-2024-Q4,op-labs'
 
 ## Description of the updates required
 
-> Write a description of the current state of the page.
+<!-- Write a description of the current state of the page. -->
+
+### Acceptance criteria
+
+<!-- Definition of done for the assignee -->
+
+### Resources
+
+<!-- Supporting docs, points of contact, and any additional helpful info -->
+
+### Action items
+
+<!-- The process for working through this issue for example:
+1. Read through resources and meet with SME
+2. Write the first draft
+3. Share draft with SMEs and implement feedback
+4. Peer review
+5. Final SME review
+6. Publish -->
 
 ## Github issue label criteria
 
