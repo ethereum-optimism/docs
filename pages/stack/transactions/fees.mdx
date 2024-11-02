@@ -1,12 +1,19 @@
 ---
-title: Transaction Fees on OP Mainnet
+title: Transaction fees on OP Mainnet
 lang: en-US
 description: Learn how transaction fees work on OP Mainnet.
 ---
 
 import { Callout } from 'nextra/components'
 
-# Transaction Fees on OP Mainnet
+<Callout>
+  The OP Stack maintains a distinct gas limit compared to the Ethereum mainnet.
+  While both chains use the same underlying transaction formats, Optimism's gas limits are tailored for optimal Layer 2 performance and scalability.
+  As a result, transactions on Optimism may behave differently from the mainnet regarding gas usage and fee estimation.
+  For a detailed comparison of gas limits between Optimism and Ethereum, see the [Optimism Chain Differences documentation](https://docs.optimism.io/chain/differences#transaction-fees).
+</Callout>
+
+# Transaction fees on OP Mainnet
 
 OP Mainnet is designed to be [EVM equivalent](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306), which means it reuses the same Ethereum code you're already familiar with and behaves as much like Ethereum as possible.
 However, transaction fees on all Layer 2 systems need to diverge from Ethereum to some extent for a number of reasons.
@@ -16,7 +23,7 @@ OP Mainnet transaction fees are composed of an [Execution Gas Fee](#execution-ga
 The total cost of a transaction is the sum of these two fees.
 Continue reading to learn more about exactly how each of these fee components are charged.
 
-## Execution Gas Fee
+## Execution gas fee
 
 A transaction's execution gas fee is exactly the same fee that you would pay for the same transaction on Ethereum.
 This fee is equal to the amount of gas used by the transaction multiplied by the gas price attached to the transaction.
@@ -30,7 +37,7 @@ The only difference is that the gas price on OP Mainnet is much lower than the g
 For this component of the fee, you can estimate the total cost of a transaction using the same tools you would use to estimate the cost of a transaction on Ethereum.
 You can read more about how Ethereum's gas fees work over on [Ethereum.org](https://ethereum.org/en/developers/docs/gas/).
 
-### Base Fee
+### Base fee
 
 The [base fee](https://ethereum.org/en/developers/docs/gas/#base-fee) is the minimum price per unit of gas that a transaction must pay to be included in a block.
 Transactions must specify a maximum base fee higher than the block base fee to be included.
@@ -40,7 +47,7 @@ The OP Mainnet base fee behaves exactly like the Ethereum base fee with a few sm
 None of these parameters should significantly impact your application, but you can read more about each of these parameters on the [OP Mainnet differences](/chain/differences#eip-1559) page.
 Read more about the base fee in the [Ethereum.org documentation](https://ethereum.org/en/developers/docs/gas/#base-fee).
 
-### Priority Fee
+### Priority fee
 
 Just like on Ethereum, OP Mainnet transactions can specify a **priority fee**.
 This priority fee is a price per unit of gas that is paid on top of the base fee.
@@ -51,7 +58,7 @@ The priority fee is an optional component of the execution gas fee and can be se
 If transaction speed is important to your application, you may want to set a higher priority fee to ensure that your transaction is included more quickly.
 The [`eth_maxPriorityFeePerGas`](https://docs.alchemy.com/reference/eth-maxpriorityfeepergas) RPC method can be used to estimate a priority fee that will get your transaction included quickly.
 
-## L1 Data Fee
+## L1 data fee
 
 The L1 Data Fee is the only part of the OP Mainnet transaction fee that differs from the Ethereum transaction fee.
 This fee arises from the fact that the transaction data for all OP Mainnet transactions is published to Ethereum.
@@ -210,7 +217,7 @@ The Sequencer Fee Vault collects and holds transaction fees paid to the sequence
 *   **Vault Address**: The Sequencer Fee Vault is predeployed at the address `0x4200000000000000000000000000000000000011` on the OP Mainnet.
 *   **Fee Usage**: Stored fees are eventually transferred to a designated recipient address (e.g., a treasury or distribution contract).
 
-### How it Works
+### How it works
 
 1.  **Fee Collection**: During the processing of transactions, the sequencer collects fees from users as part of their transaction costs. These fees are primarily used to cover the gas expenses of posting transaction data to Ethereum L1.
 2.  **Storage**: Collected fees are deposited into the Sequencer Fee Vault contract.
@@ -218,7 +225,7 @@ The Sequencer Fee Vault collects and holds transaction fees paid to the sequence
 
 This system ensures effective fee management, maintaining the security and operation of the Optimism network.
 
-## Next Steps
+## Next steps
 
 *   Read the [differences between Ethereum and OP Stack Chains](/stack/differences) guide.
 *   Read the [L2 to L1 Transactions](/builders/app-developers/bridging/messaging#for-l1-to-l2-transactions) guide.

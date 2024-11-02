@@ -12,7 +12,7 @@ This page will teach you what the `op-conductor` service is and how it works on
 a high level. It will also get you started on setting it up in your own
 environment.
 
-## Enhancing Sequencer Reliability and Availability
+## Enhancing sequencer reliability and availability
 
 The [op-conductor](https://github.com/ethereum-optimism/optimism/tree/develop/op-conductor)
 is an auxiliary service designed to enhance the reliability and availability of
@@ -26,7 +26,7 @@ It is important to note that the `op-conductor` does not incorporate Byzantine
 fault tolerance (BFT). This means the system operates under the assumption that
 all participating nodes are honest and act correctly.
 
-### Summary of Guarantees
+### Summary of guarantees
 
 The design of the `op-conductor` provides the following guarantees:
 
@@ -40,14 +40,14 @@ The design of the `op-conductor` provides the following guarantees:
 
 **On a high level, `op-conductor` serves the following functions:**
 
-### Raft Consensus Layer Participation
+### Raft consensus layer participation
 
-*   **Leader Determination:** Participates in the Raft consensus algorithm to
+*   **Leader determination:** Participates in the Raft consensus algorithm to
     determine the leader among sequencers.
-*   **State Management:** Stores the latest unsafe block ensuring consistency
+*   **State management:** Stores the latest unsafe block ensuring consistency
     across the system.
 
-### RPC Request Handling
+### RPC request handling
 
 *   **Admin RPC:** Provides administrative RPCs for manual recovery scenarios,
     including, but not limited to: stopping the leadership vote and removing itself
@@ -55,18 +55,18 @@ The design of the `op-conductor` provides the following guarantees:
 *   **Health RPC:** Offers health RPCs for the `op-node` to determine whether it
     should allow the publishing of transactions and unsafe blocks.
 
-### Sequencer Health Monitoring
+### Sequencer health monitoring
 
 *   Continuously monitors the health of the sequencer (op-node) to ensure
     optimal performance and reliability.
 
-### Control Loop Management
+### Control loop management
 
 *   Implements a control loop to manage the status of the sequencer (op-node),
     including starting and stopping operations based on different scenarios and
     health checks.
 
-## Conductor State Transition
+## Conductor state transition
 
 The following is a state machine diagram of how the op-conductor manages the
 sequencers Raft consensus.
@@ -216,7 +216,7 @@ This setup guide has the following assumptions:
   `OP_CONDUCTOR_PAUSED: true` flag and `OP_CONDUCTOR_RAFT_BOOTSTRAP` flag.
 </Steps>
 
-#### Blue/Green Deployment
+#### Blue/green deployment
 
 In order to ensure there is no downtime when setting up conductor, you need to
 have a deployment script that can update sequencers without network downtime.
@@ -240,7 +240,7 @@ An example of this workflow might look like:
 5.  Deploy the change to the original sequencer, wait for it to sync to the
     chain head. Execute health checks.
 
-#### Post-Conductor Launch Deployments
+#### Post-conductor launch deployments
 
 After conductor is live, a similar canary style workflow is used to ensure
 minimal downtime in case there is an issue with deployment:
@@ -254,7 +254,7 @@ minimal downtime in case there is an issue with deployment:
     1.  If not, then there is likely an issue with the deployment. Roll back.
 5.  Upgrade the remaining sequencers, run healthchecks.
 
-### Configuration Options
+### Configuration options
 
 It is configured via its [flags / environment variables](https://github.com/ethereum-optimism/optimism/blob/develop/op-conductor/flags/flags.go)
 
@@ -722,7 +722,7 @@ layer.
   </Tabs.Tab>
 </Tabs>
 
-## Next Steps
+## Next steps
 
 *   Checkout [op-conductor-mon](https://github.com/ethereum-optimism/infra):
     which monitors multiple op-conductor instances and provides a unified interface
