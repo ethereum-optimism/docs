@@ -2,13 +2,20 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import matter from 'gray-matter';
 
-const rootDir = path.join(process.cwd(), 'pages');
+const rootDir: string = path.join(__dirname, '..', 'pages');
 const warnings: string[] = [];
 
 // ANSI color codes
 const YELLOW = '\x1b[33m';
 const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';
+
+interface FileInfo {
+  title: string;
+  url: string;
+  description?: string;
+  content: string;
+}
 
 // Pages to exclude from checks
 const excludedPages = [
@@ -29,75 +36,55 @@ const excludedPages = [
   'experimental'
 ];
 
-// Paths to exclude from checks (full paths)
-const excludedPaths = [
-  '/builders/app-developers/tools/console',
-  '/builders/tools/op-tools/block-explorer',
-  '/builders/tools/op-tools/bridge',
-  '/builders/tools/op-tools/sdk',
-  '/builders/tools/op-tools/faucet',
-  '/builders/tools/op-tools/console',
-  '/builders/tools/op-tools/gas',
-  '/chain/security/bug-bounty',
-  '/connect/live-support',
-  '/connect/governance',
-  '/connect/resources/changelog',
-  '/stack/--- Experimental'
-];
+async function getContentFiles(folderPath: string): Promise<FileInfo[]> {
+  const files = await fs.readdir(folderPath, { withFileTypes: true });
+  const fileInfos: FileInfo[] = [];
+  const folderName = path.basename(folderPath);
 
-interface MetaJson {
-  [key: string]: {
-    title?: string;
-    display?: string;
-  } | string;
+  for (const file of files) {
+    if (file.name.startsWith('_') || 
+        file.name.startsWith('.') || 
+        excludedPages.includes(file.name)) {
+      continue;
+    }
+
+    const filePath = path.join(folderPath, file.name);
+
+    if (file.isFile() && (file.name.endsWith('.md') || file.name.endsWith('.mdx'))) {
+      try {
+        const content = await fs.readFile(filePath, 'utf-8');
+        const { data: frontMatter } = matter(content);
+        const fileName = path.basename(file.name, path.extname(file.name));
+        const fileTitle = frontMatter.title || fileName;
+        const relativeUrl = `/${path.relative(rootDir, filePath)}`.replace(/\.(md|mdx)$/, '');
+
+        fileInfos.push({
+          title: fileTitle,
+          url: relativeUrl,
+          description: frontMatter.description,
+          content: content
+        });
+      } catch (error) {
+        console.error(`Error processing file ${file.name}:`, error);
+      }
+    }
+  }
+
+  return fileInfos;
 }
 
-function shouldExcludePage(pageName: string, fullPath: string): boolean {
-  // Check if the page name is in excludedPages
-  if (excludedPages.includes(pageName)) {
-    return true;
-  }
-
-  // Check if the full path is in excludedPaths
-  if (excludedPaths.includes(fullPath)) {
-    return true;
-  }
-
-  // Skip pages with special characters or patterns
-  if (pageName.includes('---') || pageName.startsWith('_')) {
-    return true;
-  }
-
-  return false;
-}
-
-async function getMetaJsonPages(dirPath: string): Promise<string[]> {
-  try {
-    const metaPath = path.join(dirPath, '_meta.json');
-    const metaContent = await fs.readFile(metaPath, 'utf-8');
-    const meta: MetaJson = JSON.parse(metaContent);
-    
-    return Object.keys(meta).filter(key => 
-      !excludedPages.includes(key) && 
-      !key.startsWith('_') &&
-      !key.includes('---') &&
-      typeof meta[key] !== 'string'
-    );
-  } catch (error) {
-    return [];
-  }
-}
-
-async function getReferencedPagesFromBreadcrumb(breadcrumbPath: string): Promise<string[]> {
+async function getBreadcrumbCards(breadcrumbPath: string): Promise<Set<string>> {
   try {
     const content = await fs.readFile(breadcrumbPath, 'utf-8');
     const cardMatches = content.match(/<Card[^>]*href="([^"]+)"[^>]*>/g) || [];
-    return cardMatches.map(match => {
-      const hrefMatch = match.match(/href="([^"]+)"/);
-      return hrefMatch ? hrefMatch[1] : '';
-    }).filter(Boolean);
+    return new Set(
+      cardMatches.map(match => {
+        const hrefMatch = match.match(/href="([^"]+)"/);
+        return hrefMatch ? hrefMatch[1] : '';
+      }).filter(Boolean)
+    );
   } catch (error) {
-    return [];
+    return new Set();
   }
 }
 
@@ -108,45 +95,52 @@ async function checkDirectory(dirPath: string): Promise<void> {
     if (entry.isDirectory() && !entry.name.startsWith('_') && !entry.name.startsWith('.')) {
       const folderPath = path.join(dirPath, entry.name);
       const breadcrumbPath = path.join(dirPath, `${entry.name}.mdx`);
-      
-      const metaPages = await getMetaJsonPages(folderPath);
-      const referencedPages = await getReferencedPagesFromBreadcrumb(breadcrumbPath);
-      
-      for (const page of metaPages) {
-        const expectedPath = `/${path.relative(rootDir, folderPath)}/${page}`;
-        const normalizedExpectedPath = expectedPath.replace(/\\/g, '/');
-        
-        // Skip if the page or path should be excluded
-        if (shouldExcludePage(page, normalizedExpectedPath)) {
-          continue;
-        }
 
-        if (!referencedPages.some(ref => ref.endsWith(page))) {
-          const humanReadableName = page.split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-            
+      // Get all content files in the folder
+      const files = await getContentFiles(folderPath);
+      
+      // Get existing cards in breadcrumb
+      const existingCards = await getBreadcrumbCards(breadcrumbPath);
+
+      // Check for missing pages
+      files.forEach(({ title, url }) => {
+        if (!existingCards.has(url)) {
           warnings.push(
-            `Page "${humanReadableName}" (${normalizedExpectedPath}) is in _meta.json but not referenced in the breadcrumb file ${entry.name}.mdx`
+            `Page "${title}" at ${url} needs to be added to the breadcrumb file ${entry.name}.mdx`
           );
         }
-      }
-      
+      });
+
+      // Recursively check subdirectories
       await checkDirectory(folderPath);
     }
   }
 }
 
 async function main() {
+  console.log('Starting breadcrumb check process...');
+  console.log('Root directory:', rootDir);
+
   try {
-    await checkDirectory(rootDir);
-    
+    // Process main sections: builders, chain, connect, stack
+    const mainSections = ['builders', 'chain', 'connect', 'stack'];
+    for (const section of mainSections) {
+      const sectionPath = path.join(rootDir, section);
+      try {
+        await fs.access(sectionPath);
+        await checkDirectory(sectionPath);
+        console.log(`Completed checking ${section} section`);
+      } catch (error) {
+        console.log(`Skipping ${section} - directory not found`);
+      }
+    }
+
     if (warnings.length > 0) {
       console.log(`${YELLOW}${BOLD}Missing pages in breadcrumb navigation:${RESET}`);
       warnings.forEach(warning => console.log(`${YELLOW}- ${warning}${RESET}`));
       process.exit(1);
     } else {
-      console.log('All pages listed in _meta.json are properly referenced in their breadcrumb files.');
+      console.log('All pages are properly referenced in breadcrumb files.');
     }
   } catch (error) {
     console.log(`${YELLOW}${BOLD}Error checking breadcrumbs:${RESET}`, error);
