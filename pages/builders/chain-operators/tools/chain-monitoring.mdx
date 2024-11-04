@@ -19,12 +19,12 @@ Onchain monitoring services provide insights into the overall system, helping ch
 
 Monitorism is a tooling suite that supports monitoring and active remediation actions for the OP Stack chain. Monitorism uses monitors as passive security providing automated monitoring for the OP Stack. They are used to monitor the OP stack and alert on specific events that could be a sign of a security incident.
 
-Currently. the list of monitors includes:
+Currently, the list of monitors includes:
 
 Security integrity monitors: These are monitors necessary for making sure Bridges between L2 and L1 are safe and work as expected. These monitors are divided in two subgroups:
 
 *   Pre-Faultproof Chain Monitors:
-    *   Fault Monitor: checks for changes in output roots posted to the L2OutputOracle contract. When a change is detected, it reconstructs the output root from a trusted L2 source and looks for a match..
+    *   Fault Monitor: checks for changes in output roots posted to the L2OutputOracle contract. When a change is detected, it reconstructs the output root from a trusted L2 source and looks for a match.
     *   Withdrawals Monitor: checks for new withdrawals that have been proven to the OptimismPortal contract. Each withdrawal is checked against the `L2ToL1MessagePasser` contract.
 *   Faultproof chain monitors:
     *   Faultproof Withdrawal: The Faultproof Withdrawal component monitors `ProvenWithdrawals` events on the `OptimismPortal` contract and performs checks to detect any violations of invariant conditions on the chain. If a violation is detected, the issue is logged, and a Prometheus metric is set for the event. This component is designed to work exclusively with chains that are already utilizing the Fault Proofs system. This is a new version of the deprecated `chain-mon`,  `faultproof-wd-mon`. For detailed information on how the component works and the algorithms used, please refer to the component README.
@@ -34,7 +34,7 @@ Security monitors: Those tools monitor other aspects of several contracts used i
 *   Global Events Monitor: made for taking YAML rules as configuration and monitoring the events that are emitted on the chain.
 *   Liveness Expiration Monitor: monitors the liveness expiration on Safes.
 *   Balances Monitor: emits a metric reporting the balances for the configured accounts.
-*   Multisig Monitor: The multisig monitor reports the paused status of the OptimismPortal contract. "If set, reports the latest nonce of the configured Safe address and the latest presigned nonce stored in One Password.. The latest presigned nonce is identified by looking for items in the configured vault that follow a `ready-<nonce>.json` name. The highest nonce of this item name format is reported.
+*   Multisig Monitor: The multisig monitor reports the paused status of the OptimismPortal contract. If set, reports the latest nonce of the configured Safe address and the latest presigned nonce stored in One Password.. The latest presigned nonce is identified by looking for items in the configured vault that follow a `ready-<nonce>.json` name. The highest nonce of this item name format is reported.
 *   Drippie Monitor: tracks the execution and executability of drips within a Drippie contract.
 *   Secrets Monitor: takes a Drippie contract as a parameter and monitors for any drips within that contract that use the `CheckSecrets` dripcheck contract. `CheckSecrets` is a dripcheck that allows a drip to begin once a specific secret has been revealed (after a delay period) and cancels the drip if a second secret is revealed. Monitoring these secrets is important, as their revelation may indicate that the secret storage platform has been compromised and someone is attempting to exfiltrate the ETH controlled by the drip.
 
@@ -76,9 +76,9 @@ Chain operators can easily create their grafana dashboard for Dispute Monitor us
 ## Offchain component monitoring
 
 Offchain monitoring allows chain operators to monitor the operation and behavior of nodes and other offchain components. Some of the more common components that you'll likely want to monitor include `op-node`, `op-geth`, `op-proposer`, `op-batcher`, and `op-challenger`.
-The general steps for enabling offchain monitoring is pretty consistent for all the OP components:
+The general steps for enabling offchain monitoring are pretty consistent for all the OP components:
 
-1.  Expose the monitoring port by enabling the `-—metrics.enabled` flag
+1.  Expose the monitoring port by enabling the `--metrics.enabled` flag
 2.  Customize the metrics port and address via the `--metrics.port` and `--metrics.addr` flags, respectively
 3.  Use [Prometheus](https://prometheus.io/) to scrape data from the metrics port
 4.  Save the data in `influxdb`
