@@ -18,19 +18,15 @@ function toTitleCase(str: string): string {
 }
 
 function extractFirstParagraph(content: string): string {
-  // Remove frontmatter
+
   content = content.replace(/^---[\s\S]*?---/, '');
   
-  // Remove import statements
   content = content.replace(/^import[\s\S]*?\n/gm, '');
-  
-  // Remove HTML/MDX tags
+
   content = content.replace(/<[^>]+>/g, ' ');
-  
-  // Remove markdown links but keep text
+
   content = content.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
   
-  // Remove headers
   content = content.replace(/^#.+$/gm, '');
   
   const paragraphs = content.split(/\n\n+/);

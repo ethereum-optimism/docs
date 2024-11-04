@@ -3,63 +3,70 @@ import * as path from 'path';
 import matter from 'gray-matter';
 
 const rootDir = path.join(process.cwd(), 'pages');
-const errors: string[] = [];
+const warnings: string[] = [];
 
-interface PageInfo {
-  title: string;
-  url: string;
-}
+// ANSI color codes
+const YELLOW = '\x1b[33m';
+const RESET = '\x1b[0m';
+const BOLD = '\x1b[1m';
 
-async function getReferencedPages(breadcrumbContent: string): Promise<string[]> {
-  // Extract URLs from Card components in the breadcrumb file
-  const cardRegex = /<Card[^>]*href="([^"]+)"[^>]*>/g;
-  const urls: string[] = [];
-  let match;
-  
-  while ((match = cardRegex.exec(breadcrumbContent)) !== null) {
-    urls.push(match[1]);
+// Pages to exclude from checks
+const excludedPages = [
+  '400.mdx',
+  '500.mdx',
+  'index.mdx',
+  '404.mdx'
+];
+
+async function getReferencedPagesFromBreadcrumb(breadcrumbPath: string): Promise<string[]> {
+  try {
+    const content = await fs.readFile(breadcrumbPath, 'utf-8');
+    const cardMatches = content.match(/<Card[^>]*href="([^"]+)"[^>]*>/g) || [];
+    return cardMatches.map(match => {
+      const hrefMatch = match.match(/href="([^"]+)"/);
+      return hrefMatch ? hrefMatch[1] : '';
+    }).filter(Boolean);
+  } catch (error) {
+    return [];
   }
-  
-  return urls;
 }
 
 async function checkDirectory(dirPath: string): Promise<void> {
   const entries = await fs.readdir(dirPath, { withFileTypes: true });
+  const currentDir = path.basename(dirPath);
   
-  // First, find the breadcrumb file for this directory
-  const dirName = path.basename(dirPath);
-  const breadcrumbFile = path.join(dirPath, `${dirName}.mdx`);
-  let referencedPages: string[] = [];
-  
-  try {
-    const breadcrumbContent = await fs.readFile(breadcrumbFile, 'utf-8');
-    referencedPages = await getReferencedPages(breadcrumbContent);
-  } catch (error) {
-    // Only check for missing references if not in root directory
-    if (dirPath !== rootDir) {
-      errors.push(`Missing breadcrumb file for directory: ${path.relative(rootDir, dirPath)}`);
-      return;
+  // Skip the root directory check
+  if (dirPath !== rootDir) {
+    const breadcrumbPath = path.join(dirPath, `${currentDir}.mdx`);
+    const referencedPages = await getReferencedPagesFromBreadcrumb(breadcrumbPath);
+
+    // Check all .mdx and .md files in the current directory
+    for (const entry of entries) {
+      if (entry.isFile() && 
+          (entry.name.endsWith('.mdx') || entry.name.endsWith('.md')) &&
+          !excludedPages.includes(entry.name) &&
+          entry.name !== `${currentDir}.mdx`) {
+        
+        const pageName = entry.name.replace(/\.(md|mdx)$/, '');
+        const relativePath = `/stack/${path.relative(rootDir, dirPath)}/${pageName}`.replace(/\\/g, '/');
+        
+        if (!referencedPages.includes(relativePath)) {
+          const humanReadableName = pageName.split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+            
+          warnings.push(
+            `Page "${humanReadableName}" at path "${relativePath}" is not listed in the breadcrumb navigation of ${currentDir}.mdx`
+          );
+        }
+      }
     }
   }
 
-  // Check each entry in the directory
+  // Process subdirectories
   for (const entry of entries) {
-    if (entry.name.startsWith('_') || entry.name.startsWith('.')) continue;
-    
-    const fullPath = path.join(dirPath, entry.name);
-    
-    if (entry.isDirectory()) {
-      // Recursively check subdirectories
-      await checkDirectory(fullPath);
-    } else if ((entry.name.endsWith('.md') || entry.name.endsWith('.mdx')) && 
-               entry.name !== `${dirName}.mdx`) {
-      // Check if this page is referenced in the breadcrumb
-      const relativePath = '/' + path.relative(rootDir, fullPath)
-        .replace(/\.(md|mdx)$/, '');
-      
-      if (!referencedPages.includes(relativePath)) {
-        errors.push(`Page not referenced in breadcrumb: ${relativePath}`);
-      }
+    if (entry.isDirectory() && !entry.name.startsWith('_') && !entry.name.startsWith('.')) {
+      await checkDirectory(path.join(dirPath, entry.name));
     }
   }
 }
@@ -68,15 +75,15 @@ async function main() {
   try {
     await checkDirectory(rootDir);
     
-    if (errors.length > 0) {
-      console.error('Breadcrumb check failed:');
-      errors.forEach(error => console.error(`- ${error}`));
+    if (warnings.length > 0) {
+      console.log(`${YELLOW}${BOLD}Missing pages in breadcrumb navigation:${RESET}`);
+      warnings.forEach(warning => console.log(`${YELLOW}- ${warning}${RESET}`));
       process.exit(1);
     } else {
-      console.log('All pages are properly referenced in breadcrumb navigation.');
+      console.log('All pages are properly listed in their respective breadcrumb navigation files.');
     }
   } catch (error) {
-    console.error('Error checking breadcrumbs:', error);
+    console.log(`${YELLOW}${BOLD}Error checking breadcrumbs:${RESET}`, error);
     process.exit(1);
   }
 }
