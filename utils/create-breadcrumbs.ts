@@ -118,13 +118,66 @@ async function getContentFiles(folderPath: string): Promise<FileInfo[]> {
   return fileInfos;
 }
 
-async function createBreadcrumb(parentPath: string, folderName: string): Promise<string> {
-  const folderPath = path.join(parentPath, folderName);
-  const files = await getContentFiles(folderPath);
-  const title = toTitleCase(folderName);
-  const description = await generateFolderDescription(folderName, files);
+async function getExistingBreadcrumbContent(breadcrumbPath: string): Promise<{
+  existingContent: string;
+  existingCards: Set<string>;
+} | null> {
+  try {
+    const content = await fs.readFile(breadcrumbPath, 'utf-8');
+    const cardMatches = content.match(/<Card[^>]*href="([^"]+)"[^>]*>/g) || [];
+    const existingCards = new Set(
+      cardMatches.map(match => {
+        const hrefMatch = match.match(/href="([^"]+)"/);
+        return hrefMatch ? hrefMatch[1] : '';
+      }).filter(Boolean)
+    );
+    return { existingContent: content, existingCards };
+  } catch (error) {
+    return null;
+  }
+}
 
-  let content = `---
+async function createOrUpdateBreadcrumb(parentPath: string, folderName: string): Promise<void> {
+  const folderPath = path.join(parentPath, folderName);
+  const breadcrumbPath = path.join(parentPath, `${folderName}.mdx`);
+  
+  // Get current files in the folder
+  const files = await getContentFiles(folderPath);
+  
+  // Check existing breadcrumb
+  const existing = await getExistingBreadcrumbContent(breadcrumbPath);
+  
+  if (existing) {
+    // If breadcrumb exists, only add new cards
+    const newCards: string[] = [];
+    let content = existing.existingContent;
+    
+    files.forEach(({ title: fileTitle, url }) => {
+      if (!existing.existingCards.has(url)) {
+        newCards.push(`  <Card title="${fileTitle}" href="${url}" />`);
+      }
+    });
+    
+    if (newCards.length > 0) {
+      // Find the closing </Cards> tag and insert new cards before it
+      const cardsSectionEnd = content.lastIndexOf('</Cards>');
+      if (cardsSectionEnd !== -1) {
+        content = content.slice(0, cardsSectionEnd) + 
+                 '\n' + newCards.join('\n') + '\n' +
+                 content.slice(cardsSectionEnd);
+        
+        await fs.writeFile(breadcrumbPath, content);
+        console.log(`Added ${newCards.length} new cards to: ${folderName}.mdx`);
+      }
+    } else {
+      console.log(`No new cards needed for: ${folderName}.mdx`);
+    }
+  } else {
+    // If breadcrumb doesn't exist, create new one
+    const title = toTitleCase(folderName);
+    const description = await generateFolderDescription(folderName, files);
+    
+    let content = `---
 title: ${title}
 description: ${description}
 lang: en-US
@@ -138,17 +191,19 @@ ${description}
 
 `;
 
-  if (files.length > 0) {
-    content += '<Cards>\n';
-    files.forEach(({ title: fileTitle, url }) => {
-      content += `  <Card title="${fileTitle}" href="${url}" />\n`;
-    });
-    content += '</Cards>';
-  } else {
-    content += 'Documentation for this section is coming soon.';
+    if (files.length > 0) {
+      content += '<Cards>\n';
+      files.forEach(({ title: fileTitle, url }) => {
+        content += `  <Card title="${fileTitle}" href="${url}" />\n`;
+      });
+      content += '</Cards>';
+    } else {
+      content += 'Documentation for this section is coming soon.';
+    }
+    
+    await fs.writeFile(breadcrumbPath, content);
+    console.log(`Created new breadcrumb file: ${folderName}.mdx`);
   }
-
-  return content;
 }
 
 async function processSubfolders(parentPath: string): Promise<void> {
@@ -156,7 +211,6 @@ async function processSubfolders(parentPath: string): Promise<void> {
     const entries = await fs.readdir(parentPath, { withFileTypes: true });
     
     for (const entry of entries) {
-      // Skip if not a directory or starts with underscore
       if (!entry.isDirectory() || entry.name.startsWith('_')) {
         continue;
       }
@@ -165,13 +219,9 @@ async function processSubfolders(parentPath: string): Promise<void> {
       console.log(`Processing folder: ${folderName}`);
       
       try {
-        // Create breadcrumb file at the same level as the folder
-        const breadcrumbPath = path.join(parentPath, `${folderName}.mdx`);
-        const content = await createBreadcrumb(parentPath, folderName);
-        await fs.writeFile(breadcrumbPath, content);
-        console.log(`Created/Updated breadcrumb for: ${folderName}`);
+        await createOrUpdateBreadcrumb(parentPath, folderName);
       } catch (error) {
-        console.error(`Error creating breadcrumb for ${folderName}:`, error);
+        console.error(`Error processing breadcrumb for ${folderName}:`, error);
       }
     }
   } catch (error) {
