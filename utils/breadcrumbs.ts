@@ -48,7 +48,9 @@ async function checkDirectory(dirPath: string): Promise<void> {
           entry.name !== `${currentDir}.mdx`) {
         
         const pageName = entry.name.replace(/\.(md|mdx)$/, '');
-        const relativePath = `/stack/${path.relative(rootDir, dirPath)}/${pageName}`.replace(/\\/g, '/');
+        // Dynamically construct the path relative to the pages directory
+        const relativePath = '/' + path.relative(rootDir, path.join(dirPath, pageName))
+          .replace(/\\/g, '/');
         
         if (!referencedPages.includes(relativePath)) {
           const humanReadableName = pageName.split('-')
