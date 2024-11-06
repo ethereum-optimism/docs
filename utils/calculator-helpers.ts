@@ -1,11 +1,11 @@
 import { transactionTypes } from "./transaction-types";
 
 const L1GasBaseFee =
-  "https://static.optimism.io/op-analytics/reference_data/market_data/outputs/suggest_base_fee.txt"; // E76
+  "https://raw.githubusercontent.com/ethereum-optimism/op-analytics/refs/heads/main/reference_data/market_data/outputs/suggest_base_fee.txt"; // E76
 const ethToUsdRate =
-  "https://static.optimism.io/op-analytics/reference_data/market_data/outputs/ethusd.txt"; // E77
+  "https://raw.githubusercontent.com/ethereum-optimism/op-analytics/refs/heads/main/reference_data/market_data/outputs/ethusd.txt"; // E77
 const blobBaseFee =
-  "https://static.optimism.io/op-analytics/reference_data/market_data/outputs/blob_base_fee.txt"; // E78
+  "https://raw.githubusercontent.com/ethereum-optimism/op-analytics/refs/heads/main/reference_data/market_data/outputs/blob_base_fee.txt"; // E78
 
 // transactionsPerDay === E14: number
 // comparableTxnType === E15: string
