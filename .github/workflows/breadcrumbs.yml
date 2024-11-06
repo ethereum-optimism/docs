@@ -1,0 +1,32 @@
+name: Check Breadcrumbs
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'pages/**/*.mdx'
+      - 'pages/**/*.md'
+
+jobs:
+  check-breadcrumbs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20.x'
+
+    - name: Install pnpm
+      run: npm install -g pnpm
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Run breadcrumb check
+      run: pnpm check-breadcrumbs
