@@ -30,8 +30,28 @@ Transactions on OP Stack chains go through the following process to reach finali
 
 TODO: Fix this so it has the right numbers
 
-<Image src="/img/op-stack/protocol/tx-finality.png" alt="Transaction Finality Diagram." width={0} height={0} sizes="100vw" style={{ width: '100%', height: 'auto' }} quality={100} />
+```mermaid
 
+sequenceDiagram
+    participant User
+    participant Network
+    participant Sequencer
+    participant Ethereum
+
+    User->>Network: Submit transaction
+    Network->>Sequencer: Forward transaction
+    Sequencer->>Sequencer: Include transaction in block
+    Sequencer->>Network: Distribute block over P2P network
+    Note right of Sequencer: Transaction status: "unsafe"<br>(block data not yet posted to Ethereum)<br>~a few seconds
+
+    Sequencer->>Ethereum: Publish block data (as blob data<br>or calldata)
+    Note right of Ethereum: Transaction status: "safe"<br>(included in Ethereum block)<br>~5–10 minutes
+
+    Ethereum->>Ethereum: Finalize block (~65 blocks or ~13 mins)
+    Note right of Ethereum: Transaction status: "finalized"<br>~13 minutes (may vary)
+
+
+```
 ## Common misconceptions
 
 ### Transactions take 7 days to finalize
