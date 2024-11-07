@@ -1,28 +1,25 @@
 ---
-title: Bridging ETH with the Optimism SDK
+title: Bridging ETH with Viem
 lang: en-US
-description: Learn how to use the Optimism SDK to transfer ETH between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
+description: Learn how to use Viem to transfer ETH between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
 ---
 
-import { Callout, Steps } from 'nextra/components'
-import { WipCallout } from '@/components/WipCallout'
+import { Callout, Steps, Tabs } from 'nextra/components'
 
-<WipCallout />
+# Bridging ETH to OP Mainnet with Viem
 
-# Bridging ETH to OP Mainnet with the Optimism SDK
+This tutorial explains how you can use [Viem](https://viem.sh) to bridge ETH from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
+Viem is a TypeScript interface for Ethereum that provides low-level stateless primitives for interacting with Ethereum.
+It offers an easy way to add bridging functionality to your JavaScript-based application.
 
-This tutorial explains how you can use the [Optimism SDK](https://sdk.optimism.io) to bridge ETH from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
-The Optimism SDK is an easy way to add bridging functionality to your JavaScript-based application.
-It also provides some safety rails to prevent common mistakes that could cause ETH or ERC-20 tokens to be made inaccessible.
-
-Behind the scenes, the Optimism SDK uses the [Standard Bridge](/builders/app-developers/bridging/standard-bridge) contracts to transfer ETH and ERC-20 tokens.
+Behind the scenes, Viem uses the [Standard Bridge](/builders/app-developers/bridging/standard-bridge) contracts to transfer ETH and ERC-20 tokens.
 Make sure to check out the [Standard Bridge guide](/builders/app-developers/bridging/standard-bridge) if you want to learn more about how the bridge works under the hood.
 
 ## Supported networks
 
-The Optimism SDK supports any of the [Superchain networks](/chain/networks).
-[Some Superchain networks](https://sdk.optimism.io/enums/l2chainid) are already included in the SDK by default.
-If you want to use a network that isn't included by default you can simply [instantiate the SDK with the appropriate contract addresses](/builders/chain-operators/tutorials/sdk).
+Viem supports any of the [Superchain networks](/chain/networks).
+The OP Stack networks are included in Viem by default.
+If you want to use a network that isn't included by default, you can add it to Viem's chain configurations.
 
 ## Dependencies
 
@@ -31,40 +28,33 @@ If you want to use a network that isn't included by default you can simply [inst
 
 ## Create a demo project
 
-You're going to use the Optimism SDK for this tutorial.
-Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
+You're going to use Viem for this tutorial.
+Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
-{<h3>Make a Project Folder</h3>}
+  {<h3>Make a project folder</h3>}
 
-```bash
-mkdir op-sample-project
-cd op-sample-project
-```
+  ```bash
+  mkdir bridge-eth
+  cd bridge-eth
+  ```
 
-{<h3>Initialize the Project</h3>}
+  {<h3>Initialize the project</h3>}
 
-```bash
-pnpm init
-```
+  ```bash
+  pnpm init
+  ```
 
-{<h3>Install the Optimism SDK</h3>}
+  {<h3>Install the Viem library</h3>}
 
-```bash
-pnpm add @eth-optimism/sdk
-```
-
-{<h3>Install ethers.js</h3>}
-
-```bash
-pnpm add ethers@^5
-```
-
+  ```bash
+  pnpm add viem
+  ```
 </Steps>
 
 <Callout type="info">
-Want to create a new wallet for this tutorial?
-If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
+  Want to create a new wallet for this tutorial?
+  If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
 </Callout>
 
 ## Get ETH on Sepolia
@@ -73,13 +63,13 @@ This tutorial explains how to bridge ETH from Sepolia to OP Sepolia.
 You will need to get some ETH on Sepolia to follow along.
 
 <Callout type="info">
-You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
+  You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
 </Callout>
 
 ## Add a private key to your environment
 
 You need a private key in order to sign transactions.
-Set your private key as an environment variable with the `export` command.
+Set your private key as an environment variable with the export command.
 Make sure this private key corresponds to an address that has ETH on Sepolia.
 
 ```bash
@@ -88,116 +78,126 @@ export TUTORIAL_PRIVATE_KEY=0x...
 
 ## Start the Node REPL
 
-You're going to use the Node REPL to interact with the Optimism SDK.
+You're going to use the Node REPL to interact with Viem.
 To start the Node REPL run the following command in your terminal:
 
 ```bash
 node
 ```
 
-This will bring up a Node REPL prompt that allows you to run javascript code.
+This will bring up a Node REPL prompt that allows you to run JavaScript code.
 
 ## Import dependencies
 
 You need to import some dependencies into your Node REPL session.
 
 <Steps>
+{<h3>Import Viem and other packages</h3>}
 
-{<h3>Import the Optimism SDK</h3>}
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L3-L6 hash=88319dda3322e76accb9e50222d30abc
 ```
 
-{<h3>Import ethers.js</h3>}
+{<h3>Load private key and set account</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L9-L10 hash=251ec91fdff9dbc613b459ca3b9fb8bd
+```
+
+{<h3>Create L1 public client for reading from the Sepolia network</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L13-L16 hash=6f2335d67920c219b5fd3590f8450cac
+```
+
+
+{<h3>Create L1 wallet client for sending transactions on Sepolia</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L19-L23 hash=a9b217aef7c065eaf3f2a7222494a3e1
+```
+
+
+{<h3>Create L2 public client for interacting with OP Sepolia</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L26-L29 hash=dd7868fc9ab8f8a34768c8a83232409b
+```
+
+{<h3>Create L2 wallet client on OP Sepolia</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L32-L36 hash=6f91578c5b155d7abfeecf2297ee9f70
 ```
 
 </Steps>
 
-## Set session variables
-
-You'll need a few variables throughout this tutorial.
-Let's set those up now.
-
-<Steps>
-
-{<h3>Load your private key</h3>}
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L6 hash=755b77a7ffc7dfdc186f36c37d3d847a
-```
-
-{<h3>Create the RPC providers and wallets</h3>}
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L8-L11 hash=9afdce50665ae93bce602068071ffaa1
-```
-
-</Steps>
-
-## Get ETH
+## Get ETH on Sepolia
 
 You're going to need some ETH on L1 that you can bridge to L2.
 You can get some Sepolia ETH from [this faucet](https://sepoliafaucet.com).
 
 ## Deposit ETH
 
-Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBridge` contract.
-You'll then receive the same number of ETH on L2 in return.
+Now that you have some ETH on L1 you can deposit that ETH into the `L1StandardBridge` contract. You'll then receive the same number of ETH on L2 in return.
 
-<Steps>
+<Tabs items={['depositETH', 'Full Code']}>
+  <Tabs.Tab>
+    <Steps>
+      {<h3>Check your wallet balance on L1</h3>}
 
-{<h3>Check your wallet balance on L1</h3>}
+      See how much ETH you have on L1 so you can confirm that the deposit worked later on.
 
-See how much ETH you have on L1 so you can confirm that the deposit worked later on.
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L38-L39 hash=a77304eb0a056ba30aaa21eee60bcafa
+      ```
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L14 hash=3be1dd9a6019e9f59ad6fab38e168e99
-```
+      <Callout type="info">
+        We used `formatEther` method from `viem` to format the balance to ether.
+      </Callout>
 
-{<h3>Create a CrossChainMessenger instance</h3>}
+      {<h3>Create the deposit transaction</h3>}
 
-The Optimism SDK exports a `CrossChainMessenger` class that makes it easy to interact with the `L1StandardBridge` contract.
+      Use `buildDepositTransaction` to build the deposit transaction parameters on the L2.
 
-Create an instance of the `CrossChainMessenger` class:
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L44-L47 hash=01a8dadb00216636f18b72758236d4b0
+      ```
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L16-L21 hash=997b9c4cdd5fb1f9d4e0882a683ae016
-```
-{<h3>Deposit your ETH</h3>}
+      {<h3>Send the deposit transaction</h3>}
 
-Now you can deposit your ETH into the Standard Bridge contract.
-You'll deposit a small amount of ETH just to demonstrate the process.
+      Send the deposit transaction on L1 and log the L1 transaction hash.
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L24-L25 hash=8bd6fdfe984274e8ec2368dc735118b4
-```
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L49-L50 hash=6c47f29f428cc4c7f6d4ad322e4feaec
+      ```
+
+      {<h3>Wait for L1 transaction</h3>}
+
+      Wait for the L1 transaction to be processed and log the receipt.
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L52-L53 hash=0de1fe6dd17f753ab80d356b38d9ca41
+      ```
+
+      {<h3>Extract the L2 transaction hash</h3>}
+
+      Extracts the corresponding L2 transaction hash from the L1 receipt, and logs it.
+      This hash represents the deposit transaction on L2.
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L55-L56 hash=07a053f25193bcfcb9dae397091d755a
+      ```
+
+      {<h3>Wait for the L2 transaction to be processed</h3>}
+
+      Wait for the L2 transaction to be processed and confirmed and logs the L2 receipt to verify completion.
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L58-L62 hash=4ab7fdff1700699951ced567db6d4710
+      ```
+    </Steps>
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L3-L63 hash=b7d72a54dcdbb9b89c6874e2862fde00
+      ```
+  </Tabs.Tab>
+</Tabs>
 
 <Callout>
-Using a smart contract wallet?
-As a safety measure, `depositETH` will fail if you try to deposit ETH from a smart contract wallet without specifying a `recipient`.
-Add the `recipient` option to the `depositETH` call to fix this.
-Check out the [Optimism SDK docs](https://sdk.optimism.io/classes/crosschainmessenger#depositETH-2) for more info on the options you can pass to `depositETH`.
+  Using a smart contract wallet?
+  As a safety measure, `depositETH` will fail if you try to deposit ETH from a smart contract wallet without specifying a `recipient`.
+  Add the `recipient` option to the `depositETH` call to fix this.
 </Callout>
-
-{<h3>Wait for the deposit to be relayed</h3>}
-
-You can use the `waitForMessageStatus` function to wait for the deposit to be relayed to L2.
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L28 hash=659971675ab8d53bc2bd5196f72c873b
-```
-
-{<h3>Check your wallet balance on L1</h3>}
-
-You should now have less ETH on L1.
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L31 hash=3be1dd9a6019e9f59ad6fab38e168e99
-```
-
-{<h3>Check your wallet balance on L2</h3>}
-
-You should now have more ETH on L2.
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L34 hash=7884641849eab1590b148118d709f0fd
-```
-
-</Steps>
 
 ## Withdraw ETH
 
@@ -205,81 +205,102 @@ You just bridged some ETH from L1 to L2.
 Nice!
 Now you're going to repeat the process in reverse to bridge some ETH from L2 to L1.
 
-<Steps>
+<Tabs items={['withdrawETH', 'Full code']}>
+  <Tabs.Tab>
+    <Steps>
+      {<h3>Create the withdrawal transaction</h3>}
 
-{<h3>Start your withdrawal on L2</h3>}
+      Uses `buildWithdrawalTransaction` to create the withdrawal parameters.
+      Converts the withdrawal amount to `wei` and specifies the recipient on L1.
 
-The first step to withdrawing ETH from L2 to L1 is to start the withdrawal on L2.
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L68-L72 hash=cd22b075bb05dc05ac92c5502aa0568f
+      ```
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L37-L38 hash=e9880eb7e7e95253637b5b88a4772074
-```
+      {<h3>Executing the withdrawal</h3>}
 
-{<h3>Check your wallet balance on L2</h3>}
+      This sends the withdrawal transaction on L2, which initiates the withdrawal process on L2 and logs a transaction hash for tracking the withdrawal.
 
-You should now have less ETH on L2, but your wallet balance on L1 will not have changed yet.
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L74-L75 hash=e5f3d46ba9f417fddfa4b861f3f6f208
+      ```
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L41 hash=7884641849eab1590b148118d709f0fd
-```
+      {<h3>Confirming L2 transaction</h3>}
 
-{<h3>Wait until the withdrawal is ready to prove</h3>}
+      Wait one hour (max) for the L2 Output containing the transaction to be proposed, and log the receipt, which contains important details like the block number etc.
 
-The second step to withdrawing ETH from L2 to L1 is to prove to the bridge on L1 that the withdrawal happened on L2.
-You first need to wait until the withdrawal is ready to prove.
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L77-L78 hash=37f83c57e384910a0e5bf7040c52aa7a
+      ```
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L44 hash=e8b55ec0f16f90ba4d4197cf47ff8e6d
-```
+      {<h3>Wait for withdrawal prove</h3>}
 
-<Callout type="info">
-This step can take a few minutes.
-Feel free to take a quick break while you wait.
+      Next, is to prove to the bridge on L1 that the withdrawal happened on L2. To achieve that, you first need to wait until the withdrawal is ready to prove.
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L80-L83 hash=c1c63ecb4c7f47bc2779fedabb5f70ab
+      ```
+
+      Build parameters to prove the withdrawal on the L2.
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L85-L88 hash=2bc88cda19bd39bfa89451906e4e1ae7
+      ```
+
+      {<h3>Prove the withdrawal on the L1</h3>}
+
+      Once the withdrawal is ready to be proven, you'll send an L1 transaction to prove that the withdrawal happened on L2.
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L90-L92 hash=312b1d49267d75ec0475bc507ae9a742
+      ```
+
+      {<h3>Wait for withdrawal finalization</h3>}
+
+      Before a withdrawal transaction can be finalized, you will need to wait for the finalization period.
+      This can only happen after the fault proof period has elapsed. On OP Mainnet, this takes 7 days.
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L94-L97 hash=15e6f754d2e9f11a03f400813efef383
+      ```
+
+      <Callout>
+        We're currently testing fault proofs on OP Sepolia, so withdrawal times
+        reflect Mainnet times.
+      </Callout>
+
+      {<h3>Finalize the withdrawal</h3>}
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L99-L102 hash=02f0f111055d889d627785754e6935ae
+      ```
+
+      {<h3>Wait until the withdrawal is finalized</h3>}
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L104-L106 hash=b3e63b66595ba34594c366e69a451abe
+      ```
+
+      {<h3>Check the withdrawal status</h3>}
+
+      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L108-L112 hash=3bd3e14a6c32270cc75d6b691e7b0c91
+      ```
+    </Steps>
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L68-L111 hash=4a8d4d442b95aaf0853147420eb131af
+  ```
+
+  </Tabs.Tab>
+</Tabs>
+
+## Important Considerations
+
+<Callout type="warning">
+  *   Challenge period: The 7-day withdrawal challenge Period is crucial for security.
+  *   Gas costs: Withdrawals involve transactions on both L2 and L1, each incurring gas fees.
+  *   Private Key handling: Use secure key management practices in real applications.
+  *   RPC endpoint security: Keep your API key (or any RPC endpoint) secure.
 </Callout>
 
-{<h3>Prove the withdrawal on L1</h3>}
+## Next Steps
 
-Once the withdrawal is ready to be proven, you'll send an L1 transaction to prove that the withdrawal happened on L2.
+*   Develop a user interface for easier interaction with these bridging functions.
+*   Implement robust error handling and retry mechanisms for production use.
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L47 hash=fee5f5e924472ee9daceb681ccae1cb9
-```
-
-{<h3>Wait until the withdrawal is ready for relay</h3>}
-
-The final step to withdrawing ETH from L2 to L1 is to relay the withdrawal on L1.
-This can only happen after the fault proof period has elapsed.
-On OP Mainnet, this takes 7 days.
-
-<Callout>
-We're currently testing fault proofs on OP Sepolia, so withdrawal times reflect Mainnet times.
-</Callout>
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L50 hash=55a41ac5586b8a688ffd6dfbb20f2d15
-```
-
-{<h3>Relay the withdrawal on L1</h3>}
-
-Once the withdrawal is ready to be relayed you can finally complete the withdrawal process.
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L66 hash=f8d30944dad1664d82b9fdf14da59f9e
-```
-
-{<h3>Wait until the withdrawal is relayed</h3>}
-
-Now you simply wait until the message is relayed.
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L69 hash=c2c14a739c44011a058e9848a0019f15
-```
-
-{<h3>Check your wallet balance on L1</h3>}
-
-You should now have more ETH on L1.
-
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L72 hash=3be1dd9a6019e9f59ad6fab38e168e99
-```
-
-</Steps>
-
-## Next steps
-
-Congrats!
-You've just deposited and withdrawn ETH using the Optimism SDK.
-You should now be able to write applications that use the Optimism SDK to transfer ETH between L1 and L2.
+You've just deposited and withdrawn ETH using `viem/op-stack`.
+You should now be able to write applications that use `viem/op-stack` to transfer ETH between L1 and L2.
 Although this tutorial used Sepolia and OP Sepolia, the same process works for Ethereum and OP Mainnet.

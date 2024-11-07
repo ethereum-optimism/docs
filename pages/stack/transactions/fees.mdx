@@ -6,6 +6,13 @@ description: Learn how transaction fees work on OP Mainnet.
 
 import { Callout } from 'nextra/components'
 
+<Callout>
+  The OP Stack maintains a distinct gas limit compared to the Ethereum mainnet.
+  While both chains use the same underlying transaction formats, Optimism's gas limits are tailored for optimal Layer 2 performance and scalability.
+  As a result, transactions on Optimism may behave differently from the mainnet regarding gas usage and fee estimation.
+  For a detailed comparison of gas limits between Optimism and Ethereum, see the [Optimism Chain Differences documentation](https://docs.optimism.io/chain/differences#transaction-fees).
+</Callout>
+
 # Transaction fees on OP Mainnet
 
 OP Mainnet is designed to be [EVM equivalent](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306), which means it reuses the same Ethereum code you're already familiar with and behaves as much like Ethereum as possible.
@@ -45,7 +52,8 @@ Read more about the base fee in the [Ethereum.org documentation](https://ethereu
 Just like on Ethereum, OP Mainnet transactions can specify a **priority fee**.
 This priority fee is a price per unit of gas that is paid on top of the base fee.
 For example, if the block base fee is 1 gwei and the transaction specifies a priority fee of 1 gwei, the total price per unit of gas is 2 gwei.
-The priority fee is an optional component of the execution gas fee and can be set to 0.
+The priority fee(tip) is an optional component of the execution gas fee and can technically be set to 0.
+However, while EIP-1559 does not define a minimum priority fee, certain wallets and mempool implementations (like Geth) may enforce a minimum value. For instance, Geth typically defaults to a minimum priority fee of 1 gwei, but this can be configured to other values.
 
 **The OP Mainnet sequencer will prioritize transactions with a higher priority fee** and execute them before any transactions with a lower priority fee.
 If transaction speed is important to your application, you may want to set a higher priority fee to ensure that your transaction is included more quickly.
