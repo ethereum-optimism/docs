@@ -1,22 +1,15 @@
 ---
 title: Tracing deposits and withdrawals
 lang: en-US
-description: Learn how to use the Optimism SDK to trace deposits and withdrawals between L1 and L2.
+description: Learn how to use the viem library to trace deposits and withdrawals between L1 and L2.
 ---
 
 import { Callout, Steps } from 'nextra/components'
-import { WipCallout } from '@/components/WipCallout'
 
-<WipCallout />
 # Tracing deposits and withdrawals
 
-In this tutorial, you'll learn how to use the [Optimism SDK](https://sdk.optimism.io) to trace a [Standard Bridge](../bridging/standard-bridge) deposit or withdrawal between L1 and L2.
+In this tutorial, you'll learn how to use the [viem](https://viem.sh) library to trace a [Standard Bridge](../bridging/standard-bridge) deposit or withdrawal between L1 and L2.
 You'll specifically learn how to determine the status of a deposit or withdrawal and how to retrieve the transaction receipt for the executed transaction on L1 (for withdrawals) or L2 (for deposits).
-
-<Callout>
-Check out the tutorial on [Bridging ERC-20 Tokens With the Optimism SDK](./cross-dom-bridge-erc20) to learn how to create deposits and withdrawals.
-You can also check out the tutorial on [Viewing Deposits and Withdrawals by Address](./sdk-view-txns) to find deposits and withdrawals to trace.
-</Callout>
 
 ## Dependencies
 
@@ -25,203 +18,145 @@ You can also check out the tutorial on [Viewing Deposits and Withdrawals by Addr
 
 ## Create a demo project
 
-You're going to use the Optimism SDK for this tutorial.
-Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
+You're going to use the viem library for this tutorial.
+Since viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
+  {<h3>Make a Project Folder</h3>}
 
-{<h3>Make a Project Folder</h3>}
+  ```bash
+  mkdir trace-trx
+  cd trace-trx
+  ```
 
-```bash
-mkdir op-sample-project
-cd op-sample-project
-```
+  {<h3>Initialize the project</h3>}
 
-{<h3>Initialize the Project</h3>}
+  ```bash
+  pnpm init
+  ```
 
-```bash
-pnpm init
-```
+  {<h3>Install viem</h3>}
 
-{<h3>Install the Optimism SDK</h3>}
-
-```bash
-pnpm add @eth-optimism/sdk
-```
-
-{<h3>Install ethers.js</h3>}
-
-```bash
-pnpm add ethers@^5
-```
-
+  ```bash
+  pnpm add viem 
+  ```
 </Steps>
-
 
 ## Add RPC URLs to your environment
 
-You'll be using the `getMessageReceipt` function from the Optimism SDK during this tutorial.
-This function use event queries to retrieve the receipt for a deposit or withdrawal.
+You'll be using the `getTransactionReceipt` function from the viem library during this tutorial. This function use event queries to retrieve the receipt for a deposit or withdrawal.
 Since this function uses large event queries, you'll need to use an RPC provider like [Alchemy](https://alchemy.com) that supports indexed event queries.
 Grab an L1 and L2 RPC URL for Sepolia and OP Sepolia, respectively.
 
 ```bash
-export L1_RPC_URL=... # Sepolia RPC URL
-export L2_RPC_URL=... # OP Sepolia RPC URL
+export L1_RPC_URL="https://YOUR_L1_ SEPOLIA_RPC_URL_HERE"
+export L2_RPC_URL="https://YOUR_L2_OP_SEPOLIA_RPC_URL_HERE"
 ```
-
-<Callout>
-The Optimism SDK may be updated in the future to use a different method of retrieving deposits and withdrawals under the hood that does not require indexed event queries.
-This tutorial will be updated to reflect those changes if and when they occur.
-</Callout>
 
 ## Start the Node REPL
 
-You're going to use the Node REPL to interact with the Optimism SDK.
-To start the Node REPL run the following command in your terminal:
+You're going to use the Node REPL to interact with viem. To start the Node REPL, run the following command in your terminal:
 
 ```bash
 node
 ```
 
-This will bring up a Node REPL prompt that allows you to run javascript code.
+This will bring up a Node REPL prompt that allows you to run JavaScript code.
 
 ## Import dependencies
 
 You need to import some dependencies into your Node REPL session.
 
-<Steps>
+{<h3>Import viem</h3>}
 
-{<h3>Import the Optimism SDK</h3>}
-
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
+```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L3-L4 hash=57a929d665f2e5e4a7ecd085ad3d0b01
 ```
-
-{<h3>Import ethers.js</h3>}
-
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
-```
-
-</Steps>
-
+  
 ## Set session variables
 
-You'll need a few variables throughout this tutorial.
-Let's set those up now.
+You'll need a few variables throughout this tutorial. Let's set those up now.
 
 <Steps>
+  {<h3>Import RPC URLs</h3>}
 
-{<h3>Import RPC URLs</h3>}
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L13-L14 hash=0badc18f525e56b36406e7be8ad1104e
+  ```
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L10-L11 hash=02141d8cb077764665c61fc48e18ed04
-```
+  {<h3>Set the deposit to trace</h3>}
 
-{<h3>Set the deposit to trace</h3>}
+  You'll be tracing a specific deposit in this tutorial. Deposit tracing is generally based on the transaction hash of the transaction that triggered the deposit. You can replace this transaction hash with your own if you'd like.
 
-You'll be tracing a specific deposit in this tutorial.
-Deposit tracing is generally based on the transaction hash of the transaction that triggered the deposit.
-You can replace this transaction hash with your own if you'd like.
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L17 hash=367c797c3e9746addedf43857f789eeb
+  ```
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L14 hash=a874f1ce83255bb233539f7a188ea1d3
-```
+  {<h3>Set the withdrawal to trace</h3>}
 
-{<h3>Set the withdrawal to trace</h3>}
+  You'll also be tracing a specific withdrawal in this tutorial. Like with deposits, withdrawal tracing is generally based on the transaction hash of the transaction that triggered the withdrawal. You can replace this transaction hash with your own if you'd like.
 
-You'll also be tracing a specific withdrawal in this tutorial.
-Like with deposits, withdrawal tracing is generally based on the transaction hash of the transaction that triggered the withdrawal.
-You can replace this transaction hash with your own if you'd like.
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L18 hash=545d1eed00ad0a235e2c79c8a87efd30
+  ```
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L15 hash=6c5af039dfa0217810295dfaf82ef7c1
-```
+  {<h3>Create the RPC providers</h3>}
 
-{<h3>Create the RPC providers</h3>}
-
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L17-L18 hash=e86efaea1d4adde679ca66911080dc28
-```
-
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L20-L28 hash=6286672ca3163543e9d8ddeb5b1b6477
+  ```
 </Steps>
 
-## Create the CrossDomainMessenger
+## Trace a Deposit
 
-The Optimism SDK exports a `CrossChainMessenger` class that makes it easy to interact with the Standard Bridge contracts.
-
-Create an instance of the `CrossChainMessenger` class:
-
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L20-L25 hash=158c6888c82bdc2f07c37c3edb3a9a6a
-```
-
-## Trace a deposit
-
-You can use the `CrossChainMessenger` instance to trace a deposit.
+You can use viem to trace a deposit.
 
 <Steps>
+  {<h3>Get the deposit status</h3>}
 
-{<h3>Get the deposit status</h3>}
+  You can query for the deposit status using the transaction hash of the deposit.
 
-It's often useful to know the status of a deposit.
-Deposits can have a number of statuses depending on where the deposit is within its lifecycle.
-Refer to the [Optimism SDK documentation](https://sdk.optimism.io/enums/messagestatus) for a full list of potential deposit statuses.
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L30-L32 hash=b3693011e87b605cdd29baeffb080b9a
+  ```
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L28-L29 hash=11aa5fe48d79feea140691842bf5213c
-```
+  {<h3>Get the deposit transaction receipt</h3>}
 
-{<h3>Get the deposit transaction receipt</h3>}
+  Retrieve the transaction receipt for the deposit using the viem client.
 
-You can also use the `CrossChainMessenger` instance to get the transaction receipt for the L2 transaction that executes and completes the deposit.
-Note that this function will also return the message status of the deposit and is therefore an alternative to the previous function.
-The result of this function is an object with a `messageStatus` property and a `transactionReceipt` property that is identical to the result of the `ethers` function `getTransactionReceipt`.
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L34-L36 hash=077581a56fc7b26f62589f0a6ae99e0d
+  ```
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L32-L33 hash=42ce77ccd7c2c7c9b447ac534c0daa4f
-```
+  {<h3>Get the deposit transaction</h3>}
 
-{<h3>Parse deposit logs</h3>}
+  You can directly query for the L2 transaction that executed the deposit.
 
-Like any other transaction receipt, the deposit transaction receipt contains logs that can be parsed to get additional information about the deposit.
-You can iterate through these logs and parse them just as you would parse any other receipt.
-For instance, you may wish to search for `Mint` events to determine the amount of tokens that were minted as a result of the deposit.
-
-{<h3>Get the deposit transaction</h3>}
-
-Once you have the transaction receipt, you can directly query for the actual L2 transaction that executed the deposit.
-
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L36-L37 hash=13bdc82e94c80eb3c29bf4430b15e456
-```
-
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L38-L40 hash=c67f0abeef0f2f817b7fb04be8f157a6
+  ```
 </Steps>
 
 ## Trace a withdrawal
 
-You can also use the `CrossChainMessenger` instance to trace a withdrawal.
+You can use viem's functions to trace a withdrawal.
 
 <Steps>
+  {<h3>Get the withdrawal status</h3>}
 
-{<h3>Get the withdrawal status</h3>}
+  Like deposits, withdrawals can have multiple statuses depending on where they are in the process.
 
-Like deposits, withdrawals can have a number of statuses depending on where the withdrawal is within its lifecycle.
-Refer to the [Optimism SDK documentation](https://sdk.optimism.io/enums/messagestatus) for a full list of potential withdrawal statuses.
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L42-L44 hash=55ceda3d9d2f9abf037f8b259de14f26
+  ```
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L40-L41 hash=24ef2259ff96107ff31bfb8f02a4150a
-```
+  {<h3>Get the withdrawal transaction receipt</h3>}
 
-{<h3>Get the withdrawal transaction receipt</h3>}
+  Retrieve the L1 transaction receipt for the withdrawal.
 
-You can also use the `CrossChainMessenger` instance to get the transaction receipt for the L1 transaction that executes and completes the withdrawal.
-The result of this function is an object with a `messageStatus` property and a `transactionReceipt` property that is identical to the result of the `ethers` function `getTransactionReceipt`.
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L46-L48 hash=d784970abbfd37215d33274d60173ab2
+  ```
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L44-L45 hash=e2e9688e7c3cb81740c73f921808cc3e
-```
+  {<h3>Get the withdrawal transaction</h3>}
 
-{<h3>Parse withdrawal logs</h3>}
+  Directly query for the L1 transaction that executed the withdrawal.
 
-Like any other transaction receipt, the withdrawal transaction receipt contains logs that can be parsed to get additional information about the withdrawal.
-You can iterate through these logs and parse them just as you would parse any other receipt.
-For instance, you may wish to search for `Burn` events to determine the amount of tokens that were burned as a result of the withdrawal.
-
-{<h3>Get the withdrawal transaction</h3>}
-
-Once you have the transaction receipt, you can directly query for the actual L1 transaction that executed the withdrawal.
-
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L48-L49 hash=c138a32f8c1e3c887f19d9bc7e87c73b
-```
-
+  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L50-L52 hash=48358bc45243db4e69de6ed3d49a67f9
+  ```
 </Steps>
+
+## Next steps
+
+*   Check out the tutorial on [bridging ERC-20 tokens with the Optimism SDK](./cross-dom-bridge-erc20) to learn how to create deposits and withdrawals.
+*   You can also check out the tutorial on [viewing deposits and withdrawals by address](./sdk-view-txns) to find deposits and withdrawals to trace.
