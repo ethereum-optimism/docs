@@ -7,9 +7,9 @@ description: Learn the basics of interoperability on the OP Stack.
 import { Callout } from 'nextra/components'
 import Image from 'next/image'
 
-import { InfoCallout } from '@/components/WipCallout'
+import { InteropCallout } from '@/components/WipCallout'
 
-<InfoCallout />
+<InteropCallout />
 
 # Interoperability explainer 
 
@@ -40,9 +40,48 @@ Chain operators can add or remove chains from the dependency set through the `Sy
 
 However, since the nature of defining a dependency is one way, it is impossible for a chain to know of all of the other chains that depend on it.
 
+## New predeploys
+
+The following predeploys have been added to enable interoperability. Predeployed smart contracts exist at predetermined addresses in the genesis state. They are similar to precompiles but instead run directly in the EVM instead of running native code outside the EVM.
+
+### CrossL2Inbox
+
+The `CrossL2Inbox` is the system predeploy for cross chain messaging. Anyone can trigger the execution or validation of cross chain messages, on behalf of any user.
+
+*   **Address:** `0x4200000000000000000000000000000000000022`
+*   **Specs:** [CrossL2Inbox](https://specs.optimism.io/interop/predeploys.html#crossl2inbox)
+
+### L2ToL2CrossDomainMessenger
+
+The `L2ToL2CrossDomainMessenger` is a higher level abstraction on top of the `CrossL2Inbox` that provides general message passing, utilized for secure transfers ERC20 tokens between L2 chains. Messages sent through the `L2ToL2CrossDomainMessenger` on the source chain receive both replay protection and domain binding, ie the executing transaction can only be valid on a single chain.
+
+*   **Address:** `0x4200000000000000000000000000000000000023`
+*   **Specs:** [L2ToL2CrossDomainMessenger](https://specs.optimism.io/interop/predeploys.html#l2tol2crossdomainmessenger)
+
+### OptimismSuperchainERC20Factory
+
+The `OptimismSuperchainERC20Factory` creates ERC20 contracts that implement the SuperchainERC20 standard, grants mint-burn rights to the `L2StandardBridge` (`OptimismSuperchainERC20`), and includes a remoteToken variable. These ERC20s are called `OptimismSuperchainERC20` and can be converted back and forth with `OptimismMintableERC20` tokens. The goal of the `OptimismSuperchainERC20` is to extend functionalities of the `OptimismMintableERC20` so that they are interop compatible.
+
+*   **Address:** `0x4200000000000000000000000000000000000026`
+*   **Specs:** [OptimismSuperchainERC20Factory](https://specs.optimism.io/interop/predeploys.html#optimismsuperchainerc20factory)
+
+
+### BeaconContract
+
+The `BeaconContract` predeploy gets called by the `OptimismSuperchainERC20` BeaconProxies deployed by the SuperchainERC20Factory. The Beacon Contract implements the interface defined in [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967).
+
+*   **Address:** `0x4200000000000000000000000000000000000027`
+*   **Specs:** [BeaconContract](https://specs.optimism.io/interop/predeploys.html#beaconcontract)
+
+### SuperchainERC20Bridge
+
+The `SuperchainERC20Bridge` is an abstraction on top of the `L2toL2CrossDomainMessenger` that facilitates token bridging using interop. It has mint and burn rights over `SuperchainERC20` tokens, as described in the [token bridging spec](https://specs.optimism.io/interop/token-bridging.html).
+
+*   **Address:** `0x4200000000000000000000000000000000000028`
+*   **Specs:** [SuperchainERC20Bridge](https://specs.optimism.io/interop/predeploys.html#superchainerc20bridge)
 ## Considerations
 Chain operators will need to run additional infrastructure to be part of the interoperable set. 
-*   The Superchain-backend service, `op-supervisor`, will be a requirement for running an OP Stack chain that has interop enabled. 
+*   The Superchain-backend service, [`op-supervisor`](op-supervisor), will be a requirement for running an OP Stack chain that has interop enabled. 
 `op-supervisor` is responsible for validating all cross-chain messages and will need to have an RPC configured for each chain in the dependency set. 
 *   In the future, to reduce infrastructure costs, `op-supervisor` will rely on the P2P network and cryptographic schemes for validating cross-chain messages. 
 
