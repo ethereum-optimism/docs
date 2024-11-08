@@ -108,13 +108,11 @@ export function ResultsTable({
           <p className="calculator-info calculator-text">
             <strong>Note: </strong>This is an estimation,{" "}
             <a
-              href="https://docs.optimism.io/builders/chain-operators/management/blobs#determine-scalar-values-for-using-blobs"
+              href="/builders/chain-operators/management/blobs#determine-scalar-values-for-using-blobs"
               target="_blank"
             >
-              see the Optimism Docs
-            </a>{" "}
-            for steps on modifying parameters if needed once the chain is on
-            mainnet{" "}
+              read how to determine scalar values using blobs
+            </a>
           </p>
         </div>
         <div className="results-table-wrap">
