@@ -1,37 +1,39 @@
 (async () => {
 
-const optimism = require("@eth-optimism/sdk")
-const ethers = require("ethers")
-
-const privateKey = process.env.TUTORIAL_PRIVATE_KEY
+const { createPublicClient, http } = require('viem');
+const { optimismSepolia } = require('viem/chains');
+const {  publicActionsL1, publicActionsL2} = require('viem/op-stack');
 
 const transactionHash = process.env.TUTORIAL_TRANSACTION_HASH
 
-const l1Provider = new ethers.providers.StaticJsonRpcProvider("https://rpc.ankr.com/eth_sepolia")
-const l2Provider = new ethers.providers.StaticJsonRpcProvider("https://sepolia.optimism.io")
-const l1Wallet = new ethers.Wallet(privateKey, l1Provider)
-const l2Wallet = new ethers.Wallet(privateKey, l2Provider)
-
-const messenger = new optimism.CrossChainMessenger({
-  l1ChainId: 11155111, // 11155111 for Sepolia, 1 for Ethereum
-  l2ChainId: 11155420, // 11155420 for OP Sepolia, 10 for OP Mainnet
-  l1SignerOrProvider: l1Wallet,
-  l2SignerOrProvider: l2Wallet,
-})
+const l1Provider = createPublicClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") }).extend(publicActionsL1())
+const l2Provider = createPublicClient({ chain: optimismSepolia, transport: http("https://sepolia.optimism.io") }).extend(publicActionsL2());
 
 console.log('Waiting for message to be provable...')
-await messenger.waitForMessageStatus(transactionHash, optimism.MessageStatus.READY_TO_PROVE)
+await l1Provider.getWithdrawalStatus({ 
+  receipt, 
+  targetChain: l2Provider.chain, 
+}) 
 
 console.log('Proving message...')
-await messenger.proveMessage(transactionHash)
+const receipt = await l2Provider.getTransactionReceipt(transactionHash)
+const output = await l1Provider.waitToProve({ 
+  receipt, 
+  targetChain: l2Provider.chain, 
+}) 
 
 console.log('Waiting for message to be relayable...')
-await messenger.waitForMessageStatus(transactionHash, optimism.MessageStatus.READY_FOR_RELAY)
+await l1Provider.getWithdrawalStatus({ 
+  receipt, 
+  targetChain: l2Provider.chain, 
+}) 
 
 console.log('Relaying message...')
-await messenger.finalizeMessage(transactionHash)
+const [message] = getWithdrawals(receipt)
+await l1Provider.waitToFinalize({ withdrawalHash: message.withdrawalHash, targetChain: l2Provider.chain }) 
 
 console.log('Waiting for message to be relayed...')
-await messenger.waitForMessageStatus(transactionHash, optimism.MessageStatus.RELAYED)
+await l1Provider.getWithdrawalStatus({ receipt, targetChain: l2Provider.chain }) 
+
 
 })()
