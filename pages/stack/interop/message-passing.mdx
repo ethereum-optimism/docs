@@ -1,10 +1,11 @@
 ---
 title: Interop message passing overview
 lang: en-US
-description: Learn about cross-chain message passing in the Superchain.
+description: Learn about cross-chain message passing with OP Stack interoperability.
 ---
 
 import { Callout, Steps } from 'nextra/components'
+import Image from 'next/image'
 
 # Interop message passing overview
 
@@ -12,13 +13,29 @@ import { Callout, Steps } from 'nextra/components'
   Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
 </Callout>
 
-This guide provides an overview of cross-chain message passing in the Superchain.
+This guide provides an overview of cross-chain message passing with the OP Stack. A cross-chain message applies to any message sent across a chain.
 
-## Overview
+## Anatomy of a cross-chain message
 
-The Superchain uses a pull-based event system for cross-chain communication. Messages are sent through the `L2ToL2CrossDomainMessenger` contract, which provides a secure and standardized way to pass information between chains.
+To send a cross-chain message on the Superchain using [Superchain interoperability](/stack/explainer), these two aspects must be in place:
+
+1.  Each interoperable chain runs a verifying node for each chain in the interoperable set.
+2.  Each cross-chain message has an **initiating transaction** on the source chain and a **finalizing transaction** on the destination chain.
+    *   **First/initiating transaction:** is submitted to the source chain and emits an event that can be consumed on a destination chain.
+    *   **Second/finalizing transaction:** is submitted to a destination chain, where the block builder should only include it if certain that the first transaction was included in the source chain. The block builder can use OP-Supervisor to determine the integrity of the initiating message. Anyone can submit the second transaction.
+<Callout type="default">
+  There is no strict requirement that the executing message is ever submitted. See the specs for details on tracing the [executing message event](https://specs.optimism.io/interop/predeploys.html#executingmessage-event).
+</Callout>
+
+<br />
+
+<Image src="/img/op-stack/protocol/cross-chain-message.png" alt="Anatomy of Cross-Chain Message with Interop" width={700} height={500} />
+
+In the example above, `Ox123` sends 1 OP from OP Mainnet to Base, but this applies to any asset using the SuperchainERC20 token standard.
 
 ## How it works
+
+The Superchain uses a pull-based event system for cross-chain communication. Messages are sent through the `L2ToL2CrossDomainMessenger` contract, which provides a secure and standardized way to pass information between chains.
 
 The following diagram illustrates how messages flow between chains through the `L2ToL2CrossDomainMessenger` contract, which acts as a bridge for cross-chain communication. When a contract on the source chain initiates a message, it's processed through several stages before reaching its destination, ensuring secure and reliable message delivery.
 
