@@ -14,12 +14,11 @@ import { InteropCallout } from '@/components/WipCallout'
 # Interoperability explainer 
 
 Interoperability is the ability for a blockchain to securely read the state of another blockchain. 
-Native OP Stack interoperability provides the ability to read messages and transfer assets across the Superchain (without having to go through L1) via secure message passing. This results in the following benefits:
-*   fungible and portable assets and liquidity
-*   lower fees and lower latency
-*   less fragmentation across the Superchain
+Native OP Stack interoperability provides the ability to read messages and transfer assets across the Superchain (without having to go through L1) via low-latency, secure message passing. This results in the following benefits:
+*   1-block latency asset movement movement that is both maximally capital efficient and non-fragmenting 
 *   improved user experience for developers on the Superchain
 *   secure transfer of ETH and ERC-20s across L2s
+*   horizontally scalable applications 
 
 ## Secure message passing
 Superchain interop includes both the protocol layer message passing and the Superchain ERC20 token specification.
@@ -30,15 +29,18 @@ Superchain interop includes both the protocol layer message passing and the Supe
 This means ETH and ERC-20s can seamlessly and securely move across L2s, and intent-based protocols (i.e., bridges) can build better experiences on top of the message passing protocol.
 
 ## Low latency
-Interoperability allows for horizontally scalable blockchains, a key feature of the Superchain. With Superchain interop, latency can be low (~2 seconds) by optimistically accepting cross-chain messages. 
-The fork choice rule enforces eventual consistency, meaning that if an invalid cross-chain message is accepted, it will be reorganized out eventually. 
-The fault proof guarantees that all of the cross-chain messages are accounted for from the perspective of handling withdrawals through the bridge to L1.
+Interoperability allows for horizontally scalable blockchains, a key feature of the Superchain. With Superchain interop, latency can be 1-block (~2 seconds) by optimistically accepting cross-chain messages. 
 
-## Permissionless chain set
-It is permissionless to define a dependency on a chain, so chain operators will be able to choose which chains their chains depend on, and it is not a requirement that chains are in each other's dependency set. 
-Chain operators can add or remove chains from the dependency set through the `SystemConfig`. For example, the dependency set for OP Mainnet is managed by Optimism Governance.
+## Permisonless dependency set
+The interop protocol works via a dependency set which is configured on a per chain basis and is a unidirectional relationship that defines the set of chains that a chain will accept incoming messages from. 
 
-However, since the nature of defining a dependency is one way, it is impossible for a chain to know of all of the other chains that depend on it.
+This gives the OP Stack an unopinionated and flexible foundation so chain operators are able to choose which chains their chains depend on, and it is not a requirement that chains are in each other's dependency set. 
+
+## Superchain interop cluster
+The Superchain builds ontop of the interop protocol and implements a single mesh network with complete dependencies. In this model, each blockchain in the Superchain interop cluster would have direct connections to every other blockchain, creating a fully connected mesh network. This provides the highest level of interoperability, as any blockchain can transact directly with any other.
+
+Each blockchain that is part of the Superchain interop cluster will have the same security model to mitigate the weakest-link scenario and will be managed by Optimism Governance. 
+
 
 ## New predeploys
 
@@ -108,6 +110,9 @@ See this [dune dashboard](https://dune.com/oplabspbc/op-stack-chains-l1-activity
 ### What is stopping a sequencer from censoring a cross-chain message?
 There is nothing stopping a sequencer from censoring a transaction when it is sent directly to the sequencer. This does not mean the network has no censorship resistance, users can always send a deposit transaction for censorship resistance as strong as L1 guarantees. The tradeoff here is the latency, instead of being confirmed in ~2 seconds, the transaction can be confirmed at the rate of L1 block production. It may be possible to adopt something like [EIP-7547](https://eips.ethereum.org/EIPS/eip-7547) in the future to enable low latency censorship resistance.
 
+### What is the weakest link scenario?
+Without shared security the concern is that interoperating chains both change their state due to some cross-chain interaction, but a weak chain is attacked / reorged, and that would leave the interop cluster in a conflicting state. This means the security around interactions between two or more chains is as weak as the weakest chain. 
+
 ### Are callback style transactions possible?
 If two blocks are being built at the same time with shared knowledge of their contents, it is possible to build blocks where a transaction calls to another chain, does compute and then a transaction calls back with the results. This requires no protocol level changes, it just requires more sophisticated block builder infrastructure.
 
@@ -121,3 +126,4 @@ Sequencers only have to trust each other, if they are accepting executing messag
 Chains that have non-fungible blockspace are chains that have different features - it could be that they use Plasma for data availability, a custom gas paying token or have a large execution gas limit. As long as the chain can be fault proven, it can work with Superchain interoperability. At the application layer, it is important for chains to have legibility into the type of chain that the message originated from. This ensures that applications do not accept messages from chains they consider not secure enough. See this [discussion](https://github.com/ethereum-optimism/specs/issues/121) for additional thoughts.
 
 When it comes to chains that have different gas limits that are interoperable, it creates a set of transactions that can execute on one chain but not the other. This happens when the transaction consumes more than the gas limit of the smaller chain but less than of the bigger chain. At 2024 usages levels, these sorts of transactions are very rare. In the future, it may be the case that these transactions become more common, it will be up to the chain operators to ensure quality of service for their users.
+
