@@ -10,7 +10,7 @@ The content directory contains markdown files that can be imported across the ne
 
 Create a `.md` file in the `/content` directory.
 
-### How to Use a Single Reusable Content Components
+### How to Use a Single Reusable Content Component
 
 1. Import it at the top of `.mdx` file:
 
