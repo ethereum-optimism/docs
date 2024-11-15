@@ -1,7 +1,7 @@
 # Redirect links management guide
 
 ## Scripts overview
-Two scripts help maintain internal links when pages are redirect:
+Two scripts help maintain internal links when pages are redirected:
 
 *   `check-redirects`: Identifies links that need updating based on the `_redirects` file.
 *   `fix-redirects`: Automatically updates links to match `_redirects` entries.
