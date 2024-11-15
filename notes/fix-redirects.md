@@ -11,8 +11,8 @@ Two scripts help maintain internal links when pages are redirected:
 Run the check script:
 
 ```bash
-pnpm check-redirects //OR
-pnpm lint
+pnpm lint //OR
+pnpm check-redirects 
 ```
 ## What it does
 
@@ -38,8 +38,8 @@ Pages OK ✅ - 48
 Fix links automatically:
 
 ```bash
-pnpm fix-redirects //OR
-pnpm fix
+pnpm fix //OR
+pnpm fix-redirects 
 ```
 
 ## What it does
