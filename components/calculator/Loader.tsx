@@ -7,7 +7,7 @@ export const Loader: React.FC = () => {
           <circle
             fill="#FF0420"
             stroke="#FF0420"
-            strokeWidth="15
+            strokeWidth="15"
             r="15"
             cx="40"
             cy="65"
