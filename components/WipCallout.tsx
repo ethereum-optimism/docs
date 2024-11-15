@@ -1,13 +1,9 @@
 /**
  * The WipCallout function renders a custom callout component with optional context text for
  * displaying maintenance messages.
- * @param {Props}  - The code snippet you provided is a React component named `WipCallout` that
- * renders a special callout message. The component takes an optional prop `context` of type string,
- * which can be used to customize the message displayed in the callout.
- * @returns The WipCallout component is being returned, which is a React element representing a
- * custom callout with a message. The message displayed depends on the value of the `context` prop
- * passed to the component. If `context` is provided, it will display the provided context message. If
- * `context` is not provided, it will display a default maintenance message.
+ * @param {Props} props - An object containing the optional `context` property, a string used
+ *                        to customize the message displayed in the callout.
+ * @returns {ReactElement} The WipCallout component, representing a custom callout message.
  */
 import type { ReactElement } from 'react';
 import { useState } from 'react';
