@@ -8,8 +8,7 @@ import { Callout } from "nextra/components";
 
 # 🔎 OP Scan
 
-[OP Scan](https://github.com/walnuthq/op-scan) is a transaction explorer tailored specifically for the [OP Stack](https://docs.optimism.io/builders/chain-operators/tutorials/create-l2-rollup) and the [Superchain vision](https://www.youtube.com/watch?v=O6vYNgrQ1LE).
-It's purpose built to be lightweight, so that anyone can run it locally next to their OP Stack nodes, when working on a new rollup.
+OP Scan is a transaction explorer tailored specifically for the [OP Stack](https://docs.optimism.io/builders/chain-operators/tutorials/create-l2-rollup) and the [Superchain vision](https://www.youtube.com/watch?v=O6vYNgrQ1LE). It's focused on being lightweight so that anyone can run it locally next to an OP Stack devnet or any other compatible OP Stack based rollup.
 
 <Callout>
   Check out the [OP Scan README](https://github.com/walnuthq/op-scan) for
@@ -19,6 +18,12 @@ It's purpose built to be lightweight, so that anyone can run it locally next to 
 ![screenshot](https://raw.githubusercontent.com/walnuthq/op-scan/main/screenshot.png)
 
 # ⚙️ Installation
+
+### Getting Started Video
+
+[Here's a video walkthrough](https://www.loom.com/share/3b79f0b25e44443eb16d296aba021764) on how to launch the explorer locally configured for OP Sepolia testnet.
+
+### Required Dependencies
 
 The app requires the following dependencies:
 
@@ -48,15 +53,15 @@ In particular you will need to provide configuration for both L1 and L2 chains:
 ```
 NEXT_PUBLIC_L1_CHAIN_ID="11155111"
 NEXT_PUBLIC_L1_NAME="Sepolia"
-NEXT_PUBLIC_L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/API_KEY"
-NEXT_PUBLIC_L2_CHAIN_ID="42069"
-NEXT_PUBLIC_L2_NAME="OP Local"
-NEXT_PUBLIC_L2_RPC_URL="http://localhost:8545"
+NEXT_PUBLIC_L1_RPC_URL="https://ethereum-sepolia-rpc.publicnode.com"
+NEXT_PUBLIC_L2_CHAIN_ID="11155420"
+NEXT_PUBLIC_L2_NAME="OP Sepolia"
+NEXT_PUBLIC_L2_RPC_URL="https://optimism-sepolia-rpc.publicnode.com"
 ```
 
-You can get free node rpcs url by signing up to services such as [Alchemy](https://www.alchemy.com/) or [Infura](https://www.infura.io/).
+You can get free node rpcs url by signing up to services such as [Alchemy](https://www.alchemy.com/), [Infura](https://www.infura.io/) or [QuickNode](https://www.quicknode.com/).
 
-You will also need to provide your L1 contracts addresses:
+You will also need to provide your L1 contracts addresses when using a devnet:
 
 ```
 NEXT_PUBLIC_OPTIMISM_PORTAL_ADDRESS="..."
@@ -66,22 +71,22 @@ NEXT_PUBLIC_L1_CROSS_DOMAIN_MESSENGER_ADDRESS="..."
 You will find theses addresses in your rollup deployment artifacts in `contracts-bedrock/deployments/your-deployment/L1Contract.json`.
 Note that you always need to provide the proxy address, not the underlying contract.
 
-If you don't want to run the explorer with your local chain setup, you will find all the necessary environment variables commented in `.env.local.example` to configure the explorer with OP Sepolia or OP Mainnet.
+If you don't want to run the explorer with your local chain setup, you will find all the necessary environment variables in `.env.local.example` to configure the explorer with OP Sepolia or OP Mainnet.
 
 If you want to be able to use the Write Contract feature on verified contracts, you will also need to provide a [Reown](https://docs.reown.com/) project ID.
 
 ```
-NEXT_PUBLIC_REOWN_PROJECT_ID="..."
+NEXT_PUBLIC_REOWN_PROJECT_ID="REOWN_PROJECT_ID"
 ```
 
 ### Indexer Configuration
 
-To run the indexer, you first need to setup your `DATABASE_URL` in `.env.local` as well as websocket connections to your L1/L2 chains (once again you can get them from a 3rd-party provider):
+To run the indexer, you first need to setup your `DATABASE_URL` in `.env.local` (we use SQLite by default but you can switch to PostgreSQL by changing the Prisma provider in `prisma/schema.prisma`) as well as websocket connections to your L1/L2 chains:
 
 ```
 DATABASE_URL="file:dev.db"
-L1_RPC_WS="wss://eth-mainnet.g.alchemy.com/v2/API_KEY"
-L2_RPC_WS="wss://opt-mainnet.g.alchemy.com/v2/API_KEY"
+L1_RPC_WS="wss://ethereum-sepolia-rpc.publicnode.com"
+L2_RPC_WS="wss://optimism-sepolia-rpc.publicnode.com"
 ```
 
 Then you can sync your local database with the Prisma schema:
@@ -90,7 +95,6 @@ Then you can sync your local database with the Prisma schema:
 pnpm prisma:db:push
 ```
 
-We use [Bun](https://bun.sh/) to run the indexer as a long-running script so make sure it is installed globally on your system.
 Now you will be able to start indexing the blockchain by running the `op-indexer` command:
 
 ```sh
@@ -111,15 +115,19 @@ pnpm prisma:db:push
 ```
 
 Indexing a blockchain is putting a heavy load on the RPC as you need to perform a large number of JSON-RPC requests to fully index a block (along with transactions and logs).
-When indexing non-local chains you will probably encounter 429 errors related to rate-limiting, you may provide up to 3 fallback RPC URLs in case this happens:
+When indexing non-local chains you will probably encounter 429 errors related to rate-limiting, you may provide up to 5 fallback RPC URLs in case this happens:
 
 ```
-NEXT_PUBLIC_L1_FALLBACK1_RPC_URL="https://opt-mainnet.g.alchemy.com/v2/FALLBACK1_API_KEY"
-NEXT_PUBLIC_L2_FALLBACK1_RPC_URL="https://opt-mainnet.g.alchemy.com/v2/FALLBACK1_API_KEY"
-NEXT_PUBLIC_L1_FALLBACK2_RPC_URL="https://opt-mainnet.g.alchemy.com/v2/FALLBACK2_API_KEY"
-NEXT_PUBLIC_L2_FALLBACK2_RPC_URL="https://opt-mainnet.g.alchemy.com/v2/FALLBACK2_API_KEY"
-NEXT_PUBLIC_L1_FALLBACK3_RPC_URL="https://opt-mainnet.g.alchemy.com/v2/FALLBACK3_API_KEY"
-NEXT_PUBLIC_L2_FALLBACK3_RPC_URL="https://opt-mainnet.g.alchemy.com/v2/FALLBACK3_API_KEY"
+NEXT_PUBLIC_L1_FALLBACK1_RPC_URL="https://rpc.ankr.com/eth_sepolia"
+NEXT_PUBLIC_L2_FALLBACK1_RPC_URL="https://rpc.ankr.com/optimism_sepolia"
+NEXT_PUBLIC_L1_FALLBACK2_RPC_URL="https://endpoints.omniatech.io/v1/eth/sepolia/public"
+NEXT_PUBLIC_L2_FALLBACK2_RPC_URL="https://endpoints.omniatech.io/v1/op/sepolia/public"
+NEXT_PUBLIC_L1_FALLBACK3_RPC_URL="https://sepolia.drpc.org"
+NEXT_PUBLIC_L2_FALLBACK3_RPC_URL="https://optimism-sepolia.drpc.org"
+NEXT_PUBLIC_L1_FALLBACK4_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/FALLBACK4_API_KEY"
+NEXT_PUBLIC_L2_FALLBACK4_RPC_URL="https://opt-sepolia.g.alchemy.com/v2/FALLBACK4_API_KEY"
+NEXT_PUBLIC_L1_FALLBACK5_RPC_URL="https://sepolia.infura.io/v3/FALLBACK5_API_KEY"
+NEXT_PUBLIC_L2_FALLBACK5_RPC_URL="https://optimism-sepolia.infura.io/v3/FALLBACK5_API_KEY"
 ```
 
 You can pass several parameters to the indexer to control the indexing range and execution:
@@ -150,7 +158,7 @@ Make sure your local chain is started and the indexer is running, then launch th
 pnpm start
 ```
 
-Alternatively you can launch the explorer in dev mode if you want to customize it
+Alternatively you can launch the explorer in dev mode if you want to customize it:
 
 ```sh
 pnpm dev
