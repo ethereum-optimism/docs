@@ -28,14 +28,14 @@ For more information on the Holocene implementation details, please review [Holo
 
 ## For chain operators
 
-Chain operators have to upgrade their nodes ahead of the activation times to a release that contains the Holocene changes and has the activation times for their chains baked in, or set the activation times manually via overrides.
+Chain operators should upgrade their nodes ahead of the activation times to a release that contains the Holocene changes and has the activation times for their chains baked in, or set the activation times manually via overrides.
 
 Besides this, chain operators must upgrade their chain's `SystemConfig` to the latest OP Contracts [v1.8.0-rc.1 release](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.8.0-rc.1) to utilize the EIP-1559 configurability. The updated `SystemConfig` implementations are deployed at addresses:
 
 *   Sepolia: TBD
 *   Mainnet: TBD
 
-Chain operators need to update their proxy contracts to point to these new implementations. The following upgrade script can be used to facilitate the upgrade: [https://github.com/ethereum-optimism/optimism/pull/12878](https://github.com/ethereum-optimism/optimism/pull/12878)
+Chain operators need to update their proxy contracts to point to these new implementations. An upgrade script in the monorepo can be used to facilitate the upgrade, please follow the instructions in this [README](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/upgrades/holocene/README.md). Note that it is fine to upgrade the SystemConfig after the Holocene activation. You need to upgrade if you want to reconfigure your EIP-1559 parameters.
 
 ### For fault proof enabled chains
 
@@ -46,7 +46,7 @@ The `FaultDisputeGame` and `PermissionedDisputeGame` contracts must be deployed 
 *   Sepolia: TBD
 *   Mainnet: TBD
 
-Chain operators need to update the `DisputeGameFactory` to use the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. The following upgrade script can be used to facilitate the upgrade: [https://github.com/ethereum-optimism/optimism/pull/12878](https://github.com/ethereum-optimism/optimism/pull/12878)
+Chain operators need to update the `DisputeGameFactory` to use the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. The same upgrade script in the monorepo can be used to facilitate the upgrade, please follow the instructions in this [README](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/upgrades/holocene/README.md).
 
 ## For node operators
 
@@ -57,8 +57,8 @@ These following steps are necessary for every node operator:
 <Steps>
   ### Update to the latest release
 
-  *   [`op-geth`](FIND_CORRECT_LINK)
-  *   [`op-node`](FIND_CORRECT_LINK)
+  *   [`op-node`, `op-batcher`, and `op-proposer` at `v1.10.0`]()
+  *   [`op-geth` at `v1.101411.2`]()
 
   ### Configure the Holocene activation date
 
@@ -78,6 +78,6 @@ These following steps are necessary for every node operator:
   Make the following checks to verify that your node is properly configured.
 
   *   `op-node` and `op-geth` will log their configurations at startup
-  *   Check that the Granite time is set to `activation-timestamp` in the op-node startup logs
-  *   Check that the Granite time is set to `activation-timestamp` in the op-geth startup logs
+  *   Check that the Holocene time is set to `activation-timestamp` in the op-node startup logs
+  *   Check that the Holocene time is set to `activation-timestamp` in the op-geth startup logs
 </Steps>
