@@ -1,153 +1,188 @@
 ---
-title: Running a local development environment
+title: Running a Local Development Environment
 lang: en-US
-description: Learn how to setup and run a local development environment of the entire OP Mainnet system.
+description: This tutorial walks you through spinning up an OP Stack devnet chain.
 ---
 
-import { Steps, Callout, Tabs } from 'nextra/components'
+import {Callout, Steps} from 'nextra/components'
+import {WipCallout} from '@/components/WipCallout'
 
-# Running a local development environment
+# Running a Local Development Environment
 
-This tutorial teaches you how to setup and run a local development environment of the entire OP Mainnet system.
+<Callout type="info">
+  This guide is currently under active development. If you run into any issues, please open an issue on
+  [Github](https://github.com/ethereum-optimism/optimism).
+</Callout>
 
-## What is this?
+This tutorial is **designed for developers** who want to learn about the OP Stack by spinning up a local OP Stack devnet.
+You'll perform the full deployment process, and **you'll end up with your very own OP Stack devnet**.
 
-A development environment is a local installation of the entire OP Mainnet system.
-Our default development environment includes both L1 and L2 development nodes.
-Running the OP Mainnet environment locally is a great way to test your code and see how your contracts will behave on OP Mainnet before you graduate to a testnet deployment (and eventually a mainnet deployment).
+It's useful to understand what each of these components does before
+you start deploying your chain. To learn about the different components please
+read the [deployment overview page](/builders/chain-operators/deploy/overview).
 
-Alternatively, you can get a hosted development node from [any of these providers](/builders/tools/connect/rpc-providers).
+You can use this devnet to experiment and perform tests, or you can choose to modify the chain to adapt it to your own needs.
+**The OP Stack is free and open source software licensed entirely under the MIT license**. You don't need permission from
+anyone to modify or deploy the stack in any configuration you want.
 
-## Do I need this?
+<Callout type="warning">
+  Modifications to the OP Stack may prevent a chain from being able to benefit from aspects of the [Optimism
+  Superchain](/stack/explainer). Make sure to check out the [Superchain Explainer](/stack/explainer) to learn more.
+</Callout>
 
-We generally recommend using the local development environment if your application falls into one of the following categories:
+## Installing Dependencies
 
-1.  **You're building contracts on both OP Mainnet and Ethereum that need to interact with one another.** The local development environment is a great way to quickly test interactions between L1 and L2. The OP Mainnet and test networks have a communication delay between L1 and L2 that can make testing slow during the early stages of development.
+| Dependency                                        | Version  | Version Check Command |
+| ------------------------------------------------- | -------- | --------------------- |
+| [docker](https://docs.docker.com/engine/install/) | `^27`    | `docker --version`    |
+| [kurtosis](https://docs.kurtosis.com/install/)    | `^1.3.0` | `kurtosis version`    |
 
-2.  **You're building an application that might be subject to one of the few [differences between Ethereum and OP Mainnet](/stack/differences).** Although OP Mainnet is [EVM equivalent](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306), it's not exactly the same as Ethereum. If you're building an application that might be subject to one of these differences, you should use the local development environment to double check that everything is running as expected. You might otherwise have unexpected issues when you move to testnet. We strongly recommend reviewing these differences carefully to see if you might fall into this category.
+### Notes on Specific Dependencies
 
-However, not everyone will need to use the local development environment.
-OP Mainnet is [EVM equivalent](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306), which means that OP Mainnet looks almost exactly like Ethereum under the hood.
-If you don't fall into one of the above categories, you can probably get away with simply relying on existing testing tools like Foundry or Hardhat.
-If you don't know whether or not you should be using the development environment, feel free to hop into the [developer support forum](https://github.com/ethereum-optimism/developers/discussions).
-Someone nice will help you out!
+#### `docker`
 
-## Installation
+We recommend using the latest version of Docker on Linux, or [OrbStack](https://orbstack.dev/) (a drop-in replacement
+for Docker Desktop) on OSX.
 
-Before you begin, ensure you have the following components installed on your system. The instructions below cover Ubuntu and Mac installations.
+#### `kurtosis`
 
-<Steps>
-  <Tabs items={['Ubuntu', 'Mac']}>
-    <Tabs.Tab>
-      ### Ubuntu installation
+Kurtosis is a tool for packaging and deploying containerized services. It's used in this tutorial to automatically deploy
+your devnet in an isolated environment.
 
-      These instructions were verified on Ubuntu 22.04 LTS. Other versions may require slight modifications.
+## Configure your network
 
-    *   [Install just](https://github.com/casey/just):
+Now that you've installed all the necessary dependencies, you can start configuring your network. The Kurtosis package
+accepts a YAMl file which configures how many network participants there are, what kind of software they're running, and
+the network's topology. An example YAML file is below:
 
-    *   Install the command line utilities `make` and `jq`:
+```yaml
+optimism_package:
+  chains: # you can define multiple L2s, which will be deployed against the same L1 as a single Superchain
+    - participants: # each participant is a node in the network. here we've defined two, one running op-geth and one running op-reth
+          - el_type: op-geth # this node will be the sequencer since it's first in the list
+          - el_type: op-reth
+      network_params:
+        name: rollup-1 # can be anything as long as it is unique
+        chain_id: 12345 # can be anything as long as it is unique
+```
 
-    ```sh
-    sudo apt install -y make jq
-    ```
+Save the above configuration to a file. For the rest of this tutorial, we'll assume you've saved it to `network-config.yaml`.
 
-    </Tabs.Tab>
+## Start your network
 
-    <Tabs.Tab>
-      ### Mac installation
+Now that you've configured your network, you can start it up using the Kurtosis CLI. Run the command below:
 
-    *   [Install Homebrew]( https://brew.sh/) (if not already installed):
+```bash
+kurtosis run github.com/ethpandaops/ethereum-package --args-file ./network-config.yml
+```
 
-    *   Install the required utilities:
+This command will start up your network and deploy the OP Stack based on the configuration you created. The command will
+produce a lot of output and will take about five minutes to complete. Once it's done, you'll see a message that looks like
+the one below:
 
-    ```sh
-    brew install make jq just
-    ```
-    </Tabs.Tab>
-  </Tabs>
+```
+INFO[2024-09-23T00:31:29-06:00] ===================================================
+INFO[2024-09-23T00:31:29-06:00] ||          Created enclave: blue-marsh          ||
+INFO[2024-09-23T00:31:29-06:00] ===================================================
+Name:            blue-marsh
+UUID:            91af529557cb
+Status:          RUNNING
+Creation Time:   Mon, 23 Sep 2024 00:29:58 MDT
+Flags:
 
-  ### Installing Go
+========================================= Files Artifacts =========================================
+UUID           Name
+a5824b041b28   1-lighthouse-geth-0-63-0
+f7c0e13e9871   el_cl_genesis_data
+bfa022049aea   final-genesis-timestamp
+0b5c53e3940f   genesis-el-cl-env-file
+46a78cc34966   genesis_validators_root
+038ad1a753ed   jwt_file
+4fbc4bde03c2   keymanager_file
+c36887606978   op-deployer-configs
+d638c3222e56   op-deployer-fund-script
+b02f20c287ac   op_jwt_filerollup-1
+655d57862785   prysm-password
+28203054f5ec   validator-ranges
 
-Install Go on your system by following the official [Go installation instructions](https://golang.org/doc/install). Be sure to install the latest stable version.
+========================================== User Services ==========================================
+UUID           Name                                             Ports                                         Status
+29643e475cb7   cl-1-lighthouse-geth                             http: 4000/tcp -> http://127.0.0.1:33639      RUNNING
+                                                                metrics: 5054/tcp -> http://127.0.0.1:33640
+                                                                tcp-discovery: 9000/tcp -> 127.0.0.1:33641
+                                                                udp-discovery: 9000/udp -> 127.0.0.1:32920
+e7dfdc2588ae   el-1-geth-lighthouse                             engine-rpc: 8551/tcp -> 127.0.0.1:33636       RUNNING
+                                                                metrics: 9001/tcp -> http://127.0.0.1:33637
+                                                                rpc: 8545/tcp -> 127.0.0.1:33634
+                                                                tcp-discovery: 30303/tcp -> 127.0.0.1:33638
+                                                                udp-discovery: 30303/udp -> 127.0.0.1:32919
+                                                                ws: 8546/tcp -> 127.0.0.1:33635
+5ff43094ccc3   op-batcher-rollup-1                              http: 8548/tcp -> http://127.0.0.1:33650      RUNNING
+aa30d376acc9   op-cl-1-op-node-op-geth-rollup-1                 http: 8547/tcp -> http://127.0.0.1:33648      RUNNING
+                                                                tcp-discovery: 9003/tcp -> 127.0.0.1:33649
+                                                                udp-discovery: 9003/udp -> 127.0.0.1:32922
+af4abdbbe939   op-el-1-op-geth-op-node-rollup-1                 engine-rpc: 8551/tcp -> 127.0.0.1:33645       RUNNING
+                                                                metrics: 9001/tcp -> 127.0.0.1:33646
+                                                                rpc: 8545/tcp -> http://127.0.0.1:33643
+                                                                tcp-discovery: 30303/tcp -> 127.0.0.1:33647
+                                                                udp-discovery: 30303/udp -> 127.0.0.1:32921
+                                                                ws: 8546/tcp -> 127.0.0.1:33644
+578ee2b5bfe7   validator-key-generation-cl-validator-keystore   <none>                                        RUNNING
+aa69f73e96c1   vc-1-geth-lighthouse                             metrics: 8080/tcp -> http://127.0.0.1:33642   RUNNING
+```
 
-After installation, you can verify Go is correctly installed by running:
+Also take note of the last log line above this message, which contains the address of the standard bridge. You'll
+need this address to deposit funds on your L2.
 
-    ```sh
-    go version
-    ```
+This might look complicated, but it's just a list of the services that were started up by Kurtosis. For each service, you
+can see:
 
-  ### Clone the Optimism monorepo
+*   The enclave name, which identifies the services you just deployed within Kurtosis. The enclave is an isolated environment
+    that runs your devnet.
+*   The service's name, which you can use with the Kurtosis CLI to view its logs and interact with it.
+*   The service's ports and addresses, which you can use to connect to the service.
 
-  ```sh
-  git clone https://github.com/ethereum-optimism/optimism.git
-  cd optimism
-  ```
+At this point your chain is up and running. Let's move on to the next section to learn how to interact with it.
 
-  ### Install Foundry using monorepo tooling
+## Interact with your network
 
-  The following command will install Foundry if it is not already installed on your system. If an error occurs during execution, please run `source /root/.bashrc` and try again.
+You now have a fully functioning OP Stack Rollup. You can connect your wallet to this chain the same way you'd connect
+your wallet to any other EVM chain. You can find your node's RPC URL by running `kurtosis enclave inspect <enclave name>`.
+Your enclave name is outputted at the end of the `kurtosis run` command above. The RPC url is the `rpc` port name in any
+of the execution client services identified by `op-el`.
 
-  ```sh
-  just install-foundry
-  ```
+### Depositing funds onto your network
 
-  If you do already have Foundry installed, make sure to run the following to verify your installed version will work with the monorepo tooling as expected.
+Your network was configured to pre-fund development addresses using the `test test test test test test test test test test test junk`
+mnemonic. To get ETH onto your L2, you import one of the private keys from that mnemonic into your favorite wallet or use
+a CLI tool like `cast`. For the purposes of this tutorial, we'll use `cast` and assume you want to use the first address
+generated by that mnemonic.
 
-  ```sh
-  just check-foundry
-  ```
+To move ETH onto your L2, run the following command. Make sure to replace the values in angle brackets with real values:
 
-  If you need to, you can run the following to update Foundry to the expected version.
+```bash
+cast send --mnemonic 'test test test test test test test test test test test junk' --mnemonic-path "m/44'/60'/0'/0/0" \
+    --to "<standard bridge address>" --amount "<amount in ETH>eth" --rpc-url "http://127.0.0.1:<rpc port of el-1-geth-lighthouse service>"
+```
 
-  ```sh
-  just update-foundry
-  ```
-</Steps>
+Wait \~30 seconds, then check your balance on L2 by running the following command:
 
-## Operations
+```bash
+export ETH_RPC_URL="http://127.0.0.1:<rpc port of el-1-geth-lighthouse service>"
+export ADDRESS="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+cast balance "$ADDRESS"
+```
 
-*   To start, run (in the root directory of the monorepo) `make devnet-up`.\
-    The first time it runs it will be relatively slow because it needs to download the images, after that it will be faster.\
-    After the devnet starts, the L2 RPC server will be available at `127.0.0.1:9545` and the L1 RPC server will be available at `127.0.0.1:8545`.
+Your balance should match the amount you sent.
 
-*   To stop, run (in the root directory of the monorepo) `make devnet-down`.
+## See Your Rollup in Action
 
-*   To clean everything, run (in the root directory of the monorepo) `make devnet-clean`.
+You can interact with your Rollup the same way you'd interact with any other EVM chain.
+Send some transactions, deploy some contracts, and see what happens!
 
-## Additional Info
+## Next Steps
 
-*   [The monorepo includes L1 contract addresses](/chain/addresses) and [the devnet L1 deploy configs](https://github.com/ethereum-optimism/optimism/blob/65ec61dde94ffa93342728d324fecf474d228e1f/packages/contracts-bedrock/deploy-config/devnetL1.json).
-    The L2 contract addresses are, of course, the standard ones.
-
-*   There are some differences between the development node and the real world (a.k.a. Ethereum mainnet and OP Mainnet):
-
-    | Parameter                           | Real-world | Devnode |
-    | ----------------------------------- | ---------: | ------: |
-    | L1 chain ID                         |          1 |     900 |
-    | L2 chain ID                         |         10 |     901 |
-    | Time between L1 blocks (in seconds) |         12 |       6 |
-
-*   Pre-Funded Dev Accounts
-
-    By default, the same 10 dev accounts that are pre-funded using Anvil or HardHat are also pre-funded on both L1 and L2:
-
-    <Callout>
-      These private keys are common knowledge, you should **not** use them on any network other than this dev network.
-      Using these private keys on mainnet, or even a testnet, will most likely result **in a loss of funds**.
-    </Callout>
-
-    | Address                                    |                                                        Private Key |    Balance |
-    | ------------------------------------------ | -----------------------------------------------------------------: | ---------: |
-    | 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 | 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 | 10,000 ETH |
-    | 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 | 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d | 10,000 ETH |
-    | 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC | 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a | 10,000 ETH |
-    | 0x90F79bf6EB2c4f870365E785982E1f101E93b906 | 0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6 | 10,000 ETH |
-    | 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 | 0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a | 10,000 ETH |
-    | 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc | 0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba | 10,000 ETH |
-    | 0x976EA74026E726554dB657fA54763abd0C3a0aa9 | 0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e | 10,000 ETH |
-    | 0x14dC79964da2C08b23698B3D3cc7Ca32193d9955 | 0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356 | 10,000 ETH |
-    | 0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f | 0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97 | 10,000 ETH |
-    | 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720 | 0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6 | 10,000 ETH |
-
-    *   Mnemonic: `test test test test test test test test test test test junk`
-    *   Derivation path: `m/44'/60'/0'/0/`
+*   You can [modify the blockchain in various ways](../hacks/overview).
+*   Check out the [protocol specs](https://specs.optimism.io/) for more detail about the rollup protocol.
+*   If you run into any problems, please visit the [Chain Operators Troubleshooting Guide](../management/troubleshooting)
+    or [file an issue](https://github.com/ethereum-optimism/optimism/issues) for help.
