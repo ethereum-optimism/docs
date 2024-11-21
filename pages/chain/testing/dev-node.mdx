@@ -1,5 +1,5 @@
 ---
-title: Creating Your Own L2 Rollup Devnet
+title: Running a Local Development Environment
 lang: en-US
 description: This tutorial walks you through spinning up an OP Stack devnet chain.
 ---
@@ -7,7 +7,7 @@ description: This tutorial walks you through spinning up an OP Stack devnet chai
 import {Callout, Steps} from 'nextra/components'
 import {WipCallout} from '@/components/WipCallout'
 
-# Creating Your Own L2 Rollup Devnet
+# Running a Local Development Environment
 
 <Callout type="info">
     This guide is currently under active development. If you run into any issues, please open an issue on
@@ -59,15 +59,11 @@ the network's topology. An example YAML file is below:
 optimism_package:
   chains: # you can define multiple L2s, which will be deployed against the same L1 as a single Superchain
     - participants: # each participant is a node in the network. here we've defined two, one running op-geth and one running op-reth
-          - el_type: op-geth
-            sequencer: true # this node will be the sequencer
+          - el_type: op-geth # this node will be the sequencer since it's first in the list
           - el_type: op-reth
       network_params:
         name: rollup-1 # can be anything as long as it is unique
         chain_id: 12345 # can be anything as long as it is unique
-  op_contract_deployer_params: # configures the contract versions to deploy
-    image: mslipper/op-deployer:latest
-    artifacts_url: https://storage.googleapis.com/oplabs-contract-artifacts/artifacts-v1-4accd01f0c35c26f24d2aa71aba898dd7e5085a2ce5daadc8a84b10caf113409.tar.gz
 ```
 
 Save the above configuration to a file. For the rest of this tutorial, we'll assume you've saved it to `network-config.yaml`.
