@@ -1,0 +1,49 @@
+---
+title: Deploy assets using SuperchainERC20
+lang: en-US
+description: Learn about the basic details of deploying assets on SuperchainERC20
+---
+
+import { Callout } from 'nextra/components'
+import { Steps } from 'nextra/components'
+
+# Issuing new assets with SuperchainERC20
+
+<Callout>
+  Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
+</Callout>
+
+This guide explains how to issue new assets with the `SuperchainERC20` and bridge them effectively using the `SuperchainERC20Bridge`. If you want more information about the `SuperchainERC20 standard`, see our [`SuperchainERC20` standard explainer](/stack/interop/assets/superchain-erc20)
+
+Note that bridging assets through the Superchain using `SuperchainERC20` never affects the total supply of your asset. The supply remains fixed, and bridging only changes the chain on which your asset is located. This keeps the token's total amount the same across all networks, ensuring its value stays stable during the move and that the `SuperchainERC20` retains a unified, global supply count.
+
+## Steps to issue and bridge assets
+
+<Steps>
+  ### Deploy the `SuperchainERC20` Token Contract
+
+  To ensure fungibility across chains, the SuperchainERC20 assets need to have the same contract address on all chains. Achieving this requires deterministic deployment methods, such as:
+
+  *   `Create2Deployer`: A smart contract that enables deploying contracts with predictable addresses.
+  *   `OptimismSuperchainERC20Factory`: A factory contract designed for L1-native tokens to ensure uniform deployments across chains.
+
+  There are [many ways to do this](https://github.com/Arachnid/deterministic-deployment-proxy), but [here's an example smart contract to start](https://github.com/ethereum-optimism/superchainerc20-starter/blob/main/packages/contracts/src/L2NativeSuperchainERC20.sol). For an in-depth guide on how to deploy a `SuperchainERC20` use the [SuperchainERC20 Starter Kit](https://console.optimism.io/build).
+
+  By deploying assets at identical addresses across multiple chains, we abstract away the complexity of cross-chain validation.
+
+  ### Implement the IERC7802 interface
+
+  Implementations of `SuperchainERC20` will be required to implement the [IERC7802](https://specs.optimism.io/interop/token-bridging.html#ierc7802) interface, that includes two external functions and two events.
+
+  The interface defines two functions for bridging:
+
+  *   `sendERC20`: Initializes a cross-chain transfer of a `SuperchainERC20` by burning the tokens locally and sending a message to the `SuperchainERC20Bridge` on the target chain using the `L2toL2CrossDomainMessenger`. This ensures that asset supply remains constant, as sending an asset moves it from one chain to another without creating additional supply.
+  *   `relayERC20`: Processes incoming messages from the L2toL2CrossDomainMessenger and mints the corresponding amount of the SuperchainERC20.
+
+  [Here's an example implementation of the `SuperchainERC20Bridge`](https://specs.optimism.io/interop/token-bridging.html#implementation)
+</Steps>
+
+## Next steps
+*   Use the [SuperchainERC20 Starter Kit](https://console.optimism.io/build) to deploy your token across the Superchain
+*   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
+*   Review the [Superchain Interop Explainer](explainer) for answers to common questions about interoperability.

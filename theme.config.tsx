@@ -28,6 +28,14 @@ const config: DocsThemeConfig = {
     </>
   ),
   darkMode: true,
+  banner: {
+    key: 'viem/op-stack',
+    text: (
+      <a href="/builders/notices/sdk-deprecation">
+        🎉 We are deprecating the Optimism SDK and migrating all tutorials to use viem/op-stack. Read more →
+      </a>
+    )
+  },
    search: {
      component: Search,
    },

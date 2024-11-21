@@ -1,89 +1,64 @@
 ---
-title: Triggering OP Mainnet Transactions from Ethereum
+title: Triggering OP Stack transactions from Ethereum
 lang: en-US
-description: Learn how to force transaction inclusion without the OP Mainnet Sequencer.
+description: Learn how to force transaction inclusion without the OP Stack Sequencer using Viem.
 ---
 
 import { Callout, Steps } from 'nextra/components'
-import { WipCallout } from '@/components/WipCallout'
 
-<WipCallout />
-# Triggering OP Mainnet Transactions from Ethereum
+# Triggering OP Stack transactions from Ethereum
 
+OP Stack currently uses a single-Sequencer block production model.
+This means that there is only one Sequencer active on the network at any given time. Single-Sequencer models are simpler than their highly decentralized counterparts but they are also more vulnerable to potential downtime.
 
-
-OP Mainnet currently uses a single-Sequencer block production model.
-This means that there is only one Sequencer active on the network at any given time.
-Single-Sequencer models are simpler than their highly decentralized counterparts but they are also more vulnerable to potential downtime.
-
-Sequencer downtime must not be able to prevent users from transacting on the network.
-As a result, OP Mainnet includes a mechanism for "forcing" transactions to be included in the blockchain.
-This mechanism involves triggering a transaction on OP Mainnet by sending a transaction on Ethereum.
-
-In this tutorial you'll learn how to trigger a transaction on OP Mainnet from Ethereum.
-You'll use the OP Sepolia testnet, but the same logic will apply to OP Mainnet.
+Sequencer downtime must not be able to prevent users from transacting on the network. As a result, OP Stack includes a mechanism for "forcing" transactions to be included in the blockchain. This mechanism involves triggering a transaction on OP Stack by sending a transaction on Ethereum.
+In this tutorial you'll learn how to trigger a transaction on OP Stack from Ethereum using Viem. You'll use the OP Sepolia testnet, but the same logic will apply to OP Stack.
 
 ## Dependencies
 
 *   [node](https://nodejs.org/en/)
 *   [pnpm](https://pnpm.io/installation)
 
-## Create a Demo Project
+## Create a demo project
 
-You're going to use the `@eth-optimism/contracts-ts` package for this tutorial.
-Since the `@eth-optimism/contracts-ts` package is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
+You're going to use the `viem` package for this tutorial. Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
+  {<h3>Make a Project Folder</h3>}
 
-{<h3>Make a Project Folder</h3>}
+  ```bash
+  mkdir trigger-transaction
+  cd trigger-transaction
+  ```
 
-```bash
-mkdir op-sample-project
-cd op-sample-project
-```
+  {<h3>Initialize the Project</h3>}
 
-{<h3>Initialize the Project</h3>}
+  ```bash
+  pnpm init
+  ```
 
-```bash
-pnpm init
-```
+  {<h3>Install Viem</h3>}
 
-{<h3>Install the Contracts Package</h3>}
-
-```bash
-pnpm add @eth-optimism/contracts-ts
-```
-
-{<h3>Install the Utils Package</h3>}
-
-```bash
-pnpm add @eth-optimism/core-utils
-```
-
-{<h3>Install ethers.js</h3>}
-
-```bash
-pnpm add ethers@^5
-```
-
+  ```bash
+  pnpm add viem
+  ```
 </Steps>
 
 <Callout type="info">
-Want to create a new wallet for this tutorial?
-If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
+  Want to create a new wallet for this tutorial?
+  If you have [`cast`](https://book.getfoundry.sh/getting-started/installation) installed you can run `cast wallet new` in your terminal to create a new wallet and get the private key.
 </Callout>
 
 ## Get ETH on Sepolia and OP Sepolia
 
-This tutorial explains how to bridge tokens from Sepolia to OP Sepolia.
-You will need to get some ETH on both of these testnets.
+This tutorial explains how to bridge tokens from Sepolia to OP Sepolia. You will need to get some ETH on both of these testnets.
 
 <Callout type="info">
-You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
-You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
+  You can use [this faucet](https://sepoliafaucet.com) to get ETH on Sepolia.
+  You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
 </Callout>
 
-## Add a Private Key to Your Environment
+## Add a private key to your environment
 
 You need a private key in order to sign transactions.
 Set your private key as an environment variable with the `export` command.
@@ -95,7 +70,7 @@ export TUTORIAL_PRIVATE_KEY=0x...
 
 ## Start the Node REPL
 
-You're going to use the Node REPL to interact with the Optimism SDK.
+You're going to use the Node REPL to interact with Viem.
 To start the Node REPL run the following command in your terminal:
 
 ```bash
@@ -104,117 +79,91 @@ node
 
 This will bring up a Node REPL prompt that allows you to run javascript code.
 
-## Import Dependencies
+## Import dependencies
 
 You need to import some dependencies into your Node REPL session.
 
 <Steps>
+  {<h3>Import Viem</h3>}
 
-{<h3>Import the Contracts Package</h3>}
-
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L3 hash=02e8ca4ffb8e411c4b43d969c5533e24
-```
-
-{<h3>Import the Utils Package</h3>}
-
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L4 hash=6e350dd75d29dff73d09b1f0cdd1fe78
-```
-
-{<h3>Import ethers.js</h3>}
-
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L5 hash=69a65ef97862612e4978b8563e6dbe3a
-```
-
+  ```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L3-L6 hash=1e06dede41cb7ba0bd9414a8962521c6
+  ```
 </Steps>
 
-## Set Session Variables
+## Set session variables
 
-You'll need a few variables throughout this tutorial.
-Let's set those up now.
+You'll need a few variables throughout this tutorial. Let's set those up now.
 
 <Steps>
+  {<h3>Load your private key</h3>}
 
-{<h3>Load your private key</h3>}
+  ```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L8-L9 hash=46ba01375a5d8844b2315f0e579dfac3
+  ```
 
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L7 hash=755b77a7ffc7dfdc186f36c37d3d847a
-```
+  {<h3>Create the RPC providers and wallets</h3>}
 
-{<h3>Create the RPC providers and wallets</h3>}
-
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L9-L12 hash=9afdce50665ae93bce602068071ffaa1
-```
-
+  ```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L11-L13 hash=d5a5a1252f4b6ff026cd58de8e6ae7f1
+  ```
 </Steps>
 
-## Check Your Initial Balance
+## Check your initial balance
 
-You'll be sending a small amount of ETH as part of this tutorial.
-Quickly check your balance on OP Sepolia so that you know how much you had at the start of the tutorial.
+You'll be sending a small amount of ETH as part of this tutorial. Quickly check your balance on OP Sepolia so that you know how much you had at the start of the tutorial.
 
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L15-L16 hash=062c80bbd70e12144fe45532611a1846
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L17-L18 hash=2bbd74b9de0c0fa0daca043ab9030ff0
 ```
 
-## Trigger the Transaction
+## Trigger the transaction
 
-Now you'll use the [`OptimismPortal`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol) contract to trigger a transaction on OP Sepolia by sending a transaction on Sepolia.
+Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepolia by sending a transaction on Sepolia.
 
 <Steps>
+  {<h3>Create the OptimismPortal object</h3>}
 
-{<h3>Create the OptimismPortal object</h3>}
+  ```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L20-L31 hash=b062257111aacc2f3a985542e451269c
+  ```
 
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L18-L22 hash=75e09aebd1fe33724587ce7464f91940
-```
+  {<h3>Estimate the required gas</h3>}
 
-{<h3>Estimate the required gas</h3>}
+  When sending transactions via the `OptimismPortal` contract it's important to always include a gas buffer. This is because the `OptimismPortal` charges a variable amount of gas depending on the current demand for L2 transactions triggered via L1. If you do not include a gas buffer, your transactions may fail.
 
-When sending transactions via the `OptimismPortal` contract it's important to always include a gas buffer.
-This is because the `OptimismPortal` charges a variable amount of gas depending on the current demand for L2 transactions triggered via L1.
-If you do not include a gas buffer, your transactions may fail.
+  ```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L33-L45 hash=f5d0d92f161514a3359997143804af0b
+  ```
 
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L25-L31 hash=a5ed372cf7ae78a6fea1e7a65c582cee
-```
+  {<h3>Send the transaction</h3>}
 
-{<h3>Send the transaction</h3>}
+  Now you'll send the transaction. Note that you are including a buffer of 20% on top of the gas estimate.
 
-Now you'll send the transaction.
-Note that you are including a buffer of 20% on top of the gas estimate.
+  ```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L50-L61 hash=59e3ee527809087e9e615f28caa49083
+  ```
 
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L34-L43 hash=57a69ed74c2fb3bf2242b0452ed00f88
-```
+  {<h3>Wait for the L1 transaction</h3>}
 
-{<h3>Wait for the L1 transaction</h3>}
+  First you'll need to wait for the L1 transaction to be mined.
 
-First you'll need to wait for the L1 transaction to be mined.
+  ```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L60 hash=0efd9bd3369de7f5f36ea5540a5d8078
+  ```
 
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L46 hash=efcac85d794ab4711595112fbe2c7a8e
-```
+  {<h3>Wait for the L2 transaction</h3>}
 
-{<h3>Wait for the L2 transaction</h3>}
+  Now you'll need to wait for the corresponding L2 transaction to be included in a block. This transaction is automatically created as a result of your L1 transaction. Here you'll determine the hash of the L2 transaction and then wait for that transaction to be included in the L2 blockchain.
 
-Now you'll need to wait for the corresponding L2 transaction to be included in a block.
-This transaction is automatically created as a result of your L1 transaction.
-Here you'll determine the hash of the L2 transaction using the `@eth-optimism/core-utils` library and then wait for that transaction to be included in the L2 blockchain.
-
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L49-L50 hash=28b3fcba963fc4b960e89cc96b20aea2
-```
-
+  ```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L67-L73 hash=bf903509fb370c2b4e85dbfbf05650ee
+  ```
 </Steps>
 
-## Check Your Updated Balance
+## Check your updated balance
 
-You should have a little less ETH on OP Sepolia now.
-Check your balance to confirm.
+You should have a little less ETH on OP Sepolia now. Check your balance to confirm.
 
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L53-L54 hash=b907d1590d7b39e8cfba4fb84886a8f9
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L75-L76 hash=dd456528a8bae103b73c5bcd19216916
 ```
 
 Make sure that the difference is equal to the amount you were expecting to send.
 
-```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L57-L58 hash=e44227b3ca6f46e6a16a10689b11ad39
+```js file=<rootDir>/public/tutorials/send-tx-from-eth.js#L78-L79 hash=3885097e127ff18b3c2c2fc1d3d5a7c0
 ```
 
-## Next Steps
+## Next steps
 
-You've successfully triggered a transaction on OP Sepolia by sending a transaction on Sepolia.
-Although this tutorial demonstrated the simple example of sending a basic ETH transfer from your L2 address via the OptimismPortal contract, you can use this same technique to trigger any transaction you want.
-You can trigger smart contracts, send ERC-20 tokens, and more.
+You've successfully triggered a transaction on OP Sepolia by sending a transaction on Sepolia using Viem. Although this tutorial demonstrated the simple example of sending a basic ETH transfer from your L2 address via the OptimismPortal contract, you can use this same technique to trigger any transaction you want. You can trigger smart contracts, send ERC-20 tokens, and more.
