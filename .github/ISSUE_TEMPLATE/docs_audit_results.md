@@ -104,7 +104,7 @@ op-conductor
 fp-contracts
 cannon
 op-program
-asterisc
+asterisk
 kona
 superchain-registry
 supersim
@@ -125,7 +125,6 @@ devops-tooling
 artifacts-packaging
 sequencer-in-a-box
 devnets
-op-supervisor
 performance-tooling
 peer-management-service
 proxyd
