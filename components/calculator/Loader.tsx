@@ -20,7 +20,7 @@ export const Loader: React.FC = () => {
               keySplines=".5 0 .5 1;.5 0 .5 1"
               repeatCount="indefinite"
               begin="-.4"
-            ></animate>
+            >
           </circle>
           <circle
             fill="#FF0420"
@@ -38,7 +38,7 @@ export const Loader: React.FC = () => {
               keySplines=".5 0 .5 1;.5 0 .5 1"
               repeatCount="indefinite"
               begin="-.2"
-            ></animate>
+            >
           </circle>
           <circle
             fill="#FF0420"
@@ -56,7 +56,7 @@ export const Loader: React.FC = () => {
               keySplines=".5 0 .5 1;.5 0 .5 1"
               repeatCount="indefinite"
               begin="0"
-            ></animate>
+            >
           </circle>
         </svg>
       </div>
