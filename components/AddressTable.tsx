@@ -17,7 +17,7 @@ export function AddressTable({
   addresses: TableAddresses
 }): ReactElement {
   // Filter out legacy (or non-legacy) contracts.
-  const filtered: TableAddresses = Object.keys(addresses)
+  const filtered = Object.keys(addresses)
     .filter(key => LEGACY_CONTRACT_NAMES.includes(key) === legacy)
     .reduce((acc, key) => {
       acc[key] = addresses[key]
