@@ -14,5 +14,5 @@ Remark plugins can be injected into Nextra by modifying the `mdxOptions` object 
 
 #### remarkCodeImport
 
-Rule is modified via [patch](/patches/remark-code-import@1.2.0.patch) to require that all code imports include an md5 content hash of the imported content.
+Rule is modified via [patch](/patches/remark-code-import@1.2.0.patch) to require that all code imports include a md5 content hash of the imported content.
 Requiring this hash means that changes to the underlying content must also come with corresponding changes to the relevant imports and imports cannot silently break.
