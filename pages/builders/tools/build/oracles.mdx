@@ -10,10 +10,10 @@ import { Callout } from 'nextra/components'
 # Oracles
 
 <Callout type="default">
-  This page includes providers that meet specific [inclusion criteria](#inclusion-criteria), as outlined below. Please visit the [community oracles page](https://github.com/ethereum-optimism/developers/blob/main/community/tools/oracles.md) for an additional listing of third-party Oracles.
+  This page includes providers that meet specific [inclusion criteria](#inclusion-criteria), as outlined below.
 </Callout>
 
-This reference guide lists different Oracles you can use when building on Optimism. [Oracles](https://ethereum.org/en/developers/docs/oracles/) provide offchain data onchain. This allows code running on a blockchain to access a wide variety of information.
+This reference guide lists different Oracles you can use when building on Metal Layer 2. [Oracles](https://ethereum.org/en/developers/docs/oracles/) provide offchain data onchain. This allows code running on a blockchain to access a wide variety of information.
 For example, a [stablecoin](https://ethereum.org/en/stablecoins/) that accepts ETH as collateral needs to know the ETH/USD exchange rate:
 
 *   How many stablecoins can we give a user for a given amount of ETH?
@@ -44,48 +44,10 @@ Random number generation in blockchain applications ensures that smart contracts
 
 ## List of oracles
 
-### Gas oracle
-
-OP Mainnet provides a [Gas Price Oracle](https://github.com/ethereum-optimism/optimism/blob/233ede59d16cb01bdd8e7ff662a153a4c3178bdd/packages/contracts/contracts/L2/predeploys/OVM_GasPriceOracle.sol) that provides information about [gas prices and related parameters](/stack/transactions/fees).
-It can also calculate the total cost of a transaction for you before you send it.
-
-This contract is a predeploy at address `0x420000000000000000000000000000000000000F`:
-
-*   [On OP Mainnet](https://explorer.optimism.io/address/0x420000000000000000000000000000000000000F#readContract)
-*   [On OP Sepolia](https://sepolia-optimistic.etherscan.io/address/0x420000000000000000000000000000000000000F)
-
-This is a push Oracle.
-OP Mainnet (and the testnets) updates the gas price parameters onchain whenever those parameters change.
-The L1 gas price, which can be volatile, is only pushed once every 5 minutes, and each time can change only by up to 20%.
-
-*   [Blocknative](https://docs.blocknative.com/gas-prediction) provides real-time gas estimation powered by predictive modeling to forecast gas price distribution for select OP Stack chains, including OP Mainnet and Base. The [API](https://docs.blocknative.com/gas-prediction) is also available on Ethereum Mainnet to estimate base fee costs.
-
-
 ### API3
 
-The [API3 Market](https://market.api3.org/optimism) provides access to 200+ price feeds on [Optimism Mainnet](https://market.api3.org/optimism) and [Testnet](https://market.api3.org/optimism-sepolia-testnet). The price feeds operate as a native push oracle and can be activated instantly via the Market UI.
+The [API3 Market](https://market.api3.org/metal) provides access to 200+ price feeds on [Metal L2 Mainnet](https://market.api3.org/metal). The price feeds operate as a native push oracle and can be activated instantly via the Market UI.
 
-The price feeds are delivered by an aggregate of [first-party oracles](https://docs.api3.org/explore/airnode/why-first-party-oracles.html) using signed data and support [OEV recapture](https://docs.api3.org/explore/introduction/oracle-extractable-value.html).
-
-Unlike traditional data feeds, reading [API3 price feeds](https://docs.api3.org/guides/dapis/) enables dApps to auction off the right to update the price feeds to searcher bots which facilitates more efficient liquidation processes for users and LPs of DeFi money markets. The OEV recaptured is returned to the dApp.
-
-API3's QRNG provides dApps with truly random numbers based on quantum mechanics at no charge. More details [here](https://api3.org/qrng/)
-
-### Chainlink
-
-[Chainlink](https://chain.link/) is the industry-standard decentralized computing platform powering the verifiable web.
-Chainlink powers verifiable applications and high-integrity markets for banking, DeFi, global trade, gaming, and other major sectors.
-
-Chainlink provides a number of [price feeds](https://docs.chain.link/docs/optimism-price-feeds/).
-Those feeds are available on the production network @ [Op Mainnet](https://docs.chain.link/data-feeds/price-feeds/addresses?network=optimism\&page=1#optimism-mainnet).
-
-*   Data Feeds: Chainlink Data Feeds provide a secure, reliable, and decentralized source of off-chain data to power unique smart contract use cases for DeFi and beyond.
-*   Automation: Chainlink Automation is an ultra-reliable and performant smart contract automation solution enabling developers to quickly scale their operations in a verifiable, decentralized, and cost-efficient manner, to build next-generation apps.
-*   CCIP: Chainlink CCIP provides a secure interoperability protocol for powering token transfers and sending arbitrary messages cross-chain.
-
-This is a push Oracle. See the [Using Data Feeds guide](https://docs.chain.link/docs/get-the-latest-price/) to learn how to use the Chainlink feeds.
-
-*   Chainlink VRF provides cryptographically secure randomness for blockchain-based applications. More details [here](https://chain.link/vrf)
 
 ### Chronicle
 
@@ -97,55 +59,16 @@ The first Oracle on Ethereum, Chronicle's decentralized Oracle network was origi
 
 Every Oracle implementation is customized to fit your needs. Implement one of our existing data models or contact Chronicle to develop custom Oracle data feeds via [Discord](https://discord.gg/CjgvJ9EspJ) or [Email](mailto:gm@chroniclelabs.org). Developers can dive deeper into Chronicle Protocol's architecture and unique design choices [via the docs](https://docs.chroniclelabs.org/).
 
-### Gelato
-
-[Gelato VRF](https://www.gelato.network/) enables smart contracts on Optimism to access verifiable randomness. Gelato VRF offers real randomness for blockchain applications by leveraging Drand, a trusted decentralized source for random numbers.
-
-Gelato VRF (Verifiable Random Function) provides trustable randomness on EVM-compatible blockchains. Here's a brief overview:
-
-*   Contract Deployment: Use GelatoVRFConsumerBase.sol as an interface for requesting random numbers.
-*   Requesting Randomness: Emit the RequestedRandomness event to signal the need for a random number.
-*   Processing: Gelato VRF fetches the random number from Drand.
-*   Delivery: The fulfillRandomness function delivers the random number to the requesting contract.
-
-Ready to integrate? Head over to the [Gelato VRF Quick Start Guide](https://docs.gelato.network/web3-services/vrf/quick-start).
-
-### Pyth Network
-
-The Pyth Network is a financial oracle network which delivers over 400 low-latency, high-fidelity price feeds across cryptocurrencies, FX pairs, equities, ETFs, and commodities.
-
-*   Pyth's price data is sourced from over [95 first-party sources](https://pyth.network/publishers) including exchanges, market makers, and financial services providers.
-*   Pyth [Price Feeds](https://pyth.network/price-feeds) offer both the real-time spot price of the asset as well as an accompanying confidence interval band around that price
-*   The Pyth [TradingView](https://docs.pyth.network/guides/how-to-create-tradingview-charts) integration allows users to view and display Pyth prices on their own website and UI.
-
-You can explore the full catalog of Pyth Price Feed IDs for [OP Mainnet and Sepolia (EVM Stable)](https://pyth.network/developers/price-feed-ids#pyth-evm-stable).
-
-*   Pyth Entropy allows developers to quickly and easily generate secure random numbers on the blockchain. More details [here](https://pyth.network/blog/secure-random-numbers-for-blockchains)
-
-### RedStone
-
-[RedStone](https://redstone.finance/) offers flexible Data Feeds for Lending Markets, Perpetuals, Options, Stablecoins, Yield Aggregators and other types of novel DeFi protocols. The infrastructure is well battle-tested and secures hundreds of millions of USD across mainnet.
-
-Builders can choose how they want to consume the data among 3 dedicated models:
-
-*   [RedStone Core](https://docs.redstone.finance/docs/get-started/models/redstone-pull) (pull oracle) - less than 10s update time, broad spectrum of feeds, best for most use cases. All [Core Price Feeds](https://app.redstone.finance/#/app/tokens) are available on OP Mainnet & OP Sepolia.
-*   [RedStone Classic](https://docs.redstone.finance/docs/get-started/models/redstone-push) (push oracle) - for protocols designed for the traditional oracle interface, customizable heartbeat and deviation threshold.
-*   [RedStone X](https://docs.redstone.finance/docs/get-started/models/redstone-x) - specifically for Perps and Options, highest update frequency and front-running protection.
-
-Interested in integration? [Get in contact](https://discord.com/invite/PVxBZKFr46) with the RedStone team!
 
 ## Inclusion criteria
 
 Developer teams who want to feature products/tools on this page must meet the following criteria:
 
-1.  **ongoing partnership** with Optimism whether formal agreement, RPGF, RFP, collaborated on specific initiatives, etc.;
-2.  **established user base** and OP ecosystem engagement such as governance participation, homegrown TG or Discord participation, etc.; and
-3.  **actively maintained developer tool** that aligns with OP's commitment to a magical developer experience (e.g., easy-to-use, easy-to-integrate, great DevX, highly-rated by community, etc.)
+1.  **ongoing partnership** with Metal L2 whether formal agreement, RPGF, RFP, collaborated on specific initiatives, etc.;
+2.  **established user base** and Metal L2 ecosystem engagement such as governance participation, homegrown TG or Discord participation, etc.; and
+3.  **actively maintained developer tool** that aligns with Metal L2's commitment to a magical developer experience (e.g., easy-to-use, easy-to-integrate, great DevX, highly-rated by community, etc.)
 
-For teams that are supporting but still establishing a user base, we encourage you to share your tool on the [community oracles page](https://github.com/ethereum-optimism/developers/blob/main/community/tools/oracles.md).
-You can also promote your tool in the [developer forum](https://github.com/ethereum-optimism/developers/discussions/categories/show-and-tell) and signup to share your tool at the next [demo day](https://community.optimism.io/docs/contribute/demo-day/).
 
 ## Next steps
 
-*   Please visit the [community oracles page](https://github.com/ethereum-optimism/developers/blob/main/community/tools/oracles.md) for a listing of third-party Oracles used by the Optimism developer community.
 *   Looking for other developer tools? See [developer tools overview](/builders/tools/overview) to explore more options!
