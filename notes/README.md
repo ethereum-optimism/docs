@@ -1,9 +1,9 @@
-# Optimism Docs
+# Metal L2 Docs
 
-The Optimism Docs are internal docs to help you understand how the Optimism Docs are built and maintained.
+The Metal L2 Docs are internal docs to help you understand how the Metal L2 Docsare built and maintained.
 
-- [How the Optimism Docs Use Nextra](./nextra.md)
-- [How the Optimism Docs Use Remark](./remark.md)
+- [How the Metal L2 DocsUse Nextra](./nextra.md)
+- [How the Metal L2 DocsUse Remark](./remark.md)
 - [GitHub Actions](./actions.md)
 - [Algolia Search](./algolia-search.md)
 - [Lychee Link Checking](./lychee.md)
