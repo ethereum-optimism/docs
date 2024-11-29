@@ -6,7 +6,7 @@ Metal L2's documentation is open-source, hosted on GitHub in the `MetalPay/metal
 
 The Metal L2 Documentation team reviews pull requests and either merges, requests changes, or comments and closes the pull request. You can open a documentation pull request by:
 
-- forking the `docs` repository and working locally,
+- forking the `metal-l2-docs` repository and working locally,
 - or, for smaller updates, clicking the `Edit this page` link on the right side of any documentation page to directly edit in GitHub.
 
 Contributing to the Metal L2 documentation implies 2 steps:

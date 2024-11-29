@@ -1,6 +1,6 @@
 ---
 name: General docs request
-about: Template for general documentation requests from the Optimism Collective
+about: Template for general documentation requests for the Metal L2 docs
 title: "[DOCS] Add PR title"
 labels: 'community-request,documentation'
 
@@ -20,4 +20,4 @@ Provide links to any related content pages for this documentation request. This 
 
 ## Additional Context
 Provide any additional context about this documentation request. What problems did you run into that caused you to make this request? 
-Which existing documentation pages did you already try as a solution to your problem? Why do you think the requested page(s) will be beneficial to developers in the Optimism Collective?
+Which existing documentation pages did you already try as a solution to your problem? Why do you think the requested page(s) will be beneficial to developers working with Metal L2?
