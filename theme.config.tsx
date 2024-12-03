@@ -65,6 +65,7 @@ const config: DocsThemeConfig = {
       </>
     ),
   },
+  navigation: false,
   feedback: {
     content: "❤️ Share general feedback",
     labels: "user-feedback",
