@@ -18,7 +18,7 @@ Create a `.md` file in the `/content` directory.
 import DescriptionShort from '@/content/DescriptionShort.md' 
 ```
 
-1. Use it within the file
+2. Use it within the file
 
 ```
 Text before
@@ -38,7 +38,7 @@ export { default as ComponentA } from './ComponentA.md'
 export { default as ComponentB } from './ComponentB.md'
 ```
 
-1. Import it at the top of `.mdx` file:
+2. Import it at the top of `.mdx` file:
 
 ```
 import {ComponentA, ComponentB} from '@/content/index.js' 
