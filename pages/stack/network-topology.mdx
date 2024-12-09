@@ -1,0 +1,166 @@
+---
+title: OP Stack Network Topologies
+lang: en-US
+tags: ["eng-protocol"]
+description: A guide to acceptable network configurations for deploying OP Stack networks.
+---
+
+import { Callout } from 'nextra/components'
+
+# OP Stack network topologies
+
+This guide provides an example configuration for deploying OP Stack networks, addressing key components, best practices, and recommended setups.
+
+## Network architecture overview
+
+The architecture for OP Stack networks includes several node types, each serving a specific role in maintaining network functionality. Below is an example configuration:
+
+![OP Stack network diagram.](/img/op-stack/protocol/opstack-network-topology.png)
+
+## Key components
+
+### Sequencers
+
+Sequencers process transactions and maintain the rollup chain.
+
+*   Configuration recommendations:
+
+    *   Use at least one archive sequencer as a backup to recover from deep L1 reorgs.
+    *   Disable P2P discovery and define a static peer list for internal nodes.
+
+```yaml
+OP_NODE_P2P_NO_DISCOVERY: "true"
+OP_NODE_P2P_PEER_BANNING: "false"
+OP_NODE_P2P_STATIC: "<static peer list>"
+GETH_ROLLUP_DISABLETXPOOLGOSSIP: "false"
+GETH_TXPOOL_JOURNAL: ""
+GETH_TXPOOL_LIFETIME: "1h"
+GETH_TXPOOL_NOLOCALS: "true"
+GETH_NETRESTRICT: "10.0.0.0/8" # Restrict P2P to internal IPs
+```
+
+<Callout>
+  Transactions are received via P2P gossip from Tx Ingress Nodes.
+  Use the op-conductor RPC as a leader-aware proxy for [op-batcher](/builders/chain-operators/tools/chain-monitoring#op-batcher).
+</Callout>
+
+### Tx Ingress nodes
+
+These nodes handle incoming transactions from the public and gossip them internally.
+
+Configuration recommendations:
+
+```yaml
+GETH_ROLLUP_DISABLETXPOOLGOSSIP: "false"
+GETH_TXPOOL_JOURNALREMOTES: "false"
+GETH_TXPOOL_LIFETIME: "1h"
+GETH_TXPOOL_NOLOCALS: "true"
+GETH_NETRESTRICT: "10.0.0.0/8" # Restrict P2P to internal IPs
+```
+
+Node Type: Can be either full or archive nodes.
+
+### Archive RPC nodes
+
+Archive nodes provide data to internal systems like the challenger, proposer, and monitoring tools.
+
+Configuration Recommendations:
+
+```yaml
+
+GETH_GCMODE: "archive"
+GETH_DB_ENGINE: "pebble"
+GETH_STATE_SCHEME: "hash"
+```
+
+### Use cases:
+
+*   Internal RPC usage.
+*   Creating disk snapshots for disaster recovery.
+
+### Full snapsync nodes
+
+These nodes support the network by providing peers for snap sync.
+
+Configuration Recommendations:
+
+```yaml
+GETH_GCMODE: "full"
+GETH_DB_ENGINE: "pebble"
+GETH_STATE_SCHEME: "path"
+GETH_SYNCMODE: "snap"
+```
+
+### Snapsync bootnodes
+
+Bootnodes facilitate peer discovery for public nodes using snap sync.
+
+Recommendations:
+Use the Geth bootnode tool.
+Optionally, configure full Snapsync Nodes to also serve as bootnodes.
+
+### P2P bootnodes
+
+These nodes act as the discovery backbone for the op-node P2P network.
+
+Recommendations:
+Use the Geth Bootnode Tool with discovery v5 enabled.
+
+### Public RPC nodes
+
+Public RPC nodes provide external access to the network but do not participate in internal transaction gossip.
+
+Configuration recommendations:
+
+Do not include Public RPC nodes in the internal Tx pool P2P network.
+Use proxyd in consensus\_aware mode for routing and whitelist desired RPCs.
+
+```yaml
+GETH_ROLLUP_DISABLETXPOOLGOSSIP: "false"
+GETH_TXPOOL_JOURNALREMOTES: "false"
+GETH_TXPOOL_NOLOCALS: "true"
+GETH_NETRESTRICT: "10.0.0.0/8"
+```
+
+<Callout>
+  Avoid running Public RPC nodes from the same instance as Tx Ingress Nodes to mitigate risks of transaction pool data leakage.
+</Callout>
+
+## Best practices
+
+*   Redundancy: Always have backup nodes for critical roles like sequencers and archive nodes.
+*   Security:
+    *   Restrict P2P to internal IPs.
+    *   Regularly test disaster recovery setups.
+*   Monitoring: Use tools like [Monitorism](/builders/chain-operators/tools/chain-monitoring#monitorism) for network health.
+
+### Example configuration files
+
+Here are sample YAML snippets for various node setups:
+
+Sequencer Node
+
+```yaml
+OP_NODE_P2P_NO_DISCOVERY: "true"
+OP_NODE_P2P_PEER_BANNING: "false"
+OP_NODE_P2P_STATIC: "<static peer list>"
+GETH_ROLLUP_DISABLETXPOOLGOSSIP: "false"
+GETH_TXPOOL_NOLOCALS: "true"
+GETH_NETRESTRICT: "10.0.0.0/8"
+```
+
+Archive RPC node
+
+```yaml
+GETH_GCMODE: "archive"
+GETH_DB_ENGINE: "pebble"
+GETH_STATE_SCHEME: "hash"
+```
+
+## FAQs
+
+1.  Why should Public RPC nodes avoid the Tx pool P2P network?
+    Including Public RPC nodes in the Tx pool P2P network poses security risks, such as transaction data leakage.
+
+2.  What is the purpose of snapsync bootnodes?
+    These nodes facilitate peer discovery for public nodes performing snap sync.
