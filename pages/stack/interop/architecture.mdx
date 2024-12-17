@@ -13,56 +13,80 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Interoperability architecture 
 
-Interoperability is provided by an [OP Supervisor](./op-supervisor).
-This supervisor keeps a copy of the events for all the blockchains in the interoperability cluster, and can therefore validate that cross-chain messages (which are always initiated with an event on the source cluster).
+Interoperability is provided by an [OP Supervisor](./op-supervisor), a new component that we expect every node operator to run in addition to the [rollup node](/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
 
 ```mermaid
 
-graph TB
-  supervisor[OP Supervisor]
-  subgraph mainnet[OP Mainnet]
-    node1[OP Node]<-->geth1[Execution Engine]
+graph LR
+
+  classDef chain fill:#FFC
+  
+  subgraph chain1[OP Stack chain #1]
+    node1[OP Node]
+    super1[OP Supervisor]
+    geth1[Execution Engine]
+    super1-->|remote block status|node1
+    node1-->|local block status|super1
+    super1-->|initiating message validation|geth1    
+    node1<-->geth1
   end
-  subgraph base[Base]
-    node2[OP Node]<-->geth2[Execution Engine]
+  chain2[OP Stack chain #2]
+  chain3[OP Stack chain #3]
+  subgraph l1[Ethereum L1 chain]
+     l1node[Consensus Layer]
+     l1geth[Execution Layer]
   end
-  subgraph l1[Ethereum L1]
-    node3[Consensus Layer]<-->geth3[Execution Layer]
-  end
-  supervisor<-->mainnet
-  supervisor<-->base  
-  supervisor<-->l1
+
+  chain2-->|log events|super1
+  chain3-->|log events|super1
+  l1node-->|block status|super1
+
+  class chain1,chain2,chain3,l1 chain
 ```
 
+OP Supervisor holds a database of all the log events of all the chains in the interoperability cluster.
+Every event can potentially initiate a cross domain message, and it is the job of OP Supervisor to validate that the log event really happened on the source chain.
+Additionally, OP Supervisor reads information from L1's consensus layer to know what L2 blocks are unsafe (not written to L1 yet), which are safe (written to L1, but might suffer from a [reorg](https://blog.quicknode.com/understanding-blockchain-reorgs-why-block-numbers-dont-matter-as-much-as-you-think)), and which are finalized (old enough to be immune to reorgs).
+
+
 ## How messages get from one chain to the other
+
+To understand *why* we need this additional component, it is useful to know how interop messages get from one blockchain to another.
 
 ```mermaid
 
 sequenceDiagram
     participant app as Application
     participant src as Soucre Chain
-    participant op-sup as OP Supervisor
-    participant dst as Destination Chain
+    box rgba(0,0,0,0.1) Destination Chain
+      participant dst-sup as OP Supervisor
+      participant dst-geth as Execution Engine
+    end
     app->>src: Transaction
-    src->>op-sup: Log Event
-    note over src,op-sup: Log Event = Initializing Message
-    app->>dst: Transaction
-    dst->>dst: Call to CrossL2Inbox to execute or verify a message.
-    dst->>op-sup: Did you receive this initiating message?
-    op-sup->>dst: Yes
-    note left of dst: Call is successful
-    dst->>dst: CrossL2Inbox emits ExecutingMessage.
-    note over dst: Executing Message
+    src->>dst-sup: Log Event
+    note over src,dst-sup: Log Event = Initializing Message
+    app->>dst-geth: Transaction
+    dst-geth->>dst-geth: Call to CrossL2Inbox to execute or verify a message.
+    dst-geth->>dst-sup: Did you receive this initiating message?
+    dst-sup->>dst-geth: Yes
+    note left of dst-geth: Call is successful
+    dst-geth->>dst-geth: CrossL2Inbox emits ExecutingMessage.
+    note over dst-geth: Executing Message
 ```
 
+Cross domain messages require two transactions.
+The first transaction creates an *initiating message* on the source chain.
+The second transaction creates an *executing message* on the destination chain.
+This executing message could result in a contract function being executed on the destination chain.
+
+The initiating message is simply a log event. Any log event on any chain that inteoperates with the destination can initiate a cross domain message.
+
+The transaction that receives the message calls a contract called [`CrossL2Inbox`](https://specs.optimism.io/interop/predeploys.html#crossl2inbox), directly or indirectly.
+The call to `CrossL2Inbox`, also known as the *executing message*, needs to [identify the initiating message uniquely](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L35-L42), using the chain ID of the source chain, the block number, and the index of the log event within that block, as well as a few other fields as a sanity check.
+
+`CrossL2Inbox` can either [validate the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185), or [call a contract if the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185).
+
 ## Safety levels
-
-- *Unsafe* - not yet written to L1, obtained through gossip channels, ultimately based on trust in a sequencer.
-- *Cross unsafe* - verified that all executing messages have legitimate initiating messages, but otherwise still unsafe.
-  Treated as unsafe for most purposes.
-- *Safe* - the block and all the blocks on which it depends (those with initiating mesages to which it has executing messages) have been written to L1.
-- *Finalized* - the block and all the blocks on which it depends have been on L1 for long enough to make a reorg impossible.
-
 
 ```mermaid
 
@@ -97,4 +121,17 @@ flowchart LR
     B1 --> C0 
 ```
 
-A block should only be written to L1 once the blocks on which it depends are all safe.
+In addition to being written to L1, a *safe* block is one that only depends on other safe blocks.
+For example, in the image below, most blocks are safe.
+Block `n` in chain A is even finalized, and immune from reorgs.
+However, block `n+105` in chain A is unsafe.
+Since the new block depends upon it, it is also unsafe.
+
+
+{/* 
+- *Unsafe* - not yet written to L1, obtained through gossip channels, ultimately based on trust in a sequencer.
+- *Cross unsafe* - verified that all executing messages have legitimate initiating messages, but otherwise still unsafe.
+  Treated as unsafe for most purposes.
+- *Safe* - the block and all the blocks on which it depends (those with initiating mesages to which it has executing messages) have been written to L1.
+- *Finalized* - the block and all the blocks on which it depends have been on L1 for long enough to make a reorg impossible.
+*/}
