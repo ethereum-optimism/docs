@@ -58,7 +58,7 @@ Additionally, OP-Supervisor reads information from L1's consensus layer to deter
 
 ## How messages get from one chain to the other
 
-To understand *why* we need this additional component, it is useful to know how interop messages get from one blockchain to another.
+To understand *why* we need this additional service, it is useful to know how interop messages get from one blockchain to another.
 
 ```mermaid
 
@@ -89,7 +89,8 @@ This executing message could result in a contract function being executed on the
 The initiating message is simply a log event.
 Any log event on any chain that inteoperates with the destination can initiate a cross domain message.
 
-The transaction that receives the message calls a contract called [`CrossL2Inbox`](https://specs.optimism.io/interop/predeploys.html#crossl2inbox), directly or indirectly.
+The transaction that receives the message on the destination chain calls a contract called [`CrossL2Inbox`](https://specs.optimism.io/interop/predeploys.html#crossl2inbox).
+This call can be at the top level, directly from the externally owned account, or come through a smart contract.
 The call to `CrossL2Inbox`, also known as the *executing message*, needs to [identify the initiating message uniquely](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L35-L42), using the chain ID of the source chain, the block number, and the index of the log event within that block, as well as a few other fields as a sanity check.
 
 `CrossL2Inbox` can either [validate the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185), or [call a contract if the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185).
@@ -129,10 +130,15 @@ flowchart LR
     B1 --> C0 
 ```
 
-In addition to being written to L1, a *safe* block is one that only depends on other safe blocks.
+Interop expands the scope of trust for unsafe blocks, blocks that are shared through [the gossip protocol](/builders/chain-operators/architecture#sequencer).
+To trust that an unsafe block is valid and is going to become safe and then finalized, you need to trust not only the sequencer that produces it, but also all the other sequencer that produce other blocks that are still unsafe, but that include initiating messages that are executed in that block.
+
+However, this is only for *unsafe* blocks, and only if the sequencer allows messages from unsafe blocks to be processed.
+A block is only considered promotable to *safe*, and therefore ready to be written to L1, when all the blocks on which it depends are safe.
+
 For example, in the image below, most blocks are safe.
 Block `n` in chain A is even finalized, and immune from reorgs.
-However, block `n+105` in chain A is unsafe, it (or a block on which it depends is not written to L1).
+However, block `n+105` in chain A is unsafe, it (or a block on which it depends) is not written to L1.
 Because the new block depends upon it, it is also unsafe.
 
 ## Next steps
