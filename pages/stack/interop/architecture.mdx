@@ -13,7 +13,8 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Interoperability architecture
 
-Interoperability is provided by an [OP Supervisor](./op-supervisor), a new component that we expect every node operator to run in addition to the [rollup node](/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
+Interoperability among OP Stack chains is enabled via a new service called *OP-Supervisor*.
+Every node operator is expected to run this service in addition to the rollup node]\(/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
 
 ```mermaid
 
@@ -23,7 +24,7 @@ graph LR
   
   subgraph chain1[OP Stack chain #1]
     node1[OP Node]
-    super1[OP Supervisor]
+    super1[OP-Supervisor]
     geth1[Execution Engine]
     super1-->|remote block status|node1
     node1-->|local block status|super1
@@ -44,9 +45,9 @@ graph LR
   class chain1,chain2,chain3,l1 chain
 ```
 
-OP Supervisor holds a database of all the log events of all the chains in the interoperability cluster.
-Every event can potentially initiate a cross domain message, and it is the job of OP Supervisor to validate that the log event really happened on the source chain.
-Additionally, OP Supervisor reads information from L1's consensus layer to know what L2 blocks are unsafe (not written to L1 yet), which are safe (written to L1, but might suffer from a [reorg](https://blog.quicknode.com/understanding-blockchain-reorgs-why-block-numbers-dont-matter-as-much-as-you-think)), and which are finalized (old enough to be immune to reorgs).
+OP-Supervisor holds a database of all the log events of all the chains in the interoperability cluster.
+Every event can potentially initiate a cross domain message, and it is the job of OP-Supervisor to validate that the log event really happened on the source chain.
+Additionally, OP-Supervisor reads information from L1's consensus layer to know what the transaction safety of the L2 blocks.
 
 ## How messages get from one chain to the other
 
@@ -58,7 +59,7 @@ sequenceDiagram
     participant app as Application
     participant src as Soucre Chain
     box rgba(0,0,0,0.1) Destination Chain
-      participant dst-sup as OP Supervisor
+      participant dst-sup as OP-Supervisor
       participant dst-geth as Execution Engine
     end
     app->>src: Transaction
@@ -124,8 +125,18 @@ flowchart LR
 In addition to being written to L1, a *safe* block is one that only depends on other safe blocks.
 For example, in the image below, most blocks are safe.
 Block `n` in chain A is even finalized, and immune from reorgs.
-However, block `n+105` in chain A is unsafe.
-Since the new block depends upon it, it is also unsafe.
+However, block `n+105` in chain A is unsafe, it (or a block on which it depends is not written to L1).
+Because the new block depends upon it, it is also unsafe.
+
+## Next steps
+
+*   Want to learn more? Read our guide on the anatomy of a \[cross-chain message]\(cross-chain-mess
+    age) or check out this \[interop design video walk-thru]\([https://www.youtube.com/watch?v=FKc5RgjtG](https://www.youtube.com/watch?v=FKc5RgjtG)
+    es).
+*   Ready to get started? Use [Supersim](supersim), a local dev environment that simulates intero
+    p for testing applications against a local version of the Superchain.
+*   For more info about how OP Stack interoperability works under the hood, \[check out the specs]
+    ([https://specs.optimism.io/interop/overview.html](https://specs.optimism.io/interop/overview.html)).
 
 {/* 
 - *Unsafe* - not yet written to L1, obtained through gossip channels, ultimately based on trust in a sequencer.
