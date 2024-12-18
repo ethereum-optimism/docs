@@ -16,33 +16,40 @@ import { InteropCallout } from '@/components/WipCallout'
 Interoperability among OP Stack chains is enabled via a new service called *OP-Supervisor*.
 Every node operator is expected to run this service in addition to the [rollup node](/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
 
+
+{/* 
+
+    super1-->|remote block status|node1
+    node1-->|local block status|super1
+    super1-->|initiating message validation|geth1    
+    node1<-->geth1
+
+*/}
 ```mermaid
 
 graph LR
 
-  classDef chain fill:#FFC
+  classDef chain fill:#FFE
+  classDef transparent fill:none, stroke:none
   
   subgraph chain1[OP Stack chain #1]
     node1[OP Node]
     super1[OP-Supervisor]
     geth1[Execution Engine]
-    super1-->|remote block status|node1
-    node1-->|local block status|super1
-    super1-->|initiating message validation|geth1    
-    node1<-->geth1
+    node1<-->super1<-->geth1<-->node1
   end
-  chain2[OP Stack chain #2]
-  chain3[OP Stack chain #3]
-  subgraph l1[Ethereum L1 chain]
-     l1node[Consensus Layer]
-     l1geth[Execution Layer]
+  subgraph X[ ]
+    chain2[OP Stack chain #2]
+    chain3[OP Stack chain #3]
+    l1node[L1 Consensus Layer]
   end
 
   chain2-->|log events|super1
   chain3-->|log events|super1
   l1node-->|block status|super1
 
-  class chain1,chain2,chain3,l1 chain
+  class chain1,chain2,chain3 chain
+  class X transparent
 ```
 
 OP-Supervisor holds a database of all the log events of all the chains in the interoperability cluster.
@@ -132,7 +139,7 @@ Because the new block depends upon it, it is also unsafe.
 
 - Want to learn more? 
   Read our guide on the anatomy of a [cross-chain message](./cross-chain-message) or check out this 
-  [interop design video walk-thru]([https://www.youtube.com/watch?v=FKc5RgjtG](https://www.youtube.com/watch?v=FKc5RgjtG)
+  [interop design video walk-thru](https://www.youtube.com/watch?v=FKc5RgjtGes).
 - Ready to get started? Use [Supersim](./supersim), a local dev environment that simulates interop for testing applications against a local version of the Superchain.
 - For more info about how OP Stack interoperability works under the hood, 
   [check out the specs](https://specs.optimism.io/interop/overview.html).
