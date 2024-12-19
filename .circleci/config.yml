@@ -1,0 +1,30 @@
+version: 2.1
+
+jobs:
+  lint:
+    docker:
+      - image: cimg/node:23.4.0
+    steps:
+      - checkout
+      - run:
+          name: Install pnpm
+          command: npm install -g pnpm
+      - run:
+          name: Install dependencies
+          command: pnpm install
+      # - run:
+      #     name: Create and upload index
+      #     command: pnpm index:docs
+      #     environment:
+      #       ALGOLIA_APPLICATION_ID: $ALGOLIA_APPLICATION_ID
+      #       ALGOLIA_WRITE_API_KEY: $ALGOLIA_WRITE_API_KEY
+      #       ALGOLIA_INDEX_NAME: $ALGOLIA_INDEX_NAME
+
+workflows:
+  main:
+    jobs:
+      - lint:
+          context: algolia-search
+          filters:
+            branches:
+              only: main
