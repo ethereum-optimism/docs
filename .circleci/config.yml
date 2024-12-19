@@ -13,15 +13,22 @@ executors:
 
 jobs:
   publish-algolia-search:
-    executor: node20
+    executor: ubuntu
     steps:
       - checkout
+      - run:
+          name: Install Node.js (20.x) and pnpm
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            npm install -g pnpm
+            pnpm --version
       - restore_cache:
           keys:
             - v1-pnpm-cache-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Install dependencies
-          command: pnpm install
+          command: npm install -g pnpm && pnpm install
       - save_cache:
           key: v1-pnpm-cache-{{ checksum "pnpm-lock.yaml" }}
           paths:
