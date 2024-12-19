@@ -1,0 +1,122 @@
+version: 2.1
+orbs:
+  node: circleci/node@7.0.0
+
+executors:
+  node20:
+    docker:
+      - image: cimg/node:20.11.1 # Prebuilt CircleCI image for Node.js 20.x
+    resource_class: medium # Adjust resource allocation as needed
+  ubuntu:
+    machine:
+      image: ubuntu-2204:current
+  rust:
+    docker:
+      - image: cimg/rust:1.75.0 # CircleCI's Rust Docker image
+    working_directory: ~/project
+
+commands:
+  setup-node:
+    steps:
+      - run:
+          name: Install Node.js (20.x) and pnpm
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            npm install -g pnpm
+            pnpm --version
+      - restore_cache:
+          keys:
+            - v1-pnpm-cache-{{ checksum "pnpm-lock.yaml" }}
+      - run:
+          name: Install dependencies
+          command: npm install -g pnpm && pnpm install
+      - save_cache:
+          key: v1-pnpm-cache-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.pnpm-store
+
+jobs:
+  algolia:
+    description: Create and upload Algolia search index
+    executor: ubuntu
+    steps:
+      - checkout
+      - setup-node
+      - run:
+          name: Create index
+          command: pnpm run index:docs
+          environment:
+            ALGOLIA_APPLICATION_ID: $ALGOLIA_APPLICATION_ID
+            ALGOLIA_WRITE_API_KEY: $ALGOLIA_WRITE_API_KEY
+            ALGOLIA_INDEX_NAME: $ALGOLIA_INDEX_NAME
+  breadcrumbs:
+    description: Check breadcrumbs in documentation
+    executor: ubuntu
+    steps:
+      - checkout
+      - setup-node
+      - run:
+          name: Run breadcrumb check
+          command: pnpm check-breadcrumbs
+  build-and-run-lychee:
+    executor: rust
+    steps:
+      - checkout:
+          path: docs
+      - run:
+          name: Checkout lycheeverse/lychee
+          command: |
+            git clone https://github.com/lycheeverse/lychee.git lychee
+
+      - restore_cache:
+          keys:
+            - v1-rust-cache-{{ checksum "lychee/Cargo.lock" }}
+            - v1-rust-cache-
+
+      - run:
+          name: Build Lychee
+          command: |
+            cd lychee
+            cargo build --release
+
+      - save_cache:
+          key: v1-rust-cache-{{ checksum "lychee/Cargo.lock" }}
+          paths:
+            - ~/.cargo/registry
+            - ~/.cargo/git
+            - lychee/target
+
+      - run:
+          name: Run Lychee link checker
+          command: |
+            export PATH=$PATH:$HOME/project/lychee/target/release
+            cd docs
+            lychee --config ./lychee.toml --quiet "./pages"
+
+workflows:
+  algolia-workflow:
+    jobs:
+      - algolia:
+          name: Algolia Index Update
+          context: algolia-search
+          filters:
+            branches:
+              only: main
+  breadcrumbs-workflow:
+    jobs:
+      - breadcrumbs:
+          name: Breadcrumb Check
+          filters:
+            branches:
+              only:
+                - main
+                - /pull\/\d+/
+  lychee-workflow:
+    jobs:
+      - build-and-run-lychee:
+          filters:
+            branches:
+              only:
+                - main
+                - /pull\/.*/ # Include pull requests
