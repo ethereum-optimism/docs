@@ -8,8 +8,24 @@ jobs:
       image: ubuntu-2204:current
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: pnpm
+      - run:
+          name: Install Node.js (20.x) and pnpm
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            npm install -g pnpm
+            pnpm --version
+      - restore_cache:
+          keys:
+            - v1-pnpm-cache-{{ checksum "pnpm-lock.yaml" }}
+      - run:
+          name: Install dependencies
+          command: npm install -g pnpm && pnpm install
+      - save_cache:
+          key: v1-pnpm-cache-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.pnpm-store
+
       # - run:
       #     name: Create and upload index
       #     command: pnpm index:docs
