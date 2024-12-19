@@ -1,17 +1,22 @@
 version: 2.1
+node: circleci/node@7.0.0
 
 jobs:
   publish-algolia-search:
     docker:
-      - image: cimg/node:23.4.0
+      - image: ubuntu-2204:current
     steps:
       - checkout
-      - run:
-          name: Install pnpm
-          command: npm install -g pnpm
-      - run:
-          name: Install dependencies
-          command: pnpm install
+      - node/install:
+          install-yarn: true
+          node-version: "16.13"
+      - run: node --version
+      # - run:
+      #     name: Install pnpm
+      #     command: npm install -g pnpm
+      # - run:
+      #     name: Install dependencies
+      #     command: pnpm install
       # - run:
       #     name: Create and upload index
       #     command: pnpm index:docs
