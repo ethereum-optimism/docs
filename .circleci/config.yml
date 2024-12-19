@@ -95,7 +95,7 @@ jobs:
             lychee --config ./lychee.toml --quiet "./pages"
 
 workflows:
-  main:
+  algolia-workflow:
     jobs:
       - algolia:
           name: Algolia Index Update
@@ -103,6 +103,8 @@ workflows:
           filters:
             branches:
               only: main
+  breadcrumbs-workflow:
+    jobs:
       - breadcrumbs:
           name: Breadcrumb Check
           filters:
@@ -110,10 +112,11 @@ workflows:
               only:
                 - main
                 - /pull\/\d+/
-      - build-and-run-lychee
-      # - build-and-run-lychee:
-      #     filters:
-      #       branches:
-      #         only:
-      #           - main
-      #           - /pull\/.*/ # Include pull requests
+  lychee-workflow:
+    jobs:
+      - build-and-run-lychee:
+          filters:
+            branches:
+              only:
+                - main
+                - /pull\/.*/ # Include pull requests
