@@ -14,15 +14,6 @@ import { InteropCallout } from '@/components/WipCallout'
 # Interoperability architecture
 An OP Stack node consists of two pieces of software: a consensus client (e.g. op-node) and an execution client, which is responsible for processing user transactions, constructing blocks and serving RPC calls. Interoperability among OP Stack chains is enabled via a new service called *OP-Supervisor*. Every node operator is expected to run this service in addition to the [rollup node](/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
 
-
-{/* 
-
-    super1-->|remote block status|node1
-    node1-->|local block status|super1
-    super1-->|initiating message validation|geth1    
-    node1<-->geth1
-
-*/}
 ```mermaid
 
 graph LR
@@ -129,7 +120,7 @@ flowchart LR
 ```
 
 Interop expands the scope of trust for unsafe blocks, blocks that are shared through [the gossip protocol](/builders/chain-operators/architecture#sequencer).
-To trust that an unsafe block is valid and is going to become safe and then finalized, you need to trust not only the sequencer that produces it, but also all the other sequencer that produce other blocks that are still unsafe, but that include initiating messages that are executed in that block.
+To trust that an unsafe block is valid and is going to become safe and then finalized, you need to trust not only the sequencer that produces it, but also all the other sequencers that produce other blocks that are still unsafe, but that include initiating messages that are executed in that block.
 
 However, this is only for *unsafe* blocks, and only if the sequencer allows messages from unsafe blocks to be processed.
 A block is only considered promotable to *safe*, and therefore ready to be written to L1, when all the blocks on which it depends are safe.
@@ -147,11 +138,3 @@ Because the new block depends upon it, it is also unsafe.
 - Ready to get started? Use [Supersim](./supersim), a local dev environment that simulates interop for testing applications against a local version of the Superchain.
 - For more info about how OP Stack interoperability works under the hood, 
   [check out the specs](https://specs.optimism.io/interop/overview.html).
-
-{/* 
-- *Unsafe* - not yet written to L1, obtained through gossip channels, ultimately based on trust in a sequencer.
-- *Cross unsafe* - verified that all executing messages have legitimate initiating messages, but otherwise still unsafe.
-  Treated as unsafe for most purposes.
-- *Safe* - the block and all the blocks on which it depends (those with initiating mesages to which it has executing messages) have been written to L1.
-- *Finalized* - the block and all the blocks on which it depends have been on L1 for long enough to make a reorg impossible.
-*/}
