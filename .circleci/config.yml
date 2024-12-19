@@ -42,18 +42,36 @@ commands:
             - ~/.pnpm-store
 
 jobs:
-  publish-algolia-search:
+  algolia:
+    description: Create and upload Algolia search index
     executor: ubuntu
     steps:
       - checkout
       - setup-node
       - publish-algolia-search-index
+  breadcrumbs:
+    description: Check breadcrumbs in documentation
+    executor: ubuntu
+    steps:
+      - checkout
+      - setup-node
+      - run:
+          name: Run breadcrumb check
+          command: pnpm check-breadcrumbs
 
 workflows:
   main:
     jobs:
-      - publish-algolia-search:
+      - algolia:
+          name: Algolia Index Update
           context: algolia-search
           filters:
             branches:
               only: main
+      - breadcrumbs:
+          name: Breadcrumb Check
+          # filters:
+          #   branches:
+          #     only:
+          #       - main
+          #       - /pull\/\d+/
