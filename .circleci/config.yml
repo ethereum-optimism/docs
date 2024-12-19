@@ -11,11 +11,18 @@ executors:
     machine:
       image: ubuntu-2204:current
 
-jobs:
-  publish-algolia-search:
-    executor: ubuntu
+commands:
+  publish-algolia-search-index:
     steps:
-      - checkout
+      - run:
+          name: Create index
+          command: pnpm run index:docs
+          environment:
+            ALGOLIA_APPLICATION_ID: $ALGOLIA_APPLICATION_ID
+            ALGOLIA_WRITE_API_KEY: $ALGOLIA_WRITE_API_KEY
+            ALGOLIA_INDEX_NAME: $ALGOLIA_INDEX_NAME
+  setup-node:
+    steps:
       - run:
           name: Install Node.js (20.x) and pnpm
           command: |
@@ -34,13 +41,13 @@ jobs:
           paths:
             - ~/.pnpm-store
 
-      - run:
-          name: Create and upload index
-          command: pnpm index:docs
-          environment:
-            ALGOLIA_APPLICATION_ID: $ALGOLIA_APPLICATION_ID
-            ALGOLIA_WRITE_API_KEY: $ALGOLIA_WRITE_API_KEY
-            ALGOLIA_INDEX_NAME: $ALGOLIA_INDEX_NAME
+jobs:
+  publish-algolia-search:
+    executor: ubuntu
+    steps:
+      - checkout
+      - setup-node
+      - publish-algolia-search-index
 
 workflows:
   main:
