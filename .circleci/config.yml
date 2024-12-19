@@ -10,6 +10,10 @@ executors:
   ubuntu:
     machine:
       image: ubuntu-2204:current
+  rust:
+    docker:
+      - image: cimg/rust:1.75.0 # CircleCI's Rust Docker image
+    working_directory: ~/project
 
 commands:
   setup-node:
@@ -55,6 +59,43 @@ jobs:
       - run:
           name: Run breadcrumb check
           command: pnpm check-breadcrumbs
+  build-and-run-lychee:
+    executor: rust
+    steps:
+      - checkout:
+          path: docs
+      - run:
+          name: Checkout lycheeverse/lychee
+          command: |
+            git clone https://github.com/lycheeverse/lychee.git lychee
+
+      - restore_cache:
+          keys:
+            - v1-rust-cache-{{ checksum "lychee/Cargo.lock" }}
+            - v1-rust-cache-
+
+      - run:
+          name: Build Lychee
+          command: |
+            cd lychee
+            cargo build --release
+
+      - save_cache:
+          key: v1-rust-cache-{{ checksum "lychee/Cargo.lock" }}
+          paths:
+            - ~/.cargo/registry
+            - ~/.cargo/git
+            - lychee/target
+
+      - run:
+          name: Add Lychee to PATH
+          command: echo "$HOME/project/lychee/target/release" >> $BASH_ENV
+
+      - run:
+          name: Run Lychee link checker
+          command: |
+            cd docs
+            lychee --config ./lychee.toml --quiet "./pages"
 
 workflows:
   main:
@@ -72,3 +113,10 @@ workflows:
               only:
                 - main
                 - /pull\/\d+/
+      - build-and-run-lychee
+      # - build-and-run-lychee:
+      #     filters:
+      #       branches:
+      #         only:
+      #           - main
+      #           - /pull\/.*/ # Include pull requests
