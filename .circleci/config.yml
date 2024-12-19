@@ -12,15 +12,6 @@ executors:
       image: ubuntu-2204:current
 
 commands:
-  publish-algolia-search-index:
-    steps:
-      - run:
-          name: Create index
-          command: pnpm run index:docs
-          environment:
-            ALGOLIA_APPLICATION_ID: $ALGOLIA_APPLICATION_ID
-            ALGOLIA_WRITE_API_KEY: $ALGOLIA_WRITE_API_KEY
-            ALGOLIA_INDEX_NAME: $ALGOLIA_INDEX_NAME
   setup-node:
     steps:
       - run:
@@ -48,7 +39,13 @@ jobs:
     steps:
       - checkout
       - setup-node
-      - publish-algolia-search-index
+      - run:
+          name: Create index
+          command: pnpm run index:docs
+          environment:
+            ALGOLIA_APPLICATION_ID: $ALGOLIA_APPLICATION_ID
+            ALGOLIA_WRITE_API_KEY: $ALGOLIA_WRITE_API_KEY
+            ALGOLIA_INDEX_NAME: $ALGOLIA_INDEX_NAME
   breadcrumbs:
     description: Check breadcrumbs in documentation
     executor: ubuntu
