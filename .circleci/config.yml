@@ -79,20 +79,14 @@ jobs:
       - checkout
       - setup-node
       - run:
-          name: Debug
-          command: |
-            echo $ALGOLIA_INDEX_NAME
-            echo $ALGOLIA_INDEX_NAME | base64
-          environment:
-            ALGOLIA_INDEX_NAME: $ALGOLIA_INDEX_NAME
-      - run:
           name: Create and upload index
           command: |
+            # index:docs requires the following environment variables, coming from the algolia-search context
+            # ALGOLIA_APPLICATION_ID
+            # ALGOLIA_WRITE_API_KEY
+            # ALGOLIA_INDEX_NAME
             pnpm run index:docs
-          environment:
-            ALGOLIA_APPLICATION_ID: $ALGOLIA_APPLICATION_ID
-            ALGOLIA_WRITE_API_KEY: $ALGOLIA_WRITE_API_KEY
-            ALGOLIA_INDEX_NAME: $ALGOLIA_INDEX_NAME
+
   breadcrumbs:
     description: Check breadcrumbs in documentation
     executor: ubuntu
