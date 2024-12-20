@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@7.0.0
-  utils: ethereum-optimism/circleci-utils@0.0.6
+  utils: ethereum-optimism/circleci-utils@dev:first
   slack: circleci/slack@4.12.5
 
 executors:
@@ -141,8 +141,8 @@ jobs:
             cd docs
             lychee --config ./lychee.toml --quiet "./pages"
 
-  developer-metrics:
-    description: Monthly Metrics Report
+  developer-issue-metrics:
+    description: Monthly Issue Metrics Report
     executor: ubuntu
     parameters:
       repo:
@@ -174,6 +174,40 @@ jobs:
           issue-title: "${LAST_MONTH} metrics report for closed issues"
           issue-labels: "monthly-report"
           assignees: "sbvegan"
+      - utils/generate-issue-metrics-file:
+          SEARCH_QUERY: "repo:ethereum-optimism/docs is:pr created:${LAST_MONTH}"
+          file-path: "./issue_metrics.md"
+      - utils/create-github-issue-from-file:
+          repo: << parameters.repo >>
+          file-path: "./issue_metrics.md"
+          issue-title: "${LAST_MONTH} metrics report for opened prs"
+          issue-labels: "monthly-report"
+          assignees: "sbvegan"
+
+  developer-pr-metrics:
+    description: Monthly PR Metrics Report
+    executor: ubuntu
+    parameters:
+      repo:
+        type: string
+        default: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+    steps:
+      - utils/get-github-access-token:
+          private-key-str: GITHUB_APP_KEY
+          app-id: GITHUB_APP_ID
+          repo: << parameters.repo >>
+      - run:
+          name: Get Dates for Last Month
+          command: |
+            # Calculate the first day of the previous month
+            first_day=$(date -d "last month" +%Y-%m-01)
+
+
+            # Calculate the last day of the previous month
+            last_day=$(date -d "$first_day +1 month -1 day" +%Y-%m-%d)
+
+            # Export the last_month variable for subsequent steps
+            echo "export LAST_MONTH=${first_day}..${last_day}" >> $BASH_ENV
       - utils/generate-issue-metrics-file:
           SEARCH_QUERY: "repo:ethereum-optimism/docs is:pr created:${LAST_MONTH}"
           file-path: "./issue_metrics.md"
@@ -238,7 +272,9 @@ workflows:
     # when:
     #   equal: [build_monthly, <<pipeline.schedule.name>>]
     jobs:
-      - developer-metrics:
+      - developer-issue-metrics:
+          context: circleci-repo-docs
+      - developer-pr-metrics:
           context: circleci-repo-docs
 
   nightly-workflow:
