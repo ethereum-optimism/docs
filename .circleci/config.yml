@@ -1,8 +1,6 @@
 version: 2.1
 orbs:
-  node: circleci/node@7.0.0
   utils: ethereum-optimism/circleci-utils@0.0.7
-  slack: circleci/slack@4.12.5
 
 executors:
   node20:
@@ -18,39 +16,6 @@ executors:
     working_directory: ~/project
 
 commands:
-  notify_slack_on_failure:
-    steps:
-      - slack/notify:
-          event: fail
-          channel: ${SLACK_DEFAULT_CHANNEL}
-          template: BASIC_FAIL_1
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "❌ Job Failed: ${CIRCLE_JOB}",
-                    "emoji": true
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Workflow:* ${CIRCLE_WORKFLOW_ID}\n*Job:* ${CIRCLE_JOB}\n*Branch:* ${CIRCLE_BRANCH}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "<${CIRCLE_BUILD_URL}|View Job Details>"
-                  }
-                }
-              ]
-            }
   setup-node:
     steps:
       - run:
@@ -184,42 +149,6 @@ jobs:
           issue-labels: "monthly-report"
           assignees: "sbvegan"
 
-  cross-dom-bridge-eth:
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Run tutorial
-          command: node ./public/tutorials/cross-dom-bridge-eth.js
-          environment:
-            TUTORIAL_PRIVATE_KEY: ${TUTORIAL_PRIVATE_KEY}
-      - notify_slack_on_failure
-
-  send-tx-from-eth:
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Run tutorial
-          command: node ./public/tutorials/send-tx-from-eth.js
-          environment:
-            TUTORIAL_PRIVATE_KEY: ${TUTORIAL_PRIVATE_KEY}
-      - notify_slack_on_failure
-
-  sdk-estimate-costs:
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Run tutorial
-          command: node ./public/tutorials/sdk-estimate-costs.js
-          environment:
-            TUTORIAL_PRIVATE_KEY: ${TUTORIAL_PRIVATE_KEY}
-      - notify_slack_on_failure
-
 workflows:
   merge-workflow:
     jobs:
@@ -235,22 +164,8 @@ workflows:
       - links
       - lint
   monthly-workflow:
-    # when:
-    #   equal: [build_monthly, <<pipeline.schedule.name>>]
+    when:
+      equal: [build_monthly, <<pipeline.schedule.name>>]
     jobs:
       - developer-metrics:
           context: circleci-repo-docs
-  nightly-workflow:
-    when:
-      equal: [build_nightly, <<pipeline.schedule.name>>]
-    jobs:
-      - cross-dom-bridge-eth:
-          context: [tutorial-keys, slack]
-      - send-tx-from-eth:
-          context: [tutorial-keys, slack]
-          requires:
-            - cross-dom-bridge-eth
-      - sdk-estimate-costs:
-          context: [tutorial-keys, slack]
-          requires:
-            - send-tx-from-eth
