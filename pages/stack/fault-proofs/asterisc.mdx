@@ -3,351 +3,71 @@ title: Asterisc
 lang: en-US
 description: Learn about Asterisc
 ---
-
 # Asterisc
 
-Asterisc is an alternative fault-proof VM for OP Stack that proves execution of a RISC-V program with an interactive fraud-proof.
+[Asterisc](https://github.com/protolambda/asterisc/tree/master) is an alternative fault-proof VM for the OP Stack, crafted to validate RISC-V program execution via an interactive fraud-proof mechanism. Asterisc bridges simplicity and functionality, delivering a minimalist yet powerful solution for optimistic rollup fraud-proofing. Leveraging the RISC-V architecture, it offers:
 
-The interface of the Asterisk binary is essentially the same as Cannon for op-challenger compatibility; therefore, the binary commands implementation is based on [Cannon](https://github.com/ethereum-optimism/optimism/tree/develop/cannon).
+- Support for 64-bit operations
+- Concurrent yet deterministic threading
+- Compatibility with RISC-V’s expanding ecosystem
 
-*Deploy/run this at your own risk, this is highly experimental software*
+Read more about fault-proofs in our [Fault-proof explainer](/stack/fault-proofs/explainer)
+
+## How it works
+
+Asterisc enables parties to reach consensus on shared execution trace states. In cases of dispute, it identifies the diverging execution step. Commitments are generated for memory, registers, CSR, and VM states across the execution trace, with disputed steps emulated within the EVM to resolve inconsistencies.
+
+Ready to dive in? Keep reading or head over to the [Asterisc repo](https://github.com/protolambda/asterisc/tree/master).
 
 ## Getting started
 
-- Read the [docs](./docs).
-- Build the smart-contracts with foundry.
-- Compile the `tests/go-tests` (see [`Makefile`](./tests/go-tests/Makefile)) for binaries used by Go tests.
-- Run the `rvgo` tests. All onchain and offchain execution is covered by standard RISC-V unit-tests
-
-## How does it work?
-
-Interactively different parties can agree on a common prefix of the execution trace states,
-and the execution first step where things are different.
-
-Asterisc produces the commitments to the memory, register, CSR and VM state during the execution trace,
-and emulates the disputed step inside the EVM to determine the correct state after.
-
-Asterisc consists of two parts:
-- `rvgo`: Go implementation of Risc-V emulator with tooling
-  - Fast-mode: Emulate 1 instruction per step, directly on a VM state
-  - Slow-mode: Emulate 1 instruction per step, on a VM state-oracle.
-  - Tooling: merkleize VM state, collect access-list of a slow-mode step, diff VM merkle-trees
-- `rvsol`: Solidity/Yul mirror of Go Risc-V slow-mode step that runs with access-list as input
-
-All VM register state is compact enough to be proven as a single preimage, with a binary merkle-tree for 64-bit memory.
-
-### Why use Yul in solidity?
-
-The use of YUL / "solidity assembly" is very convenient because:
-- it offers pretty `switch` statements
-- it uses function calls, no operators, that can be mirrored exactly in Go
-- it preserves underflow/overflow behavior: this is a feature, not a bug, when emulating an ALU and registers.
-- it operates on unsigned word-sized integers only: no typed data, just like registers don't have types.
-  - In Go it is typed `U64` and `U256` for sanity, but it's all `uint256` words in slow mode.
+1. Read through the [additional repo docs](https://github.com/protolambda/asterisc/tree/master/docs).
+2. Use Foundry to compile the associated smart contracts.
+3. Compile test binaries using the [`Makefile`](https://github.com/protolambda/asterisc/blob/master/tests/go-tests/Makefile).
+4. Execute `rvgo` tests to validate both on-chain and off-chain operations through RISC-V unit tests.
 
-### Why fast and slow mode?
+## Key components
 
-Emulating a program on top of a merkleized state structure is expensive.
-When bisecting a program trace, you only need to produce a commitment to a few intermediate states, not all of them.
+- **`rvgo`:** A Go-based RISC-V emulator with two operational modes:
+  - **`Fast Mode`:** Executes one instruction per step on the VM state.
+  - **`Slow Mode`:** Emulates one instruction per step using a VM state oracle.
+- **`rvsol`:** A Solidity/Yul implementation of the slow-mode step for EVM compatibility.
 
-Note that slow mode and fast mode ALUs can be implemented *exactly the same*, just with different u64/u256 implementations.
-The slow mode matches the smart-contract behavior 1:1 and is useful for building the memory merkle-proof
-and having a Go mirror of the smart-contract behavior for testing/debugging in general.
+### Yul in Solidity
 
-## RISC-V subset support
-
-- `RV32I` support - 32 bit base instruction set
-  - `FENCE`, `ECALL`, `EBREAK` are hardwired to implement a minimal subset of systemcalls of the linux kernel
-    - Work in progress. All syscalls used by the Golang `risc64` runtime. 
-- `RV64I` support
-- `RV32M`+`RV64M`: Multiplication support
-- `RV32A`+`RV64A`: Atomics support
-- `RV{32,64}{D,F,Q}`: no-op: No floating points support (since no IEEE754 determinism with rounding modes etc., nor worth the complexity)
-- `Zifencei`: `FENCE.I` no-op: No need for `FENCE.I`
-- `Zicsr`: no-op: some support for Control-and-status registers may come later though.
-- `Ztso`: no-op: no need for Total Store Ordering
-- `RVC`: compact instructions - work-in-progress, to support Rust compiler output.
-- other: revert with error code on unrecognized instructions
+Yul is chosen for its simplicity and precision, offering direct mirroring with Go code while retaining critical features like underflow/overflow behavior and untyped operations.
 
-Where necessary, the non-supported operations are no-ops that allow execution of the standard Go runtime, with disabled GC.
+[See the repo](https://github.com/protolambda/asterisc/blob/master/README.md#why-use-yul-in-solidity) for a deeper dive on Yul and fast/slow modes.
 
-# Go support
+## Supported RISC-V subsets
 
-To run Go, we must support a RISC-V runtime in Go.
+Here's a few key subsets. For the complete list, see the [repo](https://github.com/protolambda/asterisc?tab=readme-ov-file#risc-v-subset-support).
+- `RV32I`: Base 32-bit instruction set
+- `RV64I`: 64-bit instruction set
+- `RV32M` and `RV64M`: Multiplication
+- `RV32A` and `RV64A`: Atomics
+- Compact instructions for Rust: Work in progress
 
-[TinyGo](https://tinygo.org/) has nice minimal riscv [targets](https://github.com/tinygo-org/tinygo/blob/release/targets/riscv64.json) with small largely-optional runtime for embedded systems,
-but is not mature enough.
+Unsupported operations are implemented as no-ops, ensuring compatibility with the Go runtime.
 
-Another path forward in the future may be to implement an alternative `riscv64_ethereum` runtime in Go,
-largely based on the javascript "OS" from the `wasm_js` runtime, to make a lot of system interaction no-ops,
-and to fake concurrency with the weird parking/recovering that is done there.
+## FAQ
 
-So instead of forking the Go runtime, or using a fork like TinyGo,
-for now we can try to support the `riscv64_linux` runtime of the official Go compiler.
+The following section highlights specific advantages that Asterisc provides over other fault-proof systems.
 
+### Benefits over Cannon
 
-## Initialization
+[Cannon](https://github.com/ethereum-optimism/cannon/), originally developed by [`geohot`](https://github.com/geohot/) and now maintained by Optimism, offers similar functionality but has key differences:
+- Cannon operates on a 32-bit MIPS architecture, whereas Asterisc uses RISC-V.
+- Asterisc supports 64-bit operations and deterministic threading, making it more future-ready.
 
-Steps:
-1. Compile Go with `riscv64_linux` target
-2. Take ELF binary output, and concatenate all sections, with filling to mem-size etc. where necessary: i.e. pre-process the ELF-loader steps.
-3. If concurrency is not supported, we must replicate the hack from geohotz in Cannon to make the GC start function in the Go runtime a no-op, 
-   during the ELF processing this can be done based on inspection of program symbols and patching `runtime.gcenable` to immediately jump to the address in the return-address register (`ra`).
-4. Prepare the stack:
-   - After `0x7f_ff_d0_00` in memory, lay out the stack:
-     - `argc = 0`
-     - `argv[n] = 0`
-     - `envp[term] = 0`
-     - `auxv[0] = _AT_PAGESZ = 6`
-     - `auxv[1] = 4 KiB = 4096`
-     - `auxv[2] = _AT_RANDOM = 25`
-     - `auxv[3] = address to 16 bytes of randomness`
-     - `auxv[term] = 0`
-     - `16 bytes of randomness`
-   - Initialize stack pointer to top of stack
-5. Merkleize the binary, this will be the cartridge we slot into the VM
+### Benefits over Cartesi
 
-## AUX vectors used by Go
-
-See [`os_linux.go`](https://github.com/golang/go/blob/1a9893a969e0a73dc4f1e48ed40ccaf29ec238a6/src/runtime/os_linux.go#L215):
-- `_AT_NULL`: End of vector
-- `_AT_PAGESZ = 6`: System physical page size. Go requires [4KB minimum physical page size](https://github.com/golang/go/blob/1a09d57de58a90987789ef637083aac21533eeb7/src/runtime/mheap.go#L23).
-- `_AT_HWCAP  = 16`, `_AT_HWCAP2 = 26`: hardware capability bit vector, and vector 2:
-  The `internal/cpu` package in Go uses these to determine abilities like AES, SHA2, etc.
-  However, the RISC-V target doesn't support any hardware accelerated functions,
-  [the `doinit()` is empty](https://github.com/golang/go/blob/feb984c96b10900daade4b47c4d308d7dd4ed5c3/src/internal/cpu/cpu_riscv64.go#L9).
-- `_AT_RANDOM = 25`: The `AT_RANDOM` vector is a pointer to 16 bytes of data, initialized by the Go runtime
-  [here](https://github.com/golang/go/blob/db36eca33c389871b132ffb1a84fd534a349e8d8/src/runtime/os_linux.go#L284)
-  to [initialize](https://github.com/golang/go/blob/0b323a3c1690050340fc8e39730a07bb01373f0a/src/runtime/proc.go#L867)
-  the "fast random" with, i.e. the randomness used by maps iteration, as well as the `hashkey` used by `hash{32,64}.go`
+[Cartesi](https://github.com/cartesi/) provides RISC-V fraud-proofing for a full machine, including numerous additional features. However, this added complexity can introduce risks. Asterisc focuses on simplicity by running single-process executions with minimal system calls.
 
+### Benefits over WebAssembly
 
-## Linux syscalls used by Go
+Arbitrum’s WebAssembly-based fraud-proofing leverages a business-source license and transformation to WAVM, limiting its general usability. In contrast, Asterisc is open-source under the MIT license, offering broader applicability.
 
-The Go runtime defines the following linux syscalls to be used by Go:
-[`sys_linux_riscv64.s`](https://github.com/golang/go/blob/master/src/runtime/sys_linux_riscv64.s)
+## Contributing
 
-And table of all syscalls:
-https://github.com/golang/go/blob/master/src/syscall/zsysnum_linux_riscv64.go
-Note that some are available to std-lib, but not used by the runtime, and thus present here but not in the runtime bindings.
-
-To read the Go assembler, see [this Go asm syntax doc](https://go.dev/doc/asm) (it's not as complete, but one of few resources).
-
-By supporting a minimal subset of these, most Go programs can be proven.
-The GC won't have to be disabled if concurrency is supported, and will then avoid growing the memory indefinitely.
-
-Note that hardware-accelerated AES hashing is not supported by the riscv64 runtime,
-fallback functions [are used instead](https://github.com/golang/go/blob/0b323a3c1690050340fc8e39730a07bb01373f0a/src/runtime/asm_riscv64.s#L222). 
-
-Errors and file descriptor flags used by the syscalls can be found in https://github.com/golang/go/blob/master/src/syscall/zerrors_linux_riscv64.go
-
-System calls used by `linux_riscv64` Go runtime:
-
-```text
-# Memory: must-have
-SYS_brk			214
-SYS_mmap		222
-
-# exits: must-have
-SYS_exit		93
-SYS_exit_group		94
-
-# Concurrency
-# ------------------------------------
-# Threads: necessary for GC to work, and concurrency support!
-SYS_clone		220
-
-# locking: to handle state of threads
-SYS_futex		98
-
-# sleeping: maybe? Can be simple
-SYS_nanosleep		101
-
-# to put the thread at end of queue, maybe useful, could be no-op
-SYS_sched_yield		124
-
-# thread id: if threads support
-SYS_gettid		178
-
-# sending signals to threads (to close them)
-SYS_tgkill		131
-SYS_tkill		130
-
-
-# File reads/writes may be useful for preimage oracle interaction
-# Otherwise fine to not support.
-# ------------------------------------
-#
-# file reading, can return small number to limit reads
-SYS_read		63
-# file writing, can also return smaller number, but may cause errors
-SYS_write		64
-
-
-# Time: maybe useful to fake based on instruction counter
-# ------------------------------------
-
-# Timers   (does the GC use these?)
-SYS_setitimer		103
-SYS_timer_create	107
-SYS_timer_delete	111
-SYS_timer_settime	110
-
-# Clocks
-SYS_clock_gettime	113
-SYS_gettimeofday	169
-
-
-# To simplify/hardcode
-# -----------------------
-# input/output readiness. Input never ready, output always ready
-SYS_pselect6		72
-# Hardcode the process ID
-SYS_getpid		172
-# "in core" = if page is in memory and not in disk, can be hardcoded
-SYS_mincore		232
-# set/get CPU affinity mask: keep this simple
-SYS_sched_getaffinity	123
-
-# NOOP
-# -----------------------
-# program advises kernel how to use memory, can be no-op
-SYS_madvise		233
-
-# NOOP - To not support, but needed to run op-program
-# May need more investigation
-# -----------------------
-# file memory mapping
-SYS_munmap		215
-
-# interprocess communication
-SYS_pipe2		59
-
-SYS_epoll_create1       20
-SYS_epoll_ctl           21
-SYS_readlinkat          78
-SYS_newfstatat          79
-SYS_newuname            160
-SYS_getrandom           278
-
-# To not support
-# -----------------------
-# sockets
-SYS_connect		203
-SYS_socket		198
-
-# files closing/opening/stats
-SYS_close		57
-SYS_openat		56
-SYS_faccessat		48
-
-# send a signal to another process
-SYS_kill		129
-
-# change action taken on signal
-SYS_rt_sigaction	134
-# fetch or change signal mask
-SYS_rt_sigprocmask	135
-# signal trampoline
-SYS_rt_sigreturn	139
-# to specify an alternate signal stack
-SYS_sigaltstack		132
-
-```
-
-Additionally, syscalls to support for Go std-lib:
-
-```text
-# file descriptor manipulation with flags - support flag lookups
-# 
-SYS_fcntl 25
-```
-
-
-## RISC-V Instructions used by Go
-
-Instructions used by Go compiler:[`internal/obj/riscv/cpu.go`](https://github.com/golang/go/blob/38cfb3be9d486833456276777155980d1ec0823e/src/cmd/internal/obj/riscv/cpu.go#L278)
-
-TLDR: extensions: A and G from unprivileged spec,
-and some things from the privileged instruction set (separate spec)
-
-```text
-2.4: Integer Computational Instructions
-ADDI, SLTI, SLTIU, ANDI, ORI, XORI, SLLI, SRLI, SRAI, LUI, AUIPC, ADD, SLT, SLTU, AND, OR, XOR, SLL, SRL, SUB, SRA
-
-"The SLL/SRL/SRA instructions differ slightly between RV32 and RV64"
-SLLIRV32, SRLIRV32, SRAIRV32
-
-2.5: Control Transfer Instructions
-JAL, JALR, BEQ, BNE, BLT, BLTU, BGE, BGEU
-
-2.6: Load and Store Instructions
-LW, LWU, LH, LHU, LB, LBU, SW, SH, SB
-
-2.7: Memory Ordering Instructions
-FENCE, FENCEI, FENCETSO
-
-5.2: Integer Computational Instructions (RV64I)
-ADDIW, SLLIW, SRLIW, SRAIW, ADDW, SLLW, SRLW, SUBW, SRAW
-
-5.3: Load and Store Instructions (RV64I)
-LD, SD
-
-7.1: Multiplication Operations
-MUL, MULH, MULHU, MULHSU, MULW, DIV, DIVU, REM, REMU, DIVW, DIVUW, REMW, REMUW
-
-8.2: Load-Reserved/Store-Conditional Instructions
-LRD, SCD, LRW, SCW
-
-8.3: Atomic Memory Operations
-AMOSWAPD, AMOADDD, AMOANDD, AMOORD, AMOXORD, AMOMAXD, AMOMAXUD, AMOMIND, AMOMINUD, AMOSWAPW, AMOADDW, AMOANDW, AMOORW, AMOXORW, AMOMAXW, AMOMAXUW, AMOMINW, AMOMINUW
-
-10.1: Base Counters and Timers
-RDCYCLE, RDCYCLEH, RDTIME, RDTIMEH, RDINSTRET, RDINSTRETH
-
-Floating point ops, no need to support in fraud prover:
-11.2: Floating-Point Control and Status Register
-11.5: Single-Precision Load and Store Instructions
-11.6: Single-Precision Floating-Point Computational Instructions
-11.7: Single-Precision Floating-Point Conversion and Move Instructions
-11.8: Single-Precision Floating-Point Compare Instructions
-11.9: Single-Precision Floating-Point Classify Instruction
-12.3: Double-Precision Load and Store Instructions
-12.4: Double-Precision Floating-Point Computational Instructions
-12.5: Double-Precision Floating-Point Conversion and Move Instructions
-12.6: Double-Precision Floating-Point Compare Instructions
-12.7: Double-Precision Floating-Point Classify Instruction
-13.1 Quad-Precision Load and Store Instructions
-13.2: Quad-Precision Computational Instructions
-13.3 Quad-Precision Convert and Move Instructions
-13.4 Quad-Precision Floating-Point Compare Instructions
-13.5 Quad-Precision Floating-Point Classify Instruction
-
-Privileged ISA (Version 20190608-Priv-MSU-Ratified)
-3.1.9: Instructions to Access CSRs
-CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
-
-3.2.1: Environment Call and Breakpoint
-ECALL, SCALL, EBREAK, SBREAK
-
-3.2.2: Trap-Return Instructions
-MRET, SRET, URET, DRET
-
-3.2.3: Wait for Interrupt
-WFI
-
-4.2.1: Supervisor Memory-Management Fence Instruction
-SFENCEVMA
-
-Hypervisor Memory-Management Instructions
-HFENCEGVMA, HFENCEVVMA
-
-The escape hatch. Inserts a single 32-bit word.
-WORD
-```
-
-fresh reg reads:
-runtime.rt0_go: 1
-
-0xC000000000 - called by mmap
-
+Asterisc is designed to run Go programs for fraud-proofing optimistic rollups. Contributions that align with its goals of simplicity, minimalism, and compatibility are highly encouraged.
