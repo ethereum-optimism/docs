@@ -2,7 +2,7 @@
 name: Docs audit results
 about: Template for a formal technical documentation audits run by OP Labs
 title: "[2024 Q4 Audit] [page-path]"
-labels: 'docs-audit-2024-Q4,op-labs'
+labels: ['docs-audit-2024-Q4', 'op-labs']
 ---
 
 <!-- this template is intended for internal OP Labs usage -->
@@ -104,7 +104,7 @@ op-conductor
 fp-contracts
 cannon
 op-program
-asterisc
+asterisk
 kona
 superchain-registry
 supersim
@@ -125,7 +125,6 @@ devops-tooling
 artifacts-packaging
 sequencer-in-a-box
 devnets
-op-supervisor
 performance-tooling
 peer-management-service
 proxyd

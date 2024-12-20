@@ -39,7 +39,7 @@ export function TokenListTable({
               return a.symbol.localeCompare(b.symbol)
             })
             .reduce((acc, token) => {
-              // Remove any duplicate L1 tokens
+              // Remove duplicate L1 tokens by address
               if (acc.some((other) => {
                 return other.address === token.address
               })) {
