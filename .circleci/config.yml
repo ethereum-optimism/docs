@@ -249,36 +249,16 @@ workflows:
   merge-workflow:
     jobs:
       - algolia:
+          name: Algolia Index Update
           context: algolia-search
-
-      # - algolia:
-      #     name: Algolia Index Update
-      #     context: algolia-search
-      #     filters:
-      #       branches:
-      #         only: main
+          filters:
+            branches:
+              only: main
   pr-workflow:
     jobs:
-      - breadcrumbs:
-          name: Breadcrumb Check
-          filters:
-            branches:
-              only:
-                - main
-                - /pull\/\d+/
-      - links:
-          filters:
-            branches:
-              only:
-                - main
-                - /pull\/\d+/
-      - lint:
-          filters:
-            branches:
-              only:
-                - main
-                - /pull\/\d+/
-
+      - breadcrumbs
+      - links
+      - lint
   monthly-workflow:
     when:
       equal: [build_monthly, <<pipeline.schedule.name>>]
