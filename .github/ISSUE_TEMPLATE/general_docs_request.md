@@ -9,7 +9,7 @@ labels: 'community-request,documentation'
 <!-- please fill out the following the best to your ability and properly label the issue -->
 
 ## Brief Description of the Docs Request
-Write a clear and concise description of the docs request. For example, is the request related to an existing page or are you suggesting a brand new docs page?
+Write a clear and concise description of the docs request. For example, is the request related to an existing page or are you suggesting a brand-new docs page?
 
 ## Description of the Documentation You'd Like
 Explain what the final documentation page or pages should look like. Do you need a guide, tutorial, FAQ, troubleshooting page or more than one page? Do you have any source/content information to provide for the requested page(s)?
