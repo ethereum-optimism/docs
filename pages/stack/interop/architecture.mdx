@@ -13,7 +13,8 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Interoperability architecture
 
-An OP Stack node consists of two pieces of software: a consensus client (e.g. op-node) and an execution client, which is responsible for processing user transactions, constructing blocks and serving RPC calls. Interoperability among OP Stack chains is enabled via a new service called *OP-Supervisor*. Every node operator is expected to run this service in addition to the [rollup node](/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
+An OP Stack node consists of two pieces of software: a consensus client (e.g. op-node) and an execution client, which is responsible for processing user transactions and constructing blocks. Interoperability among OP Stack chains is enabled via a new service called 
+[*OP Supervisor*](/stack/interop/op-supervisor). Every node operator is expected to run this service in addition to the [rollup node](/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
 
 ```mermaid
 
@@ -85,6 +86,8 @@ The call to `CrossL2Inbox`, also known as the *executing message*, needs to [ide
 
 `CrossL2Inbox` can either [validate the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185), or [call a contract if the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185).
 
+[For more information, see the  cross-chain messages anatomy page](./cross-chain-message).
+
 ## Safety levels
 
 ```mermaid
@@ -127,8 +130,8 @@ However, this is only for *unsafe* blocks, and only if the sequencer allows mess
 A block is only considered promotable to *safe*, and therefore ready to be written to L1, when all the blocks on which it depends are safe.
 
 For example, in the image below, most blocks are safe.
-Block `n` in chain A is even finalized, and immune from reorgs.
-However, block `n+105` in chain A is unsafe, it (or a block on which it depends) is not written to L1.
+Block `n` in chain `A` is even finalized, and immune from reorgs.
+However, block `n+105` in chain `A` is unsafe, it (or a block on which it depends) is not written to L1.
 Because the new block depends upon it, it is also unsafe.
 
 ## Next steps
