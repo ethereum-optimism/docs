@@ -3,11 +3,7 @@ import tokenlist from '@eth-optimism/tokenlist'
 
 const explorers = {
   '1': 'https://etherscan.io',
-  '5': 'https://goerli.etherscan.io',
-  '10': 'https://optimistic.etherscan.io',
-  '420': 'https://goerli-optimism.etherscan.io',
   '11155111': 'https://sepolia.etherscan.io/',
-  '11155420': 'https://sepolia-optimism.etherscan.io/',
   '1750' : 'https://explorer.metall2.com/',
   '1740' : 'https://testnet.explorer.metall2.com/',
 }
@@ -41,7 +37,7 @@ export function TokenListTable({
               return a.symbol.localeCompare(b.symbol)
             })
             .reduce((acc, token) => {
-              // Remove any duplicate L1 tokens
+              // Remove duplicate L1 tokens by address
               if (acc.some((other) => {
                 return other.address === token.address
               })) {
