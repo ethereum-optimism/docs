@@ -26,7 +26,7 @@ You may wish to explore some of these options to find the bridge that works best
 The Standard Bridge allows users to convert tokens that are native to one chain (like Ethereum) into a representation of those tokens on the other chain (like OP Mainnet).
 Users can then convert these bridged representations back into their original native tokens at any time.
 
-This bridging mechanism functions identically in both direction — tokens native to OP Mainnet can be bridged to Ethereum, just like tokens native to Ethereum can be bridged to OP Mainnet.
+This bridging mechanism functions identically in both directions — tokens native to OP Mainnet can be bridged to Ethereum, just like tokens native to Ethereum can be bridged to OP Mainnet.
 Here you'll get to understand how the Standard Bridge works when moving tokens from Ethereum to OP Mainnet.
 Since the bridging mechanism is mirrored on both sides, this will also explain how the bridge works in the opposite direction.
 
@@ -36,7 +36,7 @@ The Standard Bridge is composed of two contracts, the [`L1StandardBridge`](https
 These two contracts interact with one another via the `CrossDomainMessenger` system for sending messages between Ethereum and OP Mainnet.
 You can read more about the `CrossDomainMessenger` in the guide on [Sending Data Between L1 and L2](./messaging).
 
-### Bridged Tokens
+### Bridged tokens
 
 The Standard Bridge utilizes bridged representations of tokens that are native to another blockchain.
 Before a token native to one chain can be bridged to the other chain, a bridged representation of that token must be created on the receiving side.
@@ -50,7 +50,7 @@ A native token may have more than one bridged representation at the same time.
 Users must always specify which bridged token they wish to use when using the bridge.
 Different bridged representations of the same native token are considered entirely independent tokens.
 
-### Bridging Native Tokens
+### Bridging native tokens
 
 The Standard Bridge uses a "lock-and-mint" mechanism to convert native tokens into their bridged representations.
 This means that **native tokens are locked** into the Standard Bridge on one side, after which **bridged tokens are minted** on the other side.
@@ -129,7 +129,7 @@ The process for bridging a native token involves a few steps.
   This process is identical in both the Ethereum to OP Mainnet and OP Mainnet to Ethereum directions.
 </Steps>
 
-### Bridging Non-Native Tokens
+### Bridging non-native tokens
 
 The Standard Bridge uses a "burn-and-unlock" mechanism to convert bridged representations of tokens back into their native tokens.
 This means that **bridged tokens are burned** on the Standard Bridge on one side, after which **native tokens are unlocked** on the other side.
@@ -191,16 +191,16 @@ The Standard Bridge contracts can also be used to bridge ETH from Ethereum to OP
 The ETH bridging process is generally less complex than the ERC-20 bridging process.
 Users simply need to trigger and send ETH to the [`bridgeETH`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L143-L150) or [`bridgeETHTo`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L152-L166) functions on either blockchain.
 
-  <Callout>
-    Users can also deposit ETH from Ethereum to OP Mainnet by sending a basic ETH transfer from an EOA to the `L1StandardBridgeProxy`. 
-    This works because the `L1StandardBridgeProxy` contains a [`receive`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L119-L121) function.
-    You can find the mainnet and testnet addresses on the [Contract Addresses](/chain/addresses) page.
-  </Callout>
+<Callout>
+  Users can also deposit ETH from Ethereum to OP Mainnet by sending a basic ETH transfer from an EOA to the `L1StandardBridgeProxy`.
+  This works because the `L1StandardBridgeProxy` contains a [`receive`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L119-L121) function.
+  You can find the mainnet and testnet addresses on the [Contract Addresses](/chain/addresses) page.
+</Callout>
 
 ## Tutorials
 
-*   [Learn how to bridge ERC-20 tokens with the Optimism SDK](/builders/app-developers/tutorials/cross-dom-bridge-erc20)
-*   [Learn how to bridge ETH with the Optimism SDK](/builders/app-developers/tutorials/cross-dom-bridge-eth)
+*   [Learn how to bridge ERC-20 tokens with viem](/builders/app-developers/tutorials/cross-dom-bridge-erc20)
+*   [Learn how to bridge ETH with viem](/builders/app-developers/tutorials/cross-dom-bridge-eth)
 *   [Learn how to create a standard bridged token](/builders/app-developers/tutorials/standard-bridge-standard-token)
 *   [Learn how to create a custom bridged token](/builders/app-developers/tutorials/standard-bridge-custom-token)
 
@@ -221,35 +221,16 @@ You can easily find the bridged representation of a token for OP Mainnet on the 
 If you want to find the bridged representation of a token for another chain, use the following steps.
 
 <Steps>
+  {<h3>Find the token you want to bridge</h3>}
 
-{<h3>Find the token you want to bridge</h3>}
+  The Superchain Token List is organized by the token's address and native blockchain.
+  [Search the token list](https://github.com/ethereum-optimism/ethereum-optimism.github.io/blob/master/optimism.tokenlist.json) for the token you want to bridge to confirm that it's included in the list.
+  Make sure that the chain ID in the entry matches the chain ID of the blockchain you're bridging from.
+  Retrieve the token's name and symbol from the list.
 
-The Superchain Token List is organized by the token's address and native blockchain.
-[Search the token list](https://github.com/ethereum-optimism/ethereum-optimism.github.io/blob/master/optimism.tokenlist.json) for the token you want to bridge to confirm that it's included in the list.
-Make sure that the chain ID in the entry matches the chain ID of the blockchain you're bridging from.
-Retrieve the token's name and symbol from the list.
+  {<h3>Find the bridged representation of the token</h3>}
 
-{<h3>Find the bridged representation of the token</h3>}
-
-Once you've found the token you want to bridge, look for the token's name and symbol in the list.
-Find the entry that matches the name and symbol of the token you want to bridge and where the chain ID matches the chain ID of the blockchain you're bridging to.
-The address of this entry is the address of the bridged representation of the token you want to bridge.
-
+  Once you've found the token you want to bridge, look for the token's name and symbol in the list.
+  Find the entry that matches the name and symbol of the token you want to bridge and where the chain ID matches the chain ID of the blockchain you're bridging to.
+  The address of this entry is the address of the bridged representation of the token you want to bridge.
 </Steps>
-
-## Special Considerations
-
-### USDC
-
-[Circle](https://www.circle.com/en/), the issuer of [USDC](https://www.circle.com/en/usdc?gad_source=1), natively issues USDC on OP Mainnet [as of September 2023](https://www.circle.com/blog/what-you-need-to-know-native-usdc-on-op-mainnet).
-Before this service was made available, USDC had to be bridged to OP Mainnet via the Standard Bridge.
-This bridged representation of USDC is referred to as `USDC.e`.
-
-Circle recommends that users and developers make use of the native version of USDC issued by Circle over the bridged `USDC.e` token.  Please note that the bridged `USDC.e` token will be deprecated in the near future.
-
-Information about the bridged `USDC.e` token and native USDC token can be found below.
-
-| Symbol   | Description                  | Address                                                                                                                          |
-| -------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `USDC.e` | Bridged USDC from Ethereum   | [`0x7f5c764cbc14f9669b88837ca1490cca17c31607`](https://optimistic.etherscan.io/token/0x7f5c764cbc14f9669b88837ca1490cca17c31607) |
-| `USDC`   | Native USDC issued by Circle | [`0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85`](https://optimistic.etherscan.io/token/0x0b2c639c533813f4aa9d7837caf62653d097ff85) |

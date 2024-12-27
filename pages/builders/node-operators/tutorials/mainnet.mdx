@@ -1,22 +1,22 @@
 ---
-title: Running an OP Mainnet Node from Source
+title: Running an OP Mainnet node from source
 lang: en-US
 description: Learn how to run an OP Mainnet node from source code for full nodes and archive nodes.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Running an OP Mainnet Node from Source
+# Running an OP Mainnet node from source
 
 This tutorial explains how to run an OP Mainnet node from source code for full nodes and archive nodes.
 Running an OP Mainnet node from source code is a flexible alternative to using pre-built Docker images.
 
-## Building the Source Code
+## Building the source code
 
 You'll need to build `op-node` and `op-geth` from their respective source repositories before you can run a node.
 Make sure to follow the instructions on [Building a Node from Source](./node-from-source) before continuing.
 
-## Hardware Requirements
+## Hardware requirements
 
 Hardware requirements for OP Mainnet nodes can vary depending on the type of node you plan to run.
 Archive nodes generally require significantly more resources than full nodes.
@@ -25,7 +25,7 @@ Below are suggested minimum hardware requirements for each type of node.
 *   16GB RAM
 *   Reasonably modern CPU
 
-### SSD Capacity Requirements
+### SSD capacity requirements
 
 Given the growing size of the blockchain state, choosing the right SSD size is important.
 Below are the storage needs as of April 2024:
@@ -35,14 +35,18 @@ Below are the storage needs as of April 2024:
 
 Based on these trends, node operators should plan for future storage needs and choose SSDs that can handle these increasing requirements.
 
-## Full Nodes
+<Callout type="info">
+  Geth supports a "freezer" feature to store older chain data on HDDs, saving SSD space. Configure this for OP Mainnet using the `--datadir.ancient` flag. See [Geth docs](https://geth.ethereum.org/docs/fundamentals/databases) and [OP docs](../configuration/execution-config#datadirancient) for details.
+</Callout>
 
-### Assess Blob Archiver
+## Full nodes
+
+### Assess blob archiver
 
 Assess if you need to configure a blob archiver service by reading the
 [Configure a Blob Archiver documentation](/builders/node-operators/management/blobs#configure-a-blob-archiver-archive-nodes).
 
-### Create a JWT Secret
+### Create a JWT secret
 
 `op-geth` and `op-node` communicate over the engine API authrpc.
 This communication is secured using a shared secret.
@@ -154,7 +158,8 @@ Once you've started `op-geth`, you can start `op-node`.
     --l2=ws://localhost:8551 \
     --l2.jwt-secret=./jwt.txt \
     --network=op-mainnet \
-    --syncmode=execution-layer
+    --syncmode=execution-layer \
+    --l2.enginekind=geth
   ```
 
   <Callout>
@@ -164,12 +169,12 @@ Once you've started `op-geth`, you can start `op-node`.
   </Callout>
 </Steps>
 
-### Synchronization Verification
+### Synchronization verification
 
 Once you've started `op-geth` and `op-node` you should see the two begin to 
 communicate with each other and synchronize the OP Mainnet chain.
 
-#### Snap Sync (Default)
+#### Snap sync (default)
 
 Initial synchronization can take several hours to complete. You will see these 
 `op-node` logs at the start of snap sync:
@@ -218,7 +223,7 @@ There are two stages on `op-geth` for snap sync:
 
 </Steps>
 
-#### Full Sync
+#### Full sync
 
 <Callout type="info">
 You will need access to the migrated OP Mainnet database to run a full node with full sync.
@@ -251,13 +256,13 @@ INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,
 INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
 ```
 
-## Archive Nodes
+## Archive nodes
 
 <Callout type="info">
   You only need an archive node if you need the historical state. Most node operators should default to full nodes.
 </Callout>
 
-### Get the Migrated Data Directory
+### Get the migrated data directory
 
 OP Mainnet underwent a large database migration as part of the [Bedrock Upgrade](https://web.archive.org/web/20230608050602/https://blog.oplabs.co/introducing-optimism-bedrock/) in 2023.
 You will need access to the migrated OP Mainnet database to run an archive node.
@@ -268,7 +273,7 @@ In this section, you'll learn how to download and verify the pre-migrated databa
   {<h3>Download the Migrated Data Directory</h3>}
 
   Click the link below to find the latest publicly available database snapshots for OP Mainnet.
-  Snapshots are available for multiple dates and snapshots get larger as they get closer the current date.
+  Snapshots are available for multiple dates and snapshots get larger as they get closer to the current date.
   Snapshots are large files and may take some time to download.
   [OP Mainnet Snapshots](/builders/node-operators/management/snapshots#op-mainnet)
 
@@ -288,7 +293,7 @@ In this section, you'll learn how to download and verify the pre-migrated databa
   sha256sum mainnet-bedrock.tar.zst
   ```
 
-  You should see then following output:
+  You should see the following output:
 
   ```bash
   ec4baf47e309a14ffbd586dc85376833de640c0f2a8d7355cb8a9e64c38bfcd1  mainnet-bedrock.tar.zst
@@ -317,7 +322,7 @@ In this section, you'll learn how to download and verify the pre-migrated databa
   Set `--syncmode=full` and `--gcmode=archive` on `op-geth`.
 </Steps>
 
-### Get the Legacy Geth Directory (Optional)
+### Get the legacy Geth directory (optional)
 
 Blocks and transactions included in OP Mainnet before the Bedrock Upgrade cannot be executed by modern OP Mainnet nodes.
 OP Mainnet nodes will **serve** these blocks and transactions but cannot run certain queries against them (e.g. `eth_call`).
@@ -362,7 +367,7 @@ If you want to run a full node then you can safely skip this section.
   ```
 </Steps>
 
-### Start Legacy Geth (Optional)
+### Start legacy Geth (optional)
 
 If you've chosen to run a Legacy Geth node alongside your OP Mainnet node, you'll need to start it before you start your OP Mainnet node.
 
@@ -385,7 +390,7 @@ If you've chosen to run a Legacy Geth node alongside your OP Mainnet node, you'l
   ```
 </Steps>
 
-## Next Steps
+## Next steps
 
 *   If you've already got your node up and running, check out the [Node Metrics and Monitoring Guide](../management/metrics) to learn how to keep tabs on your node and make sure it keeps running smoothly.
 *   If you run into any problems, please visit the [Node Troubleshooting Guide](../management/troubleshooting) for help.

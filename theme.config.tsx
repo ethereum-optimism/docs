@@ -1,9 +1,10 @@
-import React from 'react'
-import { DocsThemeConfig } from 'nextra-theme-docs'
-import { useRouter } from 'next/router'
-import { useConfig } from 'nextra-theme-docs'
-import { FeelbackYesNo, PRESET_LIKE_DISLIKE } from "@feelback/react"
-import "@feelback/react/styles/feelback.css"
+import React from "react";
+import { DocsThemeConfig } from "nextra-theme-docs";
+import { useRouter } from "next/router";
+import { useConfig } from "nextra-theme-docs";
+import { FeelbackYesNo, PRESET_LIKE_DISLIKE } from "@feelback/react";
+import "@feelback/react/styles/feelback.css";
+import { Search } from "./components/Search";
 
 const config: DocsThemeConfig = {
   logo: (
@@ -81,22 +82,22 @@ const config: DocsThemeConfig = {
   /*banner: {
     key: 'fp-mainnet-release',
     text: (
-      <a href="/builders/notices/fp-changes" target="_self" rel="noopener noreferrer" aria-label="Preparing for Fault Proof Breaking Changes">
-      📣📣📣 ATTENTION: Fault Proofs are planned for OP Mainnet. <strong><i>Withdrawal claims submitted after June 3 will need to be reproven after the upgrade</i></strong>, which will be at least 7 days later. Click here for more info. 📣📣📣
+      <a href="/builders/notices/sdk-deprecation">
+        🎉 We are deprecating the Optimism SDK and migrating all tutorials to use viem/op-stack. Read more →
       </a>
     )
   },*/
   useNextSeoProps() {
-    const { asPath } = useRouter()
-    if (asPath !== '/') {
+    const { asPath } = useRouter();
+    if (asPath !== "/") {
       return {
         titleTemplate: '%s | Metal L2 Docs'
       }
     }
   },
   head: () => {
-    const { asPath, defaultLocale, locale } = useRouter()
-    const { frontMatter } = useConfig()
+    const { asPath, defaultLocale, locale } = useRouter();
+    const { frontMatter } = useConfig();
     const url =
       'https://docs.metall2.com' +
       (defaultLocale === locale ? asPath : `/${locale}${asPath}`)
@@ -109,15 +110,39 @@ const config: DocsThemeConfig = {
           property="og:description"
           content={frontMatter.description || 'Metal L2 Docs for developers'}
         />
-        <link rel="icon" href="/img/icons/favicon.ico" type="image/x-icon"></link>
+        <meta
+          property="og:image"
+          content="https://docs.optimism.io/logos/docs-header.png"
+        />
+        <meta
+          name="twitter:card"
+          content="summary_large_image"
+        />
+        <meta
+          name="twitter:title"
+          content={frontMatter.title || "Optimism Docs"}
+        />
+        <meta
+          name="twitter:description"
+          content={frontMatter.description || "Optimism Docs for developers"}
+        />
+        <meta
+          name="twitter:image"
+          content="https://docs.optimism.io/logos/docs-header.png"
+        />
+        <link
+          rel="icon"
+          href="/img/icons/favicon.ico"
+          type="image/x-icon"
+        ></link>
       </>
-    )
+    );
   },
   // https://nextra.site/docs/docs-theme/theme-configuration
   // primaryHue: {
-  //   dark: 
-  //   light: 
+  //   dark:
+  //   light:
   // }
-}
+};
 
-export default config
+export default config;

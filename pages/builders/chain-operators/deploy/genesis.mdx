@@ -1,24 +1,33 @@
 ---
-title: OP Stack Genesis Creation
+title: OP Stack genesis creation
 lang: en-US
 description: Learn how to create a genesis file for the OP Stack.
 ---
 
 import { Callout } from 'nextra/components'
 
-# OP Stack Genesis Creation
+# OP Stack genesis creation
+
+<Callout type="warning">
+This page is out of date and shows the legacy method for genesis file creation.
+For the latest recommended method, use [op-deployer](/builders/chain-operators/tools/op-deployer).
+</Callout>
 
 The following guide shows you how to generate the L2 genesis file `genesis.json`. This is a JSON
 file that represents the L2 genesis. You will provide this file to the
 execution client (op-geth) to initialize your network. There is also the rollup configuration file, `rollup.json`, which will be
 provided to the consensus client (op-node).
 
-## Solidity Script
+## Solidity script
 
 At the time of this writing, the preferred method for genesis generation is to use the foundry script 
 located in the monorepo to generate an "L2 state dump" and then pass this into the op-node genesis subcommand. 
 The foundry script can be found at
 [packages/contracts-bedrock/scripts/L2Genesis.s.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/L2Genesis.s.sol).
+
+<Callout type="info">
+When generating the genesis file, please use the same `op-contracts/vX.Y.Z` release commit used for L1 contract deployments.
+</Callout>
 
 ### Configuration
 
@@ -75,15 +84,10 @@ go run cmd/main.go genesis l2 \
   --l2-allocs=<Path to L2 genesis state dump> \
   --outfile.l2=<Path to L2 genesis output file: i.e. ./genesis.json> \
   --outfile.rollup=<Path to rollup output file: i.e. ./rollup.json> \
-  --l1-rpc=<RPC URL for an Ethereum L1 node. Cannot be used with --l1-starting-bloc>>
+  --l1-rpc=<RPC URL for an Ethereum L1 node. Cannot be used with --l1-starting-block>>
 ```
 
-Alternatively, you can omit `--l1-rpc` and use `--l1-starting-block`. This option
-lets you provide a path to a JSON file containing the L1 starting block. This
-overrides the need for using an L1 RPC to fetch the block. It cannot be used
-with `--l1-rpc`.
-
-## Next Steps
+## Next steps
 
 *   Learn how to [initialize](/builders/node-operators/configuration/base-config#initialization-via-genesis-file)
     `op-geth` with your `genesis.json` file.

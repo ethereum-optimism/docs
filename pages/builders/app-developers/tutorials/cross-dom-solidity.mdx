@@ -1,36 +1,32 @@
 ---
-title: Communicating Between OP Mainnet and Ethereum in Solidity
+title: Communicating between OP Stack and Ethereum in Solidity
 lang: en-US
-description: Learn how to write Solidity contracts on OP Mainnet and Ethereum that can talk to each other.
+description: Learn how to write Solidity contracts on OP Stack and Ethereum that can talk to each other.
 ---
 
 import { Steps, Callout, Tabs } from 'nextra/components'
-import { WipCallout } from '@/components/WipCallout'
 
-<WipCallout />
-# Communicating Between OP Mainnet and Ethereum in Solidity
+# Communicating between OP Stack and Ethereum in Solidity
 
-
-
-This tutorial explains how to write Solidity contracts on OP Mainnet and Ethereum that can talk to each other.
-Here you'll use a contract on OP Mainnet that can set a "greeting" variable on a contract on Ethereum, and vice-versa.
+This tutorial explains how to write Solidity contracts on OP Stack and Ethereum that can talk to each other.
+Here you'll use a contract on OP Stack that can set a "greeting" variable on a contract on Ethereum, and vice-versa.
 This is a simple example, but the same technique can be used to send any kind of message between the two chains.
 
 You won't actually be deploying any smart contracts as part of this tutorial.
-Instead, you'll reuse existing contracts that have already been deployed to OP Mainnet and Ethereum.
+Instead, you'll reuse existing contracts that have already been deployed to OP Stack and Ethereum.
 Later in the tutorial you'll learn exactly how these contracts work so you can follow the same pattern to deploy your own contracts.
 
 <Callout type="info">
-Just looking to bridge tokens between OP Mainnet and Ethereum?
-Check out the tutorial on [Bridging ERC-20 Tokens to OP Mainnet With the Optimism SDK](./cross-dom-bridge-erc20).
+Just looking to bridge tokens between OP Stack and Ethereum?
+Check out the tutorial on [Bridging ERC-20 Tokens to OP Stack With the viem](./cross-dom-bridge-erc20).
 </Callout>
 
-## Message Passing Basics
+## Message passing basics
 
-OP Mainnet uses a smart contract called the `CrossDomainMessenger` to pass messages between OP Mainnet and Ethereum.
+OP Stack uses a smart contract called the `CrossDomainMessenger` to pass messages between OP Stack and Ethereum.
 Both chains have a version of this contract (the `L1CrossDomainMessenger` and the `L2CrossDomainMessenger`).
-Messages sent from Ethereum to OP Mainnet are automatically relayed behind the scenes.
-Messages sent from OP Mainnet to Ethereum must be explicitly relayed with a second transaction on Ethereum.
+Messages sent from Ethereum to OP Stack are automatically relayed behind the scenes.
+Messages sent from OP Stack to Ethereum must be explicitly relayed with a second transaction on Ethereum.
 Read more about message passing in the guide to [Sending Data Between L1 and L2](/builders/app-developers/bridging/messaging).
 
 ## Dependencies
@@ -45,10 +41,10 @@ You will need to get some ETH on both of these testnets.
 
 <Callout type="info">
 You can use [this faucet](https://sepoliafaucet.com/) to get ETH on Sepolia.
-You can use the [Superchain Faucet](https://app.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
+You can use the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=docs) to get ETH on OP Sepolia.
 </Callout>
 
-## Review the Contracts
+## Review the contracts
 You're about to use two contracts that have already been deployed to Sepolia and OP Sepolia, the `Greeter` contracts.
 You can review the source code for the L1 `Greeter` contract [here on Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#code).
 You can review the source code for the L2 `Greeter` contract [here on Etherscan](https://sepolia-optimism.etherscan.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#code).
@@ -57,7 +53,7 @@ Both contracts have exactly the same source code.
 Feel free to review the source code for these two contracts now if you'd like.
 This tutorial will explain how these contracts work in detail later on in the [How It Works](#how-it-works) section below.
 
-## Interact With the L1 Greeter
+## Interact with the L1 Greeter
 
 You're first going to use the L1 `Greeter` contract to set the greeting on the L2 `Greeter` contract.
 You'll send a transaction directly to the L1 `Greeter` contract which will ask the `L1CrossDomainMessenger` to send a message to the L2 `Greeter` contract.
@@ -82,8 +78,8 @@ It will take a few minutes for your message to reach L2.
 Feel free to take a quick break while you wait.
 
 <Callout type="info">
-You can use the Optimism SDK to programmatically check the status of any message between L1 and L2.
-Later on in this tutorial you'll learn how to use the Optimism SDK and the `waitForMessageStatus` function to wait for various message statuses.
+You can use Viem to programmatically check the status of any message between L1 and L2.
+Later on in this tutorial you'll learn how to use Viem and the `waitToProve` function to wait for various message statuses.
 This same function can be used to wait for a message to be relayed from L1 to L2.
 </Callout>
 
@@ -95,14 +91,14 @@ Paste your address into the field next to the "greeting" function and click the 
 You should see the message you sent from L1.
 
 <Callout>
-Don't see your message yet?
+Haven't seen your message yet?
 You might need to wait a little longer.
 L2 transactions triggered on L1 are typically processed within one minute but can occasionally be slightly delayed.
 </Callout>
 
 </Steps>
 
-## Interact With the L2 Greeter
+## Interact with the L2 Greeter
 
 Now you're going to use the L2 `Greeter` contract to set the greeting on the L1 `Greeter` contract.
 You'll send a transaction directly to the L2 `Greeter` contract which will ask the `L2CrossDomainMessenger` to send a message to the L1 `Greeter` contract.
@@ -129,15 +125,14 @@ Feel free to keep this tab open so you can easily copy the transaction hash late
 
 {<h3>Create a demo project folder</h3>}
 
-You're going to use the Optimism SDK to prove and relay your message to L1.
-Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
+You're going to use the viem to prove and relay your message to L1.
 
 ```bash
-mkdir op-sample-project
-cd op-sample-project
+mkdir cross-dom
+cd cross-dom
 ```
 
-{<h3>Initialize the Project</h3>}
+{<h3>Initialize the project</h3>}
 
 Set up the project as a basic Node.js project with `pnpm` or your favorite package manager.
 
@@ -145,20 +140,12 @@ Set up the project as a basic Node.js project with `pnpm` or your favorite packa
 pnpm init
 ```
 
-{<h3>Install the Optimism SDK</h3>}
+{<h3>Install viem</h3>}
 
-Install the Optimism SDK with `pnpm` or your favorite package manager.
-
-```bash
-pnpm add @eth-optimism/sdk
-```
-
-{<h3>Install ethers.js</h3>}
-
-Install `ethers` with `pnpm` or your favorite package manager.
+Install Viem with `pnpm` or your favorite package manager.
 
 ```bash
-pnpm add ethers@^5
+pnpm add viem
 ```
 
 {<h3>Add your private key to your environment</h3>}
@@ -189,46 +176,27 @@ Start the Node.js REPL with the `node` command.
 node
 ```
 
-{<h3>Import the Optimism SDK</h3>}
+{<h3>Import Viem</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
-```
-
-{<h3>Import ethers.js</h3>}
-
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
-```
-
-{<h3>Load your private key</h3>}
-
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L6 hash=755b77a7ffc7dfdc186f36c37d3d847a
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L3-L5 hash=65b9a5ad5b634bc2e424f5664e6e1f84
 ```
 
 {<h3>Load your transaction hash</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L8 hash=320cd4f397d7bed8d914d4be0c99f8dc
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L7 hash=320cd4f397d7bed8d914d4be0c99f8dc
 ```
 
 {<h3>Create the RPC providers and wallets</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L10-L13 hash=9afdce50665ae93bce602068071ffaa1
-```
-
-{<h3>Create a CrossChainMessenger instance</h3>}
-
-The Optimism SDK exports a `CrossChainMessenger` class that makes it easy to prove and relay cross-chain messages.
-
-Create an instance of the `CrossChainMessenger` class:
-
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L15-L20 hash=997b9c4cdd5fb1f9d4e0882a683ae016
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L8-L9 hash=d47e4991c5153e1e1dc55de5047a8a3e
 ```
 
 {<h3>Wait until the message is ready to prove</h3>}
 
-The second step to send messages from L2 to L1 is to prove that the message was sent on L2.
+Next, you will send messages from L2 to L1 is to prove that the message was sent on L2.
 You first need to wait until the message is ready to prove.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L23 hash=25a072666b6147f8d8983d8223f045b8
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L12-L16 hash=df275e659d954eb72b8c5765d9baf6de
 ```
 
 <Callout type="info">
@@ -240,34 +208,34 @@ Feel free to take a quick break while you wait.
 
 Once the message is ready to be proven, you'll send an L1 transaction to prove that the message was sent on L2.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L26 hash=17922abea43b3d379404fedd87422dde
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L18-L23 hash=e4d608ac2c2ceb5a744c8474679bd8cb
 ```
 
 {<h3>Wait until the message is ready for relay</h3>}
 
 The final step to sending messages from L2 to L1 is to relay the messages on L1.
 This can only happen after the fault proof period has elapsed.
-On OP Mainnet, this takes 7 days.
+On OP Stack, this takes 7 days.
 
 <Callout>
 We're currently testing fault proofs on OP Sepolia, so withdrawal times reflect Mainnet times.
 </Callout>
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L29 hash=45d995aab47ec29afee4bb4577ae9303
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L25-L29 hash=88cec1db2fde515ea9008eaa1bbdfd73
 ```
 
 {<h3>Relay the message on L1</h3>}
 
 Once the withdrawal is ready to be relayed you can finally complete the message sending process.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L32 hash=b5515811ffcf8b9ada15dea8ae666e44
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L31-L33 hash=d7e47c9787d92e2140622a6bdcc6d7bb
 ```
 
 {<h3>Wait until the message is relayed</h3>}
 
 Now you simply wait until the message is relayed.
 
-```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L35 hash=d6e7f89e929eea0ac3217a6751b7e578
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L35-L36 hash=4ff3cdc48f17cfd7de4a6ef2d2671dc2
 ```
 
 {<h3>Check the L1 Greeter</h3>}
@@ -279,14 +247,14 @@ You should see the message you sent from L2.
 
 </Steps>
 
-## How It Works
+## How it works
 
 Congratulations!
 You've successfully sent a message from L1 to L2 and from L2 to L1.
 This section will explain how the `Greeter` contracts work so you can follow the same pattern to deploy your own contracts.
 Luckily, both `Greeter` contracts are exactly the same so it's easy to see how everything comes together.
 
-### The Messenger Variable
+### The Messenger variable
 
 The `Greeter` contract has a `MESSENGER` variable that keeps track of the `CrossDomainMessenger` contract on the current chain.
 Check out the [Contract Addresses page](/chain/addresses) to see the addresses of the `CrossDomainMessenger` contracts on whichever network you'll be using.
@@ -294,7 +262,7 @@ Check out the [Contract Addresses page](/chain/addresses) to see the addresses o
 ```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L14 hash=ce8be857d4b4e1992cd3c16b8f2864b9
 ```
 
-### The Other Greeter Variable
+### The other Greeter variable
 
 The `Greeter` contract also has an `OTHER_GREETER` variable that keeps track of the `Greeter` contract on the other chain.
 On L1, this variable is set to the address of the L2 `Greeter` contract, and vice-versa.
@@ -302,7 +270,7 @@ On L1, this variable is set to the address of the L2 `Greeter` contract, and vic
 ```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L15 hash=eedd8c3050a83e56f37f367c6faa6f5d
 ```
 
-### The Greetings Mapping
+### The Greetings mapping
 
 The `Greeter` contract keeps track of the different greetings that users have sent inside a `greetings` mapping.
 By using a mapping, this contract can keep track of greetings from different users at the same time.
@@ -317,7 +285,7 @@ The `Greeter` has a simple constructor that sets the `MESSENGER` and `OTHER_GREE
 ```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L18-L24 hash=718f3dc498975548eec30da99e47adf2
 ```
 
-### The Send Greeting Function
+### The sendGreeting function
 
 The `sendGreeting` function is the most important function in the `Greeter` contract.
 This is what you called earlier to send messages in both directions.
@@ -330,7 +298,7 @@ The final parameter is the gas limit that gets used when the message is relayed 
 ```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L26-L38 hash=3104a6775fe3a505cf2f84b71b078aee
 ```
 
-### The Set Greeting Function
+### The setGreeting function
 
 The `setMessage` function is the function that actually sets the greeting.
 This function is called by the `CrossDomainMessenger` contract on the other chain.
@@ -350,10 +318,10 @@ You can follow a similar pattern in your own smart contracts.
 ## Conclusion
 
 You just learned how you can write Solidity contracts on Sepolia and OP Sepolia that can talk to each other.
-You can follow the same pattern to write contracts that can talk to each other on Ethereum and OP Mainnet.
+You can follow the same pattern to write contracts that can talk to each other on Ethereum and OP Stack.
 
 This sort of cross-chain communication is useful for a variety of reasons.
-For example, the [Standard Bridge](/builders/app-developers/bridging/standard-bridge) contracts use this same system to bridge ETH and ERC-20 tokens between Ethereum and OP Mainnet.
+For example, the [Standard Bridge](/builders/app-developers/bridging/standard-bridge) contracts use this same system to bridge ETH and ERC-20 tokens between Ethereum and OP Stack.
 
-One cool way to take advantage of cross-chain communication is to do most of your heavy lifting on OP Mainnet and then send a message to Ethereum only when you have important results to share.
-This way you can take advantage of the low gas costs on OP Mainnet while still being able to use Ethereum when you need it.
+One cool way to take advantage of cross-chain communication is to do most of your heavy lifting on OP Stack and then send a message to Ethereum only when you have important results to share.
+This way you can take advantage of the low gas costs on OP Stack while still being able to use Ethereum when you need it.

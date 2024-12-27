@@ -1,0 +1,66 @@
+---
+title: Interop message passing overview
+lang: en-US
+description: Learn about cross-chain message passing in the Superchain.
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Interop message passing overview
+
+<Callout>
+  Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
+</Callout>
+
+This guide provides an overview of cross-chain message passing in the Superchain.
+
+## Overview
+
+The Superchain uses a pull-based event system for cross-chain communication. Messages are sent through the `L2ToL2CrossDomainMessenger` contract, which provides a secure and standardized way to pass information between chains.
+
+## How it works
+
+The following diagram illustrates how messages flow between chains through the `L2ToL2CrossDomainMessenger` contract, which acts as a bridge for cross-chain communication. When a contract on the source chain initiates a message, it's processed through several stages before reaching its destination, ensuring secure and reliable message delivery.
+
+```mermaid
+sequenceDiagram
+    participant Source as Source Chain
+    participant Messenger as L2ToL2CrossDomainMessenger
+    participant Dest as Destination Chain
+    
+    Note over Source,Dest: Message Creation
+    Source->>Messenger: Emit message event
+    Note over Source,Dest: Message Serialization
+    Messenger-->>Messenger: Convert to standard format
+    Note over Source,Dest: Identifier Creation
+    Messenger-->>Messenger: Generate unique ID
+    Note over Source,Dest: Message Execution
+    Messenger->>Dest: Process message
+```
+
+Cross-chain messaging involves four main phases:
+
+1.  **Message Creation**: The source chain contract emits an event containing the message data and destination information. This event serves as the initiating message that will be relayed across chains.
+
+2.  **Message Serialization**: The messenger contract converts the event data into a standardized format that can be consistently processed across different chains in the Superchain.
+
+3.  **Identifier Creation**: A unique identifier is generated for the message, containing information about its `origin`, `timestamp`, and other `metadata`. This identifier helps track and verify the message.
+
+4.  **Message Execution**: The destination chain receives and processes the message, executing any associated actions or state changes specified in the original message.
+
+For detailed implementation steps and code examples, see our [message passing implementation guide](https://supersim.pages.dev/guides/interop/viem).
+
+## Common Use Cases
+
+*   Simple messages between identical contracts
+*   Complex multi-contract interactions
+*   Cross-chain state synchronization
+*   Token transfers and bridging
+
+For a practical example, see our [cross-chain ping pong tutorial](https://supersim.pages.dev/guides/interop/cross-chain-contract-calls-pingpong).
+
+## Next steps
+
+*   Read about the [anatomy of a cross-chain message](/stack/interop/cross-chain-message)
+*   Try [Supersim](supersim) for testing cross-chain messages locally
+*   Learn about [manually relaying messages](https://supersim.pages.dev/guides/interop/cast)
