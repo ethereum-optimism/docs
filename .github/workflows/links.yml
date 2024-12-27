@@ -1,0 +1,48 @@
+name: Check Links
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-run-lychee:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout MetalPay/metal-l2-docs
+      uses: actions/checkout@v2
+      with:
+        repository: 'MetalPay/metal-l2-docs'
+        path: 'docs'
+
+    - name: Checkout lycheeverse/lychee
+      uses: actions/checkout@v2
+      with:
+        repository: 'lycheeverse/lychee'
+        path: 'lychee'
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+
+    - name: Build Lychee
+      run: |
+        cd lychee
+        cargo build --release
+
+    - name: Add Lychee to PATH
+      run: echo "$GITHUB_WORKSPACE/lychee/target/release" >> $GITHUB_PATH
+
+    - name: Run Lychee
+      run: |
+        cd docs
+        lychee --config ./lychee.toml --quiet "./pages"
