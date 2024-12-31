@@ -13,7 +13,7 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Interoperability explainer 
 
-## Why do we need interoperability
+## Why do we need interoperability?
 
 It is easy for a blockchain to be certain about information it generates itself. 
 Information that comes from other sources is harder to provide in a safe, decentralized, and uncensorable manner (this is called [The Oracle Problem](https://chain.link/education-hub/oracle-problem)).
@@ -29,58 +29,83 @@ Interoperability provides the following benefits:
 
 ## Interoperability architecture
 
-# Interoperability architecture 
-
-Interoperability is provided by a new service called the [OP Supervisor](./op-supervisor).
-This supervisor keeps a copy of the events for all the blockchains in the interoperability cluster, and can therefore validate that cross-chain messages (which are always initiated with an event on the source cluster).
+An OP Stack node consists of two pieces of software: a consensus client (e.g. op-node) and an execution client, which is responsible for processing user transactions and constructing blocks. 
+Interoperability among OP Stack chains is enabled via a new service called [*OP Supervisor*](/stack/interop/op-supervisor). 
+Every node operator is expected to run this service in addition to the [rollup node](/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
 
 ```mermaid
 
-graph TB
-  supervisor[OP Supervisor]
-  subgraph mainnet[OP Mainnet]
-    node1[OP Node]<-->geth1[Execution Engine]
+graph LR
+
+  classDef chain fill:#FFE
+  classDef transparent fill:none, stroke:none
+  
+  subgraph chain1[OP Stack chain #1]
+    node1[OP Node]
+    super1[OP-Supervisor]
+    geth1[Execution Engine]
+    node1<-->super1<-->geth1<-->node1
   end
-  subgraph base[Base]
-    node2[OP Node]<-->geth2[Execution Engine]
+  subgraph X[ ]
+    chain2[OP Stack chain #2]
+    chain3[OP Stack chain #3]
+    l1node[L1 Consensus Layer]
   end
-  subgraph l1[Ethereum L1]
-    node3[Consensus Layer]<-->geth3[Execution Layer]
-  end
-  supervisor<-->mainnet
-  supervisor<-->base  
-  supervisor<-->l1
+
+  chain2-->|log events|super1
+  chain3-->|log events|super1
+  l1node-->|block status|super1
+
+  class chain1,chain2,chain3 chain
+  class X transparent
 ```
 
-### How messages get from one chain to the other
+OP-Supervisor holds a database of all the log events of all the chains in the interoperability cluster.
+Every event can potentially initiate a cross domain message, and it is the job of OP-Supervisor to validate that the log event really happened on the source chain.
+Additionally, OP-Supervisor reads information from L1's consensus layer to determine the transaction safety of L2 blocks.
+
+## How messages get from one chain to the other
+
+To understand *why* we need this additional service, it is useful to know how interop messages get from one blockchain to another.
 
 ```mermaid
 
 sequenceDiagram
     participant app as Application
-    participant src as Soucre Chain
-    participant op-sup as OP Supervisor
-    participant dst as Destination Chain
+    participant src as Source Chain
+    box rgba(0,0,0,0.1) Destination Chain
+      participant dst-sup as OP-Supervisor
+      participant dst-geth as Execution Engine
+    end
     app->>src: Transaction
-    src->>op-sup: Log Event
-    note over src,op-sup: Log Event = Initializing Message
-    app->>dst: Transaction
-    dst->>dst: Call to CrossL2Inbox to execute or verify a message.
-    dst->>op-sup: Did you receive this initiating message?
-    op-sup->>dst: Yes
-    note left of dst: Call is successful
-    dst->>dst: CrossL2Inbox emits ExecutingMessage.
-    note over dst: Executing Message
+    src->>dst-sup: Log Event
+    note over src,dst-sup: Log Event = Initializing Message
+    app->>dst-geth: Transaction
+    dst-geth->>dst-geth: Call to CrossL2Inbox to execute or verify a message.
+    dst-geth->>dst-sup: Did you receive this initiating message?
+    dst-sup->>dst-geth: Yes
+    note left of dst-geth: Call is successful
+    dst-geth->>dst-geth: CrossL2Inbox emits ExecutingMessage.
+    note over dst-geth: Executing Message
 ```
 
-### Safety levels
+Cross domain messages require two transactions.
+The first transaction creates an *initiating message* on the source chain.
+The second transaction creates an *executing message* on the destination chain.
+This executing message could result in a contract function being executed on the destination chain.
 
-- *Unsafe* - not yet written to L1, obtained through gossip channels, ultimately based on trust in a sequencer.
-- *Cross unsafe* - verified that all executing messages have legitimate initiating messages, but otherwise still unsafe.
-  Treated as unsafe for most purposes.
-- *Safe* - the block and all the blocks on which it depends (those with initiating mesages to which it has executing messages) have been written to L1.
-- *Finalized* - the block and all the blocks on which it depends have been on L1 for long enough to make a reorg impossible.
+The initiating message is simply a log event.
+Any log event on any chain that inteoperates with the destination can initiate a cross domain message.
 
+The transaction that receives the message on the destination chain calls a contract called [`CrossL2Inbox`](https://specs.optimism.io/interop/predeploys.html#crossl2inbox).
+This call can be at the top level, directly from the externally owned account, or come through a smart contract.
+The call to `CrossL2Inbox`, also known as the *executing message*, needs to [identify the initiating message uniquely](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L35-L42), using the chain ID of the source chain, the block number, and the index of the log event within that block, as well as a few other fields as a sanity check.
+
+`CrossL2Inbox` can either [validate the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185), or [call a contract if the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185).
+
+[For more information, see the  cross-chain messages anatomy page](./cross-chain-message).
+
+## Block safety levels
 
 ```mermaid
 
@@ -115,69 +140,65 @@ flowchart LR
     B1 --> C0 
 ```
 
-A block should only be written to L1 once the blocks on which it depends are all safe.
+Interop expands the scope of trust for unsafe blocks, blocks that are shared through [the gossip protocol](/builders/chain-operators/architecture#sequencer).
+To trust that an unsafe block is valid and is going to become safe and then finalized, you need to trust not only the sequencer that produces it, but also all the other sequencers that produce other blocks that are still unsafe, but that include initiating messages that are executed in that block.
 
+However, this is only for *unsafe* blocks, and only if the sequencer allows messages from unsafe blocks to be processed.
+A block is only considered promotable to *safe*, and therefore ready to be written to L1, when all the blocks on which it depends are safe.
 
-
-## Secure message passing
-Superchain interop includes both the protocol layer message passing and the Superchain ERC20 token specification.
-
-*   **Message passing protocol:** the initial + finalizing/executing [message](cross-chain-message) that fire events to be consumed by the chains in the [dependency set](https://specs.optimism.io/interop/dependency-set.html)
-*   **SuperchainERC20 token specification**: the [SuperchainERC20](superchain-erc20) turns message passing into asset transfer between chains in the interop set. Learn more about how the SuperchainERC20 token standard enables asset interoperability in the Superchain [here](/stack/interop/assets/superchain-erc20)
-
-This means ETH and ERC-20s can seamlessly and securely move across L2s, and intent-based protocols (i.e., bridges) can build better experiences on top of the message passing protocol.
-
-## Low latency
-Interoperability allows for horizontally scalable blockchains, a key feature of the Superchain. With Superchain interop, latency can be 1-block (~2 seconds) by optimistically accepting cross-chain messages. 
+For example, in the image above, most blocks are safe.
+Block `n` in chain `A` is even finalized, and immune from reorgs.
+However, block `n+105` in chain `A` is unsafe, it (or a block on which it depends) is not written to L1.
+Because the new block depends upon it, it is also unsafe.
 
 ## Interop clusters
-The interop protocol works via a dependency set which is configured on a per-chain basis. The dependency set defines the set of chains that a chain will accept incoming messages from. To prevent tokens from being sent to a chain that doesn't accept incoming messages, the protocol enforces that messages can only be sent to chains within its dependency set.
 
-## Superchain interop cluster
-The Superchain builds on top of the interop protocol and implements a single mesh network with complete dependencies. In this model, each blockchain in the Superchain interop cluster would have direct connections to every other blockchain, creating a fully connected mesh network. Compared to a hub and spoke model, this provides the highest level of interoperability, as any blockchain can transact directly with any other.
+The interop protocol works via a dependency set which is configured on a per-chain basis.
+The dependency set defines the set of chains that can send and receive messages with a specific chain.
+
+```mermaid
+
+flowchart LR
+    A[Chain A] <--> B[Chain B]
+    A[Chain A] <--> C[Chain C]
+    A[Chain A] <--> D[Chain D]
+    A[Chain A] <--> E[Chain E]
+    B <--> C
+    D <--> E
+
+```
+
+For example, in the illustration above, the dependency set of chain B is chains A and C.
+
+### Superchain interop cluster
+
+The Superchain builds on top of the interop protocol and implements a single mesh network with complete dependencies. 
+In this model, each blockchain in the Superchain interop cluster would have direct connections to every other blockchain, creating a fully connected mesh network. 
+This model provides the highest level of interoperability, as any blockchain can transact directly with any other.
+
+```mermaid
+
+flowchart LR
+    A[Chain A] <--> B[Chain B] <--> C[Chain C] <--> D[Chain D] <--> E[Chain E] <--> A
+    A <--> C <--> E <--> B <--> D <--> A
+```
+
 
 Each blockchain in the Superchain interop cluster shares the same security model to mitigate the weakest-link scenario. As outlined in the [Standard Rollup Charter](https://gov.optimism.io/t/season-6-standard-rollup-charter-ratification/8135#p-36758-governing-policies-11), these chains share the same L1 `ProxyAdmin` Owner. Any changes to the Superchain interop cluster must follow the standard Protocol Upgrade vote procedure—the established governance process for Superchain modifications.
 
 
-## New predeploys
+{/* 
+## Interop assets
 
-The following predeploys have been added to enable interoperability. Predeployed smart contracts exist at predetermined addresses in the genesis state. They are similar to precompiles but instead run directly in the EVM instead of running native code outside the EVM.
+Superchain interop includes both the protocol layer message passing and the Superchain ERC20 token specification.
 
-### CrossL2Inbox
+*   **Message passing protocol:** the initial + finalizing/executing [message](cross-chain-message) that fire events to be consumed by the chains in the [dependency set](https://specs.optimism.io/interop/dependency-set.html)
+*   ****: the [SuperchainERC20](superchain-erc20) turns message passing into asset transfer between chains in the interop set. Learn more about how the SuperchainERC20 token standard enables asset interoperability in the Superchain [here](/stack/interop/assets/superchain-erc20)
 
-The `CrossL2Inbox` is the system predeploy for cross chain messaging. Anyone can trigger the execution or validation of cross chain messages, on behalf of any user.
-
-*   **Address:** `0x4200000000000000000000000000000000000022`
-*   **Specs:** [CrossL2Inbox](https://specs.optimism.io/interop/predeploys.html#crossl2inbox)
-
-### L2ToL2CrossDomainMessenger
-
-The `L2ToL2CrossDomainMessenger` is a higher level abstraction on top of the `CrossL2Inbox` that provides general message passing, utilized for secure transfers ERC20 tokens between L2 chains. Messages sent through the `L2ToL2CrossDomainMessenger` on the source chain receive both replay protection and domain binding, ie the executing transaction can only be valid on a single chain.
-
-*   **Address:** `0x4200000000000000000000000000000000000023`
-*   **Specs:** [L2ToL2CrossDomainMessenger](https://specs.optimism.io/interop/predeploys.html#l2tol2crossdomainmessenger)
-
-### OptimismSuperchainERC20Factory
-
-The `OptimismSuperchainERC20Factory` creates ERC20 contracts that implement the SuperchainERC20 standard, grants mint-burn rights to the `L2StandardBridge` (`OptimismSuperchainERC20`), and includes a remoteToken variable. These ERC20s are called `OptimismSuperchainERC20` and can be converted back and forth with `OptimismMintableERC20` tokens. The goal of the `OptimismSuperchainERC20` is to extend functionalities of the `OptimismMintableERC20` so that they are interop compatible.
-
-*   **Address:** `0x4200000000000000000000000000000000000026`
-*   **Specs:** [OptimismSuperchainERC20Factory](https://specs.optimism.io/interop/predeploys.html#optimismsuperchainerc20factory)
+This means ETH and ERC-20s can seamlessly and securely move across L2s, and intent-based protocols (i.e., bridges) can build better experiences on top of the message passing protocol.
+*/}
 
 
-### BeaconContract
-
-The `BeaconContract` predeploy gets called by the `OptimismSuperchainERC20` BeaconProxies deployed by the SuperchainERC20Factory. The Beacon Contract implements the interface defined in [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967).
-
-*   **Address:** `0x4200000000000000000000000000000000000027`
-*   **Specs:** [BeaconContract](https://specs.optimism.io/interop/predeploys.html#beaconcontract)
-
-### SuperchainERC20Bridge
-
-The `SuperchainERC20Bridge` is an abstraction on top of the `L2toL2CrossDomainMessenger` that facilitates token bridging using interop. It has mint and burn rights over `SuperchainERC20` tokens, as described in the [token bridging spec](https://specs.optimism.io/interop/token-bridging.html).
-
-*   **Address:** `0x4200000000000000000000000000000000000028`
-*   **Specs:** [SuperchainERC20Bridge](https://specs.optimism.io/interop/predeploys.html#superchainerc20bridge)
 ## Considerations
 Chain operators will need to run additional infrastructure to be part of the interoperable set. 
 *   The Superchain-backend service, [`op-supervisor`](op-supervisor), will be a requirement for running an OP Stack chain that has interop enabled. 
