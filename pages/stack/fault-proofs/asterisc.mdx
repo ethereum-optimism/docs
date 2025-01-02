@@ -1,67 +1,38 @@
 ---
-title: Asterisc
+title: Fault proof VM - Asterisc
 lang: en-US
 description: Learn about Asterisc
 ---
 
 # Asterisc
 
-[Asterisc](https://github.com/protolambda/asterisc/tree/master) is an alternative fault-proof VM for the OP Stack, crafted to validate RISC-V program execution via an interactive fraud-proof mechanism. Asterisc delivers a minimalist yet powerful solution for optimistic rollup fraud-proofing through Go. Leveraging the RISC-V architecture, it offers:
+Asterisc is an alternative implementation of the [fault-proof VM](/stack/fault-proofs/fp-components#fault-proof-virtual-machine). When combined with the a [fault proof program](/stack/fault-proofs/fp-components#fault-proof-program) like [Kona](https://github.com/anton-rs/kona), Asterisc is equivalent to Cannon + OP-Program. Asterisc uses a RISC-V architecture instead of MIPS, and Kona is written in Rust instead of Go.  
 
-*   Support for 64-bit operations
-*   Concurrent yet deterministic threading
-*   Compatibility with RISC-V's expanding ecosystem
+Read more about fault-proofs in our [Fault-proof explainer](/stack/fault-proofs/explainer) and [Cannon documentation](/stack/fault-proofs/cannon#overview-of-offchain-cannon-components)
 
-Read more about fault-proofs in our [Fault-proof explainer](/stack/fault-proofs/explainer)
+## Benefits over Cannon
+
+[Cannon](https://github.com/ethereum-optimism/cannon/) offers similar functionality but has key differences:
+
+*   Cannon operates on a 32-bit MIPS architecture, whereas Asterisc uses RISC-V.
+*   Asterisc supports 64-bit operations and deterministic threading, making it more future-ready.
 
 ## How it works
 
-Asterisc enables parties to reach consensus on shared execution trace states. In cases of dispute, it identifies the diverging execution step. Commitments are generated for memory, registers, CSR, and VM states across the execution trace, with disputed steps emulated within the EVM to resolve inconsistencies.
-
-Ready to dive in? Keep reading or head over to the [Asterisc repo](https://github.com/protolambda/asterisc/tree/master).
+Asterisc, when combined with fault proof program like Kona, enables parties to reach consensus on shared execution trace states. In cases of dispute, it identifies the diverging execution step. Commitments are generated for memory, registers, CSR, and VM states across the execution trace, with disputed steps emulated within the EVM to resolve inconsistencies.
 
 ## Getting started
 
-1.  Read through the [additional repo docs](https://github.com/protolambda/asterisc/tree/master/docs).
+Ready to dive in? Keep reading for a quick overview, or head over to the [Asterisc repo](https://github.com/ethereum-optimism/asterisc) for a complete walkthrough.
+
+1.  Read through the [additional repo docs](https://github.com/ethereum-optimism/asterisc/docs).
 2.  Use Foundry to compile the associated smart contracts.
-3.  Compile test binaries using the [`Makefile`](https://github.com/protolambda/asterisc/blob/master/tests/go-tests/Makefile).
+3.  Compile test binaries using the [`Makefile`](https://github.com/ethereum-optimism/asteriscblob/master/tests/go-tests/Makefile).
 4.  Execute `rvgo` tests to validate both on-chain and off-chain operations through RISC-V unit tests.
-
-## Key components
-
-*   **`rvgo`:** A Go-based RISC-V emulator with two operational modes:
-    *   **`Fast Mode`:** Executes one instruction per step on the VM state.
-    *   **`Slow Mode`:** Emulates one instruction per step using a VM state oracle.
-*   **`rvsol`:** A Solidity/Yul implementation of the slow-mode step for EVM compatibility.
-
-### Yul in Solidity
-
-Yul is chosen for its simplicity and precision, offering direct mirroring with Go code while retaining critical features like underflow/overflow behavior and untyped operations.
-
-[See the repo](https://github.com/protolambda/asterisc/blob/master/README.md#why-use-yul-in-solidity) for a deeper dive on Yul and fast/slow modes.
-
-## Supported RISC-V subsets
-
-Here's a few key subsets. For the complete list, see the [repo](https://github.com/protolambda/asterisc?tab=readme-ov-file#risc-v-subset-support).
-
-*   `RV32I`: Base 32-bit instruction set
-*   `RV64I`: 64-bit instruction set
-*   `RV32M` and `RV64M`: Multiplication
-*   `RV32A` and `RV64A`: Atomics
-*   Compact instructions for Rust: Work in progress
-
-Unsupported operations are implemented as no-ops, ensuring compatibility with the Go runtime.
 
 ## FAQ
 
 The following section highlights specific advantages that Asterisc provides over other fault-proof systems.
-
-### Benefits over Cannon
-
-[Cannon](https://github.com/ethereum-optimism/cannon/), originally developed by [`geohot`](https://github.com/geohot/) and now maintained by Optimism, offers similar functionality but has key differences:
-
-*   Cannon operates on a 32-bit MIPS architecture, whereas Asterisc uses RISC-V.
-*   Asterisc supports 64-bit operations and deterministic threading, making it more future-ready.
 
 ### Benefits over Cartesi
 
