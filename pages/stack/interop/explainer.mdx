@@ -144,7 +144,10 @@ Interop expands the scope of trust for unsafe blocks, blocks that are shared thr
 To trust that an unsafe block is valid and is going to become safe and then finalized, you need to trust not only the sequencer that produces it, but also all the other sequencers that produce other blocks that are still unsafe, but that include initiating messages that are executed in that block.
 
 However, this is only for *unsafe* blocks, and only if the sequencer allows messages from unsafe blocks to be processed.
-A block is only considered promotable to *safe*, and therefore ready to be written to L1, when all the blocks on which it depends are safe.
+
+In interop, the traditional safe level of is divided into two types of safety.
+A block *local safe* once it is written to L1.
+But it is only *cross safe* when it and all of the blocks on which it depends (directly or indirectly).
 
 For example, in the image above, most blocks are safe.
 Block `n` in chain `A` is even finalized, and immune from reorgs.
@@ -216,32 +219,11 @@ For additional considerations, join the [Interop discussion](https://github.com/
 
 ## FAQs
 
-### What is the latency/security tradeoff?
-If a sequencer does not want to trust another sequencer at all, they can choose to only accept executing messages where the initiating message has been finalized with L1 levels of security. This demonstrates the difference in latency vs speed. The L2 data must be submitted to L1 and then the L1 block containing the transaction with the L2 data must be finalized. It takes about 15 minutes for an L1 block to finalize, and higher throughput OP Stack chains like Base and OP Mainnet submit a batch about every 5 minutes. This means that it could take about 20 minutes for an L2 transaction to be considered final and be able to be trustlessly consumed by another chain. At lower latencies, the sequencer accepting the executing message takes on some amount of equivocation risk. It could be possible to build a bonding system to add economic security to prevent equivocation, but that is not in the scope of the first release.
-
-See this [dune dashboard](https://dune.com/oplabspbc/op-stack-chains-l1-activity#submission-frequency) to see how often OP Stack chains submit batches.
-
-<br />
-
-<Image src="/img/op-stack/protocol/safe-unsafe.png" alt="Safe and Unsafe Security Diagram" width={700} height={500} />
-
-### What is stopping a sequencer from censoring a cross-chain message?
-There is nothing stopping a sequencer from censoring a transaction when it is sent directly to the sequencer. This does not mean the network has no censorship resistance, users can always send a deposit transaction for censorship resistance as strong as L1 guarantees. The tradeoff here is the latency, instead of being confirmed in ~2 seconds, the transaction can be confirmed at the rate of L1 block production. It may be possible to adopt something like [EIP-7547](https://eips.ethereum.org/EIPS/eip-7547) in the future to enable low latency censorship resistance.
-
-### What is the weakest link scenario?
-Without shared security, there is a risk that interacting chains could enter a conflicting state due to cross-chain interactions. If a weaker chain in the network is attacked or experiences a reorganization, it could change its state independently. This would leave the entire interop cluster in an inconsistent state, as the security of interactions across chains is only as strong as the weakest chain.
-
-### Are callback style transactions possible?
-If two blocks are being built at the same time with shared knowledge of their contents, it is possible to build blocks where a transaction calls to another chain, does compute and then a transaction calls back with the results. This requires no protocol level changes, it just requires more sophisticated block builder infrastructure.
-
-### What is stopping a shared sequencer from including just the executing message and not the initiating message?
-The protocol enforces the fact that all executing messages are valid. It does this by reorganizing out executing messages that have invalid initiating messages. Running software that does not enforce this would be non-standard behavior and would leave yourself at risk of accepting an invalid executing message and therefore running on a forked chain.
-
-### What is the trust/verification model? Do sequencers that opt into this interop system have to trust each other fully?
-Sequencers only have to trust each other, if they are accepting executing messages where the initiating message is unsafe. This is because the sequencer's ability to equivocate on unsafe data, i.e., batch submit something different from what they gossip over the p2p network. Once data is submitted to L1, it is considered final relative to the L2 and therefore there is no longer an equivocation risk.
-
 ### Is interop different between chains with non-fungible blockspace?
 Chains that have non-fungible blockspace are chains that have different features - it could be that they use Plasma for data availability, a custom gas paying token or have a large execution gas limit. As long as the chain can be fault proven, it can work with Superchain interoperability. At the application layer, it is important for chains to have legibility into the type of chain that the message originated from. This ensures that applications do not accept messages from chains they consider not secure enough. See this [discussion](https://github.com/ethereum-optimism/specs/issues/121) for additional thoughts.
 
 When it comes to chains that have different gas limits that are interoperable, it creates a set of transactions that can execute on one chain but not the other. This happens when the transaction consumes more than the gas limit of the smaller chain but less than of the bigger chain. At 2024 usages levels, these sorts of transactions are very rare. In the future, it may be the case that these transactions become more common, it will be up to the chain operators to ensure quality of service for their users.
+
+### Are callback style transactions possible?
+If two blocks are being built at the same time with shared knowledge of their contents, it is possible to build blocks where a transaction calls to another chain, does compute and then a transaction calls back with the results. This requires no protocol level changes, it just requires more sophisticated block builder infrastructure.
 
