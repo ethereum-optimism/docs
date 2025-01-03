@@ -1,0 +1,47 @@
+---
+title: Fault proof VM - Asterisc
+lang: en-US
+description: Learn about Asterisc
+---
+
+# Asterisc
+
+Asterisc is an alternative implementation of the [fault-proof VM](/stack/fault-proofs/fp-components#fault-proof-virtual-machine). When combined with the a [fault proof program](/stack/fault-proofs/fp-components#fault-proof-program) like [Kona](https://github.com/anton-rs/kona), Asterisc is equivalent to Cannon + OP-Program. Asterisc uses a RISC-V architecture instead of MIPS, and Kona is written in Rust instead of Go.  
+
+Read more about fault-proofs in our [Fault-proof explainer](/stack/fault-proofs/explainer) and [Cannon documentation](/stack/fault-proofs/cannon#overview-of-offchain-cannon-components)
+
+## Benefits over Cannon
+
+[Cannon](https://github.com/ethereum-optimism/cannon/) offers similar functionality but has key differences:
+
+*   Cannon operates on a 32-bit MIPS architecture, whereas Asterisc uses RISC-V.
+*   Asterisc supports 64-bit operations and deterministic threading, making it more future-ready.
+
+## How it works
+
+Asterisc, when combined with fault proof program like Kona, enables parties to reach consensus on shared execution trace states. In cases of dispute, it identifies the diverging execution step. Commitments are generated for memory, registers, CSR, and VM states across the execution trace, with disputed steps emulated within the EVM to resolve inconsistencies.
+
+## Getting started
+
+Ready to dive in? Keep reading for a quick overview, or head over to the [Asterisc repo](https://github.com/ethereum-optimism/asterisc) for a complete walkthrough.
+
+1.  Read through the [additional repo docs](https://github.com/ethereum-optimism/asterisc/docs).
+2.  Use Foundry to compile the associated smart contracts.
+3.  Compile test binaries using the [`Makefile`](https://github.com/ethereum-optimism/asteriscblob/master/tests/go-tests/Makefile).
+4.  Execute `rvgo` tests to validate both on-chain and off-chain operations through RISC-V unit tests.
+
+## FAQ
+
+The following section highlights specific advantages that Asterisc provides over other fault-proof systems.
+
+### Benefits over Cartesi
+
+[Cartesi](https://github.com/cartesi/) provides RISC-V fraud-proofing for a full machine, including numerous additional features. However, this added complexity can introduce risks. Asterisc focuses on simplicity by running single-process executions with minimal system calls.
+
+### Benefits over WebAssembly
+
+Arbitrum's WebAssembly-based fraud-proofing leverages a business-source license and transformation to WAVM, limiting its general usability. In contrast, Asterisc is open-source under the MIT license, offering broader applicability.
+
+## Contributing
+
+Asterisc is designed to run Go programs for fraud-proofing optimistic rollups. Contributions that align with its goals of simplicity, minimalism, and compatibility are highly encouraged.
