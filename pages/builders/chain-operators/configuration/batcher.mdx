@@ -673,3 +673,32 @@ Print the version. The default value is false.
   <Tabs.Tab>`--version=<value>`</Tabs.Tab>
   <Tabs.Tab>`--version=false`</Tabs.Tab>
 </Tabs>
+
+## Batcher Policy
+
+The batcher policy defines high-level constraints and responsibilities regarding how L2 data is posted to L1. Below are the standard guidelines for configuring the batcher within the OP Stack.
+
+| Parameter | Description | Administrator | Requirement | Notes |
+|-----------|------------|---------------|-------------|--------|
+| Data Availability Type | Specifies whether the batcher uses **blobs** or **calldata** to post transaction data to L1. | Batch submitter address | Ethereum (Blobs or Calldata) | - Alternative data availability (Alt-DA) is not yet supported in the standard configuration.<br/>- The sequencer can switch at will between blob transactions and calldata, with no restrictions, because both are fully secured by L1. |
+| Batch Submission Frequency | Determines how frequently the batcher submits aggregated transaction data to L1 (via the batcher transaction). | Batch submitter address | Must target **1,800 L1 blocks** (6 hours on Ethereum, assuming 12s L1 block time) or lower | - Batches must be posted before the sequencing window closes (commonly 12 hours by default).<br/>- Leave a buffer for L1 network congestion and data size to ensure that each batch is fully committed in a timely manner. |
+| Output Frequency | Defines how frequently L2 output roots are submitted to L1 (via the output oracle). | L1 Proxy Admin | **43,200 L2 blocks** (24 hours at 2s block times) or lower | - Once fault proofs are implemented, this value may become deprecated.<br/>- It cannot be set to 0 (there must be some cadence for outputs). |
+
+### Additional Guidance
+
+*   **Data Availability Types**:  
+    *   **Calldata** is generally simpler but can be more expensive on mainnet Ethereum, depending on gas prices.  
+    *   **Blobs** are typically lower cost when your chain has enough transaction volume to fill large chunks of data.  
+    *   The `op-batcher` can toggle between these approaches by setting the `--data-availability-type=<blobs|calldata>` flag or with the `OP_BATCHER_DATA_AVAILABILITY_TYPE` env variable.
+
+*   **Batch Submission Frequency** (`OP_BATCHER_MAX_CHANNEL_DURATION` and related flags):  
+    *   Standard OP Chains frequently target a maximum channel duration between 1–6 hours.  
+    *   Your chain should never exceed your L2's sequencing window (commonly 12 hours).  
+    *   If targeting a longer submission window (e.g., 5 or 6 hours), be aware that the [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall up to that duration.
+
+*   **Output Frequency**:  
+    *   Used to post output roots to L1 for verification.  
+    *   The recommended maximum is 24 hours (43,200 blocks at 2s each), though many chains choose smaller intervals.  
+    *   Will eventually be replaced or significantly changed by the introduction of fault proofs.
+
+Include these high-level "policy" requirements when you set up or modify your `op-batcher` configuration. For more details, see the [Batcher Configuration](#global-options) reference, which explains each CLI flag and environment variable in depth.
