@@ -6,18 +6,20 @@ labels: 'community-request,documentation'
 
 ---
 
-<!-- please fill out the following the best to your ability and properly label the issue -->
+<!-- please fill out the description and acceptance criteria to the best to your ability. While the other sections are optional, it makes resolving the issue much easier. -->
 
-## Brief Description of the Docs Request
-Write a clear and concise description of the docs request. For example, is the request related to an existing page or are you suggesting a brand-new docs page?
+## Description 
+<!-- Write a clear and concise description of the docs request. For example, is the request related to an existing page or are you suggesting a brand-new docs page? -->
 
-## Description of the Documentation You'd Like
-Explain what the final documentation page or pages should look like. Do you need a guide, tutorial, FAQ, troubleshooting page or more than one page? Do you have any source/content information to provide for the requested page(s)?
+## Acceptance criteria
+<!-- Clearly list out the definition of done. -->
 
-## Links to Related Pages
-Provide links to any related content pages for this documentation request. This will help us to determine where the page(s) from your docs request should live  
-(e.g. a new node operators resource will likely link to other pages in the node operators section of the docs).
+## User stories
+<!-- User stories that illustrate the benefits of this issue. For example, this documentation improvement will allow user X to be able to Y. -->
 
-## Additional Context
-Provide any additional context about this documentation request. What problems did you run into that caused you to make this request? 
-Which existing documentation pages did you already try as a solution to your problem? Why do you think the requested page(s) will be beneficial to developers in the Optimism Collective?
+
+## Resources and support
+<!-- Provide additional documentation, context, and subject matter experts to help us complete this issue. -->
+
+## Action items
+<!-- Clear steps to take to complete this issue -->
