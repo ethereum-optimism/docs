@@ -93,29 +93,24 @@ Even if a sequencer accepts unsafe initiating messages, the blocks it constructs
 </Callout>
 
 
-{/* 
-## What is stopping a sequencer from censoring a cross-chain message?
-There is nothing stopping a sequencer from censoring a transaction when it is sent directly to the sequencer. This does not mean the network has no censorship resistance, users can always send a deposit transaction for censorship resistance as strong as L1 guarantees. The tradeoff here is the latency, instead of being confirmed in ~2 seconds, the transaction can be confirmed at the rate of L1 block production. It may be possible to adopt something like [EIP-7547](https://eips.ethereum.org/EIPS/eip-7547) in the future to enable low latency censorship resistance.
-
-*/}
-
 ## The trust model
 
 Barring L1 reorgs, there are two ways in which interop can fail.
 
-- *equivocation*
-- *reporting false information*
-
-## What is the weakest link scenario?
-
-The information 
-
+- *Equivocation*: A sequencer publishes a block using the gossip protocol that is different from the one that eventually gets written to L1.
+  Equivocation is solved by the distinction between blocks that are cross safe (written to L1, along with all of the ones on which the block depends) and those that aren't.
+- *Faulty information*: The sequencer operator can run a verifier node for every chain in the dependency set, in which case it can deduce the initiating messages from the safe transactions of every chain.
+  To save on resources, the operator can choose to query other nodes of the source blockchain.
+  In that case, the cross-safe blocks depend on the accuracy of the information reported by those nodes. 
 
 
-Without shared security, there is a risk that interacting chains could enter a conflicting state due to cross-chain interactions. If a weaker chain in the network is attacked or experiences a reorganization, it could change its state independently. This would leave the entire interop cluster in an inconsistent state, as the security of interactions across chains is only as strong as the weakest chain.
+{/* 
+## What is stopping a sequencer from censoring a cross-chain message?
+There is nothing stopping a sequencer from censoring a transaction when it is sent directly to the sequencer. This does not mean the network has no censorship resistance, users can always send a deposit transaction for censorship resistance as strong as L1 guarantees. The tradeoff here is the latency, instead of being confirmed in ~2 seconds, the transaction can be confirmed at the rate of L1 block production. It may be possible to adopt something like [EIP-7547](https://eips.ethereum.org/EIPS/eip-7547) in the future to enable low latency censorship resistance.
+
+
 
 ## What is stopping a shared sequencer from including just the executing message and not the initiating message?
 The protocol enforces the fact that all executing messages are valid. It does this by reorganizing out executing messages that have invalid initiating messages. Running software that does not enforce this would be non-standard behavior and would leave yourself at risk of accepting an invalid executing message and therefore running on a forked chain.
 
-## What is the trust/verification model? Do sequencers that opt into this interop system have to trust each other fully?
-Sequencers only have to trust each other, if they are accepting executing messages where the initiating message is unsafe. This is because the sequencer's ability to equivocate on unsafe data, i.e., batch submit something different from what they gossip over the p2p network. Once data is submitted to L1, it is considered final relative to the L2 and therefore there is no longer an equivocation risk.
+*/}
