@@ -1,0 +1,31 @@
+---
+title: Connectivity considerations
+lang: en-US
+description: What types of connectivity can we support?
+---
+
+import { Callout } from 'nextra/components'
+import Image from 'next/image'
+
+import { InteropCallout } from '@/components/WipCallout'
+
+<InteropCallout />
+
+# Connectivity considerations
+
+## Interop between chains with non-fungible blockspace
+
+Chains that have *non-fungible blockspace* are chains that have different features - for example, chains that use Plasma for data availability, a custom gas paying token, or have a large execution gas limit. 
+As long as the chain can be fault proven, it can work with Superchain interoperability. 
+However, at the application layer, it is important for chains to have legibility into the type of chain that the message originated from. 
+This ensures that applications do not accept messages from chains they consider not secure enough. 
+See [this discussion](https://github.com/ethereum-optimism/specs/issues/121) for additional thoughts.
+
+When it comes to chains that have different gas limits that are interoperable, it creates a set of transactions that can execute on one chain but not the other. 
+This happens when the transaction consumes more than the gas limit of the smaller chain but less than of the bigger chain. At 2024 usages levels, these sorts of transactions are very rare. 
+In the future, it may be the case that these transactions become more common, it will be up to the chain operators to ensure quality of service for their users.
+
+## Are callback style transactions possible?
+
+If two blocks are being built at the same time with shared knowledge of their contents, it is possible to build blocks where a transaction calls to another chain, does compute and then a transaction calls back with the results. 
+This requires no protocol level changes, it just requires more sophisticated block builder infrastructure.

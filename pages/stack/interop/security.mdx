@@ -13,7 +13,47 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Security considerations
 
+## The trust model
+
+Barring L1 reorgs, there are two ways in which interop can fail.
+
+- *Equivocation*. A sequencer publishes a block using the gossip protocol that is different from the one that eventually gets written to L1.
+  Equivocation is solved by the distinction between blocks that are cross safe (written to L1, along with all of the ones on which the block depends) and those that aren't.
+- *Faulty information*. The sequencer operator can run a verifier node for every chain in the dependency set, in which case it can deduce the initiating messages from the safe transactions of every chain.
+  To save on resources, the sequencer can choose to query existing nodes of the source blockchain.
+  In that case, if the information provided to sequencer is incorrect, of course the blocks posted by the sequencer will be also incorrect.
+
+  Note that in this case the blocks posted by the sequencer will be invalid, and other verifiers will be able to see they are invalid and replace them with *deposit only* blocks.
+
+    <details>
+
+    <summary>What are deposit only blocks?</summary>
+
+    Normally the blocks that make it to the canonical blockchain are those posted to L1 by the sequencer.
+    However, when those blocks are missing or invalid (for example because they rely on an initiating message that is missing), they are replaced by *deposit only blocks*, blocks whose content can be calculated from L1 without relying on the sequencer.
+
+    The way this works is that there are two types of user transactions in an OP Stack block:
+
+    - Sequencer transactions, which go through the sequencer.
+    These transactions are extremely cheap, but in theory a sequencer could censor them.
+    - Deposit transactions, which users submit through L1.
+    These transactions have the cost of an L1 transaction, which is a lot higher, but they cannot be censored by the sequencer.
+
+    A deposit only block only contains the deposit transactions and some internal transactions, not the sequencer transactions.
+
+    For more information about this process, [see the technical specifications](https://specs.optimism.io/protocol/derivation.html#deriving-the-transaction-list).
+
+    </details>
+  
+
 ## The latency/security tradeoff
+
+The initiating message comes from a block on a different blockchain.
+If we accept initiating messages as soon as the block is available through the gossip protocol, we have minimal latency but at a security cost (because the source sequencer can send incorrect information through gossip).
+Alternatively, we can wait until the source sequencer posts the block to L1.
+In that case we can be more certain that the block is correct, but at the cost of higher latency.
+
+There are three different possibilities, at different levels of latency and security.
 
 ### Unsafe initiating messages
 
@@ -21,8 +61,7 @@ L2 blocks start as unsafe, meaning that there is no L1 evidence for them, and th
 Sending out incorrect information, for example that a certain transaction is included in a block when it isn't, is called *equivocation*. 
 A sequencer that builds blocks with interop can choose to accept messages from unsafe blocks (received through the gossip protocol), for minimal latency.
 
-However, because of equivocation risk, a block that is written to L1 (*local safe*) can only be considered truly safe (the techincal term is *cross safe*), once all the source blocks of the messages are written to L1 as well.
-The cost of this approach is that the state calculated by the sequencer may not be correct, and it will have to be recalculated if the other sequencer equivocates.
+However, because of equivocation risk, a block that is written to L1 (*local safe*) can only be considered truly safe (the techincal term is *cross safe*), for itself and the previous blocks in its blockchain are also written to L1.
 
 ```mermaid
 
@@ -41,15 +80,16 @@ sequenceDiagram
     end
     src->>l1: Write block src_n without txn_0 (so no evt_0)
     l1->>dst: This is the safe block src_n
-    note left of dst: No evt_0, so txn_1 fails. <br /> The state after dst_m is incorrect <br /> So is the state after dst_m+1, dst_m+2... .
-
+    note left of dst: No evt_0, so block dst_m is incorrect <br /> and so is every subsequent block. <br /> All those blocks are replaced with <br /> deposit only blocks.
 ```
 
 ### Safe initiating messages
 
-Alternatively, a sequencer can be configured to only accept executing messages once the initiating message is in a cross safe block (one which is written to L1, and whose own dependencies are all written to L1).
-In this case, the source sequencer cannot equivocate, and the state will only need to be recalculated if there is an [L1 reorg](https://www.alchemy.com/overviews/what-is-a-reorg#what-happens-to-reorgs-after-the-merge). 
-The cost is that it would take longer for a message to pass from one blockchain to the other.
+Alternatively, a sequencer can be configured to only accept executing messages once the initiating message is in a cross safe block.
+A cross safe block is one that is written to L1, and whose dependecies (direct or indirect, including dependencies of previous blocks in the same chain) are all written to L1.
+
+When a block is cross safe, the source sequencer cannot equivocate, and the state will only need to be recalculated if there is an [L1 reorg](https://www.alchemy.com/overviews/what-is-a-reorg#what-happens-to-reorgs-after-the-merge). 
+The cost of this enhanced security that it would take longer for a message to pass from one blockchain to the other.
 Higher throughput OP Stack chains like Base and OP Mainnet submit a batch about every 5 minutes, so on average it takes about 2.5 minutes for an initiating message to become safe.
 
 You can use [this dune dashboard](https://dune.com/oplabspbc/op-stack-chains-l1-activity#submission-frequency) to see how often OP Stack chains submit batches.
@@ -91,17 +131,6 @@ Currently, this adds [about 15 minutes](https://ethereum.org/en/roadmap/single-s
 Even if a sequencer accepts unsafe initiating messages, the blocks it constructs that rely on them cannot be promoted until equivocation is impossible.
 
 </Callout>
-
-
-## The trust model
-
-Barring L1 reorgs, there are two ways in which interop can fail.
-
-- *Equivocation*: A sequencer publishes a block using the gossip protocol that is different from the one that eventually gets written to L1.
-  Equivocation is solved by the distinction between blocks that are cross safe (written to L1, along with all of the ones on which the block depends) and those that aren't.
-- *Faulty information*: The sequencer operator can run a verifier node for every chain in the dependency set, in which case it can deduce the initiating messages from the safe transactions of every chain.
-  To save on resources, the operator can choose to query other nodes of the source blockchain.
-  In that case, the cross-safe blocks depend on the accuracy of the information reported by those nodes. 
 
 
 {/* 
