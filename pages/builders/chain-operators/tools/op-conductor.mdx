@@ -544,14 +544,14 @@ AddServerAsVoter adds a server as a voter to the cluster.
   <Tabs.Tab>
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"conductor_addServerAsVoter","params":[<id>, <raft-consensus-addr>, <version>],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"conductor_addServerAsVoter","params":[<raft-server-id>, <raft-consensus-addr>, <raft-config-version>],"id":1}'  \
         http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 
   <Tabs.Tab>
     ```sh
-    cast rpc conductor_addServerAsVoter --rpc-url http://127.0.0.1:8547 <id> <raft-consensus-addr> <version>
+    cast rpc conductor_addServerAsVoter <raft-server-id> <raft-consensus-addr> <raft-config-version> --rpc-url http://127.0.0.1:8547 
     ```
   </Tabs.Tab>
 </Tabs>
@@ -569,14 +569,14 @@ The non-voter will not participate in the leader election.
   <Tabs.Tab>
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"conductor_addServerAsNonvoter","params":[],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"conductor_addServerAsNonvoter","params":[<raft-server-id>, <raft-consensus-addr>, <raft-config-version>],"id":1}'  \
         http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 
   <Tabs.Tab>
     ```sh
-    cast rpc conductor_addServerAsNonvoter --rpc-url http://127.0.0.1:8547
+    cast rpc conductor_addServerAsNonvoter <raft-server-id> <raft-consensus-addr> <raft-config-version> --rpc-url http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 </Tabs>
@@ -593,14 +593,14 @@ RemoveServer removes a server from the cluster.
   <Tabs.Tab>
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"conductor_removeServer","params":[],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"conductor_removeServer","params":[<raft-server-id>, <raft-config-version>],"id":1}'  \
         http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 
   <Tabs.Tab>
     ```sh
-    cast rpc conductor_removeServer --rpc-url http://127.0.0.1:8547
+    cast rpc conductor_removeServer <raft-server-id> <raft-config-version> --rpc-url http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 </Tabs>
@@ -611,7 +611,7 @@ RemoveServer removes a server from the cluster.
   API related to consensus.
 </Callout>
 
-TransferLeader transfers leadership to another server.
+TransferLeader transfers leadership to another server (resigns).
 
 <Tabs items={['curl', 'cast']}>
   <Tabs.Tab>
@@ -641,14 +641,14 @@ TransferLeaderToServer transfers leadership to a specific server.
   <Tabs.Tab>
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"conductor_transferLeaderToServer","params":[],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"conductor_transferLeaderToServer","params":[<raft-server-id>, <raft-consensus-addr>, <raft-config-version>],"id":1}'  \
         http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 
   <Tabs.Tab>
     ```sh
-    cast rpc conductor_transferLeaderToServer --rpc-url http://127.0.0.1:8547
+    cast rpc conductor_transferLeaderToServer <raft-server-id> <raft-consensus-addr> <raft-config-version> --rpc-url http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 </Tabs>
@@ -704,7 +704,7 @@ Active returns true if the op-conductor is active (not paused or stopped).
 </Callout>
 
 CommitUnsafePayload commits an unsafe payload (latest head) to the consensus
-layer.
+layer. TODO - usage examples that include required params are needed
 
 <Tabs items={['curl', 'cast']}>
   <Tabs.Tab>
