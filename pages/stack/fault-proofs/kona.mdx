@@ -1,0 +1,106 @@
+---
+title: "Fault proof VM - Kona"
+lang: en-US
+sidebar_label: "FPVM: Kona"
+description: "KLearn about Kona and its default operation as part of Optimism's Fault Proof Virtual Machine."
+---
+
+# FPVM: Kona
+
+Kona is an alternative fault-proof program for the OP Stack, providing a Rust-based implementation to complement the Asterisc fault-proof VM. Together, they form an equivalent system to Cannon and op-program but with distinct architectural and implementation differences.
+
+
+## Overview
+
+Kona works as the fault-proof program within the Asterisc fault-proof system. It operates by executing program logic step-by-step and generating commitments for every state transition. These commitments allow disputing parties to identify and resolve divergences in execution traces through interactive fraud proofs.
+
+Key features of Kona include:
+
+*   **Written in Rust:** High performance and memory safety.
+*   **Optimized for Asterisc:** Specifically tailored to work with the Asterisc RISC-V-based fault-proof VM.
+*   **Deterministic Execution:** Ensures consistency in state transitions during disputes.
+
+Kona + Asterisc is analogous to Cannon + op-program, providing an alternative pathway to secure optimistic rollups.
+
+## Relationship to Asterisc
+
+Kona is designed to:
+
+*   Complement Asterisc, which serves as the RISC-V fault-proof VM.
+*   Validate execution traces using the interactive fraud-proof mechanism.
+*   Offer an alternative to the Cannon + op-program system, leveraging Rust and RISC-V for distinct performance characteristics.
+
+For more on Asterisc, see the [Asterisc documentation](./asterisc.mdx).
+
+
+
+## Key Differences
+
+### Architecture
+
+| System              | Fault-Proof VM | Fault-Proof Program | Language | Architecture |
+| ------------------- | -------------- | ------------------- | -------- | ------------ |
+| Asterisc + Kona     | Asterisc       | Kona                | Rust     | RISC-V       |
+| Cannon + op-program | Cannon         | op-program          | Go       | MIPS         |
+
+### Performance
+
+*   Kona benefits from Rust's memory safety and performance optimizations.
+*   Asterisc uses RISC-V, offering a simpler and more adaptable instruction set.
+
+## Getting Started
+
+To set up and use Kona, follow these steps:
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone https://github.com/anton-rs/kona.git
+    cd kona
+    ```
+
+2.  **Install Dependencies:**
+    Ensure you have the Rust toolchain installed. Use `rustup` to set up Rust:
+    ```bash
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    rustup install stable
+    ```
+
+3.  **Compile the Program:**
+    Build the Kona fault-proof program:
+    ```bash
+    cargo build --release
+    ```
+
+4.  **Run Tests:**
+    Execute the test suite to verify your setup:
+    ```bash
+    cargo test
+    ```
+
+5.  **Explore Further Documentation:**
+    Check the [Kona repo docs](https://github.com/anton-rs/kona) for advanced usage and implementation details.
+
+## Benefits of Kona
+
+1.  **Rust-Based Implementation:**
+    *   Provides performance advantages and memory safety.
+
+2.  **Integration with Asterisc:**
+    *   Designed to fully utilize the RISC-V-based VM's capabilities.
+
+3.  **Focused Functionality:**
+    *   Tailored for the OP Stack's fault-proofing needs without additional complexity.
+
+## Limitations
+
+Kona is not a general-purpose program and is specifically designed for use within the Optimism fault-proofing stack. It does not support arbitrary RISC-V programs, focusing solely on its role as the fault-proof program for Asterisc.
+
+Kona is currently in the experimental stage. While it provides a functional alternative, it may lack the maturity and stability of Cannon + op-program. Users are encouraged to contribute to its development and provide feedback.
+
+## Next steps
+
+*   [Kona Repository](https://github.com/anton-rs/kona)
+*   [Kona Book](https://anton-rs.github.io/kona/)
+*   [Asterisc Documentation](./asterisc)
+*   [Optimism Fault-Proofs Explainer](/explainer)
+*   [Cannon Documentation](./cannon)
