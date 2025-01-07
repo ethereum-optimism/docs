@@ -17,7 +17,8 @@ import { InteropCallout } from '@/components/WipCallout'
 
 It is easy for a blockchain to be certain about information it generates itself. 
 Information that comes from other sources is harder to provide in a safe, decentralized, and uncensorable manner (this is called [The Oracle Problem](https://chain.link/education-hub/oracle-problem)).
-The Superchain should appear as a single blockchain to the lay user, which requires quick, seamless message and asset bridging.
+The next major scalability improvement to the OP Stack is to enable a network of chains to feel like a single blockchain.
+This goal requires low-latency, seamless message passing and asset bridging.
 
 *Interoperability* is a set of protocols and services that lets OP Stack blockchains read each others' state.
 Interoperability provides the following benefits:
@@ -61,12 +62,12 @@ graph LR
 ```
 
 OP-Supervisor holds a database of all the log events of all the chains in the interoperability cluster.
-Every event can potentially initiate a cross domain message, and it is the job of OP-Supervisor to validate that the log event really happened on the source chain.
+Every event can potentially initiate a cross-domain message, and it is the job of OP-Supervisor to validate that the log event really happened on the source chain.
 Additionally, OP-Supervisor reads information from L1's consensus layer to determine the transaction safety of L2 blocks.
 
 ## How messages get from one chain to the other
 
-To understand *why* we need this additional service, it is useful to know how interop messages get from one blockchain to another.
+To understand *why* we need this additional service, it is useful to know how interop messages get from one OP Stack chain to another.
 
 ```mermaid
 
@@ -89,13 +90,13 @@ sequenceDiagram
     note over dst-geth: Executing Message
 ```
 
-Cross domain messages require two transactions.
+Cross-domain messages require two transactions.
 The first transaction creates an *initiating message* on the source chain.
 The second transaction creates an *executing message* on the destination chain.
 This executing message could result in a contract function being executed on the destination chain.
 
 The initiating message is simply a log event.
-Any log event on any chain that inteoperates with the destination can initiate a cross domain message.
+Any log event on any chain that inteoperates with the destination can initiate a cross-domain message.
 
 The transaction that receives the message on the destination chain calls a contract called [`CrossL2Inbox`](https://specs.optimism.io/interop/predeploys.html#crossl2inbox).
 This call can be at the top level, directly from the externally owned account, or come through a smart contract.
@@ -140,19 +141,19 @@ flowchart LR
     B1 --> C0 
 ```
 
-Interop expands the scope of trust for unsafe blocks, blocks that are shared through [the gossip protocol](/builders/chain-operators/architecture#sequencer).
+Interop expands the scope of trust for unsafe blocks (blocks that are shared through [the gossip protocol](/builders/chain-operators/architecture#sequencer)).
 To trust that an unsafe block is valid and is going to become safe and then finalized, you need to trust not only the sequencer that produces it, but also all the other sequencers that produce other blocks that are still unsafe, but that include initiating messages that are executed in that block.
 
-However, this is only for *unsafe* blocks, and only if the sequencer allows messages from unsafe blocks to be processed.
+Notably this trust assumption is only for *unsafe* blocks, and *only* if the sequencer allows messages from unsafe blocks to be processed.
 
-In interop, the traditional safe level of is divided into two types of safety.
-A block *local safe* once it is written to L1.
+In interop, [the traditional safe level](https://docs.optimism.io/stack/transactions/transaction-finality#steps-to-finality) of is divided into two types of safety.
+A block is *local safe* once it is written to L1.
 But it is only *cross safe* when in addition to the block itself all of the blocks on which it depends (directly or indirectly) are written to L1, including the dependencies of previous blocks in the same chain.
 
 For example, in the image above, most blocks are safe.
 Block `n` in chain `A` is even finalized, and immune from reorgs.
 However, block `n+105` in chain `A` is unsafe, it (or a block on which it depends) is not written to L1.
-Because the new block depends upon it, it is also unsafe.
+Because the new block depends upon it, it can be either unsafe or local safe, but it cannot be cross safe.
 
 ## Interop clusters
 
@@ -172,6 +173,7 @@ flowchart LR
 ```
 
 For example, in the illustration above, the dependency set of chain B is chains A and C.
+To move an asset from chain E to chain B, it is necessary to move the asset from chain E to chain A, and then from chain A to chain C, because there is no direct dependency between B and E.
 
 ### Superchain interop cluster
 
