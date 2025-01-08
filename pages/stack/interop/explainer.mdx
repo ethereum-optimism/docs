@@ -142,7 +142,32 @@ flowchart LR
 ```
 
 Interop expands the scope of trust for unsafe blocks (blocks that are shared through [the gossip protocol](/builders/chain-operators/architecture#sequencer)).
-To trust that an unsafe block is valid and is going to become safe and then finalized, you need to trust not only the sequencer that produces it, but also all the other sequencers that produce other blocks that are still unsafe, but that include initiating messages that are executed in that block.
+If a sequencer chooses to accept unsafe messages, the sequencer must trust the sequencer that produces the inbound message as well as any referenced unsafe messages produced from sequencers in the transitive dependency set.
+
+<details>
+
+<summary>What is the transitive dependency set?</summary>
+
+The transitive dependency set of a blockchain is all the chains on which it depends, and all the chains that depend on them, and so on. 
+For example, in the illustration above, the dependency set of chain A is just chain B.
+However, the *transitive* dependency set includes chain B, the chains that depend on it (C and D) and the chains that depend on them (E). 
+If there was a chain that depended on E, that chain would be part of the transitive dependency set too.
+
+```mermaid
+
+flowchart LR
+    A[Chain A] <--> B[Chain B]
+    B <--> C[Chain C]
+    B <--> D[Chain D]
+    D <--> E[Chain E]
+    F[Chain F] <--> G[Chain G]
+```
+
+For example, there could be a block in chain D that depends on an initiating message in chain E>
+If the block with that initiating message is still unsafe (not written to L1), then the block in chain D is also usafe, even if it has been written to L1.
+As a result, a block in chain B that depends on the chain D block can also be unsafe, as can a block in chain A that depends on the block in chain B.
+
+</details>
 
 Notably this trust assumption is only for *unsafe* blocks, and *only* if the sequencer allows messages from unsafe blocks to be processed.
 

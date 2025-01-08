@@ -15,10 +15,14 @@ import { InteropCallout } from '@/components/WipCallout'
 
 ## The trust model
 
-Barring L1 reorgs, there are two ways in which interop can fail.
+The vulnerability in interop is what happens when there appears to be an initiating message, and therefore we process the executing message, but then it turns out the initiating message is not there in the cannonical chain.
+Barring L1 reorgs, there are two ways this can happen:
 
 - *Equivocation*. A sequencer publishes a block using the gossip protocol that is different from the one that eventually gets written to L1.
-  Equivocation is solved by the distinction between blocks that are cross safe (written to L1, along with all of the ones on which the block depends) and those that aren't.
+  The problem happens when the gossip protocol block includes a log entry that is used as an initiating message, but the real block (the one written to L1) does not.
+  The way this is handled is that a block that depends on an unsafe block is, itself, unsafe.
+  It does not get treated as safe until all the blocks on which it depends (directly or indirectly) are also written to L1.
+
 - *Faulty information*. The sequencer operator can run a verifier node for every chain in the dependency set, in which case it can deduce the initiating messages from the safe transactions of every chain.
   To save on resources, the sequencer can choose to query existing nodes of the source blockchain.
   In that case, if the information provided to sequencer is incorrect, of course the blocks posted by the sequencer will be also incorrect.
@@ -128,7 +132,7 @@ Currently, this adds [about 15 minutes](https://ethereum.org/en/roadmap/single-s
 
 <Callout>
 
-Even if a sequencer accepts unsafe initiating messages, the blocks it constructs that rely on them cannot be promoted until equivocation is impossible.
+Even if a sequencer accepts unsafe initiating messages, the blocks it constructs that rely on them are considered unsafe until the blocks with those initiating messages are written to L1 and become safe.
 
 </Callout>
 
