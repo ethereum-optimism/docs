@@ -44,8 +44,32 @@ const config: DocsThemeConfig = {
   },
   docsRepositoryBase: "https://github.com/ethereum-optimism/docs/blob/main/",
   footer: {
-    text: "OP Documentation",
+    text: (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          padding: "0 1rem",
+          fontSize: ".7rem",
+          marginTop: "0",
+          width: "100%",
+          boxSizing: "border-box",
+          lineHeight: "1",
+          gap: "1rem",
+          textDecoration: "none",
+        }}
+      >
+        <a href="https://optimism.io/terms">Terms of Service</a>
+        <a href="https://optimism.io/community-agreement">Community Agreement</a>
+        <a href="https://optimism.io/data-privacy-policy">Privacy Policy</a>
+      </div>
+    ),
   },
+  
+  
+  
+
   sidebar: {
     defaultMenuCollapseLevel: 1,
     autoCollapse: true,
