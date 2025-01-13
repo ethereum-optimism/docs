@@ -15,7 +15,7 @@ export default function ScrollDispatcher({
       document.documentElement.scrollHeight;
 
     if (bottom && queryID && objectID) {
-      aa.default("convertedObjectIDsAfterSearch", {
+      aa("convertedObjectIDsAfterSearch", {
         index: "docs",
         eventName: "Converted Search",
         queryID: queryID,
