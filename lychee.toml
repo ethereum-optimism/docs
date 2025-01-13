@@ -9,13 +9,14 @@ no_show_source = true
 #############################  Requests  ############################
 # URL remapping rules.
 remap = [
-    # First handle the resource paths relative to pages directory
-    "file:///(.*?)/img/(.*) file:///./$1/public/img/$2", 
-    "file:///(.*?)/icons/(.*) file:///./$1/public/icons/$2", 
-    "file:///(.*?)/resources/(.*) file:///./$1/public/resources/$2", 
-    "file:///(.*?)/audit-reports/(.*) file:///./$1/public/audit-reports/$2", 
-    # Then handle the internal links for mdx files
-    "file:///([^#.?]+)(#.*)?$ file:///./pages/$1.mdx$2",
+    # Handle URL-encoded anchors (%23) first
+    "file:///([^%]+)%23(.*) file:///./pages/$1.mdx#$2",
+    # Handle regular anchors
+    "file:///([^#]+)#(.*) file:///./pages/$1.mdx#$2",
+    # Handle the resource paths relative to pages directory
+    
+    # Handle regular files without anchors
+    "file:///([^#%]+) file:///./pages/$1.mdx",
     "\\\\& &"
 ]
 
@@ -50,3 +51,7 @@ accept = [
 
 # Use compact format for cleaner output
 format = "compact"
+
+#############################  Anchors  #############################
+# Enable checking for anchors in local files
+check_anchors = true
