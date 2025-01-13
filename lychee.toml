@@ -1,18 +1,19 @@
 #############################  Display  #############################
-
-# Verbose program output
-verbose = "info"
-
+# Use error level to only show failed requests
+verbose = "error"
 # Don't show interactive progress bar while checking links.
 no_progress = true
+# Don't show the source file of links
+no_show_source = true
 
 #############################  Requests  ############################
-
 # URL remapping rules.
 remap = [
-    "file:///(.*?)/pages/img/(.*) file:///$1/public/img/$2",
-    "file:///(.*?)/pages/resources/(.*) file:///$1/public/resources/$2",
-    "file:///([^#.?]+)(#.*)?$ file:///$1.mdx$2",
+    "file:///(.*?)/img/(.*) file:///$1/public/img/$2", 
+    "file:///(.*?)/icons/(.*) file:///$1/public/icons/$2", 
+    "file:///(.*?)/resources/(.*) file:///$1/public/resources/$2", 
+    "file:///(.*?)/audit-reports/(.*) file:///$1/public/audit-reports/$2", 
+    "file:///([^#.?]+)(#.*)?$ file:///$1.mdx$2", 
     "\\\\& &"
 ]
 
@@ -20,13 +21,10 @@ remap = [
 base = "./pages"
 
 #############################  Exclusions  ##########################
-
 # Exclude loopback IP address range and localhost from checking.
 exclude_loopback = true
-
 # Exclude all mail addresses from checking.
 exclude_mail = true
-
 # Exclude RPC URLs from checking.
 exclude = [
     'https://mainnet.optimism.io',
@@ -37,8 +35,16 @@ exclude = [
     'https://web.archive.org',
     'https://mainnet.base.org',
     'https://sepolia.base.org',
-    'https://optimism.easscan.org'
+    'https://optimism.easscan.org',
+    '\.(pdf|zip|png|jpg|jpeg|gif|svg)$'
 ]
 
-# Accept these status codes
-accept = ["100..=103", "200..=299", "403..=403", "502..=502"]
+# Accept all status codes except 404
+accept = [
+    "100..=399",
+    "401..=403",
+    "405..=999"
+]
+
+# Use compact format for cleaner output
+format = "compact"
