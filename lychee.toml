@@ -9,16 +9,18 @@ no_show_source = true
 #############################  Requests  ############################
 # URL remapping rules.
 remap = [
-    "file:///(.*?)/img/(.*) file:///$1/public/img/$2", 
-    "file:///(.*?)/icons/(.*) file:///$1/public/icons/$2", 
-    "file:///(.*?)/resources/(.*) file:///$1/public/resources/$2", 
-    "file:///(.*?)/audit-reports/(.*) file:///$1/public/audit-reports/$2", 
-    "file:///([^#.?]+)(#.*)?$ file:///$1.mdx$2", 
+    # First handle the resource paths relative to pages directory
+    "file:///(.*?)/img/(.*) file:///./$1/public/img/$2", 
+    "file:///(.*?)/icons/(.*) file:///./$1/public/icons/$2", 
+    "file:///(.*?)/resources/(.*) file:///./$1/public/resources/$2", 
+    "file:///(.*?)/audit-reports/(.*) file:///./$1/public/audit-reports/$2", 
+    # Then handle the internal links for mdx files
+    "file:///([^#.?]+)(#.*)?$ file:///./pages/$1.mdx$2",
     "\\\\& &"
 ]
 
-# Base URL or website root directory to check relative URLs.
-base = "./pages"
+# Base URL or website root directory to check relative URLs
+base = "."
 
 #############################  Exclusions  ##########################
 # Exclude loopback IP address range and localhost from checking.
