@@ -15,11 +15,11 @@ import { InteropCallout } from '@/components/WipCallout'
 
 ## The trust model
 
-The vulnerability in interop is what happens when there appears to be an initiating message, and therefore we process the executing message, but then it turns out the initiating message is not there in the cannonical chain.
-Barring L1 reorgs, there are two ways this can happen:
+This interop vulnerability arises when an initiating message seems to exist, prompting the processing of the executing message. However, the initiating message ends up not actually appear in the canonical chain.
+Excluding L1 reorgs, this can happen in two ways:
 
 - *Equivocation*. A sequencer publishes a block using the gossip protocol that is different from the one that eventually gets written to L1.
-  The problem happens when the gossip protocol block includes a log entry that is used as an initiating message, but the real block (the one written to L1) does not.
+  The problem happens when the gossip protocol block includes a log entry that is used as an initiating message, but the real block (the one written to L1) doesn't.
   The way this is handled is that a block that depends on an unsafe block is, itself, unsafe.
   It does not get treated as safe until all the blocks on which it depends (directly or indirectly) are also written to L1.
 
@@ -27,14 +27,14 @@ Barring L1 reorgs, there are two ways this can happen:
   To save on resources, the sequencer can choose to query existing nodes of the source blockchain.
   In that case, if the information provided to sequencer is incorrect, of course the blocks posted by the sequencer will be also incorrect.
 
-  Note that in this case the blocks posted by the sequencer will be invalid, and other verifiers will be able to see they are invalid and replace them with *deposit only* blocks.
+  In this case, invalid blocks will be replaced with deposit only blocks by other verifiers.
 
     <details>
 
     <summary>What are deposit only blocks?</summary>
 
     Normally the blocks that make it to the canonical blockchain are those posted to L1 by the sequencer.
-    However, when those blocks are missing or invalid (for example because they rely on an initiating message that is missing), they are replaced by *deposit only blocks*, blocks whose content can be calculated from L1 without relying on the sequencer.
+    However, when those blocks are missing or invalid (for example because they rely on an initiating message that is missing), they're replaced by *deposit only blocks*, blocks whose content can be calculated from L1 without relying on the sequencer.
 
     The way this works is that there are two types of user transactions in an OP Stack block:
 
@@ -61,7 +61,7 @@ There are three different possibilities, at different levels of latency and secu
 
 ### Unsafe initiating messages
 
-L2 blocks start as unsafe, meaning that there is no L1 evidence for them, and the sequencer for that blockchain can send out incorrect information.
+L2 blocks start as unsafe, meaning that there's no L1 evidence for them, and the sequencer for that blockchain can send out incorrect information.
 Sending out incorrect information, for example that a certain transaction is included in a block when it isn't, is called *equivocation*. 
 A sequencer that builds blocks with interop can choose to accept messages from unsafe blocks (received through the gossip protocol), for minimal latency.
 
@@ -92,7 +92,7 @@ sequenceDiagram
 Alternatively, a sequencer can be configured to only accept executing messages once the initiating message is in a cross safe block.
 A cross safe block is one that is written to L1, and whose dependecies (direct or indirect, including dependencies of previous blocks in the same chain) are all written to L1.
 
-When a block is cross safe, the source sequencer cannot equivocate, and the state will only need to be recalculated if there is an [L1 reorg](https://www.alchemy.com/overviews/what-is-a-reorg#what-happens-to-reorgs-after-the-merge). 
+When a block is cross safe, the source sequencer cannot equivocate, and the state will only need to be recalculated if there's an [L1 reorg](https://www.alchemy.com/overviews/what-is-a-reorg#what-happens-to-reorgs-after-the-merge). 
 The cost of this enhanced security that it would take longer for a message to pass from one blockchain to the other.
 Higher throughput OP Stack chains like Base and OP Mainnet submit a batch about every 5 minutes, so on average it takes about 2.5 minutes for an initiating message to become safe.
 
@@ -123,7 +123,7 @@ sequenceDiagram
 
 ### Finalized initiating messages
 
-A sequencer can also be configured to reject all executing messages until the initiating message is *finalized*, meaning it is irrevocably on L1 and immune to reorgs.
+A sequencer can also be configured to reject all executing messages until the initiating message is *finalized*, meaning it's irrevocably on L1 and immune to reorgs.
 Currently, this adds [about 15 minutes](https://ethereum.org/en/roadmap/single-slot-finality/) to the message latency.
 
 <br />
