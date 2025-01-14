@@ -45,6 +45,14 @@ its view of the world from `op-geth`.
 for verifiers. To reduce the cost of writing to the L1, it only posts the minimal
 amount of data required to reproduce L2 blocks.
 
+### op-batcher
+
+`op-deployer` is a tool that simplifies the process of deploying standardized OP Stack chains that comply with Superchain specifications. 
+It compares the state of your chain against the intent, 
+and make whatever changes are necessary for them to match. In its current state, 
+it is intended to deploy new standard chains that utilize the Superchain wide contracts.
+
+
 ### op-proposer
 
 <OpProposerDescriptionShort />
@@ -97,9 +105,7 @@ the batcher to handle block creation. To allow the Sequencer to focus on that jo
 you can peer replica nodes to handle the rest of the work.
 
 An example of this would be to configure [proxyd](https://github.com/ethereum-optimism/infra/tree/main/proxyd)
-to route RPC methods, retry failed requests, load balance, etc. Users sending
-`eth_sendRawTransaction` requests can have their requests forwarded directly to the
-Sequencer. All other RPC requests can be forwarded to replica nodes.
+to route RPC methods, retry failed requests, load balance, etc.
 
 Configuration recommendations:
 
@@ -110,8 +116,6 @@ GETH_TXPOOL_LIFETIME: "1h"
 GETH_TXPOOL_NOLOCALS: "true"
 GETH_NETRESTRICT: "10.0.0.0/8" # Restrict P2P to internal IPs
 ```
-
-<Image src="/img/builders/chain-operators/ingress-traffic-diagram.png" alt="Ingress Traffic Diagram" width={400} height={400} />
 
 ## Bootnodes
 
