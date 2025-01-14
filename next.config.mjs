@@ -17,26 +17,7 @@ export default {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  redirects: async () => [
-      {
-        source: '/stack/interop/architecture',
-        destination: '/stack/interop/explainer#interoperability-architecture',
-        permanent: false,
-      },
-      {
-        source: '/stack/interop/cross-chain-message',
-        destination: '/stack/interop/explainer#how-messages-get-from-one-chain-to-the-other',
-        permanent: false,
-      },
-      {
-        source: '/stack/interop/supersim',
-        destination: '/stack/interop/tools/supersim',
-        permanent: false,
-      },
-      {
-        source: '/stack/interop/devnet',
-        destination: '/stack/interop/tools/devnet',
-        permanent: false,
-      },
-  ],
+
+  // Don't put redirects here
+  // they go in public/_redirects
 }
