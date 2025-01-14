@@ -28,5 +28,15 @@ export default {
         destination: '/stack/interop/explainer#how-messages-get-from-one-chain-to-the-other',
         permanent: false,
       },
+      {
+        source: '/stack/interop/supersim',
+        destination: '/stack/interop/tools/supersim',
+        permanent: false,
+      },
+      {
+        source: '/stack/interop/devnet',
+        destination: '/stack/interop/tools/devnet',
+        permanent: false,
+      },
   ],
 }
