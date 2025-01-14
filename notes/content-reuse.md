@@ -23,7 +23,7 @@ import DescriptionShort from '@/content/DescriptionShort.md'
 ```
 Text before
 
-<OpProposerDescriptionShort />
+<DescriptionShort />
 
 Text after
 ```

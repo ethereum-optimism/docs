@@ -23,6 +23,15 @@ An orderly shutdown is done in the reverse order to the order in which component
     This way the batcher knows to save any data it has cached to L1.
     Wait until you see `Batch Submitter stopped` in batcher's output before you stop the process.
 
+### Stop `op-proposer`
+
+To stop the proposer, terminate the process directly. This can be done by:
+
+*   Pressing **Ctrl+C** in the terminal running the process
+*   Using system commands like `kill -TERM <pid>` to stop the process gracefully
+
+Ensure that the proposer process has terminated completely before proceeding to stop other components.
+
 ### Stop `op-node`
     This component is stateless, so you can just stop the process.
 
@@ -44,6 +53,26 @@ To restart the blockchain, use the same order of components you did when you ini
     curl -d '{"id":0,"jsonrpc":"2.0","method":"admin_startBatcher","params":[]}' \
         -H "Content-Type: application/json" http://localhost:8548 | jq   
     ```
+### Start `op-proposer`
+
+Start the proposer using the appropriate command. Here's an example:
+
+  ```sh
+  ./bin/op-proposer \
+    --poll-interval=12s \
+    --rpc.port=8560 \
+    --rollup-rpc=http://localhost:8547 \
+    --l2oo-address=0xYourL2OutputOracleAddress \
+    --private-key=$PROPOSER_PRIVATE_KEY \
+    --l1-eth-rpc=$L1_RPC_URL
+  ```
+  | Parameter     | Description                                                    |
+  | ------------- | -------------------------------------------------------------- |
+  | poll-interval | How often to check for new output proposals (recommended: 12s) |
+  | rpc.port      | Local RPC port for the proposer service                        |
+  | l2oo-address  | The L2 Output Oracle contract address (0x-prefixed hex)        |
+  | private-key   | Private key for signing proposals                              |
+  | l1-eth-rpc    | L1 network RPC endpoint URL                                    |
 </Steps>
 <Callout type="info">
 Synchronization takes time
@@ -74,7 +103,7 @@ This script will NOT work for chain operators trying to generate this data in or
 You'll need to run this tool:
 
 ```
-./bin/op-node networks dump-rollup-config --network=sepolia   
+./bin/op-node networks dump-rollup-config --network=op-sepolia   
 {
   "genesis": {
     "l1": {
@@ -115,7 +144,7 @@ You'll need to run this tool:
 ```
 ### Check the flags
 Ensure that you are using the appropriate flag. 
-The `--network=sepolia` flag allows the tool to pick up the appropriate data from the registry, and uses the OPChains mapping under the hood.
+The `--network=op-sepolia` flag allows the tool to pick up the appropriate data from the registry, and uses the OPChains mapping under the hood.
 
 </Steps>
 
