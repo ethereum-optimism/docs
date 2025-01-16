@@ -31,7 +31,7 @@ export function WipCallout({ context }: Props): ReactElement {
               href="https://github.com/ethereum-optimism/docs/issues"
               className="callout-link"
             >
-              signup to help us revise this page
+              sign up to help us revise this page
             </a>
             . We welcome your contribution! ❤️
           </div>
