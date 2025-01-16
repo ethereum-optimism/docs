@@ -49,7 +49,7 @@ const depositArgs = await publicClientL2.buildDepositTransaction({
 const depositHash = await walletClientL1.depositTransaction(depositArgs);
 console.log(`Deposit transaction hash on L1: ${depositHash}`);
 
-const depositReceipt = await publicClientL1.waitForTransactionReceipt({ depositHash });
+const depositReceipt = await publicClientL1.waitForTransactionReceipt({ hash: depositHash });
 console.log('L1 transaction confirmed:', depositReceipt);
 
 const [l2Hash] = getL2TransactionHashes(depositReceipt);
