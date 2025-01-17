@@ -360,44 +360,47 @@ references to all other contract addresses for the chain.
 
 #### DisputeGameFactory
 
-The `DisputeGameFactory` contract generates `FaultDisputeGame` contract
-instances.
+The `DisputeGameFactory` contract deploys `FaultDisputeGame` instances to resolve 
+disputes about the state of the OP Stack chain at specific block numbers. It serves 
+as the primary mechanism for creating and managing dispute games.
 
 #### FaultDisputeGame
 
-The `FaultDisputeGame` contract is deployed by the `DisputeGameFactory`. Each
-deployed instance of the contract acts as a host to a proposal about the state
-of the OP Stack chain at a given block number.
+The `FaultDisputeGame` contract is deployed by the `DisputeGameFactory` to 
+facilitate disputes about the OP Stack chain state. Participants can propose 
+or challenge states, and the contract hosts the logic to resolve these disputes.
 
 #### PermissionedDisputeGame
 
-The `Guardian` can also choose to revert to a `PermissionedDisputeGame`
-contract that only allows specific roles to submit and challenge proposals.
+The `PermissionedDisputeGame` is an alternative to `FaultDisputeGame` that restricts 
+participation to specific roles, such as designated proposers or challengers. It is 
+enabled by the `Guardian` when stricter access controls are needed.
 
 #### AnchorStateRegistry
 
-The `AnchorStateRegistry` is a contract that stores the latest "anchor" state
-for each available `FaultDisputeGame` type. The anchor state is the latest
-state that has been proposed on L1 and was not challenged within the challenge
-period. By using stored anchor states, new `FaultDisputeGame` instances can
-be initialized with a more recent starting state which reduces the amount of
-required offchain computation.
+The `AnchorStateRegistry` stores the latest unchallenged "anchor" state for each 
+`FaultDisputeGame` type. These anchor states allow new games to start from a recent 
+trusted state, reducing offchain computation requirements.
 
 #### DelayedWETH
 
-The `DelayedWETH` contract has been set up to hold the bonds and only allow
-payouts after a delay, so that bonds can be redirected towards the correct
-recipient in the case that a game resolves incorrectly.
+The `DelayedWETH` contract manages bonds posted during disputes, ensuring participants 
+are financially committed. Payouts are delayed to allow for verification and correction 
+of errors, ensuring bonds go to the correct recipient.
 
 #### MIPS
 
-The `MIPS` smart contract is an onchain implementation of a virtual machine
-(VM) that encompasses the 32-bit, Big-Endian, MIPS III Instruction Set
-Architecture (ISA).
+The `MIPS` contract provides an onchain implementation of a 32-bit, Big-Endian MIPS III 
+virtual machine (VM). It executes fault proofs for disputes using a standardized instruction set.
 
 #### PreimageOracle
 
-The `PreimageOracle` contract is used for storing permissioned pre-images.
+The `PreimageOracle` contract maps hashes to their corresponding pre-images, enabling permissioned 
+and secure retrieval of data. It is integral to fault proof disputes, where hash-based claims 
+(e.g., state transitions or computational steps) must be validated by retrieving the original data. 
+By ensuring accurate and efficient verification of these claims, the `PreimageOracle` helps maintain 
+the integrity of the dispute resolution process.
+
 
 #### DEPRECATED - L2OutputOracle
 
