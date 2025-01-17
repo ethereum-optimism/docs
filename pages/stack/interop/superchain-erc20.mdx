@@ -71,6 +71,12 @@ This diagram illustrates the process where tokens are burned on the source chain
   Projects moving from other token implementations may need to adapt to the `SuperchainERC20` specification.
 </Callout>
 
+## Consistent addresses across chains
+
+It is best to use predefined addresses: Assign and verify the same address for each `SuperchainERC20` instance on every chain. Predefined addresses reduce deployment conflicts and ensure tokens are accurately recognized across chains. Otherwise, the `SuperchainERC20Bridge` would need a way to verify if the tokens they mint on destination, correspond to the tokens that were burned on source.
+
+Consider using `Create2Deployer` or one of our [predeploys](https://specs.optimism.io/interop/predeploys.html) to ensure this.
+
 ## Implementation details
 
 Application developers must do two things to make their tokens `SuperchainERC20` compatible. Doing this setup now ensures that tokens can benefit from Interop once the Interop upgrade happens.
