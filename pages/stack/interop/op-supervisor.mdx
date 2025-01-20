@@ -5,20 +5,47 @@ description: Learn the basics of OP Supervisor.
 ---
 
 import { Callout, Tabs, Steps } from 'nextra/components'
+import { InteropCallout } from '@/components/WipCallout'
+
+<InteropCallout />
 
 # OP Supervisor
 
-<Callout>
-  Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
-</Callout>
+OP Supervisor is a service that verifies cross-chain messages and manages interoperability between chains in the OP Stack. 
+The main information it contains about other blockchains is:
+- Log entries, which could be [initiating messages](./explainer#how-messages-get-from-one-chain-to-the-other) for cross-domain messages.
+- Blockchain heads, which are the latest blocks at various levels of confidence and safety:
+  - Unsafe (the latest block available through the gossip protocol)
+  - Local-safe (the latest block written to L1)
+  - Cross-safe (the latest block written to L1, and for which all the dependencies are written to L1)
+  - Finalized (the latest blcok written to L1, and that L1 block is safe from reorgs)
 
-OP Supervisor is a service that verifies cross-chain messages and manages interoperability between chains in the OP Stack. It serves as a hub where each `op-node` can index the data needed for cross-chain verification. Chain operators and teams running full nodes like RPC providers are expected to run this service.
-Some features and benefits include:
+```mermaid
 
-*   Enables secure cross-chain message passing on the Superchain
-*   Provides a unified point for managing interoperability data
-*   Supports multiple networks simultaneously
-*   Offers potential for public endpoints to aid in node synchronization
+graph LR
+
+  classDef chain fill:#FFE
+  classDef transparent fill:none, stroke:none
+  
+  subgraph chain1[OP Stack chain #1]
+    node1[OP Node]
+    super1[OP-Supervisor]
+    geth1[Execution Engine]
+    node1<-->super1--->geth1<-->node1
+  end
+  subgraph X[ ]
+    chain2[OP Stack chain #2]
+    chain3[OP Stack chain #3]
+    l1node[L1 Consensus Layer]
+  end
+
+  chain2-->|log events|super1
+  chain3-->|log events|super1
+  l1node-->|block status|super1
+
+  class chain1,chain2,chain3 chain
+  class X transparent
+```
 
 ## How cross-chain message verification works
 
