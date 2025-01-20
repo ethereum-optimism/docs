@@ -11,11 +11,11 @@ import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
 
-# Interoperability explainer 
+# Interoperability explainer
 
 ## Why do we need interoperability?
 
-It is easy for a blockchain to be certain about information it generates itself. 
+It is easy for a blockchain to be certain about information it generates itself.
 Information that comes from other sources is harder to provide in a safe, decentralized, and uncensorable manner (this is called [The Oracle Problem](https://chain.link/education-hub/oracle-problem)).
 The next major scalability improvement to the OP Stack is to enable a network of chains to feel like a single blockchain.
 This goal requires low-latency, seamless message passing and asset bridging.
@@ -23,15 +23,15 @@ This goal requires low-latency, seamless message passing and asset bridging.
 *Interoperability* is a set of protocols and services that lets OP Stack blockchains read each others' state.
 Interoperability provides the following benefits:
 
-- 1-block latency asset movement, removing the problem of capital fragmentation leading to better capital efficiency.
-- Improved experience for both users and developers.
-- Secure transfer of assets, such as ETH and ERC-20 tokens, across L2s.
-- Horizontal scalability for applications that need it.
+*   1-block latency asset movement, removing the problem of capital fragmentation leading to better capital efficiency.
+*   Improved experience for both users and developers.
+*   Secure transfer of assets, such as ETH and ERC-20 tokens, across L2s.
+*   Horizontal scalability for applications that need it.
 
 ## Interoperability architecture
 
 A pre-interop OP Stack node consists of two pieces of software: a consensus client (e.g. op-node) and an execution client, which is responsible for processing user transactions and constructing blocks (e.g. op-geth).
-Interoperability among OP Stack chains is enabled via a new service called [*OP Supervisor*](/stack/interop/op-supervisor). 
+Interoperability among OP Stack chains is enabled via a new service called [*OP Supervisor*](/stack/interop/op-supervisor).
 Every node operator is expected to run this service in addition to the [rollup node](/builders/node-operators/architecture#rollup-node) and [execution client](/builders/node-operators/architecture#execution-client).
 
 ```mermaid
@@ -96,7 +96,7 @@ The second transaction creates an *executing message* on the destination chain.
 This executing message could result in a contract function being executed on the destination chain.
 
 The initiating message is simply a log event.
-Any log event on any chain that inteoperates with the destination can initiate a cross-domain message.
+Any log event on any chain that interoperates with the destination can initiate a cross-domain message.
 
 The transaction that receives the message on the destination chain calls a contract called [`CrossL2Inbox`](https://specs.optimism.io/interop/predeploys.html#crossl2inbox).
 This call can be at the top level, directly from the externally owned account, or come through a smart contract.
@@ -104,7 +104,7 @@ The call to `CrossL2Inbox`, also known as the *executing message*, needs to [ide
 
 `CrossL2Inbox` can either [validate the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185), or [call a contract if the message exists](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L171-L185).
 
-[For more information, see the  cross-chain messages anatomy page](./cross-chain-message).
+[For more information, see the  cross-chain messages anatomy page](#how-messages-get-from-one-chain-to-the-other).
 
 ## Block safety levels
 
@@ -145,28 +145,26 @@ Interop expands the scope of trust for unsafe blocks (blocks that are shared thr
 If a sequencer chooses to accept unsafe messages, the sequencer must trust the sequencer that produces the inbound message as well as any referenced unsafe messages produced from sequencers in the transitive dependency set.
 
 <details>
+  <summary>What is the transitive dependency set?</summary>
 
-<summary>What is the transitive dependency set?</summary>
+  The transitive dependency set of a blockchain is all the chains on which it depends, and all the chains that depend on them, and so on.
+  For example, in the illustration above, the dependency set of chain A is just chain B.
+  However, the *transitive* dependency set includes chain B, the chains that depend on it (C and D) and the chains that depend on them (E).
+  If there was a chain that depended on E, that chain would be part of the transitive dependency set too.
 
-The transitive dependency set of a blockchain is all the chains on which it depends, and all the chains that depend on them, and so on. 
-For example, in the illustration above, the dependency set of chain A is just chain B.
-However, the *transitive* dependency set includes chain B, the chains that depend on it (C and D) and the chains that depend on them (E). 
-If there was a chain that depended on E, that chain would be part of the transitive dependency set too.
+  ```mermaid
 
-```mermaid
+  flowchart LR
+      A[Chain A] <--> B[Chain B]
+      B <--> C[Chain C]
+      B <--> D[Chain D]
+      D <--> E[Chain E]
+      F[Chain F] <--> G[Chain G]
+  ```
 
-flowchart LR
-    A[Chain A] <--> B[Chain B]
-    B <--> C[Chain C]
-    B <--> D[Chain D]
-    D <--> E[Chain E]
-    F[Chain F] <--> G[Chain G]
-```
-
-For example, there could be a block in chain D that depends on an initiating message in chain E>
-If the block with that initiating message is still unsafe (not written to L1), then the block in chain D is also usafe, even if it has been written to L1.
-As a result, a block in chain B that depends on the chain D block can also be unsafe, as can a block in chain A that depends on the block in chain B.
-
+  For example, there could be a block in chain D that depends on an initiating message in chain E>
+  If the block with that initiating message is still unsafe (not written to L1), then the block in chain D is also usafe, even if it has been written to L1.
+  As a result, a block in chain B that depends on the chain D block can also be unsafe, as can a block in chain A that depends on the block in chain B.
 </details>
 
 Notably this trust assumption is only for *unsafe* blocks, and *only* if the sequencer allows messages from unsafe blocks to be processed.
@@ -202,8 +200,8 @@ To move an asset from chain E to chain B, it is necessary to move the asset from
 
 ### Superchain interop cluster
 
-The Superchain builds on top of the interop protocol and implements a single mesh network with complete dependencies. 
-In this model, each blockchain in the Superchain interop cluster would have direct connections to every other blockchain, creating a fully connected mesh network. 
+The Superchain builds on top of the interop protocol and implements a single mesh network with complete dependencies.
+In this model, each blockchain in the Superchain interop cluster would have direct connections to every other blockchain, creating a fully connected mesh network.
 This model provides the highest level of interoperability, as any blockchain can transact directly with any other.
 
 ```mermaid
@@ -213,9 +211,7 @@ flowchart LR
     A <--> C <--> E <--> B <--> D <--> A
 ```
 
-
-Each blockchain in the Superchain interop cluster shares the same security model to mitigate the weakest-link scenario. As outlined in the [Standard Rollup Charter](https://gov.optimism.io/t/season-6-standard-rollup-charter-ratification/8135#p-36758-governing-policies-11), these chains share the same L1 `ProxyAdmin` Owner. Any changes to the Superchain interop cluster must follow the standard Protocol Upgrade vote procedure—the established governance process for Superchain modifications.
-
+Each blockchain in the Superchain interop cluster shares the same security model to mitigate the weakest-link scenario. As outlined in the [Standard Rollup Charter](/superchain/blockspace-charter), these chains share the same L1 `ProxyAdmin` Owner. Any changes to the Superchain interop cluster must follow the standard Protocol Upgrade vote procedure—the established governance process for Superchain modifications.
 
 {/* 
 ## Interop assets
@@ -229,8 +225,8 @@ This means ETH and ERC-20s can seamlessly and securely move across L2s, and inte
 */}
 
 ## Next steps
-* Want to learn more? Read our guide on the anatomy of a [cross-chain message](cross-chain-message) or check out this [interop design video walk-thru](https://www.youtube.com/watch?v=FKc5RgjtGes).
-* Ready to get started? Use [Supersim](supersim), a local dev environment that simulates interop for testing applications against a local version of the Superchain.
-* For more info about how OP Stack interoperability works under the hood, [check out the specs](https://specs.optimism.io/interop/overview.html).
 
-
+*   Watch this video that gives an [overview of OP Stack interoperability](https://www.youtube.com/watch?v=FKc5RgjtGes).
+*   Learn more about the [predeploys that have been added to the OP Stack to enable interoperability](/stack/interop/predeploy).
+*   Use [Supersim](/stack/interop/tools/supersim), a local dev environment that simulates interop for testing applications against a local version of the Superchain.
+*   For more info about how OP Stack interoperability works under the hood, [check out the specs](https://specs.optimism.io/interop/overview.html).

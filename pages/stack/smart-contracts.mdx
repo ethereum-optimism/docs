@@ -66,7 +66,6 @@ The upgrade was coupled with the [Granite network upgrade](/builders/node-operat
   *   DisputeGameFactory: [1.0.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.4.0/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol#L25)
   *   SuperchainConfig: [1.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/SuperchainConfig.sol#L38)
   *   ProtocolVersions: [1.0.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/ProtocolVersions.sol#L39)
-
 </details>
 
 #### op-contracts/v1.5.0 - Safe extensions
@@ -79,13 +78,13 @@ of 13 owners. This meets the 75% threshold requirement for a Stage 1 rollup
 outlined in [L2Beat's Stages framework](https://medium.com/l2beat/stages-update-security-council-requirements-4c79cea8ef52)
 2.  Reassigning the role of Guardian from the Foundation to a new Guardian Safe 
 with the Security Council Safe as its sole owner. This moves the Superchain 
-closer to satisfying the 1 week exit window 5 requirement for Stage 1. 
+closer to satisfying the 1 week exit window requirement for Stage 1. 
     *   Additionally the Foundation is appointed to the new DeputyGuardian role 
         which is able to act as Guardian through the Guardian Safe. This 
         appointment can be revoked by the Security Council Safe at any time.
-3.  Reassigning the owner of the L2ProxyAdmin contract from the Foundation to 
-the Security Council. This ensures the Security Council Safe has a blocking 
-vote for L2 predeploy upgrades and is a requirement for Stage 1.
+3.  Reassigning the owner of the L2ProxyAdmin contract from the Foundation to
+    the Security Council. This ensures the Security Council Safe has a blocking
+    vote for L2 predeploy upgrades and is a requirement for Stage 1.
 
 *   [Official - Safe Extensions Release](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv1.5.0)
 *   [Governance Post](https://gov.optimism.io/t/final-protocol-upgrade-8-guardian-security-council-threshold-and-l2-proxyadmin-ownership-changes-for-stage-1-decentralization/8157)
@@ -116,7 +115,6 @@ vote for L2 predeploy upgrades and is a requirement for Stage 1.
   *   PreimageOracle: [1.0.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.4.0/packages/contracts-bedrock/src/cannon/PreimageOracle.sol#L33)
   *   SuperchainConfig: [1.1.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/SuperchainConfig.sol#L38)
   *   ProtocolVersions: [1.0.0](https://github.com/ethereum-optimism/optimism/blob/op-contracts/v1.2.0/packages/contracts-bedrock/src/L1/ProtocolVersions.sol#L39)
-
 </details>
 
 #### op-contracts/v1.4.0 - Fault proofs
@@ -303,16 +301,16 @@ and most importantly making the stack modular.
 
 ### L1 Contract Details
 
-#### AddressManager 
+#### AddressManager
 
-`AddressManager` is a legacy contract that was used in the old version of the 
+`AddressManager` is a legacy contract that was used in the old version of the
 Optimism system to manage a registry of string names to addresses. We now use a
 more standard proxy system for most contracts, but this contract is still used for
 the L1CrossDomainMessenger, via ResolvedDelegateProxy
 
 #### SuperchainConfig
 
-The `SuperchainConfig` contract is used to manage configuration of global 
+The `SuperchainConfig` contract is used to manage configuration of global
 superchain values. It has the ability to pause and unpause all withdrawals
 in the Superchain.
 
@@ -338,7 +336,7 @@ contract acts as an escrow for ERC721 tokens deposited into L2.
 
 The `L1StandardBridge` is responsible for transferring ETH and ERC20 tokens between L1 and
 L2. In the case that an ERC20 token is native to L1, it will be escrowed within this
-contract. If the ERC20 token is native to L2, it will be burnt. 
+contract. If the ERC20 token is native to L2, it will be burnt.
 
 #### OptimismPortal
 
@@ -348,58 +346,58 @@ Users are encouraged to use the `L1CrossDomainMessenger` for a higher-level inte
 
 #### ProtocolVersions
 
-The `ProtocolVersions` contract is used to manage Superchain protocol version 
+The `ProtocolVersions` contract is used to manage Superchain protocol version
 information. It exposes a recommended and required version for node operators.
-The recommended/required versions are changed with each hard fork. Nodes can 
+The recommended/required versions are changed with each hard fork. Nodes can
 optionally halt if using the wrong version.
 
 #### SystemConfig
 
-The `SystemConfig` contract is helps manage configuration of an OP Stack 
+The `SystemConfig` contract helps manage configuration of an OP Stack 
 network. Much of the network's configuration is stored on L1 and picked up by 
 L2 as part of the derivation of the L2 chain. The contract also contains 
 references to all other contract addresses for the chain.
 
 #### DisputeGameFactory
 
-The `DisputeGameFactory` contract generates `FaultDisputeGame` contract 
+The `DisputeGameFactory` contract generates `FaultDisputeGame` contract
 instances.
 
-#### FaultDisputeGame 
+#### FaultDisputeGame
 
-The `FaultDisputeGame` contract is deployed by the `DisputeGameFactory`. Each 
-deployed instance of the contract acts as a host to a proposal about the state 
+The `FaultDisputeGame` contract is deployed by the `DisputeGameFactory`. Each
+deployed instance of the contract acts as a host to a proposal about the state
 of the OP Stack chain at a given block number.
 
 #### PermissionedDisputeGame
 
-The `Guardian` can also choose to revert to a `PermissionedDisputeGame` 
+The `Guardian` can also choose to revert to a `PermissionedDisputeGame`
 contract that only allows specific roles to submit and challenge proposals.
 
 #### AnchorStateRegistry
 
-The `AnchorStateRegistry` is a contract that stores the latest "anchor" state 
-for each available `FaultDisputeGame` type. The anchor state is the latest 
-state that has been proposed on L1 and was not challenged within the challenge 
+The `AnchorStateRegistry` is a contract that stores the latest "anchor" state
+for each available `FaultDisputeGame` type. The anchor state is the latest
+state that has been proposed on L1 and was not challenged within the challenge
 period. By using stored anchor states, new `FaultDisputeGame` instances can
-be initialized with a more recent starting state which reduces the amount of 
+be initialized with a more recent starting state which reduces the amount of
 required offchain computation.
 
 #### DelayedWETH
 
-The `DelayedWETH` contract has been set up to hold the bonds and only allow 
-payouts after a delay, so that bonds can be redirected towards the correct 
+The `DelayedWETH` contract has been set up to hold the bonds and only allow
+payouts after a delay, so that bonds can be redirected towards the correct
 recipient in the case that a game resolves incorrectly.
 
-#### MIPS 
+#### MIPS
 
-The `MIPS` smart contract is an onchain implementation of a virtual machine 
-(VM) that encompasses the 32-bit, Big-Endian, MIPS III Instruction Set 
+The `MIPS` smart contract is an onchain implementation of a virtual machine
+(VM) that encompasses the 32-bit, Big-Endian, MIPS III Instruction Set
 Architecture (ISA).
 
 #### PreimageOracle
 
-The `PreimageOracle` contract for storing permissioned pre-images.
+The `PreimageOracle` contract is used for storing permissioned pre-images.
 
 #### DEPRECATED - L2OutputOracle
 
@@ -484,10 +482,10 @@ user is depositing from L1 to L2 or withdrawing from L2 to L1.
 ### GasPriceOracle
 
 The `GasPriceOracle` is no longer a permissioned contract like in the legacy
-system. It only exists to preserve the API for offchain gas estimation. The 
-function `getL1Fee(bytes)` accepts an unsigned RLP transaction and will return 
-the L1 portion of the fee. This fee pays for using L1 as a data availability 
-layer and should be added to the L2 portion of the fee, which pays for 
+system. It only exists to preserve the API for offchain gas estimation. The
+function `getL1Fee(bytes)` accepts an unsigned RLP transaction and will return
+the L1 portion of the fee. This fee pays for using L1 as a data availability
+layer and should be added to the L2 portion of the fee, which pays for
 execution, to compute the total transaction fee.
 
 Following the Ecotone upgrade, the values used for L1 fee computation are:
@@ -606,15 +604,18 @@ withdrawn to an immutable address on L1.
 
 ### SchemaRegistry
 
-The `SchemaRegistry` predeploy implements the global attestation schemas for
-the Ethereum Attestation Service protocol.
+The `SchemaRegistry` predeploy implements the global attestation schemas for the Ethereum Attestation Service protocol.
 
 *   **Address:** `0x4200000000000000000000000000000000000020`
 *   **Introduced:** Bedrock
 *   **Deprecated:** no
 *   **Proxied:** yes
 
-### EAS
+The SchemaRegistry works alongside the Ethereum Attestation Service (EAS) to enable attestations. See [Build Decentralized Identity Apps with Attestations](about-attestations) for more details on schemas and usage.
+
+### EAS (Ethereum Attestation Service)
+
+The [Ethereum Attestation Service (EAS)](https://attest.sh/) is an open-source public good included as a predeploy in the OP Stack. It allows developers to issue and manage attestations on-chain, supporting use cases such as decentralized identity and other data integrity scenarios.
 
 The `EAS` predeploy implements the Ethereum Attestation Service protocol.
 
@@ -622,6 +623,39 @@ The `EAS` predeploy implements the Ethereum Attestation Service protocol.
 *   **Introduced:** Bedrock
 *   **Deprecated:** no
 *   **Proxied:** yes
+
+### Contract addresses
+
+EAS contracts are deployed on these networks:
+
+| Network    | Attestation Contract                                                                                                                   | Schema Registry Contract                                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| OP Sepolia | [0x4200000000000000000000000000000000000021](https://sepolia-optimism.etherscan.io/address/0x4200000000000000000000000000000000000021) | [0x4200000000000000000000000000000000000020](https://sepolia-optimism.etherscan.io/address/0x4200000000000000000000000000000000000020) |
+| OP Mainnet | [0x4200000000000000000000000000000000000021](https://optimistic.etherscan.io/address/0x4200000000000000000000000000000000000021)       | [0x4200000000000000000000000000000000000020](https://optimistic.etherscan.io/address/0x4200000000000000000000000000000000000020)       |
+
+### How to use EAS
+
+You can interact with the Ethereum Attestation Service in several ways:
+
+1.  **Using the EAS Scan UI:**
+    *   [EAS Scan for OP Mainnet](https://optimism.easscan.org/)
+    *   [EAS Scan for OP Sepolia](https://optimism-sepolia.easscan.org/)
+
+2.  **Using the JavaScript SDK:**
+    *   [EAS SDK Documentation](https://docs.attest.sh/docs/developer-tools/eas-sdk)
+
+3.  **Access Directly Onchain:**
+    *   See the [EAS Smart Contract Implementation](https://github.com/ethereum-attestation-service/eas-contracts/blob/master/contracts/EAS.sol).
+
+### Indexing Attestations
+
+Attestations made via EAS can be indexed through the following tools:
+
+*   [GraphQL Endpoint](https://docs.attest.sh/docs/developer-tools/api)
+*   [Ponder Graph](https://github.com/ethereum-attestation-service/eas-ponder-graph)
+*   [Open Source Indexer](https://github.com/ethereum-attestation-service/eas-indexing-service)
+
+For more information on working with attestations, see [Build Decentralized Identity Apps with Attestations](about-attestations).
 
 ### BeaconBlockRoot
 
@@ -634,8 +668,7 @@ This was added during the Ecotone network upgrade and is specified in
 *   **Deprecated:** no
 *   **Proxied:** no
 
-### DEPRECATED Contracts 
-
+### DEPRECATED Contracts
 
 #### DEPRECATED - LegacyMessagePasser
 
