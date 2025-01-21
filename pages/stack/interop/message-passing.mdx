@@ -16,6 +16,9 @@ The low level [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blo
 However, this contract does not check what is the destination of a message, whether it has already been processed, etc. 
 The [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contracts sits on top of `CrossL2Inbox` and provides the full functionality expected of a cross domain messenger.
 
+A cross-chain message in the Superchain is two transactions: an *intiating message* on the source chain and an *executing mesage* on the destination chain.
+For high level interop messages, both messages use `L2ToL2CrossDomainMessenger` on their respective chains.
+
 ## Initiating message
 
 ```mermaid
@@ -24,16 +27,13 @@ sequenceDiagram
     participant app as Application
     box rgba(0,0,0,0.1) Source Chain
       participant srcContract as Source Contract
-      participant srcXdom as L2ToL2Cross...
+      participant srcXdom as L2ToL2CrossDomainMessenger
       participant log as Event Log
-    end
-    box rgba(0,0,0,0.1) Destination Chain
-      participant dstXdom as L2ToL2Cross...
-      participant dstContract as Destination Contract
     end
     app->>srcContract: 1. Send a message
     srcContract->>srcXdom: 2. Call contract A<br/>in chainId B<br/>with calldata C
-    srcXdom->>log: 3. Log event SentMessage
+    note over srcXdom: 3. Sanity checks
+    srcXdom->>log: 4. Log event SentMessage
     
 ```
 
@@ -47,7 +47,12 @@ sequenceDiagram
    - `_message`, the actual message.
      This message is provided to `_target` as calldata, which means it includes a function selector and the parameters for that function call.
 
-3. After a few sanity checks, `L2ToL2CrossDomainMessenger` emits a log entry.
+3. `L2ToL2CrossDomainMessenger` on the source chain verifies the message is legitimate:
+   - The destination chain is one to which this chain can send messages.
+   - The destination chain is *not* the source chain.
+   - The target is neither `CrossL2Inbox` nor `L2ToL2CrossDomainMessenger`.
+
+4. `L2ToL2CrossDomainMessenger` emits a log entry.
    In addition to the parameters, the log entry also includes:
 
    - `_nonce`, a [nonce](https://en.wikipedia.org/wiki/Cryptographic_nonce) value to ensure the message is only executed once.
@@ -62,32 +67,37 @@ sequenceDiagram
 sequenceDiagram
     participant app as Application
     box rgba(0,0,0,0.1) Source Chain
-      participant srcContract as Source Contract
-      participant srcXdom as L2ToL2Cross...
       participant log as Event Log
-    end
+    end    
+    participant super as OP-Supervisor<br/>(destination chain<br/>node)
     box rgba(0,0,0,0.1) Destination Chain
-      participant dstXdom as L2ToL2Cross...
+      participant dstXdom as L2ToL2CrossDomainMessenger
+      participant Xinbox as CrossL2Inbox
       participant dstContract as Destination Contract
     end
-    app->>dstXdom: 1. Send an executing message
-    note over dstXdom: 2. Sanity checks
-    dstXdom->>dstContract: 3. Call with provided calldata.
+    log->>super: 1. Initiating message log event
+    app->>dstXdom: 2. Send an executing message
+    dstXdom->>Xinbox: 3. Verify the initiating message is real 
+    note over dstXdom: 4. Sanity checks
+    dstXdom->>dstContract: 5. Call with provided calldata
 ```
 
-1. The application (or a contract calling on the application's behalf) calls [`L2ToL2CrossDomainMessenger.SendMessage.relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L156-L216).
+1. Before the executing message is processed, the log event of the initiating message has to get to OP-Proposer on the destination chain.
+
+2. The application (or a contract calling on the application's behalf) calls [`L2ToL2CrossDomainMessenger.SendMessage.relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L156-L216).
    This call includes the message that was sent (`_sendMessage`), as well as the [fields required to find that message (`_id`)](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol#L4-L10).
 
-2. `L2ToL2CrossDomainMessenger` on the destination chain verified the message is legitimate:
+3. `L2ToL2CrossDomainMessenger` uses `CrossL2Inbox` to verify the message really was sent from the source.
+
+4. `L2ToL2CrossDomainMessenger` on the destination chain verifies the message is legitimate:
 
    - The origin (of the log entry) is `L2ToL2CrossDomainMessenger` on the other side.
-   - Verify the message really was sent from the source (using `CrossL2Inbox`).
    - The destination chain ID is correct.
    - The target is neither `CrossL2Inbox` nor `L2ToL2CrossDomainMessenger`.
    - This message has not been relayed before.
      This is the reason we need the nonce value, to enable us to send multiple messages that would be otherwise identical.
 
-3. If everything checks out, `L2ToL2CrossDomainMessenger` calls the destination contract with the calldata provided in the message.
+5. If everything checks out, `L2ToL2CrossDomainMessenger` calls the destination contract with the calldata provided in the message.
 
 
 ## Next steps
