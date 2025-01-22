@@ -12,12 +12,11 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Interop message passing overview
 
-The low level [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) contract provides for basic executing message functionality, it verifies whether an initiating message is available or not.
-However, this contract does not check what is the destination of a message, whether it has already been processed, etc.
-The [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contracts sits on top of `CrossL2Inbox` and provides the full functionality expected of a cross domain messenger.
+The low-level [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) contract handles basic message execution. It verifies whether an initiating message exists but does not check the message's destination, processing status, or other attributes.
 
-A cross-chain message in the Superchain is two transactions: an *intiating message* on the source chain and an *executing mesage* on the destination chain.
-For high level interop messages, both messages use `L2ToL2CrossDomainMessenger` on their respective chains.
+The [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract extends `CrossL2Inbox` by providing complete cross-domain messaging functionality.
+
+For high-level interoperability, both messages use the `L2ToL2CrossDomainMessenger` contract on their respective chains.
 
 ## Initiating message
 
@@ -42,9 +41,9 @@ sequenceDiagram
 2.  The contract calls [`L2ToL2CrossDomainMessenger.SendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L127-L154).
     The call requires these parameters:
 
-    *   `_destination`, the chain ID of the destination blockchain.
-    *   `_target`, the address of the contract on that blockchain.
-    *   `_message`, the actual message.
+    *   `_destination`: The chain ID of the destination blockchain.
+    *   `_target`: The address of the contract on that blockchain.
+    *   `_message`: The actual message.
         This message is provided to `_target` as calldata, which means it includes a function selector and the parameters for that function call.
 
 3.  `L2ToL2CrossDomainMessenger` on the source chain verifies the message is legitimate:
@@ -55,9 +54,9 @@ sequenceDiagram
 4.  `L2ToL2CrossDomainMessenger` emits a log entry.
     In addition to the parameters, the log entry also includes:
 
-    *   `_nonce`, a [nonce](https://en.wikipedia.org/wiki/Cryptographic_nonce) value to ensure the message is only executed once.
+    *   `_nonce`: A [nonce](https://en.wikipedia.org/wiki/Cryptographic_nonce) value to ensure the message is only executed once.
 
-    *   `_sender`, the contract that sent the cross domain message.
+    *   `_sender`: The contract that sent the cross domain message.
 
 ## Executing message
 
@@ -81,12 +80,12 @@ sequenceDiagram
     dstXdom->>dstContract: 5. Call with provided calldata
 ```
 
-1.  Before the executing message is processed, the log event of the initiating message has to get to OP-Proposer on the destination chain.
+1.  Before the executing message is processed, the log event of the initiating message has to get to `op-proposer` on the destination chain.
 
 2.  The application (or a contract calling on the application's behalf) calls [`L2ToL2CrossDomainMessenger.SendMessage.relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L156-L216).
     This call includes the message that was sent (`_sendMessage`), as well as the [fields required to find that message (`_id`)](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol#L4-L10).
 
-3.  `L2ToL2CrossDomainMessenger` uses `CrossL2Inbox` to verify the message really was sent from the source.
+3.  The `L2ToL2CrossDomainMessenger` uses `CrossL2Inbox` to verify the message was sent from the source.
 
 4.  `L2ToL2CrossDomainMessenger` on the destination chain verifies the message is legitimate:
 
