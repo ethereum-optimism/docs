@@ -6,61 +6,101 @@ description: Learn about cross-chain message passing in the Superchain.
 
 import { Callout, Steps } from 'nextra/components'
 
+import { InteropCallout } from '@/components/WipCallout'
+
+<InteropCallout />
+
 # Interop message passing overview
 
-<Callout>
-  Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
-</Callout>
+The low-level [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) contract handles basic message execution. It verifies whether an initiating message exists but does not check the message's destination, processing status, or other attributes.
 
-This guide provides an overview of cross-chain message passing in the Superchain.
+The [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract extends `CrossL2Inbox` by providing complete cross-domain messaging functionality.
 
-## Overview
+For high-level interoperability, both messages use the `L2ToL2CrossDomainMessenger` contract on their respective chains.
 
-The Superchain uses a pull-based event system for cross-chain communication. Messages are sent through the `L2ToL2CrossDomainMessenger` contract, which provides a secure and standardized way to pass information between chains.
-
-## How it works
-
-The following diagram illustrates how messages flow between chains through the `L2ToL2CrossDomainMessenger` contract, which acts as a bridge for cross-chain communication. When a contract on the source chain initiates a message, it's processed through several stages before reaching its destination, ensuring secure and reliable message delivery.
+## Initiating message
 
 ```mermaid
+
 sequenceDiagram
-    participant Source as Source Chain
-    participant Messenger as L2ToL2CrossDomainMessenger
-    participant Dest as Destination Chain
+    participant app as Application
+    box rgba(0,0,0,0.1) Source Chain
+      participant srcContract as Source Contract
+      participant srcXdom as L2ToL2CrossDomainMessenger
+      participant log as Event Log
+    end
+    app->>srcContract: 1. Send a message
+    srcContract->>srcXdom: 2. Call contract A<br/>in chainId B<br/>with calldata C
+    note over srcXdom: 3. Sanity checks
+    srcXdom->>log: 4. Log event SentMessage
     
-    Note over Source,Dest: Message Creation
-    Source->>Messenger: Emit message event
-    Note over Source,Dest: Message Serialization
-    Messenger-->>Messenger: Convert to standard format
-    Note over Source,Dest: Identifier Creation
-    Messenger-->>Messenger: Generate unique ID
-    Note over Source,Dest: Message Execution
-    Messenger->>Dest: Process message
 ```
 
-Cross-chain messaging involves four main phases:
+1.  The application sends a transaction to a contract on the source chain.
 
-1.  **Message Creation**: The source chain contract emits an event containing the message data and destination information. This event serves as the initiating message that will be relayed across chains.
+2.  The contract calls [`L2ToL2CrossDomainMessenger.SendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L127-L154).
+    The call requires these parameters:
 
-2.  **Message Serialization**: The messenger contract converts the event data into a standardized format that can be consistently processed across different chains in the Superchain.
+    *   `_destination`: The chain ID of the destination blockchain.
+    *   `_target`: The address of the contract on that blockchain.
+    *   `_message`: The actual message.
+        This message is provided to `_target` as calldata, which means it includes a function selector and the parameters for that function call.
 
-3.  **Identifier Creation**: A unique identifier is generated for the message, containing information about its `origin`, `timestamp`, and other `metadata`. This identifier helps track and verify the message.
+3.  `L2ToL2CrossDomainMessenger` on the source chain verifies the message is legitimate:
+    *   The destination chain is one to which this chain can send messages.
+    *   The destination chain is *not* the source chain.
+    *   The target is neither `CrossL2Inbox` nor `L2ToL2CrossDomainMessenger`.
 
-4.  **Message Execution**: The destination chain receives and processes the message, executing any associated actions or state changes specified in the original message.
+4.  `L2ToL2CrossDomainMessenger` emits a log entry.
+    In addition to the parameters, the log entry also includes:
 
-For detailed implementation steps and code examples, see our [message passing implementation guide](https://supersim.pages.dev/guides/interop/viem).
+    *   `_nonce`: A [nonce](https://en.wikipedia.org/wiki/Cryptographic_nonce) value to ensure the message is only executed once.
 
-## Common Use Cases
+    *   `_sender`: The contract that sent the cross domain message.
 
-*   Simple messages between identical contracts
-*   Complex multi-contract interactions
-*   Cross-chain state synchronization
-*   Token transfers and bridging
+## Executing message
 
-For a practical example, see our [cross-chain ping pong tutorial](https://supersim.pages.dev/guides/interop/cross-chain-contract-calls-pingpong).
+```mermaid
+
+sequenceDiagram
+    participant app as Application
+    box rgba(0,0,0,0.1) Source Chain
+      participant log as Event Log
+    end    
+    participant super as OP-Supervisor<br/>(destination chain<br/>node)
+    box rgba(0,0,0,0.1) Destination Chain
+      participant dstXdom as L2ToL2CrossDomainMessenger
+      participant Xinbox as CrossL2Inbox
+      participant dstContract as Destination Contract
+    end
+    log->>super: 1. Initiating message log event
+    app->>dstXdom: 2. Send an executing message
+    dstXdom->>Xinbox: 3. Verify the initiating message is real 
+    note over dstXdom: 4. Sanity checks
+    dstXdom->>dstContract: 5. Call with provided calldata
+```
+
+1.  Before the executing message is processed, the log event of the initiating message has to get to `op-proposer` on the destination chain.
+
+2.  The application (or a contract calling on the application's behalf) calls [`L2ToL2CrossDomainMessenger.SendMessage.relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L156-L216).
+    This call includes the message that was sent (`_sendMessage`), as well as the [fields required to find that message (`_id`)](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol#L4-L10).
+
+3.  The `L2ToL2CrossDomainMessenger` uses `CrossL2Inbox` to verify the message was sent from the source.
+
+4.  `L2ToL2CrossDomainMessenger` on the destination chain verifies the message is legitimate:
+
+    *   The origin (of the log entry) is `L2ToL2CrossDomainMessenger` on the other side.
+    *   The destination chain ID is correct.
+    *   The target is neither `CrossL2Inbox` nor `L2ToL2CrossDomainMessenger`.
+    *   This message has not been relayed before.
+        This is the reason we need the nonce value, to enable us to send multiple messages that would be otherwise identical.
+
+5.  If everything checks out, `L2ToL2CrossDomainMessenger` calls the destination contract with the calldata provided in the message.
 
 ## Next steps
 
-*   Read about the [anatomy of a cross-chain message](/stack/interop/explainer#how-messages-get-from-one-chain-to-the-other)
-*   Try [Supersim](supersim) for testing cross-chain messages locally
-*   Learn about [manually relaying messages](https://supersim.pages.dev/guides/interop/viem?#viem-to-send-and-relay-interop-messages)
+*   Read how [messages get from one blockchain to another (`CrossL2Inbox`)](explainer#how-messages-get-from-one-chain-to-the-other).
+*   Try [Supersim](tools/supersim) for testing cross-chain messages locally.
+*   Learn about [manually relaying messages](https://supersim.pages.dev/guides/interop/viem?#viem-to-send-and-relay-interop-messages).
+
+{/*  After the tutorial for L2ToL2CrossDomainMessenger is written, need to add a link here */}

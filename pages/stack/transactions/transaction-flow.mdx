@@ -15,9 +15,9 @@ This guide explains the transaction flow process for rollup transactions. The pr
 
 *   The transaction needs to be executed to modify the state (by `op-geth`).
     Afterwards, `op-proposer` writes a [commitment](https://en.wikipedia.org/wiki/Commitment_scheme) to the post-transaction state to L1.
-    Note that `op-proposer` does not need to write a commitment after each transaction to L1, it is OK to commit to the state after a block of transactions.
+    Note that `op-proposer` does not need to write a commitment after each transaction to L1; it is OK to commit to the state after a block of transactions.
 
-![Overall process.](/img/op-stack/protocol/transaction-flow.svg)
+![Overall process.](/img/op-stack/protocol/transaction-flow-dark-mode.svg)
 
 ## Writing the transaction to L1
 
@@ -35,8 +35,8 @@ You can read more about this process [in the specs](https://specs.optimism.io/pr
 When a channel is full or times out it is compressed and written.
 
 The maximum time that a channel can be open, from the first transaction to the last, is specified in units of L1 block time (so a value of 5 means 5\*12=60 seconds).
-You can specify it either as an environment variable (`OP_BATCHER_MAX_CHANNEL_DURATION`) or a command line parameters (`--max-channel-duration`).
-Alternatively, you can set it to zero (the default) to avoid posting smaller, less cost efficient, transactions.
+You can specify it either as an environment variable (`OP_BATCHER_MAX_CHANNEL_DURATION`) or a command line parameter (`--max-channel-duration`).
+Alternatively, you can set it to zero (the default) to avoid posting smaller, less cost efficient transactions.
 
 A channel is full when the anticipated compressed size is the target L1 transaction size.
 This is controlled by two parameters:
@@ -84,14 +84,14 @@ The directions here are for [Foundry](https://book.getfoundry.sh/), but the conc
     ```
 
 2.  Get the number of the latest finalized block.
-    If the result is greater than the block number of the transaction, or equal, the transaction is finalized.
+    If the result is greater than or equal to the block number of the transaction, the transaction is finalized.
 
     ```sh
     cast block finalized --field number
     ```
 
 3.  Get the number of the latest safe block.
-    If the result is greater than the block number of the transaction, or equal, the transaction is safe.
+    If the result is greater than or equal to the block number of the transaction, the transaction is safe.
 
     ```sh
     cast block safe --field number
