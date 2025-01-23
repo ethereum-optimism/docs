@@ -13,7 +13,9 @@ import { InteropCallout } from '@/components/WipCallout'
 # SuperchainERC20
 
 [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) is an implementation of [ERC-7802](https://ethereum-magicians.org/t/erc-7802-crosschain-token-interface/21508) designed to enable asset interoperability in the Superchain.
-Asset interoperability allows for tokens to securely move across chains without asset wrapping or liquidity pools for maximum capital efficiency, thus unifying liquidity and simplifying the user experience.
+Asset interoperability allows tokens to move securely in the Superchain by burning tokens on the source chain and minting the same number of tokens that were burned on the destination chain.
+Asset interoperability solves the issues of liquidity fragmentation and poor user experiences caused by asset wrapping or liquidity pools.
+Instead, assets essentially teleport from one chain in the Superchain to another, providing users with a secure and capital-efficient way to transact within the Superchain.
 
 Additional features:
 
@@ -84,7 +86,13 @@ Application developers must do two things to make their tokens `SuperchainERC20`
 Doing this setup now ensures that tokens benefit from interop (once it is available).
 
 *   Grant permission to `SuperchainTokenBridge` (address `0x4200000000000000000000000000000000000028`) to call `crosschainMint` and `crosschainBurn`.
-    [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) already does this for you.
+    If you are using [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) this is already done for you.
+
+    {/* 
+    
+    Link to tutorial here
+    
+    */}
 
 *   Deploy the ERC-20 contract at the same address on every chain in the Superchain.
     This is easiest when using [`create2`](https://book.getfoundry.sh/tutorials/create2-tutorial).
@@ -109,7 +117,7 @@ For step-by-step information on implementing SuperchainERC20, see [Deploy assets
 
 *   `SuperchainERC20` implements ERC-7802, which provides a minimal crosschain mint/burn interface designed to be a common pattern for the EVM ecosystem.
 *   `SuperchainERC20` uses the shared trust assumptions of the Superchain.
-    Traffic originating in *any* chain is trusted, because they are all managed by The Optimism Foundation.
+    Traffic originating in any of the Superchain's chains is trusted, because all those chains [share the same security standard](https://docs.optimism.io/superchain/standard-configuration).
 
 <Callout type="info">
   Projects moving from other token implementations may need to adapt to the `SuperchainERC20` specification.
