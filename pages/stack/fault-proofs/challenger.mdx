@@ -9,7 +9,9 @@ import Image from 'next/image'
 
 # OP-Challenger explainer
 
-The `op-challenger` operates as the *honest actor* in the fault dispute system and defends the chain by securing the `OptimismPortal` and ensuring the game always resolves to the correct state of the chain. For verifying the legitimacy of claims, `op-challenger` relies on a synced, trusted rollup node as well as a trace provider (e.g., [Cannon](/stack/fault-proofs/cannon)).
+The `op-challenger` operates as the *honest actor* in the fault dispute system and defends the chain by securing the `OptimismPortal` and ensuring the game always resolves to the correct state of the chain. For verifying the legitimacy of claims, `op-challenger` relies on a synced, trusted rollup node as well as a trace provider (e.g., [Cannon](/stack/fault-proofs/cannon)) that now supports 64-bit MIPS emulation.
+
+The updated 64-bit architecture allows for a significantly larger address space compared to the previous 32-bit implementation, enabling the system to handle more complex state transitions and larger memory requirements. This upgrade to 64-bit addressing provides access to a theoretical 16 exabytes of virtual memory space, though practical limitations and system configurations will typically restrict this to a more manageable size.
 
 Specifically, `op-challenger` performs the following actions:
 
@@ -20,7 +22,7 @@ Specifically, `op-challenger` performs the following actions:
 *   claims paid out bonds for both the challenger and proposer
 
 ## Architecture
-This diagram illustrates how `op-challenger` monitors dispute games, defends valid proposals, and challenges invalid ones. It also shows its interaction with the `op-proposer` in resolving claims.
+This diagram illustrates how `op-challenger` monitors dispute games, defends valid proposals, and challenges invalid ones. It also shows its interaction with the `op-proposer` in resolving claims. OP-Challenger now leverages a 64-bit MIPS VM with multithreaded capabilities, enabling features like asynchronous garbage collection and deterministic thread management through context switching.
 
 ```mermaid
 graph TD;
@@ -30,12 +32,20 @@ graph TD;
     OP -->|Assists| OPP[OP-Proposer]
     OPP -->|Resolves Claims| DG
     DG -->|Claims Paid| Bonds[Bonds for Challenger and Proposer]
+    
+    subgraph VM[64-bit MIPS VM]
+        MT[Multithreaded Execution] -->|Manages| TS[Thread States]
+        MT -->|Enables| GC[Asynchronous GC]
+        MT -->|Controls| CS[Context Switching]
+    end
+
+    OP -->|Uses| VM
 
     classDef default fill:#00,stroke:#FF0420,stroke-width:2px;
 ```
 
 <Callout>
-  The `cannon` and `op-program` executables are run in the `op-challenger` docker container as sub-processes when required to generate game trace data.
+  The `cannon` and `op-program` executables are run in the `op-challenger` docker container as sub-processes, leveraging 64-bit MIPS emulation and multithreaded capabilities to efficiently generate game trace data.
 </Callout>
 
 ## Fault detection responses
@@ -97,7 +107,7 @@ Note: An actor would only be pushed down to the bottom half of the game if the b
 
 ### How many CPUs should I run for challenger to work efficiently?
 
-The default `--max-concurrency` setting suits most operators. Increase it if the challenger lags, or decrease it if it overloads with requests.
+The default `--max-concurrency` setting is optimized for the 64-bit MIPS emulation with multithreaded Cannon. The system automatically balances thread allocation, but you can adjust this value if needed - increase it to utilize more parallel processing power, or decrease it if system resources are constrained.
 
 ### How much ETH do you need to challenge in a game?
 
