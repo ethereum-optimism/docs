@@ -127,7 +127,7 @@ the ability for the guardian to override if necessary to maintain security.
 As a result, withdrawals no longer depend on the privileged proposer role
 posting an output root, allowing the entire withdrawal process to be completed
 without any privileged actions. The trust assumption is reduced to requiring
-only that the guardian role does not act to intervene.
+only that the Guardian role does not act to intervene.
 
 Combined with the Guardian, Security Council Threshold and L2 ProxyAdmin
 Ownership changes 23 proposals, this satisfies the criteria to have OP Chains
@@ -360,44 +360,57 @@ references to all other contract addresses for the chain.
 
 #### DisputeGameFactory
 
-The `DisputeGameFactory` contract generates `FaultDisputeGame` contract
-instances.
+The `DisputeGameFactory` deploys instances of `FaultDisputeGame` and `PermissionedDisputeGame` 
+to resolve disputes about the OP Stack chain state at specific block numbers. 
+It serves as the entry point for creating and managing dispute games.
+The factory uses the `AnchorStateRegistry` for initialization,
+and integrates the `DelayedWETH` contract to manage participant bonds.
 
 #### FaultDisputeGame
 
-The `FaultDisputeGame` contract is deployed by the `DisputeGameFactory`. Each
-deployed instance of the contract acts as a host to a proposal about the state
-of the OP Stack chain at a given block number.
+The `FaultDisputeGame` resolves disputes about the OP Stack chain state by 
+allowing participants to propose or challenge states. 
+It is deployed by the `DisputeGameFactory` and includes logic to finalize disputes. 
+The contract uses the `AnchorStateRegistry` to start from trusted states, 
+`MIPS` to execute fault proofs, the `PreimageOracle` to validate hash-based claims, 
+and the `DelayedWETH` contract to handle bonds.
 
 #### PermissionedDisputeGame
 
-The `Guardian` can also choose to revert to a `PermissionedDisputeGame`
-contract that only allows specific roles to submit and challenge proposals.
+The `PermissionedDisputeGame` is also deployed by the `DisputeGameFactory`, 
+and inherits logic and dependencies from `FaultDisputeGame` while adding role-based restrictions. 
+It restricts participation to specific roles, such as designated proposers or challengers.
+It is used when stricter access controls are required, as enforced by the Guardian.
 
 #### AnchorStateRegistry
 
-The `AnchorStateRegistry` is a contract that stores the latest "anchor" state
-for each available `FaultDisputeGame` type. The anchor state is the latest
-state that has been proposed on L1 and was not challenged within the challenge
-period. By using stored anchor states, new `FaultDisputeGame` instances can
-be initialized with a more recent starting state which reduces the amount of
-required offchain computation.
+The `AnchorStateRegistry` stores the latest "anchor" state for each dispute game type.
+An anchor state is the most recent state proposed on L1 that was not challenged within the challenge period.
+These states allow new dispute games to start from a trusted, recent state, reducing offchain computation requirements.
 
 #### DelayedWETH
 
-The `DelayedWETH` contract has been set up to hold the bonds and only allow
-payouts after a delay, so that bonds can be redirected towards the correct
-recipient in the case that a game resolves incorrectly.
+The `DelayedWETH` contract manages bonds posted by participants during disputes.
+It delays payouts to allow time for verification, ensuring that funds are distributed correctly.
+This mechanism ensures participants are financially committed and disputes are finalized securely.
 
 #### MIPS
 
-The `MIPS` smart contract is an onchain implementation of a virtual machine
-(VM) that encompasses the 32-bit, Big-Endian, MIPS III Instruction Set
-Architecture (ISA).
+The `MIPS` contract provides an on-chain implementation of a 32-bit, Big-Endian MIPS III virtual machine, 
+designed to execute fault proofs for disputes by processing a standardized instruction set. 
+This enables instances of `FaultDisputeGame` and `PermissionedDisputeGame` to resolve disputes
+ over state transitions accurately and consistently. 
+ The process starts from the trusted anchor state provided by the `AnchorStateRegistry`, 
+ ensuring that the dispute is based on a reliable foundation. 
+ The `PreimageOracle` is then used to retrieve pre-images of hash-based claims, 
+ validating the data used in the computation and ensuring its integrity.
 
 #### PreimageOracle
 
-The `PreimageOracle` contract is used for storing permissioned pre-images.
+The `PreimageOracle` maps hashes to their corresponding pre-images for secure and permissioned data retrieval. 
+It validates hash-based claims used in disputes, such as state transitions or computational steps. 
+This ensures the integrity of fault proofs in `FaultDisputeGame` and `PermissionedDisputeGame` instances.
+
 
 #### DEPRECATED - L2OutputOracle
 
