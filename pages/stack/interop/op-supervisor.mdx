@@ -11,14 +11,15 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # OP-Supervisor
 
-OP-Supervisor is a service that verifies cross-chain messages and manages interoperability between chains in the OP Stack. 
+OP-Supervisor is a service that verifies cross-chain messages and manages interoperability between chains in the OP Stack.
 The main information it contains about other blockchains is:
-- Log entries, which could be [initiating messages](./explainer#how-messages-get-from-one-chain-to-the-other) for cross-domain messages.
-- Blockchain heads, which are the latest blocks at various levels of confidence and safety:
-  - Unsafe (the latest block available through the gossip protocol)
-  - Local-safe (the latest block written to L1)
-  - Cross-safe (the latest block written to L1, and for which all the dependencies are written to L1)
-  - Finalized (the latest block written to L1, and that L1 block is safe from reorgs)
+
+*   Log entries, which could be [initiating messages](./explainer#how-messages-get-from-one-chain-to-the-other) for cross-domain messages.
+*   Blockchain heads, which are the latest blocks at various levels of confidence and safety:
+    *   Unsafe (the latest block available through the gossip protocol)
+    *   Local-safe (the latest block written to L1)
+    *   Cross-safe (the latest block written to L1, and for which all the dependencies are written to L1)
+    *   Finalized (the latest block written to L1, and that L1 block is safe from reorgs)
 
 ```mermaid
 
@@ -51,14 +52,14 @@ To do this, OP-Supervisor has to have RPC access to all the chains in the depend
 
 ## How other components use OP-Supervisor
 
-- The execution client (typically `op-geth`) queries `op-supervisor` during block-building to verify if a message is sufficiently safe to include. 
-  To do this, the execution client looks at every executing message and  queries `op-supervisor` to see if there is a corresponding initiating message.
+*   The execution client (typically `op-geth`) queries `op-supervisor` during block-building to verify if a message is sufficiently safe to include.
+    To do this, the execution client looks at every executing message and  queries `op-supervisor` to see if there is a corresponding initiating message.
 
-- `op-node` queries cross-chain safety information and coordinates safety updates between OP stack nodes and `op-supervisor`. It uses the API provided by `op-supervisor` to:
-  - Retrieve the unsafe, local-safe, cross-safe, and finalized heads for other chains.
-  - Update the unsafe, local-safe, and finalized heads for its own chain.
-  - Attempt to promote blocks in its own chain to cross-safe status.
-  - Attempt to finalize L2 blocks based on L1 finality.
+*   `op-node` queries cross-chain safety information and coordinates safety updates between OP stack nodes and `op-supervisor`. It uses the API provided by `op-supervisor` to:
+    *   Retrieve the unsafe, local-safe, cross-safe, and finalized heads for other chains.
+    *   Update the unsafe, local-safe, and finalized heads for its own chain.
+    *   Attempt to promote blocks in its own chain to cross-safe status.
+    *   Attempt to finalize L2 blocks based on L1 finality.
 
 ### API
 
