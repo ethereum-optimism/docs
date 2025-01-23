@@ -29,16 +29,25 @@ The initiating message burns tokens on the source chain.
 The executing message then mints them on the destination chain.
 
 ```mermaid
+
+%%{
+  init: {
+    "sequence": {
+      "wrap": true
+    }
+  }
+}%%
+
 sequenceDiagram
   box rgba(0,0,0,0.1) Source Chain
-    participant src-erc20 as ERC20<sup>1</sup>  
-    participant src-bridge as Bridge
+    participant src-erc20 as SuperchainERC20
+    participant src-bridge as SuperchainTokenBridge
   end
   actor user as User  
   box rgba(0,0,0,0.1) Destination Chain
-    participant dst-l2Xl2 as L2ToL2
-    participant dst-bridge as Bridge    
-    participant dst-erc20 as ERC20 
+    participant dst-l2Xl2 as L2ToL2CrossDomainMessenger
+    participant dst-bridge as SuperchainTokenBridge    
+    participant dst-erc20 as SuperchainERC20 
   end
   rect rgba(0,0,0,0.1)
     note over src-erc20, dst-l2Xl2: Initiating Message
@@ -54,7 +63,7 @@ sequenceDiagram
   end
 ```
 
-#### Initiating message
+#### Initiating message (source chain)
 
 1.  The user (or a contract) calls [`SuperchainTokenBridge.sendERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol#L52-L78).
 
@@ -63,9 +72,9 @@ sequenceDiagram
 3.  The source token bridge calls [`SuperchainTokenBridge.relayERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol#L80-L97) on the destination token bridge.
     This call is relayed using [`L2ToL2CrossDomainMessenger`](./message-passing).
 
-#### Executing message
+#### Executing message (destination chain)
 
-4.  The user sends an executing message to [`L2ToL2CrossDomainMessenger`](./message-passing) to relay the message.
+4.  The user, or a relayer, sends an executing message to [`L2ToL2CrossDomainMessenger`](./message-passing) to relay the message.
 
 5.  The destination token bridge calls [`SuperchainERC20.crosschainMint`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol#L26-L35) to mint tokens for the user/contract that called `SuperchainTokenBridge.sendERC20` originally.
 
