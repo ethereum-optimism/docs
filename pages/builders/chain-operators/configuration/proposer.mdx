@@ -12,11 +12,28 @@ This page list all configuration options for op-proposer. The op-proposer posts
 the output roots to the L1, to make it available for verifiers. The following
 options are from the `--help` in [v1.7.6](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.6).
 
+## Proposer policy
+
+The proposer policy defines high-level constraints and responsibilities regarding how L2 output roots are posted to L1. Below are the [standard guidelines](/superchain/standard-configuration) for configuring the batcher within the OP Stack.
+
+| Parameter        | Description                                                                         | Administrator  | Requirement                                                | Notes                                                                                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Output Frequency | Defines how frequently L2 output roots are submitted to L1 (via the output oracle). | L1 Proxy Admin | **43,200 L2 blocks** (24 hours at 2s block times) or lower | - Once fault proofs are implemented, this value may become deprecated.<br />- It cannot be set to 0 (there must be some cadence for outputs). |
+
+### Additional Guidance
+
+*   **Output Frequency**:
+    *   Used to post output roots to L1 for verification.
+    *   The recommended maximum is 24 hours (43,200 blocks at 2s each), though many chains choose smaller intervals.
+    *   Will eventually be replaced or significantly changed by the introduction of fault proofs.
+
+Include these high-level "policy" requirements when you set up or modify your `op-proposer` configuration. See the [Proposer Configuration](#global-options) reference, which explains each CLI flag and environment variable in depth.
+
 ## Global options
 
 ### active-sequencer-check-duration
 
-The duration between checks to determine the active sequencer endpoint. The 
+The duration between checks to determine the active sequencer endpoint. The
 default value is `2m0s`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -27,7 +44,7 @@ default value is `2m0s`.
 
 ### allow-non-finalized
 
-Allow the proposer to submit proposals for L2 blocks from non-finalized L1 
+Allow the proposer to submit proposals for L2 blocks from non-finalized L1
 blocks. The default value is false.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -38,7 +55,7 @@ blocks. The default value is false.
 
 ### fee-limit-multiplier
 
-The multiplier applied to fee suggestions to limit fee increases. The default 
+The multiplier applied to fee suggestions to limit fee increases. The default
 value is 5.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -59,7 +76,7 @@ Address of the DisputeGameFactory contract.
 
 ### game-type
 
-Dispute game type to create via the configured DisputeGameFactory. The default 
+Dispute game type to create via the configured DisputeGameFactory. The default
 value is 0.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -273,7 +290,7 @@ The private key to use with the service. Must not be used with mnemonic.
 
 ### proposal-interval
 
-Interval between submitting L2 output proposals when the dispute game factory 
+Interval between submitting L2 output proposals when the dispute game factory
 address is set. The default value is 0s.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -284,7 +301,7 @@ address is set. The default value is 0s.
 
 ### resubmission-timeout
 
-Duration we will wait before resubmitting a transaction to L1. The default 
+Duration we will wait before resubmitting a transaction to L1. The default
 value is 48s.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -295,7 +312,7 @@ value is 48s.
 
 ### rollup-rpc
 
-HTTP provider URL for the rollup node. A comma-separated list enables the 
+HTTP provider URL for the rollup node. A comma-separated list enables the
 active rollup provider.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -336,7 +353,7 @@ rpc listening port. The default value is 8545.
 
 ### safe-abort-nonce-too-low-count
 
-Number of ErrNonceTooLow observations required to give up on a tx at a 
+Number of ErrNonceTooLow observations required to give up on a tx at a
 particular nonce without receiving confirmation. The default value is 3.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -408,7 +425,7 @@ default value is 100.
 
 ### txmgr.min-basefee
 
-Enforces a minimum base fee (in GWei) to assume when determining tx fees. The 
+Enforces a minimum base fee (in GWei) to assume when determining tx fees. The
 default value is 1.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -419,7 +436,7 @@ default value is 1.
 
 ### txmgr.min-tip-cap
 
-Enforces a minimum tip cap (in GWei) to use when determining tx fees. The 
+Enforces a minimum tip cap (in GWei) to use when determining tx fees. The
 default value is 1.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -430,7 +447,7 @@ default value is 1.
 
 ### txmgr.not-in-mempool-timeout
 
-Timeout for aborting a tx send if the tx does not make it to the mempool. The 
+Timeout for aborting a tx send if the tx does not make it to the mempool. The
 default value is 2m0s.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -461,7 +478,7 @@ Timeout for sending transactions. If 0 it is disabled. The default value is 0s.
 
 ### wait-node-sync
 
-Indicates if, during startup, the proposer should wait for the rollup node to 
+Indicates if, during startup, the proposer should wait for the rollup node to
 sync to the current L1 tip before proceeding with its driver loop. The default
 value is false.
 
