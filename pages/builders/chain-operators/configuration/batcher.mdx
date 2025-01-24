@@ -27,7 +27,7 @@ The batcher policy defines high-level constraints and responsibilities regarding
 *   **Data Availability Types**:
     *   **Calldata** is generally simpler but can be more expensive on mainnet Ethereum, depending on gas prices.
     *   **Blobs** are typically lower cost when your chain has enough transaction volume to fill large chunks of data.
-    *   The `op-batcher` can toggle between these approaches by setting the `--data-availability-type=<blobs|calldata>` flag or with the `OP_BATCHER_DATA_AVAILABILITY_TYPE` env variable.
+    *   The `op-batcher` can toggle between these approaches by setting the `--data-availability-type=<blobs|calldata|auto>` flag or with the `OP_BATCHER_DATA_AVAILABILITY_TYPE` env variable. Setting this flag to `auto` will allow the batcher to automatically switch between `calldata` and `blobs` based on the current L1 gas price.
 
 *   **Batch Submission Frequency** (`OP_BATCHER_MAX_CHANNEL_DURATION` and related flags):
     *   Standard OP Chains frequently target a maximum channel duration between 1–6 hours.
@@ -286,6 +286,10 @@ is `shadow`.
 </Tabs>
 
 ### data-availability-type
+
+<Callout type="info">
+  Setting this flag to `auto` will allow the batcher to automatically switch between `calldata` and `blobs` based on the current L1 gas price.
+</Callout>
 
 The data availability type to use for submitting batches to the L1. Valid
 options: `calldata`, `blobs`, and `auto`. The default value is `calldata`.
