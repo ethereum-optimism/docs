@@ -419,20 +419,44 @@ cast codesize 0x4e59b44847b379578588920cA78FbF26c0B4956C --rpc-url $L1_RPC_URL
 
 Once you've configured your network, it's time to deploy the L1 contracts necessary for the functionality of the chain.
 
-<Steps>
+### Using `op-deployer`
 
-{<h3>Deploy the L1 contracts</h3>}
+The recommended way to deploy the L1 smart contracts is with the `op-deployer` tool. 
+Follow these steps:
+
+<Steps>
+{<h3>Set Up Your Environment</h3>}
+
+*   Install `op-deployer`:
+    The recommended way to install `op-deployer` is to download the latest release from the monorepo's
+    [release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
+    for your platform then extract it somewhere on your `PATH`.
+*   Access to the L1 blockchain (e.g., Sepolia or Mainnet) via an RPC URL.
+*   A private key with sufficient funds to cover deployment costs.
+
+
+{<h3>Create an intent file</h3>}
+
+*   Define the configuration of your chain in an intent file.
+*   This file specifies the deployment parameters for deploying the L1 smart contract. 
+Follow the instructions provided in the [configure your chain](/tools/op-deployer#init-configure-your-chain) section to generate the intent file.
+
+{<h3>Run the `apply` command</h3>}
+
+Execute the following command to deploy the L1 smart contracts:
 
 ```bash
-forge script scripts/Deploy.s.sol:Deploy --private-key $GS_ADMIN_PRIVATE_KEY --broadcast --rpc-url $L1_RPC_URL --slow
+op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
 ```
 
-<Callout>
-If you see a nondescript error that includes `EvmError: Revert` and `Script failed` then you likely need to change the `IMPL_SALT` environment variable.
-This variable determines the addresses of various smart contracts that are deployed via [CREATE2](https://eips.ethereum.org/EIPS/eip-1014).
-If the same `IMPL_SALT` is used to deploy the same contracts twice, the second deployment will fail.
-**You can generate a new `IMPL_SALT` by running `direnv allow` anywhere in the Optimism Monorepo.**
-</Callout>
+*   Replace `<rpc-url>` with your L1 RPC URL.
+*   Replace `<private key hex>` with the private key of the account used for deployment.
+
+{<h3>Verify the deployment</h3>}
+Once the deployment is complete, you can verify the deployed contract addresses and configuration:
+
+*   Check the deployment output for contract addresses and transaction details.
+*   Verify the deployed contracts on the block explorer using the specified `ETHERSCAN_API_KEY` in the configuration file.
 
 </Steps>
 
