@@ -4,13 +4,12 @@ lang: en-US
 description: Learn how to deploy the OP Stack L1 smart contracts.
 ---
 
-import { Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 
 # OP Stack smart contract deployment
 
-<Callout type="warning">
-This page is out of date and shows the legacy method for smart contract deployment.
-For the latest recommended method, use [op-deployer](/builders/chain-operators/tools/op-deployer).
+<Callout type="info">
+  Standard OP Stack chains must use the latest governance approved and audited versions of the smart contract code.
 </Callout>
 
 The following guide shows you how to deploy the OP Stack L1 smart contracts.
@@ -19,29 +18,28 @@ official contract releases**. You can visit the see the [smart contract overview
 for the official release versions. Changes to the smart contracts are
 generally not considered backwards compatible.
 
-<Callout>
-  Standard OP Stack chains should use the latest governance approved and audited versions of the smart contract code.
+<Callout type="warning">
+The following deployment information outlines the legacy method for deploying the OP Stack L1 contracts. 
+We do not recommend using this method, and it is provided here only for historical context.
 </Callout>
 
-## Deployment configuration
+## Deployment Configuration
 
-Deploying your OP Stack contracts requires creating a deployment configuration
-JSON file. You will create a new deployment configuration file in the following
-monorepo subdirectory: [packages/contracts-bedrock/deploy-config](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/deploy-config)
-For the full set of deployment configuration options and their meanings, you
-can see the [rollup deployment configuration page](/builders/chain-operators/configuration/rollup).
+To deploy OP Stack contracts, you need to create a deployment configuration JSON file. 
+The file should be placed in the following monorepo subdirectory: [packages/contracts-bedrock/deploy-config](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/deploy-config).
 
-## Deployment script
+For a detailed explanation of the configuration options and their meanings, refer to the [rollup deployment configuration page](/builders/chain-operators/configuration/rollup).
 
-The smart contracts are deployed using [foundry](https://github.com/foundry-rs)
-and you can find the script's source code in the monorepo at
+## Deployment script (Legacy Method)
+
+The legacy method for deploying smart contracts uses [foundry](https://github.com/foundry-rs) and the deployment script located in the monorepo at 
 [packages/contracts-bedrock/scripts/deploy/Deploy.s.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/deploy/Deploy.s.sol).
 
 ### State diff
 
-Before deploying the contracts, you can verify the state diff by using the `runWithStateDiff()` function signature in the deployment script, which produces
-the outputs inside [`snapshots/state-diff/`](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/snapshots/state-diff).
-Run the deployment with state diffs by executing:
+You can verify the state diff before deploying the contracts by using the `runWithStateDiff()` function in the deployment script. 
+This produces outputs in [`snapshots/state-diff/`](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/snapshots/state-diff).
+Run the deployment with state diffs using the following command:
 
 ```bash
 forge script -vvv scripts/deploy/Deploy.s.sol:Deploy --sig 'runWithStateDiff()' --rpc-url $ETH_RPC_URL --broadcast --private-key $PRIVATE_KEY
@@ -81,6 +79,77 @@ DEPLOY_CONFIG_PATH=<PATH_TO_MY_DEPLOY_CONFIG> \
 All functions for deploying a single contract are public, meaning that
 the `--sig` argument to forge script can be used to target the deployment of a
 single contract.
+
+
+## Using `op-deployer`
+
+The recommended way to deploy the L1 smart contracts is with the `op-deployer` tool. 
+Follow these steps:
+
+<Steps>
+{<h3>Install op-deployer</h3>}
+
+The recommended way to install `op-deployer` is to download the latest release from the monorepo's
+[release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
+for your platform then extract it somewhere on your `PATH`.
+
+{<h3>Configure deployment settings</h3>}
+Create a deployment configuration file following the op-deployer specifications.
+
+*   Create a configuration file(`deployer-config.json`) in JSON format that defines the parameters for your deployment.
+*   You can find a configuration template in the op-deployer documentation.
+*   The configuration file typically includes parameters like:
+    *   Chain ID
+    *   RPC URLs for L1 and L2
+    *   Deployment addresses
+    *   Contract configuration.
+
+{<h3>Bootstrap the deployment</h3>}
+
+Before deploying the contracts, bootstrap your environment to ensure all prerequisites are met:
+
+```bash
+# Bootstrap the deployment
+
+op-deployer bootstrap --config <./deploy-config.json>
+```
+
+This step verifies that:
+
+*   The L1 and L2 RPC URLs are accessible.
+*   The configuration file is valid and complete.
+
+{<h3>Deploy contracts</h3>}
+Run the following command to deploy the L1 and L2 smart contracts:
+
+```bash
+# Deploy the contracts
+
+op-deployer deploy --config ./deploy-config.json --rpc https://mainnet.infura.io/v3/<API_KEY>
+```
+
+*Parameters:*
+
+*   **--config:** Path to your deployment configuration file.
+*   **--rpc:** The RPC URL for the L1 network.
+
+{<h3>Verify the deployment</h3>}
+Once the deployment is complete, you can verify the deployed contract addresses and configuration:
+
+*   Check the deployment output for contract addresses and transaction details.
+*   Verify the deployed contracts on the block explorer using the specified `ETHERSCAN_API_KEY` in the configuration file.
+
+```bash
+# Verify the contracts (optional, requires ETHERSCAN_API_KEY in config)
+
+op-deployer verify --config ./deploy-config.json
+```
+</Steps>
+
+<Callout type="info">
+If you need deterministic deployment (e.g., for deploying contracts at the same address across multiple chains), 
+use the `CREATE2` method.
+</Callout>
 
 ## Best practices
 
