@@ -1,0 +1,115 @@
+---
+title: Preparing for Pectra Breaking Changes
+lang: en-US
+description: Learn how to prepare for Pectra upgrade breaking changes.
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Preparing for Pectra breaking changes
+
+This page outlines breaking changes related to the Ethereum Pectra (Prague-Electra) hard fork for chain operators and node operators on OP Stack chains.
+If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
+
+<Callout type="info">
+  *   This page will be updated continuously with information on upgrade runbooks and timelines as they come.
+  *   The Pectra upgrade for Holocene L1 proposed activation is on **Wed Feb 12**.
+  *   The Pectra upgrade for Sepolia L1 proposed activation is on **Wed Feb 19**.
+  *   The Pectra upgrade for Ethereum L1 will be activated in **March**.
+</Callout>
+
+## What's included in Pectra?
+
+Pectra contains a variety of EIPs, some of which apply to the OP Stack; others do not. The following EIPs are included in Pectra as outlined in the [Pectra Devnet 5 notes](https://notes.ethereum.org/@ethpandaops/pectra-devnet-5):
+
+*   [EIP-2537: Precompile for BLS12-381 curve operations](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-2537.md)
+*   [EIP-2935: Save historical block hashes in state](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-2935.md)
+*   [EIP-6110: Supply validator deposits on chain](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-6110.md)
+*   [EIP-7002: Execution layer triggerable withdrawals](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-7002.md)
+*   [EIP-7251: Increase the MAX\_EFFECTIVE\_BALANCE](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-7251.md)
+*   [EIP-7549: Move committee index outside Attestation](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-7549.md)
+*   [EIP-7623: Increase calldata cost](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-7623.md)
+*   [EIP-7685: General purpose execution layer requests](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-7685.md)
+*   [EIP-7691: Blob throughput increase](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-7691.md)
+*   [EIP-7702: Set EOA account code](https://github.com/ethereum/EIPs/blob/d96625a4dcbbe2572fa006f062bd02b4582eefd5/EIPS/eip-7702.md)
+*   [EIP-7840: Add blob schedule to EL config files](https://github.com/ethereum/EIPs/pull/9129)
+
+## For chain operators
+
+The OP Stack is approaching the Pectra upgrade in two parts:
+
+1.  Make the necessary upgrades to make sure OP Stack chains do not break when the L1 pectra upgrade activates.
+2.  Upgrade OP Stack chains to support Pectra's new features that apply to L2s.
+
+For the first part, we will be releasing a new versions of the OP Stack that includes the necessary changes to make sure OP Stack chains do not break when the L1 pectra upgrade activates. It is essential for chain operators and the nodes on your network to upgrade to these latest versions. If you're are running a fault proof enabled chain, you will need to follow additional steps outlined below.
+
+For the second part, we will be implementing all the features of Pectra that apply to L2s. We will be releasing a new version of the OP Stack that includes these features. We will provide more information on this part of the upgrade as when the engineering work is complete. The spec work is being tracked in this [issue](https://github.com/ethereum-optimism/specs/issues/499).
+
+These following steps are necessary for every chain operator:
+
+<Steps>
+  ### Update to the latest releases
+
+  *   `op-node` at `vTBD`
+  *   `op-geth` at `vTBD`
+  *   `op-batcher` at `vTBD`
+
+  ### Verify Your Configuration
+
+  Make the following checks to verify that your node is properly configured.
+
+  *   `op-node` and `op-geth` will log their configurations at startup
+  *   Check that the Pectra time is set to `activation-timestamp` in the op-node startup logs
+  *   Check that the Pectra time is set to `activation-timestamp` in the op-geth startup logs
+</Steps>
+
+### For fault proof enabled chains
+
+Since the Pectra upgrade changes the derivation rules, the version of `op-program` used in the fault proof system has to be upgraded to a version that supports these changes. The `op-program` version used is specified via the `faultGameAbsolutePrestate` setting, deployed as part of `FaultDisputeGame` and `PermissionedDisputeGame` contracts.
+
+<Steps>
+  ### Make sure the Superchain Registry is up to date
+
+  The new `op-program` release will pull the configurations from the [superchain-registry](https://github.com/ethereum-optimism/superchain-registry). This is important because the op-challenger uses the `op-program` and it needs to be aware of your chain's configuration. If you are running a chain that is not in the superchain-registry, please open a PR to add your chain to the superchain-registry.
+
+  ### Generate a new absolute prestate
+
+  Once we have a finalized release of the `op-program`, we will provide a release tag for you to use to generate the absolute prestate. You will check out that release tag in the monorepo and run the `make reproducible-prestate` [command](https://github.com/ethereum-optimism/optimism/blob/80eff009a352c4e74ec8fb41a6bdb2a5778f3075/Makefile#L133-L135) to generate the absolute prestate.
+
+  ### Deploy new dispute game contracts
+
+  You will then take the absolute prestate and deploy new `FaultDisputeGame` and `PermissionedDisputeGame` contracts with that value.
+
+  ### Update the DisputeGameFactory
+
+  You will then need to update the `DisputeGameFactory` to use the point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. We will provide an upgrade task and script to facilitate this upgrade.
+
+  ### Update your op-challenger
+
+  Finally you will need to update your `op-challenger` to the new release version that will be provided soon.
+</Steps>
+
+### For OP Stack forks
+
+We are working on a PR that will include the ability to sync L1 after the pectra upgrade. The commits from the PR will need to be applied to your chain before Pectra goes live on L1. We will provide a link to the PR after it is complete.
+
+## For node operators
+
+Node operators will need to upgrade to the respective releases before the activation dates.
+
+These following steps are necessary for every node operator:
+
+<Steps>
+  ### Update to the latest release
+
+  *   `op-node` at `vTBD`
+  *   `op-geth` at `vTBD`
+
+  ### Verify Your Configuration
+
+  Make the following checks to verify that your node is properly configured.
+
+  *   `op-node` and `op-geth` will log their configurations at startup
+  *   Check that the Pectra time is set to `activation-timestamp` in the op-node startup logs
+  *   Check that the Pectra time is set to `activation-timestamp` in the op-geth startup logs
+</Steps>
