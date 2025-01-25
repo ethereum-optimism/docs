@@ -1,7 +1,7 @@
 ---
-title: Reorgs and sequencing errors
+title: Interop reorg awareness
 lang: en-US
-description: How interop avoids the double-spending problem.
+description: How the OP Stack enables low-latency interop and avoids the double-spend problem.
 ---
 
 import { Callout } from 'nextra/components'
@@ -11,10 +11,10 @@ import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
 
-# Reorgs and sequencing errors
+# Interop reorg awareness
 
-Sequencing errors happen when, for some reason or another (possibly a [reorg](https://www.alchemy.com/overviews/what-is-a-reorg#what-happens-to-reorgs-after-the-merge)), a system such as a blockchain has an incorrect view of another system and thinks that assets were transferred when they have not been.
-This could result in [double spending](https://en.wikipedia.org/wiki/Double-spending), which happens when an asset appears in two places at once.
+[Reorgs](https://www.alchemy.com/overviews/what-is-a-reorg#what-happens-to-reorgs-after-the-merge) and a few other types of sequencing errors can result in one blockchain having an incorrect view of another.
+The main risk is [double spending](https://en.wikipedia.org/wiki/Double-spending), a problem that can happen when an asset appears in two places at once.
 
 <details>
 
@@ -48,25 +48,24 @@ flowchart LR
     end
 ```
 
-Double spending occurs when the destination chain "thinks" that it received the initiating message, but that message was not really sent.
-When that happens, the tokens are still on the source chain, but they are also on the destination chain, allowing the user to spend them twice.
+A double-spend problem occurs when the destination chain receives a valid initiating message, but due to an issue on the source chain, such as a reorg, that initiating transaction is no longer valid. 
+When that happens, the tokens are still on the source chain, but they also on the destination chain.
 
 </details>
 
 In Ethereum, incorrect state is usually a transient phenomenon.
-If a sequencer equivocates (sends one block through gossip, and then posts another to L1), once the block is posted to L1 that is the correct block.
-A new block can be replaced through a reorg, but after sufficient time has passed the block is finalized, and is nearly impossible to remove from the blockchain.  
+On L2, a sequencer can share one block through gossip and then post a different block to L1.
+But once the block is posted to L1, that is the correct block for the blockchain.
+On L1, new block can be replaced through a reorg, but after sufficient time has passed the block is finalized, and is nearly impossible to remove from the blockchain.
 
-The simplest solution to double-spending is to wait.
-For maximum security, a bridge could wait until the block with the initiating message is written to L1, finalized, and then wait until the [challenge period](/connect/resources/glossary#challenge-period) is over before minting the tokens.
-This is how the [Optimism L1 bridge](https://app.optimism.io/bridge/withdraw) works.
-That solution is really bad from the usability perspective.
+The most frequent solution to mitigate the double-spend problem is to wait for L1 finality; however, that solution results in high latency and poor user experience.
 
 ## Block safety levels
 
-Instead, interop allows for one block transfers optimistically, but restricts their validity using [block safety levels](explainer#block-safety-levels).
-A block is only as safe as the least safe block on which it depends.
+To mitigate the double-spend problem and deliver a low-latency cross-chain experience, OP Stack interop can achieve one-block latency cross-chain transfers through the use of [block safety levels](./explainer#block-safety-levels).
+This means users can transfer assets across chains in the Superchain with 1-block latency, and should a reorg happen, both the source and destination transaction would revert preventing a double spend problem.
 
+{/* 
 ```mermaid
 
 graph LR
@@ -100,10 +99,37 @@ Blockchains B and C are high traffic, so they write their blocks to L1 quickly, 
 However, blockchain A has only written block A<sub>100</sub> to the blockchain. 
 As a result, block A<sub>101</sub> is unsafe, and so are all the blocks that depend on it, directly (A<sub>102</sub>, B<sub>301</sub>, and B<sub>302</sub>) or indirectly (A<sub>103</sub>, B<sub>303</sub>, and C<sub>203</sub>).
 Some of these blocks may be *local-safe* because they are written to L1, but none of them are *cross-safe* because they depend on a block that isn't.
+*/}
 
+```mermaid
+
+graph LR
+    classDef finalized fill:#CCC
+    classDef safe fill:#8F8
+    classDef unsafe fill:#F89
+
+    subgraph A ["Chain A"]
+      A100["A<sub>100</sub>"]-->A101["A<sub>101</sub>"]-->A102["A<sub>102</sub>"]-->A103["A<sub>103</sub>"]
+    end
+    subgraph B ["Chain B"]
+      B300["B<sub>300</sub>"]-->B301["B<sub>301</sub>"]-->B302["B<sub>302</sub>"]-->B303["B<sub>303</sub>"]
+    end
+    A101-.->B302
+    B300-.->A100
+    class A100,B300,B301 safe
+    class A101,A102,A103,B302,B303 unsafe
+```
+
+In the diagram above, solid arrows are the derivation of a block from the previous block in the chain. 
+Dotted arrows go from the block with the initiating message (the source) to the block with the executing message (the destination).
+Blocks can either be finalized (grey), cross-safe (green), or unsafe (red).
+Blockchain A has only written block A<sub>100</sub> to the blockchain. 
+As a result, block A<sub>101</sub> is unsafe, and so are all the blocks that depend on it, directly (A<sub>102</sub> and B<sub>302</sub>) or indirectly (A<sub>103</sub> and B<sub>303</sub>).
+Blocks B<sub>302</sub> and B<sub>303</sub> may be *local-safe* (if they are written to L1), but they cannot be *cross-safe* because they depend on a block that isn't. 
 If all goes well, eventually A<sub>101</sub> will be written to L1, turn safe, and then the blocks that depend on it can become safe as well. 
 
-If there is a problem, blocks may need to be recalculated, but only the unsafe blocks.
+The message between A<sub>101</sub> and B<sub>302</sub> can be an asset moving across the bridge.
+In that case, the initiating message (A<sub>101</sub>) burns `n` tokens on the source chain (A), and the executing message (B<sub>302</sub>) mints `n` tokens on the destination chain (B).
 
 ### Equivocation
 
@@ -172,8 +198,10 @@ If the new block does not contain the same blob, then the sequencer on the chain
 
 So L1 reorgs are basically invisible to L2.
 
+{/* 
 ### L2 reorg
 
 An L2 reorg could happen after the sequencer is decentralized.
 In that case, there is a deterministic FCU (fork choice update), just as there is on L1.
 At worst, some unsafe blocks need to be recalculated (if one fork is chosen over another).
+*/}
