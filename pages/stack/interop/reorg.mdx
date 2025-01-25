@@ -55,15 +55,16 @@ When that happens, the tokens are still on the source chain, but they also on th
 
 In Ethereum, incorrect state is usually a transient phenomenon.
 On L2, a sequencer can share one block through gossip and then post a different block to L1.
-But once the block is posted to L1, that is the correct block for the blockchain.
+But once the block is posted to L1, that is the correct block for the blockchain, barring L1 reorgs.
 On L1, new block can be replaced through a reorg, but after sufficient time has passed the block is finalized, and is nearly impossible to remove from the blockchain.
 
 The most frequent solution to mitigate the double-spend problem is to wait for L1 finality; however, that solution results in high latency and poor user experience.
 
 ## Block safety levels
 
-To mitigate the double-spend problem and deliver a low-latency cross-chain experience, OP Stack interop can achieve one-block latency cross-chain transfers through the use of [block safety levels](./explainer#block-safety-levels).
-This means users can transfer assets across chains in the Superchain with 1-block latency, and should a reorg happen, both the source and destination transaction would revert preventing a double spend problem.
+To mitigate the double-spend problem while delivering a low-latency cross-chain experience, OP Stack interop uses [block safety levels](./explainer#block-safety-levels).
+This means users can transfer assets across chains in the Superchain with 1-block latency, and should a reorg happen, either both the source and destination transactions would remain, or both of them would revert.
+In every case, there is no window of opportunity to double spend.
 
 {/* 
 ```mermaid
@@ -131,7 +132,23 @@ If all goes well, eventually A<sub>101</sub> will be written to L1, turn safe, a
 The message between A<sub>101</sub> and B<sub>302</sub> can be an asset moving across the bridge.
 In that case, the initiating message (A<sub>101</sub>) burns `n` tokens on the source chain (A), and the executing message (B<sub>302</sub>) mints `n` tokens on the destination chain (B).
 
+### L1 reorg
+
+In this case an L1 block is replaced and the new block either contains the same blob with chain data that was contained in the old block or it doesn't.
+If the new block contains the same blob, the change is meaningless from the L2 perspective.
+If the new block does not contain the same blob, then the sequencer on the chain will know it is missing and repost it.
+
+So L1 reorgs are basically invisible to L2.
+
 ### Equivocation
+
+Sequencer inform the rest of the Superchain about a new block in two ways:
+
+- The gossip protocol, which is typically used as soon as the block is created.
+  The problem is that the gossip protocol does not create a commitment.
+- Posting to L1, which typically happens a few minutes after the block is created.
+  The reason is cost, it is a lot cheaper if compression and L1 posting are done in large batches, rather than for each individual block.
+
 
 Equivocation happens when a sequencer publishes a block using the gossip protocol that is different from the one that eventually gets written to L1.
 In this case, the block that is written to L1 (let's call it A'<sub>101</sub>) is the valid one, and that causes every dependant block to be recalculated.
@@ -189,14 +206,6 @@ There are several potential reasons:
 </details>
 
 This is functionally equivalent to equivocation, and dealt with the same way, so it can change unsafe blocks but only those blocks.
-
-### L1 reorg
-
-In this case an L1 block is replaced and the new block either contains the same blob with chain data that was contained in the old block or it doesn't.
-If the new block contains the same blob, the change is meaningless from the L2 perspective.
-If the new block does not contain the same blob, then the sequencer on the chain will know it is missing and repost it.
-
-So L1 reorgs are basically invisible to L2.
 
 {/* 
 ### L2 reorg
