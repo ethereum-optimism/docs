@@ -15,7 +15,7 @@ import { InteropCallout } from '@/components/WipCallout'
 
 ## The trust model
 
-This interop vulnerability arises when an initiating message seems to exist, prompting the processing of the executing message. However, the initiating message ends up not actually appear in the canonical chain.
+This interop vulnerability arises when an initiating message seems to exist, prompting the processing of the executing message. However, the initiating message ends up not actually appearing in the canonical chain.
 Excluding L1 reorgs, this can happen in two ways:
 
 *   *Equivocation*. A sequencer publishes a block using the gossip protocol that is different from the one that eventually gets written to L1.
@@ -62,7 +62,13 @@ L2 blocks start as unsafe, meaning that there's no L1 evidence for them, and the
 Sending out incorrect information, for example that a certain transaction is included in a block when it isn't, is called *equivocation*.
 A sequencer that builds blocks with interop can choose to accept messages from unsafe blocks (received through the gossip protocol), for minimal latency.
 
-However, because of equivocation risk, a block that is written to L1 (*local safe*) can only be considered truly safe (the technical term is *cross safe*), for itself and the previous blocks in its blockchain are also written to L1.
+To minimize the risk of equivocation, a block written to L1 (*local safe*) is only considered fully safe (*cross safe*) once both that block and all preceding blocks in its blockchain are also written to L1.
+If the source block is written to L1 first, the destination sequencer can detect it. 
+If the source block is missing an initiating message that the sequencer relied on due to equivocation, the sequencer can identify the error and recalculate the state. In this scenario, no significant harm occurs.
+
+However, if the destination block—containing the executing message that depends on the initiating message—is written to L1 first (e.g., due to higher traffic on the chain), a different risk arises. 
+If the source block that is eventually written to L1 lacks the initiating message, verifiers will detect that the derivation of the destination block, and any blocks dependent on it, is incorrect. 
+In this case, the destination block and all subsequent blocks on any chain that depend on it are classified as deposit-only blocks.
 
 ```mermaid
 
@@ -71,14 +77,18 @@ sequenceDiagram
     participant src as Source Chain
     participant dst as Destination Chain
     participant l1 as Ethereum Mainnet
+    note over src,dst: ↓ Initiating message ↓
     src->>dst: Block src_n will have transaction txn_0 that emits log event evt_0
-    note over src,dst: Initiating message
-    app->>dst: Transaction txn_1: If you have evt_0, call contract C with the data in evt_0.
-    note over app,dst: Executing message
+    note over app,dst: ↓ Executing message ↓    
+    app->>dst: Transaction txn_1: If you have evt_0, call contract C with the data in evt_0. Otherwise, revert.
     note left of dst: Block dst_m will <br/> have the results of <br/> calling contract C <br/> with the data in evt_0.
     break
         note over app,l1: time passes
     end
+    dst->>l1: Write block dst_m, which includes a successful txn_1.
+    break
+        note over app,l1: time passes
+    end    
     src->>l1: Write block src_n without txn_0 (so no evt_0)
     l1->>dst: This is the safe block src_n
     note left of dst: No evt_0, so block dst_m is incorrect <br /> and so is every subsequent block. <br /> All those blocks are replaced with <br /> deposit only blocks.
@@ -102,10 +112,10 @@ sequenceDiagram
     participant src as Source Chain
     participant dst as Destination Chain
     participant l1 as Ethereum Mainnet
+    note over src,dst: ↓ Initiating message ↓
     src->>dst: Block src_n will have transaction txn_0 that emits log event evt_0
-    note over src,dst: Initiating message
-    app->>dst: Transaction txn_1: If you have evt_0, call contract C with the data in evt_0.
-    note over app,dst: Executing message
+    note over app,dst: ↓ Executing message ↓    
+    app->>dst: Transaction txn_1: If you have evt_0, call contract C with the data in evt_0, otherwise revert.
     note over dst: Block src_n is not safe yet,<br />txn_1 fails
     break
         note over app,l1: time passes
