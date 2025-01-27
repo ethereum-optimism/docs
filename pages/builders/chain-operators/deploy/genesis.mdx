@@ -9,8 +9,8 @@ import { Callout } from 'nextra/components'
 # OP Stack genesis creation
 
 <Callout type="info">
-The recommended way to generate genesis and rollup configuration files is using `op-deployer`. 
-This ensures standardization and compatibility with the Superchain.
+  The recommended way to generate genesis and rollup configuration files is using `op-deployer`.
+  This ensures standardization and compatibility with the Superchain.
 </Callout>
 
 The following guide shows you how to generate the L2 genesis file `genesis.json`. This is a JSON
@@ -19,19 +19,19 @@ execution client (op-geth) to initialize your network. There is also the rollup 
 provided to the consensus client (op-node).
 
 <Callout type="warning">
-The following genesis creation information is the legacy method for creating OP Stack configuration files. 
-We do not recommend using this method. It's preserved here for historical context.
+  The following genesis creation information is the legacy method for creating OP Stack configuration files.
+  We do not recommend using this method. It's preserved here for historical context.
 </Callout>
 
 ## Solidity script (Legacy)
 
-You can also use the foundry script 
-located in the monorepo to generate an "L2 state dump" and then pass this into the op-node genesis subcommand. 
+You can also use the foundry script
+located in the monorepo to generate an "L2 state dump" and then pass this into the op-node genesis subcommand.
 The foundry script can be found at
 [packages/contracts-bedrock/scripts/L2Genesis.s.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/L2Genesis.s.sol).
 
 <Callout type="info">
-When generating the genesis file, please use the same `op-contracts/vX.Y.Z` release commit used for L1 contract deployments.
+  When generating the genesis file, please use the same `op-contracts/vX.Y.Z` release commit used for L1 contract deployments.
 </Callout>
 
 ### Configuration
@@ -92,34 +92,35 @@ go run cmd/main.go genesis l2 \
   --l1-rpc=<RPC URL for an Ethereum L1 node. Cannot be used with --l1-starting-block>>
 ```
 
-## Genesis and rollup configuration with `op-deployer`
+## Genesis and rollup configuration with `op-deployer` 
 
-The `op-deployer` tool simplifies the creation of genesis and rollup configuration files (`genesis.json` and `rollup.json`). 
+The `op-deployer` tool simplifies the creation of genesis and rollup configuration files (`genesis.json` and `rollup.json`).
 These files are crucial for initializing the execution client (`op-geth`) and consensus client (`op-node`) for your network.
 
 ### Steps to Generate Files
 
 To generate the configuration files using `op-deployer`, follow these steps:
 
-1. **Install op-deployer**  
-   Ensure you have the `op-deployer` tool installed. 
-   For installation instructions, see the [op-deployer installation section](/builders/chain-operators/tools/op-deployer#installation).
+1.  **Install op-deployer**\
+    Ensure you have the `op-deployer` tool installed.
+    For installation instructions, see the [op-deployer installation section](/builders/chain-operators/tools/op-deployer#installation).
 
-2. **Generate configuration files**  
-   Use the `op-deployer` commands to create the required files. 
-   With the [contracts deployed](builders/chain-operators/deploy/smart-contracts#using-op-deployer), generate the genesis and rollup configuration files by running the following commands:
-   
-   The example below demonstrates generating `genesis.json` and `rollup.json`:
+2.  **Generate configuration files**\
+    Use the `op-deployer` commands to create the required files.
+    With the [contracts deployed](builders/chain-operators/deploy/smart-contracts#using-op-deployer), generate the genesis and rollup configuration files by running the following commands:
+
+    The example below demonstrates generating `genesis.json` and `rollup.json`:
 
 ```bash
 op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
 op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
 ```
-Replace `<l2-chain-id>` with the L2 chain ID. 
 
-3. **Get data**
+Replace `<l2-chain-id>` with the L2 chain ID.
 
-Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network. 
+3.  **Get data**
+
+Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network.
 You can also use the following inspect subcommands to get additional data:
 
 ```bash
