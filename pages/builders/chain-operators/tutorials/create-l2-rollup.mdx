@@ -462,52 +462,38 @@ Once the deployment is complete, you can verify the deployed contract addresses 
 
 ## Generate the L2 config files
 
-Now that you've set up the L1 smart contracts you can automatically generate several configuration files that are used within the Consensus Client and the Execution Client.
+Now that you've set up the L1 smart contracts you can automatically generate several configuration files that are used within the consensus client and the execution client.
 
-You need to generate three important files:
+You need to generate two important files:
 
 1.  `genesis.json` includes the genesis state of the chain for the Execution Client.
 2.  `rollup.json` includes configuration information for the Consensus Client.
-3.  `jwt.txt` is a [JSON Web Token](https://jwt.io/introduction) that allows the Consensus Client and the Execution Client to communicate securely (the same mechanism is used in Ethereum clients).
 
 <Steps>
 
-{<h3>Navigate to the op-node package</h3>}
+{<h3>Install op-deployer</h3>}
+
+    Ensure you have the `op-deployer` tool installed.
+    For installation instructions, see the [op-deployer installation section](/builders/chain-operators/tools/op-deployer#installation).
+
+{<h3>Generate configuration files</h3>}
+
+With the contracts deployed, generate the genesis and rollup configuration files by running the following commands:
 
 ```bash
-cd ~/optimism/op-node
+op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
+op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
 ```
+Replace `<l2-chain-id>` with the L2 chain ID.
 
-{<h3>Create genesis files</h3>}
+{<h3>Get data</h3>}
 
-Now you'll generate the `genesis.json` and `rollup.json` files within the `op-node` folder:
-
-```bash
-go run cmd/main.go genesis l2 \
-  --deploy-config ../packages/contracts-bedrock/deploy-config/getting-started.json \
-  --l1-deployments ../packages/contracts-bedrock/deployments/getting-started/.deploy \
-  --outfile.l2 genesis.json \
-  --outfile.rollup rollup.json \
-  --l1-rpc $L1_RPC_URL
-```
-
-{<h3>Create an authentication key</h3>}
-
-Next you'll create a [JSON Web Token](https://jwt.io/introduction) that will be used to authenticate the Consensus Client and the Execution Client.
-This token is used to ensure that only the Consensus Client and the Execution Client can communicate with each other.
-You can generate a JWT with the following command:
+Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network.
+You can also use the following inspect subcommands to get additional data:
 
 ```bash
-openssl rand -hex 32 > jwt.txt
-```
-
-{<h3>Copy genesis files into the op-geth directory</h3>}
-
-Finally, you'll need to copy the `genesis.json` file and `jwt.txt` file into `op-geth` so you can use it to initialize and run `op-geth`:
-
-```bash
-cp genesis.json ~/op-geth
-cp jwt.txt ~/op-geth
+op-deployer inspect l1 --workdir .deployer <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
+op-deployer inspect deploy-config --workdir .deployer <l2-chain-id> # outputs the deploy config for an L2 chain
 ```
 
 </Steps>
