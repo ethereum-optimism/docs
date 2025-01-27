@@ -26,7 +26,7 @@ const CONFIG = {
     '!pages/500.mdx',
     '!pages/_app.mdx'
   ],
-  maxContentSize: 9500, // 9.5KB to leave room for other fields
+  maxContentSize: 9500,
   algolia: {
     appId: process.env.ALGOLIA_APPLICATION_ID || 'JCF9BUJTB9',
     apiKey: process.env.ALGOLIA_WRITE_API_KEY || '71c744716516426a5edfd74347bbc859',
@@ -34,7 +34,6 @@ const CONFIG = {
   } as AlgoliaConfig
 };
 
-// Utility functions
 const sanitizeContent = (content: string, maxBytes: number): string => {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder('utf-8');
@@ -53,7 +52,7 @@ const processPage = async (filePath: string): Promise<PageObject[]> => {
       .map(section => ({
         ...data,
         slug,
-        section: slug, // Consider changing this to actual section title
+        section: slug,
         content: sanitizeContent(section, CONFIG.maxContentSize)
       }));
   } catch (error) {
@@ -62,7 +61,6 @@ const processPage = async (filePath: string): Promise<PageObject[]> => {
   }
 };
 
-// Algolia operations
 class AlgoliaManager {
   private client: ReturnType<typeof algoliasearch>;
   private index: SearchIndex;
@@ -89,12 +87,10 @@ class AlgoliaManager {
     }
   }
 
-// Update the updateIndex method in the AlgoliaManager class:
 async updateIndex(objects: PageObject[]): Promise<void> {
   try {
     console.log(`[Algolia] Starting index update with ${objects.length} records`);
-    
-    // Updated section
+
     const response = await this.index.replaceAllObjects(objects, {
       safe: true,
       autoGenerateObjectIDIfNotExist: true
@@ -102,7 +98,6 @@ async updateIndex(objects: PageObject[]): Promise<void> {
 
     console.log(`[Algolia] Index update initiated. Task IDs:`, response.taskIDs);
     
-    // If you need to wait for all tasks to complete
     await Promise.all(
       response.taskIDs.map(taskID => this.index.waitTask(taskID))
     );
@@ -115,17 +110,15 @@ async updateIndex(objects: PageObject[]): Promise<void> {
 }
 }
 
-// Main execution flow
 const main = async () => {
   try {
-    // Load and process pages
+
     const pagePaths = await globby(['pages/', ...CONFIG.excludeFiles]);
     console.log(`[Processing] Found ${pagePaths.length} pages to index`);
 
     const processingResults = await Promise.all(pagePaths.map(processPage));
     const indexObjects = processingResults.flat();
 
-    // Algolia operations
     const algolia = new AlgoliaManager(CONFIG.algolia);
     await algolia.testConnection();
     await algolia.updateIndex(indexObjects);
