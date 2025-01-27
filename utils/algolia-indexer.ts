@@ -3,7 +3,6 @@ import matter from 'gray-matter';
 import algoliasearch, { SearchIndex } from 'algoliasearch';
 const globby = require("globby");
 
-// Type definitions
 interface PageObject {
   objectID?: string;
   slug: string;
