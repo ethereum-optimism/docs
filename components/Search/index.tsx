@@ -6,7 +6,10 @@ import { DocSearch } from "./docsearch";
 import algoliasearch from "algoliasearch";
 import AlgoliaContext from "@/utils/contexts/AlgoliaContext";
 
-const client = algoliasearch("JCF9BUJTB9", "71c744716516426a5edfd74347bbc859");
+const client = algoliasearch(
+    "JCF9BUJTB9", 
+    "71c744716516426a5edfd74347bbc859"
+  );
 
 const index = client.initIndex("docs");
 
