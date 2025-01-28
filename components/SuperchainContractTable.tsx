@@ -45,18 +45,24 @@ export function SuperchainContractTable({
     return <div>Error: {error}</div>;
   }
 
-  // Helper function to recursively extract Ethereum addresses
-  function extractAddresses(obj: Record<string, any>, prefix = ''): TableAddresses {
-    const addresses: TableAddresses = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'string' && /^0x[a-fA-F0-9]{40}$/.test(value)) {
-        addresses[`${prefix}${key}`] = value; // Add key with optional prefix
-      } else if (typeof value === 'object' && value !== null) {
-        Object.assign(addresses, extractAddresses(value, `${key}.`)); // Recurse into nested objects
-      }
+// Helper function to recursively extract Ethereum addresses with renamed keys
+function extractAddresses(obj: Record<string, any>, prefix = ''): TableAddresses {
+  const addresses: TableAddresses = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string' && /^0x[a-fA-F0-9]{40}$/.test(value)) {
+      // Rename specific keys
+      let newKey = `${prefix}${key}`;
+      if (key === 'protocol_versions_addr') newKey = 'ProtocolVersions';
+      if (key === 'superchain_config_addr') newKey = 'SuperchainConfig';
+      if (key === 'op_contracts_manager_proxy_addr') newKey = 'OPContractsManagerProxy';
+      addresses[newKey] = value;
+    } else if (typeof value === 'object' && value !== null) {
+      Object.assign(addresses, extractAddresses(value, `${key}.`)); // Recurse into nested objects
     }
-    return addresses;
   }
+  return addresses;
+}
+
 
   const addresses = extractAddresses(config || {});
 
