@@ -12,7 +12,7 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Interoperable ETH
 
-InteroperableETH is implemented using three contacts:
+InteroperableETH is implemented using three contracts:
 
 - [`SuperchainWETH`](https://github.com/ethereum-optimism/optimism/blob/develop/contracts-bedrock/src/L2/SuperchainWETH.sol) is the bridge that lets you move ETH from one Superchain blockchain to another.
 - [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol) holds a practically infinite amount of ETH (it starts with 2<sup>248</sup> WEI).
@@ -89,7 +89,7 @@ sequenceDiagram
     `SuperchainWETH` runs several sanity checks:
 
     *   The `relayETH` call has to come directly from `L2ToL2CrossDomainMessenger`.
-    *   The introp message has to have been sent by `SuperchainWETH`
+    *   The interop message has to have been sent by `SuperchainWETH`
 
 6.  `SuperchainWETH` withdraws the requested amount of ETH from `ETHLiquidity`.
     It is the only contract allowed to withdraw from `ETHLiquidity`, which adds to the ETH in circulation on the destination chain.
@@ -101,7 +101,8 @@ sequenceDiagram
 ## L1 Treasury
 
 All the ETH in circulation on the Superchain (all the ETH except for what is held by `ETHLiquidity`) needs to be backed by real ETH held on L1.
-This is done by the . 
+This is done using a lockbox contract on L1 that holds all the ETH ever bridged to Superchain chains and not yet withdrawn.
+New ETH can only be minted on L2 when it is locked on L1, and it is burned on L2 before it can be released from the lockbox.
 
 Here is an example of how this works.
 
