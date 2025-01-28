@@ -108,7 +108,7 @@ export function ResultsTable({
           <p className="calculator-info calculator-text">
             <strong>Note: </strong>This is an estimation,{" "}
             <a
-              href="/builders/chain-operators/management/blobs#determine-scalar-values-for-using-blobs"
+              href="/operators/chain-operators/management/blobs#determine-scalar-values-for-using-blobs"
               target="_blank"
             >
               read how to determine scalar values using blobs
