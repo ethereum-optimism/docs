@@ -15,7 +15,14 @@ import {Callout, Steps} from 'nextra/components'
 
 The recommended way to install `op-deployer` is to download the latest release from the monorepo's
 [release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
-for your platform then extract it somewhere on your `PATH`. The rest of this tutorial will assume that you have
+for your platform then extract it somewhere on your `PATH`. 
+
+Run the following commad:
+  ```bash
+  cd op-deployer && just build
+  ```
+
+The rest of this tutorial will assume that you have
 installed `op-deployer` using this method.
 
 ## Deployment usage
@@ -100,7 +107,7 @@ Now that you've created your intent file, you can apply it to your chain to depl
 ```
 ./bin/op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
 ```
-*   Replace `<rpc-url>` with your `L1 RPC URL` and `<private key>` with your private key
+*   Replace `<rpc-url>` with your `L1_RPC_URL` and `<private key>` with your private key
 
 This command will deploy the OP Stack to L1. It will deploy all L2s specified in the intent file. Superchain
 configuration will be set to the Superchain-wide defaults - i.e., your chain will be opted into the [Superchain pause](https://specs.optimism.io/protocol/superchain-config.html#pausability)
@@ -116,8 +123,8 @@ address as other chains on the Superchain.
 Inspect the `state.json` file by navigating to your working directory. With the contracts deployed, generate the genesis and rollup configuration files by running the following commands:
 
 ```
-op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
-op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
+./bin/op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
+./bin/op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
 ```
 
 Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network. You can also use the following inspect subcommands to get additional data:
