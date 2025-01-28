@@ -10,8 +10,6 @@ import { WipCallout } from '@/components/WipCallout'
 <WipCallout />
 # Creating your own L2 rollup testnet
 
-
-
 <Callout type="info">
 Please **be prepared to set aside approximately one hour** to get everything running properly and **make sure to read through the guide carefully**.
 You don't want to miss any important steps that might cause issues down the line.
@@ -430,7 +428,16 @@ Follow these steps:
 *   Install `op-deployer`:
     The recommended way to install `op-deployer` is to download the latest release from the monorepo's
     [release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
-    for your platform then extract it somewhere on your `PATH`.
+    for your platform then extract it somewhere on your `PATH`. or simply run the following command to clone it into your system:
+
+  ```bash
+  git clone git@github.com:ethereum-optimism/optimism.git && cd optimism
+  cd op-deployer && just build
+  ```
+  <Callout type="info">
+  [Install just](https://github.com/just-buildsystem/justbuild/blob/master/INSTALL.md) in your computer, before running the command above or use `brew install just` if you are a mac user.
+  </Callout>
+
 *   Access to the L1 blockchain (e.g., Sepolia or Mainnet) via an RPC URL.
 *   A private key with sufficient funds to cover deployment costs.
 
@@ -438,18 +445,22 @@ Follow these steps:
 
 *   Define the configuration of your chain in an intent file.
 *   This file specifies the deployment parameters for deploying the L1 smart contract. 
-Follow the instructions provided in the [configure your chain](/builders/chain-operators/tools/op-deployer#init-configure-your-chain) section to generate the intent file.
+Use the built-in `op-deployer` utility to generate this file:
+
+```bash
+./bin/op-deployer init --l1-chain-id 11155111 --l2-chain-ids <l2-chain-id> --workdir .deployer
+```
+Replace `<l2-chain-id>` with the correct value.
 
 ### Run the `apply` command
 
-Execute the following command to deploy the L1 smart contracts:
+The next step is to deploy the L1 smart contracts, by running the following command:
 
 ```bash
-op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
+op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key>
 ```
-
 *   Replace `<rpc-url>` with your L1 RPC URL.
-*   Replace `<private key hex>` with the private key of the account used for deployment.
+*   Replace `<private key>` with the private key of the account used for deployment.
 
 ### Verify the deployment
 Once the deployment is complete, you can verify the deployed contract addresses and configuration:
