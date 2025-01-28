@@ -10,8 +10,6 @@ import { WipCallout } from '@/components/WipCallout'
 <WipCallout />
 # Creating your own L2 rollup testnet
 
-
-
 <Callout type="info">
 Please **be prepared to set aside approximately one hour** to get everything running properly and **make sure to read through the guide carefully**.
 You don't want to miss any important steps that might cause issues down the line.
@@ -430,27 +428,34 @@ Follow these steps:
 *   Install `op-deployer`:
     The recommended way to install `op-deployer` is to download the latest release from the monorepo's
     [release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
-    for your platform then extract it somewhere on your `PATH`.
+    for your platform then extract it somewhere on your `PATH`. or simply run the following command to clone it into your system:
+
+  ```bash
+  git clone git@github.com:ethereum-optimism/optimism.git && cd optimism
+  cd op-deployer && just build
+  ```
+  <Callout type="info">
+  [Install just](https://github.com/just-buildsystem/justbuild/blob/master/INSTALL.md) in your computer, before running the command above or use `brew install just` if you are a mac user.
+  </Callout>
+
 *   Access to the L1 blockchain (e.g., Sepolia or Mainnet) via an RPC URL.
 *   A private key with sufficient funds to cover deployment costs.
-
 
 ### Create an intent file
 
 *   Define the configuration of your chain in an intent file.
 *   This file specifies the deployment parameters for deploying the L1 smart contract. 
-Follow the instructions provided in the [configure your chain](/tools/op-deployer#init-configure-your-chain) section to generate the intent file.
+Follow the instructions provided in the [configure your chain](/builders/chain-operators/tools/op-deployer#init-configure-your-chain) section to generate the intent file.
 
 ### Run the `apply` command
 
-Execute the following command to deploy the L1 smart contracts:
+The next step is to deploy the L1 smart contracts, by running the following command:
 
 ```bash
-op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
+./bin/op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key>
 ```
-
 *   Replace `<rpc-url>` with your L1 RPC URL.
-*   Replace `<private key hex>` with the private key of the account used for deployment.
+*   Replace `<private key>` with the private key of the account used for deployment.
 
 ### Verify the deployment
 Once the deployment is complete, you can verify the deployed contract addresses and configuration:
@@ -462,52 +467,38 @@ Once the deployment is complete, you can verify the deployed contract addresses 
 
 ## Generate the L2 config files
 
-Now that you've set up the L1 smart contracts you can automatically generate several configuration files that are used within the Consensus Client and the Execution Client.
+Now that you've set up the L1 smart contracts you can automatically generate several configuration files that are used within the consensus client and the execution client.
 
-You need to generate three important files:
+You need to generate two important files:
 
 1.  `genesis.json` includes the genesis state of the chain for the Execution Client.
 2.  `rollup.json` includes configuration information for the Consensus Client.
-3.  `jwt.txt` is a [JSON Web Token](https://jwt.io/introduction) that allows the Consensus Client and the Execution Client to communicate securely (the same mechanism is used in Ethereum clients).
 
 <Steps>
 
-{<h3>Navigate to the op-node package</h3>}
+{<h3>Install op-deployer</h3>}
+
+    Ensure you have the `op-deployer` tool installed.
+    For installation instructions, see the [op-deployer installation section](/builders/chain-operators/tools/op-deployer#installation).
+
+{<h3>Generate configuration files</h3>}
+
+With the contracts deployed, generate the genesis and rollup configuration files by running the following commands:
 
 ```bash
-cd ~/optimism/op-node
+op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
+op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
 ```
+Replace `<l2-chain-id>` with the L2 chain ID.
 
-{<h3>Create genesis files</h3>}
+{<h3>Get data</h3>}
 
-Now you'll generate the `genesis.json` and `rollup.json` files within the `op-node` folder:
-
-```bash
-go run cmd/main.go genesis l2 \
-  --deploy-config ../packages/contracts-bedrock/deploy-config/getting-started.json \
-  --l1-deployments ../packages/contracts-bedrock/deployments/getting-started/.deploy \
-  --outfile.l2 genesis.json \
-  --outfile.rollup rollup.json \
-  --l1-rpc $L1_RPC_URL
-```
-
-{<h3>Create an authentication key</h3>}
-
-Next you'll create a [JSON Web Token](https://jwt.io/introduction) that will be used to authenticate the Consensus Client and the Execution Client.
-This token is used to ensure that only the Consensus Client and the Execution Client can communicate with each other.
-You can generate a JWT with the following command:
+Now that you have your `genesis.json` and `rollup.json`
+you can use the following inspect subcommands to get additional data:
 
 ```bash
-openssl rand -hex 32 > jwt.txt
-```
-
-{<h3>Copy genesis files into the op-geth directory</h3>}
-
-Finally, you'll need to copy the `genesis.json` file and `jwt.txt` file into `op-geth` so you can use it to initialize and run `op-geth`:
-
-```bash
-cp genesis.json ~/op-geth
-cp jwt.txt ~/op-geth
+op-deployer inspect l1 --workdir .deployer <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
+op-deployer inspect deploy-config --workdir .deployer <l2-chain-id> # outputs the deploy config for an L2 chain
 ```
 
 </Steps>
