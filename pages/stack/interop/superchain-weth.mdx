@@ -12,80 +12,88 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # SuperchainWETH
 
-The [`SuperchainWETH`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol) contract implements [ERC-7802](https://ethereum-magicians.org/t/erc-7802-crosschain-token-interface/21508) to enable ETH interoperability within the Superchain.
+The [`SuperchainWETH`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol) contract works with [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol) 
+and [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) to enable ETH interoperability within the Superchain.
+This is accomplished by depositing ETH on the source chain's `ETHLiquidity` and withdrawing an equivalent amount on the destination chain.
+This approach addresses issues such as liquidity fragmentation and poor user experiences caused by asset wrapping or reliance on liquidity pools.
 
-ETH interoperability 
-
-
-allows tokens to move securely across the Superchain by burning tokens on the source chain and minting an equivalent amount on the destination chain. This approach addresses issues such as liquidity fragmentation and poor user experiences caused by asset wrapping or reliance on liquidity pools.
 
 ## Features and benefits
 
-*   Enables seamless ETH transfers across different chains in the Superchain
-*   Maintains fungibility of ETH across the Superchain
-*   Provides liquidity for cross-chain transactions
-*   Improves user experience by abstracting complex bridging processes
-
-<Callout>
-  The `SuperchainTokenBridge` can only rebalance assets across chains. It cannot mint or increase/decrease the total circulating supply.
-</Callout>
+* Enables seamless ETH transfers across different chains in the Superchain
+* Maintains fungibility of ETH across the Superchain
+* Provides liquidity for cross-chain transactions
+* Improves user experience by abstracting complex bridging processes
 
 ## How it works
 
-Currently, L2-to-L2 ETH transfers between two interoperable chains require four separate transactions:
+```mermaid 
 
-1.  Wrap `ETH` to `SuperchainWETH`.
-2.  Call `SuperchainTokenBridge#SendERC20` to burn `SuperchainWETH` on source chain and relay a message to the destination chain that mints `SuperchainWETH` to the recipient (`crosschainBurn` is used).
-3.  Execute the message on the destination chain, triggering `SuperchainTokenBridge#RelayERC20` to mint `SuperchainWETH` to the recipient (`crosschainMint` is used). If the destination is a non-custom gas token chain, ETH is sourced from the `ETHLiquidity` contract.
-4.  Unwrap the received `SuperchainWETH` to `ETH`.
+%%{
+  init: {
+    "sequence": {
+      "wrap": true
+    }
+  }
+}%%
 
-<Callout type="info">
-Abstraction is a possible future consideration to reduce this process to two transactions, which can be followed in the [design docs](https://github.com/ethereum-optimism/design-docs/pull/146/files).
-</Callout>
-
-```mermaid
 sequenceDiagram
-    participant User
-    participant Source Chain
-    participant Cross-Chain Messenger
-    participant Destination Chain
-
-    User->>Source Chain: 1. Wrap ETH to SuperchainWETH
-    Source Chain->>Cross-Chain Messenger: 2. Burn SuperchainWETH and relay message
-    Cross-Chain Messenger->>Destination Chain: 3. Mint SuperchainWETH to recipient
-    User->>Destination Chain: 4. Unwrap SuperchainWETH to ETH
+  box rgba(0,0,0,0.1) Source Chain
+    participant src-liquidity as ETHLiquidity
+    participant src-weth as SuperchainWETH
+  end
+  actor user as User
+  participant any-offchain as User, Relayer, etc.  
+  box rgba(0,0,0,0.1) Destination Chain
+    participant dst-l2Xl2 as L2ToL2CrossDomainMessenger
+    participant dst-weth as SuperchainWETH
+    participant dst-liquidity as ETHLiquidity       
+    participant dst-final as ETH Destination
+  end
+  rect rgba(0,0,0,0.1)
+    note over src-weth, dst-l2Xl2: Initiating Message
+    user->>src-weth: 1. sendETH(to, chainId) with n ETH
+    src-weth->>src-liquidity: 2. Deposit n ETH
+    src-weth->>dst-l2Xl2: 3. Send relayETH to Superchain WETH on chainId
+  end
+  rect rgba(0,0,0,0.1)
+    note over any-offchain,dst-weth: Executing message
+    any-offchain->>dst-l2Xl2: 4. Relay the message
+    dst-l2Xl2->>dst-weth: 5. relayETH(from, to, amount)
+    dst-weth->>dst-liquidity: 6. Withdraw amount ETH
+    dst-weth->>dst-final: 7. Here are amount ETH
+  end
 ```
-_Figure 1: Superchain WETH transfer process between two interoperable L2 chains._
 
-<Callout type="warning">
-  `crosschainBurn` and `crosschainMint`can only be called by the `SuperchainTokenBridge`. 
-</Callout>
+#### Initiating message
 
-## Major components
+1. The user (or a contract operating on a user's behalf) calls `SuperchainWETH.sendETH` with a destination address and a chainId.
+   This call should have an attached amount of ETH.
 
-### `SuperchainWETH` contract
+2. `SuperchainWETH` sends the amount of ETH to `ETHLiquidity`, removing it from circulation on the source chain.
 
-This contract implements the core functionality for wrapping, unwrapping, and cross-chain transfer of ETH. It integrates with the `SuperchainTokenBridge` for interoperable actions.
+3. `SuperchainWETH` on the source chain sends a [`relayETH`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol#L125-L145) call to the `SuperchainWETH` on the destination chain using [`L2ToL2CrossDomainMessenger`](./message-passing).
 
-*   Contract address: `0x4200000000000000000000000000000000000024`
+#### Executing message
 
-### `ETHLiquidity` contract
+4. Some offchain entity submits a transaction with the executing message.
+   Any address can submit such a transaction, but it has to have ETH on the destination chain to do so. 
+   We expect that in many cases this will be a relayer rather than the user, because the user won't have ETH on the destination chain yet.
 
-A predeploy contract with a large pool of ETH that provides liquidity for cross-chain transfers. It allows "burning" and "minting" of ETH for cross-chain transfers. ETH is associated with bridge ETH from the L1 lockbox, making ETH available to interop chains through a shared lockbox rather than fragmented amongst the existing portal contracts.
+5. `L2ToL2CrossDomainMessenger` on the destination chain calls `SuperchainWETH` with the source of the ETH, the destination address, and the amount.
 
-*   Contract address: `0x4200000000000000000000000000000000000025`
+   `SuperchainWETH` runs several sanity checks:
 
-### `L2ToL2CrossDomainMessenger` contract
+   - The `relayETH` call has to come directly from `L2ToL2CrossDomainMessenger`.
+   - The introp message has to have been sent by `SuperchainWETH`
 
-This predeploy contract facilitates general message passing between different chains in the Superchain. It also securely transfers ERC20 tokens between L2 chains.
+6. `SuperchainWETH` withdraws the requested amount of ETH from `ETHLiquidity`.
+   It is the only contract allowed to withdraw from `ETHLiquidity`, which adds to the ETH in circulation on the destination chain.
 
-*   Contract address: `0x4200000000000000000000000000000000000023`
-
-<Callout type="info">
-  `SuperchainWETH` implements strict access controls to ensure security (e.g., only `SuperchainWETH` can call `ETHLiquidity` functions).
-</Callout>
+7. `SuperchainWETH` uses [`SafeSend`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/universal/SafeSend.sol) to send the ETH.
+   This means that even if the destination is a smart contract, its custom logic does not get called, [in contrast to normal ETH transfers](https://docs.base.org/base-learn/docs/address-and-payable/#receiving-ether-with-payable-addresses).
 
 ## Next steps
 
-*   Explore the [`SuperchainWETH`](https://specs.optimism.io/interop/superchain-weth.html) specs for in-depth implementation details.
-*   Review the [Superchain Interop Explainer](../explainer) for answers to common questions about interoperability.
+* Explore [the `SuperchainWETH` specs](https://specs.optimism.io/interop/superchain-weth.html) for in-depth implementation details.
+* Read the [interop message passing](./message-passing) page for more information about how `L2ToL2CrossDomainMessenger` passes messages.
