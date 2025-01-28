@@ -23,7 +23,7 @@ export function SuperchainContractTable({
         if (!response.ok) {
           throw new Error('Failed to fetch config');
         }
-        const text = await response.text();
+        const text = await response.json();
         const data = toml.parse(text);
         setConfig(data);
       } catch (err) {
