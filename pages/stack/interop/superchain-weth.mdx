@@ -15,8 +15,8 @@ import { InteropCallout } from '@/components/WipCallout'
 InteroperableETH is implemented using three contracts:
 
 - [`SuperchainWETH`](https://github.com/ethereum-optimism/optimism/blob/develop/contracts-bedrock/src/L2/SuperchainWETH.sol) is the bridge that lets you move ETH from one Superchain blockchain to another.
-- [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol), which holds a large amount of ETH used to provide liquidity.
-  It is used by `SuperchainWETH` as a liquidity repository to be able to provide ETH on the destination chain when transfering. 
+- [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol), which serves as a liquidity provider for ETH transfers.
+  It is used by `SuperchainWETH` as a liquidity repository to be able to provide ETH on the destination chain when transferring. 
 - [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) is used to [pass messages between different chains](./message-passing).
 
 InteroperableETH works by depositing ETH on the source chain's `ETHLiquidity` and withdrawing an equivalent amount on the destination chain.
@@ -82,7 +82,7 @@ sequenceDiagram
 
 4.  Some offchain entity submits a transaction with the executing message.
     Any address can submit such a transaction, but it has to have ETH on the destination chain to do so.
-    We expect that in many cases this will be a relayer rather than the user, because the user won't have ETH on the destination chain yet.
+    We expect that usually this will be a relayer rather than the user because the user won't have ETH on the destination chain yet.
 
 5.  `L2ToL2CrossDomainMessenger` on the destination chain calls `SuperchainWETH` with the source of the ETH, the destination address, and the amount.
 
@@ -100,7 +100,7 @@ sequenceDiagram
 
 ## L1 Treasury
 
-All the ETH in circulation on the Superchain (all the ETH except for what is held by `ETHLiquidity`) needs to be backed by ETH held on L1.
+Every ETH in circulation on the Superchain (all the ETH except for those held by `ETHLiquidity`) needs to be backed by ETH held on L1.
 This is done using a lockbox contract on L1 that holds all the ETH ever bridged to [chains in the Superchain interop cluster](explainer#superchain-interop-cluster) and not yet withdrawn.
 New ETH can only be minted on L2 when it is locked on L1, and it is burned on L2 before it can be released from the lockbox.
 
@@ -128,7 +128,7 @@ Here is an example of how this works.
    `SuperchainWETH` transfers 1 ETH from `ETHLiquidity` on chain B to the user.
 
 5. The user decides to withdraw 1 ETH from chain B back into L1.
-   Normally a user would do this through a third party bridge, which is faster and usually cheaper, but for illustration purposes this user uses the standard OP bridge.
+   Normally, a user would do this through a third-party bridge, which is faster and usually cheaper, but for illustration purposes this user uses the standard OP bridge.
    The user starts with an initiating message on chain B, which burns 1 ETH and sends a message to L1.
 
 6. After the week long [challenge period](/connect/resources/glossary#challenge-period), the user finalizes the withdrawal on L1. 
