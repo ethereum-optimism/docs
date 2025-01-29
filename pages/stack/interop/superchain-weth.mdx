@@ -15,8 +15,8 @@ import { InteropCallout } from '@/components/WipCallout'
 InteroperableETH is implemented using three contracts:
 
 - [`SuperchainWETH`](https://github.com/ethereum-optimism/optimism/blob/develop/contracts-bedrock/src/L2/SuperchainWETH.sol) is the bridge that lets you move ETH from one Superchain blockchain to another.
-- [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol) holds a practically infinite amount of ETH (it starts with 2<sup>248</sup> WEI).
-  It is used by `SuperchainWETH` as a liquidity repository to be able to provide ETH on the destination chain.
+- [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol), which holds a large amount of ETH used to provide liquidity.
+  It is used by `SuperchainWETH` as a liquidity repository to be able to provide ETH on the destination chain when transfering. 
 - [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) is used to [pass messages between different chains](./message-passing).
 
 InteroperableETH works by depositing ETH on the source chain's `ETHLiquidity` and withdrawing an equivalent amount on the destination chain.
@@ -100,8 +100,8 @@ sequenceDiagram
 
 ## L1 Treasury
 
-All the ETH in circulation on the Superchain (all the ETH except for what is held by `ETHLiquidity`) needs to be backed by real ETH held on L1.
-This is done using a lockbox contract on L1 that holds all the ETH ever bridged to Superchain chains and not yet withdrawn.
+All the ETH in circulation on the Superchain (all the ETH except for what is held by `ETHLiquidity`) needs to be backed by ETH held on L1.
+This is done using a lockbox contract on L1 that holds all the ETH ever bridged to [chains in the Superchain interop cluster](explainer#superchain-interop-cluster) and not yet withdrawn.
 New ETH can only be minted on L2 when it is locked on L1, and it is burned on L2 before it can be released from the lockbox.
 
 Here is an example of how this works.
