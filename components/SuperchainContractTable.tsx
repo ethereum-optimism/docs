@@ -1,58 +1,70 @@
-import type { ReactElement } from 'react'
-import { useEffect, useState } from 'react'
-import { AddressTable, TableAddresses } from '@/components/AddressTable'
+import type { ReactElement } from 'react';
+import { useEffect, useState } from 'react';
+import { AddressTable, TableAddresses } from '@/components/AddressTable';
+import toml from 'toml';
 
-const CONFIG_URL = 'https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/main/superchain/configs/configs.json';
+const CONFIG_URL = 'https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/main/superchain/configs/mainnet/superchain.toml';
 
 export function SuperchainContractTable({
   chain,
   explorer,
 }: {
-  chain: string,
-  explorer: string,
+  chain: string;
+  explorer: string;
 }): ReactElement {
-  const [config, setConfig] = useState<Record<string, any> | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [config, setConfig] = useState<Record<string, any> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchAddresses() {
       try {
-        const response = await fetch(CONFIG_URL)
+        const response = await fetch(CONFIG_URL);
         if (!response.ok) {
-          throw new Error('Failed to fetch config')
+          throw new Error('Failed to fetch config');
         }
-        const data = await response.json()
-        setConfig(data)
+        const text = await response.text();
+        const data = toml.parse(text);
+        setConfig(data);
       } catch (err) {
-        setError(err.message)
-        console.error('Error fetching config:', err)
+        setError(err.message);
+        console.error('Error fetching or parsing config:', err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchAddresses()
-  }, [])
+    fetchAddresses();
+  }, []);
 
   if (loading) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>
+    return <div>Error: {error}</div>;
   }
 
-  // Find the superchain config for the given chain.
-  const superchain = config?.superchains.find(
-    (sc: any) => sc.config.L1.ChainID.toString() === chain
-  )
+// Helper function to recursively extract Ethereum addresses with renamed keys
+function extractAddresses(obj: Record<string, any>, prefix = ''): TableAddresses {
+  const addresses: TableAddresses = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string' && /^0x[a-fA-F0-9]{40}$/.test(value)) {
+      // Rename specific keys
+      let newKey = `${prefix}${key}`;
+      if (key === 'protocol_versions_addr') newKey = 'ProtocolVersions';
+      if (key === 'superchain_config_addr') newKey = 'SuperchainConfig';
+      if (key === 'op_contracts_manager_proxy_addr') newKey = 'OPContractsManagerProxy';
+      addresses[newKey] = value;
+    } else if (typeof value === 'object' && value !== null) {
+      Object.assign(addresses, extractAddresses(value, `${key}.`)); // Recurse into nested objects
+    }
+  }
+  return addresses;
+}
 
-  // Create a TableAddresses object with the ProtocolVersions and SuperchainConfig addresses.
-  const addresses: TableAddresses | undefined = superchain && {
-    ProtocolVersions: superchain.config.ProtocolVersionsAddr,
-    SuperchainConfig: superchain.config.SuperchainConfigAddr,
-  };
+
+  const addresses = extractAddresses(config || {});
 
   return (
     <AddressTable
@@ -61,5 +73,5 @@ export function SuperchainContractTable({
       legacy={false}
       addresses={addresses}
     />
-  )
+  );
 }
