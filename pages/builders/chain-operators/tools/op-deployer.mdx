@@ -37,6 +37,8 @@ To get started with `op-deployer`, create an intent file that defines your desir
 ./bin/op-deployer init --l1-chain-id 11155111 --l2-chain-ids <l2-chain-id> --workdir .deployer
 ```
 
+Replace `<l2-chain-id>` with the exact value.
+
 This command will create a directory called `.deployer` in your current working directory containing the intent file and an empty `state.json` file. `state.json` is populated with the results of your deployment, and never needs to be edited directly.
 
 Your intent file will need to be modified to your parameters, but it will initially look something like this:
@@ -102,9 +104,11 @@ You can also do chain by chain configurations in the `chains` table.
 
 Now that you've created your intent file, you can apply it to your chain to deploy the L1 smart contracts:
 
+```bash
+./bin/op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
 ```
-op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
-```
+
+*   Replace `<rpc-url>` with your `L1_RPC_URL` and `<private key>` with your private key
 
 This command will deploy the OP Stack to L1. It will deploy all L2s specified in the intent file. Superchain
 configuration will be set to the Superchain-wide defaults - i.e., your chain will be opted into the [Superchain pause](https://specs.optimism.io/protocol/superchain-config.html#pausability)
@@ -119,17 +123,17 @@ address as other chains on the Superchain.
 
 Inspect the `state.json` file by navigating to your working directory. With the contracts deployed, generate the genesis and rollup configuration files by running the following commands:
 
-```
-op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
-op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
+```bash
+./bin/op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
+./bin/op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
 ```
 
 Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network. You can also use the following inspect subcommands to get additional data:
 
-```
-op-deployer inspect l1 --workdir .deployer <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
-op-deployer inspect deploy-config --workdir .deployer <l2-chain-id> # outputs the deploy config for an L2 chain
-op-deployer inspect l2-semvers --workdir .deployer <l2-chain-id> # outputs the semvers for all L2 chains
+```bash
+./bin/op-deployer inspect l1 --workdir .deployer <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
+./bin/op-deployer inspect deploy-config --workdir .deployer <l2-chain-id> # outputs the deploy config for an L2 chain
+./bin/op-deployer inspect l2-semvers --workdir .deployer <l2-chain-id> # outputs the semvers for all L2 chains
 ```
 </Steps>
 
