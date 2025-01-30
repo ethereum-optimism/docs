@@ -13,6 +13,8 @@ The recommended way to generate genesis and rollup configuration files is using 
   This ensures standardization and compatibility with the Superchain.
 </Callout>
 
+The `op-deployer` tool simplifies the creation of genesis and rollup configuration files (`genesis.json` and `rollup.json`).
+These files are crucial for initializing the execution client (`op-geth`) and consensus client (`op-node`) for your network.
 
 The recommended flow for creating a genesis file and rollup configuration file on the OP Stack is as follows:
 
@@ -39,7 +41,7 @@ After installation, extract the `op-deployer` into your `PATH` and `cd op-deploy
 
 To deploy your chain to L1, run:
 ```bash
-op-deployer apply --workdir .deployer \
+./bin/op-deployer apply --workdir .deployer \
   --l1-rpc-url <RPC_URL_FOR_L1> \
   --private-key <DEPLOYER_PRIVATE_KEY_HEX>
 ```
@@ -54,8 +56,8 @@ This command:
 
 After your L1 contracts have been deployed, generate the L2 genesis and rollup configuration files by inspecting the deployer’s `state.json.`
 ```bash
-op-deployer inspect genesis --workdir .deployer <L2_CHAIN_ID> > .deployer/genesis.json
-op-deployer inspect rollup --workdir .deployer <L2_CHAIN_ID> > .deployer/rollup.json
+./bin/op-deployer inspect genesis --workdir .deployer <L2_CHAIN_ID> > .deployer/genesis.json
+./bin/op-deployer inspect rollup --workdir .deployer <L2_CHAIN_ID> > .deployer/rollup.json
 ```
 
 * genesis.json is the file you will provide to your execution client (e.g. op-geth).
@@ -63,11 +65,21 @@ op-deployer inspect rollup --workdir .deployer <L2_CHAIN_ID> > .deployer/rollup.
 
 ### Step 3: Initialize your off-chain components
 
-Once you have genesis.json and rollup.json:
+Once you have `genesis.json` and `rollup.json`:
 
 1. Initialize op-geth using genesis.json.
-1. Configure op-node with rollup.json.
-1. Set up additional off-chain infrastructure as needed (block explorer, indexers, etc.). For more on architecture, see [Architecture overview](/builders/chain-operators/architecture).
+2. Configure op-node with rollup.json.
+3. Set up additional off-chain infrastructure as needed (block explorer, indexers, etc.). For more on architecture, see [Architecture overview](/builders/chain-operators/architecture).
+
+4.  ### Step 3: Get data
+
+Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network.
+You can also use the following inspect subcommands to get additional data:
+
+```bash
+./bin/op-deployer inspect l1 --workdir .deployer <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
+./bin/op-deployer inspect deploy-config --workdir .deployer <l2-chain-id> # outputs the deploy config for an L2 chain
+```
 
 ## Legacy method: using foundry script
 
