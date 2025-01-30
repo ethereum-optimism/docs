@@ -64,18 +64,19 @@ It ensures the integrity of L2 state transitions by challenging incorrect output
 
 ## Sequencer
 
-The Sequencer node works with the batcher and proposer to create new blocks. So it should
-handle the state changing RPC request `eth_sendRawTransaction`. It can be peered with
-replica nodes to gossip new `unsafe` blocks to the rest of the network.
+The Sequencer node works with the batcher and proposer to create new blocks,
+handling state-changing RPC requests like `eth_sendRawTransaction`. 
+It can peer with replica nodes to gossip new unsafe blocks across the network.
 
-Sequencer op-node should have p2p discovery disabled and only be statically peered with other internal nodes (or use [peer-management-service](https://github.com/ethereum-optimism/infra/tree/main/peer-mgmt-service) to define peering network)
+For security and stability, Sequencer op-node should have P2P discovery disabled and be statically peered with internal nodes.
+Alternatively, it can use peer-management-service to define its peering network.
 
 A production setup should include:
 
 *   At least one archive sequencer for recovering from deep L1 reorgs
-*   Secure P2P configuration with static peering
+*   A secure P2P configuration with static peering
 *   Integration with op-conductor for high availability
-*   Disable P2P discovery and define a static peer list for internal nodes.
+*   P2P discovery disabled with a defined static peer list for internal nodes.
 
 ```yaml
 # Recommended sequencer configuration
