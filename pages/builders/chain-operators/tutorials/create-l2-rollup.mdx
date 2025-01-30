@@ -417,96 +417,79 @@ cast codesize 0x4e59b44847b379578588920cA78FbF26c0B4956C --rpc-url $L1_RPC_URL
 
 Once you've configured your network, it's time to deploy the L1 contracts necessary for the functionality of the chain.
 
-### Using `op-deployer`
+## Using `op-deployer`
 
-The recommended way to deploy the L1 smart contracts is with the `op-deployer` tool. 
-Follow these steps:
+The `op-deployer` tool simplifies the creation of genesis and rollup configuration files (`genesis.json` and `rollup.json`).
+These files are crucial for initializing the execution client (`op-geth`) and consensus client (`op-node`) for your network.
 
-<Steps>
-{<h3>Set Up Your Environment</h3>}
+The recommended flow for creating a genesis file and rollup configuration file on the OP Stack is as follows:
 
-*   Install `op-deployer`:
-    The recommended way to install `op-deployer` is to download the latest release from the monorepo's
-    [release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
-    for your platform then extract it somewhere on your `PATH`. or simply run the following command to clone it into your system:
+1.  **Deploy the L1 contracts** using [op-deployer](/builders/chain-operators/tools/op-deployer).
+2.  **Generate** both the L2 genesis file (`genesis.json`) and the rollup configuration file (`rollup.json`) using op-deployer's `inspect` commands.
+3.  **Initialize** your off-chain components (e.g., execution client, consensus client).
 
-  ```bash
-  git clone git@github.com:ethereum-optimism/optimism.git && cd optimism
-  cd op-deployer && just build
-  ```
-  <Callout type="info">
-  [Install just](https://github.com/just-buildsystem/justbuild/blob/master/INSTALL.md) in your computer, before running the command above or use `brew install just` if you are a mac user.
-  </Callout>
+## Recommended method: using op-deployer
 
-*   Access to the L1 blockchain (e.g., Sepolia or Mainnet) via an RPC URL.
-*   A private key with sufficient funds to cover deployment costs.
+### Prerequisites
 
-### Create an intent file
+1.  You have installed the `op-deployer` binary following the instructions in [deployer docs](/builders/chain-operators/tools/op-deployer#installation).
+    After installation, extract the `op-deployer` into your `PATH` and `cd op-deployer`.
 
-*   Define the configuration of your chain in an intent file.
-*   This file specifies the deployment parameters for deploying the L1 smart contract. 
-Use the built-in `op-deployer` utility to generate this file:
+2.  You have created and customized an intent file in a `.deployer` directory, typically by running:
 
-```bash
-./bin/op-deployer init --l1-chain-id 11155111 --l2-chain-ids <l2-chain-id> --workdir .deployer
-```
-Replace `<l2-chain-id>` with the correct value.
+    ```bash
+    ./bin/op-deployer init --l1-chain-id <YOUR_L1_CHAIN_ID> --l2-chain-ids <YOUR_L2_CHAIN_ID> --workdir .deployer
+    ```
 
-### Run the `apply` command
+    Replace `<YOUR_L1_CHAIN_ID>` and `<YOUR_L2_CHAIN_ID>` with their respective values, see a list of [`chainIds`](https://chainid.network/).
 
-The next step is to deploy the L1 smart contracts, by running the following command:
+3.  You have edited that intent file to your liking (roles, addresses, etc.).
+
+### Step 1: Deploy the L1 contracts
+
+To deploy your chain to L1, run:
 
 ```bash
-op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key>
+./bin/op-deployer apply --workdir .deployer \
+  --l1-rpc-url <RPC_URL_FOR_L1> \
+  --private-key <DEPLOYER_PRIVATE_KEY_HEX>
 ```
-*   Replace `<rpc-url>` with your L1 RPC URL.
-*   Replace `<private key>` with the private key of the account used for deployment.
 
-### Verify the deployment
-Once the deployment is complete, you can verify the deployed contract addresses and configuration:
+This command:
 
-*   Check the deployment output for contract addresses and transaction details.
-*   Verify the deployed contracts on the block explorer using the specified `ETHERSCAN_API_KEY` in the configuration file.
+*   Reads your intent file in `.deployer/.`
+*   Deploys the OP Stack contracts to the specified L1.
+*   Updates a local `state.json` file with the results of the deployment.
 
-</Steps>
+### Step 2: Generate your L2 genesis file and rollup file
 
-## Generate the L2 config files
-
-Now that you've set up the L1 smart contracts you can automatically generate several configuration files that are used within the consensus client and the execution client.
-
-You need to generate two important files:
-
-1.  `genesis.json` includes the genesis state of the chain for the Execution Client.
-2.  `rollup.json` includes configuration information for the Consensus Client.
-
-<Steps>
-
-{<h3>Install op-deployer</h3>}
-
-    Ensure you have the `op-deployer` tool installed.
-    For installation instructions, see the [op-deployer installation section](/builders/chain-operators/tools/op-deployer#installation).
-
-{<h3>Generate configuration files</h3>}
-
-With the contracts deployed, generate the genesis and rollup configuration files by running the following commands:
+After your L1 contracts have been deployed, generate the L2 genesis and rollup configuration files by inspecting the deployer's `state.json.`
 
 ```bash
-op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
-op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
+./bin/op-deployer inspect genesis --workdir .deployer <L2_CHAIN_ID> > .deployer/genesis.json
+./bin/op-deployer inspect rollup --workdir .deployer <L2_CHAIN_ID> > .deployer/rollup.json
 ```
-Replace `<l2-chain-id>` with the L2 chain ID.
 
-{<h3>Get data</h3>}
+*   genesis.json is the file you will provide to your execution client (e.g. op-geth).
+*   rollup.json is the file you will provide to your consensus client (e.g. op-node).
 
-Now that you have your `genesis.json` and `rollup.json`
-you can use the following inspect subcommands to get additional data:
+### Step 3: Initialize your off-chain components
+
+Once you have `genesis.json` and `rollup.json`:
+
+1.  Initialize op-geth using genesis.json.
+2.  Configure op-node with rollup.json.
+3.  Set up additional off-chain infrastructure as needed (block explorer, indexers, etc.). For more on architecture, see [Architecture overview](/builders/chain-operators/architecture).
+
+### Step 3: Get data
+
+Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network.
+You can also use the following inspect subcommands to get additional data:
 
 ```bash
-op-deployer inspect l1 --workdir .deployer <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
-op-deployer inspect deploy-config --workdir .deployer <l2-chain-id> # outputs the deploy config for an L2 chain
+./bin/op-deployer inspect l1 --workdir .deployer <l2-chain-id> # outputs all L1 contract addresses for an L2 chain
+./bin/op-deployer inspect deploy-config --workdir .deployer <l2-chain-id> # outputs the deploy config for an L2 chain
 ```
-
-</Steps>
 
 ## Initialize `op-geth`
 
