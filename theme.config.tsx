@@ -5,7 +5,8 @@ import { useConfig } from 'nextra-theme-docs';
 import { FeelbackYesNo, PRESET_LIKE_DISLIKE } from '@feelback/react';
 import '@feelback/react/styles/feelback.css';
 import { Search } from './components/Search';
-import { RiSparkling2Fill } from '@remixicon/react';
+import { AskAIButton } from './components/AskAIButton';
+import { useFeature } from '@growthbook/growthbook-react';
 
 const config: DocsThemeConfig = {
   logo: (
@@ -31,12 +32,7 @@ const config: DocsThemeConfig = {
     component: Search
   },
   navbar: {
-    extraContent: (
-      <button id='custom-ask-ai-button' className='nx-flex nx-gap-2 nx-items-center nx-py-1.5 nx-px-3 nx-rounded-lg nx-text-sm nx-font-semibold' style={{ backgroundColor: '#FF0420', color: 'white', display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <span>Ask AI</span>
-        <RiSparkling2Fill size={14} />
-      </button>
-    )
+    extraContent: AskAIButton
   },
   docsRepositoryBase: 'https://github.com/ethereum-optimism/docs/blob/main/',
   footer: {
@@ -121,6 +117,7 @@ const config: DocsThemeConfig = {
     const { asPath, defaultLocale, locale } = useRouter();
     const { frontMatter } = useConfig();
     const url = 'https://docs.optimism.io' + (defaultLocale === locale ? asPath : `/${locale}${asPath}`);
+    const enableDocsAIWidget = useFeature('enable_docs_ai_widget').on;
 
     return (
       <>
@@ -133,20 +130,23 @@ const config: DocsThemeConfig = {
         <meta name='twitter:description' content={frontMatter.description || 'Optimism Docs for developers'} />
         <meta name='twitter:image' content='https://docs.optimism.io/logos/docs-header.png' />
         <link rel='icon' href='/img/icons/favicon.ico' type='image/x-icon'></link>
-        <script
-          async
-          src='https://widget.kapa.ai/kapa-widget.bundle.js'
-          data-website-id={process.env.NEXT_PUBLIC_KAPA_WEBSITE_ID}
-          data-project-name='OP Labs'
-          data-project-color='#FF0420'
-          data-modal-title='Optimism Docs Assistant ✨'
-          data-project-logo='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8nhCmw7cu6jVQI01JFtMAV5tkTNLJXMSAOg&s'
-          data-modal-example-questions='What is the OP Stack?, How do I get started with Supersim?, How do I create a SuperERC20 token?, How do I get faucet funds?'
-          data-user-analytics-fingerprint-enabled='true'
-          data-modal-override-open-id='custom-ask-ai-button'
-          data-button-hide='true'
-          data-max-tokens='100'
-        ></script>
+        {enableDocsAIWidget && (
+          <script
+            async
+            src='https://widget.kapa.ai/kapa-widget.bundle.js'
+            data-website-id={process.env.NEXT_PUBLIC_KAPA_WEBSITE_ID}
+            data-project-name='OP Labs'
+            data-project-color='#FF0420'
+            data-modal-title='Optimism Docs Assistant ✨'
+            data-project-logo='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8nhCmw7cu6jVQI01JFtMAV5tkTNLJXMSAOg&s'
+            data-modal-example-questions='What is the OP Stack?, How do I get started with Supersim?, How do I create a SuperERC20 token?, How do I get faucet funds?'
+            data-user-analytics-fingerprint-enabled='true'
+            data-modal-override-open-id='custom-ask-ai-button'
+            data-modal-ask-ai-input-placeholder='Ask me a question about building on Optimism'
+            data-button-hide='true'
+            data-max-tokens='100'
+          ></script>
+        )}
       </>
     );
   }
