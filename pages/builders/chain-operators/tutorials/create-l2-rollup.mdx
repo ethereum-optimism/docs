@@ -86,8 +86,8 @@ You can either use a node provider like [Alchemy](https://www.alchemy.com/) (eas
 
 ## Build the source code
 
-You're going to be spinning up your OP Stack chain directly from source code instead of using a container system like [Docker](https://www.docker.com/).
-Although this adds a few extra steps, it means you'll have an easier time modifying the behavior of the stack if you'd like to do so.
+You're going to be spinning up your OP Stack chain using pre-built binaries from the latest Optimism release instead of building directly from source. 
+This simplifies the setup process and ensures you're using the latest stable version.
 
 <Callout>
 You're using the home directory `~/` as the work directory for this tutorial for simplicity.
@@ -112,30 +112,73 @@ git clone https://github.com/ethereum-optimism/optimism.git
 cd optimism
 ```
 
-{<h3>Check out the correct branch</h3>}
+</Steps>
+
+## Download the latest Optimism release
+
+The latest stable releases of `op-node`, `op-batcher`, and `op-proposer` can be found on the [Optimism releases page](https://github.com/ethereum-optimism/optimism/releases).
 
 <Callout>
-You will be using the `tutorials/chain` branch of the Optimism Monorepo to deploy an OP Stack testnet chain during this tutorial.
-This is a non-production branch that lags behind the `develop` branch.
-You should **NEVER** use the `develop` or `tutorials/chain` branches in production.
+Always use the latest releases when building your chain. 
+Using outdated versions may lead to compatibility issues or missing critical features.
 </Callout>
 
-```bash
-git checkout tutorials/chain
-```
+<Steps>
 
-{<h3>Check your dependencies</h3>}
+{<h3>Navigate to Optimism releases</h3>}
 
-<Callout>
-Don't skip this step! Make sure you have all of the required dependencies installed before continuing.
+ Open the Official [Optimism releases page](https://github.com/ethereum-optimism/optimism/releases) in your browser.
+
+ {<h3>Identify latest release</h3>}
+
+*   Look for the most recent version tagged as `vX.Y.Z`.
+
+*   Verify release date matches current expectations.
+
+*   Check release notes for critical compatibility information.
+
+{<h3> Download required binaries</h3>}
+
+In the *Assets* section of the release, download these files for your operating system:
+
+*   `op-node_<version>_<OS>_<arch>.tar.gz`
+*   `op-batcher_<version>_<OS>_<arch>.tar.gz`
+*   `op-proposer_<version>_<OS>_<arch>.tar.gz`
+
+<Callout> 
+**Identify your system**: 
+*   **Windows**: Use `windows` packages.
+*   **macOS**: `darwin` packages (Intel: `amd64`, Apple Silicon: `arm64`). 
+*   **Linux**: `linux` packages (`amd64` or `arm64`). 
 </Callout>
 
-Run the following script and double check that you have all of the required versions installed.
-If you don't have the correct versions installed, you may run into unexpected errors.
+{<h3> Verify file integrity</h3>}
+
+1.  Open the checksums.txt file in the release assets
+2.  Compare listed SHA256 values with your downloaded files using:
+    *   Windows: PowerShell Get-FileHash command
+    *   macOS: Terminal shasum command
+    *   Linux: Terminal sha256sum command
+
+{<h3> Extract binaries</h3>}
+
+Using your system's archive tool:
+1.  Extract all .tar.gz files
+2.  Preserve directory structure during extraction
+
+Move these extracted files to a directory in your system PATH:
+*   `op-node`
+*   `op-batcher`
+*   `op-proposer`
+
+{<h3> Verify installation</h3>}
 
 ```bash
-./packages/contracts-bedrock/scripts/getting-started/versions.sh
+op-node --version
+op-batcher --version
+op-proposer --version
 ```
+</Steps>
 
 {<h3>Install dependencies</h3>}
 
@@ -149,8 +192,6 @@ pnpm install
 make op-node op-batcher op-proposer
 pnpm build
 ```
-
-</Steps>
 
 ### Build `op-geth`
 
