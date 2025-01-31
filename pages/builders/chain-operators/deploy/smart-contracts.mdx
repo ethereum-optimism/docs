@@ -19,25 +19,25 @@ for the official release versions. Changes to the smart contracts are
 generally not considered backwards compatible.
 
 <Callout type="warning">
-The following deployment information outlines the legacy method for deploying the OP Stack L1 contracts. 
-This method is not recommended and is provided only for historical context.
+  The following deployment information outlines the legacy method for deploying the OP Stack L1 contracts.
+  This method is not recommended and is provided only for historical context.
 </Callout>
 
 ## Deployment configuration
 
-To deploy OP Stack contracts, you need to create a deployment configuration JSON file. 
+To deploy OP Stack contracts, you need to create a deployment configuration JSON file.
 The file should be placed in the following monorepo subdirectory: [packages/contracts-bedrock/deploy-config](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/deploy-config).
 
 For a detailed explanation of the configuration options and their meanings, refer to the [rollup deployment configuration page](/builders/chain-operators/configuration/rollup).
 
 ## Deployment script (Legacy method)
 
-The legacy method for deploying smart contracts uses [foundry](https://github.com/foundry-rs) and the deployment script located in the monorepo at 
+The legacy method for deploying smart contracts uses [foundry](https://github.com/foundry-rs) and the deployment script located in the monorepo at
 [packages/contracts-bedrock/scripts/deploy/Deploy.s.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/deploy/Deploy.s.sol).
 
 ### State diff
 
-You can verify the state diff before deploying the contracts by using the `runWithStateDiff()` function in the deployment script. 
+You can verify the state diff before deploying the contracts by using the `runWithStateDiff()` function in the deployment script.
 This produces outputs in [`snapshots/state-diff/`](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/snapshots/state-diff).
 Run the deployment with state diffs using the following command:
 
@@ -80,55 +80,53 @@ All functions for deploying a single contract are public, meaning that
 the `--sig` argument to forge script can be used to target the deployment of a
 single contract.
 
-
 ## Using `op-deployer`
 
-The recommended way to deploy the L1 smart contracts is with the `op-deployer` tool. 
+The recommended way to deploy the L1 smart contracts is with the `op-deployer` tool.
 Follow these steps:
 
 <Steps>
-### Set Up your environment
+  ### Set Up your environment
 
-*   Install `op-deployer`:
-    The recommended way to install `op-deployer` is to download the latest release from the monorepo's
-    [release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
-    for your platform then extract it somewhere on your `PATH`.
-*   Access to the L1 blockchain (e.g., Sepolia or Mainnet) via an RPC URL.
-*   A private key with sufficient funds to cover deployment costs.
+  *   Install `op-deployer`:
+      The recommended way to install `op-deployer` is to download the latest release from the monorepo's
+      [release page](https://github.com/ethereum-optimism/optimism/releases). To install a release, download the binary
+      for your platform then extract it somewhere on your `PATH`.
+  *   Access to the L1 blockchain (e.g., Sepolia or Mainnet) via an RPC URL.
+  *   A private key with sufficient funds to cover deployment costs.
 
+  ### Create an intent file
 
-### Create an intent file
+  *   Define the configuration of your chain in an intent file.
+  *   This file specifies the deployment parameters for both L1 and L2.
+      Follow the instructions provided in the [configure your chain](/builders/chain-operators/tools/op-deployer#init-configure-your-chain) section to generate the intent file.
 
-*   Define the configuration of your chain in an intent file.
-*   This file specifies the deployment parameters for both L1 and L2. 
-Follow the instructions provided in the [configure your chain](/builders/chain-operators/tools/op-deployer#init-configure-your-chain) section to generate the intent file.
+  ### Run the `apply` command
 
-### Run the `apply` command
+  Execute the following command to deploy the L1 smart contracts:
 
-Execute the following command to deploy the L1 smart contracts:
+  ```bash
+  ./bin/op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
+  ```
 
-```bash
-./bin/op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
-```
+  *   Replace `<rpc-url>` with your L1 RPC URL.
+  *   Replace `<private key hex>` with the private key of the account used for deployment.
 
-*   Replace `<rpc-url>` with your L1 RPC URL.
-*   Replace `<private key hex>` with the private key of the account used for deployment.
+  ### Verify the deployment
 
-### Verify the deployment
-Once the deployment is complete, you can verify the deployed contract addresses and configuration:
+  Once the deployment is complete, you can verify the deployed contract addresses and configuration:
 
-*   Check the deployment output for contract addresses and transaction details.
-*   Verify the deployed contracts on the block explorer using the specified `ETHERSCAN_API_KEY` in the configuration file.
-*   To outputs all L1 contract addresses for an L2 chain run:
+  *   Check the deployment output for contract addresses and transaction details.
+  *   Verify the deployed contracts on the block explorer using the specified `ETHERSCAN_API_KEY` in the configuration file.
+  *   To outputs all L1 contract addresses for an L2 chain run:
       ```bash
           ./bin/op-deployer inspect l1 --workdir .deployer <l2-chain-id>
       ```
-
 </Steps>
 
 <Callout type="info">
-If you need deterministic deployment (e.g., for deploying contracts at the same address across multiple chains), 
-use the `CREATE2` method.
+  If you need deterministic deployment (e.g., for deploying contracts at the same address across multiple chains),
+  use the `CREATE2` method.
 </Callout>
 
 ## Best practices
@@ -142,7 +140,7 @@ Starting with permissioned fault proofs gives chain operators time to get comfor
 running the additional infrastructure requirements: [op-challenger](https://github.com/ethereum-optimism/optimism/tree/develop/op-challenger) and
 [monitoring](https://github.com/ethereum-optimism/monitorism/tree/main). There are also
 additional changes to the economics of operating a permissionless fault proof that chain
-operators should have a firm understanding of. 
+operators should have a firm understanding of.
 
 ## Next steps
 
