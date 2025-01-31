@@ -141,13 +141,11 @@ const config: DocsThemeConfig = {
           data-project-color='#FF0420'
           data-modal-title='Optimism Docs Assistant ✨'
           data-project-logo='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8nhCmw7cu6jVQI01JFtMAV5tkTNLJXMSAOg&s'
-          data-modal-disclaimer='This is a custom LLM for OPLabs with access to [all help center documentation](https://docs.optimism.io/).'
           data-modal-example-questions='What is the OP Stack?, How do I get started with Supersim?, How do I create a SuperERC20 token?, How do I get faucet funds?'
           data-user-analytics-fingerprint-enabled='true'
           data-modal-override-open-id='custom-ask-ai-button'
           data-button-hide='true'
           data-max-tokens='100'
-          data-modal-theme='dark'
         ></script>
       </>
     );
