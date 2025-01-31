@@ -136,9 +136,10 @@ const config: DocsThemeConfig = {
         <script
           async
           src='https://widget.kapa.ai/kapa-widget.bundle.js'
-          data-website-id='1e9518c7-51d1-4ac5-a237-14befea6148f'
+          data-website-id={process.env.NEXT_PUBLIC_KAPA_WEBSITE_ID}
           data-project-name='OP Labs'
           data-project-color='#FF0420'
+          data-modal-title='Optimism Docs Assistant ✨'
           data-project-logo='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8nhCmw7cu6jVQI01JFtMAV5tkTNLJXMSAOg&s'
           data-modal-disclaimer='This is a custom LLM for OPLabs with access to [all help center documentation](https://docs.optimism.io/).'
           data-modal-example-questions='What is the OP Stack?, How do I get started with Supersim?, How do I create a SuperERC20 token?, How do I get faucet funds?'
