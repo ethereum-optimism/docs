@@ -9,7 +9,7 @@ const withNextra = nextra({
     remarkPlugins: [
       remarkCodeImport,
     ]
-  }
+  },
 })
 
 export default {
@@ -17,4 +17,7 @@ export default {
   eslint: {
     ignoreDuringBuilds: true,
   },
+
+  // Don't put redirects here
+  // they go in public/_redirects
 }

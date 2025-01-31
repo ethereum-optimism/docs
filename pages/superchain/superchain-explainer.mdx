@@ -264,7 +264,7 @@ It is possible to introduce synchronous cross-chain messaging and enable atomic 
 
 With the combination of low-latency L2 to L2 message passing as well as shared sequencing, it is possible to perform complex transactions such as cross-chain flash loans. It is even possible to go further and create an EVM abstraction where individual smart contracts (or even individual storage slots) exist on different chains.
 
-### Alt-Data availability layer — Plasma Protocol
+### Alt-Data availability layer — Alt-DA Protocol
 
 #### Pain point:
 
@@ -272,27 +272,27 @@ With the combination of low-latency L2 to L2 message passing as well as shared s
 
 #### Proposed solution:
 
-Today L1 data availability (DA) does not scale nearly enough to be able to support internet-level scale. However, it is possible to extend the amount of data availability accessible to OP Chains by using a Plasma protocol which enables alternative DA providers to supplement the more limited L1 DA.
+Today L1 data availability (DA) does not scale nearly enough to be able to support internet-level scale. However, it is possible to extend the amount of data availability accessible to OP Chains by using a Alt-DA protocol which enables alternative DA providers to supplement the more limited L1 DA.
 
 <Callout type="info">
-  Plasma chain
+  Alt-DA chain
 
   A chain where transaction data is committed to on L1 but not supplied to L1 directly, with a data availability challenge fallback.
 </Callout>
 
-A generic Plasma protocol is able to scale beyond what is possible on L1 because only the users who are interested in the transaction data will download the Plasma data, whereas on L1 every Ethereum node downloads all of the transaction data on L1. This means that Plasma data is extremely cheap. However, Plasma has a worse security model than L1 — it is possible for Plasma chain data to temporarily become unavailable, meaning users must withdraw from the chain. Note, this security model still guarantees safety of the Plasma chains, just not liveness.
+A generic Alt-DA protocol is able to scale beyond what is possible on L1 because only the users who are interested in the transaction data will download the Alt-DA data, whereas on L1 every Ethereum node downloads all of the transaction data on L1. This means that Alt-DA data is extremely cheap. However, Alt-DA has a worse security model than L1 — it is possible for Alt-DA chain data to temporarily become unavailable, meaning users must withdraw from the chain. Note, this security model still guarantees safety of the Alt-DA chains, just not liveness.
 
-**Plasma protocol overview:**
+**Alt-DA protocol overview:**
 
 *   Data Availability (DA) Providers receive transaction data from users.
-*   DA Providers then hash the transaction data and submit the hash to the Plasma Contract.
+*   DA Providers then hash the transaction data and submit the hash to the Alt-DA Contract.
 *   Once the hash has been submitted, the DA Provider sends a proof to the user which proves inclusion of their transaction data in the hash. The DA Provider can misbehave by withholding the proof, i.e., not sending it to the user.
-*   If the DA Provider does not send the proof to the user, the user may submit a DA challenge. This forces the DA Provider to post the transaction data onchain. If the DA Provider does not submit the proof onchain, the hash is deleted. This ensures the user can always (after the challenge period) sync the Plasma chain.
+*   If the DA Provider does not send the proof to the user, the user may submit a DA challenge. This forces the DA Provider to post the transaction data onchain. If the DA Provider does not submit the proof onchain, the hash is deleted. This ensures the user can always (after the challenge period) sync the Alt-DA chain.
     *   DA challenge periods may be extended in case of heavy L1 congestion.
-*   The user may also submit an L1 transaction to withdraw from the Plasma chain in order to switch their DA Provider.
-*   Settlement of Plasma chains use a near identical Fault Proof System to Rollup chains with the only difference being that additional data is derived from the chain using the hashes that are finalized in the Plasma Contract.
+*   The user may also submit an L1 transaction to withdraw from the Alt-DA chain in order to switch their DA Provider.
+*   Settlement of Alt-DA chains use a near identical Fault Proof System to Rollup chains with the only difference being that additional data is derived from the chain using the hashes that are finalized in the Alt-DA Contract.
 
-Because of the ability for hashes to reduce arbitrary size data into a constant size commitment, and the ability to parallelize transaction data hashing, it is possible to achieve near-perfect horizontal scalability of data commitments using Plasma DA. This means that it is possible to put massively scalable applications such as games or social media on Plasma chains.
+Because of the ability for hashes to reduce arbitrary size data into a constant size commitment, and the ability to parallelize transaction data hashing, it is possible to achieve near-perfect horizontal scalability of data commitments using Alt-DA DA. This means that it is possible to put massively scalable applications such as games or social media on Alt-DA chains.
 
 ### Multi-chain app frameworks
 

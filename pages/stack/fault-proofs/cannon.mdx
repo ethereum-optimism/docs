@@ -16,7 +16,7 @@ However, Cannon is Optimism's default Fault Proof Virtual Machine (FPVM). Cannon
 *   Onchain `MIPS.sol`: EVM implementation to verify execution of a single MIPS instruction.
 *   Offchain `mipsevm`: Go implementation to produce a proof for any MIPS instruction to verify onchain.
 
-Note that Cannon is just one example of a FPVM that can be used to resolve disputes.
+Note that Cannon is just one example of an FPVM that can be used to resolve disputes.
 
 This documentation will go into detail about the subcomponents that make up the offchain Cannon implementation as a whole.
 Additionally, we will explore the differences between Cannon and the onchain `MIPS.sol`. For more information about the onchain
@@ -52,7 +52,7 @@ where the code that has been compiled into MIPS instructions is OP-Program.
 OP-Program is golang code that will be compiled into MIPS instructions and run within the Cannon FPVM. OP-Program, whether run as standalone
 golang code or in Cannon, fetches all necessary data used for deriving the state of the L2. It is built such that the 
 same inputs will produce not only the same outputs, but the same execution trace. This allows all participants in a fault dispute game to run
-OP-Program such that, given the same L2 output root state transition, can generate the same execution traces. This in turn generates the same
+OP-Program such that, given the same L2 output root state transition, they can generate the same execution traces. This in turn generates the same
 witness proof for the exact same MIPS instruction that will be run onchain.
 
 ## Overview of offchain Cannon components
@@ -155,7 +155,7 @@ is used to parse all the symbols stored in the ELF file. Understanding which ELF
 they are located is important for other functionality, such as understanding if the current `PC` is running within a specific function.
 
 Another step that occurs while loading the ELF file is patching the binary of any incompatible functions. This step is crucial, as a key design decision
-important**, as a key design decision in both the onchain and offchain `mipsevm` implementations is that neither implementation
+in both the onchain and offchain `mipsevm` implementations is that neither implementation
 has access to a kernel. This is primarily due to the limitations within the EVM itself, and since the offchain Cannon
 implementation must match functionality exactly with its onchain counterpart, kernel access is also not available within Cannon. This means that the VMs
 cannot replicate behavior that would otherwise be performed by a kernel 1:1, which primarily impacts system calls (syscalls).
@@ -169,9 +169,9 @@ within the ELF file, and effectively stubbing out the function by returning imme
 Once the MIPS binary is loaded into Cannon, we can then begin to run MIPS instructions one at a time.
 [`run.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/cmd/run.go) contains the top-level
 code responsible for stepping through MIPS instructions. Additionally, before each MIPS instruction, `run.go` will determine whether
-separate action(s) needs to be performed. The actions to be performed are configured by the user, and can include logging information,
+separate action(s) need(s) to be performed. The action(s) to be performed are configured by the user, and can include logging information,
 stopping at a certain instruction, taking a snapshot at a certain instruction, or signaling to the VM to generate the witness proof.
-Actions to be performed are instantiated and checked by [`matcher.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/cmd/matcher.go),
+The action(s) to be performed are instantiated and checked by [`matcher.go`](https://github.com/ethereum-optimism/optimism/blob/develop/cannon/cmd/matcher.go),
 which generates a match function that triggers when the configured regular expression is true.
 
 Within `run.go`, the `StepFn` is the wrapper that initiates the MIPS instruction to be run.

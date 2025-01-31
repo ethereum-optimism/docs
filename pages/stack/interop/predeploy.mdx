@@ -1,0 +1,65 @@
+---
+title: Interoperability predeploys
+lang: en-US
+description: How it works.
+---
+
+import { Callout } from 'nextra/components'
+import Image from 'next/image'
+
+import { InteropCallout } from '@/components/WipCallout'
+
+<InteropCallout />
+
+# Interoperability predeploys
+
+The following predeploys have been added to enable interoperability.
+*Predeployed smart contracts* exist at predetermined addresses, coming from the genesis state.
+They're similar to [precompiles](https://www.evm.codes/precompiled) but run directly in the EVM instead of running as native code.
+
+## CrossL2Inbox
+
+The `CrossL2Inbox` is the system predeploy for cross chain messaging.
+Anyone can trigger the execution or validation of cross chain messages, on behalf of any user.
+
+*   **Address:** `0x4200000000000000000000000000000000000022`
+*   **Specs:** [`CrossL2Inbox`](https://specs.optimism.io/interop/predeploys.html#crossl2inbox)
+*   **Source code:** [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol)
+
+## L2ToL2CrossDomainMessenger
+
+The `L2ToL2CrossDomainMessenger` is a higher level abstraction on top of the `CrossL2Inbox` that provides general message passing.
+It's utilized for secure ERC20 token transfers between L2 chains.
+Messages sent through the `L2ToL2CrossDomainMessenger` on the source chain receive both replay protection and domain binding (the executing transaction can only be valid on a single chain).
+
+*   **Address:** `0x4200000000000000000000000000000000000023`
+*   **Specs:** [`L2ToL2CrossDomainMessenger`](https://specs.optimism.io/interop/predeploys.html#l2tol2crossdomainmessenger)
+*   **Source code:** [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol)
+
+{/* 
+## OptimismSuperchainERC20Factory
+
+`OptimismSuperchainERC20Factory` creates ERC20 contracts that implement the SuperchainERC20 standard, grants mint-burn rights to the `L2StandardBridge`, and includes a remoteToken variable. These ERC20s are called `OptimismSuperchainERC20` and can be converted back and forth with `OptimismMintableERC20` tokens. The goal of the `OptimismSuperchainERC20` is to extend functionalities of the `OptimismMintableERC20` so that they are interop compatible.
+
+- **Address:** `0x4200000000000000000000000000000000000026`
+- **Specs:** [`OptimismSuperchainERC20Factory`](https://specs.optimism.io/interop/predeploys.html#optimismsuperchainerc20factory)
+- **Source code:** [`OptimismSuperchainERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/OptimismSuperchainERC20Factory.sol)
+
+## OptimismSuperchainERC20Beacon
+
+To enable upgrades, `OptimismSuperchainERC20` contracts use [the `BeaconProxy` pattern](https://docs.openzeppelin.com/contracts/3.x/api/proxy#beacon).
+This contract is the `Beacon` part, which provides the implementation address for those proxies.
+
+- **Address:** `0x4200000000000000000000000000000000000027`
+- **Specs:** [`OptimismSuperchainERC20Beacon`](https://specs.optimism.io/interop/predeploys.html#beaconcontract)
+- **Source code:** [`OptimismSuperchainERC20Beacon`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/OptimismSuperchainERC20Beacon.sol)
+
+*/}
+
+## SuperchainTokenBridge
+
+The `SuperchainTokenBridge` is an abstraction on top of the `L2toL2CrossDomainMessenger` that facilitates token bridging using interop. It has mint and burn rights over `OptimismSuperchainERC20` tokens, as described in the [token bridging spec](https://specs.optimism.io/interop/token-bridging.html).
+
+*   **Address:** `0x4200000000000000000000000000000000000028`
+*   **Specs:** [`SuperchainTokenBridge`](https://specs.optimism.io/interop/predeploys.html#superchainerc20bridge)
+*   **Source code:** [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol)
