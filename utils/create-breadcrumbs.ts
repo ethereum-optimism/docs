@@ -235,7 +235,7 @@ const main = async (): Promise<void> => {
 
   try {
     // Process main sections: builders, chain, connect, stack
-    const mainSections = ['app-developers', 'operators', 'connect', 'stack'];
+    const mainSections = ['app-developers', 'operators', 'superchain', 'stack'];
     for (const section of mainSections) {
       const sectionPath = path.join(rootDir, section);
       try {

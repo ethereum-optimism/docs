@@ -28,7 +28,7 @@ pnpm fix
 1. **Before Running**
    *   Commit your current changes
    *   Ensure you're in the docs root directory
-   *   Target folders should exist: `builders`, `chain`, `stack`, `connect`
+   *   Target folders should exist: `app-developers`, `operators`, `stack`, `superchain`
 
 2. **After Running**
    *   Review generated `.mdx` files in each folder
