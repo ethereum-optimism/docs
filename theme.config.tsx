@@ -5,6 +5,7 @@ import { useConfig } from "nextra-theme-docs";
 import { FeelbackYesNo, PRESET_LIKE_DISLIKE } from "@feelback/react";
 import "@feelback/react/styles/feelback.css";
 import { Search } from "./components/Search";
+import { Footer } from "./components/Footer";
 
 const config: DocsThemeConfig = {
   logo: (
@@ -39,12 +40,10 @@ const config: DocsThemeConfig = {
    search: {
      component: Search,
    },
-  project: {
-    link: "https://github.com/ethereum-optimism/docs",
-  },
   docsRepositoryBase: "https://github.com/ethereum-optimism/docs/blob/main/",
   footer: {
-    text: (
+    text: <Footer />,
+    /*text: (
       <div style={{
         display: "flex",
         justifyContent: "space-between", 
@@ -86,7 +85,7 @@ const config: DocsThemeConfig = {
           </a>
         </div>
       </div>
-    )
+    )*/
    },
   
   
