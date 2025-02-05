@@ -134,7 +134,7 @@ const config: DocsThemeConfig = {
           <script
             async
             src='https://widget.kapa.ai/kapa-widget.bundle.js'
-            data-website-id={process.env.NEXT_PUBLIC_KAPA_WEBSITE_ID}
+            data-website-id={process.env.NEXT_PUBLIC_KAPA_WEBSITE_ID || ''}
             data-project-name='OP Labs'
             data-project-color='#FF0420'
             data-modal-title='Optimism Docs Assistant ✨'
