@@ -6,7 +6,6 @@ import { FeelbackYesNo, PRESET_LIKE_DISLIKE } from '@feelback/react';
 import '@feelback/react/styles/feelback.css';
 import { Search } from './components/Search';
 import { AskAIButton } from './components/AskAIButton';
-import { useFeature } from '@growthbook/growthbook-react';
 
 const config: DocsThemeConfig = {
   logo: (
@@ -117,7 +116,7 @@ const config: DocsThemeConfig = {
     const { asPath, defaultLocale, locale } = useRouter();
     const { frontMatter } = useConfig();
     const url = 'https://docs.optimism.io' + (defaultLocale === locale ? asPath : `/${locale}${asPath}`);
-    const enableDocsAIWidget = useFeature('enable_docs_ai_widget').on;
+    const enableDocsAIWidget = true;
 
     return (
       <>

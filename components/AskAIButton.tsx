@@ -1,8 +1,7 @@
 import { RiSparkling2Fill } from '@remixicon/react';
-import { useFeature } from '@growthbook/growthbook-react';
 
 const AskAIButton = () => {
-  const enableDocsAIWidget = useFeature('enable_docs_ai_widget').on;
+  const enableDocsAIWidget = true;
 
   if (!enableDocsAIWidget) {
     return null;

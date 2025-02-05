@@ -6,7 +6,6 @@ import * as gtag from '../utils/gtag';
 import * as aa from 'search-insights';
 import AlgoliaContext from '@/utils/contexts/AlgoliaContext';
 import ScrollDispatcher from '@/components/ScrollDispatcher';
-import { CustomGrowthBookProvider } from '../providers/GrowthbookProvider';
 
 export default function App({ Component, pageProps }) {
   const [queryID, setQueryID] = useState(null);
@@ -29,19 +28,17 @@ export default function App({ Component, pageProps }) {
   });
 
   return (
-    <CustomGrowthBookProvider>
-      <AlgoliaContext.Provider
-        value={{
-          queryID,
-          setQueryID,
-          objectID,
-          setObjectID
-        }}
-      >
-        <ScrollDispatcher>
-          <Component {...pageProps} />
-        </ScrollDispatcher>
-      </AlgoliaContext.Provider>
-    </CustomGrowthBookProvider>
+    <AlgoliaContext.Provider
+      value={{
+        queryID,
+        setQueryID,
+        objectID,
+        setObjectID
+      }}
+    >
+      <ScrollDispatcher>
+        <Component {...pageProps} />
+      </ScrollDispatcher>
+    </AlgoliaContext.Provider>
   );
 }
