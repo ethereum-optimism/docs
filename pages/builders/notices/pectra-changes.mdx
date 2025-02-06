@@ -12,10 +12,12 @@ This page outlines breaking changes related to the Ethereum Pectra (Prague-Elect
 If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
 
 <Callout type="info">
-  This page will be updated continuously with information on upgrade runbooks and timelines as they come. This based on the last Ethereum ACDC on Jan 23rd 2025. These dates are subject to change based on how `devnet-6` goes. Ethereum L1 clients are expected to have a release out by Feb 3rd.
-  *   The Pectra upgrade for Holesky L1 proposed activation is on **Wed, Feb 12 at 09:32:48 UTC (`1739352768`)**.
-  *   The Pectra upgrade for Sepolia L1 proposed activation is on **Wed, Feb 19 at 15:48:48 UTC (`1739980128`)**.
-  *   The Pectra upgrade for Ethereum L1 will be activated in **March**.
+  This page will be updated continuously with information on upgrade runbooks and timelines as they come. Here's the tentative L1 Pectra hard fork times per the ACDC that happened on Feb 6th:
+
+  L1 Client testnet releases out by Feb 13 (ACDE):
+      *   Holesky slot: 3710976 (Mon, Feb 24 at 21:55:12 UTC)
+      *   Sepolia slot: 7118848 (Wed, Mar 5 at 07:29:36 UTC)
+      *   +30 day mainnet slot: 11444224 (Tue, Apr 8 at 23:25:11 UTC)
 </Callout>
 
 ## What's included in Pectra?
@@ -45,8 +47,9 @@ These following steps are necessary for every chain operator:
 
 <Steps>
   ### Update to the latest releases
+
   <Callout type="info">
-    The software is currently being tested and we expect the releases to be cut by the end of this week (Jan 27th to 31st). 
+    The software is currently being tested and we expect the releases to be cut by the end of this week (Feb 3rd to 7th). These [release candidates](https://github.com/ethereum-optimism/optimism/issues/13627#issuecomment-2627347212) are currently baking on devnet.
   </Callout>
 
   *   `op-node` at `vTBD`
@@ -64,28 +67,62 @@ These following steps are necessary for every chain operator:
 
 ### For fault proof enabled chains
 
-Since the Pectra upgrade changes the derivation rules, you will need to upgrade the `op-program` version used in the fault proof system to support these changes. The `op-program` version used is specified via the `faultGameAbsolutePrestate` setting, deployed as part of `FaultDisputeGame` and `PermissionedDisputeGame` contracts.
+<Callout type="info">
+  The following instructions assume your chain is on the latest contract release `op-contracts/v1.8.0` and have Holocene activated.
+</Callout>
+
+The following steps are to update your absolute prestate on your chain. **This is absolutely necessary for chains running permissionless fault proofs.** For chains running the Fault Proof System with permissioned games you can skip this section because games will not be played out and the absolute prestate is not used. 
+
+The Pectra upgrade changes the derivation rules, permissionless fault proof chains need to upgrade the `op-program` version used in the fault proof system to support these changes. The `op-program` version used is specified via the `faultGameAbsolutePrestate` setting, deployed as part of `FaultDisputeGame` and `PermissionedDisputeGame` contracts.
 
 <Steps>
   ### Make sure the Superchain Registry is up to date
 
   The new `op-program` release will pull the configurations from the [superchain-registry](https://github.com/ethereum-optimism/superchain-registry). This is important because the op-challenger uses the `op-program` and it needs to be aware of your chain's configuration. If your chain that not in the superchain-registry, please [open a PR to add your chain to the superchain-registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/docs/ops.md#adding-a-chain).
 
-  ### Generate a new absolute prestate
+  ### Verify the new absolute prestate
 
-  Once we have a finalized release of the `op-program`, we will provide a release tag for you to use to generate the absolute prestate. You will check out that release tag in the monorepo and run the `make reproducible-prestate` [command](https://github.com/ethereum-optimism/optimism/blob/80eff009a352c4e74ec8fb41a6bdb2a5778f3075/Makefile#L133-L135) to generate the absolute prestate.
+  <Callout type="info">
+    The following is based on the [op-program/v1.5.0-rc.1](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.5.0-rc.1) which is wrapping up testing and the official release will be out soon.
+  </Callout>
+
+  You can use this new absolute prestate (`0x03dfa3b3ac66e8fae9f338824237ebacff616df928cf7dada0e14be2531bc1f4`) for the following chains:
+
+  *   Sepolia: Base, OP, Metal, Mode, Zora, Ethernity, Unichain, Ink
+  *   Mainnet: Base, OP, Orderly, Lyra, Metal, Mode, Zora, Lisk, Ethernity, Binary, Ink
+
+  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/6819d8a4e787df2adcd09305bc3057e2ca4e58d9/Makefile#L133-L135) in the root of the monorepo:
+
+  ```shell
+  make reproducible-prestate
+  ```
+
+  You should expect the following output at the end of the command:
+
+  ```shell
+  Cannon Absolute prestate hash: 
+  0x03dfa3b3ac66e8fae9f338824237ebacff616df928cf7dada0e14be2531bc1f4
+  Cannon64 Absolute prestate hash: 
+  0x03f83792f653160f3274b0888e998077a27e1f74cb35bcb20d86021e769340aa
+  CannonInterop Absolute prestate hash: 
+  0x03b7658b889796c1e372f57439e48eb46a5b008f6e6a4b7e5c8c2d3bddffa797
+  ```
 
   ### Deploy new dispute game contracts
 
-  You will then take the absolute prestate and deploy new `FaultDisputeGame` and `PermissionedDisputeGame` contracts with that value.
+  You will then take the absolute prestate and deploy new `FaultDisputeGame` and `PermissionedDisputeGame` contracts with that value. You can reuse the [Holocene script](https://github.com/ethereum-optimism/optimism/tree/op-contracts/v1.8.0-rc.4/packages/contracts-bedrock/scripts/upgrades/holocene) to deploy the new contracts. The only change you will need to make is to update the `absolutePrestate` value in your [deploy-config](https://github.com/ethereum-optimism/optimism/blob/2073f4059bd806af3e8b76b820aa3fa0b42016d0/packages/contracts-bedrock/scripts/upgrades/holocene/README.md?plain=1#L53-L54). Alternatively we will be releasing an `OPPrestateUpdater` that can be used to deploy the new contracts.
 
   ### Update the DisputeGameFactory
 
-  You will then need to update the `DisputeGameFactory` to use the point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. We will provide an upgrade task and script to facilitate this upgrade.
+  You will then need to update the `DisputeGameFactory` to point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. You can utilize this [template](https://github.com/ethereum-optimism/superchain-ops/tree/main/tasks/sep/fp-recovery/005-set-game-implementation) to generate the transaction and validation script for this step. Before executing, you will need to update your op-challenger.
 
   ### Update your op-challenger
 
-  Finally you will need to update your `op-challenger` to the new release version that will be provided soon.
+  Update your `op-challenger` to the new release version that will be provided soon and configure it to use the new absolute prestate.
+
+  ### Execute the upgrade 
+
+  Once your challenger is ready, you can execute the "Set Dispute Game Implementation" transaction. Please simulate and validate that the expected output prior to executing the transaction.
 </Steps>
 
 ### For OP Stack forks
@@ -102,7 +139,7 @@ These following steps are necessary for every node operator:
   ### Update to the latest release
 
   <Callout type="info">
-    The software is currently being tested and we expect the releases to be cut by the end of this week (Jan 27th to 31st). 
+    The software is currently being tested and we expect the releases to be cut by the end of this week (Feb 3rd to 7th). These [release candidates](https://github.com/ethereum-optimism/optimism/issues/13627#issuecomment-2627347212) are currently baking on devnet.
   </Callout>
 
   *   `op-node` at `vTBD`
