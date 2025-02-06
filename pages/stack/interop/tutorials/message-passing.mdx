@@ -107,7 +107,7 @@ Look below for an explanation how to relay your own messages.
         string greeting;
 
         event SetGreeting(
-            address sender,     // msg.sender
+            address indexed sender,     // msg.sender
             string greeting
         ); 
 
@@ -192,7 +192,7 @@ Look below for an explanation how to relay your own messages.
 
     ```solidity
     import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
-    import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMe>
+    import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";
 
     import { Greeter } from "src/Greeter.sol";
 
@@ -218,6 +218,31 @@ Look below for an explanation how to relay your own messages.
     }
     ```
 
+    <details>
+
+    <summary>Explanation</summary>
+
+    ```solidity
+    function setGreeting(string calldata greeting) public {
+        bytes memory message = abi.encodeCall(
+            Greeter.setGreeting,
+            (greeting)
+        );
+    ```
+
+    The message is the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) sent to the destination contract.
+    The easiest way to calldata is the use [`abi.encodeCall`](https://docs.soliditylang.org/en/latest/units-and-global-variables.html#abi-encoding-and-decoding-functions).
+
+
+    ```solidity
+        messenger.sendMessage(greeterChainId, greeterAddress, message);
+    }
+    ```
+
+    Actually send the message using [`L2ToL2CrossDomainMessenger.sendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L128-L154).
+
+    </details>
+
 1. Deploy `GreetingSender` to chain A.
 
     ```sh
@@ -231,18 +256,120 @@ Send a greeting from chain A to chain B.
 ```sh
 cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
 cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A"
+sleep 2
 cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
 ```
+
+The `sleep` call is because the message is not relayed until the next chain B block, which can take up to two seconds.
 
 </Steps>
 
 ## Sender information
 
+Run this command to view the events to see who called `setGreeting`.
+
+```sh
+cast logs --rpc-url $RPC_B 'SetGreeting(address,string)'
+```
+
+The sender is the second topic.
+However, when the greetings come from a separate blockchain, that value is just the address of the local `L2ToL2CrossDomainMessenger` contract, which is always `4200000000000000000000000000000000000023`.
+That is not useful.
+
+In this section we change `Greeter.sol` to report 
+
 <Steps>
+
+### Modify the Greeter contract
+
+1. Modify `src/Greeter.sol` to this code.
+
+    ```solidity
+    //SPDX-License-Identifier: MIT
+    pragma solidity ^0.8.0;
+
+    import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
+    import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";    
+
+    contract Greeter {
+
+        IL2ToL2CrossDomainMessenger public immutable messenger =
+            IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
+
+        string greeting;
+
+        event SetGreeting(
+            address indexed sender,     // msg.sender
+            string greeting
+        ); 
+
+        event CrossDomainSetGreeting(
+            address indexed sender,   // Sender on the other side
+            uint256 indexed chainId,  // ChainID of the other side
+            string greeting
+        );
+
+        function greet() public view returns (string memory) {
+            return greeting;
+        }
+
+        function setGreeting(string memory _greeting) public {
+            greeting = _greeting;
+            emit SetGreeting(msg.sender, _greeting);
+
+            if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
+                (address sender, uint256 chainId) =
+                    messenger.crossDomainMessageContext();              
+                emit CrossDomainSetGreeting(sender, chainId, _greeting);
+            }
+        }
+    }
+    ```   
+
+    <details>
+
+    <summary>Explanation</summary>
+
+    If we see that we got a message from `L2ToL2CrossDomainMessenger`, we call [`L2ToL2CrossDomainMessenger.crossDomainMessageContext`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L118-L126).
+
+    </details>
+
+1. Redeploy the contracts.
+   Because the address of `Greeter` is immutable in `GreetingSender`, we need to redeploy both contracts.
+
+    ```sh
+    GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
+    GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
+    ```
+
+### Verify you can see cross chain sender information
+
+1. Set the greeting through `GreetingSender`.
+
+    ```sh
+    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+    cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A, with an event"
+    sleep 2
+    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+    ```    
+
+1. Read the log entries.
+
+    ```sh
+    cast logs --rpc-url $RPC_B 'CrossDomainSetGreeting(address,uint256,string)'
+    echo $GREETER_A_ADDR
+    echo 0x385 | cast --to-dec
+    ```
+
+    See that the second topic (the first indexed log parameter) is the same as `$GREETER_A_ADDR`.
+    The third topic is `0x385=901`, which is the chain ID for chain A.
 
 </Steps>
 
 ## Javascript message relaying
+
+So far we relied on `--interop.autorelay` to send the executing messages to chain B.
+But in real life we are not going to have this, we will need to handle it ourselves.
 
 <Steps>
 
