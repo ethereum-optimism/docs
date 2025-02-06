@@ -1,0 +1,247 @@
+---
+title: Interop message passing tutorial
+lang: en-US
+description: Learn how to pass messages from one superchain blockchain to another
+---
+
+import { Callout } from 'nextra/components'
+import { Steps } from 'nextra/components'
+import { InteropCallout } from '@/components/WipCallout'
+
+<InteropCallout />
+
+# Interop message passing tutorial
+
+<Callout>
+  This is a step-by-step tutorial.
+  You can find an explanation of how this works [here](../message-passing).
+</Callout>
+
+In this tutorial you learn how to use the [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract to pass a message from one interop blockchain to another.
+
+In this tutorial we will use several tools:
+
+- The [Supersim multichain development environment](../tools/supersim)
+- [Foundry](https://book.getfoundry.sh/)
+- [Viem](https://viem.sh/), running on top of [Node](https://nodejs.org/en)
+- UNIX. 
+  This tutorial is designed to run either on Linux or MacOS. 
+  If you use Windows, you can use the [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+
+## Install tools
+
+<Steps>
+
+### Foundry
+
+Download and install [Foundry].
+Part of Foundry is [`anvil`](https://book.getfoundry.sh/anvil/), which runs a local Ethereum node.
+
+### Supersim
+
+Download and install [Supersim](https://github.com/ethereum-optimism/supersim/releases).
+
+</Steps>
+
+## Solidity message passing
+
+In this section you create contracts and transfer a message between them.
+For now, we ignore the need for executing messages by turning on autorelay.
+Look below for an explanation how to relay your own messages.
+
+<Steps>
+
+### Run the chains
+
+1. In the directory where Supersim is installed, start it with autorelay.
+
+    ```sh
+    ./supersim --interop.autorelay
+    ```
+
+    Supersim creates three `anvil` blockchains:
+
+    | Role | ChainID | RPC URL |
+    | - | -: | - |
+    | L1 | 900 | http://127.0.0.1:8545 
+    | OPChainA | 901 | http://127.0.0.1:9545 
+    | OPChainB | 902 | http://127.0.0.1:9546  
+
+1. Store the configuration in environment variables.
+
+    ```sh
+    USER_ADDR=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+    PRIV_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+    RPC_L1=http://localhost:8545
+    RPC_A=http://localhost:9545
+    RPC_B=http://localhost:9546
+    ```
+
+1. To verify that the chains are running, check the balance of `$ADDR`.
+
+    ```sh
+    cast balance --ether $USER_ADDR --rpc-url $RPC_L1
+    cast balance --ether $USER_ADDR --rpc-url $RPC_A
+    cast balance --ether $USER_ADDR --rpc-url $RPC_B        
+    ```
+
+### Create the contracts
+
+1. Create a new Foundry project.
+
+   ```sh
+   mkdir onchain-code
+   cd onchain-code
+   forge init
+   ```
+
+1. In `src/Greeter.sol` put this file.
+   This is a variation on [Hardhat's Greeter contract](https://github.com/matter-labs/hardhat-zksync/blob/main/examples/upgradable-example/contracts/Greeter.sol).
+
+    ```solidity
+    //SPDX-License-Identifier: MIT
+    pragma solidity ^0.8.0;
+
+    contract Greeter {
+        string greeting;
+
+        event SetGreeting(
+            address sender,     // msg.sender
+            string greeting
+        ); 
+
+        function greet() public view returns (string memory) {
+            return greeting;
+        }
+
+        function setGreeting(string memory _greeting) public {
+            greeting = _greeting;
+            emit SetGreeting(msg.sender, _greeting);
+        }
+    }
+    ```
+
+1. Deploy the contract to chain B and set `GREETER_B_ADDR` to the address for the contract.
+
+    ```sh
+    GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
+    ```
+
+    <details>
+
+    <summary>Explanation</summary>
+
+    The command that deploys the contract is:
+
+    ```sh
+    forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast
+    ```
+
+    The command output gives us the deployer address, the address of the new contract, and the transaction hash:
+
+    ```
+    Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+    Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
+    Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
+    ```
+
+    The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
+
+    ```sh
+    awk '/Deployed to:/ {print $3}'
+    ```
+
+    Finally, in UNIX (including Linux and MacOS) the when the command line includes backticks (`\``), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
+    So we get.
+
+    ```sh
+    GREETER_B_ADDR=<the address>
+    ```
+
+    </details>
+
+1. Run these commands to verify the contract works.
+   The first and third commands read the greeting, and the second submit a transaction that changes it.
+
+   ```sh
+   cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+   cast send --private-key $PRIV_KEY --rpc-url $RPC_B $GREETER_B_ADDR "setGreeting(string)" Hello
+   cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+   ```
+
+1. Install the Optimism Solidity libraries into the project.
+
+    ```sh
+    cd lib
+    npm add @eth-optimism/contracts-bedrock
+    cd ..
+    echo @eth-optimism/=lib/node_modules/@eth-optimism/ >> remappings.txt
+    ```
+
+1. The [`@eth-optimism/contracts-bedrock`](https://www.npmjs.com/package/@eth-optimism/contracts-bedrock) library does not have the Interop Solidity code yet.
+   Run these commands to add it.
+
+   ```sh
+   mkdir -p lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
+   wget https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol
+   mv IL2ToL2CrossDomainMessenger.sol lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
+   ```
+
+1. Create `src/GreetingSender.sol`.
+
+    ```solidity
+    import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
+    import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMe>
+
+    import { Greeter } from "src/Greeter.sol";
+
+    contract GreetingSender {
+        IL2ToL2CrossDomainMessenger public immutable messenger =
+            IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
+
+        address immutable greeterAddress;
+        uint256 immutable greeterChainId;
+
+        constructor(address _greeterAddress, uint256 _greeterChainId) {
+            greeterAddress = _greeterAddress;
+            greeterChainId = _greeterChainId;
+        }
+
+        function setGreeting(string calldata greeting) public {
+            bytes memory message = abi.encodeCall(
+                Greeter.setGreeting,
+                (greeting)
+            );
+            messenger.sendMessage(greeterChainId, greeterAddress, message);
+        }
+    }
+    ```
+
+1. Deploy `GreetingSender` to chain A.
+
+    ```sh
+    GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
+    ```
+
+1. Attempt to send a greeting from chain A to chain B.
+
+    ```sh
+    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+    cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A"
+    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+    ```
+
+</Steps>
+
+## Sender information
+
+<Steps>
+
+</Steps>
+
+## Javascript message relaying
+
+<Steps>
+
+</Steps>
