@@ -12,7 +12,7 @@ import {OpProposerDescriptionShort} from '@/content/index.js'
 
 This page contains information about the components of the rollup protocol and
 how they work together to build the layer 2 blockchain from the Chain Operator's
-perspective. The OP Stack is built in such a way that it is as similar to
+perspective. The OP Stack is built to be as similar to
 Ethereum as possible. Like Ethereum, the OP Stack has execution and consensus
 clients. The OP Stack also has some privileged roles that produce L2 blocks.
 If you want a more detailed view of the OP Stack protocol, check out the
@@ -22,11 +22,11 @@ If you want a more detailed view of the OP Stack protocol, check out the
 
 These clients and services work together to enable the block production on the L2 network.
 Sequencer nodes (`op-geth` + `op-node`) gather proposed transactions from users.
-The batcher submits batch data to L1 which controls the safe blocks and ultimately
-controls the canonical chain. The proposer submits output roots to L1 which control
+`op-batcher` submits batch data to L1, which controls the safe blocks and ultimately
+controls the canonical chain, while `op-proposer` submits output roots to L1 which control
 L2 to L1 messaging.
 
-<Image src="/img/builders/chain-operators/sequencer-diagram.png" alt="Sequencer Component Diagram" width={400} height={400} />
+<Image src="/img/builders/chain-operators/sequencer-diagram-background.png" alt="Sequencer Component Diagram" width={400} height={400} />
 
 ### op-geth
 
@@ -57,20 +57,26 @@ it is intended to deploy new standard chains that utilize the Superchain wide co
 
 <OpProposerDescriptionShort />
 
+### op-challenger
+
+`op-challenger` is the service that monitors output roots submitted to L1 and disputes invalid claims. 
+It ensures the integrity of L2 state transitions by challenging incorrect output roots, reinforcing trustless security.
+
 ## Sequencer
 
-The Sequencer node works with the batcher and proposer to create new blocks. So it should
-handle the state changing RPC request `eth_sendRawTransaction`. It can be peered with
-replica nodes to gossip new `unsafe` blocks to the rest of the network.
+The Sequencer node works with the batcher and proposer to create new blocks,
+handling state-changing RPC requests like `eth_sendRawTransaction`. 
+It can peer with replica nodes to gossip new unsafe blocks across the network.
 
-Sequencer op-node should have p2p discovery disabled and only be statically peered with other internal nodes (or use [peer-management-service](https://github.com/ethereum-optimism/infra/tree/main/peer-mgmt-service) to define peering network)
+For security and stability, Sequencer op-node should have P2P discovery disabled and be statically peered with internal nodes.
+Alternatively, it can use peer-management-service to define its peering network.
 
 A production setup should include:
 
 *   At least one archive sequencer for recovering from deep L1 reorgs
-*   Secure P2P configuration with static peering
+*   A secure P2P configuration with static peering
 *   Integration with op-conductor for high availability
-*   Disable P2P discovery and define a static peer list for internal nodes.
+*   P2P discovery disabled with a defined static peer list for internal nodes.
 
 ```yaml
 # Recommended sequencer configuration
@@ -91,7 +97,7 @@ The replica nodes are additional nodes on the network. They can be peered to the
 which might not be connected to the rest of the internet, and other replicas. Additional
 replicas can help horizontally scale RPC requests.
 
-<Image src="/img/builders/chain-operators/replica-node.png" alt="Replica Node Diagram" width={200} height={200} />
+<Image src="/img/builders/chain-operators/replica-node-background.png" alt="Replica Node Diagram" width={200} height={200} />
 
 <Callout type="info">
   To run a rollup, you need a minimum of one archive node. This is required by the proposer as the data that it needs can be older than the data available to a full node.  Note that since the proposer doesn't care what archive node it points to, you can technically point it towards an archive node that isn't the sequencer.
@@ -99,7 +105,7 @@ replicas can help horizontally scale RPC requests.
 
 ## Ingress traffic
 
-It is important to setup a robust chain architecture to handle large volumes of RPC
+It is important to set up a robust chain architecture to handle large volumes of RPC
 requests from your users. The Sequencer node has the important job of working with
 the batcher to handle block creation. To allow the Sequencer to focus on that job,
 you can peer replica nodes to handle the rest of the work.
@@ -123,7 +129,7 @@ Bootnodes facilitate peer discovery for network nodes. They help initialize peer
 
 ### Archive RPC Nodes
 
-We recommend setting up some archive nodes for internal RPC usage, primary used by the challenger, proposer and security monitoring tools like [monitorism](/builders/chain-operators/tools/chain-monitoring#monitorism).
+We recommend setting up some archive nodes for internal RPC usage, primarily used by the challenger, proposer and security monitoring tools like [monitorism](/builders/chain-operators/tools/chain-monitoring#monitorism).
 
 ```yaml
 GETH_GCMODE: "archive"
@@ -162,10 +168,6 @@ In addition to the core protocol components, the following offchain services are
 
 The [op-conductor](/builders/chain-operators/tools/op-conductor) RPC can act as a leader-aware rpc proxy for op-batcher (proxies the necessary op-geth / op-node RPC methods if the node is the leader).
 
-### op-challenger
-
-The [op-challenger](/builders/chain-operators/tools/op-challenger) verifies the correctness of the L2 state by challenging invalid state transitions. This ensures the network's security and validity.
-
 ### Ethereum L1 nodes
 
 These nodes are required to interface with the Ethereum mainnet, handling data submission and validation.
@@ -193,10 +195,10 @@ This tool is an RPC request router and proxy. It does the following things:
 1.  Whitelists RPC methods.
 2.  Routes RPC methods to groups of backend services.
 3.  Automatically retries failed backend requests.
-4.  Track backend consensus (latest, safe, finalized blocks), peer count and sync state.
-5.  Re-write requests and responses to enforce consensus.
-6.  Load balance requests across backend services.
-7.  Cache immutable responses from backends.
+4.  Tracks backend consensus (latest, safe, finalized blocks), peer count and sync state.
+5.  Re-writes requests and responses to enforce consensus.
+6.  Load balances requests across backend services.
+7.  Caches immutable responses from backends.
 8.  Provides metrics to measure request latency, error rates, and the like.
 
 ## Next steps
