@@ -75,6 +75,10 @@ These following steps are necessary for every chain operator:
 
 ### For fault proof enabled chains
 
+<Callout type="importnat">
+  The following instructions assume your chain is on the latest contract release `op-contracts/v1.8.0` and have Holocene activated.
+</Callout>
+
 The following steps are to update your absolute prestate on your chain. **This is absolutely necessary for chains running permissionless fault proofs.** For chains running the Fault Proof System with permissioned games you can skip this section because games will not be played out and the absolute prestate is not used. 
 
 The Pectra upgrade changes the derivation rules, permissionless fault proof chains need to upgrade the `op-program` version used in the fault proof system to support these changes. The `op-program` version used is specified via the `faultGameAbsolutePrestate` setting, deployed as part of `FaultDisputeGame` and `PermissionedDisputeGame` contracts.
@@ -118,11 +122,15 @@ The Pectra upgrade changes the derivation rules, permissionless fault proof chai
 
   ### Update the DisputeGameFactory
 
-  You will then need to update the `DisputeGameFactory` to use the point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. We will provide an upgrade task and script to facilitate this upgrade.
+  You will then need to update the `DisputeGameFactory` to use the point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. You can utilize this [template](https://github.com/ethereum-optimism/superchain-ops/tree/main/tasks/sep/fp-recovery/005-set-game-implementation) to generate the transaction and validation script for this step. Before executing you will need to update your op-challenger.
 
   ### Update your op-challenger
 
-  Finally you will need to update your `op-challenger` to the new release version that will be provided soon.
+  Update your `op-challenger` to the new release version that will be provided soon and configure it to use the new absolute prestate.
+
+  ### Execute the upgrade 
+
+  Once your challenger is ready, you can execute the "Set Dispute Game Implementation" transaction. Please simulate and validate that the expected output prior to executing the transaction.
 </Steps>
 
 ### For OP Stack forks
