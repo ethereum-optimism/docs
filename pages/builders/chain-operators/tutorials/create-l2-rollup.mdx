@@ -112,77 +112,102 @@ Although this adds a few extra steps, it means you'll have an easier time modify
   cd optimism
   ```
 
-  {<h3>Check out the correct branch</h3>}
-
-  <Callout type="info">
-    You will be using the `tutorials/chain` branch of the Optimism Monorepo to deploy an OP Stack testnet chain during this tutorial.
-    This is a non-production branch that lags behind the `develop` branch.
-    You should **NEVER** use the `develop` or `tutorials/chain` branches in production.
-  </Callout>
+  {<h3>Create and switch to tutorial branch</h3>}
 
   ```bash
-  git checkout tutorials/chain
+  git checkout -b tutorial
   ```
 
-  <Callout type="warning">
-    The components in the `tutorials/chain` branch are outdated and may have compatibility issues with the latest L1 networks.\
-    To ensure compatibility and stability, you will:
+  {<h3>Create package.json</h3>}
 
-    1.  Download the latest releases of `op-node`, `op-batcher`, and `op-proposer` from the Optimism releases page
-    2.  Use these latest versions to override the outdated components in the `tutorials/chain` branch
-    3.  Maintain compatibility with current L1 network specifications
-  </Callout>
+  Create a new file named `package.json` and add the following content:
 
-  {<h3> Download the latest Optimism releases </h3>}
-
-  1.  Visit the [Official Optimism releases page](https://github.com/ethereum-optimism/optimism/releases)
-  2.  Look for the latest stable release tagged as `vX.Y.Z`
-  3.  Download the following components for your operating system:
-
-  *   `op-node`
-  *   `op-batcher`
-  *   `op-proposer`
-
-  {<h3>Verify release integrity</h3>}
-
-  1.  Download the `checksums.txt` file from the release assets
-  2.  Verify file integrity using the appropriate command for your OS:
-
-  ```bash
-  # On Linux
-  sha256sum -c checksums.txt
-  # On macOS
-  shasum -a 256 -c checksums.txt
-  # On Windows (PowerShell)
-  Get-FileHash <file> | Format-List
-  ```
-
-  {<h3> Download required binaries</h3>}
-
-  In the *Assets* section of the release, download these files for your operating system:
-
-  *   `op-node_<version>_<OS>_<arch>.tar.gz`
-  *   `op-batcher_<version>_<OS>_<arch>.tar.gz`
-  *   `op-proposer_<version>_<OS>_<arch>.tar.gz`
-
-  {<h3> Extract binaries</h3>}
-
-  Using your system's archive tool:
-
-  1.  Extract all `.tar.gz` files
-  2.  Override any outdated components in the `tutorials/chain` branch during extraction by moving these extracted files to a directory in your system `PATH`:
-
-  *   `op-node`
-  *   `op-batcher`
-  *   `op-proposer`
-
-  {<h3> Verify installation</h3>}
-
-  ```bash
-  op-node --version
-  op-batcher --version
-  op-proposer --version
-  ```
+  ```json
+  {
+  "name": "optimism",
+  "version": "1.0.0",
+  "author": "Optimism PBC",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=16",
+    "pnpm": ">=8"
+  },
+  "scripts": {
+    "clean": "pnpm recursive run clean; rm -rf node_modules packages/*/node_modules && echo 'Finished cleaning. Run `pnpm install && pnpm build` from root of repo to rebuild the repo.'",
+    "bindings": "nx bindings @eth-optimism/contracts-bedrock",
+    "build": "npx nx run-many --target=build",
+    "test": "npx nx run-many --target=test",
+    "issues": "./ops/scripts/todo-checker.sh",
+    "install:ci": "pnpm install --ignore-scripts --frozen-lockfile && pnpm rebuild nx",
+    "install:ci:offline": "pnpm install --ignore-scripts --offline --frozen-lockfile && pnpm rebuild nx",
+    "lint": "npx nx run-many --target=lint",
+    "test:coverage": "npx nx run-many --target=test:coverage",
+    "lint:ts:check": "npx nx run-many --target=lint:ts:check",
+    "lint:check": "npx nx run-many --target=lint:check",
+    "lint:fix": "npx nx run-many --target=lint:fix",
+    "lint:specs:fix": "npx markdownlint-cli2-fix \"./specs/**/*.md\"",
+    "lint:specs:check": "npx markdownlint-cli2  \"./specs/**/*.md\"",
+    "lint:specs:toc": "npx doctoc '--title=**Table of Contents**' ./specs",
+    "preinstall": "npx only-allow pnpm",
+    "ready": "pnpm lint && pnpm test",
+    "prepare": "husky install",
+    "release": "npx nx run-many --target=build --skip-nx-cache && pnpm changeset publish",
+    "release:check": "changeset status --verbose --since=origin/main",
+    "release:publish": "pnpm install --frozen-lockfile && npx nx run-many --target=build && pnpm build && changeset publish",
+    "release:version": "changeset version && pnpm install --lockfile-only",
+    "install:foundry": "curl -L https://foundry.paradigm.xyz | bash && pnpm update:foundry",
+    "update:foundry": "bash ./ops/scripts/install-foundry.sh",
+    "install:abigen": "go install github.com/ethereum/go-ethereum/cmd/abigen@$(jq -r .abigen < versions.json)",
+    "print:abigen": "abigen --version | sed -e 's/[^0-9]/ /g' -e 's/^ *//g' -e 's/ *$//g' -e 's/ /./g' -e 's/^/v/'",
+    "check:abigen": "[[ $(pnpm -s print:abigen) = $(cat versions.json | jq -r '.abigen') ]] && echo '✓ abigen versions match' || (echo '✗ abigen version mismatch. Run `pnpm upgrade:abigen` to upgrade.' && exit 1)",
+    "upgrade:abigen": "jq '.abigen = $v' --arg v $(pnpm -s print:abigen) <<<$(cat versions.json) > versions.json",
+    "install:slither": "pip3 install slither-analyzer==$(jq -r .slither < versions.json)",
+    "print:slither": "slither --version",
+    "check:slither": "[[ $(pnpm -s print:slither) = $(jq -r .slither < versions.json) ]] && echo '✓ slither versions match' || (echo '✗ slither version mismatch. Run `pnpm upgrade:slither` to upgrade.' && exit 1)",
+    "upgrade:slither": "jq '.slither = $v' --arg v $(pnpm -s print:slither) <<<$(cat versions.json) > versions.json"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.23.3",
+    "@changesets/changelog-github": "^0.4.8",
+    "@types/chai": "^4.3.11",
+    "@types/chai-as-promised": "^7.1.8",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.8",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "chai": "^4.3.10",
+    "depcheck": "^1.4.7",
+    "doctoc": "^2.2.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsdoc": "^35.1.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-unicorn": "^49.0.0",
+    "husky": "^8.0.3",
+    "lint-staged": "15.2.0",
+    "markdownlint": "^0.33.0",
+    "markdownlint-cli2": "0.4.0",
+    "mocha": "^10.2.0",
+    "nx": "17.2.8",
+    "nyc": "^15.1.0",
+    "prettier": "^2.8.0",
+    "rimraf": "^5.0.5",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^5.3.3",
+    "nx-cloud": "latest"
+  },
+      "dependencies": {
+        "@changesets/cli": "^2.27.1"
+    }
+  }
+```
 </Steps>
 
 {<h3>Install dependencies</h3>}
