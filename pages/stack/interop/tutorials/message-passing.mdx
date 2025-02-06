@@ -224,13 +224,15 @@ Look below for an explanation how to relay your own messages.
     GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
     ```
 
-1. Attempt to send a greeting from chain A to chain B.
+### Send a message
 
-    ```sh
-    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
-    cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A"
-    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
-    ```
+Send a greeting from chain A to chain B.
+
+```sh
+cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A"
+cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+```
 
 </Steps>
 
