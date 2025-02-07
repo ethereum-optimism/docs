@@ -2,113 +2,124 @@
 
 Thanks for taking the time to contribute! ❤️
 
-Optimism's documentation is open-source, hosted on GitHub in the `ethereum-optimism/docs` repository which renders on the corresponding official website hosted at [docs.optimism.io](https://docs.optimism.io). This guide will give you an overview of the contribution workflow from opening an issue, creating a PR, reviewing, and merging the PR. Please note that contributions, pull requests, and issues should be written in English at this time. We will be running a dedicated project in the future to add language support to the technical docs, so please reach out via our [developer support channel](https://github.com/ethereum-optimism/developers/) if you are interested in helping with that project.
+## Table of Contents
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Development Setup](#development-setup)
+- [Contributing Process](#contributing-process)
+  - [File Architecture](#file-architecture)
+  - [Content Guidelines](#content-guidelines)
+  - [Local Testing](#local-testing)
+- [Pull Request Process](#pull-request-process)
+  - [Before Submitting](#before-submitting)
+  - [Submission Guidelines](#submission-guidelines)
+  - [Review Process](#review-process)
+- [Code of Conduct](#code-of-conduct)
+- [Additional Ways to Contribute](#additional-ways-to-contribute)
 
-The Optimism Documentation team reviews pull requests and either merges, requests changes, or comments and closes the pull request. You can open a documentation pull request by:
+## Overview
 
-- forking the `docs` repository and working locally,
-- or, for smaller updates, clicking the `Edit this page` link on the right side of any documentation page to directly edit in GitHub.
+Optimism's documentation is open-source and hosted on GitHub in the `ethereum-optimism/docs` repository. The documentation is rendered at [docs.optimism.io](https://docs.optimism.io). You can contribute either by:
+- Forking the `docs` repository and working locally
+- Using the "Edit this page" button on any documentation page for smaller updates
 
-Contributing to the Optimism documentation implies 2 steps:
+All contributions, pull requests, and issues should be in English at this time. We will be running a dedicated project in the future to add language support to the technical docs, so please reach out via our [developer support channel](https://github.com/ethereum-optimism/developers/) if you are interested in helping with that project.
 
-1. Learn how to use [Nextra](#learn-how-to-use-nextra), the tool used to write and generate Optimism's documentation.
+## Getting Started
 
-2. [Submit a pull request](#send-pull-request) for review.
+### Prerequisites
+- Basic knowledge of Git and GitHub
+- Familiarity with Markdown
+- Understanding of technical documentation principles
+- Node.js and npm installed
 
-## Learn How to Use Nextra
-
-Optimism's documentation is built with the React and Markdown-based [Nextra](https://nextra.site/docs) framework. We are using the docs theme (as opposed to the blog theme), which has specialized features.
-
-To start contributing to Optimism's documentation using Nextra, you need to understand the [files and branches architecture](#understand-file-architecture-and-branch-names) and use the proper [syntax to format content](#use-proper-formatting-and-syntax). Additionally, if you want to work locally from a repository fork, you should [set up the Nextra project](#set-up-the-project-and-test-locally) on your machine.
-
-### Understand File Architecture and Branch Names
-
-Optimism's documentation includes two major sections with each section living in a different folder. 
-
-| Section name      | Target content                                                    | Folder                        |
-| ------------------| ----------------------------------------------------------------- | ----------------------------- | 
-| Pages       | Where all the pages of the technical docs live | `/docs/pages/` |
-| Public   | Where all the images, icons, and illustrations for the tech docs live      | `/docs/public/`  | 
-
-**Warning**
-The `public` folder also stores the `robots.txt` and `sitemap.xml` files used for SEO. Please do not modify these pages. 
-The Optimism Documentation team will modify these pages, when necessary, after your PR is merged.
-
-### Use Proper Formatting and Syntax
-
-Nextra is MDX-based, meaning the content you write is [Markdown](https://daringfireball.net/projects/markdown/syntax) that accepts [React](https://reactjs.org/) components.
-
-The Optimism Documentation team has created a complete style guide for you to make the best out of the various options available:
-
-[Optimism Documentation Style Guide](/pages/connect/contribute/style-guide.mdx) 
-
-### Set Up the Project and Test Locally
-
-To set up the Nextra project on your machine, perform the following steps from a terminal instance:
-
-1. Install pnpm [install pnpm](https://pnpm.io/installation).
-2. First, run `pnpm i` to install the dependencies.
-3. Then, run `pnpm dev` to start the development server and 
-4. Visit [localhost:3000](http://localhost:3000) in your browser to view the website.
+### Development Setup
+1. Install [pnpm](https://pnpm.io/installation)
+2. Run `pnpm i` to install dependencies
+3. Run `pnpm dev` to start development server
+4. Visit [localhost:3000](http://localhost:3000)
 
 You can now start changing content and see the website updated live each time you save a new file. 🤓
 
-## Send Pull Request
+## Contributing Process
 
-**Important prerequisite**
+### File Architecture
+Our documentation is organized into two main sections:
 
-To prevent building issues upstream, you should build the content locally before submitting a pull request: stop or delete the terminal server if it's running, then run `pnpm dev`.
+| Section | Purpose | Location |
+|---------|----------|----------|
+| Pages | Technical documentation content | `/docs/pages/` |
+| Public | Images, icons, and illustrations | `/docs/public/` |
 
-- Use the information reported by the terminal to fix any issues (e.g., broken links). 
-- Run `pnpm fix` to automatically fix most linting issues (e.g., formatting and style guide). 
-- Run `pnpm spellcheck:lint` to test your content against the dictionary. Add new words to the dictionary by appending them to `words.txt`.
-- Run `pnpm spellcheck:fix` to add new words to the dictionary automatically.
-- Try another `pnpm dev` and repeat until no issues are reported ("client" and "server compiled successfully").
+**Warning**: The `public` folder contains `robots.txt` and `sitemap.xml` for SEO purposes. These files are maintained by the Documentation team only.
 
+### Content Guidelines
+We use [Nextra](https://nextra.site/docs), a React and MDX-based framework with the docs theme (as opposed to the blog theme). The content you write is [Markdown](https://daringfireball.net/projects/markdown/syntax) that accepts [React](https://reactjs.org/) components.
 
-Your pull request should usually target the `main` branch, though the Optimism Documentation team might sometimes ask you to target another branch.
+Please refer to our comprehensive [Style Guide](/pages/connect/contribute/style-guide.mdx) for detailed formatting instructions.
 
-To submit your contribution for review:
+### Local Testing
+Before submitting your changes:
+1. Stop or delete the terminal server if it's running
+2. Run `pnpm dev` to test builds
+3. Execute `pnpm fix` for automatic linting
+4. Run `pnpm spellcheck:lint` for spell checking
+   - Add new words to the dictionary by appending them to `words.txt`
+5. Use `pnpm spellcheck:fix` to update dictionary
+6. Try another `pnpm dev` and repeat until no issues are reported ("client" and "server compiled successfully")
 
-1. Create a new [pull request on GitHub](https://github.com/ethereum-optimism/docs/issues/new/choose).
-2. Select a PR type from the list or choose **Open a blank issue** at the bottom of the page.
-3. Complete the form as requested. For blank PR issues, please provide a clear title and accurate description/context.
-4. Click the "Create pull request" button to create the pull request effectively.
-    
->If your pull request is not ready for review yet, choose the "[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)"in the dropdown. The Optimism documentation team will review your pull request only when you mark it as "[Ready for review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request)".
+If you encounter build issues:
+- Check terminal output for error messages
+- Verify all links are working
+- Ensure proper formatting according to the style guide
+- Test locally before pushing changes
+
+## Pull Request Process
+
+### Before Submitting
+- Ensure all local tests pass
+- Fix any reported issues
+- Verify content accuracy
+- Test all links and references
+- Target the `main` branch (unless otherwise specified)
+
+### Submission Guidelines
+1. Create a [new pull request](https://github.com/ethereum-optimism/docs/issues/new/choose)
+2. Choose appropriate PR type or use blank template
+3. Provide clear title and accurate description
+4. Add required labels:
+   - `documentation` (required for all PRs)
+   - Content-specific: `tutorial`, `faq`, `troubleshooting`
+   - Feature-specific: `oracle`, `rpc-provider`, `faucet`, `attestation`
+   - Issue-specific: `user feedback`, `bug`
    
-5. Add GitHub labels for the pull request. Add `documentation` to all pull requests in this repo **AND** additional labels based on the type of update or request.
-     - `tutorial`, `faq`, or `troubleshooting` for specific content types, 
-     - `oracle`, `rpc-provider`, `faucet`, or `attestation` for ecosystem offerings,
-     - `user feedback` for general feedback about one or more pages, or 
-     - `bug` if something isn't working as expected. 
->If label for type of update is not set, the Optimism Documentation team will set or update this for you<br/>
-    
-**Warning**
-Approved pull requests are usually merged immediately into the `main` branch, automatically triggering a deployment on docs.optimism.io. Please add the `flag:merge-pending-release` label if the pull request content should only be released publicly in sync with a product release.
+> **Note**: If label type is not set, the Documentation team will set or update it for you.
 
-That's it! 🥳 Once the pull request is [reviewed and approved](#review-and-management-of-pull-requests), the Optimism Documentation team will merge it, and the content will be live on [docs.optimism.io](http://docs.optimism.io) a few minutes later. 🚀
+> **Important**: Add `flag:merge-pending-release` label if the PR content should only be released publicly in sync with a product release.
 
-## Review and Management of Pull Requests
+> **Tip**: Use "[Create draft pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)" if your work is still in progress.
 
-The pull request review process and timeline are based on the availability of the Optimism Documentation team to handle community contributions. The workflow is as follows:
+### Review Process
+1. Assignment to Documentation team member
+2. Technical review for accuracy
+3. Quality and scope alignment check
+4. Minimum 1 reviewer approval required
+5. Reviewers will either approve, request changes, or close the pull request with comments
+6. Automatic deployment after merge to [docs.optimism.io](https://docs.optimism.io)
 
-1. The pull request is assigned to a member of the Documentation team.
-2. At least 1 member of the Documentation team will review the pull request for:
+## Code of Conduct
+- Be respectful and inclusive
+- Follow project guidelines
+- Provide constructive feedback
+- Maintain professional communication
+- Report inappropriate behavior
 
-   - accuracy,
-   - quality,
-   - alignment with the documentation scope.
+## Additional Ways to Contribute
+Even without direct code contributions, you can support us by:
+- ⭐ Starring the project
+- 🐦 Sharing on social media
+- 📝 Mentioning us in your projects
+- 🗣️ Spreading the word in your community
 
-3. Reviewers will either approve, ask for changes, or reject the pull request.
-4. Accepted pull requests will be merged and automatically deployed on [docs.optimism.io](https://docs.optimism.io) a few minutes later. 
-
-## Other Ways to Support the Project
-All types of contributions are encouraged and valued. 
-And if you like the project, but just don't have time to contribute, that's fine too. There are other easy ways to support the project and show your appreciation, which we would also be very happy about:
-- Star the project
-- Tweet about it
-- Refer this project in your project's readme
-- Mention the project at local meetups and tell your friends/colleagues
-
-The community looks forward to your contributions. 🎉
+Thank you for contributing to Optimism Docs! 🎉
