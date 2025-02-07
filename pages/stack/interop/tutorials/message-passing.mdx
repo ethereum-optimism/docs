@@ -23,7 +23,9 @@ In this tutorial we will use several tools:
 
 - The [Supersim multichain development environment](../tools/supersim)
 - [Foundry](https://book.getfoundry.sh/)
-- [Viem](https://viem.sh/), running on top of [Node](https://nodejs.org/en)
+- [Viem](https://viem.sh/)
+- [Node](https://nodejs.org/en)
+- [TypeScript](https://www.typescriptlang.org/)
 - UNIX. 
   This tutorial is designed to run either on Linux or MacOS. 
   If you use Windows, you can use the [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install).
@@ -68,7 +70,7 @@ Look below for an explanation how to relay your own messages.
     | OPChainA | 901 | http://127.0.0.1:9545 
     | OPChainB | 902 | http://127.0.0.1:9546  
 
-1. Store the configuration in environment variables.
+1. In a separate shell, store the configuration in environment variables.
 
     ```sh
     USER_ADDR=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
@@ -191,6 +193,9 @@ Look below for an explanation how to relay your own messages.
 1. Create `src/GreetingSender.sol`.
 
     ```solidity
+    //SPDX-License-Identifier: MIT
+    pragma solidity ^0.8.0;
+
     import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
     import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";
 
@@ -369,8 +374,146 @@ In this section we change `Greeter.sol` to report
 ## Javascript message relaying
 
 So far we relied on `--interop.autorelay` to send the executing messages to chain B.
-But in real life we are not going to have this, we will need to handle it ourselves.
+But we only have it because we're using a development system.
+In production we will not have this, we need to create our own executing messages.
 
 <Steps>
+
+### Set up
+
+We are going to use a [Node](https://nodejs.org/en) project, to be able to get executing messages from the command line.
+We use [TypeScript](https://www.typescriptlang.org/) to have type safety combined with JavaScript functionality.
+
+1. Initialize a new Node project.
+
+    ```sh
+    mkdir ../offchain-code
+    cd ../offchain-code
+    npm init -y
+    npm install --save-dev -y viem tsx @types/node @eth-optimism/viem
+    mkdir src
+    ```
+
+1. Edit `package.json` to add the `start` script.
+
+    ```json
+    {
+        "name": "offchain-code",
+        "version": "1.0.0",
+        "main": "index.js",
+        "scripts": {
+            "test": "echo \"Error: no test specified\" && exit 1",
+            "start": "tsx src/app.mts"
+        },
+        "keywords": [],
+        "author": "",
+        "license": "ISC",
+        "type": "commonjs",
+        "description": "",
+        "devDependencies": {
+            "@eth-optimism/viem": "^0.3.0",
+            "@types/node": "^22.13.1",
+            "tsx": "^4.19.2",
+            "viem": "^2.22.23"
+        }
+    }
+    ```
+
+1. Export environment variables.
+   This is necessary because those variables are currently limited to the shell process.
+   We need them in the Node process that the shell creates.
+
+    ```sh
+    export GREETER_A_ADDR GREETER_B_ADDR PRIV_KEY RPC_A RPC_B
+    ```
+
+1. Create a simple `src/app.mts` file.
+
+    ```typescript
+    console.log(`Chain A: ${process.env.RPC_A}\tGreeter ${process.env.GREETER_A_ADDR}`)
+    console.log(`Chain B: ${process.env.RPC_B}\tGreeter ${process.env.GREETER_B_ADDR}`)
+    ```    
+
+1. Run the program.
+
+    ```sh
+    npm run start
+    ```
+
+### Send a greeting 
+
+1. Link the compiled versions of the code, which include the ABI, to the source code.
+
+    ```sh
+    cd src
+    ln -s ../../onchain-code/out/Greeter.sol/Greeter.json .
+    ln -s ../../onchain-code/out/GreetingSender.sol/GreetingSender.json .
+    cd ..
+    ```
+
+1. Replace `src/app.mts` with this code.
+
+    ```typescript
+    import {
+        createWalletClient,
+        http,
+        defineChain,
+        publicActions,
+        getContract,
+        Address,
+    } from 'viem'
+    import { privateKeyToAccount } from 'viem/accounts'
+    import { supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
+
+
+    import greeterData from './Greeter.json'
+    import greetingSenderData from './GreetingSender.json'
+
+    const account = privateKeyToAccount(process.env.PRIV_KEY as `0x${string}`)
+
+    const walletA = createWalletClient({
+        chain: supersimL2A,
+        transport: http(),
+        account
+    }).extend(publicActions)
+
+    const walletB = createWalletClient({
+        chain: supersimL2B,
+        transport: http(),
+        account
+    }).extend(publicActions)
+
+    const greeter = getContract({
+        address: process.env.GREETER_B_ADDR as Address,
+        abi: greeterData.abi,
+        client: walletB
+    })
+
+    const greetingSender = getContract({
+        address: process.env.GREETER_A_ADDR as Address,
+        abi: greetingSenderData.abi,
+        client: walletA
+    })
+    const txnBHash = await greeter.write.setGreeting(["Greeting directly to chain B"])
+    await walletB.waitForTransactionReceipt({hash: txnBHash})
+
+    const greeting1 = await greeter.read.greet()
+    console.log(`Chain B Greeting: ${greeting1}`)
+
+    const txnAHash = await greetingSender.write.setGreeting(["Greeting through chain A"])
+    await walletA.waitForTransactionReceipt({hash: txnAHash})
+
+    const greeting2 = await greeter.read.greet()
+    console.log(`Chain A Greeting: ${greeting2}`)
+    ```
+
+3. Run the program, see that a greeting from chain A is related to chain B.
+
+   ```sh
+   npm start
+   ```
+
+### Rerun supersim
+
 
 </Steps>
