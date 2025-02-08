@@ -50,7 +50,7 @@ Download and install [Supersim](https://github.com/ethereum-optimism/supersim/re
 
 In this section you create contracts and transfer a message between them.
 For now, we ignore the need for executing messages by turning on autorelay.
-Look below for an explanation how to relay your own messages.
+Look [below](#javascript-message-relaying) for an explanation how to relay your own messages.
 
 <Steps>
 
@@ -353,7 +353,7 @@ In this section we change `Greeter.sol` to report
 
     ```sh
     cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
-    cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A, with an event"
+    cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A, with a CrossDomainSetGreeting event"
     sleep 2
     cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
     ```    
@@ -514,6 +514,41 @@ We use [TypeScript](https://www.typescriptlang.org/) to have type safety combine
    ```
 
 ### Rerun supersim
+
+Now we need to rerun Supersim *without* autorelay.
+
+1. In the windows that runs Supersim, stop it and restart with this command:
+
+    ```sh
+    ./supersim
+    ```
+
+1. In the window you used for your earlier tests, redeploy the contracts.
+   Export the addresses so we'll have them in JavaScript
+
+    ```sh
+    cd ../onchain-code
+    export GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
+    export GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
+    cd ../offchain-code
+    ```
+
+1. Rerun the JavaScript program.
+
+    ```sh
+    npm start
+    ```
+
+   See that the transaction to chain B changes the greeting, but the transaction to chain A does not.
+
+    ```
+    > offchain-code@1.0.0 start
+    > tsx src/app.mts
+
+    Chain B Greeting: Greeting directly to chain B
+    Chain A Greeting: Greeting directly to chain B
+    ```    
+
 
 
 </Steps>
