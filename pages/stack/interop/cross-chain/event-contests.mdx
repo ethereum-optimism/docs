@@ -52,7 +52,7 @@ Unlike [TicTacToe](event-reads) which is deployed on every participating chain, 
           bytes32 hash = blockhash(_blockHeight);
           require(hash != bytes32(0));
 
-          emit BlockHash(_blockNumber, hash);
+          emit BlockHash(_blockHeight, hash);
       }
   }
   ```
@@ -79,7 +79,7 @@ Unlike [TicTacToe](event-reads) which is deployed on every participating chain, 
           // Decode the event data
           (uint256 chainId, uint256 gameId, address creator,) = abi.decode(_data[32:], (uint256, uint256, address, address));
 
-          IContestResolver resolver = new TicTacToeGameResolver(contest, tictactoe, chainId, gameId, creator);
+          IContestResolver resolver = new TicTacToeGameResolver(contests, tictactoe, chainId, gameId, creator);
           contests.newContest{ value: msg.value }(resolver, msg.sender);
       }
   }
