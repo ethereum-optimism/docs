@@ -13,8 +13,9 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Interop reorg awareness
 
-[Reorgs](https://www.alchemy.com/overviews/what-is-a-reorg#what-happens-to-reorgs-after-the-merge) and a few other types of sequencing errors can result in one blockchain having an incorrect view of another.
-The main risk is [double spending](https://en.wikipedia.org/wiki/Double-spending), a problem that can happen when an asset appears in two places at once.
+[A chain reorganization, or “reorg”,](https://www.alchemy.com/overviews/what-is-a-reorg#what-happens-to-reorgs-after-the-merge) happens when validators disagree on the most accurate version of the blockchain.
+If not handled correctly, reorgs in a cross-chain context could result in a [double-spend problem](https://en.wikipedia.org/wiki/Double-spending). 
+The most frequent solution to mitigate the double-spend problem is to wait for Ethereum finality; however, that solution results in high latency cross-chain communication and a poor user experience.
 
 <details>
 
@@ -54,8 +55,8 @@ When that happens, the tokens are still on the source chain, but they also on th
 </details>
 
 In Ethereum, incorrect state is usually a transient phenomenon.
-On L2, a sequencer can share one block through gossip and then post a different block to L1.
-But once the block is posted to L1, that is the correct block for the blockchain, barring L1 reorgs.
+On L2, a sequencer can share one block through gossip and then post a different block to L1 (equivocation).
+If a sequencer equivocates, the dependent cross chain messages are reorged out once the block is posted by the sequencer to L1.
 On L1, new block can be replaced through a reorg, but after sufficient time has passed the block is finalized, and is nearly impossible to remove from the blockchain.
 
 The most frequent solution to mitigate the double-spend problem is to wait for L1 finality; however, that solution results in high latency and poor user experience.
