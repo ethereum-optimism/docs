@@ -2,7 +2,7 @@
 
   const { createPublicClient, http, createWalletClient } = require("viem");
   const { optimismSepolia, sepolia } = require("viem/chains");
-  const { publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2 } = require("viem/op-stack");
+  const { publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2, getWithdrawals } = require("viem/op-stack");
   const { privateKeyToAccount } = require("viem/accounts");
 
   const l1Provider = createPublicClient({ chain: sepolia, transport: http("https://eth-sepolia.g.alchemy.com/v2/***") }).extend(publicActionsL1())
