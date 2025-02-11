@@ -62,11 +62,8 @@ export function InteropCallout({ context }: Props): ReactElement {
           <div className="nx-text-left">
             Interop is currently in <strong>active development</strong> and not
             yet ready for production use. The information provided here may
-            change frequently.
-            <p>
-              We recommend checking back regularly for the most up-to-date
+            change frequently. We recommend checking back regularly for the most up-to-date
               information.
-            </p>
           </div>
         )}
       </div>
