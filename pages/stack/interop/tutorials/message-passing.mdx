@@ -610,6 +610,18 @@ Now we need to rerun Supersim *without* autorelay.
         .extend(publicActionsL2())
         .extend(walletActionsL2())
 
+    const greeter = getContract({
+        address: process.env.GREETER_B_ADDR as Address,
+        abi: greeterData.abi,
+        client: walletB
+    })
+
+    const greetingSender = getContract({
+        address: process.env.GREETER_A_ADDR as Address,
+        abi: greetingSenderData.abi,
+        client: walletA
+    })
+
     const txnBHash = await greeter.write.setGreeting(
         ["Greeting directly to chain B"])
     await walletB.waitForTransactionReceipt({hash: txnBHash})
@@ -701,6 +713,69 @@ Now we need to rerun Supersim *without* autorelay.
     </details>
 
 1. Rerun the JavaScript program, and see that the message is relayed.
+
+    ```sh
+    npm start
+    ```
+
+### Using the devnet
+
+The same contracts are deployed on [the devnet](../tools/devnet).
+You can relay messages in exactly the same way you'd do it on Supersim.
+
+| Contract | Network | Address
+| - | - | -
+| `Greeter` | [Devnet 1](../tools/devnet#interop-devnet-1) | [`0x1A183FCf61053B7dcd2322BbE766f7E1946d3718`](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718/contract/420120001/readContract?chainid=420120001)
+| `GreetingSender`  | [Devnet 0](../tools/devnet#interop-devnet-1)  | [`0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f`](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f/contract/420120000/readContract?chainid=420120000)
+
+1. Set the address environment variables.
+
+   ```sh
+   export GREETER_A_ADDR=0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f
+   export GREETER_B_ADDR=0x1A183FCf61053B7dcd2322BbE766f7E1946d3718 
+   ```
+
+1. In `src/app.mts`, replace this line:
+
+    ```typescript
+    import { supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
+    ```
+
+   with
+
+    ```typescript
+    import { chainConfig } from 'viem/op-stack'
+
+    const supersimL2A = defineChain({
+    ...chainConfig,
+    id: 420120000,
+    name: 'Interop devnet 0',
+    rpcUrls: {
+        default: {
+        http: ['https://interop-alpha-0.optimism.io'],
+        },
+    },
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    sourceId: 11155111,
+    testnet: true,
+    })
+
+    const supersimL2B = defineChain({
+    ...chainConfig,
+    id: 420120001,
+    name: 'Interop devnet 1',
+    rpcUrls: {
+        default: {
+        http: ['https://interop-alpha-1.optimism.io'],
+        },
+    },
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    sourceId: 11155111,
+    testnet: true,
+    })    
+    ```
+
+1. Rerun the test.
 
     ```sh
     npm start
