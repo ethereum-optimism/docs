@@ -35,7 +35,7 @@ Before starting this tutorial, ensure you have:
 
 Before starting this tutorial, refer to the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to set up **Foundry** and **Supersim** on your system.
 
-## Implementing solidity message passing
+## Implementing onchain message passing (in Solidity)
 
 This section demonstrates how to deploy smart contracts for cross-chain messaging and send messages between them.
 For now, we will ignore the need for executing messages by turning on autorelay.
@@ -419,7 +419,7 @@ We use [TypeScript](https://www.typescriptlang.org/) to have type safety combine
         "type": "commonjs",
         "description": "",
         "devDependencies": {
-            "@eth-optimism/viem": "^0.3.0",
+            "@eth-optimism/viem": "^0.3.2",
             "@types/node": "^22.13.1",
             "tsx": "^4.19.2",
             "viem": "^2.22.23"
@@ -435,6 +435,10 @@ We use [TypeScript](https://www.typescriptlang.org/) to have type safety combine
     export GREETER_A_ADDR GREETER_B_ADDR PRIV_KEY
     ```
 
+<details>
+
+<summary>Sanity check</summary>
+
 1. Create a simple `src/app.mts` file.
 
     ```typescript
@@ -448,6 +452,9 @@ We use [TypeScript](https://www.typescriptlang.org/) to have type safety combine
     npm run start
     ```
 
+</details>
+
+
 ### Send a greeting 
 
 1. Link the compiled versions of the onchain code, which include the ABI, to the source code.
@@ -459,7 +466,7 @@ We use [TypeScript](https://www.typescriptlang.org/) to have type safety combine
     cd ..
     ```
 
-1. Replace `src/app.mts` with this code.
+1. Create or replace `src/app.mts` with this code.
 
     ```typescript
     import {
@@ -715,54 +722,25 @@ You can relay messages in exactly the same way you'd do it on Supersim.
 
 | Contract | Network | Address
 | - | - | -
-| `Greeter` | [Devnet 1](../tools/devnet#interop-devnet-1) | [`0x1A183FCf61053B7dcd2322BbE766f7E1946d3718`](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718/contract/420120001/readContract?chainid=420120001)
+| `Greeter` | [Devnet 1](../tools/devnet#interop-devnet-1) | [`0x1A183FCf61053B7dcd2322BbE766f7E1946d3718`](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718)
 | `GreetingSender`  | [Devnet 0](../tools/devnet#interop-devnet-1)  | [`0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f`](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f/contract/420120000/readContract?chainid=420120000)
 
-1. Set the address environment variables.
+To modify the program to relay messagez on devnet, follow these steps:
 
-   ```sh
-   export GREETER_A_ADDR=0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f
-   export GREETER_B_ADDR=0x1A183FCf61053B7dcd2322BbE766f7E1946d3718 
-   ```
+1. In `src/app.mts`, replace these lines to update the chains and contract addresses.
 
-1. In `src/app.mts`, replace this line:
+    | Line number | New content |
+    | -: | - |
+    | 10 | `import { interopAlpha0, interopAlpha1 } from '@eth-optimism/viem/chains'`
+    | 24 | `    chain: interopAlpha0,`
+    | 32 | `    chain: interopAlpha1,`
+    | 40 | `    address: "0x1A183FCf61053B7dcd2322BbE766f7E1946d3718",`
+    | 46 | `    address: "0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f",`
 
-    ```typescript
-    import { supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
-    ```
+1. Set `PRIV_KEY` to the private key of an address that has Sepolia ETH on the two chains.
 
-   with
-
-    ```typescript
-    import { chainConfig } from 'viem/op-stack'
-
-    const supersimL2A = defineChain({
-    ...chainConfig,
-    id: 420120000,
-    name: 'Interop devnet 0',
-    rpcUrls: {
-        default: {
-        http: ['https://interop-alpha-0.optimism.io'],
-        },
-    },
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    sourceId: 11155111,
-    testnet: true,
-    })
-
-    const supersimL2B = defineChain({
-    ...chainConfig,
-    id: 420120001,
-    name: 'Interop devnet 1',
-    rpcUrls: {
-        default: {
-        http: ['https://interop-alpha-1.optimism.io'],
-        },
-    },
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    sourceId: 11155111,
-    testnet: true,
-    })    
+    ```sh
+    export PRIV_KEY=0x<private key here>
     ```
 
 1. Rerun the test.
@@ -770,6 +748,12 @@ You can relay messages in exactly the same way you'd do it on Supersim.
     ```sh
     npm start
     ```
+
+1. You can see the transactions in a block explorer.
+
+   - The first transaction, which sets the greeting directly, [on the `Greeter` contract on interop1](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718).
+   - The second transaction, the initiation message for the cross chain greeting change, [on the `GreetingSender` contract on interop0](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f).
+   - The third transaction, the executing message for the cross chain greeting change, [on the `Greeter` contract on interop1 as an internal transaction](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718/internalTx).
 
 ### Debugging
 
