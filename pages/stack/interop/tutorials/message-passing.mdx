@@ -14,10 +14,11 @@ import { InteropCallout } from '@/components/WipCallout'
 
 ## Overview
 
-This tutorial demonstrates how to implement cross-chain communication within the Superchain ecosystem. You'll build a complete 
+This tutorial demonstrates how to implement cross-chain communication within the Superchain ecosystem. You'll build a complete
 message passing system that enables different chains to interact with each other using the `L2ToL2CrossDomainMessenger` contract.
 
 ### What You'll Build
+
 *   A Greeter contract that stores and updates messages
 *   A GreetingSender contract that sends cross-chain messages
 *   A TypeScript application to relay messages between chains
@@ -30,9 +31,9 @@ message passing system that enables different chains to interact with each other
 *   How to relay messages manually between chains
 
 <Callout>
- This tutorial provides step-by-step instructions for implementing cross-chain messaging. 
- For a conceptual overview, 
-see the [message passing explainer](../message-passing).
+  This tutorial provides step-by-step instructions for implementing cross-chain messaging.
+  For a conceptual overview,
+  see the [message passing explainer](../message-passing).
 </Callout>
 
 In this tutorial, you will learn how to use the [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract to pass messages between interoperable blockchains.
@@ -43,221 +44,211 @@ Before starting this tutorial, ensure your development environment meets the fol
 
 ### Technical knowledge
 
-*  Intermediate Solidity programming
-*  Basic TypeScript knowledge
-*  Understanding of smart contract development
-*  Familiarity with blockchain concepts
+*   Intermediate Solidity programming
+*   Basic TypeScript knowledge
+*   Understanding of smart contract development
+*   Familiarity with blockchain concepts
 
 ### Development environment
 
-*  Unix-like operating system (Linux, macOS, or WSL for Windows)
-*  Node.js version 16 or higher
-*  Git for version control
+*   Unix-like operating system (Linux, macOS, or WSL for Windows)
+*   Node.js version 16 or higher
+*   Git for version control
 
 ### Required tools
 
 The tutorial uses these primary tools:
-*  Foundry: For smart contract development
-*  Supersim: For local blockchain simulation
-*  TypeScript: For implementation
-*  Viem: For blockchain interaction
 
+*   Foundry: For smart contract development
+*   Supersim: For local blockchain simulation
+*   TypeScript: For implementation
+*   Viem: For blockchain interaction
 
 ## Setting up your development environment
 
 <Steps>
+  ### Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to install:
 
-    ### Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to install:
-    *   Foundry for smart contract development
-    *   Supersim for local blockchain simulation
+  *   Foundry for smart contract development
+  *   Supersim for local blockchain simulation
 
-    ### Verify your installation:
-    ```sh
-    forge --version
-    supersim --version
-    ```
+  ### Verify your installation:
 
+  ```sh
+  forge --version
+  supersim --version
+  ```
 </Steps>
 
 ## Implementing onchain message passing (in Solidity)
 
 The implementation consists of three main components:
 
-1. **Greeter Contract**: Deployed on `Chain B`, receives and stores messages.
-2. **GreetingSender Contract**: Deployed on `Chain A`, initiates cross-chain messages.
-3. **Message relay system**: Ensures message delivery between chains.
+1.  **Greeter Contract**: Deployed on `Chain B`, receives and stores messages.
+2.  **GreetingSender Contract**: Deployed on `Chain A`, initiates cross-chain messages.
+3.  **Message relay system**: Ensures message delivery between chains.
 
 For development purposes, we'll first use autorelay mode to handle message execution automatically. Later sections cover [manual message relaying](#javascript-message-relaying) for production environments.
 
 <Steps>
+  ### Setting up test networks
 
-### Setting up test networks
+  1.  In the directory where Supersim is installed, start it with autorelay.
 
-1. In the directory where Supersim is installed, start it with autorelay.
+      ```sh
+      supersim
+      ```
 
-    ```sh
-    supersim
-    ```
+      Supersim creates three `anvil` blockchains:
 
-    Supersim creates three `anvil` blockchains:
+      | Role     | ChainID | RPC URL                                        |
+      | -------*   | ------: | ---------------------------------------------*   |
+      | L1       |     900 | [http://127.0.0.1:8545](http://127.0.0.1:8545) |
+      | OPChainA |     901 | [http://127.0.0.1:9545](http://127.0.0.1:9545) |
+      | OPChainB |     902 | [http://127.0.0.1:9546](http://127.0.0.1:9546) |
 
-    | Role | ChainID | RPC URL |
-    | - | -: | - |
-    | L1 | 900 | http://127.0.0.1:8545 
-    | OPChainA | 901 | http://127.0.0.1:9545 
-    | OPChainB | 902 | http://127.0.0.1:9546  
+  2.  In a separate shell, store the configuration in environment variables.
 
-2. In a separate shell, store the configuration in environment variables.
+      ```sh
+      USER_ADDR=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+      PRIV_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+      RPC_L1=http://localhost:8545
+      RPC_A=http://localhost:9545
+      RPC_B=http://localhost:9546
+      ```
 
-    ```sh
-    USER_ADDR=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-    PRIV_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-    RPC_L1=http://localhost:8545
-    RPC_A=http://localhost:9545
-    RPC_B=http://localhost:9546
-    ```
+  <details>
+    <summary>Sanity check</summary>
 
-<details>
-
-<summary>Sanity check</summary>
-
-To verify that the chains are running, check the balance of `$USER_ADDR`.
+    To verify that the chains are running, check the balance of `$USER_ADDR`.
 
     ```sh
     cast balance --ether $USER_ADDR --rpc-url $RPC_L1
     cast balance --ether $USER_ADDR --rpc-url $RPC_A
     cast balance --ether $USER_ADDR --rpc-url $RPC_B        
     ```
+  </details>
 
-</details>
+  ### Create the contracts
 
-### Create the contracts
+  1.  Create a new Foundry project.
 
-1. Create a new Foundry project.
+      ```sh
+      mkdir onchain-code
+      cd onchain-code
+      forge init 
+      ```
+  2.  In `src/Greeter.sol` put this file.
+      This is a variation on [Hardhat's Greeter contract](https://github.com/matter-labs/hardhat-zksync/blob/main/examples/upgradable-example/contracts/Greeter.sol).
 
-   ```sh
-   mkdir onchain-code
-   cd onchain-code
-   forge init 
-   ```
-2. In `src/Greeter.sol` put this file.
-   This is a variation on [Hardhat's Greeter contract](https://github.com/matter-labs/hardhat-zksync/blob/main/examples/upgradable-example/contracts/Greeter.sol).
+  ```solidity file=<rootDir>/public/tutorials/Greeter.sol#L1-L20 hash=b3c5550bcc2cc4272125388ef23a67e7
+  ```
 
-```solidity file=<rootDir>/public/tutorials/Greeter.sol#L1-L20 hash=b3c5550bcc2cc4272125388ef23a67e7
-```
+  3.  Deploy the `Greeter` contract to Chain B and store the resulting contract address in the `GREETER_B_ADDR` environment variable.
 
-3. Deploy the `Greeter` contract to Chain B and store the resulting contract address in the `GREETER_B_ADDR` environment variable.
+      ```sh
+      GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
+      ```
 
-    ```sh
-    GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
-    ```
+        <details>
+          <summary>Explanation</summary>
 
-    <details>
+          The command that deploys the contract is:
 
-    <summary>Explanation</summary>
+          ```sh
+          forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast
+          ```
 
-    The command that deploys the contract is:
+          The command output gives us the deployer address, the address of the new contract, and the transaction hash:
 
-    ```sh
-    forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast
-    ```
+          ```
+          Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+          Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
+          Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
+          ```
 
-    The command output gives us the deployer address, the address of the new contract, and the transaction hash:
+          The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
 
-    ```
-    Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-    Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
-    Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
-    ```
+          ```sh
+          awk '/Deployed to:/ {print $3}'
+          ```
 
-    The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
+          Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (\`\`\`), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
+          So we get.
 
-    ```sh
-    awk '/Deployed to:/ {print $3}'
-    ```
+          ```sh
+          GREETER_B_ADDR=<the address>
+          ```
+        </details>
 
-    Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (`\``), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
-    So we get.
+        <details>
+          <summary>Sanity check</summary>
 
-    ```sh
-    GREETER_B_ADDR=<the address>
-    ```
+          Run these commands to verify the contract works.
+          The first and third commands retrieve the current greeting, while the second command updates it.
 
-    </details>
+          ```sh
+          cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+          cast send --private-key $PRIV_KEY --rpc-url $RPC_B $GREETER_B_ADDR "setGreeting(string)" Hello
+          cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+          ```
+        </details>
 
-    <details>
+  4.  Install the Optimism Solidity libraries into the project.
 
-    <summary>Sanity check</summary>
+      ```sh
+      cd lib
+      npm install @eth-optimism/contracts-bedrock
+      cd ..
+      echo @eth-optimism/=lib/node_modules/@eth-optimism/ >> remappings.txt
+      ```
 
-    Run these commands to verify the contract works.
-    The first and third commands retrieve the current greeting, while the second command updates it.
+  5.  The [`@eth-optimism/contracts-bedrock`](https://www.npmjs.com/package/@eth-optimism/contracts-bedrock) library does not have the Interop Solidity code yet.
+      Run these commands to add it.
 
-    ```sh
-    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
-    cast send --private-key $PRIV_KEY --rpc-url $RPC_B $GREETER_B_ADDR "setGreeting(string)" Hello
-    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
-    ```
+      ```sh
+      mkdir -p lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
+      wget https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol
+      mv IL2ToL2CrossDomainMessenger.sol lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
+      ```
 
-    </details>
+  6.  Create `src/GreetingSender.sol`.
 
-1. Install the Optimism Solidity libraries into the project.
+      ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L1-L28 hash=75d197d1e1da112421785c2160f6a55a
+      ```
 
-    ```sh
-    cd lib
-    npm install @eth-optimism/contracts-bedrock
-    cd ..
-    echo @eth-optimism/=lib/node_modules/@eth-optimism/ >> remappings.txt
-    ```
+        <details>
+          <summary>Explanation</summary>
 
-1. The [`@eth-optimism/contracts-bedrock`](https://www.npmjs.com/package/@eth-optimism/contracts-bedrock) library does not have the Interop Solidity code yet.
-   Run these commands to add it.
+          ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L21-L27 hash=6c27ebcf4916e5aa2325d30f99c65436
+          ```
 
-   ```sh
-   mkdir -p lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
-   wget https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol
-   mv IL2ToL2CrossDomainMessenger.sol lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
-   ```
+          This function encodes a call to `setGreeting` and sends it to a contract on another chain.
 
-1. Create `src/GreetingSender.sol`.
+          *   `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
 
-    ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L1-L28 hash=75d197d1e1da112421785c2160f6a55a
-    ```
+          *   The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
+              This ensures that `setGreeting` is executed remotely with the provided `greeting` value.
+        </details>
 
-    <details>
+  7.  Deploy `GreetingSender` to chain A.
 
-    <summary>Explanation</summary>
+      ```sh
+      GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
+      ```
 
-    ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L21-L27 hash=6c27ebcf4916e5aa2325d30f99c65436
-    ```
+  ### Send a message
 
-    This function encodes a call to `setGreeting` and sends it to a contract on another chain.
+  Send a greeting from chain A to chain B.
 
-    *   `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
-    *   The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
-    This ensures that `setGreeting` is executed remotely with the provided `greeting` value.
+  ```sh
+  cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+  cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A"
+  sleep 2
+  cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+  ```
 
-    
-    </details>
-
-1. Deploy `GreetingSender` to chain A.
-
-    ```sh
-    GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
-    ```
-
-### Send a message
-
-Send a greeting from chain A to chain B.
-
-```sh
-cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
-cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A"
-sleep 2
-cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
-```
-
-The `sleep` call is because the message is not relayed until the next chain B block, which can take up to two seconds.
-
+  The `sleep` call is because the message is not relayed until the next chain B block, which can take up to two seconds.
 </Steps>
 
 ## Sender information
@@ -271,102 +262,98 @@ cast logs --rpc-url $RPC_B 'SetGreeting(address,string)'
 The sender information is stored in the second event topic.
 However, for cross-chain messages, this value corresponds to the local `L2ToL2CrossDomainMessenger` contract address (`4200000000000000000000000000000000000023`), making it ineffective for identifying the original sender.
 
-In this section we change `Greeter.sol` to emit a separate event in it receives a cross domain message, with the sender's identity (address and chain ID). 
+In this section we change `Greeter.sol` to emit a separate event in it receives a cross domain message, with the sender's identity (address and chain ID).
 
 <Steps>
+  ### Modify the Greeter contract
 
-### Modify the Greeter contract
+  1.  Modify `src/Greeter.sol` to this code.
 
-1. Modify `src/Greeter.sol` to this code.
+      ```solidity
+      //SPDX-License-Identifier: MIT
+      pragma solidity ^0.8.0;
 
-    ```solidity
-    //SPDX-License-Identifier: MIT
-    pragma solidity ^0.8.0;
+      import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
+      import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";    
 
-    import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
-    import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";    
+      contract Greeter {
 
-    contract Greeter {
+          IL2ToL2CrossDomainMessenger public immutable messenger =
+              IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
 
-        IL2ToL2CrossDomainMessenger public immutable messenger =
-            IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
+          string greeting;
 
-        string greeting;
+          event SetGreeting(
+              address indexed sender,     // msg.sender
+              string greeting
+          ); 
 
-        event SetGreeting(
-            address indexed sender,     // msg.sender
-            string greeting
-        ); 
+          event CrossDomainSetGreeting(
+              address indexed sender,   // Sender on the other side
+              uint256 indexed chainId,  // ChainID of the other side
+              string greeting
+          );
 
-        event CrossDomainSetGreeting(
-            address indexed sender,   // Sender on the other side
-            uint256 indexed chainId,  // ChainID of the other side
-            string greeting
-        );
+          function greet() public view returns (string memory) {
+              return greeting;
+          }
 
-        function greet() public view returns (string memory) {
-            return greeting;
-        }
+          function setGreeting(string memory _greeting) public {
+              greeting = _greeting;
+              emit SetGreeting(msg.sender, _greeting);
 
-        function setGreeting(string memory _greeting) public {
-            greeting = _greeting;
-            emit SetGreeting(msg.sender, _greeting);
+              if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
+                  (address sender, uint256 chainId) =
+                      messenger.crossDomainMessageContext();              
+                  emit CrossDomainSetGreeting(sender, chainId, _greeting);
+              }
+          }
+      }
+      ```
 
-            if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
-                (address sender, uint256 chainId) =
-                    messenger.crossDomainMessageContext();              
-                emit CrossDomainSetGreeting(sender, chainId, _greeting);
-            }
-        }
-    }
-    ```   
+        <details>
+          <summary>Explanation</summary>
 
-    <details>
+          ```solidity
+                  if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
+                      (address sender, uint256 chainId) =
+                          messenger.crossDomainMessageContext();              
+                      emit CrossDomainSetGreeting(sender, chainId, _greeting);
+                  }
+          ```
 
-    <summary>Explanation</summary>
+          If we see that we got a message from `L2ToL2CrossDomainMessenger`, we call [`L2ToL2CrossDomainMessenger.crossDomainMessageContext`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L118-L126).
+        </details>
 
-    ```solidity
-            if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
-                (address sender, uint256 chainId) =
-                    messenger.crossDomainMessageContext();              
-                emit CrossDomainSetGreeting(sender, chainId, _greeting);
-            }
-    ```    
+  2.  Redeploy the contracts.
+      Because the address of `Greeter` is immutable in `GreetingSender`, we need to redeploy both contracts.
 
-    If we see that we got a message from `L2ToL2CrossDomainMessenger`, we call [`L2ToL2CrossDomainMessenger.crossDomainMessageContext`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L118-L126).
+      ```sh
+      GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
+      GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
+      ```
 
-    </details>
+  ### Verify you can see cross chain sender information
 
-1. Redeploy the contracts.
-   Because the address of `Greeter` is immutable in `GreetingSender`, we need to redeploy both contracts.
+  1.  Set the greeting through `GreetingSender`.
 
-    ```sh
-    GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
-    GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
-    ```
+      ```sh
+      cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+      cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A, with a CrossDomainSetGreeting event"
+      sleep 2
+      cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+      ```
 
-### Verify you can see cross chain sender information
+  2.  Read the log entries.
 
-1. Set the greeting through `GreetingSender`.
+      ```sh
+      cast logs --rpc-url $RPC_B 'CrossDomainSetGreeting(address,uint256,string)'
+      echo $GREETER_A_ADDR
+      echo 0x385 | cast --to-dec
+      ```
 
-    ```sh
-    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
-    cast send --private-key $PRIV_KEY --rpc-url $RPC_A $GREETER_A_ADDR "setGreeting(string)" "Hello from chain A, with a CrossDomainSetGreeting event"
-    sleep 2
-    cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
-    ```    
-
-1. Read the log entries.
-
-    ```sh
-    cast logs --rpc-url $RPC_B 'CrossDomainSetGreeting(address,uint256,string)'
-    echo $GREETER_A_ADDR
-    echo 0x385 | cast --to-dec
-    ```
-
-    See that the second topic (the first indexed log parameter) is the same as `$GREETER_A_ADDR`.
-    The third topic is `0x385=901`, which is the chain ID for chain A.
-
+      See that the second topic (the first indexed log parameter) is the same as `$GREETER_A_ADDR`.
+      The third topic is `0x385=901`, which is the chain ID for chain A.
 </Steps>
 
 ## Implement manual message relaying
@@ -376,339 +363,231 @@ But we only have it because we're using a development system.
 In production we will not have this, we need to create our own executing messages.
 
 <Steps>
+  ### Set up
+
+  We are going to use a [Node](https://nodejs.org/en) project, to be able to get executing messages from the command line.
+  We use [TypeScript](https://www.typescriptlang.org/) to have type safety combined with JavaScript functionality.
+
+  1.  Initialize a new Node project.
+
+      ```sh
+      mkdir ../offchain-code
+      cd ../offchain-code
+      npm init -y
+      npm install --save-dev -y viem tsx @types/node @eth-optimism/viem
+      mkdir src
+      ```
+
+  2.  Edit `package.json` to add the `start` script.
 
-### Set up
+      ```json
+      {
+          "name": "offchain-code",
+          "version": "1.0.0",
+          "main": "index.js",
+          "scripts": {
+              "test": "echo \"Error: no test specified\" && exit 1",
+              "start": "tsx src/app.mts"
+          },
+          "keywords": [],
+          "author": "",
+          "license": "ISC",
+          "type": "commonjs",
+          "description": "",
+          "devDependencies": {
+              "@eth-optimism/viem": "^0.3.2",
+              "@types/node": "^22.13.1",
+              "tsx": "^4.19.2",
+              "viem": "^2.22.23"
+          }
+      }
+      ```
 
-We are going to use a [Node](https://nodejs.org/en) project, to be able to get executing messages from the command line.
-We use [TypeScript](https://www.typescriptlang.org/) to have type safety combined with JavaScript functionality.
+  3.  Export environment variables.
+      This is necessary because those variables are currently limited to the shell process.
+      We need them in the Node process that the shell creates.
 
-1. Initialize a new Node project.
+      ```sh
+      export GREETER_A_ADDR GREETER_B_ADDR PRIV_KEY
+      ```
 
-    ```sh
-    mkdir ../offchain-code
-    cd ../offchain-code
-    npm init -y
-    npm install --save-dev -y viem tsx @types/node @eth-optimism/viem
-    mkdir src
-    ```
+  <details>
+    <summary>Sanity check</summary>
 
-1. Edit `package.json` to add the `start` script.
+    1.  Create a simple `src/app.mts` file.
 
-    ```json
-    {
-        "name": "offchain-code",
-        "version": "1.0.0",
-        "main": "index.js",
-        "scripts": {
-            "test": "echo \"Error: no test specified\" && exit 1",
-            "start": "tsx src/app.mts"
-        },
-        "keywords": [],
-        "author": "",
-        "license": "ISC",
-        "type": "commonjs",
-        "description": "",
-        "devDependencies": {
-            "@eth-optimism/viem": "^0.3.2",
-            "@types/node": "^22.13.1",
-            "tsx": "^4.19.2",
-            "viem": "^2.22.23"
-        }
-    }
-    ```
+        ```typescript
+        console.log(`Greeter A ${process.env.GREETER_A_ADDR}`)
+        console.log(`Greeter B ${process.env.GREETER_B_ADDR}`)
+        ```
 
-1. Export environment variables.
-   This is necessary because those variables are currently limited to the shell process.
-   We need them in the Node process that the shell creates.
+    2.  Run the program.
 
-    ```sh
-    export GREETER_A_ADDR GREETER_B_ADDR PRIV_KEY
-    ```
+        ```sh
+        npm run start
+        ```
+  </details>
 
-<details>
+  ### Send a greeting
 
-<summary>Sanity check</summary>
+  1.  Link the compiled versions of the onchain code, which include the ABI, to the source code.
 
-1. Create a simple `src/app.mts` file.
+      ```sh
+      cd src
+      ln -s ../../onchain-code/out/Greeter.sol/Greeter.json .
+      ln -s ../../onchain-code/out/GreetingSender.sol/GreetingSender.json .
+      cd ..
+      ```
 
-    ```typescript
-    console.log(`Greeter A ${process.env.GREETER_A_ADDR}`)
-    console.log(`Greeter B ${process.env.GREETER_B_ADDR}`)
-    ```    
+  2.  Create or replace `src/app.mts` with this code.
 
-1. Run the program.
+  ```solidity file=<rootDir>/public/tutorials/app.mts#L1-L51 hash=8f6f776884b8e37ae613f7aea8cd6a3b
+  ```
 
-    ```sh
-    npm run start
-    ```
+  3.  Run the program, see that a greeting from chain A is related to chain B.
 
-</details>
+      ```sh
+      npm start
+      ```
 
+  ### Rerun supersim
 
-### Send a greeting 
+  Now we need to rerun Supersim *without* autorelay.
 
-1. Link the compiled versions of the onchain code, which include the ABI, to the source code.
+  1.  In the window that runs Supersim, stop it and restart with this command:
 
-    ```sh
-    cd src
-    ln -s ../../onchain-code/out/Greeter.sol/Greeter.json .
-    ln -s ../../onchain-code/out/GreetingSender.sol/GreetingSender.json .
-    cd ..
-    ```
+      ```sh
+      ./supersim
+      ```
 
-1. Create or replace `src/app.mts` with this code.
-
-```solidity file=<rootDir>/public/tutorials/app.mts#L1-L51 hash=8f6f776884b8e37ae613f7aea8cd6a3b
-```
+  2.  In the window you used for your earlier tests, redeploy the contracts.
+      Export the addresses so we'll have them in JavaScript
 
-
-3. Run the program, see that a greeting from chain A is related to chain B.
+      ```sh
+      cd ../onchain-code
+      export GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
+      export GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
+      cd ../offchain-code
+      ```
 
-   ```sh
-   npm start
-   ```
+  3.  Rerun the JavaScript program.
 
-### Rerun supersim
-
-Now we need to rerun Supersim *without* autorelay.
+      ```sh
+      npm start
+      ```
 
-1. In the window that runs Supersim, stop it and restart with this command:
-
-    ```sh
-    ./supersim
-    ```
-
-1. In the window you used for your earlier tests, redeploy the contracts.
-   Export the addresses so we'll have them in JavaScript
-
-    ```sh
-    cd ../onchain-code
-    export GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
-    export GREETER_A_ADDR=`forge create --rpc-url $RPC_A --private-key $PRIV_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDR 902 | awk '/Deployed to:/ {print $3}'`
-    cd ../offchain-code
-    ```
-
-1. Rerun the JavaScript program.
-
-    ```sh
-    npm start
-    ```
-
-   See that the transaction to chain B changes the greeting, but the transaction to chain A does not.
-
-    ```
-    > offchain-code@1.0.0 start
-    > tsx src/app.mts
-
-    Chain B Greeting: Greeting directly to chain B
-    Chain A Greeting: Greeting directly to chain B
-    ```    
-
-### Add manual relaying logic
-
-1. Replace `src/app.mts` with:
-
-    ```typescript
-    import {
-        createWalletClient,
-        http,
-        defineChain,
-        publicActions,
-        getContract,
-        Address,
-    } from 'viem'
-    import { privateKeyToAccount } from 'viem/accounts'
-    import { supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
-
-    import {
-        walletActionsL2,
-        publicActionsL2,
-        createInteropSentL2ToL2Messages,
-    } from '@eth-optimism/viem'
-
-    import greeterData from './Greeter.json'
-    import greetingSenderData from './GreetingSender.json'
-
-    const account = privateKeyToAccount(process.env.PRIV_KEY as `0x${string}`)
-
-    const walletA = createWalletClient({
-        chain: supersimL2A,
-        transport: http(),
-        account
-    }).extend(publicActions)
-        .extend(publicActionsL2())
-        .extend(walletActionsL2())
-
-    const walletB = createWalletClient({
-        chain: supersimL2B,
-        transport: http(),
-        account
-    }).extend(publicActions)
-        .extend(publicActionsL2())
-        .extend(walletActionsL2())
-
-    const greeter = getContract({
-        address: process.env.GREETER_B_ADDR as Address,
-        abi: greeterData.abi,
-        client: walletB
-    })
-
-    const greetingSender = getContract({
-        address: process.env.GREETER_A_ADDR as Address,
-        abi: greetingSenderData.abi,
-        client: walletA
-    })
-
-    const txnBHash = await greeter.write.setGreeting(
-        ["Greeting directly to chain B"])
-    await walletB.waitForTransactionReceipt({hash: txnBHash})
-
-    const greeting1 = await greeter.read.greet()
-    console.log(`Chain B Greeting: ${greeting1}`)
-
-    const txnAHash = await greetingSender.write.setGreeting(
-        ["Greeting through chain A"])
-    const receiptA = await walletA.waitForTransactionReceipt({hash: txnAHash})
-
-    const sentMessage =  
-        (await createInteropSentL2ToL2Messages(walletA, { receipt: receiptA }))
-            .sentMessages[0]
-    const relayMsgTxnHash = await walletB.interop.relayMessage({
-        sentMessageId: sentMessage.id,
-        sentMessagePayload: sentMessage.payload,
-        })
-
-    const receiptRelay = await walletB.waitForTransactionReceipt(
-            {hash: relayMsgTxnHash})
-
-    const greeting2 = await greeter.read.greet()
-    console.log(`Chain A Greeting: ${greeting2}`)
-    ```
-
-    <details>
-    
-    <summary>Explanation</summary>
-
-    ```typescript
-    import {
-        walletActionsL2,
-        publicActionsL2,
-        createInteropSentL2ToL2Messages,
-    } from '@eth-optimism/viem'
-    ```
-
-    Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
-
-    ```typescript
-    const walletA = createWalletClient({
-        chain: supersimL2A,
-        transport: http(),
-        account
-    }).extend(publicActions)
-        .extend(publicActionsL2())
-        .extend(walletActionsL2())
-
-    const walletB = createWalletClient({
-        chain: supersimL2B,
-        transport: http(),
-        account
-    }).extend(publicActions)
-        .extend(publicActionsL2())
-        .extend(walletActionsL2())
-    ```
-
-    In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions, both the public ones and the ones that require an account.
-
-    ```typescript
-    const receiptA = await walletA.waitForTransactionReceipt({hash: txnAHash})
-    ```
-
-    To relay a message we need the information in the receipt.
-    Also, we need to wait until the transaction with the relayed message is actually part of a block.
-
-    ```typescript
-    const sentMessage =
-        (await createInteropSentL2ToL2Messages(walletA, { receipt: receiptA }))
-            .sentMessages[0]
-    ```
-
-    A single transaction can send multiple messages. 
-    But here we know we sent just one, so we look for the first one in the list.
-
-    ```typescript
-    const relayMsgTxnHash = await walletB.interop.relayMessage({
-        sentMessageId: sentMessage.id,
-        sentMessagePayload: sentMessage.payload,
-        })
-
-    const receiptRelay = await walletB.waitForTransactionReceipt(
-            {hash: relayMsgTxnHash})
-    ```
-
-    Here we first send the relay message on chain B, and then wait for the receipt for it.
-
-    </details>
-
-1. Rerun the JavaScript program, and see that the message is relayed.
-
-    ```sh
-    npm start
-    ```
-
-### Using the devnet
-
-The same contracts are deployed on [the devnet](../tools/devnet).
-You can relay messages in exactly the same way you'd do it on Supersim.
-
-| Contract | Network | Address
-| - | - | -
-| `Greeter` | [Devnet 1](../tools/devnet#interop-devnet-1) | [`0x1A183FCf61053B7dcd2322BbE766f7E1946d3718`](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718)
-| `GreetingSender`  | [Devnet 0](../tools/devnet#interop-devnet-1)  | [`0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f`](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f/contract/420120000/readContract?chainid=420120000)
-
-To modify the program to relay messagez on devnet, follow these steps:
-
-1. In `src/app.mts`, replace these lines to update the chains and contract addresses.
-
-    | Line number | New content |
-    | -: | - |
-    | 10 | `import { interopAlpha0, interopAlpha1 } from '@eth-optimism/viem/chains'`
-    | 24 | `    chain: interopAlpha0,`
-    | 32 | `    chain: interopAlpha1,`
-    | 40 | `    address: "0x1A183FCf61053B7dcd2322BbE766f7E1946d3718",`
-    | 46 | `    address: "0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f",`
-
-1. Set `PRIV_KEY` to the private key of an address that has Sepolia ETH on the two chains.
-
-    ```sh
-    export PRIV_KEY=0x<private key here>
-    ```
-
-1. Rerun the test.
-
-    ```sh
-    npm start
-    ```
-
-1. You can see the transactions in a block explorer.
-
-   - The first transaction, which sets the greeting directly, [on the `Greeter` contract on interop1](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718).
-   - The second transaction, the initiation message for the cross chain greeting change, [on the `GreetingSender` contract on interop0](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f).
-   - The third transaction, the executing message for the cross chain greeting change, [on the `Greeter` contract on interop1 as an internal transaction](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718/internalTx).
-
-### Debugging
-
-To see what messages were relayed by a specific transaction you can use this code:
-
-```typescript
-import { decodeRelayedL2ToL2Messages } from '@eth-optimism/viem'
-
-const decodedRelays = decodeRelayedL2ToL2Messages(
-    {receipt: receiptRelay})
-
-console.log(decodedRelays)
-console.log(decodedRelays.successfulMessages[0].log)
-```
+      See that the transaction to chain B changes the greeting, but the transaction to chain A does not.
 
+      ```
+      > offchain-code@1.0.0 start
+      > tsx src/app.mts
+
+      Chain B Greeting: Greeting directly to chain B
+      Chain A Greeting: Greeting directly to chain B
+      ```
+
+  ### Add manual relaying logic
+
+  1.  Replace `src/app.mts` with:
+
+  ```js file=<rootDir>/public/tutorials/app.mts#L1-L51 hash=8f6f776884b8e37ae613f7aea8cd6a3b
+  ```
+
+        <details>
+          <summary>Explanation</summary>
+
+          1. **Import Required Libraries**
+            *   Imports functions from `viem` for wallet creation, HTTP transport, and contract interactions.  
+            *   Imports `@eth-optimism/viem` utilities for handling OP-Stack-specific actions and interoperability.  
+            *   Loads ABI definitions from `Greeter.json` and `GreetingSender.json` for contract interactions.  
+
+            2. **Initialize Wallet Clients**
+            *   Uses `privateKeyToAccount` to generate an account from an environment variable.  
+            *   Creates `walletA` for chain `supersimL2A` and `walletB` for chain `supersimL2B`, extending them with Viem’s public and OP-Stack-specific actions.  
+
+            3. **Get Contract Instances**
+            *   Retrieves contract instances for `greeter` on `walletB` and `greetingSender` on `walletA` using `getContract`.  
+            *   The addresses are taken from environment variables, and the clients are set to the respective wallets.  
+
+            4. **Direct Greeting on Chain B**
+            *   Calls `setGreeting` on `greeter` to store a greeting directly on chain B.  
+            *   Waits for the transaction to be confirmed using `waitForTransactionReceipt`.  
+            *   Reads and logs the greeting stored on chain B.  
+
+            5. **Cross-Chain Greeting via Chain A**
+            *   Calls `setGreeting` on `greetingSender` to send a greeting through chain A.  
+            *   Waits for the transaction receipt on chain A.  
+
+            6. **Retrieve and Relay the Cross-Chain Message**
+            *   Extracts the message from the transaction receipt using `createInteropSentL2ToL2Messages`.  
+            *   Relays the message to chain B using `walletB.interop.relayMessage`.  
+            *   Waits for confirmation of the relay transaction.  
+
+            7. **Verify the Updated Greeting on Chain B**
+            *   Reads the greeting from `greeter` after the relay process.  
+            *   Logs the updated greeting, showing that it was successfully relayed from chain A to chain B.  
+
+        </details>
+
+  2.  Rerun the JavaScript program, and see that the message is relayed.
+
+      ```sh
+      npm start
+      ```
+
+  ### Using devnet
+
+  The same contracts are deployed on [the devnet](../tools/devnet).
+  You can relay messages in exactly the same way you'd do it on Supersim.
+
+  | Contract         | Network                                      | Address                                                                                                                                                                               |
+  | ---------------*   | -------------------------------------------*   | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*   |
+  | `Greeter`        | [Devnet 1](../tools/devnet#interop-devnet-1) | [`0x1A183FCf61053B7dcd2322BbE766f7E1946d3718`](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718)                                                   |
+  | `GreetingSender` | [Devnet 0](../tools/devnet#interop-devnet-1) | [`0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f`](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f/contract/420120000/readContract?chainid=420120000) |
+
+  To modify the program to relay messagez on devnet, follow these steps:
+
+  1.  In `src/app.mts`, replace these lines to update the chains and contract addresses.
+
+      | Line number | New content                                                                |
+      | ----------: | -------------------------------------------------------------------------*   |
+      |          10 | `import { interopAlpha0, interopAlpha1 } from '@eth-optimism/viem/chains'` |
+      |          24 | `    chain: interopAlpha0,`                                                |
+      |          32 | `    chain: interopAlpha1,`                                                |
+      |          40 | `    address: "0x1A183FCf61053B7dcd2322BbE766f7E1946d3718",`               |
+      |          46 | `    address: "0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f",`               |
+
+  2.  Set `PRIV_KEY` to the private key of an address that has Sepolia ETH on the two chains.
+
+      ```sh
+      export PRIV_KEY=0x<private key here>
+      ```
+
+  3.  Rerun the test.
+
+      ```sh
+      npm start
+      ```
+
+  4.  You can see the transactions in a block explorer.
+
+      *   The first transaction, which sets the greeting directly, [on the `Greeter` contract on interop1](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718).
+      *   The second transaction, the initiation message for the cross chain greeting change, [on the `GreetingSender` contract on interop0](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f).
+      *   The third transaction, the executing message for the cross chain greeting change, [on the `Greeter` contract on interop1 as an internal transaction](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718/internalTx).
+
+  ### Debugging
+
+  To see what messages were relayed by a specific transaction you can use this code:
+
+  ```typescript
+  import { decodeRelayedL2ToL2Messages } from '@eth-optimism/viem'
+
+  const decodedRelays = decodeRelayedL2ToL2Messages(
+      {receipt: receiptRelay})
+
+  console.log(decodedRelays)
+  console.log(decodedRelays.successfulMessages[0].log)
+  ```
 </Steps>
 
 ## Next steps
