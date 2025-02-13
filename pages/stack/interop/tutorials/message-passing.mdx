@@ -101,11 +101,11 @@ For development purposes, we'll first use autorelay mode to handle message execu
 
       Supersim creates three `anvil` blockchains:
 
-      | Role     | ChainID | RPC URL                                        |
-      | -------*   | ------: | ---------------------------------------------*   |
-      | L1       |     900 | [http://127.0.0.1:8545](http://127.0.0.1:8545) |
-      | OPChainA |     901 | [http://127.0.0.1:9545](http://127.0.0.1:9545) |
-      | OPChainB |     902 | [http://127.0.0.1:9546](http://127.0.0.1:9546) |
+      \| Role     | ChainID | RPC URL                                        |
+      \| -------\*   | ------: | ---------------------------------------------\*   |
+      \| L1       |     900 | [http://127.0.0.1:8545](http://127.0.0.1:8545) |
+      \| OPChainA |     901 | [http://127.0.0.1:9545](http://127.0.0.1:9545) |
+      \| OPChainB |     902 | [http://127.0.0.1:9546](http://127.0.0.1:9546) |
 
   2.  In a separate shell, store the configuration in environment variables.
 
@@ -493,41 +493,47 @@ In production we will not have this, we need to create our own executing message
   ```js file=<rootDir>/public/tutorials/app.mts#L1-L51 hash=8f6f776884b8e37ae613f7aea8cd6a3b
   ```
 
-        <details>
-          <summary>Explanation</summary>
+  <details>
+    <summary>Explanation</summary>
 
-          1. **Import Required Libraries**
-            *   Imports functions from `viem` for wallet creation, HTTP transport, and contract interactions.  
-            *   Imports `@eth-optimism/viem` utilities for handling OP-Stack-specific actions and interoperability.  
-            *   Loads ABI definitions from `Greeter.json` and `GreetingSender.json` for contract interactions.  
+    1.  **Import Required Libraries**
 
-            2. **Initialize Wallet Clients**
-            *   Uses `privateKeyToAccount` to generate an account from an environment variable.  
-            *   Creates `walletA` for chain `supersimL2A` and `walletB` for chain `supersimL2B`, extending them with Viem’s public and OP-Stack-specific actions.  
+    *   Imports functions from `viem` for wallet creation, HTTP transport, and contract interactions.
+    *   Imports `@eth-optimism/viem` utilities for handling OP-Stack-specific actions and interoperability.
+    *   Loads ABI definitions from `Greeter.json` and `GreetingSender.json` for contract interactions.
 
-            3. **Get Contract Instances**
-            *   Retrieves contract instances for `greeter` on `walletB` and `greetingSender` on `walletA` using `getContract`.  
-            *   The addresses are taken from environment variables, and the clients are set to the respective wallets.  
+    2.  **Initialize Wallet Clients**
 
-            4. **Direct Greeting on Chain B**
-            *   Calls `setGreeting` on `greeter` to store a greeting directly on chain B.  
-            *   Waits for the transaction to be confirmed using `waitForTransactionReceipt`.  
-            *   Reads and logs the greeting stored on chain B.  
+    *   Uses `privateKeyToAccount` to generate an account from an environment variable.
+    *   Creates `walletA` for chain `supersimL2A` and `walletB` for chain `supersimL2B`, extending them with Viem's public and OP-Stack-specific actions.
 
-            5. **Cross-Chain Greeting via Chain A**
-            *   Calls `setGreeting` on `greetingSender` to send a greeting through chain A.  
-            *   Waits for the transaction receipt on chain A.  
+    3.  **Get Contract Instances**
 
-            6. **Retrieve and Relay the Cross-Chain Message**
-            *   Extracts the message from the transaction receipt using `createInteropSentL2ToL2Messages`.  
-            *   Relays the message to chain B using `walletB.interop.relayMessage`.  
-            *   Waits for confirmation of the relay transaction.  
+    *   Retrieves contract instances for `greeter` on `walletB` and `greetingSender` on `walletA` using `getContract`.
+    *   The addresses are taken from environment variables, and the clients are set to the respective wallets.
 
-            7. **Verify the Updated Greeting on Chain B**
-            *   Reads the greeting from `greeter` after the relay process.  
-            *   Logs the updated greeting, showing that it was successfully relayed from chain A to chain B.  
+    4.  **Direct Greeting on Chain B**
 
-        </details>
+    *   Calls `setGreeting` on `greeter` to store a greeting directly on chain B.
+    *   Waits for the transaction to be confirmed using `waitForTransactionReceipt`.
+    *   Reads and logs the greeting stored on chain B.
+
+    5.  **Cross-Chain Greeting via Chain A**
+
+    *   Calls `setGreeting` on `greetingSender` to send a greeting through chain A.
+    *   Waits for the transaction receipt on chain A.
+
+    6.  **Retrieve and Relay the Cross-Chain Message**
+
+    *   Extracts the message from the transaction receipt using `createInteropSentL2ToL2Messages`.
+    *   Relays the message to chain B using `walletB.interop.relayMessage`.
+    *   Waits for confirmation of the relay transaction.
+
+    7.  **Verify the Updated Greeting on Chain B**
+
+    *   Reads the greeting from `greeter` after the relay process.
+    *   Logs the updated greeting, showing that it was successfully relayed from chain A to chain B.
+  </details>
 
   2.  Rerun the JavaScript program, and see that the message is relayed.
 
@@ -540,22 +546,22 @@ In production we will not have this, we need to create our own executing message
   The same contracts are deployed on [the devnet](../tools/devnet).
   You can relay messages in exactly the same way you'd do it on Supersim.
 
-  | Contract         | Network                                      | Address                                                                                                                                                                               |
-  | ---------------*   | -------------------------------------------*   | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*   |
-  | `Greeter`        | [Devnet 1](../tools/devnet#interop-devnet-1) | [`0x1A183FCf61053B7dcd2322BbE766f7E1946d3718`](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718)                                                   |
-  | `GreetingSender` | [Devnet 0](../tools/devnet#interop-devnet-1) | [`0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f`](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f/contract/420120000/readContract?chainid=420120000) |
+  \| Contract         | Network                                      | Address                                                                                                                                                                               |
+  \| ---------------\*   | -------------------------------------------\*   | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\*   |
+  \| `Greeter`        | [Devnet 1](../tools/devnet#interop-devnet-1) | [`0x1A183FCf61053B7dcd2322BbE766f7E1946d3718`](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718)                                                   |
+  \| `GreetingSender` | [Devnet 0](../tools/devnet#interop-devnet-1) | [`0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f`](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f/contract/420120000/readContract?chainid=420120000) |
 
   To modify the program to relay messagez on devnet, follow these steps:
 
   1.  In `src/app.mts`, replace these lines to update the chains and contract addresses.
 
-      | Line number | New content                                                                |
-      | ----------: | -------------------------------------------------------------------------*   |
-      |          10 | `import { interopAlpha0, interopAlpha1 } from '@eth-optimism/viem/chains'` |
-      |          24 | `    chain: interopAlpha0,`                                                |
-      |          32 | `    chain: interopAlpha1,`                                                |
-      |          40 | `    address: "0x1A183FCf61053B7dcd2322BbE766f7E1946d3718",`               |
-      |          46 | `    address: "0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f",`               |
+      \| Line number | New content                                                                |
+      \| ----------: | -------------------------------------------------------------------------\*   |
+      \|          10 | `import { interopAlpha0, interopAlpha1 } from '@eth-optimism/viem/chains'` |
+      \|          24 | `    chain: interopAlpha0,`                                                |
+      \|          32 | `    chain: interopAlpha1,`                                                |
+      \|          40 | `    address: "0x1A183FCf61053B7dcd2322BbE766f7E1946d3718",`               |
+      \|          46 | `    address: "0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f",`               |
 
   2.  Set `PRIV_KEY` to the private key of an address that has Sepolia ETH on the two chains.
 
