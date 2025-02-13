@@ -1,7 +1,7 @@
 ---
 title: Interop message passing tutorial
 lang: en-US
-description: Learn how to pass messages between chains in the Superchain using the L2ToL2CrossDomainMessenger contract.
+description: Learn to implement cross-chain communication in the Superchain by building a message passing system using the L2ToL2CrossDomainMessenger contract.
 ---
 
 import { Callout } from 'nextra/components'
@@ -12,34 +12,82 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Interop message passing tutorial
 
-<Callout>
-  This is a step-by-step tutorial.
-  You can find an explanation of how this works [here](../message-passing).
+## Overview
 
- [See here](#use-the-eth-optimismviem-library-to-relay-the-message), if you want a working code example.
+This tutorial demonstrates how to implement cross-chain communication within the Superchain ecosystem. You'll build a complete 
+message passing system that enables different chains to interact with each other using the `L2ToL2CrossDomainMessenger` contract.
+
+### What You'll Build
+*   A Greeter contract that stores and updates messages
+*   A GreetingSender contract that sends cross-chain messages
+*   A TypeScript application to relay messages between chains
+
+### What you'll learn
+
+*   How to deploy contracts across different chains
+*   How to implement cross-chain message passing
+*   How to handle sender verification across chains
+*   How to relay messages manually between chains
+
+<Callout>
+ This tutorial provides step-by-step instructions for implementing cross-chain messaging. 
+ For a conceptual overview, 
+see the [message passing explainer](../message-passing).
 </Callout>
 
 In this tutorial, you will learn how to use the [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract to pass messages between interoperable blockchains.
 
 ## Prerequisites
 
-Before starting this tutorial, ensure you have:
+Before starting this tutorial, ensure your development environment meets the following requirements:
 
-*  Basic knowledge of Solidity and TypeScript
-*  Experience with smart contract development
+### Technical knowledge
+
+*  Intermediate Solidity programming
+*  Basic TypeScript knowledge
+*  Understanding of smart contract development
 *  Familiarity with blockchain concepts
-*  A Unix-like environment (Linux, macOS, or WSL for Windows)
+
+### Development environment
+
+*  Unix-like operating system (Linux, macOS, or WSL for Windows)
+*  Node.js version 16 or higher
+*  Git for version control
+
+### Required tools
+
+The tutorial uses these primary tools:
+*  Foundry: For smart contract development
+*  Supersim: For local blockchain simulation
+*  TypeScript: For implementation
+*  Viem: For blockchain interaction
 
 
-## Installing required tools
+## Setting up your development environment
 
-Before starting this tutorial, refer to the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to set up **Foundry** and **Supersim** on your system.
+<Steps>
+
+    ### Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to install:
+    *   Foundry for smart contract development
+    *   Supersim for local blockchain simulation
+
+    ### Verify your installation:
+    ```sh
+    forge --version
+    supersim --version
+    ```
+
+</Steps>
 
 ## Implementing onchain message passing (in Solidity)
 
-This section demonstrates how to deploy smart contracts for cross-chain messaging and send messages between them.
-For now, we will ignore the need for executing messages by turning on autorelay.
-Read more on [how to relay your own messages](#javascript-message-relaying).
+The implementation consists of three main components:
+
+1. **Greeter Contract**: Deployed on `Chain B`, receives and stores messages.
+2. **GreetingSender Contract**: Deployed on `Chain A`, initiates cross-chain messages.
+3. **Message relay system**: Ensures message delivery between chains.
+
+For development purposes, we'll first use autorelay mode to handle message execution automatically. Later sections cover [manual message relaying](#javascript-message-relaying) for production environments.
 
 <Steps>
 
@@ -48,7 +96,7 @@ Read more on [how to relay your own messages](#javascript-message-relaying).
 1. In the directory where Supersim is installed, start it with autorelay.
 
     ```sh
-    ./supersim --interop.autorelay
+    supersim
     ```
 
     Supersim creates three `anvil` blockchains:
@@ -90,34 +138,13 @@ To verify that the chains are running, check the balance of `$USER_ADDR`.
    ```sh
    mkdir onchain-code
    cd onchain-code
-   forge init
+   forge init 
    ```
-
 2. In `src/Greeter.sol` put this file.
    This is a variation on [Hardhat's Greeter contract](https://github.com/matter-labs/hardhat-zksync/blob/main/examples/upgradable-example/contracts/Greeter.sol).
 
-    ```solidity
-    //SPDX-License-Identifier: MIT
-    pragma solidity ^0.8.0;
-
-    contract Greeter {
-        string greeting;
-
-        event SetGreeting(
-            address indexed sender,     // msg.sender
-            string greeting
-        ); 
-
-        function greet() public view returns (string memory) {
-            return greeting;
-        }
-
-        function setGreeting(string memory _greeting) public {
-            greeting = _greeting;
-            emit SetGreeting(msg.sender, _greeting);
-        }
-    }
-    ```
+```solidity file=<rootDir>/public/tutorials/Greeter.sol#L1-L20 hash=b3c5550bcc2cc4272125388ef23a67e7
+```
 
 3. Deploy the `Greeter` contract to Chain B and store the resulting contract address in the `GREETER_B_ADDR` environment variable.
 
@@ -193,60 +220,23 @@ To verify that the chains are running, check the balance of `$USER_ADDR`.
 
 1. Create `src/GreetingSender.sol`.
 
-    ```solidity
-    //SPDX-License-Identifier: MIT
-    pragma solidity ^0.8.0;
-
-    import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
-    import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";
-
-    import { Greeter } from "src/Greeter.sol";
-
-    contract GreetingSender {
-        IL2ToL2CrossDomainMessenger public immutable messenger =
-            IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
-
-        address immutable greeterAddress;
-        uint256 immutable greeterChainId;
-
-        constructor(address _greeterAddress, uint256 _greeterChainId) {
-            greeterAddress = _greeterAddress;
-            greeterChainId = _greeterChainId;
-        }
-
-        function setGreeting(string calldata greeting) public {
-            bytes memory message = abi.encodeCall(
-                Greeter.setGreeting,
-                (greeting)
-            );
-            messenger.sendMessage(greeterChainId, greeterAddress, message);
-        }
-    }
+    ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L1-L28 hash=75d197d1e1da112421785c2160f6a55a
     ```
 
     <details>
 
     <summary>Explanation</summary>
 
-    ```solidity
-    function setGreeting(string calldata greeting) public {
-        bytes memory message = abi.encodeCall(
-            Greeter.setGreeting,
-            (greeting)
-        );
+    ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L21-L27 hash=6c27ebcf4916e5aa2325d30f99c65436
     ```
 
-    The message is the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) sent to the destination contract.
-    The easiest way to calldata is the use [`abi.encodeCall`](https://docs.soliditylang.org/en/latest/units-and-global-variables.html#abi-encoding-and-decoding-functions).
+    This function encodes a call to `setGreeting` and sends it to a contract on another chain.
 
+    *   `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
+    *   The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
+    This ensures that `setGreeting` is executed remotely with the provided `greeting` value.
 
-    ```solidity
-        messenger.sendMessage(greeterChainId, greeterAddress, message);
-    }
-    ```
-
-    Actually send the message using [`L2ToL2CrossDomainMessenger.sendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L128-L154).
-
+    
     </details>
 
 1. Deploy `GreetingSender` to chain A.
@@ -379,7 +369,7 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
 
 </Steps>
 
-## Javascript message relaying
+## Implement manual message relaying
 
 So far we relied on `--interop.autorelay` to send the executing messages to chain B.
 But we only have it because we're using a development system.
@@ -468,59 +458,9 @@ We use [TypeScript](https://www.typescriptlang.org/) to have type safety combine
 
 1. Create or replace `src/app.mts` with this code.
 
-    ```typescript
-    import {
-        createWalletClient,
-        http,
-        defineChain,
-        publicActions,
-        getContract,
-        Address,
-    } from 'viem'
-    import { privateKeyToAccount } from 'viem/accounts'
-    import { supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
+```solidity file=<rootDir>/public/tutorials/app.mts#L1-L51 hash=8f6f776884b8e37ae613f7aea8cd6a3b
+```
 
-
-    import greeterData from './Greeter.json'
-    import greetingSenderData from './GreetingSender.json'
-
-    const account = privateKeyToAccount(process.env.PRIV_KEY as `0x${string}`)
-
-    const walletA = createWalletClient({
-        chain: supersimL2A,
-        transport: http(),
-        account
-    }).extend(publicActions)
-
-    const walletB = createWalletClient({
-        chain: supersimL2B,
-        transport: http(),
-        account
-    }).extend(publicActions)
-
-    const greeter = getContract({
-        address: process.env.GREETER_B_ADDR as Address,
-        abi: greeterData.abi,
-        client: walletB
-    })
-
-    const greetingSender = getContract({
-        address: process.env.GREETER_A_ADDR as Address,
-        abi: greetingSenderData.abi,
-        client: walletA
-    })
-    const txnBHash = await greeter.write.setGreeting(["Greeting directly to chain B"])
-    await walletB.waitForTransactionReceipt({hash: txnBHash})
-
-    const greeting1 = await greeter.read.greet()
-    console.log(`Chain B Greeting: ${greeting1}`)
-
-    const txnAHash = await greetingSender.write.setGreeting(["Greeting through chain A"])
-    await walletA.waitForTransactionReceipt({hash: txnAHash})
-
-    const greeting2 = await greeter.read.greet()
-    console.log(`Chain A Greeting: ${greeting2}`)
-    ```
 
 3. Run the program, see that a greeting from chain A is related to chain B.
 
@@ -564,7 +504,7 @@ Now we need to rerun Supersim *without* autorelay.
     Chain A Greeting: Greeting directly to chain B
     ```    
 
-### Use the `@eth-optimism/viem` library to relay the message
+### Add manual relaying logic
 
 1. Replace `src/app.mts` with:
 
