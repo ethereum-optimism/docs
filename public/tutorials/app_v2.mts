@@ -1,7 +1,6 @@
 import {
     createWalletClient,
     http,
-    defineChain,
     publicActions,
     getContract,
     Address,
