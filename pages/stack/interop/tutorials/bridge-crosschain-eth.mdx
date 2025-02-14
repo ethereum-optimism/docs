@@ -6,6 +6,7 @@ description: Learn how to bridge native cross-chain ETH transfers.
 
 import { Callout } from 'nextra/components'
 import { Steps } from 'nextra/components'
+import { Tabs } from 'nextra/components'
 import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
@@ -13,18 +14,74 @@ import { InteropCallout } from '@/components/WipCallout'
 # Bridging native cross-chain ETH transfers
 
 Crosschain ETH transfers in the Superchain are facilitated through the [SuperchainWETH](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol) contract.
-This tutorial walks through how to send native ETH from chain 901 to 902. To simplify these steps, [supersim](/stack/interop/tools/supersim) will be run with the `--interop.autorelay` flag. The `--interop.autorelay` flag automatically triggers the relay message transaction once the initial send transaction is completed on the source chain, improving the developer experience by removing the need to manually send the relay message.
+This tutorial walks through how to send native ETH from one chain to another.
+You can do this on [Supersim](../tools/supersim), [the Interop devnet](../tools/devnet), or production, once it is released.
 
 <Callout>
   If the source chain uses native ETH as their gas token, but the destination chain uses a custom gas token, then the recipient will receive `SuperchainWETH` on the destination chain.
 </Callout>
 
-<Steps>
-  ### Start `supersim` with the autorelayer enabled
 
-  ```sh
-  supersim --interop.autorelay 
-  ```
+<Steps>
+
+### Configure the network
+
+1. Install [Foundry](https://book.getfoundry.sh/getting-started/installation).
+
+<Tabs items={['Supersim', 'Interop devnet']}>
+  <Tabs.Tab>
+    2. Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to install [Supersim](../tools/supersim) for running blockchains with Interop.
+
+    3. Supersim uses Foundry's `anvil` blockchains, which start with ten prefunded accounts.
+       Set these environment variables to access one of those accounts on the L2 blockchains.
+
+        ```sh
+        export PRIV_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+        ```
+
+      <details>
+
+        <summary>Sanity check</summary>
+
+        ```sh
+        cast balance --ether `cast wallet address $PRIV_KEY` --rpc-url http://localhost:9545
+        cast balance --ether `cast wallet address $PRIV_KEY` --rpc-url http://localhost:9546
+        ```
+
+      </details>
+  </Tabs.Tab>
+  <Tabs.Tab>
+    2.  Set `PRIV_KEY` to the private key of an address that has [Sepolia ETH](https://cloud.google.com/application/web3/faucet/ethereum/sepolia).
+
+        ```sh
+        export PRIV_KEY=0x<private key here>
+        ```
+
+    3. Send ETH to the two L2 blockchains.
+
+        ```sh
+        cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIV_KEY --value 0.001ether 0x7385d89d38ab79984e7c84fab9ce5e6f4815468a
+        cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIV_KEY --value 0.001ether 0x55f5c4653dbcde7d1254f9c690a5d761b315500c
+        ```
+
+    4. Wait a few minutes until you can see the ETH [on the block explorer](https://sid.testnet.routescan.io/) for your address.  
+
+    <details>
+
+        <summary>Sanity check</summary>
+
+        ```sh
+        cast balance --ether `cast wallet address $PRIV_KEY` --rpc-url https://interop-alpha-0.optimism.io/
+        cast balance --ether `cast wallet address $PRIV_KEY` --rpc-url https://interop-alpha-1.optimism.io/
+        ```
+
+     </details>
+
+  </Tabs.Tab>
+</Tabs>
+
+
+
 
   ### Initiate the send transaction on chain 901
 
