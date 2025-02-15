@@ -44,7 +44,6 @@ Pectra contains a variety of EIPs, some of which apply to the OP Stack; others d
 
 Node operators will need to upgrade to the respective releases before the activation dates.These following steps are necessary for every node operator:
 
-
 ### Update to the latest release
 
 <Callout type="warning">
@@ -53,42 +52,51 @@ Node operators will need to upgrade to the respective releases before the activa
 
 *   `op-node` at [`v1.11.0`](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.11.0)
 *   `op-geth` at [`v1.101500.0`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101500.0)
-*   `op-batcher` at [`v1.11.1`](https://github.com/ethereum-optimism/optimism/releases/tag/op-batcher%2Fv1.11.1)
 *   `op-reth` at [`v1.1.5`](https://github.com/paradigmxyz/reth/releases/tag/v1.1.5) also includes L1 Pectra support.
 
 ## For chain operators
 
 The following sections are how chain operators can prepare the first part of the OP Stack's Pectra L1 support. This ensures OP Stack chains do not break when the L1 Pectra upgrade activates.
 
-Every chain operator will need to first follow the guidance outlined in the [Node Operator section](#update-to-the-latest-release) to update your nodes to the latest releases. 
+Every chain operator will need to:
+
+<Steps>
+
+  ### Update your node binaries
+
+  Follow the guidance outlined in the [Node Operator section](#update-to-the-latest-release) to update your nodes to the latest releases. 
+
+  ### Update your batcher
+
+  Then update your batcher to [`op-batcher/v1.11.1`](https://github.com/ethereum-optimism/optimism/releases/tag/op-batcher%2Fv1.11.1).
+
+</Steps>
+
 
 ## For fault proof enabled chains
 
 <Callout type="info">
   The following instructions assume your chain is on the latest contract release `op-contracts/v1.8.0` and have Holocene activated.
 </Callout>
-
-The following steps are to update your absolute prestate on your chain. **This is absolutely necessary for chains running permissionless fault proofs.** For chains running the Fault Proof System with permissioned games you can skip this section because games will not be played out and the absolute prestate is not used. 
+  
+The following steps are to update your absolute prestate with new dispute game contracts. **This is absolutely necessary for chains running permissionless fault proofs.** For chains running the Fault Proof System with permissioned games you can skip this section because games will not be played out and the absolute prestate is not used. 
 
 The Pectra upgrade changes the derivation rules, permissionless fault proof chains need to upgrade the `op-program` version used in the fault proof system to support these changes. The `op-program` version used is specified via the `faultGameAbsolutePrestate` setting, deployed as part of `FaultDisputeGame` and `PermissionedDisputeGame` contracts.
 
 <Steps>
-  ### Make sure the Superchain Registry is up to date
 
-  The new `op-program` release will pull the configurations from the [superchain-registry](https://github.com/ethereum-optimism/superchain-registry). This is important because the op-challenger uses the `op-program` and it needs to be aware of your chain's configuration. If your chain that not in the superchain-registry, please [open a PR to add your chain to the superchain-registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/docs/ops.md#adding-a-chain).
+  ### Update your `op-challenger`
+
+  Update your `op-challenger` binary to [`op-challenger/v1.3.1`](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.3.1). 
 
   ### Verify the new absolute prestate
 
-  <Callout type="info">
-    The following is based on the [op-program/v1.5.0-rc.2](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.5.0-rc.2) which will be included in the `op-challenger` release.
-  </Callout>
-
-  You can use this new absolute prestate (`0x035ac388b5cb22acf52a2063cfde108d09b1888655d21f02f595f9c3ea6cbdcd`) for the following chains:
+  The absolute prestate is generated with the [op-program/v1.5.0-rc.2](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.5.0-rc.2). You can use this new absolute prestate (`0x035ac388b5cb22acf52a2063cfde108d09b1888655d21f02f595f9c3ea6cbdcd`) for the following chains:
 
   *   Sepolia: Base, OP, Metal, Mode, Zora, Ethernity, Unichain, Ink
   *   Mainnet: Base, OP, Orderly, Lyra, Metal, Mode, Zora, Lisk, Ethernity, Binary, Ink, Unichain
 
-  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/3f18df1c8a502136bbe33f10ed1e29a26cd4678a/Makefile#L129-L131) in the root of the monorepo:
+  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/3f18df1c8a502136bbe33f10ed1e29a26cd4678a/Makefile#L129-L131) in the root of the monorepo on the `op-program/v1.5.0-rc.2` tag:
 
   ```shell
   make reproducible-prestate
@@ -105,6 +113,12 @@ The Pectra upgrade changes the derivation rules, permissionless fault proof chai
   0x0379d61de1833af6766f07b4ed931d85b3f6282508bbcbf9f4637398d97b61c1
   ```
 
+  ### Upload your new preimage file
+
+  During the previous step, you also generated the preimage of the absolute prestate, which is basically the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `0x035ac388b5cb22acf52a2063cfde108d09b1888655d21f02f595f9c3ea6cbdcd.bin.gz`. 
+  
+  Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
+
   ### Deploy new dispute game contracts
 
   You will then take the absolute prestate and deploy new `FaultDisputeGame` and `PermissionedDisputeGame` contracts with that value. You can reuse the [Holocene script](https://github.com/ethereum-optimism/optimism/tree/op-contracts/v1.8.0-rc.4/packages/contracts-bedrock/scripts/upgrades/holocene) to deploy the new contracts. The only change you will need to make is to update the `absolutePrestate` value in your [deploy-config](https://github.com/ethereum-optimism/optimism/blob/2073f4059bd806af3e8b76b820aa3fa0b42016d0/packages/contracts-bedrock/scripts/upgrades/holocene/README.md?plain=1#L53-L54). Alternatively we will be releasing an `OPPrestateUpdater` that can be used to deploy the new contracts.
@@ -113,13 +127,9 @@ The Pectra upgrade changes the derivation rules, permissionless fault proof chai
 
   You will then need to update the `DisputeGameFactory` to point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. You can utilize this [template](https://github.com/ethereum-optimism/superchain-ops/tree/main/tasks/sep/fp-recovery/005-set-game-implementation) to generate the transaction and validation script for this step. Before executing, you will need to update your op-challenger.
 
-  ### Update your op-challenger
-
-  Update your `op-challenger` to the new release version that will be provided soon and configure it to use the new absolute prestate.
-
   ### Execute the upgrade 
 
-  Once your challenger is ready, you can execute the "Set Dispute Game Implementation" transaction. Please simulate and validate that the expected output prior to executing the transaction.
+  Once your `op-challenger` is ready with the new preimage, you can execute the "Set Dispute Game Implementation" transaction. Please simulate and validate that the expected output prior to executing the transaction.
 </Steps>
 
 ## For OP Stack forks
