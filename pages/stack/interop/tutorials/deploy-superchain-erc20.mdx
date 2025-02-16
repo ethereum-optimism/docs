@@ -8,11 +8,13 @@ import { Callout } from 'nextra/components'
 import { Steps } from 'nextra/components'
 
 <Callout>
-The SuperchainERC20 standard is ready for production use with active Mainnet deployments. 
-However, the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
+  The SuperchainERC20 standard is ready for production use with active Mainnet deployments. 
+  However, the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
 </Callout>
 
 # Issuing new assets with SuperchainERC20
+
+## Overview
 
 This guide explains how to issue new assets with the [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) contract.
 Those assets can then be bridged quickly and safely using the [`SuperchainTokenBridge` ](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract (once interop is operational).
@@ -27,21 +29,33 @@ This requirement abstracts away the complexity of cross-chain validation.
 Achieving this requires deterministic deployment methods. There are [many ways to do this](https://github.com/Arachnid/deterministic-deployment-proxy).
 Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
 
+### What you'll do
 
-{/*
+* Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy an `SuperchainERC20` token on the devnet.
 
-### Implement the IERC7802 interface
+### What you'll learn
 
-  Implementations of `SuperchainERC20` will be required to implement the [IERC7802](https://specs.optimism.io/interop/token-bridging.html#ierc7802) interface, that includes two external functions and two events.
+* How to deploy `SuperchainERC20` tokens on different chains at the same address.
 
-  The interface defines two functions for bridging:
+## Prerequisites
 
-  *   `sendERC20`: Initializes a cross-chain transfer of a `SuperchainERC20` by burning the tokens locally and sending a message to the `SuperchainERC20Bridge` on the target chain using the `L2toL2CrossDomainMessenger`. This ensures that asset supply remains constant, as sending an asset moves it from one chain to another without creating additional supply.
-  *   `relayERC20`: Processes incoming messages from the L2toL2CrossDomainMessenger and mints the corresponding amount of the SuperchainERC20.
+Before starting this tutorial, ensure your development environment meets the following requirements:
 
-  [Here's an example implementation of the `SuperchainERC20Bridge`](https://specs.optimism.io/interop/token-bridging.html#implementation)
+### Technical knowledge
 
-*/}
+*   Understanding of smart contract development
+*   Familiarity with blockchain concepts
+
+### Development environment
+
+*   Unix-like operating system (Linux, macOS, or WSL for Windows)
+*   Git for version control
+
+### Required tools
+
+The tutorial uses these primary tools:
+
+*   Foundry: For sending transactions to blockchains.
 
 ## Step by step explanation
 
@@ -146,15 +160,24 @@ Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
        OWNER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
        RPC_DEV0=https://interop-alpha-0.optimism.io
        RPC_DEV1=https://interop-alpha-1.optimism.io
-       cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mint(address,uint256)" $OWNER_ADDRESS 1000 --rpc-url $RPC_DEV0
-       cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mint(address,uint256)" $OWNER_ADDRESS 1000 --rpc-url $RPC_DEV1       
+       cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mintTo(address,uint256)" $OWNER_ADDRESS 1000 --rpc-url $RPC_DEV0
+       cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mintTo(address,uint256)" $OWNER_ADDRESS 2000 --rpc-url $RPC_DEV1       
        ```
+
+    1. Check the balance of the owner address on both blockchains.
+
+        ```sh
+        cast call $TOKEN_ADDRESS "balanceOf(address)" $OWNER_ADDRESS --rpc-url $RPC_DEV0 | cast to-dec        
+        cast call $TOKEN_ADDRESS "balanceOf(address)" $OWNER_ADDRESS --rpc-url $RPC_DEV1 | cast to-dec
+        ```
+
 
   </details>
   
 </Steps>
 
 ## Next steps
+*   Learn how to [transfer tokens between chains inside the Superchain](transfer-superchainERC20).
 *   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
 *   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
 *   Review the [Superchain Interop Explainer](../explainer) for answers to common questions about interoperability.
