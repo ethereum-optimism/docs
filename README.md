@@ -1,5 +1,6 @@
 #  Optimism Docs
 
+
 This repo houses the Optimism Docs located at [docs.optimism.io](https://docs.optimism.io/). All documentation-related updates and new content will be tracked and maintained in this repo. 
 
 ## Local Development
