@@ -229,11 +229,10 @@ For development purposes, we'll first use autorelay mode to handle message execu
           ```
 
           This function encodes a call to `setGreeting` and sends it to a contract on another chain.
-
-          *   `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
-
-          *   The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
-              This ensures that `setGreeting` is executed remotely with the provided `greeting` value.
+          `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
+          The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
+          
+          This ensures that `setGreeting` is executed remotely with the provided `greeting` value (as long as there is an executing message to relay it).
         </details>
 
   7.  Deploy `GreetingSender` to chain A.
@@ -501,52 +500,33 @@ In production we will not have this, we need to create our own executing message
         <details>
           <summary>Explanation</summary>
 
-          1.  **Import Required Libraries**
+            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L11-L15 hash=721ed87241535b606be281539baa8770
+            ```  
 
-          *   Imports functions from `viem` for wallet creation, HTTP transport, and contract interactions.
+            Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
 
-          *   Imports `@eth-optimism/viem` utilities for handling OP-Stack-specific actions and interoperability.
+            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L22-L28 hash=ffa76edb1191121e15eb4286e16ad041
+            ```
 
-          *   Loads ABI definitions from `Greeter.json` and `GreetingSender.json` for contract interactions.
+            In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions, both the public ones and the ones that require an account.  
 
-          2.  **Initialize Wallet Clients**
+            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L59 hash=23aa6f24baeb5757130361f30c1b0e9c
+            ```
 
-          *   Uses `privateKeyToAccount` to generate an account from an environment variable.
+            To relay a message we need the information in the receipt.
+            Also, we need to wait until the transaction with the relayed message is actually part of a block.
 
-          *   Creates `walletA` for chain `supersimL2A` and `walletB` for chain `supersimL2B`, extending them with Viem's public and OP-Stack-specific actions.
+            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L61-L63 hash=da4b8733c578a393eb36f154a4e816e1
+            ```
 
-          3.  **Get Contract Instances**
+            A single transaction can send multiple messages. 
+            But here we know we sent just one, so we look for the first one in the list.
 
-          *   Retrieves contract instances for `greeter` on `walletB` and `greetingSender` on `walletA` using `getContract`.
+            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L64-L70 hash=6bfcd99f2e79df79897d230f36d4a682
+            ```            
 
-          *   The addresses are taken from environment variables, and the clients are set to the respective wallets.
+            Here we first send the relay message on chain B, and then wait for the receipt for it.
 
-          4.  **Direct Greeting on Chain B**
-
-          *   Calls `setGreeting` on `greeter` to store a greeting directly on chain B.
-
-          *   Waits for the transaction to be confirmed using `waitForTransactionReceipt`.
-
-          *   Reads and logs the greeting stored on chain B.
-
-          5.  **Cross-Chain Greeting via Chain A**
-
-          *   Calls `setGreeting` on `greetingSender` to send a greeting through chain A.
-
-          *   Waits for the transaction receipt on chain A.
-
-          6.  **Retrieve and Relay the Cross-Chain Message**
-
-          *   Extracts the message from the transaction receipt using `createInteropSentL2ToL2Messages`.
-
-          *   Relays the message to chain B using `walletB.interop.relayMessage`.
-
-          *   Waits for confirmation of the relay transaction.
-
-          7.  **Verify the Updated Greeting on Chain B**
-
-          *   Reads the greeting from `greeter` after the relay process.
-          *   Logs the updated greeting, showing that it was successfully relayed from chain A to chain B.
         </details>
 
   2.  Rerun the JavaScript program, and see that the message is relayed.
@@ -585,20 +565,20 @@ In production we will not have this, we need to create our own executing message
 
   3.  Send ETH to the two L2 blockchains.
 
-  ```sh
-  cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIV_KEY --value 0.001ether 0x7385d89d38ab79984e7c84fab9ce5e6f4815468a
-  cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIV_KEY --value 0.001ether 0x7385d89d38ab79984e7c84fab9ce5e6f4815468a
-  ```
+      ```sh
+      cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIV_KEY --value 0.001ether 0x7385d89d38ab79984e7c84fab9ce5e6f4815468a
+      cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIV_KEY --value 0.001ether 0x55f5c4653dbcde7d1254f9c690a5d761b315500c
+      ```
 
-  Wait a few minutes until you can see the ETH [on your explorer](https://sid.testnet.routescan.io/).
+      Wait a few minutes until you can see the ETH [on your explorer](https://sid.testnet.routescan.io/).
 
-  3.  Rerun the test.
+  4.  Rerun the test.
 
       ```sh
       npm start
       ```
 
-  4.  You can see the transactions in a block explorer.
+  5.  You can see the transactions in a block explorer.
 
       *   The first transaction, which sets the greeting directly, [on the `Greeter` contract on interop1](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718).
       *   The second transaction, the initiation message for the cross chain greeting change, [on the `GreetingSender` contract on interop0](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f).
