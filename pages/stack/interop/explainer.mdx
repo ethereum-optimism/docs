@@ -1,7 +1,7 @@
 ---
-title: Interoperability explainer
+title: Superchain interoperability explainer
 lang: en-US
-description: Learn the basics of interoperability on the OP Stack.
+description: Learn the basics of Superchain interoperability.
 ---
 
 import { Callout } from 'nextra/components'
@@ -11,26 +11,26 @@ import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
 
-# Interoperability explainer
+# Superchain interoperability explainer
 
-## Why do we need interoperability?
+## Why do we need Superchain interoperability?
 
 It is easy for a blockchain to be certain about information it generates itself.
 Information that comes from other sources is harder to provide in a safe, decentralized, and uncensorable manner (this is called [The Oracle Problem](https://chain.link/education-hub/oracle-problem)).
-The next major scalability improvement to the OP Stack is to enable a network of chains to feel like a single blockchain.
+The next major scalability improvement to the OP Stack is to enable a network of chains, the Superchain, to feel like a single blockchain.
 This goal requires low-latency, seamless message passing and asset bridging.
 
-*Interoperability* is a set of protocols and services that lets OP Stack blockchains read each others' state.
-Interoperability provides the following benefits:
+*Superchain interoperability* is a set of protocols and services that lets OP Stack blockchains read each other's state.
+Superchain interoperability provides the following benefits:
 
 *   ETH and ERC-20 tokens to move securely between chains via native minting and burning.  Asset interoperability solves the issues of liquidity fragmentation and poor user experiences caused by asset wrapping or liquidity pools. 
 *   Apps to compose with data that exist on other chains.
 *   Horizontal scalability for applications that need it.
 
-## Interoperability architecture
+## Superchain interoperability architecture
 
 A pre-interop OP Stack node consists of two pieces of software: a consensus client (e.g. op-node) and an execution client, which is responsible for processing user transactions and constructing blocks (e.g. op-geth).
-Interoperability among OP Stack chains is enabled via a new service called [*OP Supervisor*](/stack/interop/op-supervisor).
+Superchain interoperability among OP Stack chains is enabled via a new service called [*OP Supervisor*](/stack/interop/op-supervisor).
 Every node operator is expected to run this service in addition to the [rollup node](/operators/node-operators/architecture#rollup-node) and [execution client](/operators/node-operators/architecture#execution-client).
 
 ```mermaid
@@ -60,7 +60,7 @@ graph LR
   class X transparent
 ```
 
-OP-Supervisor holds a database of all the log events of all the chains in the interoperability cluster.
+OP-Supervisor holds a database of all the log events of all the chains in the Superchain interoperability cluster.
 Every event can potentially initiate a cross-domain message, and it is the job of OP-Supervisor to validate that the log event really happened on the source chain.
 Additionally, OP-Supervisor reads information from L1's consensus layer to determine the transaction safety of L2 blocks.
 
@@ -138,7 +138,7 @@ flowchart LR
     B1 --> C0 
 ```
 
-Interop expands the scope of trust for unsafe blocks (blocks that are shared through [the gossip protocol](/operators/chain-operators/architecture#sequencer)).
+Superchain interop expands the scope of trust for unsafe blocks (blocks that are shared through [the gossip protocol](/operators/chain-operators/architecture#sequencer)).
 If a sequencer chooses to accept unsafe messages, the sequencer must trust the sequencer that produces the inbound message as well as any referenced unsafe messages produced from sequencers in the transitive dependency set.
 
 <details>
@@ -166,7 +166,7 @@ If a sequencer chooses to accept unsafe messages, the sequencer must trust the s
 
 Notably this trust assumption is only for *unsafe* blocks, and *only* if the sequencer allows messages from unsafe blocks to be processed.
 
-In interop, [the traditional safe level](https://docs.optimism.io/stack/transactions/transaction-finality#steps-to-finality) of is divided into two types of safety.
+In Superchain interop, [the traditional safe level](https://docs.optimism.io/stack/transactions/transaction-finality#steps-to-finality) of is divided into two types of safety.
 A block is *local safe* once it is written to L1.
 But it is only *cross safe* when in addition to the block itself all of the blocks on which it depends (directly or indirectly) are written to L1, including the dependencies of previous blocks in the same chain.
 
@@ -211,9 +211,9 @@ flowchart LR
 Each blockchain in the Superchain interop cluster shares the same security model to mitigate the weakest-link scenario. As outlined in the [Standard Rollup Charter](/superchain/blockspace-charter), these chains share the same L1 `ProxyAdmin` Owner. Any changes to the Superchain interop cluster must follow the standard Protocol Upgrade vote procedure—the established governance process for Superchain modifications.
 
 {/* 
-## Interop assets
+## Superchain interop assets
 
-Superchain interop includes both the protocol layer message passing and the Superchain ERC20 token specification.
+Superchain interop includes both the protocol layer message passing asset interoperability for ETH and SuperchainERC20 tokens.
 
 *   **Message passing protocol:** the initial + finalizing/executing [message](cross-chain-message) that fire events to be consumed by the chains in the [dependency set](https://specs.optimism.io/interop/dependency-set.html)
 *   ****: the [SuperchainERC20](superchain-erc20) turns message passing into asset transfer between chains in the interop set. Learn more about how the SuperchainERC20 token standard enables asset interoperability in the Superchain [here](/stack/interop/superchain-erc20)
