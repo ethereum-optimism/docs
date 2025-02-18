@@ -8,7 +8,7 @@ import { Callout } from 'nextra/components'
 import { Steps } from 'nextra/components'
 
 <Callout>
-  The SuperchainERC20 standard is ready for production use with active Mainnet deployments. 
+  The SuperchainERC20 standard is ready for production use with active Mainnet deployments.
   However, the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
 </Callout>
 
@@ -31,11 +31,11 @@ Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
 
 ### What you'll do
 
-* Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy an `SuperchainERC20` token on the devnet.
+*   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy an `SuperchainERC20` token on the devnet.
 
 ### What you'll learn
 
-* How to deploy `SuperchainERC20` tokens on different chains at the same address.
+*   How to deploy `SuperchainERC20` tokens on different chains at the same address.
 
 ## Prerequisites
 
@@ -69,44 +69,44 @@ The tutorial uses these primary tools:
   The Starter Kit already deploys a `SuperchainERC20` token to [Supersim](../tools/supersim).
   Here we will deploy it to the [Interop devnet](../tools/devnet).
 
-  1. Edit `packages/contracts/foundry.toml` to add the RPC endpoints for the devnet (add the bottom two rows).
-     
-     ```toml
-     [rpc_endpoints]
-     op_chain_a = "http://127.0.0.1:9545"
-     op_chain_b = "http://127.0.0.1:9546"
-     devnet0 = "https://interop-alpha-0.optimism.io"
-     devnet1 = "https://interop-alpha-1.optimism.io"
-     ```
+  1.  Edit `packages/contracts/foundry.toml` to add the RPC endpoints for the devnet (add the bottom two rows).
 
-     You can import most RPC endpoints with this command, but it does not include the Interop devnet.
+      ```toml
+      [rpc_endpoints]
+      op_chain_a = "http://127.0.0.1:9545"
+      op_chain_b = "http://127.0.0.1:9546"
+      devnet0 = "https://interop-alpha-0.optimism.io"
+      devnet1 = "https://interop-alpha-1.optimism.io"
+      ```
 
-     ```sh
-     pnpm contracts:update:rpcs
-     ```
+      You can import most RPC endpoints with this command, but it does not include the Interop devnet.
 
-  1. Edit `packages/contracts/configs/deploy-config.toml` for the deployment settions.
+      ```sh
+      pnpm contracts:update:rpcs
+      ```
 
-      - Set these parameters in the `[deploy-config]` section:
+  2.  Edit `packages/contracts/configs/deploy-config.toml` for the deployment settions.
 
-        | Parameter | Meaning | Example |
-        | --------- | --- | - |
-        | salt | A unique identifier | Carthage
-        | chains | The chains to deploy the contract<sup>1</sup> | ["devnet0","devnet1"]
+      *   Set these parameters in the `[deploy-config]` section:
 
-        (1) These names must correspond to the chain names in the `[rpc-endpoints]` section of `foundry.toml` you updated in the previous step.
+          | Parameter | Meaning                                       | Example                |
+          | --------- | --------------------------------------------- | ---------------------- |
+          | salt      | A unique identifier                           | Carthage               |
+          | chains    | The chains to deploy the contract<sup>1</sup> | \["devnet0","devnet1"] |
 
-      - Set these parameters in the `[token]` section:
+          (1) These names must correspond to the chain names in the `[rpc-endpoints]` section of `foundry.toml` you updated in the previous step.
 
-        | Parameter | Meaning | Example |
-        | --------- | --- | - |
-        | owner_address | Owner of the token | Your address<sup>1</sup> | 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-        | name | Token name | Quick Transfer Token
-        | symbol | Token symbol | QTT
-        | decimals | Number of decimal places | 18
+      *   Set these parameters in the `[token]` section:
 
-        (1) This should be an address you control (for which you know the private key), which has some ETH on the devnets.
-        [See here](/stack/interop/tools/devnet#sending-eth-to-the-interop-devnets) to add ETH to the devnets.
+          | Parameter      | Meaning                  | Example                  |                                            |
+          | -------------- | ------------------------ | ------------------------ | ------------------------------------------ |
+          | owner\_address | Owner of the token       | Your address<sup>1</sup> | 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 |
+          | name           | Token name               | Quick Transfer Token     |                                            |
+          | symbol         | Token symbol             | QTT                      |                                            |
+          | decimals       | Number of decimal places | 18                       |                                            |
+
+          (1) This should be an address you control (for which you know the private key), which has some ETH on the devnets.
+          [See here](/stack/interop/tools/devnet#sending-eth-to-the-interop-devnets) to add ETH to the devnets.
 
       Here is a sample `packages/contracts/configs/deploy-config.toml` file you can use, as long as you update `owner_address`.
 
@@ -122,7 +122,7 @@ The tutorial uses these primary tools:
       decimals = 18
       ```
 
-   1. Set the private key.
+  3.  Set the private key.
       Edit `packages/contracts/.env` to set `DEPLOYER_PRIVATE_KEY` to the private key of an account that has ETH on both devnet blockchains.
 
       ```sh
@@ -133,50 +133,47 @@ The tutorial uses these primary tools:
 
   Run the deployment script.
 
-      ```sh
-      pnpm contracts:deploy:token
-      ```
+  ```sh
+  pnpm contracts:deploy:token
+  ```
 
   <details>
-
     <summary>Sanity check</summary>
 
-    1. Set `TOKEN_ADDRESS` to the address where the token is deployed.
+    1.  Set `TOKEN_ADDRESS` to the address where the token is deployed.
 
         ```sh
         TOKEN_ADDRESS=0x322f4aF25D370BE2A2C74eEFf0DD0d2AF2e7eD75
         ```
 
-    1. Set `PRIVATE_KEY` to the private key for the owner address.
+    2.  Set `PRIVATE_KEY` to the private key for the owner address.
 
         ```sh
         PRIVATE_KEY=0x0123456701234567012345670123456701234567012345670123456701234567
         ```
 
-    1. Mint tokens for an address you control on both chains.
-       The owner address is the easiest to use.
+    3.  Mint tokens for an address you control on both chains.
+        The owner address is the easiest to use.
 
-       ```sh
-       OWNER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
-       RPC_DEV0=https://interop-alpha-0.optimism.io
-       RPC_DEV1=https://interop-alpha-1.optimism.io
-       cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mintTo(address,uint256)" $OWNER_ADDRESS 1000 --rpc-url $RPC_DEV0
-       cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mintTo(address,uint256)" $OWNER_ADDRESS 2000 --rpc-url $RPC_DEV1       
-       ```
+        ```sh
+        OWNER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
+        RPC_DEV0=https://interop-alpha-0.optimism.io
+        RPC_DEV1=https://interop-alpha-1.optimism.io
+        cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mintTo(address,uint256)" $OWNER_ADDRESS 1000 --rpc-url $RPC_DEV0
+        cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mintTo(address,uint256)" $OWNER_ADDRESS 2000 --rpc-url $RPC_DEV1       
+        ```
 
-    1. Check the balance of the owner address on both blockchains.
+    4.  Check the balance of the owner address on both blockchains.
 
         ```sh
         cast call $TOKEN_ADDRESS "balanceOf(address)" $OWNER_ADDRESS --rpc-url $RPC_DEV0 | cast to-dec        
         cast call $TOKEN_ADDRESS "balanceOf(address)" $OWNER_ADDRESS --rpc-url $RPC_DEV1 | cast to-dec
         ```
-
-
   </details>
-  
 </Steps>
 
 ## Next steps
+
 *   Learn how to [transfer tokens between chains inside the Superchain](transfer-superchainERC20).
 *   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
 *   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
