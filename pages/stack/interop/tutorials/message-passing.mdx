@@ -155,49 +155,49 @@ For development purposes, we'll first use autorelay mode to handle message execu
       GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          The command that deploys the contract is:
+        The command that deploys the contract is:
 
-          ```sh
-          forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast
-          ```
+        ```sh
+        forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast
+        ```
 
-          The command output gives us the deployer address, the address of the new contract, and the transaction hash:
+        The command output gives us the deployer address, the address of the new contract, and the transaction hash:
 
-          ```
-          Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-          Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
-          Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
-          ```
+        ```
+        Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+        Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
+        Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
+        ```
 
-          The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
+        The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
 
-          ```sh
-          awk '/Deployed to:/ {print $3}'
-          ```
+        ```sh
+        awk '/Deployed to:/ {print $3}'
+        ```
 
-          Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (\`\`\`), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
-          So we get.
+        Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (\`\`\`), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
+        So we get.
 
-          ```sh
-          GREETER_B_ADDR=<the address>
-          ```
-        </details>
+        ```sh
+        GREETER_B_ADDR=<the address>
+        ```
+      </details>
 
-        <details>
-          <summary>Sanity check</summary>
+      <details>
+        <summary>Sanity check</summary>
 
-          Run these commands to verify the contract works.
-          The first and third commands retrieve the current greeting, while the second command updates it.
+        Run these commands to verify the contract works.
+        The first and third commands retrieve the current greeting, while the second command updates it.
 
-          ```sh
-          cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
-          cast send --private-key $PRIV_KEY --rpc-url $RPC_B $GREETER_B_ADDR "setGreeting(string)" Hello
-          cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
-          ```
-        </details>
+        ```sh
+        cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+        cast send --private-key $PRIV_KEY --rpc-url $RPC_B $GREETER_B_ADDR "setGreeting(string)" Hello
+        cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+        ```
+      </details>
 
   4.  Install the Optimism Solidity libraries into the project.
 
@@ -222,18 +222,18 @@ For development purposes, we'll first use autorelay mode to handle message execu
       ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L1-L28 hash=75d197d1e1da112421785c2160f6a55a
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L21-L27 hash=6c27ebcf4916e5aa2325d30f99c65436
-          ```
+        ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L21-L27 hash=6c27ebcf4916e5aa2325d30f99c65436
+        ```
 
-          This function encodes a call to `setGreeting` and sends it to a contract on another chain.
-          `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
-          The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
+        This function encodes a call to `setGreeting` and sends it to a contract on another chain.
+        `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
+        The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
 
-          This ensures that `setGreeting` is executed remotely with the provided `greeting` value (as long as there is an executing message to relay it).
-        </details>
+        This ensures that `setGreeting` is executed remotely with the provided `greeting` value (as long as there is an executing message to relay it).
+      </details>
 
   7.  Deploy `GreetingSender` to chain A.
 
