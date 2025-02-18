@@ -83,7 +83,7 @@ export function DocSearch({
           (e.metaKey /* for Mac */ || /* for non-Mac */ e.ctrlKey))
       ) {
         e.preventDefault();
-        // prevent to scroll to top
+        // prevent scrolling to the top
         input.current.focus({ preventScroll: true });
       } else if (e.key === "Escape") {
         setShow(false);
