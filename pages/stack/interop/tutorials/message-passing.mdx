@@ -231,7 +231,7 @@ For development purposes, we'll first use autorelay mode to handle message execu
           This function encodes a call to `setGreeting` and sends it to a contract on another chain.
           `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
           The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
-          
+
           This ensures that `setGreeting` is executed remotely with the provided `greeting` value (as long as there is an executing message to relay it).
         </details>
 
@@ -500,33 +500,32 @@ In production we will not have this, we need to create our own executing message
         <details>
           <summary>Explanation</summary>
 
-            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L11-L15 hash=721ed87241535b606be281539baa8770
-            ```  
+          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L11-L15 hash=721ed87241535b606be281539baa8770
+          ```
 
-            Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
+          Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
 
-            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L22-L28 hash=ffa76edb1191121e15eb4286e16ad041
-            ```
+          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L22-L28 hash=ffa76edb1191121e15eb4286e16ad041
+          ```
 
-            In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions, both the public ones and the ones that require an account.  
+          In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions, both the public ones and the ones that require an account.
 
-            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L59 hash=23aa6f24baeb5757130361f30c1b0e9c
-            ```
+          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L59 hash=23aa6f24baeb5757130361f30c1b0e9c
+          ```
 
-            To relay a message we need the information in the receipt.
-            Also, we need to wait until the transaction with the relayed message is actually part of a block.
+          To relay a message we need the information in the receipt.
+          Also, we need to wait until the transaction with the relayed message is actually part of a block.
 
-            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L61-L63 hash=da4b8733c578a393eb36f154a4e816e1
-            ```
+          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L61-L63 hash=da4b8733c578a393eb36f154a4e816e1
+          ```
 
-            A single transaction can send multiple messages. 
-            But here we know we sent just one, so we look for the first one in the list.
+          A single transaction can send multiple messages.
+          But here we know we sent just one, so we look for the first one in the list.
 
-            ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L64-L70 hash=6bfcd99f2e79df79897d230f36d4a682
-            ```            
+          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L64-L70 hash=6bfcd99f2e79df79897d230f36d4a682
+          ```
 
-            Here we first send the relay message on chain B, and then wait for the receipt for it.
-
+          Here we first send the relay message on chain B, and then wait for the receipt for it.
         </details>
 
   2.  Rerun the JavaScript program, and see that the message is relayed.
