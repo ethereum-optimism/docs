@@ -27,7 +27,7 @@ import {
 import superchainWethAbi from './SuperchainWETH.abi.json'
 
 const supersimAddress="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-const account = privateKeyToAccount(process.env.PRIV_KEY as `0x${string}`)
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
 const sourceChain = account.address == supersimAddress ? supersimL2A : interopAlpha0
 const destinationChain = account.address == supersimAddress ? supersimL2B : interopAlpha1
 
