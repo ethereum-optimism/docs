@@ -8,15 +8,15 @@ import { Callout } from 'nextra/components'
 import { Steps } from 'nextra/components'
 
 <Callout>
-The SuperchainERC20 standard is ready for production use with active Mainnet deployments. 
-Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
+  The SuperchainERC20 standard is ready for production use with active Mainnet deployments.
+  Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
 </Callout>
 
 # Creating custom SuperchainERC20 tokens
 
 ## Overview
 
-This guide explains how to modify the behavior of [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) contracts to create custom tokens that can then be bridged quickly and safely using the [`SuperchainTokenBridge` ](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract (once interop is operational).
+This guide explains how to modify the behavior of [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) contracts to create custom tokens that can then be bridged quickly and safely using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract (once interop is operational).
 For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
 
 To ensure fungibility across chains, `SuperchainERC20` assets *must* have the same contract address on all chains.
@@ -30,7 +30,7 @@ Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
 
 ### What you'll learn
 
-*   How to deploy custom ERC-20 tokens on different chains at the same address so that they can be bridged with the [`SuperchainTokenBridge` ](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract.
+*   How to deploy custom ERC-20 tokens on different chains at the same address so that they can be bridged with the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract.
 
 ## Prerequisites
 
@@ -56,17 +56,16 @@ The tutorial uses these primary tools:
 ## Step by step explanation
 
 <Steps>
-
   ### Prepare for deployment
 
-  1. Follow the setup steps in the [SuperchainERC20 Starter Kit](/app-developers/starter-kit#setup).
-     Don't start the development environment (step 5).
+  1.  Follow the setup steps in the [SuperchainERC20 Starter Kit](/app-developers/starter-kit#setup).
+      Don't start the development environment (step 5).
 
-  1. Follow [the deployment preparations steps](./deploy-superchain-erc20#prepare-for-deployment) in the issuing new assets page.
-     Don't deploy the contracts yet.
+  2.  Follow [the deployment preparations steps](./deploy-superchain-erc20#prepare-for-deployment) in the issuing new assets page.
+      Don't deploy the contracts yet.
 
-     **Note:** Make sure to specify a previously unused value for the salt, for example your address and a timestamp.
-     This is necessary because if the same constructor code is used with the same salt when using the deployment script, it gets the same address, which is a problem if you want a fresh deployment.
+      **Note:** Make sure to specify a previously unused value for the salt, for example your address and a timestamp.
+      This is necessary because if the same constructor code is used with the same salt when using the deployment script, it gets the same address, which is a problem if you want a fresh deployment.
 
   ### Create the custom contract
 
@@ -77,7 +76,6 @@ The tutorial uses these primary tools:
   ```
 
   <details>
-
     <summary>Explanation</summary>
 
     ```typescript file=<rootDir>/public/tutorials/CustomSuperchainToken.sol#L36-L38 hash=4e402ea88c9cd796500425172a6de16d 
@@ -85,41 +83,39 @@ The tutorial uses these primary tools:
 
     This function lets users get tokens for themselves.
     This token is for testing purposes, so it is useful for users to get their own tokens to run tests.
-
   </details>
 
   ### Deploy the new token
 
-  1. Edit `packages/contracts/scripts/SuperchainERC20Deployer.s.sol`:
+  1.  Edit `packages/contracts/scripts/SuperchainERC20Deployer.s.sol`:
 
-      - Change line 6 to import the new token.
+      *   Change line 6 to import the new token.
 
-        ```solidity
-        import {CustomSuperchainToken} from "../src/CustomSuperchainToken.sol";
-        ```
+          ```solidity
+          import {CustomSuperchainToken} from "../src/CustomSuperchainToken.sol";
+          ```
 
-      - Change lines 52-54 to get the `CustomSuperchainToken` initialization code.
+      *   Change lines 52-54 to get the `CustomSuperchainToken` initialization code.
 
-        ```solidity
-        bytes memory initCode = abi.encodePacked(
-              type(CustomSuperchainToken).creationCode, abi.encode(ownerAddr_, name, symbol, uint8(decimals))
-        );
-        ```
+          ```solidity
+          bytes memory initCode = abi.encodePacked(
+                type(CustomSuperchainToken).creationCode, abi.encode(ownerAddr_, name, symbol, uint8(decimals))
+          );
+          ```
 
-      - Change line 62 to deploy a `CustomSuperchainToken` contract.
+      *   Change line 62 to deploy a `CustomSuperchainToken` contract.
 
-        ```solidity
-          addr_ = address(new CustomSuperchainToken{salt: _implSalt()}(ownerAddr_, name, symbol, uint8(decimals)));
-        ```
+          ```solidity
+            addr_ = address(new CustomSuperchainToken{salt: _implSalt()}(ownerAddr_, name, symbol, uint8(decimals)));
+          ```
 
-  1. Deploy the token contract.
+  2.  Deploy the token contract.
 
-    ```sh
-    pnpm contracts:deploy:token
-    ```
+  ```sh
+  pnpm contracts:deploy:token
+  ```
 
   <details>
-
     <summary>Sanity check</summary>
 
     1.  Set `TOKEN_ADDRESS` to the address where the token is deployed.
@@ -129,35 +125,33 @@ The tutorial uses these primary tools:
         TOKEN_ADDRESS=0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8
         ```
 
-    1. Source the `.env` file to get the private key and the address to which it corresponds.
+    2.  Source the `.env` file to get the private key and the address to which it corresponds.
 
         ```sh
         . packages/contracts/.env
         MY_ADDRESS=`cast wallet address $DEPLOYER_PRIVATE_KEY`
         ```
 
-    1. Set variables for the RPC URLs.
+    3.  Set variables for the RPC URLs.
 
         ```sh
         RPC_DEV0=https://interop-alpha-0.optimism.io
         RPC_DEV1=https://interop-alpha-1.optimism.io
         ```
 
-    1. Get your current balance (it should be zero).
+    4.  Get your current balance (it should be zero).
 
         ```sh
         cast call --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "balanceOf(address)" $MY_ADDRESS | cast to-dec | cast --from-wei
         ```
 
-    1. Call the faucet to get a token and check the balance again.
+    5.  Call the faucet to get a token and check the balance again.
 
         ```sh
         cast send  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "faucet()"
         cast call --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "balanceOf(address)" $MY_ADDRESS | cast to-dec | cast --from-wei
         ```
-
   </details>
-
 </Steps>
 
 ## How does this work?
@@ -168,6 +162,7 @@ You can either use [the `SuperchainERC20` implementation](https://github.com/eth
 For more details [see the explainer](../superchain-erc20).
 
 ## Next steps
+
 *   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
 *   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
 *   Review the [Superchain Interop Explainer](../explainer) for answers to common questions about interoperability.
