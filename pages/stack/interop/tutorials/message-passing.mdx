@@ -155,49 +155,49 @@ For development purposes, we'll first use autorelay mode to handle message execu
       GREETER_B_ADDR=`forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          The command that deploys the contract is:
+        The command that deploys the contract is:
 
-          ```sh
-          forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast
-          ```
+        ```sh
+        forge create --rpc-url $RPC_B --private-key $PRIV_KEY Greeter --broadcast
+        ```
 
-          The command output gives us the deployer address, the address of the new contract, and the transaction hash:
+        The command output gives us the deployer address, the address of the new contract, and the transaction hash:
 
-          ```
-          Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-          Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
-          Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
-          ```
+        ```
+        Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+        Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
+        Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
+        ```
 
-          The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
+        The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
 
-          ```sh
-          awk '/Deployed to:/ {print $3}'
-          ```
+        ```sh
+        awk '/Deployed to:/ {print $3}'
+        ```
 
-          Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (\`\`\`), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
-          So we get.
+        Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (\`\`\`), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
+        So we get.
 
-          ```sh
-          GREETER_B_ADDR=<the address>
-          ```
-        </details>
+        ```sh
+        GREETER_B_ADDR=<the address>
+        ```
+      </details>
 
-        <details>
-          <summary>Sanity check</summary>
+      <details>
+        <summary>Sanity check</summary>
 
-          Run these commands to verify the contract works.
-          The first and third commands retrieve the current greeting, while the second command updates it.
+        Run these commands to verify the contract works.
+        The first and third commands retrieve the current greeting, while the second command updates it.
 
-          ```sh
-          cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
-          cast send --private-key $PRIV_KEY --rpc-url $RPC_B $GREETER_B_ADDR "setGreeting(string)" Hello
-          cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
-          ```
-        </details>
+        ```sh
+        cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii 
+        cast send --private-key $PRIV_KEY --rpc-url $RPC_B $GREETER_B_ADDR "setGreeting(string)" Hello
+        cast call --rpc-url $RPC_B $GREETER_B_ADDR "greet()" | cast --to-ascii
+        ```
+      </details>
 
   4.  Install the Optimism Solidity libraries into the project.
 
@@ -222,18 +222,18 @@ For development purposes, we'll first use autorelay mode to handle message execu
       ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L1-L28 hash=75d197d1e1da112421785c2160f6a55a
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L21-L27 hash=6c27ebcf4916e5aa2325d30f99c65436
-          ```
+        ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L21-L27 hash=6c27ebcf4916e5aa2325d30f99c65436
+        ```
 
-          This function encodes a call to `setGreeting` and sends it to a contract on another chain.
-          `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
-          The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
+        This function encodes a call to `setGreeting` and sends it to a contract on another chain.
+        `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.
+        The encoded message is then passed to `messenger.sendMessage`, which forwards it to the destination contract (`greeterAddress`) on the specified chain (`greeterChainId`).
 
-          This ensures that `setGreeting` is executed remotely with the provided `greeting` value (as long as there is an executing message to relay it).
-        </details>
+        This ensures that `setGreeting` is executed remotely with the provided `greeting` value (as long as there is an executing message to relay it).
+      </details>
 
   7.  Deploy `GreetingSender` to chain A.
 
@@ -315,19 +315,19 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
       }
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```solidity
-                  if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
-                      (address sender, uint256 chainId) =
-                          messenger.crossDomainMessageContext();              
-                      emit CrossDomainSetGreeting(sender, chainId, _greeting);
-                  }
-          ```
+        ```solidity
+                if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
+                    (address sender, uint256 chainId) =
+                        messenger.crossDomainMessageContext();              
+                    emit CrossDomainSetGreeting(sender, chainId, _greeting);
+                }
+        ```
 
-          If we see that we got a message from `L2ToL2CrossDomainMessenger`, we call [`L2ToL2CrossDomainMessenger.crossDomainMessageContext`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L118-L126).
-        </details>
+        If we see that we got a message from `L2ToL2CrossDomainMessenger`, we call [`L2ToL2CrossDomainMessenger.crossDomainMessageContext`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L118-L126).
+      </details>
 
   2.  Redeploy the contracts.
       Because the address of `Greeter` is immutable in `GreetingSender`, we need to redeploy both contracts.
@@ -497,36 +497,36 @@ In production we will not have this, we need to create our own executing message
       ```typescript file=<rootDir>/public/tutorials/app_v2.mts hash=a7b0f60aa6f1e48fc9994178ed3d5498
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L11-L15 hash=721ed87241535b606be281539baa8770
-          ```
+        ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L11-L15 hash=721ed87241535b606be281539baa8770
+        ```
 
-          Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
+        Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
 
-          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L22-L28 hash=ffa76edb1191121e15eb4286e16ad041
-          ```
+        ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L22-L28 hash=ffa76edb1191121e15eb4286e16ad041
+        ```
 
-          In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions, both the public ones and the ones that require an account.
+        In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions, both the public ones and the ones that require an account.
 
-          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L59 hash=23aa6f24baeb5757130361f30c1b0e9c
-          ```
+        ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L59 hash=23aa6f24baeb5757130361f30c1b0e9c
+        ```
 
-          To relay a message we need the information in the receipt.
-          Also, we need to wait until the transaction with the relayed message is actually part of a block.
+        To relay a message we need the information in the receipt.
+        Also, we need to wait until the transaction with the relayed message is actually part of a block.
 
-          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L61-L63 hash=da4b8733c578a393eb36f154a4e816e1
-          ```
+        ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L61-L63 hash=da4b8733c578a393eb36f154a4e816e1
+        ```
 
-          A single transaction can send multiple messages.
-          But here we know we sent just one, so we look for the first one in the list.
+        A single transaction can send multiple messages.
+        But here we know we sent just one, so we look for the first one in the list.
 
-          ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L64-L70 hash=6bfcd99f2e79df79897d230f36d4a682
-          ```
+        ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L64-L70 hash=6bfcd99f2e79df79897d230f36d4a682
+        ```
 
-          Here we first send the relay message on chain B, and then wait for the receipt for it.
-        </details>
+        Here we first send the relay message on chain B, and then wait for the receipt for it.
+      </details>
 
   2.  Rerun the JavaScript program, and see that the message is relayed.
 
