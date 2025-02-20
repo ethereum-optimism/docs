@@ -60,15 +60,24 @@ The tutorial uses these primary tools:
 *   Viem: For blockchain interaction
 
 <Steps>
-  ### Configure the network
+  ### Install prerequisite software
 
   1.  Install [Foundry](https://book.getfoundry.sh/getting-started/installation).
+  1.  Install [Node](https://nodejs.org/en).
+  1.  Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+      The exact mechanism to do this depends on your operating system, most come with it preinstalled.
+
+  ### Configure the network
+
+  You can run this tutorial either with [Supersim](../tools/supersim) running locally, or using the [Interop devnet](../tools/devnet).
+  Select the correct tab and follow the directions. 
+
 
   <Tabs items={['Supersim', 'Interop devnet']}>
     <Tabs.Tab>
-      2.  Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to install [Supersim](../tools/supersim) for running blockchains with Interop.
+      1.  Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to install [Supersim](../tools/supersim) for running blockchains with Interop.
 
-      3.  Supersim uses Foundry's `anvil` blockchains, which start with ten prefunded accounts.
+      1.  Supersim uses Foundry's `anvil` blockchains, which start with ten prefunded accounts.
           Set these environment variables to access one of those accounts on the L2 blockchains.
 
           ```sh
@@ -86,20 +95,20 @@ The tutorial uses these primary tools:
     </Tabs.Tab>
 
     <Tabs.Tab>
-      2.  Set `PRIVATE_KEY` to the private key of an address that has [Sepolia ETH](https://cloud.google.com/application/web3/faucet/ethereum/sepolia).
+      1.  Set `PRIVATE_KEY` to the private key of an address that has [Sepolia ETH](https://cloud.google.com/application/web3/faucet/ethereum/sepolia).
 
           ```sh
-          export PRIVATE_KEY=0x<private key here>
+          export PRIVATE_KEY=0x <<<PRIVATE_KEY>>>
           ```
 
-      3.  Send ETH to the two L2 blockchains via their OptimismPortal contracts on Sepolia.
+      1.  Send ETH to the two L2 blockchains via their OptimismPortal contracts on Sepolia.
 
           ```sh
           cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIVATE_KEY --value 0.02ether 0x7385d89d38ab79984e7c84fab9ce5e6f4815468a
           cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIVATE_KEY --value 0.02ether 0x55f5c4653dbcde7d1254f9c690a5d761b315500c
           ```
 
-      4.  Wait a few minutes until you can see the ETH [on the block explorer](https://sid.testnet.routescan.io/) for your address.
+      1.  Wait a few minutes until you can see the ETH [on the block explorer](https://sid.testnet.routescan.io/) for your address.
 
           <details>
             <summary>Sanity check</summary>
@@ -129,8 +138,7 @@ The tutorial uses these primary tools:
   2.  Download the ABI for `SuperchainWETH`.
 
       ```sh
-      wget https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/snapshots/abi/SuperchainWETH.json
-      mv SuperchainWETH.json src/SuperchainWETH.abi.json
+      curl https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/snapshots/abi/SuperchainWETH.json > src/SuperchainWETH.abi.json
       ```
 
   3.  Place this in `src/transfer-eth.mts`:
@@ -217,6 +225,6 @@ The tutorial uses these primary tools:
 
 ## Next steps
 
-*   Checkout the [SuperchainWETH guide](/stack/interop/superchain-weth) for more information.
+*   Check out the [SuperchainWETH guide](/stack/interop/superchain-weth) for more information.
 *   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
-*   Review the [Superchain Interop Explainer](/stack/interop/explainer) for answers to common questions about interoperability.
+*   Review the [Superchain interop explainer](/stack/interop/explainer) for answers to common questions about interoperability.
