@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
-import * as glob from 'glob';
-import matter from 'gray-matter';
 
 // Promisify fs functions
 const readFile = promisify(fs.readFile);
+const readdir = promisify(fs.readdir);
+const stat = promisify(fs.stat);
 
 // Add terminal colors
 const colors = {
@@ -14,16 +14,9 @@ const colors = {
   green: '\x1b[32m',
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
-  magenta: '\x1b[35m',
   cyan: '\x1b[36m',
-  white: '\x1b[37m',
   brightRed: '\x1b[91m',
-  brightGreen: '\x1b[92m',
   brightYellow: '\x1b[93m',
-  brightBlue: '\x1b[94m',
-  brightMagenta: '\x1b[95m',
-  brightCyan: '\x1b[96m',
-  brightWhite: '\x1b[97m',
   bold: '\x1b[1m',
 };
 
@@ -81,22 +74,35 @@ async function runLinkChecker(): Promise<void> {
     displayReport(report);
     
   } catch (error) {
-    console.error('❌ Error running link checker:', error);
+    console.error(`${colors.red}❌ Error running link checker:${colors.reset}`, error);
     process.exit(1);
   }
 }
 
 /**
- * Find all documentation files in the pages directory
+ * Recursively find all files with specified extensions
  */
-async function findAllDocFiles(): Promise<string[]> {
-  const patterns = config.fileExtensions.map(ext => `${config.rootDir}/**/*${ext}`);
-  const filesArrays = await Promise.all(patterns.map(pattern => glob.glob(pattern)));
+async function findAllDocFiles(dir = config.rootDir): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
   
-  // Flatten arrays and filter out node_modules if any exist
-  return filesArrays
-    .flat()
-    .filter(file => !file.includes('node_modules'));
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const filePath = path.join(dir, entry.name);
+      
+      // Skip node_modules and hidden directories
+      if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+        return findAllDocFiles(filePath);
+      }
+      
+      if (entry.isFile() && config.fileExtensions.some(ext => entry.name.endsWith(ext))) {
+        return [filePath];
+      }
+      
+      return [];
+    })
+  );
+  
+  return files.flat();
 }
 
 /**
@@ -167,8 +173,10 @@ function extractLinks(content: string): {
   // Remove frontmatter if present
   let cleanContent = content;
   try {
-    const { content: contentWithoutFrontmatter } = matter(content);
-    cleanContent = contentWithoutFrontmatter;
+    const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (frontmatterMatch) {
+      cleanContent = content.slice(frontmatterMatch[0].length);
+    }
   } catch (error) {
     // Not a markdown file with frontmatter, continue with original content
   }
@@ -393,7 +401,7 @@ function displayReport(report: AuditReport): void {
     result += `\n${colors.green}✅ LIFECYCLE\tCommand completed successfully.${colors.reset}\n`;
   }
   
-  // Format similar to the example output, and show it at the beginning as requested
+  // Format similar to the example output, and show it at the end as requested
   const totalCount = report.totalFiles + report.summary.totalBrokenLinks;
   const okCount = report.totalFiles - report.summary.affectedFiles;
   const errorCount = report.summary.totalBrokenLinks;
