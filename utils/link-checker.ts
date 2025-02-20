@@ -7,6 +7,26 @@ import matter from 'gray-matter';
 // Promisify fs functions
 const readFile = promisify(fs.readFile);
 
+// Add terminal colors
+const colors = {
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  white: '\x1b[37m',
+  brightRed: '\x1b[91m',
+  brightGreen: '\x1b[92m',
+  brightYellow: '\x1b[93m',
+  brightBlue: '\x1b[94m',
+  brightMagenta: '\x1b[95m',
+  brightCyan: '\x1b[96m',
+  brightWhite: '\x1b[97m',
+  bold: '\x1b[1m',
+};
+
 // Types
 interface BrokenLink {
   sourcePath: string;
@@ -34,7 +54,7 @@ const config = {
     /\.(jpg|jpeg|png|gif|svg|webp|bmp|ico)($|\?)/i,
     /\.(pdf|doc|docx|xls|xlsx|ppt|pptx)($|\?)/i,
     /\.(css|scss|less|sass)($|\?)/i,
-    /\.(js|jsx|ts|tsx)($|\?)/i,
+    /\.(js|jsx|ts|tsx|json)($|\?)/i,
     /^(https?|ftp|mailto):/i,
     /^#/,  // Anchor links
   ],
@@ -153,16 +173,58 @@ function extractLinks(content: string): {
     // Not a markdown file with frontmatter, continue with original content
   }
   
-  // Match markdown links [text](link)
-  const markdownLinkRegex = /\[(?:[^\[\]]+)\]\(([^)]+)\)/g;
-  let match;
+  // Split content into lines and process each line
   const lines = cleanContent.split('\n');
+  
+  let inComment = false;
+  const isCommentLine = (line: string): boolean => {
+    const trimmedLine = line.trim();
+    
+    // Check for JSX/TSX comments
+    if (trimmedLine.startsWith('//')) return true;
+    
+    // Check for start of multiline comment
+    if (trimmedLine.startsWith('/*')) {
+      inComment = true;
+      return true;
+    }
+    
+    // Check for end of multiline comment
+    if (inComment && trimmedLine.includes('*/')) {
+      inComment = false;
+      return true;
+    }
+    
+    // Check if we're in a multiline comment
+    if (inComment) return true;
+    
+    // Check for HTML comments
+    if (trimmedLine.startsWith('<!--')) {
+      if (trimmedLine.includes('-->')) {
+        return true;
+      }
+      inComment = true;
+      return true;
+    }
+    
+    if (inComment && trimmedLine.includes('-->')) {
+      inComment = false;
+      return true;
+    }
+    
+    return false;
+  };
   
   lines.forEach((line, index) => {
     const lineNum = index + 1;
+    
+    // Skip comment lines
+    if (isCommentLine(line)) return;
+    
     let lineMatch;
     
-    // Check markdown links in each line
+    // Check markdown links in each line [text](link)
+    const markdownLinkRegex = /\[(?:[^\[\]]+)\]\(([^)]+)\)/g;
     while ((lineMatch = markdownLinkRegex.exec(line)) !== null) {
       const link = lineMatch[1].split(' ')[0].trim();  // Handle cases with titles: [text](link "title")
       links.push(link);
@@ -299,14 +361,8 @@ function generateReport(
  * Display the report in console output
  */
 function displayReport(report: AuditReport): void {
-  // Format similar to the example output
-  const totalCount = report.totalFiles + report.summary.totalBrokenLinks;
-  const okCount = report.totalFiles - report.summary.affectedFiles;
-  const errorCount = report.summary.totalBrokenLinks;
-  const excludedCount = 0; // We don't track this but could add it
-  const timeoutCount = 0;  // We don't track this but could add it
-  
-  console.log(`\n${totalCount} Total (in ${report.elapsedTime}s) ✅ ${okCount} OK ❌ ${errorCount} Errors 🚫 ${excludedCount} Excluded ⏱️ ${timeoutCount} Timeouts`);
+  // Process all link checking first
+  let result = '';
   
   if (report.brokenLinks.length > 0) {
     // Sort broken links by source path for better organization
@@ -323,19 +379,38 @@ function displayReport(report: AuditReport): void {
       linksBySource[link.sourcePath].push(link);
     });
     
-    // Print broken links grouped by file
+    // Format broken links grouped by file
     Object.entries(linksBySource).forEach(([sourcePath, links]) => {
-      console.log(`\nFile: ${sourcePath}`);
+      result += `\n${colors.bold}${colors.cyan}File: ${sourcePath}${colors.reset}\n`;
       links.forEach(link => {
-        console.log(`  Line ${link.lineNumber}: Broken link to "${link.linkPath}"`);
+        result += `  ${colors.yellow}Line ${link.lineNumber}:${colors.reset} Broken link to ${colors.brightRed}"${link.linkPath}"${colors.reset}\n`;
       });
     });
     
-    // Print summary line at the end
-    console.log(`\n❌ LIFECYCLE\tCommand failed with exit code 1.`);
-    process.exit(1); // Exit with error code if broken links found
+    // Add final summary line
+    result += `\n${colors.red}❌ LIFECYCLE\tCommand failed with exit code 1.${colors.reset}\n`;
   } else {
-    console.log(`\n✅ LIFECYCLE\tCommand completed successfully.`);
+    result += `\n${colors.green}✅ LIFECYCLE\tCommand completed successfully.${colors.reset}\n`;
+  }
+  
+  // Format similar to the example output, and show it at the beginning as requested
+  const totalCount = report.totalFiles + report.summary.totalBrokenLinks;
+  const okCount = report.totalFiles - report.summary.affectedFiles;
+  const errorCount = report.summary.totalBrokenLinks;
+  const excludedCount = 0; // We don't track this but could add it
+  const timeoutCount = 0;  // We don't track this but could add it
+  
+  const summary = `\n${colors.bold}${totalCount} Total (in ${report.elapsedTime}s) ${colors.green}✅ ${okCount} OK ${colors.red}❌ ${errorCount} Errors ${colors.brightYellow}🚫 ${excludedCount} Excluded ${colors.cyan}⏱️ ${timeoutCount} Timeouts${colors.reset}`;
+  
+  // Print detailed broken links first, then the summary at the end
+  if (result.trim()) {
+    console.log(result);
+  }
+  console.log(summary);
+  
+  // Exit with appropriate code
+  if (report.brokenLinks.length > 0) {
+    process.exit(1); 
   }
 }
 
