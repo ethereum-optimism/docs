@@ -16,12 +16,9 @@ import { Steps } from 'nextra/components'
 
 ## Overview
 
-This guide explains how to modify the behavior of [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) contracts to create custom tokens that can then be bridged quickly and safely using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract (once interop is operational).
-For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
+This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol)  that can then teleport across the Superchain interop cluster quickly and safely using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract. For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
 
-To ensure fungibility across chains, `SuperchainERC20` assets *must* have the same contract address on all chains.
-This requirement abstracts away the complexity of cross-chain validation.
-Achieving this requires deterministic deployment methods. There are [many ways to do this](https://github.com/Arachnid/deterministic-deployment-proxy).
+To ensure fungibility across chains, `SuperchainERC20` assets must have the same contract address on all chains. This requirement abstracts away the complexity of cross-chain validation. Achieving this requires deterministic deployment methods. There are [many ways to do this](https://github.com/Arachnid/deterministic-deployment-proxy).
 Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
 
 ### What you'll do
@@ -30,7 +27,127 @@ Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
 
 ### What you'll learn
 
-*   How to deploy custom ERC-20 tokens on different chains at the same address so that they can be bridged with the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract.
+*   How to deploy custom ERC20 tokens across multiple chains at the same address so that they can be bridged with the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract.
+
+### How does this work?
+
+To benefit from Superchain Interoperability, an ERC-20 token has to implement ERC-7802. You can either use the SuperchainERC20 implementation, or write your own.
+
+At a high level you will:
+
+<Steps>
+
+### Create a basic ERC20 contract
+
+The following code implements a basic ERC20 contract:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
+contract MyERC20 is ERC20, Ownable {
+    constructor(address owner, string memory name, string memory symbol) ERC20(name, symbol) Ownable(owner) {}
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+}
+
+```
+
+### Add the new SuperchainERC20 interface 
+
+The first step is simply to implement `IERC7802` and `IERC165`. Note that we've renamed the contract at this point:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {IERC7802} from "@openzeppelin/contracts/token/ERC20/IERC7802.sol";
+
+contract MySuperchainERC20 is ERC20, Ownable, IERC7802 {
+    error NotSuperchainERC20Bridge();
+
+    constructor(address owner, string memory name, string memory symbol) ERC20(name, symbol) Ownable(owner) {}
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+
+
+    function supportsInterface(bytes4 _interfaceId) public view virtual returns (bool) {
+        return _interfaceId == type(IERC7802).interfaceId || 
+               _interfaceId == type(ERC20).interfaceId 
+               || _interfaceId == type(ERC165).interfaceId;
+    }
+}
+
+```
+
+### Implement burn and mint functions
+
+There are two functions we need to implement: `CrosschainMint` and `CrosschainBurn`. These two functions allow two chains to bridge a token by burning them on one chain and mint them on another. Read more about these functions in our [SuperchainERC20 docs](/stack/interop/superchain-erc20).
+
+Here's what our contract looks like once we've implemented the functions:
+
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {IERC7802} from "@openzeppelin/contracts/token/ERC20/IERC7802.sol";
+
+contract MySuperchainERC20 is ERC20, Ownable, IERC7802 {
+    error NotSuperchainERC20Bridge();
+
+    constructor(address owner, string memory name, string memory symbol) ERC20(name, symbol) Ownable(owner) {}
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+
+    /// @notice Allows the SuperchainTokenBridge to mint tokens.
+    /// @param _to Address to mint tokens to.
+    /// @param _amount Amount of tokens to mint.
+    function crosschainMint(address _to, uint256 _amount) external {
+        if (msg.sender != 0x4200000000000000000000000000000000000028) revert NotSuperchainERC20Bridge();
+
+        _mint(_to, _amount);
+
+        emit CrosschainMint(_to, _amount, msg.sender);
+    }
+
+    /// @notice Allows the SuperchainTokenBridge to burn tokens.
+    /// @param _from Address to burn tokens from.
+    /// @param _amount Amount of tokens to burn.
+    function crosschainBurn(address _from, uint256 _amount) external {
+        if (msg.sender != 0x4200000000000000000000000000000000000028) revert NotSuperchainERC20Bridge();
+        
+        _burn(_from, _amount);
+
+        emit CrosschainBurn(_from, _amount, msg.sender);
+    }
+
+    function supportsInterface(bytes4 _interfaceId) public view virtual returns (bool) {
+        return _interfaceId == type(IERC7802).interfaceId || 
+               _interfaceId == type(ERC20).interfaceId 
+               || _interfaceId == type(ERC165).interfaceId;
+    }
+}
+```
+
+</Steps>
+
+For more details [see the explainer](stack/interop/superchain-erc20).
 
 ## Prerequisites
 
@@ -154,15 +271,10 @@ The tutorial uses these primary tools:
   </details>
 </Steps>
 
-## How does this work?
-
-To allow for superchain interoperability, an ERC-20 token has to implement [ERC-7802](https://specs.optimism.io/interop/token-bridging.html#ierc7802).
-You can either use [the `SuperchainERC20` implementation](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol#L26-L46), or write your own.
-
 For more details [see the explainer](../superchain-erc20).
 
 ## Next steps
+*    Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
+*    If you'd like a guided walkthrough, check out our tutorial video instead.
+*    Review the [Superchain Interop Explainer](../explainer) for answers to common questions about interoperability.
 
-*   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
-*   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
-*   Review the [Superchain Interop Explainer](../explainer) for answers to common questions about interoperability.
