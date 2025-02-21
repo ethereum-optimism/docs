@@ -1,0 +1,54 @@
+---
+title: Deprecation of the Custom Gas Tokens
+lang: en-US
+description: This page outlines the details of the Custom Gas Tokens deprecation and points towards alternatives
+---
+
+## Deprecation of Custom Gas Tokens
+
+The Custom Gas Token beta feature has been deprecated. Beta features give developers access to early versions of highly requested features, allowing us to validate demand through usage data and user feedback. Since May 2024, usage of the custom gas token beta feature has steadily declined as ERC-4337 and robust paymaster services gained traction. 
+
+Based on this trend, the beta feature was deprecated instead of being moved to the OP Stack standard configuration. While the custom gas token code has been removed from the Optimism monorepo, chains can choose to maintain their own forks – though this comes at their own risk. 
+
+Additionally, advancements in Account Abstraction (AA) tooling now enable gas payments in any token, offering better alternatives for the limited number of chains that require this feature.
+
+
+## Highlights
+
+Coder removal: The Custom Gas Token code will be removed from the Optimism monorepo. 
+
+End of developer support: OP Labs Developer Support will no longer address CGT-related issues or requests.
+
+## Migration recommendations
+
+The Optimism ecosystem is focusing on interoperability within the Superchain, with efforts and incentives directed towards [standard configured chains](superchain/standard-configuration). We strongly recommend:
+
+* All new chains launch with the standard ETH gas token configuration.
+* Utilize Account Abstraction tooling to allow users to pay gas fees in alternative tokens instead of relying on Custom Gas Tokens.
+  * For example, a given chain can maintain ETH as its protocol gas token while using AA tooling to permit payments in their native token.
+
+With CGT code removed from the monorepo, chains relying on this feature will find it increasingly difficult to stay up-to-date with the latest L1 and L2 OP Stack upgrades. While an external team might be able to maintain an unofficial fork of the Optimism monorepo that includes CGT support,  that is not guaranteed and introduces significant risks.
+
+### Account abstraction tools
+
+There are many account abstractions providers in the space. You should find the correct one for your needs, but we've [compiled a list](/app-developers/tools/build/account-abstraction#inclusion-criteria) to get you started.  
+
+## Risks of continued use of Custom Gas Tokens
+
+For any chain considering CGT post-deprecation, be aware of the following risks:
+
+* Fee mechanism flaws: Fees are charged as a scalar on blob fees denominated in ETH. This means CGT chains will either drastically overcharge or undercharge users for transaction fees relative to their L1 Data Availability costs.
+
+* Higher overhead for RaaS providers: Managing CGT chains requires RaaS providers to assume additional risk exposure to the custom gas token asset.
+
+* Security concerns: The CGT code modifies the L1 `OptimismPortal`, where all native assets are stored, and will not have undergone third-party auditing.
+
+* Lack of future compatibility: Without official support from core protocol developers, there is no guarantee that future OP Stack upgrades will function properly with CGT-based chains.
+
+### Need help?
+
+For further assistance or questions about this migration, feel free to reach through the following channels:
+
+*   Connect with us on [Discord](https://discord.gg/optimism) for community support
+*   Join us on our [developer forum](https://github.com/ethereum-optimism/developers/discussions) for discussions, questions, and general support.
+*   Open an [issue on our GitHub repository](https://github.com/ethereum-optimism/docs/issues) for documentation-related concerns
