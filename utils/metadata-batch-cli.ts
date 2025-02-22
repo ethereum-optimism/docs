@@ -2,10 +2,14 @@
 
 import { promises as fs } from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
+import { updateMetadata } from './metadata-manager'
 import matter from 'gray-matter'
-import globby from 'globby'
-import { updateMetadata } from './metadata-manager.js'
-import { MetadataResult } from './types/metadata-types.js'
+
+// @ts-ignore
+const globModule = await import('glob')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Interface for processing summary
 interface ProcessingSummary {
@@ -32,13 +36,7 @@ interface ParentMetadata {
 }
 
 async function findMdxFiles(pattern: string): Promise<string[]> {
-  const files = await globby(pattern, {
-    absolute: true,
-    expandDirectories: {
-      files: ['*.mdx'],
-      extensions: ['mdx']
-    }
-  })
+  const files = await globModule.glob(pattern, { ignore: ['pages/_*.mdx'] })
   return files
 }
 
@@ -96,10 +94,10 @@ async function updateFrontmatter(filePath: string, dryRun: boolean = false, verb
 
   const result = await updateMetadata(filePath, { 
     dryRun,
-    validateOnly: false
+    prMode: !verbose
   })
 
-  if (!result.metadata) {
+  if (!result.isValid) {
     throw new Error(`Failed to process ${filePath}: ${result.errors.join(', ')}`)
   }
 
@@ -120,92 +118,65 @@ async function updateFrontmatter(filePath: string, dryRun: boolean = false, verb
   }
 }
 
+async function processFiles(files: string[]): Promise<boolean> {
+  let hasErrors = false
+  let processedCount = 0
+
+  for (const file of files) {
+    try {
+      const result = await updateMetadata(file, { dryRun: true, prMode: true })
+      if (!result.isValid) {
+        hasErrors = true
+        console.log(`\n${colors.red}Error in ${file}:${colors.reset}`)
+        result.errors.forEach(error => {
+          console.log(`  ${colors.yellow}→${colors.reset} ${error}`)
+        })
+      }
+      processedCount++
+    } catch (e) {
+      console.log(`\n${colors.red}Failed to process ${file}: ${e}${colors.reset}`)
+      hasErrors = true
+    }
+  }
+
+  console.log(
+    hasErrors
+      ? `\n${colors.red}✖ Found metadata issues in some files${colors.reset}`
+      : `\n${colors.green}✓ Validated ${processedCount} files successfully${colors.reset}`
+  )
+
+  return hasErrors
+}
+
 async function main() {
   try {
-    const args = process.argv.slice(2)
-    const dryRun = args.includes('--dry-run')
-    const verbose = args.includes('--verbose')
+    console.log('Checking metadata...')
     
-    const targetPaths = args.filter(arg => !arg.startsWith('--'))
-    if (targetPaths.length === 0) {
-      console.error(`${colors.red}Please provide at least one path to process${colors.reset}`)
-      process.exit(1)
+    // Get modified files from git
+    const gitOutput = process.env.CHANGED_FILES || ''
+    const modifiedFiles = gitOutput
+      .split('\n')
+      .filter(file => file.endsWith('.mdx'))
+      .map(file => path.resolve(process.cwd(), file))
+
+    if (modifiedFiles.length === 0) {
+      console.log(`${colors.green}✓ No MDX files modified${colors.reset}`)
+      process.exit(0)
     }
 
-    const allMdxFiles = Array.from(
-      new Set(
-        (await Promise.all(targetPaths.map(pattern => findMdxFiles(pattern))))
-          .flat()
-      )
-    )
+    console.log(`Found ${modifiedFiles.length} modified files to check`)
     
-    console.log(`Found ${allMdxFiles.length} .mdx files to process\n`)
-    
-    const summaries: ProcessingSummary[] = []
-    
-    // Process each file
-    for (const file of allMdxFiles) {
-      try {
-        const result = await updateFrontmatter(file, dryRun, verbose)
-        const relativePath = path.relative(process.cwd(), file)
-        
-        // Determine if categorization is uncertain
-        const hasUncertainCategories = 
-          !result.categories.length || 
-          (result.categories.length === 1 && result.categories[0] === 'protocol')
-
-        summaries.push({
-          path: relativePath,
-          categories: result.categories,
-          uncertainCategories: hasUncertainCategories && !result.isImported,  // Don't flag imported content
-          contentType: result.contentType,
-          isImported: result.isImported
-        })
-      } catch (error) {
-        console.error(`${colors.red}Error processing ${file}:${colors.reset}`, error)
-      }
-    }
-    
-    // Print summary
-    console.log('\nProcessing Summary:')
-    console.log('==================')
-    
-    summaries.forEach(summary => {
-      // File path in blue
-      console.log(`\n📄 ${colors.blue}${summary.path}${colors.reset}`)
-      // Type in default color
-      console.log(`   Type: ${summary.contentType}`)
-      if (summary.isImported) {
-        console.log('   Status: Imported content')
-      }
-      // Categories in default color
-      console.log(`   Categories: ${summary.categories.join(', ') || 'none'}`)
-      
-      if (summary.uncertainCategories) {
-        console.log(`   ${colors.yellow}⚠️  Categories may need manual review${colors.reset}`)
-      }
-    })
-    
-    const needsReview = summaries.filter(s => s.uncertainCategories).length
-    const importedCount = summaries.filter(s => s.isImported).length
-    
-    console.log('\n=================')
-    console.log('Final Summary:')
-    console.log(`${colors.green}✓ Processed ${summaries.length} files${colors.reset}`)
-    if (importedCount > 0) {
-      console.log(`ℹ️  ${importedCount} imported files`)
-    }
-    if (needsReview > 0) {
-      console.log(`${colors.yellow}⚠️  ${needsReview} files may need category review${colors.reset}`)
-    }
-    if (dryRun) {
-      console.log(`${colors.blue}(Dry run - no changes made)${colors.reset}`)
-    }
+    const hasErrors = await processFiles(modifiedFiles)
+    process.exit(hasErrors ? 1 : 0)
   } catch (error) {
-    console.error(`${colors.red}Fatal error:${colors.reset}`, error)
+    console.error(`${colors.red}Error: ${error}${colors.reset}`)
     process.exit(1)
   }
 }
 
-// Run the script
-main()
+// Force output buffering
+console.log = console.log.bind(console)
+main().catch(error => {
+  console.error(`${colors.red}Fatal error: ${error}${colors.reset}`)
+  process.exit(1)
+})

@@ -4,13 +4,40 @@ import path from 'path'
 
 // Load and parse keywords.config.yaml
 const configPath = path.join(process.cwd(), 'keywords.config.yaml')
-const yamlContent = yaml.load(fs.readFileSync(configPath, 'utf8'))
-
-// Add debug logging
-console.log('Config structure:', JSON.stringify(yamlContent, null, 2))
+const yamlContent = yaml.load(fs.readFileSync(configPath, 'utf8')) as MetadataConfig
 
 // Type guard to ensure the config has the expected structure
-function isValidConfig(config: any): config is {
+function isValidConfig(config: any): config is MetadataConfig {
+  return (
+    config &&
+    config.metadata_rules &&
+    config.metadata_rules.persona?.validation_rules?.[0]?.enum &&
+    config.metadata_rules.content_type?.validation_rules?.[0]?.enum &&
+    config.metadata_rules.categories?.values
+  )
+}
+
+if (!isValidConfig(yamlContent)) {
+  throw new Error('Invalid keywords.config.yaml structure')
+}
+
+export const VALID_PERSONAS = yamlContent.metadata_rules.persona.validation_rules[0].enum as readonly string[]
+export const VALID_CONTENT_TYPES = yamlContent.metadata_rules.content_type.validation_rules[0].enum as readonly string[]
+export const VALID_CATEGORIES = yamlContent.metadata_rules.categories.values as readonly string[]
+
+export interface ValidationRule {
+  pattern?: string
+  description?: string
+  enum?: string[]
+}
+
+export interface MetadataField {
+  required?: boolean
+  multiple?: boolean
+  validation_rules?: ValidationRule[]
+}
+
+export interface MetadataConfig {
   metadata_rules: {
     persona: {
       required: boolean
@@ -44,52 +71,6 @@ function isValidConfig(config: any): config is {
       values: string[]
     }
   }
-} {
-  // Add debug logging
-  console.log('Checking config structure...')
-  console.log('Has metadata_rules:', !!config?.metadata_rules)
-  console.log('Has persona:', !!config?.metadata_rules?.persona)
-  console.log('Has content_type:', !!config?.metadata_rules?.content_type)
-  console.log('Has categories:', !!config?.metadata_rules?.categories)
-
-  return (
-    config &&
-    config.metadata_rules &&
-    config.metadata_rules.persona?.validation_rules?.[0]?.enum &&
-    config.metadata_rules.content_type?.validation_rules?.[0]?.enum &&
-    config.metadata_rules.categories?.values
-  )
-}
-
-if (!isValidConfig(yamlContent)) {
-  throw new Error('Invalid keywords.config.yaml structure')
-}
-
-// Define the arrays with their literal types
-export const VALID_PERSONAS: readonly string[] = yamlContent.metadata_rules.persona.validation_rules[0].enum
-export const VALID_CONTENT_TYPES: readonly string[] = yamlContent.metadata_rules.content_type.validation_rules[0].enum
-export const VALID_CATEGORIES: readonly string[] = yamlContent.metadata_rules.categories.values
-
-export interface ValidationRule {
-  pattern?: string
-  description?: string
-  enum?: string[]
-}
-
-export interface MetadataField {
-  required?: boolean
-  multiple?: boolean
-  validation_rules?: ValidationRule[]
-}
-
-export interface MetadataConfig {
-  metadata_rules?: {
-    topic?: MetadataField
-    persona?: MetadataField
-    content_type?: MetadataField
-    categories?: MetadataField
-    timeframe?: MetadataField
-  }
 }
 
 // Type for metadata results
@@ -98,13 +79,12 @@ export interface MetadataResult {
   lang: string
   description: string
   topic: string
-  personas: typeof VALID_PERSONAS[number][]
+  personas: Array<string>  // Explicitly typed array
   content_type: typeof VALID_CONTENT_TYPES[number]
-  categories: typeof VALID_CATEGORIES[number][]
+  categories: Array<string>  // Explicitly typed array
   is_imported_content: string
-  content?: string  // Added for landing page detection
-  timeframe?: string
-  detectionLog?: string[] // Added for content analysis logging
+  content?: string
+  detectionLog?: Array<string>  // Explicitly typed array
 }
 
 export interface ProcessedFile {
@@ -115,5 +95,5 @@ export interface ProcessedFile {
 
 export interface Manifest {
   timestamp: string
-  processed_files: ProcessedFile[]
+  processed_files: Array<ProcessedFile>  // Explicitly typed array
 }

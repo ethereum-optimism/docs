@@ -30,15 +30,12 @@ export function generateTopic(title: string): string {
     .replace(/\s+/g, '-') || 'general';
 }
 
-// Fix duplicate landing page detection
-let detectedLandingPages = new Set<string>();
-
 /**
  * Enhanced landing page detection with Cards component awareness
  */
-function isLandingPage(content: string, filepath: string): boolean {
+function isLandingPage(content: string, filepath: string, detectedPages: Set<string>): boolean {
   // If we've already detected this file, return false
-  if (detectedLandingPages.has(filepath)) {
+  if (detectedPages.has(filepath)) {
     return false;
   }
 
@@ -70,7 +67,7 @@ function isLandingPage(content: string, filepath: string): boolean {
   const isLanding = (isOperatorLanding || (isOverviewPage && hasMultipleCards)) && !isTooDeep && !notLandingPage;
 
   if (isLanding) {
-    detectedLandingPages.add(filepath);
+    detectedPages.add(filepath);
     console.log(`Landing page detected: ${filepath}`);
   }
 
@@ -126,9 +123,19 @@ function getLandingPageCategories(filepath: string, content: string): Set<string
  * Detects categories based on content signals
  */
 function detectCategories(content: string, filepath: string, detectionLog: string[]): string[] {
-  detectionLog.push(`Analyzing categories for: ${filepath}`);
-  
   const categories = new Set<string>();
+
+  // Add categories without logging
+  if (filepath.includes('/notices/')) {
+    if (content.toLowerCase().includes('network') || 
+        content.toLowerCase().includes('upgrade')) {
+      categories.add('network-upgrade');
+      categories.add('holocene');
+    }
+    if (content.toLowerCase().includes('security')) {
+      categories.add('security');
+    }
+  }
 
   // Connect section categories
   if (filepath.includes('/connect/')) {
@@ -144,23 +151,6 @@ function detectCategories(content: string, filepath: string, detectionLog: strin
     }
     if (filepath.includes('/resources/')) {
       categories.add('protocol');
-    }
-    return Array.from(categories);
-  }
-
-  // Notice categories
-  if (filepath.includes('/notices/')) {
-    if (filepath.includes('holocene')) {
-      categories.add('holocene');
-      categories.add('network-upgrade');
-    }
-    if (filepath.includes('pectra')) {
-      categories.add('security');
-      categories.add('protocol');
-    }
-    if (filepath.includes('sdk')) {
-      categories.add('typescript');
-      categories.add('javascript');
     }
     return Array.from(categories);
   }
@@ -499,7 +489,6 @@ function detectCategories(content: string, filepath: string, detectionLog: strin
     .sort((a, b) => priorityOrder.indexOf(a) - priorityOrder.indexOf(b))
     .slice(0, 5);
 
-  detectionLog.push(`Final categories: ${sortedCategories.join(', ')}`);
   return sortedCategories;
 }
 
@@ -564,66 +553,34 @@ function countGuideSignals(content: string): number {
 /**
  * Detects content type based on content structure and signals
  */
-function detectContentType(content: string, detectionLog: string[], filepath: string): typeof VALID_CONTENT_TYPES[number] {
+function detectContentType(
+  content: string, 
+  detectionLog: string[], 
+  filepath: string,
+  detectedPages: Set<string>
+): typeof VALID_CONTENT_TYPES[number] {
   // Check for landing pages first
-  if (isLandingPage(content, filepath)) {
-    detectionLog.push("Detected as landing page based on structure");
-    return 'landing-page';
+  if (isLandingPage(content, filepath, detectedPages)) {
+    return 'landing-page'
   }
 
-  // Check for configuration content
-  if (filepath.includes('/configuration/') || 
-      filepath.match(/config\.(mdx?|tsx?)$/)) {
-    detectionLog.push("Detected as reference based on configuration content");
-    return 'reference';
-  }
-
-  // Check for overview/landing pages
-  if (filepath.match(/\/(overview|index)\.(mdx?|tsx?)$/) ||
-      filepath.endsWith('chain-operators.mdx') ||
-      filepath.endsWith('node-operators.mdx') ||
-      filepath.endsWith('tools.mdx') ||
-      filepath.endsWith('features.mdx')) {
-    detectionLog.push("Detected as landing page based on path");
-    return 'landing-page';
+  // Check for notices
+  if (filepath.includes('/notices/')) {
+    return 'notice'
   }
 
   // Check for tutorials
-  if (filepath.includes('/tutorials/') || 
-      content.toLowerCase().includes('step-by-step') ||
-      content.match(/Step \d+:/g)) {
-    detectionLog.push("Detected as tutorial based on content structure");
-    return 'tutorial';
+  if (filepath.includes('/tutorials/')) {
+    return 'tutorial'
   }
 
-  // Check for troubleshooting content
-  if (filepath.includes('/troubleshooting') || 
-      content.toLowerCase().includes('common problems') ||
-      content.toLowerCase().includes('common issues') ||
-      (content.match(/problem:|solution:|error:|warning:/gi) || []).length > 2) {
-    detectionLog.push("Detected as troubleshooting content");
-    return 'troubleshooting';
+  // Check for reference docs
+  if (filepath.includes('/reference/')) {
+    return 'reference'
   }
 
-  // Check for notices/announcements
-  if (content.toLowerCase().includes('breaking change') ||
-      content.toLowerCase().includes('deprecation notice') ||
-      content.toLowerCase().includes('upgrade notice')) {
-    detectionLog.push("Detected as technical notice");
-    return 'notice';
-  }
-
-  // Reference vs Guide scoring
-  const referenceScore = countReferenceSignals(content, filepath);
-  const guideScore = countGuideSignals(content);
-
-  if (referenceScore > guideScore * 1.5) {
-    detectionLog.push(`Detected as reference (scores: ref=${referenceScore}, guide=${guideScore})`);
-    return 'reference';
-  }
-
-  detectionLog.push(`Detected as guide (scores: ref=${referenceScore}, guide=${guideScore})`);
-  return 'guide';
+  // Default to guide
+  return 'guide'
 }
 
 /**
@@ -632,23 +589,20 @@ function detectContentType(content: string, detectionLog: string[], filepath: st
 export function analyzeContent(content: string, filepath: string, verbose: boolean = false): MetadataResult {
   const detectionLog: string[] = [];
   const warnings: string[] = [];
+  const detectedPages = new Set<string>();
   
-  const contentType = detectContentType(content, detectionLog, filepath);
+  const contentType = detectContentType(content, detectionLog, filepath, detectedPages);
   const categories = detectCategories(content, filepath, detectionLog);
 
-  // Track files needing review
+  // Only track warnings if verbose mode is on
   if (contentType === 'NEEDS_REVIEW') {
     warnings.push('Content type needs manual review');
-    global.filesNeedingContentTypeReview = (global.filesNeedingContentTypeReview || 0) + 1;
   }
   if (categories.length === 0) {
     warnings.push('Categories may need manual review');
-    global.filesNeedingCategoryReview = (global.filesNeedingCategoryReview || 0) + 1;
   }
-  
-  // Track total files processed
-  global.totalFiles = (global.totalFiles || 0) + 1;
 
+  // Only log if verbose mode is on
   if (verbose) {
     console.log(`\n📄 ${filepath}`);
     console.log(`   Type: ${contentType}`);
