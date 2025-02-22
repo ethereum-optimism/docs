@@ -8,43 +8,173 @@ import { Callout } from 'nextra/components'
 import { Steps } from 'nextra/components'
 
 <Callout>
-The SuperchainERC20 standard is ready for production use with active Mainnet deployments. 
-Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
+  The SuperchainERC20 standard is ready for production deployments.
+  However, the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
 </Callout>
 
 # Issuing new assets with SuperchainERC20
 
-This guide explains how to issue new assets with the `SuperchainERC20` and bridge them effectively using the `SuperchainERC20Bridge`. If you want more information about the `SuperchainERC20 standard`, see our [`SuperchainERC20` standard explainer](/stack/interop/superchain-erc20)
+## Overview
 
-Note that bridging assets through the Superchain using `SuperchainERC20` never affects the total supply of your asset. The supply remains fixed, and bridging only changes the chain on which your asset is located. This keeps the token's total amount the same across all networks, ensuring its value stays stable during the move and that the `SuperchainERC20` retains a unified, global supply count.
+This guide explains how to issue new assets with the [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) contract.
+Those assets can then be bridged quickly and safely using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract (once interop is operational).
+For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
 
-## Steps to issue and bridge assets
+Note that bridging assets through the Superchain using `SuperchainTokenBridge` *never* affects the total supply of your asset.
+The supply remains fixed, bridging only changes the chain on which the asset is located.
+The token's total amount across all network always remains the same, ensuring value stability.
+
+To ensure fungibility across chains, `SuperchainERC20` assets *must* have the same contract address on all chains.
+This requirement abstracts away the complexity of cross-chain validation.
+Achieving this requires deterministic deployment methods. There are multiple ways to do this.
+Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
+
+### What you'll do
+
+*   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy an `SuperchainERC20` token on the devnet.
+
+### What you'll learn
+
+*   How to deploy `SuperchainERC20` tokens on different chains at the same address.
+
+## Prerequisites
+
+Before starting this tutorial, ensure your development environment meets the following requirements:
+
+### Technical knowledge
+
+*   Understanding of smart contract development
+*   Familiarity with blockchain concepts
+
+### Development environment
+
+*   Unix-like operating system (Linux, macOS, or WSL for Windows)
+*   Git for version control
+
+### Required tools
+
+The tutorial uses these primary tools:
+
+*   Foundry: For sending transactions to blockchains.
+
+## Step by step explanation
 
 <Steps>
-  ### Deploy the `SuperchainERC20` Token Contract
+  ### Install the prerequisites and the SuperchainERC20 Starter Kit
 
-  To ensure fungibility across chains, the SuperchainERC20 assets need to have the same contract address on all chains. Achieving this requires deterministic deployment methods, such as:
+  Follow the setup steps in the [SuperchainERC20 Starter Kit](/app-developers/starter-kit#setup).
 
-  *   `Create2Deployer`: A smart contract that enables deploying contracts with predictable addresses.
-  *   `OptimismSuperchainERC20Factory`: A factory contract designed for L1-native tokens to ensure uniform deployments across chains.
+  ### Prepare for deployment
 
-  There are [many ways to do this](https://github.com/Arachnid/deterministic-deployment-proxy), but [here's an example smart contract to start](https://github.com/ethereum-optimism/superchainerc20-starter/blob/main/packages/contracts/src/L2NativeSuperchainERC20.sol). For an in-depth guide on how to deploy a `SuperchainERC20` use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
+  The Starter Kit already deploys a `SuperchainERC20` token to [Supersim](/stack/interop/tools/supersim).
+  Here we will deploy it to the [Interop devnet](/stack/interop/tools/devnet).
 
-  By deploying assets at identical addresses across multiple chains, we abstract away the complexity of cross-chain validation.
+  1.  Edit `packages/contracts/foundry.toml` to add the RPC endpoints for the devnet (add the bottom two rows).
 
-  ### Implement the IERC7802 interface
+      ```toml
+      [rpc_endpoints]
+      op_chain_a = "http://127.0.0.1:9545"
+      op_chain_b = "http://127.0.0.1:9546"
+      devnet0 = "https://interop-alpha-0.optimism.io"
+      devnet1 = "https://interop-alpha-1.optimism.io"
+      ```
 
-  Implementations of `SuperchainERC20` will be required to implement the [IERC7802](https://specs.optimism.io/interop/token-bridging.html#ierc7802) interface, that includes two external functions and two events.
+      You can import most RPC endpoints with this command, but it does not include the Interop devnet.
 
-  The interface defines two functions for bridging:
+      ```sh
+      pnpm contracts:update:rpcs
+      ```
 
-  *   `sendERC20`: Initializes a cross-chain transfer of a `SuperchainERC20` by burning the tokens locally and sending a message to the `SuperchainERC20Bridge` on the target chain using the `L2toL2CrossDomainMessenger`. This ensures that asset supply remains constant, as sending an asset moves it from one chain to another without creating additional supply.
-  *   `relayERC20`: Processes incoming messages from the L2toL2CrossDomainMessenger and mints the corresponding amount of the SuperchainERC20.
+  2.  Edit `packages/contracts/configs/deploy-config.toml` for the deployment settings.
 
-  [Here's an example implementation of the `SuperchainERC20Bridge`](https://specs.optimism.io/interop/token-bridging.html#implementation)
+      *   Set these parameters in the `[deploy-config]` section:
+
+          | Parameter | Meaning                                       | Example                |
+          | --------- | --------------------------------------------- | ---------------------- |
+          | salt      | A unique identifier                           | Carthage               |
+          | chains    | The chains to deploy the contract<sup>1</sup> | \["devnet0","devnet1"] |
+
+          (1) These names must correspond to the chain names in the `[rpc-endpoints]` section of `foundry.toml` you updated in the previous step.
+
+      *   Set these parameters in the `[token]` section:
+
+          | Parameter      | Meaning                  | Example                  |                                            |
+          | -------------- | ------------------------ | ------------------------ | ------------------------------------------ |
+          | owner\_address | Owner of the token       | Your address<sup>1</sup> |                                            |
+          | name           | Token name               | Quick Transfer Token     |                                            |
+          | symbol         | Token symbol             | QTT                      |                                            |
+          | decimals       | Number of decimal places | 18                       |                                            |
+
+          (1) This should be an address you control (for which you know the private key), which has some ETH on the devnets.
+          [See here](/stack/interop/tools/devnet#sending-eth-to-the-interop-devnets) to add ETH to the devnets.
+
+      Here is a sample `packages/contracts/configs/deploy-config.toml` file you can use, as long as you update `owner_address`.
+
+      ```toml
+      [deploy_config]
+      salt = "is the source of our word salary"
+      chains = ["devnet0","devnet1"]
+
+      [token]
+      owner_address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+      name = "Quick Transfer Token"
+      symbol = "QTT"
+      decimals = 18
+      ```
+
+  3.  Set the private key.
+      Edit `packages/contracts/.env` to set `DEPLOYER_PRIVATE_KEY` to the private key of an account that has ETH on both devnet blockchains.
+
+      ```sh
+      DEPLOYER_PRIVATE_KEY= <<<private key goes here>>>
+      ```
+
+  ### Deploy the contracts
+
+  Run the deployment script.
+
+  ```sh
+  pnpm contracts:deploy:token
+  ```
+
+  <details>
+    <summary>Sanity check</summary>
+
+    1.  Set `TOKEN_ADDRESS` to the address where the token is deployed.
+
+        ```sh
+        TOKEN_ADDRESS=0x322f4aF25D370BE2A2C74eEFf0DD0d2AF2e7eD75
+        ```
+
+    2.  Set `PRIVATE_KEY` to the private key for the owner address.
+
+        ```sh
+        PRIVATE_KEY= <<<private key goes here>>>
+        ```
+
+    3.  Mint tokens for an address you control on both chains.
+        The owner address is the easiest to use.
+
+        ```sh
+        OWNER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
+        RPC_DEV0=https://interop-alpha-0.optimism.io
+        RPC_DEV1=https://interop-alpha-1.optimism.io
+        cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mintTo(address,uint256)" $OWNER_ADDRESS 1000 --rpc-url $RPC_DEV0
+        cast send --private-key $PRIVATE_KEY $TOKEN_ADDRESS "mintTo(address,uint256)" $OWNER_ADDRESS 2000 --rpc-url $RPC_DEV1       
+        ```
+
+    4.  Check the balance of the owner address on both blockchains.
+
+        ```sh
+        cast call $TOKEN_ADDRESS "balanceOf(address)" $OWNER_ADDRESS --rpc-url $RPC_DEV0 | cast to-dec        
+        cast call $TOKEN_ADDRESS "balanceOf(address)" $OWNER_ADDRESS --rpc-url $RPC_DEV1 | cast to-dec
+        ```
+  </details>
 </Steps>
 
 ## Next steps
+
+*   Learn how to [transfer tokens between chains inside the Superchain](transfer-superchainERC20).
 *   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
 *   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
-*   Review the [Superchain Interop Explainer](../explainer) for answers to common questions about interoperability.
+*   Review the [Superchain Interop Explainer](/stack/interop/explainer) for answers to common questions about interoperability.

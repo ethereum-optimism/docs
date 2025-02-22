@@ -10,4 +10,4 @@ Currently the website has the modal enabled by a custom button component located
 
 ## Enabling/disabling the feature
 
-The kapa AI assistant con be toggled on and off on the website by toggling the **`enable_docs_ai_widget`** feature flag.
+The kapa AI assistant can be toggled on and off on the website by toggling the **`enable_docs_ai_widget`** feature flag.
