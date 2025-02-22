@@ -119,138 +119,26 @@ function getLandingPageCategories(filepath: string, content: string): Set<string
   return categories;
 }
 
-/**
- * Detects categories based on content signals
- */
-function detectCategories(content: string, filepath: string, detectionLog: string[]): string[] {
+// Helper functions for category detection
+function detectStackCategories(filepath: string, content: string): Set<string> {
   const categories = new Set<string>();
+  
+  // Base protocol content
+  if (filepath.match(/\/(rollup|transactions|components|differences|smart-contracts)\//)) {
+    categories.add('protocol');
+  }
 
-  // Add categories without logging
-  if (filepath.includes('/notices/')) {
-    if (content.toLowerCase().includes('network') || 
-        content.toLowerCase().includes('upgrade')) {
-      categories.add('network-upgrade');
-      categories.add('holocene');
-    }
-    if (content.toLowerCase().includes('security')) {
-      categories.add('security');
+  // Research and specs
+  if (filepath.includes('/research/')) {
+    categories.add('protocol');
+    if (content.toLowerCase().includes('block time')) {
+      categories.add('block-times');
     }
   }
 
-  // Connect section categories
-  if (filepath.includes('/connect/')) {
-    if (filepath.includes('/contribute/')) {
-      if (filepath.includes('docs-contribute')) {
-        categories.add('typescript');
-        categories.add('javascript');
-      }
-      if (filepath.includes('stack-contribute')) {
-        categories.add('go');
-        categories.add('rust');
-      }
-    }
-    if (filepath.includes('/resources/')) {
-      categories.add('protocol');
-    }
-    return Array.from(categories);
-  }
-
-  // Get started categories
-  if (filepath.includes('/get-started/')) {
-    if (filepath.includes('interop')) {
-      categories.add('interop');
-      categories.add('cross-chain-messaging');
-    }
-    if (filepath.includes('op-stack')) {
-      categories.add('protocol');
-      categories.add('devnets');
-    }
-    if (filepath.includes('superchain')) {
-      categories.add('blockspace-charters');
-      categories.add('superchain-registry');
-    }
-    return Array.from(categories);
-  }
-
-  // Stack-specific categories
-  if (filepath.includes('/stack/')) {
-    // Base protocol content
-    if (filepath.match(/\/(rollup|transactions|components|differences|smart-contracts)\//)) {
-      categories.add('protocol');
-    }
-
-    // Research and specs
-    if (filepath.includes('/research/')) {
-      categories.add('protocol');
-      if (content.toLowerCase().includes('block time')) {
-        categories.add('block-times');
-      }
-    }
-
-    // Root stack pages
-    if (filepath.match(/\/stack\/[^/]+\.mdx$/)) {
-      // Landing pages
-      if (filepath.endsWith('features.mdx') || 
-          filepath.endsWith('beta-features.mdx')) {
-        categories.add('protocol');
-        if (content.toLowerCase().includes('gas')) {
-          categories.add('custom-gas-token');
-        }
-        if (content.toLowerCase().includes('data availability')) {
-          categories.add('alt-da');
-        }
-      }
-
-      // Core protocol pages
-      if (filepath.endsWith('rollup.mdx') ||
-          filepath.endsWith('transactions.mdx') ||
-          filepath.endsWith('components.mdx') ||
-          filepath.endsWith('differences.mdx') ||
-          filepath.endsWith('smart-contracts.mdx')) {
-        categories.add('protocol');
-      }
-
-      // Development pages
-      if (filepath.endsWith('dev-node.mdx') ||
-          filepath.endsWith('getting-started.mdx') ||
-          filepath.endsWith('public-devnets.mdx')) {
-        categories.add('devnets');
-      }
-
-      // Security pages
-      if (filepath.endsWith('security.mdx')) {
-        categories.add('security');
-      }
-
-      // Research pages
-      if (filepath.endsWith('research.mdx') ||
-          filepath.endsWith('fact-sheet.mdx')) {
-        categories.add('protocol');
-      }
-
-      // Design pages
-      if (filepath.endsWith('design-principles.mdx')) {
-        categories.add('protocol');
-      }
-
-      // Interop pages
-      if (filepath.endsWith('interop.mdx')) {
-        categories.add('interop');
-        categories.add('cross-chain-messaging');
-      }
-    }
-
-    // Rollup content
-    if (filepath.includes('/rollup/')) {
-      categories.add('protocol');
-      categories.add('rollup-node');
-      if (content.toLowerCase().includes('sequencer')) {
-        categories.add('sequencer');
-      }
-    }
-
-    // Features and beta features
-    if (filepath.includes('/features/') || filepath.includes('/beta-features/')) {
+  // Root stack pages
+  if (filepath.match(/\/stack\/[^/]+\.mdx$/)) {
+    if (filepath.endsWith('features.mdx') || filepath.endsWith('beta-features.mdx')) {
       categories.add('protocol');
       if (content.toLowerCase().includes('gas')) {
         categories.add('custom-gas-token');
@@ -260,82 +148,93 @@ function detectCategories(content: string, filepath: string, detectionLog: strin
       }
     }
 
-    // Interop content
-    if (filepath.includes('/interop/')) {
+    // Core protocol pages
+    if (['rollup.mdx', 'transactions.mdx', 'components.mdx', 'differences.mdx', 'smart-contracts.mdx']
+        .some(file => filepath.endsWith(file))) {
+      categories.add('protocol');
+    }
+
+    // Development pages
+    if (['dev-node.mdx', 'getting-started.mdx', 'public-devnets.mdx']
+        .some(file => filepath.endsWith(file))) {
+      categories.add('devnets');
+    }
+
+    // Security pages
+    if (filepath.endsWith('security.mdx')) {
+      categories.add('security');
+    }
+
+    // Research pages
+    if (['research.mdx', 'fact-sheet.mdx', 'design-principles.mdx']
+        .some(file => filepath.endsWith(file))) {
+      categories.add('protocol');
+    }
+
+    // Interop pages
+    if (filepath.endsWith('interop.mdx')) {
       categories.add('interop');
       categories.add('cross-chain-messaging');
-      if (content.toLowerCase().includes('supervisor')) {
-        categories.add('op-supervisor');
-      }
-      if (content.toLowerCase().includes('bridge') || 
-          content.toLowerCase().includes('erc20')) {
-        categories.add('interoperable-assets');
-      }
     }
-
-    // Fault proof content
-    if (filepath.includes('/fault-proofs/') || content.toLowerCase().includes('fault proof')) {
-      categories.add('fault-proofs');
-      categories.add('op-challenger');
-      if (content.toLowerCase().includes('cannon')) {
-        categories.add('cannon');
-      }
-    }
-
-    // Protocol content
-    if (filepath.includes('/protocol/')) {
-      categories.add('protocol');
-      if (content.toLowerCase().includes('sequencer')) {
-        categories.add('sequencer');
-      }
-      if (content.toLowerCase().includes('batcher')) {
-        categories.add('op-batcher');
-      }
-      if (content.toLowerCase().includes('derivation')) {
-        categories.add('rollup-node');
-      }
-    }
-
-    // Bridge content
-    if (filepath.includes('/bridge/')) {
-      categories.add('standard-bridge');
-      categories.add('cross-chain-messaging');
-      if (content.toLowerCase().includes('message passing')) {
-        categories.add('interoperable-message-passing');
-      }
-    }
-
-    // Security content
-    if (filepath.includes('/security/')) {
-      categories.add('security');
-      if (content.toLowerCase().includes('pause')) {
-        categories.add('automated-pause');
-      }
-    }
-
-    // Node content
-    if (filepath.includes('/node/')) {
-      categories.add('rollup-node');
-      categories.add('op-geth');
-      if (content.toLowerCase().includes('derivation')) {
-        categories.add('protocol');
-      }
-    }
-
-    // Transaction content
-    if (filepath.includes('/transactions/')) {
-      categories.add('protocol');
-      if (content.toLowerCase().includes('cross') || 
-          content.toLowerCase().includes('deposit') ||
-          content.toLowerCase().includes('withdrawal')) {
-        categories.add('cross-chain-messaging');
-      }
-    }
-
-    return Array.from(categories);
   }
 
-  // App developer categories - simpler version
+  return categories;
+}
+
+function detectOperatorCategories(filepath: string, content: string): Set<string> {
+  const categories = new Set<string>();
+
+  // Chain operator categories
+  if (filepath.includes('/chain-operators/')) {
+    categories.add('protocol');
+    
+    if (content.toLowerCase().includes('sequencer') ||
+        content.toLowerCase().includes('batch') ||
+        content.toLowerCase().includes('proposer')) {
+      categories.add('sequencer');
+      categories.add('op-batcher');
+    }
+    
+    if (content.toLowerCase().includes('fault proof') ||
+        content.toLowerCase().includes('challenger')) {
+      categories.add('fault-proofs');
+      categories.add('op-challenger');
+    }
+
+    if (content.toLowerCase().includes('deploy') ||
+        content.toLowerCase().includes('genesis') ||
+        content.toLowerCase().includes('configuration')) {
+      categories.add('l1-deployment-upgrade-tooling');
+      categories.add('l2-deployment-upgrade-tooling');
+    }
+  }
+
+  // Node operator categories
+  if (filepath.includes('/node-operators/')) {
+    categories.add('infrastructure');
+    
+    if (content.toLowerCase().includes('rollup node') ||
+        content.toLowerCase().includes('op-node')) {
+      categories.add('rollup-node');
+    }
+    
+    if (content.toLowerCase().includes('op-geth')) {
+      categories.add('op-geth');
+    }
+
+    if (content.toLowerCase().includes('monitoring') ||
+        content.toLowerCase().includes('metrics') ||
+        content.toLowerCase().includes('health')) {
+      categories.add('monitorism');
+    }
+  }
+
+  return categories;
+}
+
+function detectAppDeveloperCategories(filepath: string, content: string): Set<string> {
+  const categories = new Set<string>();
+
   if (filepath.includes('/app-developers/')) {
     // Bridging content
     if (filepath.includes('/bridging/') || 
@@ -366,74 +265,15 @@ function detectCategories(content: string, filepath: string, detectionLog: strin
     if (filepath.includes('/tutorials/')) {
       categories.add('devnets');
     }
-
-    return Array.from(categories);
   }
 
-  // Chain operator categories - keep existing logic
-  if (filepath.endsWith('chain-operators.mdx')) {
-    categories.add('protocol');
-    categories.add('sequencer');
-    categories.add('op-batcher');
-    categories.add('fault-proofs');
-    categories.add('op-challenger');
-    return Array.from(categories);
-  }
+  return categories;
+}
 
-  if (filepath.endsWith('node-operators.mdx')) {
-    categories.add('infrastructure');
-    categories.add('rollup-node');
-    categories.add('op-geth');
-    categories.add('monitorism');
-    return Array.from(categories);
-  }
+function detectCommonCategories(content: string, filepath: string): Set<string> {
+  const categories = new Set<string>();
 
-  // Chain operator content
-  if (filepath.includes('/chain-operators/')) {
-    categories.add('protocol');
-    
-    if (content.toLowerCase().includes('sequencer') ||
-        content.toLowerCase().includes('batch') ||
-        content.toLowerCase().includes('proposer')) {
-      categories.add('sequencer');
-      categories.add('op-batcher');
-    }
-    
-    if (content.toLowerCase().includes('fault proof') ||
-        content.toLowerCase().includes('challenger')) {
-      categories.add('fault-proofs');
-      categories.add('op-challenger');
-    }
-
-    if (content.toLowerCase().includes('deploy') ||
-        content.toLowerCase().includes('genesis') ||
-        content.toLowerCase().includes('configuration')) {
-      categories.add('l1-deployment-upgrade-tooling');
-      categories.add('l2-deployment-upgrade-tooling');
-    }
-  }
-
-  // Node operator content
-  if (filepath.includes('/node-operators/')) {
-    categories.add('infrastructure');
-    
-    if (content.toLowerCase().includes('rollup node') ||
-        content.toLowerCase().includes('op-node')) {
-      categories.add('rollup-node');
-    }
-    
-    if (content.toLowerCase().includes('op-geth')) {
-      categories.add('op-geth');
-    }
-
-    if (content.toLowerCase().includes('monitoring') ||
-        content.toLowerCase().includes('metrics') ||
-        content.toLowerCase().includes('health')) {
-      categories.add('monitorism');
-    }
-  }
-
-  // Common categories
+  // Common infrastructure
   if (content.toLowerCase().includes('kubernetes') ||
       content.toLowerCase().includes('k8s')) {
     categories.add('kubernetes-infrastructure');
@@ -454,6 +294,39 @@ function detectCategories(content: string, filepath: string, detectionLog: strin
       categories.add('security-council');
     }
   }
+
+  return categories;
+}
+
+/**
+ * Detects categories based on content signals
+ */
+function detectCategories(content: string, filepath: string, detectionLog: string[]): string[] {
+  const categories = new Set<string>();
+
+  // Landing page categories
+  if (isLandingPage(content, filepath, new Set())) {
+    const landingCategories = getLandingPageCategories(filepath, content);
+    landingCategories.forEach(category => categories.add(category));
+  }
+
+  // Stack categories
+  if (filepath.includes('/stack/')) {
+    const stackCategories = detectStackCategories(filepath, content);
+    stackCategories.forEach(category => categories.add(category));
+  }
+
+  // Operator categories
+  const operatorCategories = detectOperatorCategories(filepath, content);
+  operatorCategories.forEach(category => categories.add(category));
+
+  // App developer categories
+  const appDevCategories = detectAppDeveloperCategories(filepath, content);
+  appDevCategories.forEach(category => categories.add(category));
+
+  // Common categories
+  const commonCategories = detectCommonCategories(content, filepath);
+  commonCategories.forEach(category => categories.add(category));
 
   // Limit to 5 most relevant categories
   const priorityOrder = [

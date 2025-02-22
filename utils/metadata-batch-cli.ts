@@ -118,6 +118,34 @@ async function updateFrontmatter(filePath: string, dryRun: boolean = false, verb
   }
 }
 
+async function validateFilePaths(files: string[]): Promise<string[]> {
+  const validFiles = []
+  const errors = []
+
+  for (const file of files) {
+    try {
+      // Check if file exists and is readable
+      await fs.access(file, fs.constants.R_OK)
+      // Check if it's actually a file (not a directory)
+      const stats = await fs.stat(file)
+      if (stats.isFile()) {
+        validFiles.push(file)
+      } else {
+        errors.push(`${file} is not a file`)
+      }
+    } catch (error) {
+      errors.push(`Cannot access ${file}: ${error.message}`)
+    }
+  }
+
+  if (errors.length > 0) {
+    console.log(`${colors.yellow}Warning: Some files were skipped:${colors.reset}`)
+    errors.forEach(error => console.log(`  ${colors.yellow}→${colors.reset} ${error}`))
+  }
+
+  return validFiles
+}
+
 async function processFiles(files: string[]): Promise<boolean> {
   let hasErrors = false
   let processedCount = 0
@@ -152,10 +180,16 @@ async function main() {
   try {
     console.log('Checking metadata...')
     
-    // Get modified files from git
+    // Get modified files from git and validate input
     const gitOutput = process.env.CHANGED_FILES || ''
+    if (!gitOutput.trim()) {
+      console.log(`${colors.green}✓ No files to check${colors.reset}`)
+      process.exit(0)
+    }
+
     const modifiedFiles = gitOutput
       .split('\n')
+      .filter(file => file.trim()) // Remove empty lines
       .filter(file => file.endsWith('.mdx'))
       .map(file => path.resolve(process.cwd(), file))
 
@@ -164,9 +198,17 @@ async function main() {
       process.exit(0)
     }
 
-    console.log(`Found ${modifiedFiles.length} modified files to check`)
+    // Validate file paths
+    const validFiles = await validateFilePaths(modifiedFiles)
     
-    const hasErrors = await processFiles(modifiedFiles)
+    if (validFiles.length === 0) {
+      console.log(`${colors.red}✖ No valid files to check${colors.reset}`)
+      process.exit(1)
+    }
+
+    console.log(`Found ${validFiles.length} valid files to check`)
+    
+    const hasErrors = await processFiles(validFiles)
     process.exit(hasErrors ? 1 : 0)
   } catch (error) {
     console.error(`${colors.red}Error: ${error}${colors.reset}`)
