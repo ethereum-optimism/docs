@@ -65,14 +65,25 @@ jobs:
           name: Run breadcrumb check
           command: pnpm check-breadcrumbs
   lint:
-    description: Lint Markdown files
+    description: Lint Markdown files and validate metadata
     executor: ubuntu
     steps:
       - checkout
       - setup-node
       - run:
+          name: Get changed files
+          command: |
+            if [ -n "$CIRCLE_PULL_REQUEST" ]; then
+              PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | rev | cut -d'/' -f1 | rev)
+              CHANGED_FILES=$(curl -s "https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pulls/$PR_NUMBER/files" | jq -r '.[].filename' | grep '\.mdx$' || true)
+              echo "export CHANGED_FILES=\"$CHANGED_FILES\"" >> $BASH_ENV
+            fi
+      - run:
           name: Lint Markdown files
           command: pnpm lint
+      - run:
+          name: Validate metadata
+          command: pnpm validate-pr-metadata
 
   links:
     executor: rust
