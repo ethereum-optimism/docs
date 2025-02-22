@@ -48,6 +48,21 @@ const DEFAULT_CONFIG: AnalyzerConfig = {
   ]
 };
 
+// Add interfaces for summary stats
+interface AnalysisSummary {
+  totalFiles: number;
+  filesNeedingCategoryReview: number;
+  filesNeedingContentTypeReview: number;
+}
+
+// Add error types
+class MetadataAnalysisError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MetadataAnalysisError';
+  }
+}
+
 /**
  * Returns default personas for app developer content
  */
@@ -487,51 +502,68 @@ export function analyzeContent(
   verbose: boolean = false,
   config: AnalyzerConfig = DEFAULT_CONFIG
 ): MetadataResult {
+  // Validate inputs
+  if (!filepath || typeof filepath !== 'string') {
+    throw new MetadataAnalysisError('Invalid file path provided');
+  }
+  if (!content || typeof content !== 'string') {
+    throw new MetadataAnalysisError('Invalid content provided');
+  }
+  if (typeof verbose !== 'boolean') {
+    throw new MetadataAnalysisError('Invalid verbose flag provided');
+  }
+
   const detectionLog: string[] = [];
   const warnings: string[] = [];
   const detectedPages = new Set<string>();
   
-  const contentType = detectContentType(content, detectionLog, filepath, detectedPages);
-  const categories = detectCategories(content, filepath, detectionLog, config);
+  try {
+    const contentType = detectContentType(content, detectionLog, filepath, detectedPages);
+    const categories = detectCategories(content, filepath, detectionLog, config);
 
-  // Only track warnings if verbose mode is on
-  if (contentType === 'NEEDS_REVIEW') {
-    warnings.push('Content type needs manual review');
-  }
-  if (categories.length === 0) {
-    warnings.push('Categories may need manual review');
-  }
+    // Only track warnings if verbose mode is on
+    if (contentType === 'NEEDS_REVIEW') {
+      warnings.push('Content type needs manual review');
+    }
+    if (categories.length === 0) {
+      warnings.push('Categories may need manual review');
+    }
 
-  // Only log if verbose mode is on
-  if (verbose) {
-    config.logger(`\n📄 ${filepath}`);
-    config.logger(`   Type: ${contentType}`);
-    config.logger(`   Categories: ${categories.length ? categories.join(', ') : 'none'}`);
-    warnings.forEach(warning => {
-      config.logger(`   ⚠️  ${warning}`);
-    });
-  }
+    // Only log if verbose mode is on
+    if (verbose) {
+      config.logger(`\n📄 ${filepath}`);
+      config.logger(`   Type: ${contentType}`);
+      config.logger(`   Categories: ${categories.length ? categories.join(', ') : 'none'}`);
+      warnings.forEach(warning => {
+        config.logger(`   ⚠️  ${warning}`);
+      });
+    }
 
-  return {
-    content_type: contentType as typeof VALID_CONTENT_TYPES[number],
-    categories,
-    detectionLog,
-    title: config.defaultTitle,
-    lang: config.defaultLang,
-    description: config.defaultDescription,
-    topic: generateTopic(config.defaultTitle),
-    personas: getDefaultPersonas(filepath),
-    is_imported_content: 'false'
-  };
+    return {
+      content_type: contentType as typeof VALID_CONTENT_TYPES[number],
+      categories,
+      detectionLog,
+      title: config.defaultTitle,
+      lang: config.defaultLang,
+      description: config.defaultDescription,
+      topic: generateTopic(config.defaultTitle),
+      personas: getDefaultPersonas(filepath),
+      is_imported_content: 'false'
+    };
+  } catch (error) {
+    throw new MetadataAnalysisError(`Failed to analyze ${filepath}: ${error.message}`);
+  }
 }
 
-// Export the summary function to be called at the end of processing
-export function printSummary(): void {
-  console.log(`
+/**
+ * Prints a summary of the analysis results
+ */
+export function printSummary(summary: AnalysisSummary, config: AnalyzerConfig = DEFAULT_CONFIG): void {
+  config.logger(`
 Final Summary:
-✓ Processed ${global.totalFiles} files
-⚠️  ${global.filesNeedingCategoryReview || 0} files may need category review
-⚠️  ${global.filesNeedingContentTypeReview || 0} files may need content type review
+✓ Processed ${summary.totalFiles} files
+⚠️  ${summary.filesNeedingCategoryReview} files may need category review
+⚠️  ${summary.filesNeedingContentTypeReview} files may need content type review
 (Dry run - no changes made)
 `);
 }
@@ -546,5 +578,6 @@ export const testing = {
   detectCategories,
   detectContentType,
   isLandingPage,
-  getLandingPageCategories
+  getLandingPageCategories,
+  MetadataAnalysisError
 };
