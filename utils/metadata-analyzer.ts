@@ -2,6 +2,52 @@ import fs from 'fs'
 import path from 'path'
 import { MetadataResult, VALID_CATEGORIES, VALID_CONTENT_TYPES } from './types/metadata-types'
 
+// Add interfaces for configuration
+interface AnalyzerConfig {
+  defaultLang: string;
+  defaultTitle: string;
+  defaultDescription: string;
+  maxCategories: number;
+  logger: (message: string) => void;
+  priorityOrder: string[];
+}
+
+const DEFAULT_CONFIG: AnalyzerConfig = {
+  defaultLang: 'en-US',
+  defaultTitle: '',
+  defaultDescription: '',
+  maxCategories: 5,
+  logger: console.log,
+  priorityOrder: [
+    'protocol',
+    'infrastructure',
+    'sequencer',
+    'op-batcher',
+    'rollup-node',
+    'op-geth',
+    'fault-proofs',
+    'op-challenger',
+    'cannon',
+    'l1-deployment-upgrade-tooling',
+    'l2-deployment-upgrade-tooling',
+    'monitorism',
+    'security',
+    'automated-pause',
+    'kubernetes-infrastructure',
+    'cross-chain-messaging',
+    'standard-bridge',
+    'interoperable-message-passing',
+    'hardhat',
+    'foundry',
+    'ethers',
+    'viem',
+    'supersim',
+    'devnets',
+    'mainnet',
+    'testnet'
+  ]
+};
+
 /**
  * Returns default personas for app developer content
  */
@@ -301,7 +347,12 @@ function detectCommonCategories(content: string, filepath: string): Set<string> 
 /**
  * Detects categories based on content signals
  */
-function detectCategories(content: string, filepath: string, detectionLog: string[]): string[] {
+function detectCategories(
+  content: string, 
+  filepath: string, 
+  detectionLog: string[],
+  config: AnalyzerConfig
+): string[] {
   const categories = new Set<string>();
 
   // Landing page categories
@@ -328,39 +379,10 @@ function detectCategories(content: string, filepath: string, detectionLog: strin
   const commonCategories = detectCommonCategories(content, filepath);
   commonCategories.forEach(category => categories.add(category));
 
-  // Limit to 5 most relevant categories
-  const priorityOrder = [
-    'protocol',
-    'infrastructure',
-    'sequencer',
-    'op-batcher',
-    'rollup-node',
-    'op-geth',
-    'fault-proofs',
-    'op-challenger',
-    'cannon',
-    'l1-deployment-upgrade-tooling',
-    'l2-deployment-upgrade-tooling',
-    'monitorism',
-    'security',
-    'automated-pause',
-    'kubernetes-infrastructure',
-    'cross-chain-messaging',
-    'standard-bridge',
-    'interoperable-message-passing',
-    'hardhat',
-    'foundry',
-    'ethers',
-    'viem',
-    'supersim',
-    'devnets',
-    'mainnet',
-    'testnet'
-  ];
-
+  // Sort by priority and limit categories
   const sortedCategories = Array.from(categories)
-    .sort((a, b) => priorityOrder.indexOf(a) - priorityOrder.indexOf(b))
-    .slice(0, 5);
+    .sort((a, b) => config.priorityOrder.indexOf(a) - config.priorityOrder.indexOf(b))
+    .slice(0, config.maxCategories);
 
   return sortedCategories;
 }
@@ -459,13 +481,18 @@ function detectContentType(
 /**
  * Analyzes content to determine metadata
  */
-export function analyzeContent(content: string, filepath: string, verbose: boolean = false): MetadataResult {
+export function analyzeContent(
+  content: string, 
+  filepath: string, 
+  verbose: boolean = false,
+  config: AnalyzerConfig = DEFAULT_CONFIG
+): MetadataResult {
   const detectionLog: string[] = [];
   const warnings: string[] = [];
   const detectedPages = new Set<string>();
   
   const contentType = detectContentType(content, detectionLog, filepath, detectedPages);
-  const categories = detectCategories(content, filepath, detectionLog);
+  const categories = detectCategories(content, filepath, detectionLog, config);
 
   // Only track warnings if verbose mode is on
   if (contentType === 'NEEDS_REVIEW') {
@@ -477,11 +504,11 @@ export function analyzeContent(content: string, filepath: string, verbose: boole
 
   // Only log if verbose mode is on
   if (verbose) {
-    console.log(`\n📄 ${filepath}`);
-    console.log(`   Type: ${contentType}`);
-    console.log(`   Categories: ${categories.length ? categories.join(', ') : 'none'}`);
+    config.logger(`\n📄 ${filepath}`);
+    config.logger(`   Type: ${contentType}`);
+    config.logger(`   Categories: ${categories.length ? categories.join(', ') : 'none'}`);
     warnings.forEach(warning => {
-      console.log(`   ⚠️  ${warning}`);
+      config.logger(`   ⚠️  ${warning}`);
     });
   }
 
@@ -489,10 +516,10 @@ export function analyzeContent(content: string, filepath: string, verbose: boole
     content_type: contentType as typeof VALID_CONTENT_TYPES[number],
     categories,
     detectionLog,
-    title: '',
-    lang: 'en-US',
-    description: '',
-    topic: '',
+    title: config.defaultTitle,
+    lang: config.defaultLang,
+    description: config.defaultDescription,
+    topic: generateTopic(config.defaultTitle),
     personas: getDefaultPersonas(filepath),
     is_imported_content: 'false'
   };
@@ -508,3 +535,16 @@ Final Summary:
 (Dry run - no changes made)
 `);
 }
+
+// Export for testing
+export const testing = {
+  DEFAULT_CONFIG,
+  detectStackCategories,
+  detectOperatorCategories,
+  detectAppDeveloperCategories,
+  detectCommonCategories,
+  detectCategories,
+  detectContentType,
+  isLandingPage,
+  getLandingPageCategories
+};
