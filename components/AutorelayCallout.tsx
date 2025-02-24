@@ -19,7 +19,7 @@ export function AutorelayCallout({ context }: Props): ReactElement {
           <div className="nx-text-left">
             Normally we expect Superchain blockchains to run an autorelayer and relay your messages automatically.
             However, for performance reasons or reliability, you might decide to submit the executing message manually.
-            This section shows how to do that.
+            See below to learn how to do that.
           </div>
       </div>
     </div>
