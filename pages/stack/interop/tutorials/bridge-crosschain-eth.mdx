@@ -6,6 +6,7 @@ description: Learn how to bridge native cross-chain ETH transfers.
 
 import { Callout, Steps, Tabs } from 'nextra/components'
 import { InteropCallout } from '@/components/WipCallout'
+import { AutorelayCallout } from '@/components/AutorelayCallout'
 
 <InteropCallout />
 
@@ -84,14 +85,23 @@ The tutorial uses these primary tools:
           export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
           ```
 
+      1.  Specify the URLs to the chains.
+
+          ```sh
+          SRC_URL=http://localhost:9545
+          DST_URL=http://localhost:9546
+          ```
+
       <details>
         <summary>Sanity check</summary>
 
         ```sh
-        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url http://localhost:9545
-        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url http://localhost:9546
+        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url $SRC_URL
+        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url $DST_URL
         ```
       </details>
+
+
     </Tabs.Tab>
 
     <Tabs.Tab>
@@ -110,20 +120,46 @@ The tutorial uses these primary tools:
 
       1.  Wait a few minutes until you can see the ETH [on the block explorer](https://sid.testnet.routescan.io/) for your address.
 
-          <details>
-            <summary>Sanity check</summary>
+      1.  Specify the URLs to the chains.
 
-            ```sh
-            cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url https://interop-alpha-0.optimism.io/
-            cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url https://interop-alpha-1.optimism.io/
-            ```
-          </details>
+          ```sh
+          SRC_URL=https://interop-alpha-0.optimism.io
+          DST_URL=https://interop-alpha-1.optimism.io          
+          ```      
+
+      <details>
+        <summary>Sanity check</summary>
+
+        ```sh
+        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url $SRC_URL
+        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url $DST_URL
+        ```
+      </details>
     </Tabs.Tab>
   </Tabs>
 
+  ### Transfer ETH using Foundry
+
+  Run these commands:
+
+  ```sh
+  DST_CHAINID=`cast chain-id --rpc-url $DST_URL`
+  MY_ADDRESS=`cast wallet address $PRIVATE_KEY`
+  SUPERCHAIN_WETH=0x4200000000000000000000000000000000000024
+  BEFORE=`cast balance $MY_ADDRESS --rpc-url $DST_URL | cast from-wei`          
+  cast send --rpc-url $SRC_URL --private-key $PRIVATE_KEY $SUPERCHAIN_WETH "sendETH(address,uint256)" $MY_ADDRESS $DST_CHAINID --value 0.001ether
+  sleep 10
+  AFTER=`cast balance $MY_ADDRESS --rpc-url $DST_URL | cast from-wei`
+  echo -e Balance before transfer\\t$BEFORE
+  echo -e Balance after transfer\\t$AFTER
+  ```
+
   ### Create the TypeScript project
 
-  We need to create an executing message on the destination chain, and for that we use [the `@eth-optimism/viem` package](https://www.npmjs.com/package/@eth-optimism/viem).
+  <AutorelayCallout />
+
+  To create an executing message on the destination chain we use [the `@eth-optimism/viem` package](https://www.npmjs.com/package/@eth-optimism/viem).
+  For that we need TypeScript code.
 
   1.  Create a new TypeScript project.
 
