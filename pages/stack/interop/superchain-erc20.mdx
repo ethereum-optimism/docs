@@ -52,6 +52,7 @@ sequenceDiagram
     participant src-bridge as SuperchainTokenBridge
   end
   actor user as User  
+  participant relay as Autorelayer
   box rgba(0,0,0,0.1) Destination Chain
     participant dst-l2Xl2 as L2ToL2CrossDomainMessenger
     participant dst-bridge as SuperchainTokenBridge    
@@ -64,8 +65,8 @@ sequenceDiagram
     src-bridge--)dst-l2Xl2: 3. Relay n tokens to user
   end
   rect rgba(0,0,0,0.1)
-    note over user,dst-erc20: Executing message
-    user->>dst-l2Xl2: 4. Relay the message
+    note over relay,dst-erc20: Executing message
+    relay->>dst-l2Xl2: 4. Relay the message
     dst-l2Xl2->>dst-bridge: 4. Relay the message
     dst-bridge->>dst-erc20: 5. Mint n tokens to user
   end
@@ -84,7 +85,7 @@ sequenceDiagram
 
 #### Executing message (destination chain)
 
-4.  The user, or a relayer, sends an executing message to [`L2ToL2CrossDomainMessenger`](./message-passing) to relay the message.
+4.  The autorelayer (or the user, or any offchain entity) sends an executing message to [`L2ToL2CrossDomainMessenger`](./message-passing) to relay the message.
 
 5.  The destination token bridge calls [`SuperchainERC20.crosschainMint`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol#L26-L35) to mint tokens for the user/contract that called `SuperchainTokenBridge.sendERC20` originally.
 
