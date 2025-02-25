@@ -1,0 +1,237 @@
+# Metadata Configuration for Documentation
+metadata_rules:
+  # PERSONA
+  persona:
+    required: true
+    multiple: true
+    min: 1
+    validation_rules:
+      - enum:
+          - app-developer
+          - node-operator
+          - chain-operator
+          - protocol-developer
+          - partner
+        description: "Must select at least one valid persona"
+
+  # CONTENT TYPE
+  content_type:
+    required: true
+    multiple: false
+    validation_rules:
+      - enum:
+          - tutorial  # step-by-step instructions
+          - landing-page # navigation and overview pages
+          - guide     # general how-to content and concept exlainers
+          - reference # technical specifications and API docs
+          - troubleshooting # problem-solution focused
+          - notice        # Technical updates: breaking changes, upgrades, deprecations
+          - announcement  # Community/Governance updates: new programs, initiatives
+        description: "Must select exactly one content type"
+
+  # TOPIC
+  topic:
+    required: true
+    multiple: false
+    validation_rules:
+      - pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+        description: "Must be kebab-case, derived from page title"
+        examples: ["standard-bridge", "account-abstraction", "ecotone-upgrade"]
+      - unique: true
+        description: "Topic must be unique across all pages"
+      - max_length: 100
+        description: "Topic should be concise"
+
+  # CATEGORIES
+  categories:
+    required: true
+    multiple: true
+    min: 1
+    max: 5
+    validation_rules:
+      - no_duplicates: true
+        description: "Categories must not repeat"
+      - no_metadata_overlap:
+          fields: ["topic", "content_type", "persona"]
+        description: "Categories cannot repeat values used in topic, content_type, or persona"
+    values:
+      # Data Availability Layer
+      - eth-da               
+      - alt-da              
+      - permissionless-batch-submission
+      - block-times
+      
+      # Sequencing Layer
+      - sequencer
+      - sequencer-pbs
+      - sequencer-decentralization
+      - sequencer-in-a-box
+      - op-batcher
+      
+      # Derivation Layer
+      - rollup-node        
+      - fault-proofs
+      - fp-contracts
+      - op-challenger
+      - cannon
+      - zk
+      - op-workbench       # Tool: derivation testing & simulation
+      
+      # Execution Layer
+      - op-geth
+      - op-reth
+      - op-erigon
+      - op-nethermind
+      - evm-equivalence
+      - precompiles
+      - predeploys
+      - preinstalls
+      - custom-gas-token
+      - l2-contracts
+      - dev-console        # Tool: execution layer interaction
+      
+      # Settlement Layer
+      - l1-contracts
+      - standard-bridge
+      - teleportr
+      - interop
+      - interoperability
+      - cross-chain-messaging
+      - interoperable-assets
+      - op-deployer        # Tool: contract deployment
+      - op-supervisor
+      
+      # Governance Layer
+      - security-council
+      - op-token
+      - blockspace-charters
+      - retro-funding
+      - revshare-enshrinement
+      - superchain-registry
+      
+      # Cross-layer Development Tools
+      - supersim            # Tests across multiple layers
+      - devnets            # Full-stack local environment
+      - performance-tooling # Stack-wide performance testing
+      - superchain-registry # Chain management across layers
+      - l1-deployment-upgrade-tooling  # Cross-layer deployment
+      - l2-deployment-upgrade-tooling  # Cross-layer deployment
+      
+      # Chain Management (Cross-layer)
+      - protocol
+      - infrastructure
+      - op-proposer
+      - op-supervisor
+      - op-conductor
+      - op-signer
+      - mcp
+      - mcp-l2
+      - upgrade-standard-chains-stage-1
+      - launch-new-chains-stage-1
+      - automated-pause
+      - dispute-mon
+      - monitorism
+      - vertical-scaling
+      
+      # Protocol Releases
+      - granite
+      - holocene
+      - isthmus
+      - canyon
+      - delta
+      - ecotone
+      - fjord
+      - network-upgrade
+      - hard-fork
+      
+      # Infrastructure & Operations
+      - kubernetes-infrastructure
+      - devops-tooling
+      - artifacts-packaging
+      - peer-management-service
+      - proxyd
+      - zdd-service
+      - snapman
+      - op-beat
+      - security-monitoring-response
+      - stability-monitoring
+      - security
+      
+      # Development Languages & SDKs
+      - solidity
+      - typescript
+      - javascript
+      - go
+      - rust
+      - python
+      - foundry
+      - hardhat
+      - ethers
+      - viem
+      - web3js
+      - wagmi
+      
+      # Development Environments
+      - local-devnet
+      - testnet
+      - mainnet
+
+  # TIMEFRAME
+  timeframe:
+    required_for: 
+      - announcement
+      - notice
+    required: false
+    multiple: false
+    validation_rules:
+      # Component versions
+      - pattern: ^(op-\w+|cannon)/v\d+\.\d+\.\d+$
+        description: "Component releases must be in format component/vX.Y.Z"
+        examples: ["op-node/v1.11.0", "op-batcher/v1.11.1"]
+
+      # Release candidates
+      - pattern: ^(op-\w+)/v\d+\.\d+\.\d+-rc\.\d+$
+        description: "Release candidates must be in format component/vX.Y.Z-rc.N"
+        examples: ["op-node/v1.11.0-rc.2"]
+
+      # Alpha/Beta versions
+      - pattern: ^(op-\w+|cannon)/v\d+\.\d+\.\d+-(alpha|beta)\.\d+$
+        description: "Alpha/Beta releases must be in format component/vX.Y.Z-{alpha|beta}.N"
+        examples: ["cannon/v1.4.0-alpha.1"]
+
+      # Season format
+      - pattern: ^S[6-9]|S[1-9][0-9]+$
+        description: "Season numbers must start with 'S' followed by a number 6 or greater"
+        examples: ["S6", "S7", "S8", "S10"]
+
+      # Calendar year
+      - pattern: ^20(2[4-9]|[3-9][0-9])$
+        description: "Years must be 2024 or later"
+        examples: ["2024", "2025", "2026"]
+
+      # Half year
+      - pattern: ^20(2[4-9]|[3-9][0-9])H[1-2]$
+        description: "Half years must be in format YYYYH1 or YYYYH2"
+        examples: ["2024H1", "2024H2", "2025H1"]
+
+      # Quarter
+      - pattern: ^20(2[4-9]|[3-9][0-9])Q[1-4]$
+        description: "Quarters must be in format YYYYQ1-Q4"
+        examples: ["2024Q1", "2024Q2", "2025Q3"]
+
+      # Month
+      - pattern: ^20(2[4-9]|[3-9][0-9])-(0[1-9]|1[0-2])$
+        description: "Months must be in format YYYY-MM"
+        examples: ["2024-01", "2024-12", "2025-06"]
+
+      # Protocol upgrades
+      - enum:
+          - bedrock
+          - canyon
+          - delta
+          - ecotone
+          - fjord
+          - granite
+          - holocene
+          - isthmus
+        description: "Protocol upgrade names must match exactly"
