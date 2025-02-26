@@ -30,47 +30,47 @@ When enabling cross-chain functionality, it is essential to evaluate **security,
 
 *   **Most secure** – Fully protected by OP Stack permissionless fault proofs. No third-party dependencies.
 *   **1-block latency** within the Superchain.
-*   **Best for:** **Superchain-native tokens**, that need **the highest security, lowest latency, and seamless integration within the Superchain**
+*   **Best for:** **Superchain-native tokens**, that need **the highest security, lowest latency**, and seamless integration within the Superchain
 
 
 ### Weakest link risk
 
-If you allowlist both **Superchain interop and a third-party messaging service**, your token's security is **only as strong as the weakest service**.
-A compromised third-party service could allow **malicious minting or double spending**.
+If you allowlist both Superchain interop and a third-party messaging service, your token's security is only as strong as the weakest service.
+A compromised third-party service could allow malicious minting or double spending.
 
 ### SuperchainTokenBridge vs. Superchain interop messaging
 
 The [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) is an abstraction built on top of the **Cross-Domain Messenger (CDM)**.
-Anyone can build a **custom bridge** on the **L2-to-L2 CDM**, but it may not follow the invariant of maintaining the **same token address across chains**.
+Anyone can build a custom bridge on the **L2-to-L2 CDM**, but it may not follow the invariant of maintaining the same token address across chains.
 
 
 ## Alternative implementation options (ERC-7281 Standard)
 
-If your token requires interoperability **beyond the Superchain**, you can consider one of the following **ERC-7281-compliant** options. These introduce **external dependencies** that must be allowlisted.
+If your token requires interoperability beyond the Superchain, you can consider one of the following **ERC-7281-compliant** options. These introduce external dependencies that must be allowlisted.
 
 ### xERC20 (ERC-7281)
 
-*   **Security:** Secure within the Superchain. Security outside the Superchain depends on **allowlisted third-party bridges**.
-*   **Latency:** 1-block latency in the Superchain. Outside latency varies based on the **messaging service used**.
-*   **Best for:** Projects needing **flexible bridge integrations** while retaining control over allowlisted bridges.
+*   **Security:** Secure within the Superchain. Security outside the Superchain depends on allowlisted third-party bridges.
+*   **Latency:** 1-block latency in the Superchain. Outside latency varies based on the messaging service used.
+*   **Best for:** Projects needing flexible bridge integrations while retaining control over allowlisted bridges.
 
 ### OFT
 
 *   **Security:** Secure within the Superchain. Outside security depends on **allowlisted Decentralized Verification Networks (DVNs)**.
 *   **Latency:** 1-block latency within the Superchain. External latency depends on **DVN finality time**.
-*   **Best for:** Tokens requiring **cross-chain transfer** beyond the Superchain (e.g., Solana, Arbitrum).
+*   **Best for:** Tokens requiring cross-chain transfer beyond the Superchain (e.g., Solana, Arbitrum).
 
 ### NTT
 
-*   **Security:** Secure within the Superchain. External security depends on **allowlisted transceivers**.
-*   **Latency:** 1-block latency within the Superchain. External latency varies based on **transceiver finality**.
-*   **Best for:** Projects that want **Wormhole's network** for cross-chain transfer. *(Superchain integration is still in progress.)*
+*   **Security:** Secure within the Superchain. External security depends on allowlisted transceivers.
+*   **Latency:** 1-block latency within the Superchain. External latency varies based on transceiver finality.
+*   **Best for:** Projects that want Wormhole's network for cross-chain transfer. (Superchain integration is still in progress.)
 
 ### Key takeaways
 
 *   **SuperchainERC20** is the most secure and recommended option for native Superchain tokens.
-*   **All other options (xERC20, OFT, NTT) follow the ERC-7281 standard** and require allowlisting external verification mechanisms.
-*   **Interoperability outside the Superchain** introduces external dependencies and potential security risks.
+*   All other options (xERC20, OFT, NTT) follow the ERC-7281 standard and require allowlisting external verification mechanisms.
+*   Interoperability outside the Superchain introduces external dependencies and potential security risks.
 
 ## Next steps
 
