@@ -1,0 +1,78 @@
+---
+title: Superchain interop compatible token
+lang: en-US
+description: Learn how to enable seamless, low-latency cross-chain composability for your token within the Superchain.
+---
+
+import { Callout } from 'nextra/components'
+import { InteropCallout } from '@/components/WipCallout'
+
+<InteropCallout />
+
+# Making your token Superchain interop compatible
+
+Superchain interop enables **secure, 0-slippage, 1-block latency cross-chain composability** on the Superchain.
+The recommended approach for enabling interop capabilities is using **SuperchainERC20**, but there are other options depending on your needs.
+
+Tokens can move across chains by granting authority to a messaging service (bridge) to **mint/burn** them.
+When enabling cross-chain functionality, it is essential to evaluate **security, cost, and latency**.
+Superchain interop ensures that tokens move securely within the Superchain using **OP Stack permissionless fault proofs**, only requiring gas fees, and achieving **1-block latency**.
+
+## Why Superchain interop?
+
+*   **Low latency:** 1-block finality ensures fast asset movement.
+*   **No slippage:** Transfers happen at a 1:1 rate with no price impact.
+*   **Security:** Protected by the OP Stack's permissionless fault proofs.
+*   **[Reorg awareness](./reorg):** Prevents the double-spend problem.
+
+## Implementation options
+
+Choosing the right implementation depends on your token's needs. Below are the available options:
+
+## **Comparison of Implementation Options**
+
+| Implementation        | Security                                                                                                                 | Latency                                                                                          | Notes                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| **SuperchainERC20**   | ✅ **Most secure** – Fully protected by OP Stack permissionless fault proofs. No third-party dependencies.                | ⚡ **1-block latency** within the Superchain.                                                     | **Recommended for Superchain-native tokens**. Provides the simplest and most secure interop. |
+| **xERC20 (ERC-7281)** | ✅ Secure within the Superchain.  Security outside the Superchain depends on the allowlisted third-party bridges.         | ⚡ **1-block latency** in the Superchain.  Outside latency depends on the messaging service used. | Good for projects that need **flexible bridge integrations**.                                |
+| **OFT**               | ✅ Secure within the Superchain.  Outside security depends on allowlisted **Decentralized Verification Networks (DVNs)**. | ⚡ **1-block latency** in the Superchain.  External latency varies based on DVN finality time.    | Enables **cross-ecosystem movement** beyond the Superchain (e.g., Solana, Arbitrum).         |
+| **NTT**               | ✅ Secure within the Superchain.  External security depends on **allowlisted transceivers**.                              | ⚡ **1-block latency** in the Superchain.  External latency depends on transceiver finality.      | **Superchain integration is in progress**. Similar to OFT but uses Wormhole's network.       |
+
+### **Key Takeaways**
+
+*   **For highest security and lowest latency within the Superchain**, use **SuperchainERC20**.
+*   **For interoperability beyond the Superchain**, **xERC20, OFT, and NTT** provide options, but **security depends on external verification mechanisms**.
+*   **xERC20 is more flexible** but relies on the security of the allowlisted third-party bridges.
+*   **OFT and NTT are useful for non-Superchain ecosystems** but require allowlisting external validators.
+
+## Considerations for L1 deposited tokens
+
+The only **L1 deposited token** with a shared lockbox in the initial Superchain interop upgrade is **ETH**.
+
+<Callout type="warning">
+  If you want to enable **Superchain interop for an L1 token**, you must:
+
+  1.  **Choose a hub chain.**
+  2.  **Add the SuperchainERC20 interface** to the L2 representation of the token.
+</Callout>
+
+**Important:** The L2 representation can teleport within the Superchain, but it can **only exit to L1 through the hub chain**.\
+Depositing an L1 token into a different L2 will create a **new and separate token**, leading to **poor user experience**. We recommend **SuperchainERC20** for L2-native tokens until a shared lockbox for all ERC20 deposits is available.
+
+## Security considerations
+
+Superchain interop provides a **secure** way to transfer tokens, but security risks exist if multiple messaging services are allowlisted.
+
+### Weakest link risk
+
+If you allowlist both **Superchain interop and a third-party messaging service**, your token's security is only as strong as the weakest service. A compromised third-party service could allow malicious minting or double spending.
+
+## SuperchainTokenBridge vs. Superchain interop messaging
+
+The **SuperchainTokenBridge** is an abstraction built on top of the **Cross-Domain Messenger (CDM)**. Anyone can build a **custom bridge** on the **L2-to-L2 CDM**, but it may not follow the invariant of maintaining the same token address across chains.
+
+## Next steps
+
+*   [Deploy a SuperchainERC20 token](/stack/interop/superchain-erc20)
+*   [Learn more about interoperability](/stack/interop/explainer)
+*   [Build a cross-chain app on the Superchain](/app-developers/get-started)
