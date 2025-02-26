@@ -2,7 +2,7 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
 import yaml from 'js-yaml'
-import { analyzeContent } from './metadata-analyzer'
+import { analyzeContent } from './metadata-analyzer.js'
 import type { MetadataResult } from './types/metadata-types'
 
 // Add the interfaces at the top of the file

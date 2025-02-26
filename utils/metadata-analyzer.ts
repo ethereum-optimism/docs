@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { MetadataResult, VALID_CATEGORIES, VALID_CONTENT_TYPES } from './types/metadata-types'
+import { MetadataResult, VALID_CONTENT_TYPES } from './types/metadata-types'
 
 // Add interfaces for configuration
 interface AnalyzerConfig {
