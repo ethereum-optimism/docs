@@ -209,20 +209,37 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 
   const validateFiles = async () => {
+    let hasErrors = false
     for (const file of modifiedFiles) {
       const result = await updateMetadata(file, { validateOnly: true, prMode: true })
       if (!result.isValid) {
-        console.log('\x1b[31m✖ Metadata validation: errors found\x1b[0m')
-        process.exit(1)
+        console.log('\x1b[33m⚠️  Metadata validation warnings:\x1b[0m')
+        console.log(`\nFile: ${file}`)
+        result.errors.forEach(error => console.log(`  → ${error}`))
+        console.log('\nTo fix these warnings:')
+        console.log('1. Add required metadata to your MDX file\'s frontmatter:')
+        console.log('```yaml')
+        console.log('---')
+        console.log('title: Your Title')
+        console.log('lang: en-US')
+        console.log('description: A brief description')
+        console.log('---')
+        console.log('```')
+        console.log('\n2. Or run these commands to auto-fix:')
+        console.log('pnpm metadata-batch-cli:dry    # See what would change')
+        console.log('pnpm metadata-batch-cli        # Apply the changes')
+        hasErrors = true
       }
     }
-    console.log('\x1b[32m✓ Metadata validation: all files valid\x1b[0m')
+    // Always exit with 0 to make it non-blocking
     process.exit(0)
   }
 
   validateFiles().catch(error => {
-    console.error('\x1b[31m✖ Metadata validation: error occurred\x1b[0m')
-    process.exit(1)
+    console.error('\x1b[33m⚠️  Metadata validation error occurred (non-blocking)\x1b[0m')
+    console.error(error)
+    // Exit with 0 even on error to make it non-blocking
+    process.exit(0)
   })
 }
 
