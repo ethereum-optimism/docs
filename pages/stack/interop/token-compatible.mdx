@@ -11,12 +11,12 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Superchain interop compatible tokens
 
-Superchain interop enables **secure, gas-only, 1-block latency cross-chain composability** on the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster).
+Superchain interop enables **trust-minimized, 1-block latency cross-chain composability** on the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster).
 The **recommended** approach for enabling interop capabilities for tokens is using [SuperchainERC20](/stack/interop/superchain-erc20), but there are other options depending on your needs.
 
 ## How tokens go cross-chain
 
-Compared to traditional ERC-20 tokens deployments on a single blockchain, cross-chain tokens can move between different networks through giving crosschainMint and crosschainBurn permissions to a verification mechanism (such as a bridge protocol) that validates when tokens should be burned on one chain and minted on another.
+Compared to traditional ERC-20 tokens deployments on a single blockchain, cross-chain tokens can move between different blockchains through giving crosschainMint and crosschainBurn permissions to a verification mechanism (such as a bridge protocol) that validates when tokens should be burned on one chain and minted on another.
 
 For example when transferring a SuperchainERC20 between chains in the Superchain interop cluster, the Superchain interop protocol ensures the tokens are burned on the source chain before authorizing the corresponding mint on the destination chain.
 
@@ -43,20 +43,22 @@ SuperchainERC20 is the simplest and most trust-minimized way to enable token int
 
 ## Alternative implementation options 
 
-While the SuperchainERC20 is the simplest and recommended implementation for giving your token Superchain interop capabilities, other leading token implementations can also benefit from Superchain interop. If you choose to a token standard other than SuperchainERC20 here are a few things to consider:
+While the SuperchainERC20 is the simplest and recommended implementation for giving your token Superchain interop capabilities, other leading token implementations can also benefit from Superchain interop. If you choose a token standard other than SuperchainERC20 here are a few things to consider:
 
-### ERC-7802
+#### ERC-7802
+[`ERC-7802`](https://ethereum-magicians.org/t/erc-7802-crosschain-token-interface/21508) is a minimal cross-chain mint/burn interface designed to establish a common standard across the EVM ecosystem for tokens to communicate cross-chain. Adding this interface to your token ensures downstream integrators can easily support your token.
 
-### Weakest link risk
+#### SuperchainTokenBridge vs. L2ToL2CrossDomainMessenger
+Tokens can benefit from Superchain interop by either giving cross-chain mint/burn permissions to the `SuperchainTokenBridge` or the `L2ToL2CrossDomainMessenger`. 
+
+The [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) is an abstraction built on top of the **`L2ToL2CrossDomainMessenger`** that facilitates token bridging using interop, but requires the token address be deterministic across chains. 
+
+Alternatively, you can use the `L2ToL2CrossDomainMessenger` to faclitate cross-chain mint/burns **does not** require a deterministic address across chains but requires the token issuer to manage a token registry per chain. 
+
+
+#### Weakest link scenario
 
 If you allowlist both Superchain interop and a third-party verification mechanism, your token's security is only as strong as the weakest verification mechanism.
-
-### SuperchainTokenBridge vs. Superchain interop messaging
-
-The [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) is an abstraction built on top of the **Cross-Domain Messenger (CDM)**.
-Anyone can build a custom bridge on the **L2-to-L2 CDM**, but it may not follow the invariant of maintaining the same token address across chains.
-
-If your token requires interoperability beyond the Superchain, you can consider one of the following **ERC-7281-compliant** options. These introduce external dependencies that must be allowlisted.
 
 ### xERC20 (ERC-7281)
 
