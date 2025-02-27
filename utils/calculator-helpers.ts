@@ -192,7 +192,7 @@ const getEstimatedSizeCalldataGasRatio = (comparableTxnType: string) => {
 }; // c13 done
 
 // =24/'Chain Estimator'!E22
-const calculateImpliedMinimumBlobsPerDay = (
+const calculateImpliedMinimumL1TxsPerDay = (
   maxChannelDuration: number
 ) => {
   const output = 24 / maxChannelDuration;
