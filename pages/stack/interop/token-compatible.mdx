@@ -58,6 +58,13 @@ The [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob
 
 Alternatively, you can build a custom bridge using the `L2ToL2CrossDomainMessenger` to facilitate cross-chain mint/burns that **does not** require a deterministic address across chains but does require the token issuer to manage a token registry per chain. 
 
+#### Cross-chain token address
+
+When deploying your token cross-chain it is critical to ensure the verification mechanism knows what the valid address mapping to facilitate cross-chain mint/burns is. When using the `SuperchainTokenBridge`, there is an invariant that tokens must be deployed at a [deterministic address across chains](/stack/interop/superchain-erc20#requirements) in the Superchain interop cluster. This simplifies development experience by ensuring the token issuer does not need to manage a cross-chain token registry per chain. 
+
+If using another verification mechanism you likely will need to maintain a token registry per chain that indicates the valid address mapping to facilitate cross-chain mint/burns when moving across chains. 
+
+
 #### Weakest link scenario
 
 If you allowlist both Superchain interop and a third-party verification mechanism, your token's security is only as strong as the weakest verification mechanism.
