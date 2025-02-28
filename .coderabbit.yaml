@@ -10,6 +10,34 @@ reviews:
     - path: "**/*.mdx"
       instructions: |
         "ALWAYS review Markdown content THOROUGHLY with the following criteria:
+        - First, check the frontmatter section at the top of the file:
+          1. For regular pages, ensure ALL these fields are present and not empty:
+            ```yaml
+            ---
+            title: [non-empty]
+            lang: [non-empty]
+            description: [non-empty]
+            topic: [non-empty]
+            personas: [non-empty array]
+            categories: [non-empty array]
+            content_type: [valid type]
+            ---
+            ```
+          2. For landing pages (index.mdx or files with <Cards>), only these fields are required:
+            ```yaml
+            ---
+            title: [non-empty]
+            lang: [non-empty]
+            description: [non-empty]
+            topic: [non-empty]
+            ---
+            ```
+          3. If any required fields are missing or empty, comment:
+            'This file appears to be missing required metadata. You can fix this by running:
+            ```bash
+            pnpm metadata-batch-cli:dry "path/to/this/file.mdx"
+            ```
+            Review the changes, then run without :dry to apply them.'
         - Use proper nouns in place of personal pronouns like 'We' and 'Our' to maintain consistency in communal documentation.
         - Avoid gender-specific language and use the imperative form.
         - Monitor capitalization for emphasis. Avoid using all caps, italics, or bold for emphasis.

@@ -35,7 +35,7 @@ export const TextInput = ({
           {label}
         </label>
       )}
-      <p className="text-xs my-1 calcularor-label_description">{description}</p>
+      <p className="text-xs my-1 calculator-label_description">{description}</p>
 
       <input
         {...otherProps}
