@@ -1,7 +1,7 @@
 ---
-title: Crosschain event reads (tic-tac-toe)
+title: Making crosschain event reads (tic-tac-toe)
 lang: en-US
-description: Learn about crosschain event reads using tic-tac-toe.
+description: Learn how to make crosschain event reads using tic-tac-toe.
 ---
 
 import { Callout, Steps } from 'nextra/components'
@@ -9,7 +9,7 @@ import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
 
-# Crosschain event reads (tic-tac-toe)
+# Making crosschain event reads (tic-tac-toe)
 
 This guide reviews a horizontally scalable implementation of TicTacToe. This [implementation](https://github.com/ethereum-optimism/supersim/blob/main/contracts/src/tictactoe/TicTacToe.sol) allows players to play each other from any chain without cross-chain calls, instead relying on cross-chain event reading. Since superchain interop can allow for event reading with a 1-block latency, the experience is the **same as a single-chain implementation**.
 
@@ -34,7 +34,7 @@ This contract relies on a **CREATE2** deployment to ensure a consistent address 
 <Steps>
   ### Intent to play
 
-  A game is uniquely identified by the chain it was started from with a unqiue nonce. This identifier is included in all event fields such that each player can uniquely reference it locally.
+  A game is uniquely identified by the chain it was started from with a unique nonce. This identifier is included in all event fields such that each player can uniquely reference it locally.
 
   To start a game, a player invokes `newGame` which broadcasts a `NewGame` event that any opponent **on any chain** can react to.
 
@@ -86,7 +86,7 @@ This contract relies on a **CREATE2** deployment to ensure a consistent address 
 
   ### Starting the game
 
-  As `AcceptedGame` events are emmited, the player must pick one opponent to play. The opponent's `AcceptedGame` event is used to instantiate the game and play the starting move via the `MovePlayed` event.
+  As `AcceptedGame` events are emitted, the player must pick one opponent to play. The opponent's `AcceptedGame` event is used to instantiate the game and play the starting move via the `MovePlayed` event.
 
   ```solidity
   event MovePlayed(uint256 chainId, uint256 gameId, address player, uint8 _x, uint8 _y);
@@ -103,7 +103,7 @@ This contract relies on a **CREATE2** deployment to ensure a consistent address 
       emit MovePlayed(chainId, gameId, game.player, _x, _y);
   ```
 
-  The event fields contain the information required to perform the neccessary validation.
+  The event fields contain the information required to perform the necessary validation.
 
   *   The game identifier for lookup
   *   The caller is the appropriate player
@@ -196,4 +196,4 @@ Leveraging superchain interop, we can build new types of horizontally scalable c
 
 *   As new chains are added to the superchain, this contract can be installed by anyone and immediately playable with no necessary code changes. The frontend simply needs to react the addition of a new chain.
 *   The concept of a "chain" can be completely abstracted away from the user. When connecting their wallet, the frontend can simply pick the chain which the user has funds on with the lowest gas fees.
-*   Event reading enables a new level of composability for cross-chain interactions. Imagine [contests](event-contests) contract that resolves based on the outcome of a TicTacToe game via the `GameWon` or `GameLost` event without the need for a trusted oracle, nor permission or native integration with the TicTacToe contract.
+*   Event reading enables a new level of composability for cross-chain interactions. Imagine [contests](/stack/interop/tutorials/event-contests) contract that resolves based on the outcome of a TicTacToe game via the `GameWon` or `GameLost` event without the need for a trusted oracle, nor permission or native integration with the TicTacToe contract.

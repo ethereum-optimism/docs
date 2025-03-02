@@ -1,0 +1,280 @@
+---
+title: Creating custom SuperchainERC20 tokens
+lang: en-US
+description: Create SuperchainERC20 tokens with custom behaviors
+---
+
+import { Callout } from 'nextra/components'
+import { Steps } from 'nextra/components'
+
+<Callout>
+  The SuperchainERC20 standard is ready for production deployments.
+  Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
+</Callout>
+
+# Custom SuperchainERC20 tokens
+
+## Overview
+
+This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol)  that can then teleport across the Superchain interop cluster quickly and safely using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract. For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
+
+To ensure fungibility across chains, `SuperchainERC20` assets must have the same contract address on all chains. This requirement abstracts away the complexity of cross-chain validation. Achieving this requires deterministic deployment methods. There are [many ways to do this](https://github.com/Arachnid/deterministic-deployment-proxy).
+Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
+
+### What you'll do
+
+*   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy tokens with your custom code.
+
+### What you'll learn
+
+*   How to deploy custom ERC20 tokens across multiple chains at the same address so that they can be bridged with the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract.
+
+### How does this work?
+
+To benefit from Superchain Interoperability, an ERC-20 token has to implement ERC-7802. You can either use the SuperchainERC20 implementation, or write your own.
+
+At a high level you will:
+
+<Steps>
+
+### Create a basic ERC20 contract
+
+The following code implements a basic ERC20 contract:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
+contract MyERC20 is ERC20, Ownable {
+    constructor(address owner, string memory name, string memory symbol) ERC20(name, symbol) Ownable(owner) {}
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+}
+
+```
+
+### Add the new SuperchainERC20 interface 
+
+The first step is simply to implement `IERC7802` and `IERC165`. Note that we've renamed the contract at this point:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {IERC7802} from "@openzeppelin/contracts/token/ERC20/IERC7802.sol";
+
+contract MySuperchainERC20 is ERC20, Ownable, IERC7802 {
+    error NotSuperchainERC20Bridge();
+
+    constructor(address owner, string memory name, string memory symbol) ERC20(name, symbol) Ownable(owner) {}
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+
+
+    function supportsInterface(bytes4 _interfaceId) public view virtual returns (bool) {
+        return _interfaceId == type(IERC7802).interfaceId || 
+               _interfaceId == type(ERC20).interfaceId 
+               || _interfaceId == type(ERC165).interfaceId;
+    }
+}
+
+```
+
+### Implement burn and mint functions
+
+There are two functions we need to implement: `CrosschainMint` and `CrosschainBurn`. These two functions allow two chains to bridge a token by burning them on one chain and mint them on another. Read more about these functions in our [SuperchainERC20 docs](/stack/interop/superchain-erc20).
+
+Here's what our contract looks like once we've implemented the functions:
+
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {IERC7802} from "@openzeppelin/contracts/token/ERC20/IERC7802.sol";
+
+contract MySuperchainERC20 is ERC20, Ownable, IERC7802 {
+    error NotSuperchainERC20Bridge();
+
+    constructor(address owner, string memory name, string memory symbol) ERC20(name, symbol) Ownable(owner) {}
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+
+    /// @notice Allows the SuperchainTokenBridge to mint tokens.
+    /// @param _to Address to mint tokens to.
+    /// @param _amount Amount of tokens to mint.
+    function crosschainMint(address _to, uint256 _amount) external {
+        if (msg.sender != 0x4200000000000000000000000000000000000028) revert NotSuperchainERC20Bridge();
+
+        _mint(_to, _amount);
+
+        emit CrosschainMint(_to, _amount, msg.sender);
+    }
+
+    /// @notice Allows the SuperchainTokenBridge to burn tokens.
+    /// @param _from Address to burn tokens from.
+    /// @param _amount Amount of tokens to burn.
+    function crosschainBurn(address _from, uint256 _amount) external {
+        if (msg.sender != 0x4200000000000000000000000000000000000028) revert NotSuperchainERC20Bridge();
+        
+        _burn(_from, _amount);
+
+        emit CrosschainBurn(_from, _amount, msg.sender);
+    }
+
+    function supportsInterface(bytes4 _interfaceId) public view virtual returns (bool) {
+        return _interfaceId == type(IERC7802).interfaceId || 
+               _interfaceId == type(ERC20).interfaceId 
+               || _interfaceId == type(ERC165).interfaceId;
+    }
+}
+```
+
+</Steps>
+
+For more details [see the explainer](/stack/interop/superchain-erc20).
+
+## Prerequisites
+
+Before starting this tutorial, ensure your development environment meets the following requirements:
+
+### Technical knowledge
+
+*   Understanding of smart contract development
+*   Familiarity with blockchain concepts
+*   Familiarity with [standard SuperchainERC20 deployments](./deploy-superchain-erc20).
+
+### Development environment
+
+*   Unix-like operating system (Linux, macOS, or WSL for Windows)
+*   Git for version control
+
+### Required tools
+
+The tutorial uses these primary tools:
+
+*   Foundry: For sending transactions to blockchains.
+
+## Step by step explanation
+
+<Steps>
+  ### Prepare for deployment
+
+  1.  Follow the setup steps in the [SuperchainERC20 Starter Kit](/app-developers/starter-kit#setup).
+      Don't start the development environment (step 5).
+
+  2.  Follow [the deployment preparations steps](./deploy-superchain-erc20#prepare-for-deployment) in the issuing new assets page.
+      Don't deploy the contracts yet.
+
+      **Note:** Make sure to specify a previously unused value for the salt, for example your address and a timestamp.
+      This is necessary because if the same constructor code is used with the same salt when using the deployment script, it gets the same address, which is a problem if you want a fresh deployment.
+
+  ### Create the custom contract
+
+  The easiest way to do this is to copy and modify the `L2NativeSuperchainERC20.sol` contract.
+  Use this code, for example, as `packages/contracts/src/CustomSuperchainToken.sol`.
+
+  ```solidity file=<rootDir>/public/tutorials/CustomSuperchainToken.sol hash=4ad95b9203ce523351eba0501f8b972d 
+  ```
+
+  <details>
+    <summary>Explanation</summary>
+
+    ```solidity file=<rootDir>/public/tutorials/CustomSuperchainToken.sol#L36-L38 hash=4e402ea88c9cd796500425172a6de16d 
+    ```
+
+    This function lets users get tokens for themselves.
+    This token is for testing purposes, so it is useful for users to get their own tokens to run tests.
+  </details>
+
+  ### Deploy the new token
+
+  1.  Edit `packages/contracts/scripts/SuperchainERC20Deployer.s.sol`:
+
+      *   Change line 6 to import the new token.
+
+          ```solidity
+          import {CustomSuperchainToken} from "../src/CustomSuperchainToken.sol";
+          ```
+
+      *   Update lines 52-54 to get the `CustomSuperchainToken` initialization code.
+
+          ```solidity
+          bytes memory initCode = abi.encodePacked(
+                type(CustomSuperchainToken).creationCode, abi.encode(ownerAddr_, name, symbol, uint8(decimals))
+          );
+          ```
+
+      *   Modify line 62 to deploy a `CustomSuperchainToken` contract.
+
+          ```solidity
+            addr_ = address(new CustomSuperchainToken{salt: _implSalt()}(ownerAddr_, name, symbol, uint8(decimals)));
+          ```
+
+  2.  Deploy the token contract.
+
+  ```sh
+  pnpm contracts:deploy:token
+  ```
+
+  <details>
+    <summary>Sanity check</summary>
+
+    1.  Set `TOKEN_ADDRESS` to the address where the token is deployed.
+        You can also play with the token I created, which is at address [`0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8`](https://sid.testnet.routescan.io/address/0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8).
+
+        ```sh
+        TOKEN_ADDRESS=0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8
+        ```
+
+    2.  Source the `.env` file to get the private key and the address to which it corresponds.
+
+        ```sh
+        . packages/contracts/.env
+        MY_ADDRESS=`cast wallet address $DEPLOYER_PRIVATE_KEY`
+        ```
+
+    3.  Set variables for the RPC URLs.
+
+        ```sh
+        RPC_DEV0=https://interop-alpha-0.optimism.io
+        RPC_DEV1=https://interop-alpha-1.optimism.io
+        ```
+
+    4.  Get your current balance (it should be zero).
+
+        ```sh
+        cast call --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "balanceOf(address)" $MY_ADDRESS | cast --from-wei
+        ```
+
+    5.  Call the faucet to get a token and check the balance again.
+
+        ```sh
+        cast send  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "faucet()"
+        cast call --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "balanceOf(address)" $MY_ADDRESS | cast --from-wei
+        ```
+  </details>
+</Steps>
+
+For more details [see the explainer](/stack/interop/superchain-erc20).
+
+## Next steps
+*   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
+*   If you'd like a guided walkthrough, check out our [tutorial video](https://x.com/i/status/1866095114374045969) instead.
+*   Review the [Superchain Interop Explainer](/stack/interop/explainer) for answers to common questions about interoperability.
+

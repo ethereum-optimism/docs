@@ -90,7 +90,7 @@ You can use [this calculator](https://docs.google.com/spreadsheets/d/12VIiXHaVEC
 
 ### Set your `--batch-type=1` to use span batches
 
-Span batches reduce the overhead of OP Stack chains, introduced in Delta network upgrade. This is beneficial for sparse and low-throughput OP Stack chains.
+Span batches reduce the overhead of OP Stack chains, introduced in the Delta network upgrade. This is beneficial for sparse and low-throughput OP Stack chains.
 
 The overhead is reduced by representing a span of consecutive L2 blocks in a more efficient manner, while preserving the same consistency checks as regular batch data.
 
@@ -114,11 +114,9 @@ There are two throttling knobs:
   Note that this feature requires the batcher to correctly follow the sequencer at all times, or it would set throttling parameters on a non-sequencer EL client. That means, active sequencer follow mode has to be enabled correctly by listing all the possible sequencers in the L2 rollup and EL endpoint flags.
 </Callout>
 
-The batcher can be configures with the following new flags and default parameters:
+The batcher can be configured with the following new flags and default parameters:
 
-*   Interval at which throttling operations happen (besides when loading an L2 block in the batcher) via `--throttle-interval` (env var `OP_BATCHER_THROTTLE_INTERVAL`): 2s
-*   This can be set to zero to completely disable this feature. Since it's set to 2s by default, the feature is enabled by default.
-*   Backlog of pending block bytes beyond which the batcher will enable throttling on the sequencer via --throttle-threshold (env var `OP_BATCHER_THROTTLE_THRESHOLD`): 1\_000\_000 (batcher backlog of 1MB of data to batch)
+*   Backlog of pending block bytes beyond which the batcher will enable throttling on the sequencer via `--throttle-threshold` (env var `OP_BATCHER_THROTTLE_THRESHOLD`): 1\_000\_000 (batcher backlog of 1MB of data to batch). Disable throttling by setting this to `0`.
 *   Individual tx size throttling via `--throttle-tx-size` (env var `OP_BATCHER_THROTTLE_TX_SIZE`): 300 (estimated compressed bytes)
 *   Block size throttling via `--throttle-block-size` (env var `OP_BATCHER_THROTTLE_BLOCK_SIZE`): 21\_000 (estimated total compressed bytes, at least 70 transactions per block of up to 300 compressed bytes each)
 *   Block size throttling that's always active via `--throttle-always-block-size` (env var `OP_BATCHER_THROTTLE_ALWAYS_BLOCK_SIZE`): 130\_000
@@ -796,22 +794,10 @@ The total DA limit to start imposing on block building **when we are over the th
 
 ***
 
-### throttle-interval
-
-Interval between potential DA throttling actions. **Zero disables throttling**.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--throttle-interval=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--throttle-interval=5s`</Tabs.Tab>
-  <Tabs.Tab>`OP_BATCHER_THROTTLE_INTERVAL=5s`</Tabs.Tab>
-</Tabs>
-
-***
-
 ### throttle-threshold
 
 Threshold on `pending-blocks-bytes-current` beyond which the batcher instructs the\
-block builder to start throttling transactions with larger DA demands.
+block builder to start throttling transactions with larger DA demands. **Zero disables throttling**.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--throttle-threshold=<value>`</Tabs.Tab>
