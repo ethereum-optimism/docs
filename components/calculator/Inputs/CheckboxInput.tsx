@@ -22,7 +22,7 @@ export const CheckboxInput: React.FC<Props> = React.memo(
           {...otherProps}
           type="checkbox"
           onChange={onCheckboxChange}
-          className={`${className} meta-checkbox accent-custom-puple toggle bg-custom-puple`}
+          className={`${className} meta-checkbox accent-custom-purple toggle bg-custom-purple`}
         />
       </div>
     );

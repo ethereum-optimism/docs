@@ -1,8 +1,13 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { fileURLToPath } from 'url'
+import path from 'path'
+import fs from 'fs'
 import matter from 'gray-matter';
 
-const rootDir: string = path.join(__dirname, '..', 'pages');
+// Get current file path in ESM
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const rootDir = path.join(__dirname, '..', 'pages');
 const warnings: string[] = [];
 
 // ANSI color codes
@@ -37,7 +42,7 @@ const excludedPages = [
 ];
 
 async function getContentFiles(folderPath: string): Promise<FileInfo[]> {
-  const files = await fs.readdir(folderPath, { withFileTypes: true });
+  const files = await fs.promises.readdir(folderPath, { withFileTypes: true });
   const fileInfos: FileInfo[] = [];
   const folderName = path.basename(folderPath);
 
@@ -52,7 +57,7 @@ async function getContentFiles(folderPath: string): Promise<FileInfo[]> {
 
     if (file.isFile() && (file.name.endsWith('.md') || file.name.endsWith('.mdx'))) {
       try {
-        const content = await fs.readFile(filePath, 'utf-8');
+        const content = await fs.promises.readFile(filePath, 'utf-8');
         const { data: frontMatter } = matter(content);
         const fileName = path.basename(file.name, path.extname(file.name));
         const fileTitle = frontMatter.title || fileName;
@@ -75,7 +80,7 @@ async function getContentFiles(folderPath: string): Promise<FileInfo[]> {
 
 async function getBreadcrumbCards(breadcrumbPath: string): Promise<Set<string>> {
   try {
-    const content = await fs.readFile(breadcrumbPath, 'utf-8');
+    const content = await fs.promises.readFile(breadcrumbPath, 'utf-8');
     const cardMatches = content.match(/<Card[^>]*href="([^"]+)"[^>]*>/g) || [];
     return new Set(
       cardMatches.map(match => {
@@ -89,7 +94,7 @@ async function getBreadcrumbCards(breadcrumbPath: string): Promise<Set<string>> 
 }
 
 async function checkDirectory(dirPath: string): Promise<void> {
-  const entries = await fs.readdir(dirPath, { withFileTypes: true });
+  const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
   
   for (const entry of entries) {
     if (entry.isDirectory() && !entry.name.startsWith('_') && !entry.name.startsWith('.')) {
@@ -127,7 +132,7 @@ async function main() {
     for (const section of mainSections) {
       const sectionPath = path.join(rootDir, section);
       try {
-        await fs.access(sectionPath);
+        await fs.promises.access(sectionPath);
         await checkDirectory(sectionPath);
         console.log(`Completed checking ${section} section`);
       } catch (error) {

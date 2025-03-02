@@ -23,7 +23,7 @@ export const SelectInput: React.FC<Props> = React.memo(
             {label}
           </label>
         )}
-        <p className="text-xs my-1 calcularor-label_description">
+        <p className="text-xs my-1 calculator-label_description">
           {description}
         </p>
         <div className="grid">
