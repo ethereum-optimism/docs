@@ -141,11 +141,14 @@ export async function updateMetadata(
       is_imported_content: safeAnalysis.is_imported_content || 'false'
     }
 
+    // Validate metadata in all cases
+    const validationResult = await validateMetadata(newMetadata, filepath, options)
+
     // Check validation mode
     if (options.validateOnly || options.prMode) {
       return {
-        isValid: true,
-        errors: [],
+        isValid: validationResult.isValid,
+        errors: validationResult.errors,
         suggestions: {
           categories: safeAnalysis.categories,
           content_type: safeAnalysis.content_type
@@ -153,15 +156,15 @@ export async function updateMetadata(
       }
     }
 
-    // Only write if not in dry run mode
-    if (!options.dryRun) {
+    // Only write if not in dry run mode and validation passed
+    if (!options.dryRun && validationResult.isValid) {
       const updatedContent = matter.stringify(docContent, newMetadata)
       await fs.writeFile(filepath, updatedContent, 'utf8')
     }
 
     return {
-      isValid: true,
-      errors: [],
+      isValid: validationResult.isValid,
+      errors: validationResult.errors,
       suggestions: {
         categories: safeAnalysis.categories,
         content_type: safeAnalysis.content_type
