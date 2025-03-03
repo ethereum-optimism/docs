@@ -2,8 +2,8 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
 import yaml from 'js-yaml'
-import { analyzeContent } from './metadata-analyzer.js'
-import type { MetadataResult } from './types/metadata-types'
+import { analyzeContent } from './metadata-analyzer'
+import { MetadataResult, MetadataOptions, ValidationResult } from './types/metadata-types'
 
 // Add the interfaces at the top of the file
 interface ValidationOptions {
@@ -12,13 +12,25 @@ interface ValidationOptions {
   validateOnly?: boolean
 }
 
-interface ValidationResult {
-  isValid: boolean
-  errors: string[]
+interface UpdateOptions {
+  dryRun?: boolean
+  validateOnly?: boolean
+  prMode?: boolean
+  verbose?: boolean
+  analysis?: MetadataResult
 }
 
 // Validation functions
-async function validateMetadata(metadata: MetadataResult, filepath: string, options: ValidationOptions = {}): Promise<ValidationResult> {
+async function validateMetadata(
+  metadata: MetadataResult, 
+  filepath: string, 
+  options: {
+    dryRun?: boolean;
+    verbose?: boolean;
+    validateOnly?: boolean;
+    prMode?: boolean;
+  } = {}
+): Promise<ValidationResult> {
   const errors = [] as string[]
   const config = await loadConfig('keywords.config.yaml')
   
@@ -106,61 +118,63 @@ export async function generateMetadata(filePath: string): Promise<MetadataResult
 }
 
 // Combined update function with validation and atomic writes
-export async function updateMetadata(filePath: string, options: {
-  dryRun?: boolean
-  validateOnly?: boolean
-  prMode?: boolean
-} = {}): Promise<{
-  isValid: boolean
-  errors: string[]
-  metadata?: MetadataResult
-}> {
+export async function updateMetadata(
+  filepath: string,
+  options: MetadataOptions
+): Promise<ValidationResult> {
   try {
-    const content = await fs.readFile(filePath, 'utf8')
-    const { data: currentMetadata } = matter(content)
+    const content = await fs.readFile(filepath, 'utf8')
+    const { data: frontmatter, content: docContent } = matter(content)
 
-    if (options.validateOnly) {
-      const validationResult = await validateMetadata(currentMetadata as MetadataResult, filePath)
+    // Guard against undefined analysis with optional chaining
+    const safeAnalysis = options?.analysis || {} as MetadataResult
+    
+    // Create new metadata object with all fields
+    const newMetadata = {
+      title: safeAnalysis.title || frontmatter.title || '',
+      description: frontmatter.description || safeAnalysis.description || '',
+      lang: frontmatter.lang || safeAnalysis.lang || 'en-US',
+      content_type: safeAnalysis.content_type,
+      topic: safeAnalysis.topic || '', 
+      personas: safeAnalysis.personas || [],
+      categories: safeAnalysis.categories || [],
+      is_imported_content: safeAnalysis.is_imported_content || 'false'
+    }
+
+    // Validate metadata in all cases
+    const validationResult = await validateMetadata(newMetadata, filepath, options)
+
+    // Check validation mode
+    if (options.validateOnly || options.prMode) {
       return {
         isValid: validationResult.isValid,
-        errors: validationResult.errors
-      }
-    }
-
-    const newMetadata = await generateMetadata(filePath)
-    const validationResult = await validateMetadata(newMetadata, filePath)
-
-    if (!options.dryRun && validationResult.isValid) {
-      const updatedContent = matter.stringify(content, newMetadata)
-      const tempPath = `${filePath}.tmp`
-      
-      try {
-        await fs.writeFile(tempPath, updatedContent)
-        await fs.rename(tempPath, filePath)
-      } catch (writeError) {
-        try {
-          await fs.unlink(tempPath)
-        } catch (cleanupError) {
-          // Ignore cleanup errors
+        errors: validationResult.errors,
+        suggestions: {
+          categories: safeAnalysis.categories,
+          content_type: safeAnalysis.content_type
         }
-        throw writeError
       }
     }
 
-    if (validationResult.errors.length > 0 && !options.prMode) {
-      console.log(`\nMetadata validation errors in ${filePath}:`)
-      validationResult.errors.forEach(error => console.log(`- ${error}`))
+    // Only write if not in dry run mode and validation passed
+    if (!options.dryRun && validationResult.isValid) {
+      const updatedContent = matter.stringify(docContent, newMetadata)
+      await fs.writeFile(filepath, updatedContent, 'utf8')
     }
 
     return {
       isValid: validationResult.isValid,
       errors: validationResult.errors,
-      metadata: newMetadata
+      suggestions: {
+        categories: safeAnalysis.categories,
+        content_type: safeAnalysis.content_type
+      }
     }
   } catch (error) {
     return {
       isValid: false,
-      errors: [`Error processing file: ${error.message}`]
+      errors: [`Failed to update metadata for ${filepath}: ${error.message}`],
+      suggestions: {}
     }
   }
 }
@@ -180,7 +194,15 @@ export async function validatePRChanges(): Promise<boolean> {
 
     let hasErrors = false
     for (const file of modifiedFiles) {
-      const result = await updateMetadata(file, { validateOnly: true, prMode: true })
+      const content = await fs.readFile(file, 'utf8')
+      const analysis = analyzeContent(content, file)
+      const result = await updateMetadata(file, { 
+        validateOnly: true, 
+        prMode: true,
+        dryRun: true,
+        verbose: false,
+        analysis
+      })
       if (!result.isValid) {
         hasErrors = true
         console.error(`\n${file}:`)
@@ -211,11 +233,31 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const validateFiles = async () => {
     let hasErrors = false
     for (const file of modifiedFiles) {
-      const result = await updateMetadata(file, { validateOnly: true, prMode: true })
+      const content = await fs.readFile(file, 'utf8')
+      const analysis = analyzeContent(content, file)
+      const result = await updateMetadata(file, { 
+        validateOnly: true, 
+        prMode: true,
+        dryRun: true,
+        verbose: false,
+        analysis
+      })
       if (!result.isValid) {
         console.log('\x1b[33m⚠️  Metadata validation warnings:\x1b[0m')
         console.log(`\nFile: ${file}`)
         result.errors.forEach(error => console.log(`  → ${error}`))
+        
+        // Show suggestions if available
+        if (result.suggestions?.categories?.length || result.suggestions?.content_type) {
+          console.log('\nSuggested metadata:')
+          if (result.suggestions.content_type) {
+            console.log(`  content_type: ${result.suggestions.content_type}`)
+          }
+          if (result.suggestions.categories?.length) {
+            console.log(`  categories: ${result.suggestions.categories.join(', ')}`)
+          }
+        }
+        
         console.log('\nTo fix these warnings:')
         console.log('1. Add required metadata to your MDX file\'s frontmatter:')
         console.log('```yaml')

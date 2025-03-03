@@ -196,7 +196,7 @@ export function ChainParametersForm(): ReactElement {
             labelClass="calculator-label"
             data={comparableTransactionTypeOptions}
             onSelect={setComparableTransactionType}
-            description="What are the transaction types are similar to"
+            description="What transaction types are similar to"
             className="calculator-select t-1 sm:text-lg py-1 px-2 sm:py-2 sm:px-4"
             label="Comparable Transaction Type"
           />
