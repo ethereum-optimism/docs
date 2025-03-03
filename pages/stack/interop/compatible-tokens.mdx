@@ -1,0 +1,122 @@
+---
+title: Superchain interop compatible tokens
+lang: en-US
+description: Learn how different tokens can use Superchain interop to benefit from secure, low-latency, cross-chain composability.
+topic: Superchain Interoperability
+personas: ["Developer", "Architect"]
+categories: ["Interoperability", "Token"]
+content_type: guide
+---
+
+import { Callout } from 'nextra/components'
+import { InteropCallout } from '@/components/WipCallout'
+
+<Callout>
+The SuperchainERC20 standard is ready for production use with active Mainnet deployments. 
+Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
+</Callout>
+
+# Superchain interop compatible tokens
+
+Superchain interop enables **trust-minimized, 1-block latency cross-chain composability** on the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster).
+The recommended approach for giving tokens Superchain interop capabilities is using [SuperchainERC20](/stack/interop/superchain-erc20), but there are other options depending on your needs.
+
+## How to enable cross-chain token interoperability
+
+Compared to traditional ERC-20 tokens deployments on a single blockchain, cross-chain tokens can move between different blockchains through giving `crosschainMint` and `crosschainBurn` permissions to a verification mechanism (such as a bridge protocol) that validates when tokens should be burned on one chain and minted on another.
+
+For example when transferring a `SuperchainERC20` between chains in the Superchain interop cluster, the Superchain interop protocol ensures the tokens are burned on the source chain before authorizing the corresponding mint on the destination chain.
+
+When enabling cross-chain functionality for your token, it is essential to evaluate the security, cost, and latency of the respective verification mechanism.
+
+
+## Why use Superchain interop to enable cross-chain token interoperability
+
+Apps built with Superchain interop can essentially teleport tokens from one blockchain to another, providing users with a secure, low-latency, and capital-efficient way to transact on the Superchain.
+
+3rd party interop solutions for L2s often wait for Ethereum finalization (15min+) when transferring tokens from an L2 to mitigate the double spend problem. However, that solution results in high latency and poor user experience. 
+Superchain interop is [reorg aware](./reorg) - this means users can transfer assets across chains in the Superchain with 1-block latency, and should a reorg happen, either both the source and destination transactions would remain, or both of them would revert. In every case, there is no window of opportunity to double spend. 
+Low latency interop that mitigates the double spend problem is now possible with Superchain interop.
+
+If a 3rd party interop solution is providing faster-than-Ethereum L1 finality (15min+) cross-chain composability but not using Superchain interop as its verification mechanism, you should be clear on how the solution is mitigating finality risk and what will happen in the event there is a double spend problem. 
+
+## SuperchainERC20
+
+`SuperchainERC20` is a simple and trust-minimized way to enable token interoperability within the Superchain. You can learn more about `SuperchainERC20` [here](/stack/interop/superchain-erc20).
+
+*   **Security:** Fault Proofs secure Superchain interop end to end. No third-party dependencies to enable token interoperability.
+*   **Latency:** 1-block latency within the Superchain interop cluster.
+*   **Cost:** Gas on source chain and destination chain. 
+*   **Cross-chain address:** Deterministic, no token registry required. 
+*   **Supported ecosystem:** Superchain interop cluster.
+
+
+## Considerations when using other token implementations
+
+While the `SuperchainERC20` is a trust-minimized way to enable for giving your token Superchain interop capabilities, other token implementations can also benefit from Superchain interop. If you choose a token standard other than SuperchainERC20 here are a few things to consider:
+
+#### ERC-7802
+[`ERC-7802`](https://ethereum-magicians.org/t/erc-7802-crosschain-token-interface/21508) is a minimal cross-chain mint/burn interface designed to establish a common standard across the EVM ecosystem for tokens to communicate cross-chain. Adding this interface to your token ensures downstream integrators can easily support your token.
+
+#### SuperchainTokenBridge and L2ToL2CrossDomainMessenger
+Tokens can benefit from Superchain interop by either giving cross-chain mint/burn permissions to the `SuperchainTokenBridge` or the `L2ToL2CrossDomainMessenger`. 
+
+The [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) is an abstraction built on top of the [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) that facilitates token bridging using Superchain interop, but requires the token address be deterministic across chains. 
+
+Alternatively, you can build a custom bridge using the `L2ToL2CrossDomainMessenger` to facilitate cross-chain mint/burns that **does not** require a deterministic address across chains but does require the token issuer to manage a token registry per chain. 
+
+#### Cross-chain token address
+
+When deploying your token cross-chain it is critical to ensure the verification mechanism knows what the valid address mapping to facilitate cross-chain mint/burns is. When using the `SuperchainTokenBridge`, there is an invariant that tokens must be deployed at a [deterministic address across chains](/stack/interop/superchain-erc20#requirements) in the Superchain interop cluster. This simplifies development experience by ensuring the token issuer does not need to manage a cross-chain token registry per chain. 
+
+If using another verification mechanism you likely will need to maintain a token registry per chain that indicates the valid address mapping to facilitate cross-chain mint/burns when moving across chains. 
+
+
+#### Weakest link scenario
+
+If you allowlist both Superchain interop and a third-party verification mechanism, your token's security is only as strong as the weakest verification mechanism.
+
+## Alternative token implementations
+
+### xERC20 (ERC-7281)
+
+xERC20 tokens are crosschain ERC-20 which can be transferred across chains by allowing the token owner to approve which bridges can mint/burn their token and the ability to set rate limits per bridge. You can learn more about xERC20 and Superchain interop [here](https://github.com/ethereum-optimism/design-docs/pull/203).
+
+*   **Security:** Variable due to weakest-link scenario based on allowlisted verification mechanisms.
+*   **Latency:** 1-block latency in the Superchain. Outside the Superchain, latency is variable based on allowlisted verification mechanism.
+*   **Cost:** Variable based on allowlisted verification mechanisms.
+*   **Cross-chain address:** Deterministic or requires cross-chain registry per deployment.
+*   **Supported ecosystem:** EVM
+
+### OFT
+
+OFT is a token standard used to send, receive, and compose tokens across chains LayerZero supports. More information will be added about how OFTs can benefit from Superchain interop at a later date. 
+
+*   **Security:** Variable due to weakest-link scenario based on allowlisted verification mechanisms.
+*   **Latency:** 1-block latency within the Superchain. Outside the Superchain, latency is variable based on allowlisted verification (DVN) mechanism.
+*   **Cost:** Variable based on allowlisted verification mechanisms.
+*   **Cross-chain address:** Requires cross-chain registry per deployment.
+*   **Supported ecosystem:** EVM, Solana, MoveVM
+
+### NTT
+
+NTT is a token standard used to send, receive, and compose tokens across chains Wormhole supports. More information will be added about how NTTs can benefit from Superchain interop at a later date. 
+
+*   **Security:** Variable due to weakest-link scenario based on allowlisted verification mechanisms.
+*   **Latency:** 1-block latency within the Superchain. Outside the Superchain, latency is variable based on allowlisted verification (transceiver) mechanism.
+*   **Cost:** Variable based on allowlisted verification mechanisms.
+*   **Cross-chain address:** Requires cross-chain registry per deployment.
+*   **Supported ecosystem:** EVM, Solana, MoveVM
+
+
+## Key takeaways
+
+*   `SuperchainERC20` is a simple and trust-minimized way for token issuers to make their token available across the Superchain interop cluster.
+*   Token issuers can use other token standards (xERC20, OFT, NTT) and give  `crosschainMint` and `crosschainBurn` permissions to the `SuperchainTokenBridge` or `L2ToL2CrossDomainMessenger` to benefit from Superchain interop. 
+*   Token issuers should include a `ERC-7802` interface on their token to simplify downstream integrations.
+
+## Next steps
+
+*   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
+*   Deploy a [SuperchainERC20](/stack/interop/tutorials/deploy-superchain-erc20) to the Superchain
+*   [Learn more about SuperchainERC20](/stack/interop/superchain-erc20)

@@ -1,5 +1,5 @@
 ---
-title: Interoperable ETH
+title: Superchain ETH
 lang: en-US
 description: Learn basic details about Interoperable ETH.
 ---
@@ -10,22 +10,22 @@ import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
 
-# Interoperable ETH
+# Superchain ETH
 
-InteroperableETH enables seamless ETH transfers across Superchain blockchains. It is implemented using three key contracts:
+Superchain ETH enables seamless ETH transfers across the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster). It is implemented using three key contracts:
 
 *   [`SuperchainWETH`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol): A bridge contract that facilitates ETH transfers between Superchain blockchains.
 *   [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol): A liquidity provider for ETH transfers. 
 `SuperchainWETH` uses this contract as a liquidity repository to ensure ETH availability on the destination chain.
 *   [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol): A messaging contract that [facilitates cross-chain communication](/stack/interop/message-passing).
 
-InteroperableETH deposits ETH into the `ETHLiquidity` contract on the source chain and withdraws an equivalent amount on the destination chain. 
+Superchain ETH deposits ETH into the `ETHLiquidity` contract on the source chain and withdraws an equivalent amount on the destination chain. 
 This mechanism improves capital efficiency and eliminates liquidity fragmentation and poor user experiences caused by asset wrapping or reliance on liquidity pools.
 
 ## Features and benefits
 
-*   Enables seamless ETH transfers across different chains in the Superchain
-*   Maintains fungibility of ETH across the Superchain
+*   Enables seamless ETH transfers across different chains in the Superchain interop cluster 
+*   Maintains fungibility of ETH across the Superchain interop cluster 
 *   Provides liquidity for cross-chain transactions
 *   Improves user experience by abstracting complex bridging processes
 
@@ -82,13 +82,13 @@ sequenceDiagram
 
 4.  An off-chain entity submits a transaction to execute the message.
     Any address can submit this transaction, but it must have ETH on the destination chain.
-    Typically, a relayer submits the transaction, since the user does not yet have ETH on the destination chain.
+    Typically, this would be the chain's autorelayer.
 
 5.  `L2ToL2CrossDomainMessenger` on the destination chain calls `SuperchainWETH` with the following details:
 
-*   Source of the ETH
-*   Destination address
-*   Amount of ETH
+    *   Source of the ETH
+    *   Destination address
+    *   Amount of ETH
 
     `SuperchainWETH` performs several sanity checks:
 
@@ -141,8 +141,6 @@ Here is an example of how this works.
 
 ## Next steps
 
-*   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
-*   Explore [the `SuperchainWETH` specs](https://specs.optimism.io/interop/superchain-weth.html) for in-depth implementation details.
-*   Read the [interop message passing](/stack/interop/message-passing) page for more information about how `L2ToL2CrossDomainMessenger` passes messages.
-*   Learn about [SuperchainERC20](/stack/interop/superchain-erc20)
-*   Practice [transferring ETH across chains using Superchain interop](/stack/interop/tutorials/bridge-crosschain-eth)
+*   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain.
+*   Learn about [SuperchainERC20](/stack/interop/superchain-erc20).
+*   Practice [transferring ETH across chains using Superchain interop](/stack/interop/tutorials/bridge-crosschain-eth).

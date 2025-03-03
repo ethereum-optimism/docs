@@ -69,7 +69,7 @@ sequenceDiagram
 ```mermaid
 
 sequenceDiagram
-    participant app as Application
+    participant app as Autorelayer
     box rgba(0,0,0,0.1) Source Chain
       participant log as Event Log
     end    
@@ -88,7 +88,7 @@ sequenceDiagram
 
 1.  Before the executing message is processed, the log event of the initiating message has to get to `op-supervisor` on the destination chain.
 
-2.  The application (or a contract calling on the application's behalf) calls [`L2ToL2CrossDomainMessenger.SendMessage.relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L156-L216).
+2.  The autorelayer, the application, or a contract calling on the application's behalf calls [`L2ToL2CrossDomainMessenger.SendMessage.relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L156-L216).
     This call includes the message that was sent (`_sendMessage`), as well as the [fields required to find that message (`_id`)](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol#L4-L10).
 
 3.  The `L2ToL2CrossDomainMessenger` uses `CrossL2Inbox` to verify the message was sent from the source.
@@ -107,10 +107,5 @@ sequenceDiagram
 ## Next steps
 
 *   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
-*   Deploy a [SuperchainERC20](/stack/interop/tutorials/deploy-superchain-erc20) to the Superchain
-*   Practice how to use [Superchain interop message passing](/stack/interop/message-passing)
-*   Read how [messages get from one blockchain to another (`CrossL2Inbox`)](explainer#how-messages-get-from-one-chain-to-the-other).
-*   Try [Supersim](tools/supersim) for testing cross-chain messages locally.
-*   Learn about [manually relaying messages](/stack/interop/tutorials/relay-messages-viem)
-
-{/*  After the tutorial for L2ToL2CrossDomainMessenger is written, need to add a link here */}
+*   Learn how to [pass messages between blockchains](/stack/interop/tutorials/message-passing).
+*   Deploy a [SuperchainERC20](/stack/interop/tutorials/deploy-superchain-erc20) to the Superchain.
