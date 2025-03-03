@@ -52,7 +52,7 @@ function calculateAltDAOrL1TransactionCost(
 
 export function resultsFeeScalarsAssumed(
   comparableTxnType: string, // e15
-  transactionsPerDay: number, // e14
+  transactionsPerDay: number, // e14 
   dataAvailabilityType: string, // E16
   targetDataMargin: number, // E18
   isStateEnabled: string, // E24
