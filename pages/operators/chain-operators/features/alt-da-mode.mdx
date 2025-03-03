@@ -29,11 +29,6 @@ You should use at least the following compatible op\* versions when running your
 *   op-batcher/v1.9.1
 *   [Latest version of op-geth](https://github.com/ethereum-optimism/op-geth/releases/latest)
 
-
-<Callout type="info">
-  If you are trying to launch an Alt-DA Mode Chain using a custom gas token, follow the contract deployment instructions in our [Custom Gas Token docs](/operators/chain-operators/features/custom-gas-token.mdx).
-</Callout>
-
 <Steps>
   ### Setup your DA server
 
@@ -43,7 +38,7 @@ You should use at least the following compatible op\* versions when running your
 
   *   Celestia's docs on how to run the [Celestia DA server](https://github.com/celestiaorg/op-plasma-celestia/blob/main/README.md)
   *   EigenDA's docs on how to run the [EigenDA DA server](https://github.com/Layr-Labs/op-plasma-eigenda/blob/main/README.md)
-  *   Avail's docs on how to run the [AvailDA DA Server](https://docs.availproject.org/docs/build-with-avail/Optimium/op-stack/op-stack#setup-avail-da-server)
+  *   Avail's docs on how to run the [AvailDA DA Server](https://docs.availproject.org/docs/build-with-avail/deploy-rollup-on-avail/Optimium)
   *   0gDA's docs on how to run the [0gDA DA Server](https://github.com/0glabs/0g-da-op-plasma)
   *   Near DA's docs on how to run the [Near DA Server](https://github.com/Nuffle-Labs/data-availability/blob/84b484de98f58a91bf12c8abe8df27f5e753f63a/docs/OP-Alt-DA.md)
 
@@ -91,7 +86,7 @@ You should use at least the following compatible op\* versions when running your
   ### Set your fee configuration
 
   *   Chain operators are not posting everything to Ethereum, just commitments, so chain operators will need to determine fee scalars values to charge users. The fee scalar values are network throughput dependent, so values will need to be adjusted by chain operators as needed.
-  *   Cost structure for Alt-DA Mode: The transaction data is split up into 128kb chunks and then submitted to your DA Layer. Then, 32 byte commitments are submitted (goes to batch inbox address) to L1 for each 128kb chunk. Then, figure out how much that costs relative to the amount of transactions your chain is putting through.
+  *   Cost structure for Alt-DA Mode: The transaction data is split up into 128kb chunks and then submitted to your DA Layer. Then, 32 byte commitments are submitted (goes to batch inbox address) to L1 for each 128kb chunk. Then, figure out how much that costs relative to the number of transactions your chain is putting through.
   *   Set scalar values inside the deploy config. The example below shows some possible fee scalar values, calculated assuming negligible DA Layer costs, but will need to be adjusted up or down based on network throughput - as a reminder of how to set your scalar values, see [this section](/operators/chain-operators/management/blobs#update-your-scalar-values-for-blobs) of the docs.
 
       ```
@@ -123,7 +118,7 @@ Alt DA teams who want to be featured on this page must meet the following criter
 This feature has been renamed from Plasma Mode to Alt-DA Mode in the monorepo at: [0bb2ff5](https://github.com/ethereum-optimism/optimism/commit/0bb2ff57c8133f1e3983820c0bf238001eca119b). There are several breaking changes you should be aware of. These include changes to configuration file parameters, environment variables, and CLI commands.
 Before proceeding with the migration, ensure you are using [OP Stack v1.9.1](https://github.com/ethereum-optimism/optimism/releases/tag/v1.9.1) or later.
 
-### Modify `rollup.json` config:
+### Modify `rollup.json` config
 
 Update your `rollup.json` configuration file by replacing the old Plasma config with the new Alt-DA config.
 There are two possible formats for the old Plasma config:
