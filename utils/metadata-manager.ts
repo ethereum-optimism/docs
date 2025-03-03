@@ -126,16 +126,19 @@ export async function updateMetadata(
     const content = await fs.readFile(filepath, 'utf8')
     const { data: frontmatter, content: docContent } = matter(content)
 
+    // Guard against undefined analysis with optional chaining
+    const safeAnalysis = options?.analysis || {} as MetadataResult
+    
     // Create new metadata object with all fields
     const newMetadata = {
-      title: options.analysis.title || frontmatter.title || '',
-      description: frontmatter.description || options.analysis.description || '',
-      lang: frontmatter.lang || options.analysis.lang || 'en-US',
-      content_type: options.analysis.content_type,
-      topic: options.analysis.topic || '', 
-      personas: options.analysis.personas || [],
-      categories: options.analysis.categories || [],
-      is_imported_content: options.analysis.is_imported_content || 'false'
+      title: safeAnalysis.title || frontmatter.title || '',
+      description: frontmatter.description || safeAnalysis.description || '',
+      lang: frontmatter.lang || safeAnalysis.lang || 'en-US',
+      content_type: safeAnalysis.content_type,
+      topic: safeAnalysis.topic || '', 
+      personas: safeAnalysis.personas || [],
+      categories: safeAnalysis.categories || [],
+      is_imported_content: safeAnalysis.is_imported_content || 'false'
     }
 
     // Check validation mode
@@ -144,8 +147,8 @@ export async function updateMetadata(
         isValid: true,
         errors: [],
         suggestions: {
-          categories: options.analysis.categories,
-          content_type: options.analysis.content_type
+          categories: safeAnalysis.categories,
+          content_type: safeAnalysis.content_type
         }
       }
     }
@@ -160,8 +163,8 @@ export async function updateMetadata(
       isValid: true,
       errors: [],
       suggestions: {
-        categories: options.analysis.categories,
-        content_type: options.analysis.content_type
+        categories: safeAnalysis.categories,
+        content_type: safeAnalysis.content_type
       }
     }
   } catch (error) {
