@@ -23,7 +23,37 @@ if (!isValidConfig(yamlContent)) {
 
 export const VALID_PERSONAS = yamlContent.metadata_rules.persona.validation_rules[0].enum as readonly string[]
 export const VALID_CONTENT_TYPES = yamlContent.metadata_rules.content_type.validation_rules[0].enum as readonly string[]
-export const VALID_CATEGORIES = yamlContent.metadata_rules.categories.values as readonly string[]
+export const VALID_CATEGORIES = [
+  'protocol',
+  'infrastructure',
+  'sequencer',
+  'op-batcher',
+  'rollup-node',
+  'op-geth',
+  'fault-proofs',
+  'op-challenger',
+  'cannon',
+  'l1-deployment-upgrade-tooling',
+  'l2-deployment-upgrade-tooling',
+  'monitorism',
+  'security',
+  'automated-pause',
+  'kubernetes-infrastructure',
+  'cross-chain-messaging',
+  'standard-bridge',
+  'interoperable-message-passing',
+  'hardhat',
+  'foundry',
+  'ethers',
+  'viem',
+  'supersim',
+  'devnets',
+  'mainnet',
+  'testnet',
+  'superchain-registry',
+  'security-council',
+  'blockspace-charters'
+] as const;
 
 export interface ValidationRule {
   pattern?: string
@@ -79,12 +109,12 @@ export interface MetadataResult {
   lang: string
   description: string
   topic: string
-  personas: Array<string>  // Explicitly typed array
+  personas: Array<string>
   content_type: typeof VALID_CONTENT_TYPES[number]
-  categories: Array<string>  // Explicitly typed array
+  categories: Array<string>
   is_imported_content: string
   content?: string
-  detectionLog?: Array<string>  // Explicitly typed array
+  detectionLog?: Array<string>
 }
 
 export interface ProcessedFile {
@@ -95,5 +125,22 @@ export interface ProcessedFile {
 
 export interface Manifest {
   timestamp: string
-  processed_files: Array<ProcessedFile>  // Explicitly typed array
+  processed_files: Array<ProcessedFile>
+}
+
+export interface MetadataOptions {
+  dryRun: boolean;
+  verbose: boolean;
+  analysis: MetadataResult;
+  validateOnly: boolean;
+  prMode: boolean;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  suggestions?: {
+    categories?: string[];
+    content_type?: string;
+  };
 }
