@@ -97,7 +97,7 @@ For all transactions sent to the `OptimismPortal`:
 3.  Transactions are processed in the order they are received.
 4.  Transactions are processed within the [`sequencer_window`](https://specs.optimism.io/glossary.html#sequencing-window).
 
-In practice, this means that transactions sent to the `OptimismPortal` contract will always be processed in the order they are received and within a maximum delay of the `sequencer_window` (set to 24 hours by default but may differ from chain to chain).
+In practice, this means that transactions sent to the `OptimismPortal` contract will always be processed in the order they are received and within a maximum delay of the `sequencer_window` (set to 12 hours by default but may differ from chain to chain).
 If the Sequencer is unavailable or transactions are not published to L1 within this `sequencer_window`, OP Stack chains will automatically reorganize themselves to guarantee that these transactions are included in the L2 chain.
 
 Refer to the [L2 Chain Derivation Specification](https://specs.optimism.io/protocol/derivation.html) for a much more detailed explanation of how transactions sent to the `OptimismPortal` contract are processed.
@@ -111,7 +111,7 @@ The following scenarios make different assumptions about the state of the Sequen
 
 In this scenario we'll assume that the Sequencer is completely unavailable and unable to process any transactions.
 Users must send transactions directly to the `OptimismPortal` contract to have them included in the L2 chain.
-We'll also assume that the `sequencer_window` has been set to 24 hours.
+We'll also assume that the `sequencer_window` has been set to 12 hours.
 Here, two users are sending transactions to the `OptimismPortal` contract.
 
 Observe how the transactions sent by both users are included in the L2 chain automatically after the `sequencer_window` has elapsed.
@@ -128,8 +128,8 @@ sequenceDiagram
     Note over S: Sequencer goes offline
     U1->>OP: User 1 sends transaction 1 to OptimismPortal
     U2->>OP: User 2 sends transaction 2 to OptimismPortal
-    Note over U1: User 1 waits 24 hours
-    Note over U2: User 2 waits 24 hours
+    Note over U1: User 1 waits 12 hours
+    Note over U2: User 2 waits 12 hours
     OP->>L2: Transaction 1 included in L2 automatically
     OP->>L2: Transaction 2 included in L2 automatically
 ```
