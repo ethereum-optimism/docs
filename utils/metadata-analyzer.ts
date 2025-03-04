@@ -7,6 +7,7 @@ import { MetadataResult, VALID_CATEGORIES, VALID_CONTENT_TYPES } from './types/m
 const yamlConfig = yaml.load(fs.readFileSync('keywords.config.yaml', 'utf8')) as {
   metadata_rules: {
     categories: {
+      values: string[];
       file_patterns: {
         superchain_registry: string[];
         security_council: string[];
@@ -240,7 +241,7 @@ function getLandingPageCategories(filepath: string, content: string): Set<string
  * Validates that a category is in the allowed list
  */
 function isValidCategory(category: string): boolean {
-  return VALID_CATEGORIES.includes(category as typeof VALID_CATEGORIES[number]);
+  return yamlConfig.metadata_rules.categories.values.includes(category);
 }
 
 /**
@@ -345,37 +346,35 @@ function detectAppDeveloperCategories(filepath: string, content: string): Set<st
   const categories = new Set<string>();
 
   if (filepath.includes('/app-developers/')) {
-    // Bridging content
-    if (filepath.includes('/bridging/') || 
-        content.toLowerCase().includes('bridge') ||
-        content.toLowerCase().includes('token transfer')) {
-      addValidCategory(categories, 'standard-bridge');
-      addValidCategory(categories, 'cross-chain-messaging');
+    // Extract potential category from directory name
+    const pathParts = filepath.split('/');
+    const directoryCategory = pathParts[pathParts.length - 2]; // Get parent directory name
+    
+    // Only add if it exists in config
+    if (yamlConfig.metadata_rules.categories.values.includes(directoryCategory)) {
+      categories.add(directoryCategory);
     }
 
     // Tools content
     if (filepath.includes('/tools/')) {
       if (filepath.includes('/build/')) {
-        addValidCategory(categories, 'hardhat');
-        addValidCategory(categories, 'foundry');
+        addValidCategory(categories, 'devops-tooling');
+        addValidCategory(categories, 'testnet-tooling');
+        
+        // Add monitoring/analytics for relevant tools
+        if (content.toLowerCase().includes('monitor') || 
+            content.toLowerCase().includes('analytics') ||
+            content.toLowerCase().includes('explorer')) {
+          addValidCategory(categories, 'monitoring');
+          addValidCategory(categories, 'analytics');
+        }
       }
+      
       if (filepath.includes('/connect/')) {
-        addValidCategory(categories, 'ethers');
-        addValidCategory(categories, 'viem');
+        addValidCategory(categories, 'infrastructure');
       }
-    }
-
-    // SuperSim content
-    if (filepath.includes('/supersim/')) {
-      addValidCategory(categories, 'supersim');
-    }
-
-    // Add devnets for tutorials
-    if (filepath.includes('/tutorials/')) {
-      addValidCategory(categories, 'devnets');
     }
   }
-
   return categories;
 }
 

@@ -100,6 +100,12 @@ export async function generateMetadata(filePath: string): Promise<MetadataResult
   const { data: existingMetadata } = matter(content)
   const analysis = analyzeContent(content, filePath)
 
+  // Handle categories that might be string or array
+  let categories = existingMetadata.categories || []
+  if (typeof categories === 'string') {
+    categories = categories.split(',').map(c => c.trim())
+  }
+
   const metadata: MetadataResult = {
     ...existingMetadata,
     ...analysis,
@@ -109,7 +115,7 @@ export async function generateMetadata(filePath: string): Promise<MetadataResult
     topic: existingMetadata.topic || '',
     personas: existingMetadata.personas || [],
     content_type: existingMetadata.content_type || '',
-    categories: existingMetadata.categories || [],
+    categories: categories,
     is_imported_content: existingMetadata.is_imported_content || 'false',
     content: content
   }
