@@ -106,6 +106,11 @@ export async function generateMetadata(filePath: string): Promise<MetadataResult
     categories = categories.split(',').map(c => c.trim())
   }
 
+  let personas = existingMetadata.personas || []
+  if (typeof personas === 'string') {
+    personas = [personas]
+  }
+
   const metadata: MetadataResult = {
     ...existingMetadata,
     ...analysis,
@@ -113,7 +118,7 @@ export async function generateMetadata(filePath: string): Promise<MetadataResult
     lang: existingMetadata.lang || 'en',
     description: existingMetadata.description || '',
     topic: existingMetadata.topic || '',
-    personas: existingMetadata.personas || [],
+    personas: personas,
     content_type: existingMetadata.content_type || '',
     categories: categories,
     is_imported_content: existingMetadata.is_imported_content || 'false',

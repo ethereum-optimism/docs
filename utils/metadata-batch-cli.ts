@@ -7,6 +7,8 @@ import { updateMetadata as updateMetadataFile } from './metadata-manager'
 import matter from 'gray-matter'
 import { analyzeContent } from './metadata-analyzer'
 import { MetadataResult } from './types/metadata-types'
+import { generateMetadata } from './metadata-manager'
+import globby from 'globby'
 
 // @ts-ignore
 const globModule = await import('glob')
@@ -174,12 +176,12 @@ async function processFiles(files: string[], options: CliOptions): Promise<{
       const content = await fs.readFile(file, 'utf8')
       const { data: frontmatter } = matter(content)
       const analysis = analyzeContent(content, file, options.verbose)
-      const result = await updateMetadataFile(file, { 
-        dryRun: true,
-        verbose: false,
+      const result = await updateMetadataFile(file, {
+        dryRun: options.dryRun,
+        verbose: options.verbose,
         analysis,
-        validateOnly: true,
-        prMode: true
+        validateOnly: false,
+        prMode: false
       })
 
       console.log(`\n${colors.blue}📄 ${file}${colors.reset}`)
@@ -199,7 +201,7 @@ async function processFiles(files: string[], options: CliOptions): Promise<{
         stats.needsReview++
       } else {
         if (!options.dryRun) {
-          await updateMetadataFile(file, { 
+          await updateMetadataFile(file, {
             dryRun: false,
             verbose: options.verbose || false,
             analysis,
@@ -231,50 +233,70 @@ async function processFiles(files: string[], options: CliOptions): Promise<{
 
 async function main() {
   try {
-    console.log('Checking metadata...')
+    const isDryRun = process.argv.includes('--dry-run')
+    const isVerbose = process.argv.includes('--verbose')
     
-    let modifiedFiles: string[] = []
-    
-    // Check if we have a direct glob pattern argument
-    const globPattern = process.argv.find(arg => arg.includes('*.mdx'))
-    if (globPattern) {
-      modifiedFiles = await globModule.glob(globPattern)
+    // Get files from either CHANGED_FILES or command line glob patterns
+    let mdxFiles = []
+    if (process.env.CHANGED_FILES) {
+      mdxFiles = process.env.CHANGED_FILES.split('\n').filter(Boolean)
     } else {
-      // Fall back to CHANGED_FILES if no glob pattern
-      const gitOutput = process.env.CHANGED_FILES || ''
-      modifiedFiles = gitOutput
-        .split('\n')
-        .filter(file => file.trim())
-        .filter(file => file.endsWith('.mdx'))
-        .map(file => path.resolve(process.cwd(), file))
+      // Get glob patterns from command line args (skip the first two args)
+      const patterns = process.argv.slice(2).filter(arg => !arg.startsWith('--'))
+      if (patterns.length > 0) {
+        mdxFiles = await globby(patterns)
+      }
     }
-
-    if (modifiedFiles.length === 0) {
-      console.log(`${colors.green}✓ No MDX files to check${colors.reset}`)
+    
+    mdxFiles = mdxFiles.filter(file => file.endsWith('.mdx'))
+    
+    if (mdxFiles.length === 0) {
+      console.log('✓ No MDX files to check')
       process.exit(0)
     }
 
-    // Validate file paths
-    const validFiles = await validateFilePaths(modifiedFiles)
+    console.log(`Found ${mdxFiles.length} valid files to check\n`)
     
-    if (validFiles.length === 0) {
-      console.log(`${colors.yellow}⚠️  No valid files to check${colors.reset}`)
-      process.exit(0)
+    let processedCount = 0
+    let needsReviewCount = 0
+    
+    for (const file of mdxFiles) {
+      try {
+        const metadata = await generateMetadata(file)
+        const result = await updateMetadataFile(file, {
+          dryRun: isDryRun,
+          verbose: isVerbose,
+          validateOnly: false,
+          prMode: false,
+          analysis: metadata
+        })
+        
+        processedCount++
+        
+        // Show metadata for each file
+        console.log(`\nFile: ${file}`)
+        console.log('Categories:', metadata.categories?.join(', ') || 'none')
+        
+        if (!result.isValid) {
+          needsReviewCount++
+          console.log('\x1b[33m⚠️  Review needed:\x1b[0m')
+          result.errors.forEach(error => console.log(`  → ${error}`))
+        }
+      } catch (error) {
+        console.error(`Error processing ${file}:`, error)
+      }
     }
-
-    console.log(`Found ${validFiles.length} valid files to check`)
     
-    const options: CliOptions = {
-      dryRun: process.argv.includes('--dry-run'),
-      verbose: process.argv.includes('--verbose')
+    // Summary with colors
+    console.log(`\n${processedCount} files processed`)
+    if (needsReviewCount === 0) {
+      console.log('\x1b[32m✓ All files have valid metadata\x1b[0m')
+    } else {
+      console.log(`\x1b[33m⚠️  ${needsReviewCount} files need review\x1b[0m`)
     }
-    
-    const { hasErrors, stats } = await processFiles(validFiles, options)
-    // Don't exit with error code - we want this to be non-blocking
-    process.exit(0)
   } catch (error) {
-    console.error(`${colors.yellow}⚠️  Error: ${error}${colors.reset}`)
-    process.exit(0)
+    console.error('\x1b[31mError:\x1b[0m', error)
+    process.exit(1)
   }
 }
 
