@@ -203,7 +203,6 @@ function extractLinks(content: string): {
     }
     
     const jsxLinkRegexSingleQuote = /href=['"]([^'"]+)['"]/g;
-    const jsxLinkRegexDoubleQuote = /href=["']([^"']+)["']/g;
     const jsxLinkRegexCurly = /href=\{['"]?([^'"}\s]+)['"]?\}/g;
     
     [jsxLinkRegexSingleQuote, jsxLinkRegexDoubleQuote, jsxLinkRegexCurly].forEach(regex => {
