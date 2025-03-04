@@ -1,6 +1,3 @@
-#!/usr/bin/env node
-// Save this file as utils/fix-redirects.ts
-
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
