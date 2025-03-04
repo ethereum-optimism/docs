@@ -14,28 +14,28 @@ Quick guide on using our metadata management system for the OP Stack documentati
 
 1. Run a dry run to preview changes:
    ```bash
-   # Process all .mdx files in a directory
-   pnpm metadata-batch-cli:dry "pages/superchain/*.mdx"
+   # Process all .mdx files in a directory and its subdirectories
+   pnpm metadata-batch-cli:dry "pages/superchain/**/*.mdx"
 
    # Process a specific file with verbose output
    pnpm metadata-batch-cli:verbose "pages/app-developers/example.mdx"
 
    # Process multiple directories
-   pnpm metadata-batch-cli:dry "pages/app-developers/*.mdx" "pages/node-operators/*.mdx"
+   pnpm metadata-batch-cli:dry "pages/app-developers/**/*.mdx" "pages/node-operators/**/*.mdx"
    ```
 
 2. Apply the changes (remove :dry):
    ```bash
-   pnpm metadata-batch-cli "pages/app-developers/*.mdx"
+   pnpm metadata-batch-cli "pages/app-developers/**/*.mdx"
    ```
 
 ### Important Note About File Patterns
 
 Use these patterns to match files:
 
-* `directory/*.mdx` - matches all .mdx files in a specific directory
-* `directory/subdirectory/*.mdx` - matches all .mdx files in a specific subdirectory
-* `directory/*/*.mdx` - matches all .mdx files in all immediate subdirectories
+* `directory/**/*.mdx` - matches all .mdx files in a directory and all its subdirectories
+* `directory/*.mdx` - matches only .mdx files in the specific directory
+* `directory/subdirectory/**/*.mdx` - matches all .mdx files in a specific subdirectory tree
 * the quotes around the pattern are important to prevent shell expansion
 
 ### Configuration Files
