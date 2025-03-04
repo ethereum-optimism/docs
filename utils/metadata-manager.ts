@@ -36,29 +36,29 @@ async function validateMetadata(
   
   // Required field checks based on config
   if (!metadata.topic) {
-    errors.push('Missing required field: topic')
+    errors.push('topic')
   }
   
   // Check personas
   if (config.metadata_rules.persona.required) {
     if (!metadata.personas || metadata.personas.length === 0) {
-      errors.push('Missing required field: personas')
+      errors.push('personas')
     } else if (metadata.personas.length < config.metadata_rules.persona.min) {
-      errors.push(`Personas must have at least ${config.metadata_rules.persona.min} value(s)`)
+      errors.push(`personas (min ${config.metadata_rules.persona.min})`)
     }
   }
   
   // Check content_type
   if (config.metadata_rules.content_type.required && !metadata.content_type) {
-    errors.push('Missing required field: content_type')
+    errors.push('content_type')
   }
   
   // Check categories
   if (config.metadata_rules.categories.required) {
     if (!metadata.categories || metadata.categories.length === 0) {
-      errors.push('Missing required field: categories')
+      errors.push('categories')
     } else if (metadata.categories.length < config.metadata_rules.categories.min) {
-      errors.push(`Categories must have at least ${config.metadata_rules.categories.min} value(s)`)
+      errors.push(`categories (min ${config.metadata_rules.categories.min})`)
     }
   }
 
@@ -67,7 +67,7 @@ async function validateMetadata(
     const validPersonas = config.metadata_rules.persona.validation_rules[0].enum
     metadata.personas.forEach(p => {
       if (!validPersonas.includes(p)) {
-        errors.push(`Invalid persona: ${p}`)
+        errors.push(`invalid persona: ${p}`)
       }
     })
   }
@@ -75,7 +75,7 @@ async function validateMetadata(
   if (metadata.content_type) {
     const validTypes = config.metadata_rules.content_type.validation_rules[0].enum
     if (!validTypes.includes(metadata.content_type)) {
-      errors.push(`Invalid content_type: ${metadata.content_type}`)
+      errors.push(`invalid content_type: ${metadata.content_type}`)
     }
   }
 
@@ -83,7 +83,7 @@ async function validateMetadata(
     const validCategories = config.metadata_rules.categories.values
     metadata.categories.forEach(c => {
       if (!validCategories.includes(c)) {
-        errors.push(`Invalid category: ${c}`)
+        errors.push(`invalid category: ${c}`)
       }
     })
   }
@@ -307,4 +307,34 @@ async function validateConfig(configPath: string): Promise<void> {
     throw new Error('Invalid config: missing metadata_rules')
   }
   // Silently validate - no console output at all
+}
+
+export async function updateMetadataFile(
+  filepath: string,
+  options: {
+    dryRun?: boolean;
+    verbose?: boolean;
+    analysis: MetadataResult;
+    validateOnly: boolean;
+    prMode: boolean;
+  }
+): Promise<{ isValid: boolean; errors: string[]; metadata: MetadataResult }> {
+  try {
+    const content = await fs.readFile(filepath, 'utf8')
+    const { data: frontmatter } = matter(content)
+    const result = await validateMetadata(options.analysis, filepath, options)
+    
+    // Return early if validation failed
+    if (!result.isValid) {
+      return {
+        isValid: false,
+        errors: result.errors,
+        metadata: options.analysis
+      }
+    }
+
+    // ... rest of function
+  } catch (error) {
+    throw new Error(`Failed to update metadata for ${filepath}: ${error.message}`)
+  }
 }
