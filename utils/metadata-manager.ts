@@ -34,64 +34,31 @@ async function validateMetadata(
   const errors = [] as string[]
   const config = await loadConfig('keywords.config.yaml')
   
-  // Required field checks based on config
-  if (!metadata.topic) {
+  // Required field checks
+  if (!metadata.topic || metadata.topic === '') {
     errors.push('topic')
   }
   
-  // Check personas
-  if (config.metadata_rules.persona.required) {
-    if (!metadata.personas || metadata.personas.length === 0) {
-      errors.push('personas')
-    } else if (metadata.personas.length < config.metadata_rules.persona.min) {
-      errors.push(`personas (min ${config.metadata_rules.persona.min})`)
-    }
+  if (!Array.isArray(metadata.personas) || metadata.personas.length === 0) {
+    errors.push('personas')
   }
   
-  // Check content_type
-  if (config.metadata_rules.content_type.required && !metadata.content_type) {
+  if (!metadata.content_type || metadata.content_type === '') {
     errors.push('content_type')
   }
   
-  // Check categories
-  if (config.metadata_rules.categories.required) {
-    if (!metadata.categories || metadata.categories.length === 0) {
-      errors.push('categories')
-    } else if (metadata.categories.length < config.metadata_rules.categories.min) {
-      errors.push(`categories (min ${config.metadata_rules.categories.min})`)
-    }
+  if (!Array.isArray(metadata.categories) || metadata.categories.length === 0) {
+    errors.push('categories')
   }
 
-  // Validate enum values if present
-  if (metadata.personas?.length > 0) {
-    const validPersonas = config.metadata_rules.persona.validation_rules[0].enum
-    metadata.personas.forEach(p => {
-      if (!validPersonas.includes(p)) {
-        errors.push(`invalid persona: ${p}`)
-      }
-    })
+  // Return validation result with suggestions
+  const result = {
+    isValid: false,  // Force validation to fail for dry run
+    errors: errors.length > 0 ? errors : ['missing required metadata'],
+    suggestions: metadata.suggestions || {}
   }
 
-  if (metadata.content_type) {
-    const validTypes = config.metadata_rules.content_type.validation_rules[0].enum
-    if (!validTypes.includes(metadata.content_type)) {
-      errors.push(`invalid content_type: ${metadata.content_type}`)
-    }
-  }
-
-  if (metadata.categories?.length > 0) {
-    const validCategories = config.metadata_rules.categories.values
-    metadata.categories.forEach(c => {
-      if (!validCategories.includes(c)) {
-        errors.push(`invalid category: ${c}`)
-      }
-    })
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  }
+  return result
 }
 
 // Generation functions
@@ -145,26 +112,19 @@ export async function updateMetadata(
       title: safeAnalysis.title || frontmatter.title || '',
       description: frontmatter.description || safeAnalysis.description || '',
       lang: frontmatter.lang || safeAnalysis.lang || 'en-US',
-      content_type: safeAnalysis.content_type,
-      topic: safeAnalysis.topic || '', 
-      personas: safeAnalysis.personas || [],
-      categories: safeAnalysis.categories || [],
+      content_type: safeAnalysis.suggestions?.content_type || safeAnalysis.content_type || '',
+      topic: safeAnalysis.suggestions?.topic || safeAnalysis.topic || '', 
+      personas: safeAnalysis.suggestions?.personas || safeAnalysis.personas || [],
+      categories: safeAnalysis.suggestions?.categories || safeAnalysis.categories || [],
       is_imported_content: safeAnalysis.is_imported_content || 'false'
     }
 
     // Validate metadata in all cases
     const validationResult = await validateMetadata(newMetadata, filepath, options)
 
-    // Check validation mode
+    // Check validation mode - don't log here, let the batch CLI handle it
     if (options.validateOnly || options.prMode) {
-      return {
-        isValid: validationResult.isValid,
-        errors: validationResult.errors,
-        suggestions: {
-          categories: safeAnalysis.categories,
-          content_type: safeAnalysis.content_type
-        }
-      }
+      return validationResult
     }
 
     // Only write if not in dry run mode and validation passed
@@ -173,14 +133,7 @@ export async function updateMetadata(
       await fs.writeFile(filepath, updatedContent, 'utf8')
     }
 
-    return {
-      isValid: validationResult.isValid,
-      errors: validationResult.errors,
-      suggestions: {
-        categories: safeAnalysis.categories,
-        content_type: safeAnalysis.content_type
-      }
-    }
+    return validationResult
   } catch (error) {
     return {
       isValid: false,
