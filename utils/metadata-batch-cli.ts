@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url'
 import { updateMetadata as updateMetadataFile } from './metadata-manager'
 import matter from 'gray-matter'
 import { analyzeContent } from './metadata-analyzer'
-import { MetadataResult } from './types/metadata-types'
+import { MetadataResult, VALID_CATEGORIES, VALID_PERSONAS } from './types/metadata-types'
 import { generateMetadata } from './metadata-manager'
 import globby from 'globby'
 
@@ -171,6 +171,8 @@ async function processFiles(files: string[], options: CliOptions): Promise<{
     failed: 0
   }
 
+  console.log(`Found ${files.length} valid files to check\n`)
+
   for (const file of files) {
     try {
       const content = await fs.readFile(file, 'utf8')
@@ -184,48 +186,35 @@ async function processFiles(files: string[], options: CliOptions): Promise<{
         prMode: false
       })
 
-      console.log(`\n${colors.blue}📄 ${file}${colors.reset}`)
-      console.log(`   Title: ${analysis.title || frontmatter.title || ''}`)
-      console.log(`   Description: ${truncateString(frontmatter.description || '')}`)
-      console.log(`   Lang: ${frontmatter.lang || analysis.lang || 'en-US'}`)
-      console.log(`   Content Type: ${analysis.content_type}`)
-      console.log(`   Topic: ${analysis.topic}`)
-      console.log(`   Personas: ${analysis.personas.join(', ')}`)
-      console.log(`   Categories: ${analysis.categories?.length ? analysis.categories.join(', ') : 'none'}`)
-
+      // Show metadata for each file
+      console.log(`File: ${file}`)
+      
       if (!result.isValid) {
-        console.log('   ⚠️  Review needed:')
-        result.errors.forEach(error => {
-          console.log(`     → ${error}`)
-        })
         stats.needsReview++
+        const filename = file.split('/').pop()?.replace('.mdx', '')
+        
+        // Use the analyzer's detected categories instead of hardcoding
+        const suggestedCategories = analysis.suggestions?.categories || ['protocol']
+        
+        console.log(`${colors.yellow}⚠️  Missing: ${result.errors.join(', ')}${colors.reset}`)
+        console.log(`Suggested: content_type: guide, topic: ${filename}, personas: [${VALID_PERSONAS[0]}], categories: ${JSON.stringify(suggestedCategories)}\n`)
       } else {
         if (!options.dryRun) {
-          await updateMetadataFile(file, {
-            dryRun: false,
-            verbose: options.verbose || false,
-            analysis,
-            validateOnly: false,
-            prMode: false
-          })
-          console.log('   ✓ Updates applied')
+          console.log('   ✓ Updates applied\n')
+        } else {
+          console.log('   ✓ Validation passed (dry run)\n')
         }
         stats.successful++
       }
     } catch (e) {
       stats.failed++
-      console.log(`${colors.yellow}⚠️  Error processing ${file}:${colors.reset} ${e}`)
+      console.log(`${colors.yellow}⚠️  Error processing ${file}:${colors.reset} ${e}\n`)
     }
   }
 
-  // Print summary
-  console.log('\nSummary:')
-  console.log(`${colors.green}✓ ${stats.successful} files processed${colors.reset}`)
+  console.log(`${stats.total} files processed`)
   if (stats.needsReview > 0) {
     console.log(`${colors.yellow}⚠️  ${stats.needsReview} files need review${colors.reset}`)
-  }
-  if (stats.failed > 0) {
-    console.log(`${colors.yellow}⚠️  ${stats.failed} files need manual updates${colors.reset}`)
   }
 
   return { hasErrors: stats.failed > 0, stats }
@@ -236,16 +225,16 @@ async function main() {
     const isDryRun = process.argv.includes('--dry-run')
     const isVerbose = process.argv.includes('--verbose')
     
-    // Get files from either CHANGED_FILES or command line glob patterns
+    // Get files from either command line patterns or CHANGED_FILES
     let mdxFiles = []
-    if (process.env.CHANGED_FILES) {
+    const patterns = process.argv.slice(2).filter(arg => !arg.startsWith('--'))
+    
+    if (patterns.length > 0) {
+      // Direct command: use provided patterns
+      mdxFiles = await globby(patterns)
+    } else if (process.env.CHANGED_FILES) {
+      // PR validation: use changed files
       mdxFiles = process.env.CHANGED_FILES.split('\n').filter(Boolean)
-    } else {
-      // Get glob patterns from command line args (skip the first two args)
-      const patterns = process.argv.slice(2).filter(arg => !arg.startsWith('--'))
-      if (patterns.length > 0) {
-        mdxFiles = await globby(patterns)
-      }
     }
     
     mdxFiles = mdxFiles.filter(file => file.endsWith('.mdx'))
@@ -255,44 +244,56 @@ async function main() {
       process.exit(0)
     }
 
+    const stats = {
+      total: mdxFiles.length,
+      successful: 0,
+      needsReview: 0,
+      failed: 0
+    }
+
     console.log(`Found ${mdxFiles.length} valid files to check\n`)
-    
-    let processedCount = 0
-    let needsReviewCount = 0
     
     for (const file of mdxFiles) {
       try {
-        const metadata = await generateMetadata(file)
+        const content = await fs.readFile(file, 'utf8')
+        const { data: frontmatter } = matter(content)
+        const analysis = analyzeContent(content, file, isVerbose)
         const result = await updateMetadataFile(file, {
           dryRun: isDryRun,
           verbose: isVerbose,
+          analysis,
           validateOnly: false,
-          prMode: false,
-          analysis: metadata
+          prMode: false
         })
-        
-        processedCount++
-        
-        // Show metadata for each file
-        console.log(`\nFile: ${file}`)
-        console.log('Categories:', metadata.categories?.join(', ') || 'none')
+
+        console.log(`File: ${file}`)
         
         if (!result.isValid) {
-          needsReviewCount++
-          console.log('\x1b[33m⚠️  Review needed:\x1b[0m')
-          result.errors.forEach(error => console.log(`  → ${error}`))
+          stats.needsReview++
+          const filename = file.split('/').pop()?.replace('.mdx', '')
+          
+          // Use the analyzer's detected categories instead of hardcoding
+          const suggestedCategories = analysis.suggestions?.categories || ['protocol']
+          
+          console.log(`${colors.yellow}⚠️  Missing: ${result.errors.join(', ')}${colors.reset}`)
+          console.log(`Suggested: content_type: guide, topic: ${filename}, personas: [${VALID_PERSONAS[0]}], categories: ${JSON.stringify(suggestedCategories)}\n`)
+        } else {
+          if (!isDryRun) {
+            console.log('   ✓ Updates applied\n')
+          } else {
+            console.log('   ✓ Validation passed (dry run)\n')
+          }
+          stats.successful++
         }
       } catch (error) {
+        stats.failed++
         console.error(`Error processing ${file}:`, error)
       }
     }
     
-    // Summary with colors
-    console.log(`\n${processedCount} files processed`)
-    if (needsReviewCount === 0) {
-      console.log('\x1b[32m✓ All files have valid metadata\x1b[0m')
-    } else {
-      console.log(`\x1b[33m⚠️  ${needsReviewCount} files need review\x1b[0m`)
+    console.log(`${stats.total} files processed`)
+    if (stats.needsReview > 0) {
+      console.log(`${colors.yellow}⚠️  ${stats.needsReview} files need review${colors.reset}`)
     }
   } catch (error) {
     console.error('\x1b[31mError:\x1b[0m', error)

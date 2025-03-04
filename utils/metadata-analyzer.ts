@@ -402,44 +402,38 @@ function detectCommonCategories(content: string, filepath: string): Set<string> 
 /**
  * Detects categories based on content signals
  */
-function detectCategories(
-  content: string, 
-  filepath: string, 
-  detectionLog: string[],
-  config: AnalyzerConfig
-): string[] {
-  const categories = new Set<string>();
-
-  // Stack categories
-  if (filepath.includes('/stack/') || filepath.includes('/superchain/')) {
-    const stackCategories = detectStackCategories(filepath, content);
-    stackCategories.forEach(category => categories.add(category));
+function detectCategories(content: string, filepath: string, detectionLog: string[]): string[] {
+  const categories = new Set<string>()
+  
+  // Add categories based on content keywords
+  if (content.toLowerCase().includes('mainnet')) {
+    categories.add('mainnet')
   }
-
-  // Landing page categories
-  if (isLandingPage(content, filepath, new Set())) {
-    const landingCategories = getLandingPageCategories(filepath, content);
-    landingCategories.forEach(category => categories.add(category));
+  if (content.toLowerCase().includes('testnet') || content.toLowerCase().includes('devnet')) {
+    categories.add('testnet')
   }
-
-  // Operator categories
-  const operatorCategories = detectOperatorCategories(filepath, content);
-  operatorCategories.forEach(category => categories.add(category));
-
-  // App developer categories
-  const appDevCategories = detectAppDeveloperCategories(filepath, content);
-  appDevCategories.forEach(category => categories.add(category));
-
-  // Common categories
-  const commonCategories = detectCommonCategories(content, filepath);
-  commonCategories.forEach(category => categories.add(category));
-
-  // Sort by priority and limit categories
-  const sortedCategories = Array.from(categories)
-    .sort((a, b) => config.priorityOrder.indexOf(a) - config.priorityOrder.indexOf(b))
-    .slice(0, config.maxCategories);
-
-  return sortedCategories;
+  
+  // Add categories based on filepath
+  if (filepath.includes('/security/')) {
+    categories.add('security')
+  }
+  if (filepath.includes('/fault-proofs/')) {
+    categories.add('protocol')
+  }
+  if (filepath.includes('/interop/')) {
+    categories.add('protocol')
+  }
+  if (filepath.includes('/transactions/')) {
+    categories.add('protocol')
+  }
+  
+  // Always include protocol for stack documentation
+  if (filepath.includes('/stack/')) {
+    categories.add('protocol')
+  }
+  
+  detectionLog.push(`Detected categories: ${Array.from(categories).join(', ')}`)
+  return Array.from(categories)
 }
 
 /**
@@ -547,37 +541,31 @@ export function analyzeContent(
     const detectionLog: string[] = [];
     const detectedPages = new Set<string>();
 
-    // Get title first since we need it for topic
+    // Get current values and suggestions
     const title = detectTitle(content, filepath);
     const topic = generateTopic(title);
     const personas = getDefaultPersonas(filepath);
     const contentType = detectContentType(content, detectionLog, filepath, detectedPages);
-    const categories = detectCategories(content, filepath, detectionLog, config);
+    const categories = detectCategories(content, filepath, detectionLog);
 
-    // Create result with all required fields
-    const result: MetadataResult = {
-      content_type: contentType as typeof VALID_CONTENT_TYPES[number],
-      categories,
-      title,
-      topic,
-      personas,
+    // Return MetadataResult with empty required fields for validation
+    return {
+      title: title,
       lang: config.defaultLang,
       description: config.defaultDescription,
+      content_type: '',  // Empty for validation
+      topic: '',         // Empty for validation
+      personas: [],      // Empty for validation
+      categories: [],    // Empty for validation
+      is_imported_content: 'false',
       detectionLog,
-      is_imported_content: 'false'
+      suggestions: {     // Add suggestions here
+        content_type: contentType,
+        categories: categories,
+        topic: topic,
+        personas: personas
+      }
     };
-
-    // Log if verbose
-    if (verbose) {
-      config.logger(`\n📄 ${filepath}`);
-      config.logger(`   Type: ${result.content_type}`);
-      config.logger(`   Title: ${result.title}`);
-      config.logger(`   Topic: ${result.topic}`);
-      config.logger(`   Categories: ${result.categories.join(', ')}`);
-      config.logger(`   Personas: ${result.personas.join(', ')}`);
-    }
-
-    return result;
   } catch (error) {
     throw new MetadataAnalysisError(`Failed to analyze ${filepath}: ${error.message}`);
   }
