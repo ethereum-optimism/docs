@@ -16,7 +16,7 @@ Thanks for taking the time to contribute! ❤️
   - [Submission Guidelines](#submission-guidelines)
   - [Review Process](#review-process)
 - [Code of Conduct](#code-of-conduct)
-- [Additional Ways to Contribute](#additional-ways-to-contribute)
+- [Additional Ways to Contribute](#additional-ways-to-contribute) 
 
 ## Overview
 
