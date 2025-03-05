@@ -115,6 +115,12 @@ export interface MetadataResult {
   is_imported_content: string
   content?: string
   detectionLog?: Array<string>
+  suggestions?: {
+    content_type?: string
+    categories?: string[]
+    topic?: string
+    personas?: string[]
+  }
 }
 
 export interface ProcessedFile {

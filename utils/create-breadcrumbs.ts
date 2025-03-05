@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import matter from 'gray-matter';
 
-const rootDir: string = path.join(__dirname, '..', 'pages');
+const rootDir = path.join(process.cwd(), 'pages');
 
 interface FileInfo {
   title: string;
