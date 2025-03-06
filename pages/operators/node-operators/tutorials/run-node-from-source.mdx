@@ -1,15 +1,15 @@
 ---
-title: Running an OP Mainnet node from source
+title: Running a Superchain node from source
 lang: en-US
-description: Learn how to run an OP Mainnet node from source code for full nodes and archive nodes.
+description: Learn how to run a Superchain node from source code for full nodes and archive nodes.
 ---
 
 import { Callout, Steps } from 'nextra/components'
 
-# Running an OP Mainnet node from source
+# Running a Superchain node from source
 
-This tutorial explains how to run an OP Mainnet node from source code for full nodes and archive nodes.
-Running an OP Mainnet node from source code is a flexible alternative to using pre-built Docker images.
+This tutorial explains how to run an OP Stack node from source code for full nodes and archive nodes.
+Running an OP Stack node from source code is a flexible alternative to using pre-built Docker images.
 
 ## Building the source code
 
@@ -39,7 +39,9 @@ Based on these trends, node operators should plan for future storage needs and c
   Geth supports a "freezer" feature to store older chain data on HDDs, saving SSD space. Configure this for OP Mainnet using the `--datadir.ancient` flag. See [Geth docs](https://geth.ethereum.org/docs/fundamentals/databases) and [OP docs](/operators/node-operators/configuration/execution-config#datadirancient) for details.
 </Callout>
 
-## Full nodes
+## Superchain nodes
+
+All nodes in the Superchain ecosystem can be run from `op-node` and `op-geth` binaries if they're included in the [Superchain Registry](/superchain/superchain-registry). You can specify the type of node you want to run by configuring the `--network` flag on `op-node` and the `--op-network` flag on `op-geth`.
 
 ### Assess blob archiver
 
@@ -86,6 +88,9 @@ You can still start `op-geth` without yet running `op-node`, but the `op-geth` i
 
   {<h3>Start op-geth</h3>}
 
+  <Callout type="info">
+    If you want to run an archive node, you will need to set `--gcmode=archive`. If you want to run an OP Mainnet archive node, please refer to the [OP Mainnet archive nodes](#op-mainnet-archive-nodes) section.
+  </Callout>
   Use the following command to start `op-geth` in a default configuration.
   The JSON-RPC API will become available on port 8545.
   Refer to the `op-geth` [configuration documentation](/operators/node-operators/configuration/execution-config) for more detailed information about available options.
@@ -99,7 +104,7 @@ You can still start `op-geth` without yet running `op-node`, but the `op-geth` i
     --authrpc.jwtsecret=./jwt.txt \
     --verbosity=3 \
     --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
-    --op-network=op-mainnet \
+    --op-network=op-sepolia \
     --datadir=$DATADIR_PATH
   ```
 </Steps>
@@ -156,7 +161,7 @@ Once you've started `op-geth`, you can start `op-node`.
     --l1.beacon=$L1_BEACON_URL \
     --l2=ws://localhost:8551 \
     --l2.jwt-secret=./jwt.txt \
-    --network=op-mainnet \
+    --network=op-sepolia \
     --syncmode=execution-layer \
     --l2.enginekind=geth
   ```
@@ -225,7 +230,7 @@ There are two stages on `op-geth` for snap sync:
 #### Full sync
 
 <Callout type="info">
-You will need access to the migrated OP Mainnet database to run a full node with full sync.
+For OP Mainnet you will need access to the migrated database to run a full node with full sync.
 You can [migrate your own data directory](https://web.archive.org/web/20240110231645/https://blog.oplabs.co/reproduce-bedrock-migration/) or follow the options available for [archive nodes](#get-the-migrated-data-directory).
 </Callout>
 
@@ -255,7 +260,7 @@ INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,
 INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
 ```
 
-## Archive nodes
+## OP Mainnet archive nodes
 
 <Callout type="info">
   You only need an archive node if you need the historical state. Most node operators should default to full nodes.
