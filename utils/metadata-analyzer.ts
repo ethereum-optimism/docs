@@ -1,6 +1,20 @@
 import fs from 'fs'
 import path from 'path'
+import yaml from 'js-yaml'
 import { MetadataResult, VALID_CATEGORIES, VALID_CONTENT_TYPES } from './types/metadata-types'
+
+// Load YAML config
+const yamlConfig = yaml.load(fs.readFileSync('keywords.config.yaml', 'utf8')) as {
+  metadata_rules: {
+    categories: {
+      values: string[];
+      file_patterns: {
+        superchain_registry: string[];
+        security_council: string[];
+      };
+    };
+  };
+};
 
 // Add interfaces for configuration
 interface AnalyzerConfig {
@@ -42,7 +56,7 @@ const DEFAULT_CONFIG: AnalyzerConfig = {
     'ethers',
     'viem',
     'supersim',
-    'devnets',
+    'devnet',
     'mainnet',
     'testnet'
   ]
@@ -64,9 +78,89 @@ class MetadataAnalysisError extends Error {
 }
 
 /**
- * Returns default personas for app developer content
+ * Detects title from content by finding first h1 heading
  */
-export function getDefaultPersonas(filepath: string): string[] {
+function detectTitle(content: string, filepath: string): string {
+  // Try to find first h1 heading
+  const h1Match = content.match(/^#\s+(.+)$/m);
+  if (h1Match) {
+    return h1Match[1].trim();
+  }
+
+  // Fallback to filename without extension
+  const filename = path.basename(filepath, '.mdx');
+  return filename
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
+ * Returns default personas based on content location and content analysis
+ */
+export function getDefaultPersonas(filepath: string, content: string = ''): string[] {
+  const contentLower = content.toLowerCase()
+  
+  // Stack documentation is primarily for protocol developers and chain operators
+  if (filepath.includes('/stack/')) {
+    const personas = new Set<string>(['protocol-developer'])
+    
+    // Add chain-operator for operational content
+    if (
+      filepath.includes('/security/') ||
+      filepath.includes('/rollup/') ||
+      filepath.includes('/transactions/') ||
+      contentLower.includes('operator') ||
+      contentLower.includes('deployment') ||
+      contentLower.includes('configuration') ||
+      contentLower.includes('monitoring') ||
+      contentLower.includes('maintenance')
+    ) {
+      personas.add('chain-operator')
+    }
+
+    // Add app-developer only for specific integration content
+    if (
+      filepath.includes('/interop/tutorials/') ||
+      filepath.includes('/interop/tools/') ||
+      filepath.includes('/getting-started') ||
+      contentLower.includes('tutorial') ||
+      contentLower.includes('guide') ||
+      contentLower.includes('sdk') ||
+      contentLower.includes('api')
+    ) {
+      personas.add('app-developer')
+    }
+
+    // Remove debug logging
+    return Array.from(personas)
+  }
+  
+  // Superchain content
+  if (filepath.includes('/superchain/')) {
+    const filename = path.basename(filepath);
+    
+    // Registry files are for chain operators
+    const registryFiles = ['networks.mdx', 'addresses.mdx', 'registry.mdx', 'tokenlist.mdx', 'superchain-registry.mdx'];
+    if (registryFiles.includes(filename)) {
+      return ['chain-operator'];
+    }
+    
+    // Security files are for chain operators
+    const securityFiles = ['privileged-roles.mdx', 'standard-configuration.mdx'];
+    if (securityFiles.includes(filename)) {
+      return ['chain-operator'];
+    }
+
+    // Blockspace charter is for chain operators
+    if (filename.includes('blockspace-charter')) {
+      return ['chain-operator'];
+    }
+
+    // Default superchain content is for all personas
+    return ['app-developer', 'chain-operator', 'node-operator'];
+  }
+  
   // Chain operator content
   if (filepath.includes('/chain-operators/')) {
     return ['chain-operator'];
@@ -77,7 +171,7 @@ export function getDefaultPersonas(filepath: string): string[] {
     return ['node-operator'];
   }
   
-  // Default to app developer
+  // Default to app developer for other content
   return ['app-developer'];
 }
 
@@ -143,99 +237,91 @@ function getLandingPageCategories(filepath: string, content: string): Set<string
   
   // Add categories based on directory path
   if (filepath.includes('/bridging/')) {
-    categories.add('standard-bridge');
-    categories.add('interoperable-message-passing');
+    addValidCategory(categories, 'standard-bridge');
+    addValidCategory(categories, 'interoperable-message-passing');
   }
   
   if (filepath.includes('/tutorials/')) {
-    // Don't automatically add devnets to tutorial landing pages
+    // Don't automatically add devnet to tutorial landing pages
     if (content.toLowerCase().includes('testnet') || 
         content.toLowerCase().includes('local development')) {
-      categories.add('devnets');
+      addValidCategory(categories, 'devnet');
     }
   }
 
   if (filepath.includes('/tools/')) {
     // Add relevant categories based on tool type
     if (filepath.includes('/build/')) {
-      categories.add('hardhat');
-      categories.add('foundry');
+      addValidCategory(categories, 'hardhat');
+      addValidCategory(categories, 'foundry');
     }
     if (filepath.includes('/connect/')) {
-      categories.add('ethers');
-      categories.add('viem');
+      addValidCategory(categories, 'ethers');
+      addValidCategory(categories, 'viem');
     }
   }
 
   if (filepath.includes('/supersim/')) {
-    categories.add('supersim');
+    addValidCategory(categories, 'supersim');
   }
 
   // Add categories based on content keywords
   if (content.toLowerCase().includes('security') || 
       content.toLowerCase().includes('secure')) {
-    categories.add('security');
+    addValidCategory(categories, 'security');
   }
 
   return categories;
+}
+
+/**
+ * Validates that a category is in the allowed list
+ */
+function isValidCategory(category: string): boolean {
+  return yamlConfig.metadata_rules.categories.values.includes(category);
+}
+
+/**
+ * Adds a category if it's valid
+ */
+function addValidCategory(categories: Set<string>, category: string): void {
+  if (isValidCategory(category)) {
+    categories.add(category);
+  }
 }
 
 // Helper functions for category detection
 function detectStackCategories(filepath: string, content: string): Set<string> {
   const categories = new Set<string>();
   
-  // Base protocol content
-  if (filepath.match(/\/(rollup|transactions|components|differences|smart-contracts)\//)) {
-    categories.add('protocol');
-  }
-
-  // Research and specs
-  if (filepath.includes('/research/')) {
-    categories.add('protocol');
-    if (content.toLowerCase().includes('block time')) {
-      categories.add('block-times');
-    }
-  }
-
-  // Root stack pages
-  if (filepath.match(/\/stack\/[^/]+\.mdx$/)) {
-    if (filepath.endsWith('features.mdx') || filepath.endsWith('beta-features.mdx')) {
-      categories.add('protocol');
-      if (content.toLowerCase().includes('gas')) {
-        categories.add('custom-gas-token');
-      }
-      if (content.toLowerCase().includes('data availability')) {
-        categories.add('alt-da');
-      }
+  if (filepath.includes('/superchain/')) {
+    const filename = path.basename(filepath);
+    
+    // Registry files
+    const registryFiles = ['networks.mdx', 'addresses.mdx', 'registry.mdx', 'tokenlist.mdx', 'superchain-registry.mdx'];
+    if (registryFiles.includes(filename)) {
+      addValidCategory(categories, 'superchain-registry');
     }
 
-    // Core protocol pages
-    if (['rollup.mdx', 'transactions.mdx', 'components.mdx', 'differences.mdx', 'smart-contracts.mdx']
-        .some(file => filepath.endsWith(file))) {
-      categories.add('protocol');
+    // Protocol and security files
+    const securityFiles = ['privileged-roles.mdx', 'standard-configuration.mdx'];
+    if (securityFiles.includes(filename)) {
+      addValidCategory(categories, 'protocol');
+      addValidCategory(categories, 'security');
     }
 
-    // Development pages
-    if (['dev-node.mdx', 'getting-started.mdx', 'public-devnets.mdx']
-        .some(file => filepath.endsWith(file))) {
-      categories.add('devnets');
+    // Blockspace charter
+    if (filename.includes('blockspace-charter')) {
+      addValidCategory(categories, 'blockspace-charters');
     }
 
-    // Security pages
-    if (filepath.endsWith('security.mdx')) {
-      categories.add('security');
+    // Network types based on content
+    const contentLower = content.toLowerCase();
+    if (contentLower.includes('mainnet')) {
+      addValidCategory(categories, 'mainnet');
     }
-
-    // Research pages
-    if (['research.mdx', 'fact-sheet.mdx', 'design-principles.mdx']
-        .some(file => filepath.endsWith(file))) {
-      categories.add('protocol');
-    }
-
-    // Interop pages
-    if (filepath.endsWith('interop.mdx')) {
-      categories.add('interop');
-      categories.add('cross-chain-messaging');
+    if (contentLower.includes('testnet') || contentLower.includes('sepolia')) {
+      addValidCategory(categories, 'testnet');
     }
   }
 
@@ -247,46 +333,46 @@ function detectOperatorCategories(filepath: string, content: string): Set<string
 
   // Chain operator categories
   if (filepath.includes('/chain-operators/')) {
-    categories.add('protocol');
+    addValidCategory(categories, 'protocol');
     
     if (content.toLowerCase().includes('sequencer') ||
         content.toLowerCase().includes('batch') ||
         content.toLowerCase().includes('proposer')) {
-      categories.add('sequencer');
-      categories.add('op-batcher');
+      addValidCategory(categories, 'sequencer');
+      addValidCategory(categories, 'op-batcher');
     }
     
     if (content.toLowerCase().includes('fault proof') ||
         content.toLowerCase().includes('challenger')) {
-      categories.add('fault-proofs');
-      categories.add('op-challenger');
+      addValidCategory(categories, 'fault-proofs');
+      addValidCategory(categories, 'op-challenger');
     }
 
     if (content.toLowerCase().includes('deploy') ||
         content.toLowerCase().includes('genesis') ||
         content.toLowerCase().includes('configuration')) {
-      categories.add('l1-deployment-upgrade-tooling');
-      categories.add('l2-deployment-upgrade-tooling');
+      addValidCategory(categories, 'l1-deployment-upgrade-tooling');
+      addValidCategory(categories, 'l2-deployment-upgrade-tooling');
     }
   }
 
   // Node operator categories
   if (filepath.includes('/node-operators/')) {
-    categories.add('infrastructure');
+    addValidCategory(categories, 'infrastructure');
     
     if (content.toLowerCase().includes('rollup node') ||
         content.toLowerCase().includes('op-node')) {
-      categories.add('rollup-node');
+      addValidCategory(categories, 'rollup-node');
     }
     
     if (content.toLowerCase().includes('op-geth')) {
-      categories.add('op-geth');
+      addValidCategory(categories, 'op-geth');
     }
 
     if (content.toLowerCase().includes('monitoring') ||
         content.toLowerCase().includes('metrics') ||
         content.toLowerCase().includes('health')) {
-      categories.add('monitorism');
+      addValidCategory(categories, 'monitorism');
     }
   }
 
@@ -297,37 +383,35 @@ function detectAppDeveloperCategories(filepath: string, content: string): Set<st
   const categories = new Set<string>();
 
   if (filepath.includes('/app-developers/')) {
-    // Bridging content
-    if (filepath.includes('/bridging/') || 
-        content.toLowerCase().includes('bridge') ||
-        content.toLowerCase().includes('token transfer')) {
-      categories.add('standard-bridge');
-      categories.add('cross-chain-messaging');
+    // Extract potential category from directory name
+    const pathParts = filepath.split('/');
+    const directoryCategory = pathParts[pathParts.length - 2]; // Get parent directory name
+    
+    // Only add if it exists in config
+    if (yamlConfig.metadata_rules.categories.values.includes(directoryCategory)) {
+      categories.add(directoryCategory);
     }
 
     // Tools content
     if (filepath.includes('/tools/')) {
       if (filepath.includes('/build/')) {
-        categories.add('hardhat');
-        categories.add('foundry');
+        addValidCategory(categories, 'devops-tooling');
+        addValidCategory(categories, 'testnet-tooling');
+        
+        // Add monitoring/analytics for relevant tools
+        if (content.toLowerCase().includes('monitor') || 
+            content.toLowerCase().includes('analytics') ||
+            content.toLowerCase().includes('explorer')) {
+          addValidCategory(categories, 'monitoring');
+          addValidCategory(categories, 'analytics');
+        }
       }
+      
       if (filepath.includes('/connect/')) {
-        categories.add('ethers');
-        categories.add('viem');
+        addValidCategory(categories, 'infrastructure');
       }
-    }
-
-    // SuperSim content
-    if (filepath.includes('/supersim/')) {
-      categories.add('supersim');
-    }
-
-    // Add devnets for tutorials
-    if (filepath.includes('/tutorials/')) {
-      categories.add('devnets');
     }
   }
-
   return categories;
 }
 
@@ -337,23 +421,16 @@ function detectCommonCategories(content: string, filepath: string): Set<string> 
   // Common infrastructure
   if (content.toLowerCase().includes('kubernetes') ||
       content.toLowerCase().includes('k8s')) {
-    categories.add('kubernetes-infrastructure');
+    addValidCategory(categories, 'kubernetes-infrastructure');
   }
 
-  // Superchain content
-  if (filepath.includes('/superchain/')) {
-    if (filepath.includes('blockspace')) {
-      categories.add('blockspace-charters');
-    }
-    if (filepath.includes('registry') || 
-        filepath.includes('addresses') ||
-        filepath.includes('networks')) {
-      categories.add('superchain-registry');
-    }
-    if (content.toLowerCase().includes('security') ||
-        content.toLowerCase().includes('privileged')) {
-      categories.add('security-council');
-    }
+  // Network types
+  if (content.toLowerCase().includes('mainnet')) {
+    addValidCategory(categories, 'mainnet');
+  }
+  if (content.toLowerCase().includes('testnet') ||
+      content.toLowerCase().includes('sepolia')) {
+    addValidCategory(categories, 'testnet');
   }
 
   return categories;
@@ -362,44 +439,38 @@ function detectCommonCategories(content: string, filepath: string): Set<string> 
 /**
  * Detects categories based on content signals
  */
-function detectCategories(
-  content: string, 
-  filepath: string, 
-  detectionLog: string[],
-  config: AnalyzerConfig
-): string[] {
-  const categories = new Set<string>();
-
-  // Landing page categories
-  if (isLandingPage(content, filepath, new Set())) {
-    const landingCategories = getLandingPageCategories(filepath, content);
-    landingCategories.forEach(category => categories.add(category));
+function detectCategories(content: string, filepath: string, detectionLog: string[]): string[] {
+  const categories = new Set<string>()
+  
+  // Add categories based on content keywords
+  if (content.toLowerCase().includes('mainnet')) {
+    categories.add('mainnet')
   }
-
-  // Stack categories
+  if (content.toLowerCase().includes('testnet') || content.toLowerCase().includes('devnet')) {
+    categories.add('testnet')
+  }
+  
+  // Add categories based on filepath
+  if (filepath.includes('/security/')) {
+    categories.add('security')
+  }
+  if (filepath.includes('/fault-proofs/')) {
+    categories.add('protocol')
+  }
+  if (filepath.includes('/interop/')) {
+    categories.add('protocol')
+  }
+  if (filepath.includes('/transactions/')) {
+    categories.add('protocol')
+  }
+  
+  // Always include protocol for stack documentation
   if (filepath.includes('/stack/')) {
-    const stackCategories = detectStackCategories(filepath, content);
-    stackCategories.forEach(category => categories.add(category));
+    categories.add('protocol')
   }
-
-  // Operator categories
-  const operatorCategories = detectOperatorCategories(filepath, content);
-  operatorCategories.forEach(category => categories.add(category));
-
-  // App developer categories
-  const appDevCategories = detectAppDeveloperCategories(filepath, content);
-  appDevCategories.forEach(category => categories.add(category));
-
-  // Common categories
-  const commonCategories = detectCommonCategories(content, filepath);
-  commonCategories.forEach(category => categories.add(category));
-
-  // Sort by priority and limit categories
-  const sortedCategories = Array.from(categories)
-    .sort((a, b) => config.priorityOrder.indexOf(a) - config.priorityOrder.indexOf(b))
-    .slice(0, config.maxCategories);
-
-  return sortedCategories;
+  
+  detectionLog.push(`Detected categories: ${Array.from(categories).join(', ')}`)
+  return Array.from(categories)
 }
 
 /**
@@ -502,53 +573,37 @@ export function analyzeContent(
   verbose: boolean = false,
   config: AnalyzerConfig = DEFAULT_CONFIG
 ): MetadataResult {
-  // Validate inputs
-  if (!filepath || typeof filepath !== 'string') {
-    throw new MetadataAnalysisError('Invalid file path provided');
-  }
-  if (!content || typeof content !== 'string') {
-    throw new MetadataAnalysisError('Invalid content provided');
-  }
-  if (typeof verbose !== 'boolean') {
-    throw new MetadataAnalysisError('Invalid verbose flag provided');
-  }
-
-  const detectionLog: string[] = [];
-  const warnings: string[] = [];
-  const detectedPages = new Set<string>();
-  
   try {
+    // Initialize detection tracking
+    const detectionLog: string[] = [];
+    const detectedPages = new Set<string>();
+
+    // Get current values and suggestions
+    const title = detectTitle(content, filepath);
+    const topic = generateTopic(title);
+    const personas = getDefaultPersonas(filepath, content);
     const contentType = detectContentType(content, detectionLog, filepath, detectedPages);
-    const categories = detectCategories(content, filepath, detectionLog, config);
+    const categories = detectCategories(content, filepath, detectionLog);
 
-    // Only track warnings if verbose mode is on
-    if (contentType === 'NEEDS_REVIEW') {
-      warnings.push('Content type needs manual review');
-    }
-    if (categories.length === 0) {
-      warnings.push('Categories may need manual review');
-    }
+    detectionLog.push(`Detected personas: ${personas.join(', ')}`);
 
-    // Only log if verbose mode is on
-    if (verbose) {
-      config.logger(`\n📄 ${filepath}`);
-      config.logger(`   Type: ${contentType}`);
-      config.logger(`   Categories: ${categories.length ? categories.join(', ') : 'none'}`);
-      warnings.forEach(warning => {
-        config.logger(`   ⚠️  ${warning}`);
-      });
-    }
-
+    // Return MetadataResult with empty required fields for validation
     return {
-      content_type: contentType as typeof VALID_CONTENT_TYPES[number],
-      categories,
-      detectionLog,
-      title: config.defaultTitle,
+      title: title,
       lang: config.defaultLang,
       description: config.defaultDescription,
-      topic: generateTopic(config.defaultTitle),
-      personas: getDefaultPersonas(filepath),
-      is_imported_content: 'false'
+      content_type: '',  // Empty for validation
+      topic: '',         // Empty for validation
+      personas: [],      // Empty for validation
+      categories: [],    // Empty for validation
+      is_imported_content: 'false',
+      detectionLog,
+      suggestions: {     
+        content_type: contentType,
+        categories: categories,
+        topic: topic,
+        personas: personas  // Make sure this is being used
+      }
     };
   } catch (error) {
     throw new MetadataAnalysisError(`Failed to analyze ${filepath}: ${error.message}`);

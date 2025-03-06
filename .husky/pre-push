@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running automatic fixes before pushing..."
+pnpm fix
+
+# Check if there are any changes after running fixes
+if [ -n "$(git status --porcelain)" ]; then
+  echo "🔄 Changes detected after running fixes. Committing them automatically..."
+  
+  # Stage all changes
+  git add .
+  
+  # Create a commit with a descriptive message
+  git commit -m "Auto-fix: Update breadcrumbs, spelling dictionary and other automated fixes"
+  
+  echo "✅ Changes committed automatically. Continuing with push..."
+else
+  echo "✅ No changes needed. Continuing with push..."
+fi

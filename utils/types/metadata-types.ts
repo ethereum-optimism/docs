@@ -79,12 +79,18 @@ export interface MetadataResult {
   lang: string
   description: string
   topic: string
-  personas: Array<string>  // Explicitly typed array
+  personas: Array<string>
   content_type: typeof VALID_CONTENT_TYPES[number]
-  categories: Array<string>  // Explicitly typed array
+  categories: Array<string>
   is_imported_content: string
   content?: string
-  detectionLog?: Array<string>  // Explicitly typed array
+  detectionLog?: Array<string>
+  suggestions?: {
+    content_type?: string
+    categories?: string[]
+    topic?: string
+    personas?: string[]
+  }
 }
 
 export interface ProcessedFile {
@@ -95,5 +101,22 @@ export interface ProcessedFile {
 
 export interface Manifest {
   timestamp: string
-  processed_files: Array<ProcessedFile>  // Explicitly typed array
+  processed_files: Array<ProcessedFile>
+}
+
+export interface MetadataOptions {
+  dryRun: boolean;
+  verbose: boolean;
+  analysis: MetadataResult;
+  validateOnly: boolean;
+  prMode: boolean;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  suggestions?: {
+    categories?: string[];
+    content_type?: string;
+  };
 }

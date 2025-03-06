@@ -13,29 +13,30 @@ Quick guide on using our metadata management system for the OP Stack documentati
 ## Using the Scripts
 
 1. Run a dry run to preview changes:
-   * Process all .mdx files in a directory
-```bash
-pnpm metadata-batch-cli:dry "pages/app-developers/**/*.mdx"
-```
-   * Process a specific file with verbose output
-```bash
-pnpm metadata-batch-cli:verbose "pages/app-developers/example.mdx"
-```
-   * Process multiple directories
-```bash
-pnpm metadata-batch-cli:dry "pages/app-developers/**/*.mdx" "pages/node-operators/**/*.mdx"
-```
+   ```bash
+   # Process all .mdx files in a directory and its subdirectories
+   pnpm metadata-batch-cli:dry "pages/superchain/**/*.mdx"
+
+   # Process a specific file with verbose output
+   pnpm metadata-batch-cli:verbose "pages/app-developers/example.mdx"
+
+   # Process multiple directories
+   pnpm metadata-batch-cli:dry "pages/app-developers/**/*.mdx" "pages/node-operators/**/*.mdx"
+   ```
 
 2. Apply the changes (remove :dry):
-```bash
-pnpm metadata-batch-cli "pages/app-developers/**/*.mdx"
-```
+   ```bash
+   pnpm metadata-batch-cli "pages/app-developers/**/*.mdx"
+   ```
 
 ### Important Note About File Patterns
 
-* Use `**/*.mdx` to match all .mdx files in a directory and its subdirectories
-* The double asterisk `**` is required for recursive directory matching
-* Single `/` patterns will not work correctly
+Use these patterns to match files:
+
+* `directory/**/*.mdx` - matches all .mdx files in a directory and all its subdirectories
+* `directory/*.mdx` - matches only .mdx files in the specific directory
+* `directory/subdirectory/**/*.mdx` - matches all .mdx files in a specific subdirectory tree
+* the quotes around the pattern are important to prevent shell expansion
 
 ### Configuration Files
 
@@ -84,7 +85,7 @@ metadata_rules:
         - tokens
         - standard-bridge
         - interoperable-message-passing
-        - devnets
+        - devnet
         - infrastructure
 ```
 
@@ -100,13 +101,13 @@ metadata_rules:
    * Commit your current changes
    * Ensure you're in the docs root directory
    * Check that keywords.config.yaml exists and is properly configured
-   * **Important**: All valid metadata values must be defined in keywords.config.yaml
+   * **Important**: All metadata values must be defined in keywords.config.yaml
 
 2. **After Running**
-   * Review the manifest file
-   * Check validation messages in console output
-   * Verify metadata changes in files
-   * Review any files flagged for category review
+   * Review the categories assigned to each file
+   * Check that topics and personas are correct
+   * Verify any files marked for review
+   * Make sure network types (mainnet/testnet) are correct for registry files
 
 ## Content Analysis
 
@@ -158,7 +159,7 @@ Detected categories:
 ```yaml
 categories:
   - protocol
-  - devnets
+  - devnet
   - governance
   - security
 ```
