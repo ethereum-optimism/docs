@@ -1,23 +1,52 @@
 (async () => {
 
-const optimism = require("@eth-optimism/sdk")
-const ethers = require("ethers")
+  const { createWalletClient, createPublicClient, http, getContract  } = require('viem');
+  const { sepolia, optimismSepolia } = require('viem/chains');
+  const { privateKeyToAccount } = require('viem/accounts');
+  const { depositERC20 } = require('@eth-optimism/viem');
 
-const privateKey = process.env.TUTORIAL_PRIVATE_KEY
+  const l1Provider = createPublicClient({
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia")
+  })
+  
+  const l2Provider = createPublicClient({
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io")
+  })
 
-const l1Provider = new ethers.providers.StaticJsonRpcProvider("https://rpc.ankr.com/eth_sepolia")
-const l2Provider = new ethers.providers.StaticJsonRpcProvider("https://sepolia.optimism.io")
-const l1Wallet = new ethers.Wallet(privateKey, l1Provider)
-const l2Wallet = new ethers.Wallet(privateKey, l2Provider)
+  const l1Wallet = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+  });
+
+  const l2Wallet = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+  });
+
+
+
+const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY
+const account = privateKeyToAccount(PRIVATE_KEY)
+
 
 const l1Token = "0x5589BB8228C07c4e15558875fAf2B859f678d129"
 const l2Token = "0xD08a2917653d4E460893203471f0000826fb4034"
 
 const erc20ABI = [{ constant: true, inputs: [{ name: "_owner", type: "address" }], name: "balanceOf", outputs: [{ name: "balance", type: "uint256" }], type: "function" }, { inputs: [], name: "faucet", outputs: [], stateMutability: "nonpayable", type: "function" }]
 
-const l1ERC20 = new ethers.Contract(l1Token, erc20ABI, l1Wallet)
+const l1ERC20 = getContract({
+  address: l1Token,
+  abi: erc20ABI,
+  client: l1Wallet
+})
 
-console.log('Getting L1 tokens from faucet...')
+// const l1ERC20 = new ethers.Contract(l1Token, erc20ABI, l1Wallet)
+
+console.log('Getting L1 tokens from faucet...')  
 tx = await l1ERC20.faucet()
 await tx.wait()
 
