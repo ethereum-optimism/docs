@@ -85,7 +85,7 @@ metadata_rules:
         - tokens
         - standard-bridge
         - interoperable-message-passing
-        - devnets
+        - devnet
         - infrastructure
 ```
 
@@ -159,7 +159,7 @@ Detected categories:
 ```yaml
 categories:
   - protocol
-  - devnets
+  - devnet
   - governance
   - security
 ```
