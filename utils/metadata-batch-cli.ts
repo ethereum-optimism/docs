@@ -186,49 +186,23 @@ async function processFiles(files: string[], options: CliOptions): Promise<{
         prMode: false
       })
 
+      // Show metadata for each file
       console.log(`File: ${file}`)
       
       if (!result.isValid) {
         stats.needsReview++
         const filename = file.split('/').pop()?.replace('.mdx', '')
         
-        console.log(`\nFile: ${file}`)
+        // Use the analyzer's detected categories instead of hardcoding
+        const suggestedCategories = analysis.suggestions?.categories || ['protocol']
+        
         console.log(`${colors.yellow}⚠️  Missing: ${result.errors.join(', ')}${colors.reset}`)
-        if (analysis.suggestions) {
-          const suggestion = {
-            content_type: analysis.suggestions.content_type || 'guide',
-            topic: filename,
-            personas: analysis.suggestions.personas || [],
-            categories: analysis.suggestions.categories || []
-          }
-          
-          // Format personas and categories on same line
-          const formattedSuggestion = {
-            content_type: suggestion.content_type,
-            topic: suggestion.topic,
-            personas: JSON.stringify(suggestion.personas),
-            categories: JSON.stringify(suggestion.categories)
-          }
-          
-          if (options.dryRun) {
-            console.log(`${colors.blue}Suggested metadata:${colors.reset}`)
-            console.log(`  content_type: ${formattedSuggestion.content_type}`)
-            console.log(`  topic: ${formattedSuggestion.topic}`)
-            console.log(`  personas: ${formattedSuggestion.personas}`)
-            console.log(`  categories: ${formattedSuggestion.categories}`)
-          } else {
-            console.log(`${colors.green}Applying metadata:${colors.reset}`)
-            console.log(`  content_type: ${formattedSuggestion.content_type}`)
-            console.log(`  topic: ${formattedSuggestion.topic}`)
-            console.log(`  personas: ${formattedSuggestion.personas}`)
-            console.log(`  categories: ${formattedSuggestion.categories}`)
-          }
-        }
+        console.log(`Suggested: content_type: guide, topic: ${filename}, personas: [${VALID_PERSONAS[0]}], categories: ${JSON.stringify(suggestedCategories)}\n`)
       } else {
         if (!options.dryRun) {
-          console.log(`${colors.green}✓ Updates applied${colors.reset}`)
+          console.log('   ✓ Updates applied\n')
         } else {
-          console.log(`${colors.green}✓ Validation passed (dry run)${colors.reset}`)
+          console.log('   ✓ Validation passed (dry run)\n')
         }
         stats.successful++
       }
@@ -251,31 +225,24 @@ async function main() {
     const isDryRun = process.argv.includes('--dry-run')
     const isVerbose = process.argv.includes('--verbose')
     
-    // Get files from command line patterns or use default
-    const patterns = process.argv
-      .slice(2)
-      .filter(arg => !arg.startsWith('--'))
+    // Get files from either command line patterns or CHANGED_FILES
+    let mdxFiles = []
+    const patterns = process.argv.slice(2).filter(arg => !arg.startsWith('--'))
     
-    // Use default pattern if none provided
-    const patternsToUse = patterns.length > 0 ? patterns : ['pages/stack/**/*.mdx']
+    if (patterns.length > 0) {
+      // Direct command: use provided patterns
+      mdxFiles = await globby(patterns)
+    } else if (process.env.CHANGED_FILES) {
+      // PR validation: use changed files
+      mdxFiles = process.env.CHANGED_FILES.split('\n').filter(Boolean)
+    }
     
-    console.log(`Using patterns: ${patternsToUse.join(', ')}`)
-    
-    // Use globby to find files
-    let mdxFiles = await globby(patternsToUse, {
-      ignore: ['pages/_*.mdx'],
-      gitignore: true,
-      onlyFiles: true
-    })
-    
-    mdxFiles = Array.from(new Set(mdxFiles.filter(file => file.endsWith('.mdx'))))
+    mdxFiles = mdxFiles.filter(file => file.endsWith('.mdx'))
     
     if (mdxFiles.length === 0) {
       console.log('✓ No MDX files to check')
       process.exit(0)
     }
-
-    console.log(`Processing ${mdxFiles.length} files...\n`)
 
     const stats = {
       total: mdxFiles.length,
@@ -284,23 +251,13 @@ async function main() {
       failed: 0
     }
 
-    // Process each file
+    console.log(`Found ${mdxFiles.length} valid files to check\n`)
+    
     for (const file of mdxFiles) {
       try {
-        console.log(`\nProcessing file: ${file}`)
         const content = await fs.readFile(file, 'utf8')
         const { data: frontmatter } = matter(content)
-        
-        // Check if metadata is missing
-        const isMissingMetadata = !frontmatter.content_type || 
-                                 !frontmatter.topic || 
-                                 !frontmatter.personas || 
-                                 !frontmatter.categories ||
-                                 (Array.isArray(frontmatter.personas) && frontmatter.personas.length === 0) ||
-                                 (Array.isArray(frontmatter.categories) && frontmatter.categories.length === 0)
-        
         const analysis = analyzeContent(content, file, isVerbose)
-        
         const result = await updateMetadataFile(file, {
           dryRun: isDryRun,
           verbose: isVerbose,
@@ -309,61 +266,37 @@ async function main() {
           prMode: false
         })
 
-        if (isMissingMetadata || !result.isValid) {
+        console.log(`File: ${file}`)
+        
+        if (!result.isValid) {
           stats.needsReview++
           const filename = file.split('/').pop()?.replace('.mdx', '')
           
-          console.log(`${colors.yellow}⚠️  Missing: missing required metadata${colors.reset}`)
-          if (analysis.suggestions) {
-            const suggestion = {
-              content_type: analysis.suggestions.content_type || 'guide',
-              topic: filename,
-              personas: analysis.suggestions.personas || [],
-              categories: analysis.suggestions.categories || []
-            }
-            
-            // Format personas and categories on same line
-            const formattedSuggestion = {
-              content_type: suggestion.content_type,
-              topic: suggestion.topic,
-              personas: JSON.stringify(suggestion.personas),
-              categories: JSON.stringify(suggestion.categories)
-            }
-            
-            if (isDryRun) {
-              console.log(`${colors.blue}Suggested metadata:${colors.reset}`)
-              console.log(`  content_type: ${formattedSuggestion.content_type}`)
-              console.log(`  topic: ${formattedSuggestion.topic}`)
-              console.log(`  personas: ${formattedSuggestion.personas}`)
-              console.log(`  categories: ${formattedSuggestion.categories}`)
-            } else {
-              console.log(`${colors.green}Applying metadata:${colors.reset}`)
-              console.log(`  content_type: ${formattedSuggestion.content_type}`)
-              console.log(`  topic: ${formattedSuggestion.topic}`)
-              console.log(`  personas: ${formattedSuggestion.personas}`)
-              console.log(`  categories: ${formattedSuggestion.categories}`)
-            }
-          }
+          // Use the analyzer's detected categories instead of hardcoding
+          const suggestedCategories = analysis.suggestions?.categories || ['protocol']
+          
+          console.log(`${colors.yellow}⚠️  Missing: ${result.errors.join(', ')}${colors.reset}`)
+          console.log(`Suggested: content_type: guide, topic: ${filename}, personas: [${VALID_PERSONAS[0]}], categories: ${JSON.stringify(suggestedCategories)}\n`)
         } else {
           if (!isDryRun) {
-            console.log(`${colors.green}✓ Updates applied${colors.reset}`)
+            console.log('   ✓ Updates applied\n')
           } else {
-            console.log(`${colors.green}✓ Validation passed (dry run)${colors.reset}`)
+            console.log('   ✓ Validation passed (dry run)\n')
           }
           stats.successful++
         }
       } catch (error) {
         stats.failed++
-        console.error(`${colors.red}Error processing ${file}:${colors.reset}`, error)
+        console.error(`Error processing ${file}:`, error)
       }
     }
     
-    console.log(`\n${stats.total} files processed`)
+    console.log(`${stats.total} files processed`)
     if (stats.needsReview > 0) {
       console.log(`${colors.yellow}⚠️  ${stats.needsReview} files need review${colors.reset}`)
     }
   } catch (error) {
-    console.error(`${colors.red}Error:${colors.reset}`, error)
+    console.error('\x1b[31mError:\x1b[0m', error)
     process.exit(1)
   }
 }
