@@ -192,22 +192,43 @@ async function processFiles(files: string[], options: CliOptions): Promise<{
         stats.needsReview++
         const filename = file.split('/').pop()?.replace('.mdx', '')
         
-        // Show validation results - single consolidated suggestion line
+        console.log(`\nFile: ${file}`)
         console.log(`${colors.yellow}⚠️  Missing: ${result.errors.join(', ')}${colors.reset}`)
         if (analysis.suggestions) {
           const suggestion = {
             content_type: analysis.suggestions.content_type || 'guide',
             topic: filename,
-            personas: analysis.suggestions.personas,
-            categories: analysis.suggestions.categories
+            personas: analysis.suggestions.personas || [],
+            categories: analysis.suggestions.categories || []
           }
-          console.log(`Suggested: ${JSON.stringify(suggestion, null, 0)}\n`)
+          
+          // Format personas and categories on same line
+          const formattedSuggestion = {
+            content_type: suggestion.content_type,
+            topic: suggestion.topic,
+            personas: JSON.stringify(suggestion.personas),
+            categories: JSON.stringify(suggestion.categories)
+          }
+          
+          if (options.dryRun) {
+            console.log(`${colors.blue}Suggested metadata:${colors.reset}`)
+            console.log(`  content_type: ${formattedSuggestion.content_type}`)
+            console.log(`  topic: ${formattedSuggestion.topic}`)
+            console.log(`  personas: ${formattedSuggestion.personas}`)
+            console.log(`  categories: ${formattedSuggestion.categories}`)
+          } else {
+            console.log(`${colors.green}Applying metadata:${colors.reset}`)
+            console.log(`  content_type: ${formattedSuggestion.content_type}`)
+            console.log(`  topic: ${formattedSuggestion.topic}`)
+            console.log(`  personas: ${formattedSuggestion.personas}`)
+            console.log(`  categories: ${formattedSuggestion.categories}`)
+          }
         }
       } else {
         if (!options.dryRun) {
-          console.log('   ✓ Updates applied\n')
+          console.log(`${colors.green}✓ Updates applied${colors.reset}`)
         } else {
-          console.log('   ✓ Validation passed (dry run)\n')
+          console.log(`${colors.green}✓ Validation passed (dry run)${colors.reset}`)
         }
         stats.successful++
       }
@@ -230,27 +251,22 @@ async function main() {
     const isDryRun = process.argv.includes('--dry-run')
     const isVerbose = process.argv.includes('--verbose')
     
-    // Get files from either command line patterns or CHANGED_FILES
-    let mdxFiles = []
+    // Get files from command line patterns or use default
     const patterns = process.argv
       .slice(2)
       .filter(arg => !arg.startsWith('--'))
-      .map(pattern => pattern.replace(/['"\\]/g, ''))
-      .filter((pattern, index, self) => 
-        pattern && 
-        !pattern.includes('\\*') && 
-        self.indexOf(pattern) === index
-      )
     
-    if (patterns.length > 0) {
-      mdxFiles = await globby(patterns, {
-        ignore: ['pages/_*.mdx'],
-        gitignore: true,
-        onlyFiles: true
-      })
-    } else if (process.env.CHANGED_FILES) {
-      mdxFiles = process.env.CHANGED_FILES.split('\n').filter(Boolean)
-    }
+    // Use default pattern if none provided
+    const patternsToUse = patterns.length > 0 ? patterns : ['pages/stack/**/*.mdx']
+    
+    console.log(`Using patterns: ${patternsToUse.join(', ')}`)
+    
+    // Use globby to find files
+    let mdxFiles = await globby(patternsToUse, {
+      ignore: ['pages/_*.mdx'],
+      gitignore: true,
+      onlyFiles: true
+    })
     
     mdxFiles = Array.from(new Set(mdxFiles.filter(file => file.endsWith('.mdx'))))
     
@@ -271,33 +287,69 @@ async function main() {
     // Process each file
     for (const file of mdxFiles) {
       try {
+        console.log(`\nProcessing file: ${file}`)
         const content = await fs.readFile(file, 'utf8')
-        const analysis = analyzeContent(content, file, false)
+        const { data: frontmatter } = matter(content)
+        
+        // Check if metadata is missing
+        const isMissingMetadata = !frontmatter.content_type || 
+                                 !frontmatter.topic || 
+                                 !frontmatter.personas || 
+                                 !frontmatter.categories ||
+                                 (Array.isArray(frontmatter.personas) && frontmatter.personas.length === 0) ||
+                                 (Array.isArray(frontmatter.categories) && frontmatter.categories.length === 0)
+        
+        const analysis = analyzeContent(content, file, isVerbose)
+        
         const result = await updateMetadataFile(file, {
           dryRun: isDryRun,
-          verbose: false,
+          verbose: isVerbose,
           analysis,
           validateOnly: false,
           prMode: false
         })
 
-        if (!result.isValid) {
+        if (isMissingMetadata || !result.isValid) {
           stats.needsReview++
           const filename = file.split('/').pop()?.replace('.mdx', '')
           
-          // Show validation results - single consolidated suggestion line
-          console.log(`File: ${file}`)
-          console.log(`${colors.yellow}⚠️  Missing: ${result.errors.join(', ')}${colors.reset}`)
+          console.log(`${colors.yellow}⚠️  Missing: missing required metadata${colors.reset}`)
           if (analysis.suggestions) {
             const suggestion = {
               content_type: analysis.suggestions.content_type || 'guide',
               topic: filename,
-              personas: analysis.suggestions.personas,
-              categories: analysis.suggestions.categories
+              personas: analysis.suggestions.personas || [],
+              categories: analysis.suggestions.categories || []
             }
-            console.log(`Suggested: ${JSON.stringify(suggestion, null, 0)}\n`)
+            
+            // Format personas and categories on same line
+            const formattedSuggestion = {
+              content_type: suggestion.content_type,
+              topic: suggestion.topic,
+              personas: JSON.stringify(suggestion.personas),
+              categories: JSON.stringify(suggestion.categories)
+            }
+            
+            if (isDryRun) {
+              console.log(`${colors.blue}Suggested metadata:${colors.reset}`)
+              console.log(`  content_type: ${formattedSuggestion.content_type}`)
+              console.log(`  topic: ${formattedSuggestion.topic}`)
+              console.log(`  personas: ${formattedSuggestion.personas}`)
+              console.log(`  categories: ${formattedSuggestion.categories}`)
+            } else {
+              console.log(`${colors.green}Applying metadata:${colors.reset}`)
+              console.log(`  content_type: ${formattedSuggestion.content_type}`)
+              console.log(`  topic: ${formattedSuggestion.topic}`)
+              console.log(`  personas: ${formattedSuggestion.personas}`)
+              console.log(`  categories: ${formattedSuggestion.categories}`)
+            }
           }
         } else {
+          if (!isDryRun) {
+            console.log(`${colors.green}✓ Updates applied${colors.reset}`)
+          } else {
+            console.log(`${colors.green}✓ Validation passed (dry run)${colors.reset}`)
+          }
           stats.successful++
         }
       } catch (error) {
@@ -306,7 +358,7 @@ async function main() {
       }
     }
     
-    console.log(`${stats.total} files processed`)
+    console.log(`\n${stats.total} files processed`)
     if (stats.needsReview > 0) {
       console.log(`${colors.yellow}⚠️  ${stats.needsReview} files need review${colors.reset}`)
     }

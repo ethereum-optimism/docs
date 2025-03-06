@@ -56,7 +56,7 @@ const DEFAULT_CONFIG: AnalyzerConfig = {
     'ethers',
     'viem',
     'supersim',
-    'devnets',
+    'devnet',
     'mainnet',
     'testnet'
   ]
@@ -242,10 +242,10 @@ function getLandingPageCategories(filepath: string, content: string): Set<string
   }
   
   if (filepath.includes('/tutorials/')) {
-    // Don't automatically add devnets to tutorial landing pages
+    // Don't automatically add devnet to tutorial landing pages
     if (content.toLowerCase().includes('testnet') || 
         content.toLowerCase().includes('local development')) {
-      addValidCategory(categories, 'devnets');
+      addValidCategory(categories, 'devnet');
     }
   }
 
