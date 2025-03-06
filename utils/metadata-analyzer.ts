@@ -56,7 +56,7 @@ const DEFAULT_CONFIG: AnalyzerConfig = {
     'ethers',
     'viem',
     'supersim',
-    'devnet',
+    'devnets',
     'mainnet',
     'testnet'
   ]
@@ -96,46 +96,9 @@ function detectTitle(content: string, filepath: string): string {
 }
 
 /**
- * Returns default personas based on content location and content analysis
+ * Returns default personas based on content location
  */
-export function getDefaultPersonas(filepath: string, content: string = ''): string[] {
-  const contentLower = content.toLowerCase()
-  
-  // Stack documentation is primarily for protocol developers and chain operators
-  if (filepath.includes('/stack/')) {
-    const personas = new Set<string>(['protocol-developer'])
-    
-    // Add chain-operator for operational content
-    if (
-      filepath.includes('/security/') ||
-      filepath.includes('/rollup/') ||
-      filepath.includes('/transactions/') ||
-      contentLower.includes('operator') ||
-      contentLower.includes('deployment') ||
-      contentLower.includes('configuration') ||
-      contentLower.includes('monitoring') ||
-      contentLower.includes('maintenance')
-    ) {
-      personas.add('chain-operator')
-    }
-
-    // Add app-developer only for specific integration content
-    if (
-      filepath.includes('/interop/tutorials/') ||
-      filepath.includes('/interop/tools/') ||
-      filepath.includes('/getting-started') ||
-      contentLower.includes('tutorial') ||
-      contentLower.includes('guide') ||
-      contentLower.includes('sdk') ||
-      contentLower.includes('api')
-    ) {
-      personas.add('app-developer')
-    }
-
-    // Remove debug logging
-    return Array.from(personas)
-  }
-  
+export function getDefaultPersonas(filepath: string): string[] {
   // Superchain content
   if (filepath.includes('/superchain/')) {
     const filename = path.basename(filepath);
@@ -171,7 +134,7 @@ export function getDefaultPersonas(filepath: string, content: string = ''): stri
     return ['node-operator'];
   }
   
-  // Default to app developer for other content
+  // Default to app developer
   return ['app-developer'];
 }
 
@@ -242,10 +205,10 @@ function getLandingPageCategories(filepath: string, content: string): Set<string
   }
   
   if (filepath.includes('/tutorials/')) {
-    // Don't automatically add devnet to tutorial landing pages
+    // Don't automatically add devnets to tutorial landing pages
     if (content.toLowerCase().includes('testnet') || 
         content.toLowerCase().includes('local development')) {
-      addValidCategory(categories, 'devnet');
+      addValidCategory(categories, 'devnets');
     }
   }
 
@@ -581,11 +544,9 @@ export function analyzeContent(
     // Get current values and suggestions
     const title = detectTitle(content, filepath);
     const topic = generateTopic(title);
-    const personas = getDefaultPersonas(filepath, content);
+    const personas = getDefaultPersonas(filepath);
     const contentType = detectContentType(content, detectionLog, filepath, detectedPages);
     const categories = detectCategories(content, filepath, detectionLog);
-
-    detectionLog.push(`Detected personas: ${personas.join(', ')}`);
 
     // Return MetadataResult with empty required fields for validation
     return {
@@ -598,11 +559,11 @@ export function analyzeContent(
       categories: [],    // Empty for validation
       is_imported_content: 'false',
       detectionLog,
-      suggestions: {     
+      suggestions: {     // Add suggestions here
         content_type: contentType,
         categories: categories,
         topic: topic,
-        personas: personas  // Make sure this is being used
+        personas: personas
       }
     };
   } catch (error) {

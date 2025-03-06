@@ -4,7 +4,6 @@ import matter from 'gray-matter'
 import yaml from 'js-yaml'
 import { analyzeContent } from './metadata-analyzer'
 import { MetadataResult, MetadataOptions, ValidationResult } from './types/metadata-types'
-import * as fsStandard from 'fs'
 
 // Add the interfaces at the top of the file
 interface ValidationOptions {
@@ -21,82 +20,77 @@ interface UpdateOptions {
   analysis?: MetadataResult
 }
 
-// Load the config file
-const configPath = path.resolve(process.cwd(), 'keywords.config.yaml')
-const yamlConfig = yaml.load(fsStandard.readFileSync(configPath, 'utf8')) as {
-  metadata_rules?: {
-    categories?: {
-      values?: string[]
-    }
-  }
-} || {
-  metadata_rules: {
-    categories: {
-      values: []
-    }
-  }
-}
-
 // Validation functions
-function validateMetadata(metadata: any, filepath: string): ValidationResult {
-  const errors: string[] = []
-  const config = yamlConfig
+async function validateMetadata(
+  metadata: MetadataResult, 
+  filepath: string, 
+  options: {
+    dryRun?: boolean;
+    verbose?: boolean;
+    validateOnly?: boolean;
+    prMode?: boolean;
+  } = {}
+): Promise<ValidationResult> {
+  const errors = [] as string[]
+  const config = await loadConfig('keywords.config.yaml')
   
-  // Check for required fields
-  if (!metadata.title) {
-    errors.push('title is required')
+  // Required field checks based on config
+  if (!metadata.topic) {
+    errors.push('topic')
   }
   
-  if (!metadata.description) {
-    errors.push('description is required')
-  }
-  
-  if (!metadata.lang) {
-    errors.push('lang is required')
-  }
-  
-  // Check if this is a landing page (index.mdx)
-  const isLandingPage = filepath.endsWith('index.mdx')
-  
-  if (!isLandingPage) {
-    // Additional checks for non-landing pages
-    if (!metadata.content_type) {
-      errors.push('content_type is required')
-    }
-    
-    if (!metadata.topic) {
-      errors.push('topic is required')
-    }
-    
-    // Check personas
+  // Check personas
+  if (config.metadata_rules.persona.required) {
     if (!metadata.personas || metadata.personas.length === 0) {
-      errors.push('personas is required')
-    }
-    
-    // Check categories
-    let categories = metadata.categories || []
-    if (typeof categories === 'string') {
-      categories = categories.split(',').map(c => c.trim())
-    }
-    
-    if (categories.length === 0) {
-      errors.push('categories is required')
-    } else {
-      // Validate categories against allowed values
-      const validCategories = config.metadata_rules?.categories?.values || []
-      if (validCategories.length > 0) {
-        const invalidCategories = categories.filter(c => !validCategories.includes(c))
-        if (invalidCategories.length > 0) {
-          errors.push(`Invalid categories: ${invalidCategories.join(', ')}`)
-        }
-      }
+      errors.push('personas')
+    } else if (metadata.personas.length < config.metadata_rules.persona.min) {
+      errors.push(`personas (min ${config.metadata_rules.persona.min})`)
     }
   }
   
+  // Check content_type
+  if (config.metadata_rules.content_type.required && !metadata.content_type) {
+    errors.push('content_type')
+  }
+  
+  // Check categories
+  if (config.metadata_rules.categories.required) {
+    if (!metadata.categories || metadata.categories.length === 0) {
+      errors.push('categories')
+    } else if (metadata.categories.length < config.metadata_rules.categories.min) {
+      errors.push(`categories (min ${config.metadata_rules.categories.min})`)
+    }
+  }
+
+  // Validate enum values if present
+  if (metadata.personas?.length > 0) {
+    const validPersonas = config.metadata_rules.persona.validation_rules[0].enum
+    metadata.personas.forEach(p => {
+      if (!validPersonas.includes(p)) {
+        errors.push(`invalid persona: ${p}`)
+      }
+    })
+  }
+
+  if (metadata.content_type) {
+    const validTypes = config.metadata_rules.content_type.validation_rules[0].enum
+    if (!validTypes.includes(metadata.content_type)) {
+      errors.push(`invalid content_type: ${metadata.content_type}`)
+    }
+  }
+
+  if (metadata.categories?.length > 0) {
+    const validCategories = config.metadata_rules.categories.values
+    metadata.categories.forEach(c => {
+      if (!validCategories.includes(c)) {
+        errors.push(`invalid category: ${c}`)
+      }
+    })
+  }
+
   return {
     isValid: errors.length === 0,
-    errors,
-    suggestions: {}
+    errors
   }
 }
 
@@ -151,19 +145,26 @@ export async function updateMetadata(
       title: safeAnalysis.title || frontmatter.title || '',
       description: frontmatter.description || safeAnalysis.description || '',
       lang: frontmatter.lang || safeAnalysis.lang || 'en-US',
-      content_type: safeAnalysis.suggestions?.content_type || safeAnalysis.content_type || '',
-      topic: safeAnalysis.suggestions?.topic || safeAnalysis.topic || '', 
-      personas: safeAnalysis.suggestions?.personas || safeAnalysis.personas || [],
-      categories: safeAnalysis.suggestions?.categories || safeAnalysis.categories || [],
+      content_type: safeAnalysis.content_type,
+      topic: safeAnalysis.topic || '', 
+      personas: safeAnalysis.personas || [],
+      categories: safeAnalysis.categories || [],
       is_imported_content: safeAnalysis.is_imported_content || 'false'
     }
 
     // Validate metadata in all cases
-    const validationResult = validateMetadata(newMetadata, filepath)
+    const validationResult = await validateMetadata(newMetadata, filepath, options)
 
-    // Check validation mode - don't log here, let the batch CLI handle it
+    // Check validation mode
     if (options.validateOnly || options.prMode) {
-      return validationResult
+      return {
+        isValid: validationResult.isValid,
+        errors: validationResult.errors,
+        suggestions: {
+          categories: safeAnalysis.categories,
+          content_type: safeAnalysis.content_type
+        }
+      }
     }
 
     // Only write if not in dry run mode and validation passed
@@ -172,7 +173,14 @@ export async function updateMetadata(
       await fs.writeFile(filepath, updatedContent, 'utf8')
     }
 
-    return validationResult
+    return {
+      isValid: validationResult.isValid,
+      errors: validationResult.errors,
+      suggestions: {
+        categories: safeAnalysis.categories,
+        content_type: safeAnalysis.content_type
+      }
+    }
   } catch (error) {
     return {
       isValid: false,
@@ -301,98 +309,32 @@ async function validateConfig(configPath: string): Promise<void> {
   // Silently validate - no console output at all
 }
 
-/**
- * Updates the metadata in a markdown file
- * @param filepath Path to the markdown file
- * @param options Options for updating the metadata
- * @returns Validation result
- */
 export async function updateMetadataFile(
   filepath: string,
   options: {
     dryRun?: boolean;
     verbose?: boolean;
     analysis: MetadataResult;
-    validateOnly?: boolean;
-    prMode?: boolean;
+    validateOnly: boolean;
+    prMode: boolean;
   }
-): Promise<ValidationResult> {
+): Promise<{ isValid: boolean; errors: string[]; metadata: MetadataResult }> {
   try {
     const content = await fs.readFile(filepath, 'utf8')
-    const { data: frontmatter, content: docContent } = matter(content)
+    const { data: frontmatter } = matter(content)
+    const result = await validateMetadata(options.analysis, filepath, options)
     
-    // Create new metadata object with all fields
-    const newMetadata = {
-      title: options.analysis.title || frontmatter.title || '',
-      description: frontmatter.description || options.analysis.description || '',
-      lang: frontmatter.lang || options.analysis.lang || 'en-US',
-      content_type: options.analysis.suggestions?.content_type || options.analysis.content_type || '',
-      topic: options.analysis.suggestions?.topic || options.analysis.topic || '',
-      personas: options.analysis.suggestions?.personas || options.analysis.personas || [],
-      categories: options.analysis.suggestions?.categories || options.analysis.categories || [],
-      is_imported_content: frontmatter.is_imported_content !== undefined 
-        ? frontmatter.is_imported_content 
-        : options.analysis.is_imported_content || false
-    }
-
-    // Validate the metadata
-    const validationResult = validateMetadata(newMetadata, filepath)
-    
-    if (options.validateOnly) {
-      return validationResult
-    }
-
-    if (!validationResult.isValid && options.prMode) {
-      if (options.verbose) {
-        console.log(`Skipping ${filepath} due to validation errors in PR mode`)
-      }
-      return validationResult
-    }
-
-    // If dry run, just return the validation result
-    if (options.dryRun) {
-      if (options.verbose) {
-        console.log(`Would update ${filepath} with:`, newMetadata)
-      }
-      return validationResult
-    }
-
-    // Create the new file content with updated frontmatter
-    const updatedFileContent = matter.stringify(docContent, newMetadata)
-    
-    try {
-      // Write to a temporary file first
-      const tempFilePath = `${filepath}.tmp`
-      await fs.writeFile(tempFilePath, updatedFileContent, 'utf8')
-      
-      // Verify the temp file was written successfully
-      const tempFileStats = await fs.stat(tempFilePath)
-      if (tempFileStats.size === 0) {
-        throw new Error(`Failed to write to temporary file ${tempFilePath}`)
-      }
-      
-      // Rename the temp file to the original file
-      await fs.rename(tempFilePath, filepath)
-      
-      if (options.verbose) {
-        console.log(`✅ Successfully wrote metadata to ${filepath}`);
-      }
-      
+    // Return early if validation failed
+    if (!result.isValid) {
       return {
-        isValid: true,
-        errors: [],
-        suggestions: {}
+        isValid: false,
+        errors: result.errors,
+        metadata: options.analysis
       }
-    } catch (writeError) {
-      console.error(`❌ Failed to write to ${filepath}:`, writeError);
-      throw writeError;
     }
+
+    // ... rest of function
   } catch (error) {
-    console.error(`Error processing ${filepath}:`, error);
-    return {
-      isValid: false,
-      errors: [`Failed to update metadata for ${filepath}: ${error.message}`],
-      suggestions: {}
-    }
+    throw new Error(`Failed to update metadata for ${filepath}: ${error.message}`)
   }
 }
