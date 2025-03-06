@@ -38,7 +38,7 @@ commands:
             pnpm --version
       - restore_cache:
           keys:
-            - v2-pnpm-cache-{{ checksum "pnpm-lock.yaml" }}
+            - v2-pnpm-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Set up pnpm global bin directory
           command: pnpm setup  # Run setup to configure the global bin directory
@@ -46,7 +46,7 @@ commands:
           name: Install dependencies
           command: npm install -g pnpm && pnpm install
       - save_cache:
-          key: v2-pnpm-cache-{{ checksum "pnpm-lock.yaml" }}
+          key: v2-pnpm-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ~/.pnpm-store
 
