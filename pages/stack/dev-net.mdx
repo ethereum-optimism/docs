@@ -36,6 +36,7 @@ anyone to modify or deploy the stack in any configuration you want.
 | ------------------------------------------------- | -------- | --------------------- |
 | [docker](https://docs.docker.com/engine/install/) | `^27`    | `docker --version`    |
 | [kurtosis](https://docs.kurtosis.com/install/)    | `^1.3.0` | `kurtosis version`    |
+| [cast](https://book.getfoundry.sh/cast/)          | `^1.0.0` | `cast --version`      |
 
 ### Notes on Specific Dependencies
 
@@ -64,71 +65,85 @@ optimism_package:
       network_params:
         name: rollup-1 # can be anything as long as it is unique
         network_id: 12345 # can be anything as long as it is unique
+ethereum_package:
+  - participants:
+    - el_type: geth
+      cl_type: teku
 ```
-
-Save the above configuration to a file. For the rest of this tutorial, we'll assume you've saved it to `network-config.yaml`.
 
 ## Start your network
 
 Now that you've configured your network, you can start it up using the Kurtosis CLI. Run the command below:
 
 ```bash
-kurtosis run github.com/ethpandaops/optimism-package --args-file ./network-config.yaml
+kurtosis run github.com/ethpandaops/optimism-package \
+    --args-file https://raw.githubusercontent.com/ethpandaops/optimism-package/main/network_params.yaml \
+    --enclave op-devnet
 ```
 
-This command will start up your network and deploy the OP Stack based on the configuration you created. The command will
+This command will start up your network and deploy the OP Stack based on the ethpandaops configuration. The command will
 produce a lot of output and will take about five minutes to complete. Once it's done, you'll see a message that looks like
 the one below:
 
 ```
-INFO[2024-09-23T00:31:29-06:00] ===================================================
-INFO[2024-09-23T00:31:29-06:00] ||          Created enclave: blue-marsh          ||
-INFO[2024-09-23T00:31:29-06:00] ===================================================
-Name:            blue-marsh
-UUID:            91af529557cb
+INFO[2025-02-25T02:10:37Z] =====================================================
+INFO[2025-02-25T02:10:37Z] ||          Created enclave: op-devnet             ||
+INFO[2025-02-25T02:10:37Z] =====================================================
+Name:            op-devnet
+UUID:            eb959a72177b
 Status:          RUNNING
-Creation Time:   Mon, 23 Sep 2024 00:29:58 MDT
+Creation Time:   Tue, 25 Feb 2025 02:07:56 UTC
 Flags:
 
 ========================================= Files Artifacts =========================================
 UUID           Name
-a5824b041b28   1-lighthouse-geth-0-63-0
-f7c0e13e9871   el_cl_genesis_data
-bfa022049aea   final-genesis-timestamp
-0b5c53e3940f   genesis-el-cl-env-file
-46a78cc34966   genesis_validators_root
-038ad1a753ed   jwt_file
-4fbc4bde03c2   keymanager_file
-c36887606978   op-deployer-configs
-d638c3222e56   op-deployer-fund-script
-b02f20c287ac   op_jwt_filerollup-1
-655d57862785   prysm-password
-28203054f5ec   validator-ranges
+14b79c110784   1-teku-geth-0-63
+80829197fe1c   dashboards-0
+80e45cc0080f   divine-butterfly
+ddae8880a93f   el_cl_genesis_data
+271d9f5d46ec   final-genesis-timestamp
+df11dac8789a   genesis-el-cl-env-file
+ca839becbe40   genesis_validators_root
+40da51373335   grafana-config
+cb782c178dfd   jwt_file
+0fcd752154b6   keymanager_file
+e724c1671e85   op-deployer-configs
+e880f062cd24   op-deployer-fund-script
+bb31dbb7e788   op_jwt_file
+d8d4758b14c8   prometheus-config
+3eafd3a35757   prysm-password
+0fb6d6f67d26   validator-ranges
 
 ========================================== User Services ==========================================
 UUID           Name                                             Ports                                         Status
-29643e475cb7   cl-1-lighthouse-geth                             http: 4000/tcp -> http://127.0.0.1:33639      RUNNING
-                                                                metrics: 5054/tcp -> http://127.0.0.1:33640
-                                                                tcp-discovery: 9000/tcp -> 127.0.0.1:33641
-                                                                udp-discovery: 9000/udp -> 127.0.0.1:32920
-e7dfdc2588ae   el-1-geth-lighthouse                             engine-rpc: 8551/tcp -> 127.0.0.1:33636       RUNNING
-                                                                metrics: 9001/tcp -> http://127.0.0.1:33637
-                                                                rpc: 8545/tcp -> 127.0.0.1:33634
-                                                                tcp-discovery: 30303/tcp -> 127.0.0.1:33638
-                                                                udp-discovery: 30303/udp -> 127.0.0.1:32919
-                                                                ws: 8546/tcp -> 127.0.0.1:33635
-5ff43094ccc3   op-batcher-rollup-1                              http: 8548/tcp -> http://127.0.0.1:33650      RUNNING
-aa30d376acc9   op-cl-1-op-node-op-geth-rollup-1                 http: 8547/tcp -> http://127.0.0.1:33648      RUNNING
-                                                                tcp-discovery: 9003/tcp -> 127.0.0.1:33649
-                                                                udp-discovery: 9003/udp -> 127.0.0.1:32922
-af4abdbbe939   op-el-1-op-geth-op-node-rollup-1                 engine-rpc: 8551/tcp -> 127.0.0.1:33645       RUNNING
-                                                                metrics: 9001/tcp -> 127.0.0.1:33646
-                                                                rpc: 8545/tcp -> http://127.0.0.1:33643
-                                                                tcp-discovery: 30303/tcp -> 127.0.0.1:33647
-                                                                udp-discovery: 30303/udp -> 127.0.0.1:32921
-                                                                ws: 8546/tcp -> 127.0.0.1:33644
-578ee2b5bfe7   validator-key-generation-cl-validator-keystore   <none>                                        RUNNING
-aa69f73e96c1   vc-1-geth-lighthouse                             metrics: 8080/tcp -> http://127.0.0.1:33642   RUNNING
+976820378d51   cl-1-teku-geth                                   http: 4000/tcp -> http://127.0.0.1:32802      RUNNING
+                                                                metrics: 8008/tcp -> http://127.0.0.1:32803
+                                                                tcp-discovery: 9000/tcp -> 127.0.0.1:32804
+                                                                udp-discovery: 9000/udp -> 127.0.0.1:32775
+12ee5b7e5a18   el-1-geth-teku                                   engine-rpc: 8551/tcp -> 127.0.0.1:32799       RUNNING
+                                                                metrics: 9001/tcp -> http://127.0.0.1:32800
+                                                                rpc: 8545/tcp -> 127.0.0.1:32797
+                                                                tcp-discovery: 30303/tcp -> 127.0.0.1:32801
+                                                                udp-discovery: 30303/udp -> 127.0.0.1:32774
+                                                                ws: 8546/tcp -> 127.0.0.1:32798
+e3e534981b75   grafana                                          http: 3000/tcp -> http://127.0.0.1:32821      RUNNING
+aa9a19bf1413   op-batcher-rollup-1                              http: 8548/tcp -> http://127.0.0.1:32815      RUNNING
+                                                                metrics: 9001/tcp -> 127.0.0.1:32816
+d63d3aeaa06b   op-challenger-rollup-1                           metrics: 9001/tcp -> 127.0.0.1:32819          RUNNING
+632c061ac1b7   op-cl-1-op-node-op-geth-rollup-1                 http: 8547/tcp -> http://127.0.0.1:32812      RUNNING
+                                                                metrics: 9001/tcp -> 127.0.0.1:32813
+                                                                tcp-discovery: 9003/tcp -> 127.0.0.1:32814
+                                                                udp-discovery: 9003/udp -> 127.0.0.1:32777
+0e0d1e6c2269   op-el-1-op-geth-op-node-rollup-1                 engine-rpc: 8551/tcp                          RUNNING
+                                                                metrics: 9001/tcp
+                                                                rpc: 8545/tcp
+                                                                tcp-discovery: 30303/tcp
+                                                                udp-discovery: 30303/udp
+                                                                ws: 8546/tcp
+544b3f952009   op-proposer-rollup-1                             http: 8560/tcp -> http://127.0.0.1:32817      RUNNING
+                                                                metrics: 9001/tcp -> 127.0.0.1:32818
+5b8cc317a573   prometheus                                       http: 9090/tcp -> http://127.0.0.1:32820      RUNNING
+61ba4bff3ab8   validator-key-generation-cl-validator-keystore   <none>                                        RUNNING
 ```
 
 Also take note of the last log line above this message, which contains the address of the standard bridge. You'll
@@ -147,29 +162,53 @@ At this point your chain is up and running. Let's move on to the next section to
 ## Interact with your network
 
 You now have a fully functioning OP Stack Rollup. You can connect your wallet to this chain the same way you'd connect
-your wallet to any other EVM chain. You can find your node's RPC URL by running `kurtosis enclave inspect <enclave name>`.
-Your enclave name is outputted at the end of the `kurtosis run` command above. The RPC url is the `rpc` port name in any
-of the execution client services identified by `op-el`.
+your wallet to any other EVM chain. You can find your node's RPC URL by running `kurtosis enclave inspect op-devnet`.
+The RPC url is the `rpc` port name in any of the execution client services identified by `op-el`.
 
 ### Depositing funds onto your network
 
-Your network was configured to pre-fund development addresses using the `test test test test test test test test test test test junk`
-mnemonic. To get ETH onto your L2, you import one of the private keys from that mnemonic into your favorite wallet or use
-a CLI tool like `cast`. For the purposes of this tutorial, we'll use `cast` and assume you want to use the first address
-generated by that mnemonic.
+Your network was configured to pre-fund development addresses, you can find the full list of available pre-fund accounts from 
+[here](https://github.com/ethpandaops/ethereum-package/blob/main/src/prelaunch_data_generator/genesis_constants/genesis_constants.star). 
+To get ETH onto your L2, you import one of the private keys from that list into your favorite wallet or use a CLI tool like `cast`. 
+For the purposes of this tutorial, we'll use `cast` and assume you want to use the first address [0x8943545177806ED17B9F23F0a21ee5948eCaa776](https://github.com/ethpandaops/ethereum-package/blob/v4.0.0/src/prelaunch_data_generator/genesis_constants/genesis_constants.star#L10-L14).
 
 To move ETH onto your L2, run the following command. Make sure to replace the values in angle brackets with real values:
 
 ```bash
-cast send --mnemonic 'test test test test test test test test test test test junk' --mnemonic-path "m/44'/60'/0'/0/0" \
-    --to "<standard bridge address>" --amount "<amount in ETH>eth" --rpc-url "http://127.0.0.1:<rpc port of el-1-geth-lighthouse service>"
+cast send "<standard bridge address>" --private-key bcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31 \
+    --value "<amount in ETH>ether" --rpc-url "http://127.0.0.1:<rpc port of el-1-geth-teku service>"
 ```
+
+The output should looks like below:
+
+
+```
+blockHash            0xf6c18d85ba89b4b1e6060ddf744d8d9084dbb3720e2a2a854627a1b1b7a294ba
+blockNumber          388
+contractAddress
+cumulativeGasUsed    21000
+effectiveGasPrice    1000000007
+from                 0x8943545177806ED17B9F23F0a21ee5948eCaa776
+gasUsed              21000
+logs                 []
+logsBloom            0x000000000000000000000000000000000... # truncated
+root
+status               1 (success)
+transactionHash      0x268f98f883efe9c8f9ecc7542a9c8af51869118cfce06e775683f5b4aec2681d
+transactionIndex     0
+type                 2
+blobGasPrice
+blobGasUsed
+authorizationList
+to                   <standard bridge address>
+```
+
 
 Wait \~30 seconds, then check your balance on L2 by running the following command:
 
 ```bash
-export ETH_RPC_URL="http://127.0.0.1:<rpc port of el-1-geth-lighthouse service>"
-export ADDRESS="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+export ETH_RPC_URL="http://127.0.0.1:<rpc port of el-1-geth-teku service>"
+export ADDRESS="0x8943545177806ED17B9F23F0a21ee5948eCaa776"
 cast balance "$ADDRESS"
 ```
 
