@@ -1,8 +1,19 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔍 Running automatic fixes before pushing..."
-pnpm fix
+
+# Try multiple ways to run pnpm
+if command -v pnpm >/dev/null 2>&1; then
+  # Direct pnpm if available in PATH
+  pnpm fix
+elif [ -f "$(npm root -g)/pnpm/bin/pnpm.cjs" ]; then
+  # Try global NPM installation path
+  "$(npm root -g)/pnpm/bin/pnpm.cjs" fix
+elif command -v npx >/dev/null 2>&1; then
+  # Fallback to npx if available
+  npx --no-install pnpm fix
+else
+  echo "⚠️ Could not find pnpm. Skipping automatic fixes..."
+  exit 0  # Don't fail the push, just continue
+fi
 
 # Check if there are any changes after running fixes
 if [ -n "$(git status --porcelain)" ]; then
