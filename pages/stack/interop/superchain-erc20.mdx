@@ -105,7 +105,7 @@ Setting this up in advance ensures tokens will benefit from interop when it beco
 
       */}
 
-*   Deploy the ERC-20 contract at the same address on every chain in the Superchain.
+*   Deploy the `SuperchainERC0` at the same address on every chain in the Superchain where you want your token to be available. If you do not deploy the contract to a specific destination chain, users will be unable to successfully move their tokens to that chain. 
 
 <Callout type="warning">
   To ensure security, you must either design the deployer to allow only a specific trusted ERC-20 contract, such as `SuperchainERC20`, to be deployed through it, or call `CREATE2` to deploy the contract directly from an EOA you control.
@@ -113,30 +113,10 @@ Setting this up in advance ensures tokens will benefit from interop when it beco
   This precaution is critical because if an unauthorized ERC-20 contract is deployed at the same address on any Superchain network, it could allow malicious actors to mint unlimited tokens and bridge them to the network where the original ERC-20 contract resides.
 </Callout>
 
-## Comparison to other token implementations
 
-`SuperchainERC20` differs from other token implementations in both focus and design:
-
-*   It implements `ERC-7802`, a minimal cross-chain mint/burn interface designed to establish a common standard across the EVM ecosystem.
-*   It relies on the shared trust assumptions of the Superchain. All traffic originating from any chain within the Superchain is trusted because these chains [share the same security standard](/superchain/standard-configuration).
-
-<Callout type="info">
-  Projects moving from other token implementations may need to adapt to the `SuperchainERC20` specification.
-</Callout>
-
-## FAQ
-
-### What happens if I bridge to a chain that does not have the ERC-20 contract?
-
-The initiating message will successfully burn the tokens on the source chain.
-However, the executing message will fail because it attempts to call `crosschainMint` on a non-existent contract.
-Once a `SuperchainERC20` contract is properly deployed on the destination chain, you can retry the executing message to retrieve your tokens.
 
 ## Next steps
 
-*   Watch the [ERC20 to SuperchainERC20 video walkthrough](https://www.youtube.com/watch?v=Gb8glkyBdBA) to learn how to modify an existing ERC20 contract to make it interoperable within the Superchain.
-*   Explore the [SuperchainERC20 specifications](https://specs.optimism.io/interop/token-bridging.html) for in-depth implementation details.
-*   Check out the [SuperchainERC20 starter kit](/app-developers/starter-kit) to get started with implementation.
-*   Review the [Deploy SuperchainERC20 tutorial](/stack/interop/tutorials/deploy-superchain-erc20) to learn how to deploy a SuperchainERC20.
 *   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
 *   Deploy a [SuperchainERC20](/stack/interop/tutorials/deploy-superchain-erc20) to the Superchain
+*   Watch the [ERC20 to SuperchainERC20 video walkthrough](https://www.youtube.com/watch?v=Gb8glkyBdBA) to learn how to modify an existing ERC20 contract to make it interoperable within the Superchain.
