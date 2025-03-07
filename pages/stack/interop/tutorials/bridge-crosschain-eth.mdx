@@ -4,54 +4,273 @@ lang: en-US
 description: Learn how to bridge native cross-chain ETH transfers.
 ---
 
-import { Callout } from 'nextra/components'
-import { Steps } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
 import { InteropCallout } from '@/components/WipCallout'
+import { AutorelayCallout } from '@/components/AutorelayCallout'
 
 <InteropCallout />
 
 # Bridging native cross-chain ETH transfers
 
-Crosschain ETH transfers in the Superchain are facilitated through the [SuperchainWETH](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol) contract.
-This tutorial walks through how to send native ETH from chain 901 to 902. To simplify these steps, [supersim](/stack/interop/tools/supersim) will be run with the `--interop.autorelay` flag. The `--interop.autorelay` flag automatically triggers the relay message transaction once the initial send transaction is completed on the source chain, improving the developer experience by removing the need to manually send the relay message.
+<Callout>
+  This tutorial provides step-by-step instructions for bridging ETH from one Superchain Interop chain to another.
+  For a conceptual overview,
+  see the [interoperable ETH explainer](/stack/interop/superchain-weth).
+</Callout>
 
+## Overview
+
+Crosschain ETH transfers in the Superchain are facilitated through the [SuperchainWETH](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol) contract.
+This tutorial walks through how to send native ETH from one chain to another.
+You can do this on [Supersim](/stack/interop/tools/supersim), [the Interop devnet](/stack/interop/tools/devnet), or production once it is released.
+
+### What you'll build
+
+*   A TypeScript application to transfer ETH chains
+
+### What you'll learn
+
+*   How to send ETH on the blockchain and between blockchains
+*   How to relay messages between chains
+
+## Prerequisites
+
+Before starting this tutorial, ensure your development environment meets the following requirements:
+
+### Technical knowledge
+
+*   Intermediate TypeScript knowledge
+*   Understanding of smart contract development
+*   Familiarity with blockchain concepts
+
+### Development environment
+
+*   Unix-like operating system (Linux, macOS, or WSL for Windows)
+*   Node.js version 16 or higher
+*   Git for version control
+
+### Required tools
+
+The tutorial uses these primary tools:
+
+*   Foundry: For smart contract development
+*   Supersim: For local blockchain simulation
+*   TypeScript: For implementation
+*   Viem: For blockchain interaction
 
 <Steps>
-  ### Start `supersim` with the autorelayer enabled
+  ### Install prerequisite software
+
+  1.  Install [Foundry](https://book.getfoundry.sh/getting-started/installation).
+  1.  Install [Node](https://nodejs.org/en).
+  1.  Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+      The exact mechanism to do this depends on your operating system; most come with it preinstalled.
+
+  ### Configure the network
+
+  You can run this tutorial either with [Supersim](/stack/interop/tools/supersim) running locally, or using the [Interop devnet](/stack/interop/tools/devnet).
+  Select the correct tab and follow the directions. 
+
+
+  <Tabs items={['Supersim', 'Interop devnet']}>
+    <Tabs.Tab>
+      1.  Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to install Supersim for running blockchains with Interop.
+
+      1.  Start Supersim.
+
+          ```sh
+          ./supersim --interop.autorelay
+          ```  
+
+      1.  Supersim uses Foundry's `anvil` blockchains, which start with ten prefunded accounts.
+          Set these environment variables to access one of those accounts on the L2 blockchains.
+
+          ```sh
+          export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+          ```
+
+      1.  Specify the URLs to the chains.
+
+          ```sh
+          SRC_URL=http://localhost:9545
+          DST_URL=http://localhost:9546
+          ```
+
+      <details>
+        <summary>Sanity check</summary>
+
+        Get the ETH balances for your address on both the source and destination chains.
+
+        ```sh
+        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url $SRC_URL
+        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url $DST_URL
+        ```
+
+      </details>
+
+
+    </Tabs.Tab>
+
+    <Tabs.Tab>
+      1.  Set `PRIVATE_KEY` to the private key of an address that has [Sepolia ETH](https://cloud.google.com/application/web3/faucet/ethereum/sepolia).
+
+          ```sh
+          export PRIVATE_KEY=0x <<<PRIVATE_KEY>>>
+          ```
+
+      1.  Send ETH to the two L2 blockchains via their OptimismPortal contracts on Sepolia.
+
+          ```sh
+          cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIVATE_KEY --value 0.02ether 0x7385d89d38ab79984e7c84fab9ce5e6f4815468a
+          cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIVATE_KEY --value 0.02ether 0x55f5c4653dbcde7d1254f9c690a5d761b315500c
+          ```
+
+      1.  Wait a few minutes until you can see the ETH [on the block explorer](https://sid.testnet.routescan.io/) for your address.
+
+      1.  Specify the URLs to the chains.
+
+          ```sh
+          SRC_URL=https://interop-alpha-0.optimism.io
+          DST_URL=https://interop-alpha-1.optimism.io          
+          ```      
+
+      <details>
+        <summary>Sanity check</summary>
+
+        Get the ETH balances for your address on both the source and destination chains.
+
+        ```sh
+        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url $SRC_URL
+        cast balance --ether `cast wallet address $PRIVATE_KEY` --rpc-url $DST_URL
+        ```
+      </details>
+    </Tabs.Tab>
+  </Tabs>
+
+  ### Transfer ETH using Foundry
+
+  Run these commands:
 
   ```sh
-  supersim --interop.autorelay 
+  DST_CHAINID=`cast chain-id --rpc-url $DST_URL`
+  MY_ADDRESS=`cast wallet address $PRIVATE_KEY`
+  SUPERCHAIN_WETH=0x4200000000000000000000000000000000000024
+  BEFORE=`cast balance $MY_ADDRESS --rpc-url $DST_URL | cast from-wei`          
+  cast send --rpc-url $SRC_URL --private-key $PRIVATE_KEY $SUPERCHAIN_WETH "sendETH(address,uint256)" $MY_ADDRESS $DST_CHAINID --value 0.001ether
+  sleep 10
+  AFTER=`cast balance $MY_ADDRESS --rpc-url $DST_URL | cast from-wei`
+  echo -e Balance before transfer\\t$BEFORE
+  echo -e Balance after transfer\\t$AFTER
   ```
 
-  ### Initiate the send transaction on chain 901
+  ### Create the TypeScript project
 
-  *   In this step, you'll send ETH from Chain 901 to Chain 902 through `SuperchainWETH` contract deployed at `0x4200000000000000000000000000000000000024`.
-  *   Use the following command:
+  <AutorelayCallout />
 
-  ```sh
-  cast send 0x4200000000000000000000000000000000000024 "sendETH(address _to, uint256 _chainId)" 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 902 --value 10ether --rpc-url http://127.0.0.1:9545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-  ```
+  To create an executing message on the destination chain we use [the `@eth-optimism/viem` package](https://www.npmjs.com/package/@eth-optimism/viem).
+  For that we need TypeScript code.
 
-  ### Wait for the relayed message to appear on chain 902
+  1.  Create a new TypeScript project.
 
-  In a few seconds, you should see the relayed message on chain 902:
+      ```sh
+      mkdir transfer-eth
+      cd transfer-eth
+      npm init -y
+      npm install --save-dev -y viem tsx @types/node @eth-optimism/viem typescript
+      mkdir src
+      ```
 
-  ```sh
-  # example
-  INFO [12-02|14:53:02.434] SuperchainWETH#RelayETH chain.id=902 from=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 to=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 amount=10,000,000,000,000,000,000 source=901
-  ```
+  2.  Download the ABI for `SuperchainWETH`.
 
-  ### Check the balance on chain 902
+      ```sh
+      curl https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/snapshots/abi/SuperchainWETH.json > src/SuperchainWETH.abi.json
+      ```
 
-  Verify that the balance of the ETH on chain 902 has increased:
+  3.  Place this in `src/transfer-eth.mts`:
 
-  ```sh
-  cast balance 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --rpc-url http://127.0.0.1:9546
-  ```
+      ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts hash=c6032f96e0fc040ad8fff7bc2892bbb6 
+      ```
+
+      <details>
+        <summary>Explanation of `transfer-eth.mts`</summary>
+
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L13-L18 hash=5312f4634ac8762504935cd52d18c8ab 
+        ```
+
+        Import all chain definitions from `@eth-optimism/viem`.
+
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L29-L32 hash=e8c21357997ea12151305337eced7d71 
+        ```
+
+        If the address we use is `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`, one of the prefunded addresses on `anvil`, assume we're using Supersim.
+        Otherwise, use Interop devnet.
+
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L78-L80 hash=4933c70a9078c2369ef90bfe163f5fd7 
+        ```
+
+        To relay a message we need the information in the receipt.
+        Also, we need to wait until the transaction with the relayed message is actually part of a block.
+
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L87-L89 hash=573f22b2b21415ff51c59c713fda07d1 
+        ```
+
+        A single transaction can send multiple messages.
+        But here we know we sent just one, so we look for the first one in the list.
+
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L90-L96 hash=4b26775b46c116262af4c7299d6f1127 
+        ```
+
+        This is how you use `@eth-optimism/viem` to create an executing message.
+      </details>
+
+  ### Run the example
+
+  1.  Run the example.
+
+      ```sh
+      npx tsx src/transfer-eth.mts
+      ```
+
+  2.  Read the results.
+
+      ```
+      Before transfer
+
+              Address: 0x7ED53BfaA58B79Dd655B2f229258C093b6C09A8C
+              Balance on source chain: 0.020999799151902245
+              Balance on destination chain: 0.026999459226731331
+      ```
+
+      The initial state. Note that the address depends on your private key; it should be different from mine.
+
+      ```
+      After transfer on source chain
+
+              Address: 0x7ED53BfaA58B79Dd655B2f229258C093b6C09A8C
+              Balance on source chain: 0.019999732176717961
+              Balance on destination chain: 0.026999459226731331
+      ```
+
+      After the initiating message the balance on the source chain is immediately reduced.
+      Notice that even though we are sending 0.001 ETH, the balance on the source chain is reduced by a bit more (here, approximately 67 gwei).
+      This is the cost of the initiating transaction on the source chain.
+      Of course, as there has been no transaction on the destination chain, that balance is unchanged.
+
+      ```
+      After relaying message to destination chain
+
+              Address: 0x7ED53BfaA58B79Dd655B2f229258C093b6C09A8C
+              Balance on source chain: 0.019999732176717961
+              Balance on destination chain: 0.027999278943880868    
+      ```
+
+      Now the balance on the destination chain increases, by slightly less than 0.001 ETH.
+      The executing message also has a transaction cost (in this case, about 180gwei).
 </Steps>
 
 ## Next steps
 
-*   Checkout the [SuperchainWETH guide](/stack/interop/superchain-weth) for more information.
+*   Check out the [SuperchainWETH guide](/stack/interop/superchain-weth) for more information.
 *   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
-*   Review the [Superchain Interop Explainer](/stack/interop/explainer) for answers to common questions about interoperability.
+*   Review the [Superchain interop explainer](/stack/interop/explainer) for answers to common questions about interoperability.
+
