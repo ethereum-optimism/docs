@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import matter from 'gray-matter'
 import yaml from 'js-yaml'
-import { MetadataResult, MetadataOptions, ValidationResult, loadConfig as loadMetadataConfig } from './types/metadata-types'
+import { MetadataResult, MetadataOptions, ValidationResult, loadConfig as loadMetadataConfig, MetadataConfig } from './types/metadata-types'
 
 // Add the interfaces at the top of the file
 interface ValidationOptions {
@@ -17,6 +17,15 @@ interface UpdateOptions {
   prMode?: boolean
   verbose?: boolean
   analysis?: MetadataResult
+}
+
+// Helper function to generate suggestions
+function generateSuggestions(config: MetadataConfig) {
+  return {
+    validPersonas: config.metadata_rules.persona.validation_rules[0].enum,
+    validContentTypes: config.metadata_rules.content_type.validation_rules[0].enum,
+    validCategories: config.metadata_rules.categories.values
+  }
 }
 
 // Validation functions
@@ -36,6 +45,9 @@ export async function validateMetadata(filepath: string, content: string): Promi
   if (!frontmatter.personas || !Array.isArray(frontmatter.personas)) {
     errors.push('Missing or invalid personas array')
   } else {
+    if (frontmatter.personas.length < config.metadata_rules.persona.min) {
+      errors.push(`At least ${config.metadata_rules.persona.min} persona is required`)
+    }
     const validPersonas = config.metadata_rules.persona.validation_rules[0].enum
     frontmatter.personas.forEach(persona => {
       if (!validPersonas.includes(persona)) {
@@ -58,6 +70,19 @@ export async function validateMetadata(filepath: string, content: string): Promi
   if (!frontmatter.categories || !Array.isArray(frontmatter.categories)) {
     errors.push('Missing or invalid categories array')
   } else {
+    // Check minimum categories
+    if (frontmatter.categories.length < config.metadata_rules.categories.min) {
+      errors.push(`At least ${config.metadata_rules.categories.min} category is required`)
+    }
+    // Check maximum categories
+    if (frontmatter.categories.length > config.metadata_rules.categories.max) {
+      errors.push(`Maximum ${config.metadata_rules.categories.max} categories allowed`)
+    }
+    // Check for duplicates
+    const uniqueCategories = new Set(frontmatter.categories)
+    if (uniqueCategories.size !== frontmatter.categories.length) {
+      errors.push('Duplicate categories are not allowed')
+    }
     const validCategories = config.metadata_rules.categories.values
     frontmatter.categories.forEach(category => {
       if (!validCategories.includes(category)) {
@@ -77,11 +102,7 @@ export async function validateMetadata(filepath: string, content: string): Promi
   return {
     isValid: errors.length === 0,
     errors,
-    suggestions: {
-      validPersonas: config.metadata_rules.persona.validation_rules[0].enum,
-      validContentTypes: config.metadata_rules.content_type.validation_rules[0].enum,
-      validCategories: config.metadata_rules.categories.values
-    }
+    suggestions: generateSuggestions(config)
   }
 }
 
@@ -150,11 +171,7 @@ export async function updateMetadata(
       return {
         isValid: validationResult.isValid,
         errors: validationResult.errors,
-        suggestions: {
-          validPersonas: config.metadata_rules.persona.validation_rules[0].enum,
-          validContentTypes: config.metadata_rules.content_type.validation_rules[0].enum,
-          validCategories: config.metadata_rules.categories.values
-        }
+        suggestions: generateSuggestions(config)
       }
     }
 
@@ -167,22 +184,14 @@ export async function updateMetadata(
     return {
       isValid: validationResult.isValid,
       errors: validationResult.errors,
-      suggestions: {
-        validPersonas: config.metadata_rules.persona.validation_rules[0].enum,
-        validContentTypes: config.metadata_rules.content_type.validation_rules[0].enum,
-        validCategories: config.metadata_rules.categories.values
-      }
+      suggestions: generateSuggestions(config)
     }
   } catch (error) {
     const config = await loadMetadataConfig()
     return {
       isValid: false,
       errors: [`Failed to update metadata for ${filepath}: ${error.message}`],
-      suggestions: {
-        validPersonas: config.metadata_rules.persona.validation_rules[0].enum,
-        validContentTypes: config.metadata_rules.content_type.validation_rules[0].enum,
-        validCategories: config.metadata_rules.categories.values
-      }
+      suggestions: generateSuggestions(config)
     }
   }
 }

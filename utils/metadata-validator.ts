@@ -35,6 +35,7 @@ async function main() {
           console.log('  - Personas:', result.suggestions?.validPersonas.join(', '))
           console.log('  - Content Types:', result.suggestions?.validContentTypes.join(', '))
           console.log('  - Categories:', result.suggestions?.validCategories.join(', '))
+          console.log('  - Is Imported Content: true, false')
         } else {
           console.log(`✓ ${file} passed validation`)
         }
