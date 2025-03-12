@@ -7,7 +7,6 @@ import algoliasearch from "algoliasearch";
 import AlgoliaContext from "@/utils/contexts/AlgoliaContext";
 
 // Using environment variables for Algolia configuration
-// This is a read-only search API key
 const client = algoliasearch(
   process.env.NEXT_PUBLIC_ALGOLIA_APPLICATION_ID || "",
   process.env.NEXT_PUBLIC_ALGOLIA_WRITE_API_KEY || ""
