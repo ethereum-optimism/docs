@@ -27,9 +27,9 @@ const CONFIG = {
   ],
   maxContentSize: 9500,
   algolia: {
-    appId: process.env.ALGOLIA_APPLICATION_ID || 'JCF9BUJTB9',
-    apiKey: process.env.ALGOLIA_WRITE_API_KEY || '71c744716516426a5edfd74347bbc859',
-    indexName: process.env.ALGOLIA_INDEX_NAME || 'optimism technical docs'
+    appId: process.env.ALGOLIA_APPLICATION_ID || '',
+    apiKey: process.env.ALGOLIA_WRITE_API_KEY || '',
+    indexName: process.env.ALGOLIA_INDEX_NAME || ''
   } as AlgoliaConfig
 };
 
