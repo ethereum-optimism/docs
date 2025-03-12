@@ -6,12 +6,14 @@ import { DocSearch } from "./docsearch";
 import algoliasearch from "algoliasearch";
 import AlgoliaContext from "@/utils/contexts/AlgoliaContext";
 
+// Using environment variables for Algolia configuration
+// This is a read-only search API key
 const client = algoliasearch(
-    "JCF9BUJTB9", 
-    "71c744716516426a5edfd74347bbc859"
-  );
+  process.env.NEXT_PUBLIC_ALGOLIA_APPLICATION_ID || "",
+  process.env.NEXT_PUBLIC_ALGOLIA_WRITE_API_KEY || ""
+);
 
-const index = client.initIndex("docs");
+const index = client.initIndex(process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "docs");
 
 type AlgoliaHits = {
   hits: AlgoliaHit[];
@@ -32,6 +34,7 @@ export function Search({
   className?: string;
   directories: NormalItem[];
 }>): ReactElement {
+  // Rest of your code remains the same
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
 
