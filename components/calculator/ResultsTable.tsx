@@ -134,7 +134,7 @@ export function ResultsTable({
             </thead>
             <tbody>
               <tr>
-                <td>l1BlobBaseBaseScalar</td>
+                <td>l1BlobBaseFeeScalar</td>
                 <td>{l1BlobBaseFeeScalar}</td>
                 <td>{convertToMillionUnits(l1BlobBaseFeeScalar)}</td>
               </tr>
