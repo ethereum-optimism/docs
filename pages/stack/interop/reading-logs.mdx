@@ -11,17 +11,18 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Reading logs in superchain interop
 
-Superchain interop enables developers to leverage current and historical logs from other blockchains within the Superchain interop cluster directly on their local chain. This feature allows for cross-chain log consumption with low latency in a trust-minimized way.
+Superchain interop enables developers to leverage current and historical logs from other blockchains within the Superchain interop cluster directly on their local chain.
+This allows for cross-chain log consumption with low latency in a trust-minimized way.
 
 ## Overview
 
-While the [L2ToL2CrossDomainMessenger](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) enables sending messages across chains, the [`CrossL2Inbox#validateMessage`](https://github.com/ethereum-optimism/optimism/blob/af091753917c1d7101314cbfe8ac5cbc2efe0e5e/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L49) function allows smart contracts to verify and consume logs that were emitted on other chains within the Superchain ecosystem.
+Instead of relying solely on [L2ToL2CrossDomainMessenger](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol), developers can use [`CrossL2Inbox#validateMessage`](https://github.com/ethereum-optimism/optimism/blob/af091753917c1d7101314cbfe8ac5cbc2efe0e5e/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L49) and treat `CrossL2Inbox` as an oracle for logs that occurred on different chains or even their local chain.
 
-This capability enables developers to:
+This enables developers to:
 
-*   Reference attestations or events from other chains
-*   Build cross-chain applications that react to events happening across the Superchain
-*   Create novel financial products that leverage data from multiple chains
+*   Reference attestations or events from other chains.
+*   Build cross-chain applications that react to events happening across the Superchain.
+*   Create novel dApps that leverage data from multiple chains.
 
 ## Why use `CrossL2Inbox`?
 
@@ -35,8 +36,8 @@ This capability enables developers to:
 
 The process works through the [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/af091753917c1d7101314cbfe8ac5cbc2efe0e5e/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L33) contract, which serves as an oracle for logs from other chains in the Superchain:
 
-1.  A smart contract on Chain A emits a log (event)
-2.  Your contract on Chain B calls `CrossL2Inbox#validateMessage` with the log's identifier
+1.  A smart contract on `Chain A` emits a log (event)
+2.  Your contract on `Chain B` calls `CrossL2Inbox#validateMessage` with the log's identifier
 3.  The `CrossL2Inbox` contract verifies the log's authenticity
 4.  Your contract can then use the validated log data
 
@@ -66,6 +67,14 @@ sequenceDiagram
     Note over Log: Event contains attestation data
 ```
 
+1.  The user initiates a request for an attestation through an application.
+
+2.  The application calls the `createAttestation()` function on the EAS (Ethereum Attestation Service) contract on the source chain.
+
+3.  The EAS contract processes the attestation request and emits an `AttestationCreated` event.
+
+4.  The event is recorded in the chain's log, containing all necessary attestation data.
+
 ### Destination chain: verifying the attestation
 
 On the destination chain (e.g., Base), a DeFi application wants to verify this attestation:
@@ -87,6 +96,22 @@ sequenceDiagram
     Verifier-->>DeFi: Return verification status
     DeFi-->>User: Grant access based on attestation
 ```
+
+1.  The user requests access to a DeFi application on the destination chain, referencing an attestation created on the source chain.
+
+2.  The DeFi application calls `verifyAttestation()` on the `AttestationVerifier` contract, passing the attestation's identifier and event data.
+
+3.  The AttestationVerifier calls `validateMessage()` on the `CrossL2Inbox` contract, passing the attestation identifier and a hash of the event data.
+
+4.  The `CrossL2Inbox` contract interacts with the `OP-Supervisor` node to check if the specified log exists on the source chain.
+
+5.  The `OP-Supervisor` confirms the validity of the log to the `CrossL2Inbox` contract.
+
+6.  The `CrossL2Inbox` returns the validation result to the `AttestationVerifier`.
+
+7.  The `AttestationVerifier` returns the verification status to the DeFi application.
+
+8.  If validation is successful, the DeFi application grants the user access based on the verified attestation.
 
 ### Sample code for attestation verification
 
@@ -150,6 +175,14 @@ flowchart TD
     C -.-> F
 ```
 
+1.  First, identify which log from another chain you want to consume in your application.
+
+2.  Create an Identifier struct that contains all necessary information about the log, including the chain ID and the contract address that emitted the log.
+
+3.  Call the `validateMessage()` function on the `CrossL2Inbox` contract, passing the identifier and a hash of the log data.
+
+4.  After validation, process the log data according to your application's requirements.
+
 ## Important considerations
 
 *   This feature works between chains within the same Superchain interop cluster
@@ -185,6 +218,32 @@ flowchart LR
         K <--->|verify log| I
     end
 ```
+
+This diagram compares the two approaches for cross-chain communication:
+
+### L2ToL2CrossDomainMessenger (Push Model):
+
+1.  A source contract calls `sendMessage()` on the `L2ToL2CrossDomainMessenger`.
+
+2.  The messenger emits an event to the event log.
+
+3.  An autorelayer detects the event and relays it to the destination chain.
+
+4.  The destination `L2ToL2CrossDomainMessenger` receives the relayed message.
+
+5.  The destination messenger executes the message on the target contract.
+
+### CrossL2Inbox (Pull Model):
+
+1.  A source contract emits an event to the event log.
+
+2.  The `OP-Supervisor` node monitors events across chains.
+
+3.  A destination contract calls `validateMessage()` on the `CrossL2Inbox`.
+
+4.  The `CrossL2Inbox` verifies the log's existence by communicating with the `OP-Supervisor`.
+
+5.  The destination contract receives verification and proceeds with its logic.
 
 ## Next steps
 
