@@ -1,11 +1,11 @@
 ---
-title: Bridging ERC-20 tokens to OP Mainnet with the Optimism SDK
+title: Bridging ERC-20 tokens to OP Mainnet
 description: >-
-  Learn how to use the Optimism SDK to transfer ERC-20 tokens between Layer 1
+  Learn how to use the @eth-optimism/viem package to transfer ERC-20 tokens between Layer 1
   (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
 lang: en-US
 content_type: tutorial
-topic: bridging-erc-20-tokens-to-op-mainnet-with-the-optimism-sdk
+topic: bridging-erc-20-tokens-to-op-mainnet
 personas:
   - app-developer
 categories:
@@ -22,15 +22,15 @@ import { WipCallout } from '@/components/WipCallout'
 
 <WipCallout />
 
-# Bridging ERC-20 tokens to OP Mainnet with the Optimism SDK
+# Bridging ERC-20 tokens to OP Mainnet
 
 
 
-This tutorial explains how you can use the [Optimism SDK](https://sdk.optimism.io) to bridge ERC-20 tokens from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
-The Optimism SDK is an easy way to add bridging functionality to your javascript-based application.
+This tutorial explains how you can use [@eth-optimism/viem](https://www.npmjs.com/package/@eth-optimism/viem) to bridge ERC-20 tokens from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
+The `@eth-optimism/viem` package is an easy way to add bridging functionality to your javascript-based application.
 It also provides some safety rails to prevent common mistakes that could cause tokens to be made inaccessible.
 
-Behind the scenes, the Optimism SDK uses the [Standard Bridge](/app-developers/bridging/standard-bridge) contracts to transfer tokens.
+Behind the scenes, `@eth-optimism/viem` package uses the [Standard Bridge](/app-developers/bridging/standard-bridge) contracts to transfer tokens.
 Make sure to check out the [Standard Bridge guide](/app-developers/bridging/standard-bridge) if you want to learn more about how the bridge works under the hood.
 
 <Callout type="error">
@@ -42,9 +42,8 @@ Make sure to check out the [Standard Bridge guide](/app-developers/bridging/stan
 
 ## Supported networks
 
-The Optimism SDK supports any of the [Superchain networks](/superchain/networks).
-[Some Superchain networks](https://sdk.optimism.io/enums/l2chainid) are already included in the SDK by default.
-If you want to use a network that isn't included by default, you can simply [instantiate the SDK with the appropriate contract addresses](/app-developers/get-started).
+The `@eth-optimism/viem` package supports any of the [Superchain networks](/superchain/networks).
+If you want to use a network that isn't included by default, you can simply [instantiate the package with the appropriate contract addresses](/app-developers/get-started).
 
 ## Dependencies
 
@@ -53,15 +52,15 @@ If you want to use a network that isn't included by default, you can simply [ins
 
 ## Create a demo project
 
-You're going to use the Optimism SDK for this tutorial.
-Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
+You're going to use the `@eth-optimism/viem` package for this tutorial.
+Since the `@eth-optimism/viem` package is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
   {<h3>Make a Project Folder</h3>}
 
   ```bash
-  mkdir op-sample-project
-  cd op-sample-project
+  mkdir bridging-erc20-tokens
+  cd bridging-erc20-tokens
   ```
 
   {<h3>Initialize the Project</h3>}
@@ -70,16 +69,16 @@ Since the Optimism SDK is a [Node.js](https://nodejs.org/en/) library, you'll ne
   pnpm init
   ```
 
-  {<h3>Install the Optimism SDK</h3>}
+  {<h3>Install the `@eth-optimism/viem`</h3>}
 
   ```bash
-  pnpm add @eth-optimism/sdk
+  pnpm add @eth-optimism/viem
   ```
 
-  {<h3>Install ethers.js</h3>}
+  {<h3>Install viem</h3>}
 
   ```bash
-  pnpm add ethers@^5
+  pnpm add viem
   ```
 </Steps>
 
@@ -114,7 +113,7 @@ export TUTORIAL_PRIVATE_KEY=0x...
 
 ## Start the Node REPL
 
-You're going to use the Node REPL to interact with the Optimism SDK.
+You're going to use the Node REPL to interact with the `@eth-optimism/viem`.
 To start the Node REPL, run the following command in your terminal:
 
 ```bash
@@ -128,12 +127,12 @@ This will bring up a Node REPL prompt that allows you to run javascript code.
 You need to import some dependencies into your Node REPL session.
 
 <Steps>
-  {<h3>Import the Optimism SDK</h3>}
+  {<h3>Import the `@eth-optimism/viem` package</h3>}
 
   ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
   ```
 
-  {<h3>Import ethers.js</h3>}
+  {<h3>Import viem</h3>}
 
   ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
   ```
@@ -188,11 +187,6 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
   ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L18 hash=9f9d7e38319ff5263e0e99d80d495554
   ```
 
-  {<h3>Request some tokens</h3>}
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L21-L22 hash=3533ec5426e8845fdb9af1e9e8d3de4c
-  ```
-
   {<h3>Check your token balance</h3>}
 
   ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L25 hash=d7a60aa394d1055555c2aeab2a2e111d
@@ -210,15 +204,6 @@ You'll then receive the same number of tokens on L2 in return.
   The testing token has 18 decimal places, so you'll want to define a variable that represents one token.
 
   ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L27 hash=9349517ae6165a8798e49750da8faeee
-  ```
-
-  {<h3>Create a CrossChainMessenger instance</h3>}
-
-  The Optimism SDK exports a `CrossChainMessenger` class that makes it easy to interact with the `L1StandardBridge` contract.
-
-  Create an instance of the `CrossChainMessenger` class:
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L29-L34 hash=997b9c4cdd5fb1f9d4e0882a683ae016
   ```
 
   {<h3>Allow the Standard Bridge to access your tokens</h3>}
