@@ -9,7 +9,7 @@ import AlgoliaContext from "@/utils/contexts/AlgoliaContext";
 // Using environment variables for Algolia configuration
 const client = algoliasearch(
   process.env.NEXT_PUBLIC_ALGOLIA_APPLICATION_ID || "",
-  process.env.NEXT_PUBLIC_ALGOLIA_WRITE_API_KEY || ""
+  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY || ""
 );
 
 const index = client.initIndex(process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME || "docs");
