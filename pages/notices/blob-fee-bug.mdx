@@ -17,10 +17,9 @@ is_imported_content: 'false'
 import { Steps, Callout } from 'nextra/components'
 import Image from 'next/image'
 
-
 # Superchain testnets' blob fee bug
 
-At the time of writing, all OP Stack testnets are currently sequencing a "wrong" chain. The L1 Block's blob base fee is calculated with pre-Prague blob schedule parameters. This is not a critical security issue on any OP Sepolia (or Holesky) chain. However, when L1 blob base fees rise to 100 Mwei or higher on the L1 testnet, there is a temporary liveness risk, because we'd be overcharge L1 fees. 
+At the time of writing, all OP Stack testnets are currently sequencing a "wrong" chain. The L1 Block's blob base fee is calculated with pre-Prague blob schedule parameters. This is not a critical security issue on any OP Sepolia (or Holesky) chain. However, when L1 blob base fees rise to 100 Mwei or higher on the L1 testnet, there is a temporary liveness risk, because we'd be overcharge L1 fees.
 
 This was fixed on the `develop` branch with this [PR](https://github.com/ethereum-optimism/optimism/pull/14500) and there will be no impact on any mainnet chains. Mainnet chains will just need to update their binaries to the latest release prior to the activation of Pectra on Ethereum, so the bug isn't triggered when Pectra activates.
 
@@ -38,23 +37,17 @@ BBF_Cancun = BBF_Prague^1.5
 
 This has a huge impact as fees grow:
 
-<Image 
-    src="/img/notices/blob-fee-plot.png" 
-    alt="Blob Fee Bug Graph" 
-    width={600} 
-    height={600} 
-/>
+<Image src="/img/notices/blob-fee-plot.png" alt="Blob Fee Bug Graph" width={600} height={600} />
 
-| BBF Prague (actual) | BBF Cancun (we charge)     |
-|---------------------|----------------------------|
-| 1 Mwei              | 1 Gwei                     |
-| 10 Mwei             | 31.6 Gwei                  |
-| 100 Mwei            | 1 Twei                     |
-| 1 Gwei              | 31.6 Twei (31.6e12)        |
-| 10 Gwei             | 1e15 Wei = 1 PetaWei       |
-| 100 Gwei            | 31.6e15 PetaWei            |
-| 1 Twei              | 1e18 Wei = 1 ExaWei        |
-
+| BBF Prague (actual) | BBF Cancun (we charge) |
+| ------------------- | ---------------------- |
+| 1 Mwei              | 1 Gwei                 |
+| 10 Mwei             | 31.6 Gwei              |
+| 100 Mwei            | 1 Twei                 |
+| 1 Gwei              | 31.6 Twei (31.6e12)    |
+| 10 Gwei             | 1e15 Wei = 1 PetaWei   |
+| 100 Gwei            | 31.6e15 PetaWei        |
+| 1 Twei              | 1e18 Wei = 1 ExaWei    |
 
 ## For chain and node operators
 
@@ -65,33 +58,32 @@ These chains will inherit the `Thu Mar 20 16:00:00 UTC 2025` (`1742486400`) hard
 The following chains are in the Superchain Registry and are not opted into the hardfork activation inheritance behavior: `Arena-Z Sepolia`, `Cyber Sepolia`, `Funki Sepolia`, `Lisk Sepolia`, `Pivotal Sepolia`, `Race Sepolia`, `Shape Sepolia`, `TBN Sepolia`, and `Worldchain Sepolia`. These chains and any other OP Stack testnet that is not included in the lists above will need to manually set the hardfork activation time for their network to activate on. These following steps are necessary for every node operator:
 
 <Steps>
-   ### Update to the latest release 
+  ### Update to the latest release
 
-   <Callout type="warning">
+  <Callout type="warning">
     You must configure your op-node to utilize the activation timestamp outlined in step 2 at the same time as upgrading your node binary. This is to ensure that the hardfork is activated uniformly across the network. If the Pectra Blob Schedule flag is not set, your node will either not start or automatically apply the hardfork at startup causing the node to fork from the rest of the network.
-   </Callout>
+  </Callout>
 
-   The following `op-node/v1.12.2` adds a kill-switch to op-node to print an error at startup if the Pectra Blob Schedule Fix time is not set for a Sepolia or Holesky chain. The check only happens if the chain's genesis is before the Holesky/Sepolia Pectra activation time. The check can be disabled with a hidden flag.
+  The following `op-node/v1.12.2` adds a kill-switch to op-node to print an error at startup if the Pectra Blob Schedule Fix time is not set for a Sepolia or Holesky chain. The check only happens if the chain's genesis is before the Holesky/Sepolia Pectra activation time. The check can be disabled with a hidden flag.
 
   The purpose of the kill-switch is to make sure that node operators don't accidentally upgrade their nodes without scheduling the fix because most Holesky and Sepolia chains were running a sequencer that ran into the Pectra Blob Schedule bug. So it's better to not start op-node in such cases at all rather than accidentally forking the chain.
 
   The `op-node/v1.12.1` and `op-node/v1.12.0` binaries do not have this kill-switch and will automatically apply the hardfork at startup if there is no Pectra Blob Schedule Fix time set.
 
-   *   `op-node` at [`v1.12.2`](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.12.2)
-   *   `op-geth` at [`v1.101503.1`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101503.1)
+  *   `op-node` at [`v1.12.2`](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.12.2)
+  *   `op-geth` at [`v1.101503.1`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101503.1)
 
-   ### Update the hardfork activation time
+  ### Update the hardfork activation time
 
-   <Callout type="warning">
+  <Callout type="warning">
     If you are operating a node for an OP Chain that has opted into the [hardfork activation inheritance behavior](https://github.com/ethereum-optimism/superchain-registry/blob/main/docs/hardfork-activation-inheritance.md), the Pectra Blob Schedule Fix activation date is part of the op-node node. So, no action is needed for the sequencer after upgrading to the latest release, assuming you're using the network flags.
 
     That is: `OP Sepolia`, `Soneium Minato`, `Zora Sepolia`, `Unichain Sepolia`, `Base Sepolia`, `Mode Sepolia`, `Metal Sepolia`, `Creator Chain Sepolia`, `Ink Sepolia`, and `Ethernity Sepolia`.
-   </Callout>
+  </Callout>
 
-   For chains that are not opted into the hardfork activation inheritance behavior, you will need to manually set the hardfork activation time. This can be done one of two ways:
+  For chains that are not opted into the hardfork activation inheritance behavior, you will need to manually set the hardfork activation time. This can be done one of two ways:
 
-   *   **Option 1:** Set the activation time in the `rollup.json` for `op-node`. You do not need to set any configurations in `op-geth`.
-   *   **Option 2:** Set the activation time via overrides (CLI) in the `op-node`. These will need to be set on `op-node` for the sequencer and all other nodes. The override flag looks like this: `--override.pectrablobschedule=1742486400`.
-   
-   
+  *   **Option 1:** Set the activation time in the `rollup.json` for `op-node`. You do not need to set any configurations in `op-geth`.
+
+  *   **Option 2:** Set the activation time via overrides (CLI) in the `op-node`. These will need to be set on `op-node` for the sequencer and all other nodes. The override flag looks like this: `--override.pectrablobschedule=1742486400`.
 </Steps>
