@@ -62,13 +62,13 @@ However, the L2 processing of the transaction is performed by the Optimism nodes
 If there were no cost attached, an attacker could submit a transaction that had high execution costs on L2, and that way perform a denial of service attack.
 
 To avoid this DoS vector, [`depositTransaction`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L422-L483), and the functions that call it, require a gas limit parameter.
-[This gas limit is encoded into the \[\]`TransactionDeposited` event](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L469-L477), and used as the gas limit for the user deposit transaction on L2.
+[This gas limit is encoded into the `TransactionDeposited` event](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L469-L477), and used as the gas limit for the user deposit transaction on L2.
 
 This L2 gas is paid for by burning L1 gas [here](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/L1/ResourceMetering.sol#L162).
 
 ## Replaying messages
 
-Deposits transactions can fail due to several reasons:
+Deposit transactions can fail due to several reasons:
 
 *   Not enough gas provided.
 *   The state on L2 does not allow the transaction to be successful.
