@@ -2,16 +2,16 @@
 title: Upgrade 13 OPCM and incident response improvements
 description: Learn how to prepare for Isthmus upgrade breaking changes.
 lang: en-US
-content_type: guide
-topic: Isthmus-changes
+content_type: notice
+topic: upgrade-13
 personas:
   - chain-operator
   - node-operator
 categories:
   - security
-  - automated-pause
   - protocol
   - infrastructure
+  - l1-contracts
 is_imported_content: 'false'
 ---
 
@@ -19,7 +19,7 @@ import { Steps, Callout } from 'nextra/components'
 
 # Upgrade 13: OPCM and incident response improvements
 
-This page outlines changes related to the Upgrade 13 network upgrade for chain operators, node operators, and developers.
+This page outlines changes related to the Upgrade 13 network upgrade for chain operators, node operators, and users of OP Stack chains. The upgrade proposal is available [here](https://gov.optimism.io/t/upgrade-proposal-13-opcm-and-incident-response-improvements/9739) and the governance vote is available [here](https://vote.optimism.io/proposals/84511922734478887667300419900648701566511387783615524992018614345859900443455).
 
 If you experience difficulty at any stage of this process, please reach out to developer support.
 
@@ -37,7 +37,7 @@ For more information on the Upgrade 13 implementation details, please review the
 
 ### OP Contracts Manager
 
-The OP Contracts Manager (OPCM) is a new system for upgrading L1 contracts across the Superchain. Each release will have its own OPCM that can deploy new proxies and upgrade existing OP Chains.
+The OP Contracts Manager ([OPCM](/stack/opcm)) is a new system for upgrading L1 contracts across the Superchain. Each release will have its own OPCM that can deploy new proxies and upgrade existing OP Chains.
 
 Key changes:
 
@@ -90,27 +90,9 @@ The Optimism Foundation Safe is expected to rotate the Pause Deputy private key 
 
 ## For chain operators
 
-If this proposal is accepted, multisig ceremonies will be coordinated to execute upgrade transactions. The following transactions will be executed on the respective chains:
+If this proposal is accepted, multisig ceremonies will be coordinated to execute upgrade transactions. The following transactions will be executed on the respective chains: `OP Mainnet`, `Soneium Mainnet`, `Ink Mainnet`, `Base Mainnet`, and `Unichain Mainnet`. If your Optimism governed chain is not in this list, please reach out to OP Labs Solutions Engineering to coordinate your upgrade. If your chain is not Optimism governed, we'll be working on providing documentation to upgrade your chain.
 
-### Upgrade OP Mainnet, Soneium and Ink
-
-```
-0x82ad56cb000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000026b2f158255beac46c1e7c6b8bbf29a4b6a7b76000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000164ff2dd5a100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003000000000000000000000000229047fed2591dbec1ef1118d64f7af3db9eb290000000000000000000000000543ba4aadbab8f9025686bd03993043599c6fb04039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d90000000000000000000000007a8ed66b319911a0f3e7288bddab30d9c0c875c300000000000000000000000089889b569c3a505f3640ee1bd0ac1d557f436d2a039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d900000000000000000000000062c0a111929fa32cec2f76adba54c16afb6e8364000000000000000000000000d56045e68956fce2576e680c95a4750cf8241f79039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d900000000000000000000000000000000000000000000000000000000
-```
-
-### Upgrade Base
-
-```
-0x82ad56cb000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000026b2f158255beac46c1e7c6b8bbf29a4b6a7b760000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a4ff2dd5a10000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000100000000000000000000000073a79fab69143498ed3712e519a88a918e1f40720000000000000000000000000475cbcaebd9ce8afa5025828d5b98dfb67e059e039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d900000000000000000000000000000000000000000000000000000000
-```
-
-### Upgrade Unichain
-
-```
-0x82ad56cb000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000026b2f158255beac46c1e7c6b8bbf29a4b6a7b760000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a4ff2dd5a100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c407398d063f942febbcc6f80a156b47f3f1bda60000000000000000000000003b73fa8d82f511a3cae17b5a26e4e1a2d5e2f2a4039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d900000000000000000000000000000000000000000000000000000000
-```
-
-As this is an L1 contracts-only upgrade, no action is required by node operators.
+As this is an L1 contracts-only upgrade, no action is required to upgrade your node binaries. However, there is a required upgrade to [`op-dispute-mon/v1.4.0`](https://github.com/ethereum-optimism/optimism/releases/tag/op-dispute-mon%2Fv1.4.0) to remain compatible with the new contract changes.
 
 ## For users
 
