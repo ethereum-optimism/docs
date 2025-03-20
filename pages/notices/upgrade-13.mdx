@@ -19,4 +19,132 @@ import { Steps, Callout } from 'nextra/components'
 
 # Upgrade 13: OPCM and incident response improvements
 
+This page outlines changes related to the Upgrade 13 network upgrade for chain operators, node operators, and developers.
+
+If you experience difficulty at any stage of this process, please reach out to developer support.
+
 ## What's included in Upgrade 13
+
+Upgrade 13 contains three main components:
+
+*   **OP Contracts Manager**: A new system for upgrading L1 contracts across the Superchain, making contract upgrades more scalable, less prone to error, and easier to test.
+*   **Fault Proofs Incident Response Improvements**: Technical improvements to several key contracts to enable more flexible and less disruptive ways to respond to potential incidents in the OP Stack fault proof system.
+*   **DeputyPauseModule (Superchain Pause Improvements)**: A new Safe Module to be installed into the Optimism Foundation Safe to simplify the process of quickly responding to security incidents via the Superchain-wide pause mechanism.
+
+For more information on the Upgrade 13 implementation details, please review the specifications linked in the Technical Details section below.
+
+## Technical details
+
+### OP Contracts Manager
+
+The OP Contracts Manager (OPCM) is a new system for upgrading L1 contracts across the Superchain. Each release will have its own OPCM that can deploy new proxies and upgrade existing OP Chains.
+
+Key changes:
+
+*   OPCM is not considered part of the protocol and has no special role
+*   In-protocol contract modifications include:
+    *   Stack too deep fixes to enable code coverage measurements
+    *   Updated contracts to call interfaces for external interactions rather than implementations
+    *   Removal of CustomGasToken logic
+    *   Changes to deposit transaction aliasing to ensure compatibility with the L1 Pectra upgrade's introduction of EIP-7702
+
+### Fault Proofs incident response improvements
+
+Several components have been updated to improve incident response capabilities:
+
+**DelayedWETH**
+
+*   `DelayedWETH.hold(...)` now executes an approval and transfer from the target account to the owner account
+*   Added a version of `DelayedWETH.hold(...)` that does not require the owner to specify the target's balance
+
+**OptimismPortal**
+
+*   `OptimsimPortal.setRespectedGameType(...)` no longer sets the respected game type and retirement timestamp simultaneously
+*   A special reserved input value can be used to set the retirement timestamp
+*   `OptimismPortal.checkWithdrawal(...)` now asserts that a FaultDisputeGame was the respected game type at the time of creation
+
+**AnchorStateRegistry**
+
+*   `AnchorStateRegistry.tryUpdateAnchorState(...)` is removed
+*   `AnchorStateRegistry.setAnchorState(...)` is repurposed as the primary way for FaultDisputeGame contracts to update the anchor state
+*   Internal anchor state is now unified across all game types
+*   Updates enable all OP Stack chains to share a common AnchorStateRegistry implementation
+
+**FaultDisputeGame**
+
+*   Added support for "bond refunding" to automatically distribute bonds back to their original depositors if the game is invalidated
+
+<Callout type="warning">
+  If adopted and deployed, this proposal will cause a one-time invalidation of all pending withdrawal proofs created on L1. Users should complete any pending withdrawals before the upgrade is executed and avoid creating new withdrawal proofs that would not become executable in time.
+</Callout>
+
+### DeputyPauseModule (Superchain pause improvements)
+
+The DeputyPauseModule is a new Safe Module to be installed into the Optimism Foundation Safe that allows:
+
+*   The Optimism Foundation to assign a "Pause Deputy" private key
+*   The Pause Deputy to create signatures that authorize the use of the Superchain-wide pause
+*   The Pause Deputy private key to cause the Optimism Foundation Safe to execute a call to the DeputyGuardianModule account ONLY for the purpose of executing the pause function
+
+The Optimism Foundation Safe is expected to rotate the Pause Deputy private key approximately every 3 months.
+
+## For chain operators
+
+If this proposal is accepted, multisig ceremonies will be coordinated to execute upgrade transactions. The following transactions will be executed on the respective chains:
+
+### Upgrade OP Mainnet, Soneium and Ink
+
+```
+0x82ad56cb000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000026b2f158255beac46c1e7c6b8bbf29a4b6a7b76000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000164ff2dd5a100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003000000000000000000000000229047fed2591dbec1ef1118d64f7af3db9eb290000000000000000000000000543ba4aadbab8f9025686bd03993043599c6fb04039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d90000000000000000000000007a8ed66b319911a0f3e7288bddab30d9c0c875c300000000000000000000000089889b569c3a505f3640ee1bd0ac1d557f436d2a039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d900000000000000000000000062c0a111929fa32cec2f76adba54c16afb6e8364000000000000000000000000d56045e68956fce2576e680c95a4750cf8241f79039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d900000000000000000000000000000000000000000000000000000000
+```
+
+### Upgrade Base
+
+```
+0x82ad56cb000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000026b2f158255beac46c1e7c6b8bbf29a4b6a7b760000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a4ff2dd5a10000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000100000000000000000000000073a79fab69143498ed3712e519a88a918e1f40720000000000000000000000000475cbcaebd9ce8afa5025828d5b98dfb67e059e039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d900000000000000000000000000000000000000000000000000000000
+```
+
+### Upgrade Unichain
+
+```
+0x82ad56cb000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000026b2f158255beac46c1e7c6b8bbf29a4b6a7b760000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a4ff2dd5a100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c407398d063f942febbcc6f80a156b47f3f1bda60000000000000000000000003b73fa8d82f511a3cae17b5a26e4e1a2d5e2f2a4039facea52b20c605c05efb0a33560a92de7074218998f75bcdf61e8989cb5d900000000000000000000000000000000000000000000000000000000
+```
+
+As this is an L1 contracts-only upgrade, no action is required by node operators.
+
+## For users
+
+Users should be aware of the following impacts:
+
+### Withdrawal flow changes
+
+1.  There will be a one-time invalidation of all pending withdrawal proofs created on L1.
+
+2.  Complete any pending withdrawals before the upgrade is executed
+
+3.  Avoid creating new withdrawal proofs that would not become executable in time
+
+4.  If a withdrawal was invalidated, submit a second withdrawal proof transaction on L1
+
+This invalidation does not place any ETH or ERC-20 tokens at risk.
+
+### Communication timeline
+
+*   Public messaging on OP social channels will begin next week
+*   Bridge infrastructure contributors will post banners notifying users of the changes
+*   Developer support teams will be prepared for support tickets about transactions that need to be reproven
+
+## Audit reports
+
+The code for Upgrade 13 has undergone multiple audits:
+
+*   **Offbeat Labs**: Completed an audit and found 1 Low Severity issue which has been addressed.
+*   **Spearbit**: Completed an audit and found 1 Medium Severity and 2 Low Severity issues. The Medium Severity issue was a design decision that conflicted with updated L2Beat Stage 1 requirements published in January 2025. The design has been modified to satisfy these requirements.
+*   **Radiant Labs**: Completed an audit of the DeputyPauseModule with only Low/informational findings, all of which have been addressed.
+*   **MiloTruck (independent)**: Completed an audit of the DeputyPauseModule with only Low/informational findings, all of which have been addressed.
+
+## Emergency cancellation
+
+If a critical security issue is discovered before upgrading, OP Labs will collaborate with the community to extensively communicate that the upgrade will no longer occur. The Optimism Foundation and Security Council will work to coordinate an emergency cancellation.
+
+For more detailed information, please refer to the full upgrade proposal or reach out to developer support.
