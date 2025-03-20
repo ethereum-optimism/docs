@@ -33,7 +33,6 @@ This enables developers to:
 *   **Consistent trust model**: Uses the same trust assumptions as the underlying OP Stack infrastructure.
 *   **Flexibility**: Can be used to validate events from another chain or even the local chain.
 
-
 ## How it works
 
 ### Architecture
@@ -52,7 +51,7 @@ The process works through the [`CrossL2Inbox`](https://github.com/ethereum-optim
 
 ## Example: cross-chain attestation verification
 
-Let's walk through a practical example of verifying an Ethereum Attestation Service (EAS) attestation across chains.
+Let's walk through a conceptual example of verifying an Ethereum Attestation Service (EAS) attestation across chains.
 
 ### Source chain: creating an attestation
 
@@ -103,57 +102,40 @@ sequenceDiagram
 
 1.  The user requests access to a DeFi application on the destination chain, referencing an attestation created on the source chain.
 
-2.  The DeFi application calls `verifyAttestation()` on the `AttestationVerifier` contract, passing the attestation's identifier and event data.
+2.  The DeFi application calls a verification function on an attestation verifier contract, passing the attestation's identifier and event data.
 
-3.  The AttestationVerifier calls `validateMessage()` on the `CrossL2Inbox` contract, passing the attestation identifier and a hash of the event data.
+3.  The attestation verifier calls [`validateMessage()`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L79) on the `CrossL2Inbox` contract, passing the attestation identifier and a hash of the event data.
 
-4.  The `CrossL2Inbox` contract interacts with the [`OP-Supervisor`](/stack/interop/op-supervisor) service to check if the specified log exists on the source chain.
+4.  The [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) contract interacts with the [`OP-Supervisor`](/stack/interop/op-supervisor) service to check if the specified log exists on the source chain.
 
 5.  The `OP-Supervisor` confirms the validity of the log to the `CrossL2Inbox` contract.
 
-6.  The `CrossL2Inbox` returns the validation result to the `AttestationVerifier`.
+6.  The `CrossL2Inbox` returns the validation result to the attestation verifier.
 
-7.  The `AttestationVerifier` returns the verification status to the DeFi application.
+7.  The attestation verifier returns the verification status to the DeFi application.
 
 8.  If validation is successful, the DeFi application grants the user access based on the verified attestation.
 
-### Sample code for attestation verification
+### Conceptual approach for attestation verification
 
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+When implementing an attestation verification system using `CrossL2Inbox`, you would need to:
 
-import { ICrossL2Inbox, Identifier } from "interfaces/L2/ICrossL2Inbox.sol";
-import { Predeploys } from "src/libraries/Predeploys.sol";
+1.  **Create an [Identifier struct](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L13)** that uniquely identifies the attestation event:
+    *   Include the source chain ID where the attestation was created
+    *   Specify the EAS contract address (origin) that emitted the event
+    *   Include other necessary parameters to identify the specific log
 
-contract AttestationVerifier {
-    address constant CROSS_L2_INBOX = 0x4200000000000000000000000000000000000022;
-    address constant EAS_CONTRACT = 0x4200000000000000000000000000000000000021;
-    
-    // Event selector for AttestationCreated event
-    bytes32 constant ATTESTATION_CREATED_EVENT_SELECTOR = 
-        0x831531dabaca5375ba77364edc9627be5638660e8b613d921b86766021d3c165; // Example selector
-    
-    function verifyAttestation(
-        Identifier calldata _id,
-        bytes calldata _attestationEvent
-    ) external returns (bool) {
-        // Ensure the log came from the EAS contract
-        require(_id.origin == EAS_CONTRACT, "Not from EAS contract");
-        
-        // Validate the message through CrossL2Inbox
-        ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(_id, keccak256(_attestationEvent));
-        
-        // Decode the attestation event data
-        // (implementation depends on EAS event structure)
-        
-        // Process the attestation
-        // For example, grant special permissions or better rates
-        
-        return true;
-    }
-}
-```
+2.  **Validate the attestation event**:
+    *   Call the `validateMessage()` function on the CrossL2Inbox contract
+    *   Pass the identifier struct and a hash of the attestation event data
+    *   Handle potential validation failures in your contract logic
+
+3.  **Process the validated attestation**:
+    *   Once validated, your contract can trust that the attestation exists on the source chain
+    *   Extract relevant data from the attestation to inform your application's logic
+    *   Implement business rules based on the verified attestation (e.g., grant access, enable features)
+
+The primary benefit of this approach is that it allows your contract to verify attestations that already exist on another chain without requiring those attestations to have been explicitly sent as cross-chain messages.
 
 ## Implementation guide
 
@@ -165,14 +147,14 @@ flowchart TD
     B --> C[3. Call validateMessage]
     C --> D[4. Process validated log data]
     
-    subgraph "Code Examples"
-    E["Identifier memory id = Identifier({
-        chainId: sourceChainId,
-        origin: sourceContractAddress,
-        // Other identifier parameters
-    });"]
+    subgraph "Conceptual Approach"
+    E["Define an Identifier struct with:
+       - chainId: The source chain ID
+       - origin: The source contract address
+       - Other required identifier parameters"]
     
-    F["ICrossL2Inbox(Predeploys.CROSS_L2_INBOX).validateMessage(id, keccak256(logData));"]
+    F["Call validateMessage on CrossL2Inbox
+       Pass the identifier and hash of log data"]
     end
     
     B -.-> E
