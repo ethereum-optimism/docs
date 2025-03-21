@@ -1,5 +1,5 @@
 ---
-title: Reading Logs in Superchain Interop
+title: Reading Logs with Superchain Interop
 lang: en-US
 description: Learn how to reference logs from one chain on another within the Superchain.
 topic: Cross-Chain Log Verification
@@ -13,9 +13,9 @@ import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
 
-# Reading logs in superchain interop
+# Reading Logs with Superchain Interop
 
-Superchain interop enables developers to leverage current and historical logs from other blockchains within the Superchain interop cluster directly on their local chain.
+Superchain interop enables developers to leverage current and historical logs from other blockchains within the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster) directly on their local chain.
 This allows smart contracts to consume local and cross-chain logs with low latency in a trust-minimized way.
 
 ## Overview
@@ -30,8 +30,7 @@ This enables developers to:
 ## Why use `CrossL2Inbox`?
 
 *   **Reference existing logs**: Allows contracts to verify and use logs that were already emitted, without requiring those logs to have been sent as cross-chain messages.
-*   **Consistent trust model**: Uses the same trust assumptions as the underlying OP Stack infrastructure.
-*   **Trust-minimized security**: Leverages the existing Superchain security model with no additional trust assumptions, unlike traditional oracle solutions that require trusting external validators.
+*   **Trust-minimized security**: Leverages the existing Superchain security model with no additional trust assumptions.
 *   **Flexibility**: Can be used to validate events from another chain or even the local chain.
 
 ## How it works
@@ -53,6 +52,7 @@ The process works through the [`CrossL2Inbox`](https://github.com/ethereum-optim
 ## Example: cross-chain attestation verification
 
 Let's walk through a conceptual example of verifying an Ethereum Attestation Service (EAS) attestation across chains.
+EAS is a [predeploy](/stack/interop/predeploy) in the OP Stack for making attestations on or off-chain about anything.
 
 ### Source chain: creating an attestation
 
@@ -81,7 +81,7 @@ sequenceDiagram
 
 ### Destination chain: verifying the attestation
 
-On the destination chain (e.g., Base), a DeFi application wants to verify this attestation:
+On the destination chain (e.g., Unichain), a DeFi application wants to verify this attestation:
 
 ```mermaid
 sequenceDiagram
@@ -119,7 +119,7 @@ sequenceDiagram
 
 The primary benefit of this approach is that it allows your contract to verify attestations that already exist on another chain without requiring those attestations to have been explicitly sent as cross-chain messages.
 
-## Implementation guide
+## Overview of the process
 
 To implement cross-chain log reading:
 
@@ -139,8 +139,8 @@ flowchart TD
        Pass the identifier and hash of log data"]
     end
     
-    B -.-> E
-    C -.-> F
+    B --> E
+    C --> F
 ```
 
 1.  First, identify which log from another chain you want to consume in your application.
@@ -153,9 +153,8 @@ flowchart TD
 
 ## Important considerations
 
-*   This feature works between chains within the same Superchain interop cluster.
+*   This feature works between chains within the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster).
 *   The same functionality can be used on a single chain (for example, to maintain a consistent architecture).
-*   Ensure your contract handles validation failures gracefully.
 
 ### Handling validation failures
 
