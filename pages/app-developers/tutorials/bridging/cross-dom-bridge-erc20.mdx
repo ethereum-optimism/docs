@@ -18,9 +18,6 @@ is_imported_content: 'false'
 ---
 
 import { Callout, Steps } from 'nextra/components'
-import { WipCallout } from '@/components/WipCallout'
-
-<WipCallout />
 
 # Bridging ERC-20 tokens to OP Mainnet
 
@@ -129,13 +126,9 @@ You need to import some dependencies into your Node REPL session.
 <Steps>
   {<h3>Import the `@eth-optimism/viem` package</h3>}
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L3 hash=26b2fdb17dd6c8326a54ec51f0769528
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L2-L6 hash=30c1b8fdaa0ae421d3c5ccca087768a4
   ```
 
-  {<h3>Import viem</h3>}
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L4 hash=69a65ef97862612e4978b8563e6dbe3a
-  ```
 </Steps>
 
 ## Set session variables
@@ -146,12 +139,12 @@ Let's set those up now.
 <Steps>
   {<h3>Load your private key</h3>}
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L6 hash=755b77a7ffc7dfdc186f36c37d3d847a
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L9-L10 hash=6a160f7ff083969091e72c90e1138563
   ```
 
   {<h3>Create the RPC providers and wallets</h3>}
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L8-L11 hash=9afdce50665ae93bce602068071ffaa1
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L12-L35 hash=ed9620d94ad7d545fcfd286ec41f7654
   ```
 
   {<h3>Set the L1 and L2 ERC-20 addresses</h3>}
@@ -159,7 +152,7 @@ Let's set those up now.
   This tutorial uses existing ERC-20 tokens that have been deployed on Sepolia and OP Sepolia.
   These tokens are designed for testing the bridging process.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L13-L14 hash=d8f0d4c8124782a6cd36097ff31010e5
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L38-L39 hash=c2923828fd372202af37fc3022de7e75
   ```
 
   <Callout>
@@ -171,26 +164,17 @@ Let's set those up now.
   </Callout>
 </Steps>
 
-## Get L1 tokens
-
-You're going to need some tokens on L1 that you can bridge to L2.
-The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](https://sepolia.etherscan.io/address/0x5589BB8228C07c4e15558875fAf2B859f678d129) has a `faucet` function that makes it easy to get tokens.
-
 <Steps>
   {<h3>Set the ERC20 ABI</h3>}
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L16 hash=d1caeba8dc014637e2b0b72f5cd076d0
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L42-L84 hash=e770998acb63edd0a2683e1821589e7c
   ```
 
-  {<h3>Create a Contract instance for the L1 token</h3>}
+  {<h3>Check initial balance</h3>}
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L18 hash=9f9d7e38319ff5263e0e99d80d495554
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L86-L99 hash=d0a5ecad5f27344a5e45e186a60a935f
   ```
 
-  {<h3>Check your token balance</h3>}
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L25 hash=d7a60aa394d1055555c2aeab2a2e111d
-  ```
 </Steps>
 
 ## Deposit tokens
@@ -203,7 +187,7 @@ You'll then receive the same number of tokens on L2 in return.
 
   The testing token has 18 decimal places, so you'll want to define a variable that represents one token.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L27 hash=9349517ae6165a8798e49750da8faeee
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L102-L104 hash=9a3bfb2443d7d9de23a418ad11992007
   ```
 
   {<h3>Allow the Standard Bridge to access your tokens</h3>}
@@ -211,50 +195,53 @@ You'll then receive the same number of tokens on L2 in return.
   Before you can deposit your tokens, you'll need to give the Standard Bridge contract an allowance of tokens on L1.
   This will allow the Standard Bridge to pull these tokens out of your address and escrow inside the bridge.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L37-L38 hash=3d9347e57540e808d71230c1bbe49db5
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L106-L113 hash=1019de7f356be5903cf655801d55eecb
+  ```
+
+  {<h3>Wait for approval</h3>}
+
+  Wait for approval transaction to be relayed.
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L116-L121 hash=808ed3788e47f5af11ece6192a19653b
   ```
 
   {<h3>Deposit your tokens</h3>}
 
   Now you can deposit your tokens into the Standard Bridge contract.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L41-L42 hash=0dc6191c87c0a371d7a469ed98190e57
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L124-L135 hash=1621f7bc18b57a6e960c9b5beba9958c
   ```
 
   <Callout>
     Using a smart contract wallet? As a safety measure, `depositERC20` will fail
     if you try to deposit ETH from a smart contract wallet without specifying a
     `recipient`. Add the `recipient` option to the `depositERC20` call to fix
-    this. Check out the [Optimism SDK
-    docs](https://sdk.optimism.io/classes/crosschainmessenger#depositERC20-2) for
+    this. Check out the [@eth-optimism/viem
+    docs](https://github.com/ethereum-optimism/ecosystem/tree/main/packages/viem) for
     more info on the options you can pass to `depositERC20`.
   </Callout>
 
   {<h3>Wait for the deposit to be relayed</h3>}
 
-  You can use the `waitForMessageStatus` function to wait for the deposit to be relayed to L2.
+  You can use the `waitForTransactionReceipt` function to wait for the deposit to be relayed to L2.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L45 hash=659971675ab8d53bc2bd5196f72c873b
-  ```
-
-  {<h3>Check your token balance on L1</h3>}
-
-  You should now have one less token on L1.
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L48 hash=d7a60aa394d1055555c2aeab2a2e111d
-  ```
-
-  {<h3>Create a Contract instance for the L2 token</h3>}
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L50 hash=d7ab5afad79dafcb7be976c3d0d3df84
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L138-L143 hash=1399607e74622853a9dee75e750d2ef3
   ```
 
   {<h3>Check your token balance on L2</h3>}
 
   You should now have one more token on L2.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L53 hash=b332b68817359e4c6e991ed83de6e490
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L149-L156 hash=d174885b0097c830e1a4ea5a8e325def
   ```
+
+    {<h3>Check your token balance on L1</h3>}
+
+  You should now have one less token on L1.
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L159-L166 hash=8077233cab79012607c0e83356a5d9a3
+  ```
+
 </Steps>
 
 ## Withdraw tokens
@@ -264,18 +251,27 @@ Nice!
 Now you're going to repeat the process in reverse to bridge some tokens from L2 to L1.
 
 <Steps>
-  {<h3>Start your withdrawal on L2</h3>}
-
-  The first step to withdrawing tokens from L2 to L1 is to start the withdrawal on L2.
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L56-L57 hash=b97f906085a2c350d9113488ea9b1d45
-  ```
 
   {<h3>Check your token balance on L2</h3>}
 
   You should now have one less token on L2, but your token balance on L1 will not have changed yet.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L60 hash=b332b68817359e4c6e991ed83de6e490
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L177-L191 hash=e82925487d171ad4eace7327487e72a8
+  ```
+
+    {<h3>Get the standard bridge address</h3>}
+
+  You'll use `opSepolia.contracts.l2StandardBridge.address` to get the standard bridge addressand convert amount to proper units.
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L194-L197 hash=23d9557e5ac89f15e9a9c2d0b682a249
+  ```
+
+    {<h3>Initiate the withdrawal</h3>}
+
+  To withdraw tokens from L2 to L1 is to prove to the bridge on L1 that the withdrawal happened on L2.
+  We are going to use the `withdrawOptimismERC20` function for that.
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L202-L209 hash=1fbb5e09387d64b392e7b577c1125f9a
   ```
 
   {<h3>Wait until the withdrawal is ready to prove</h3>}
@@ -283,7 +279,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   The second step to withdrawing tokens from L2 to L1 is to prove to the bridge on L1 that the withdrawal happened on L2.
   You first need to wait until the withdrawal is ready to prove.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L63 hash=e8b55ec0f16f90ba4d4197cf47ff8e6d
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L212-L217 hash=f727f366d60fcde1fcc7d0666ad5195c
   ```
 
   <Callout type="info">
@@ -291,52 +287,17 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
     wait.
   </Callout>
 
-  {<h3>Prove the withdrawal on L1</h3>}
-
-  Once the withdrawal is ready to be proven, you'll send an L1 transaction to prove that the withdrawal happened on L2.
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L66 hash=fee5f5e924472ee9daceb681ccae1cb9
-  ```
-
-  {<h3>Wait until the withdrawal is ready for relay</h3>}
-
-  The final step to withdrawing tokens from L2 to L1 is to relay the withdrawal on L1.
-  This can only happen after the fault proof period has elapsed.
-  On OP Mainnet, this takes 7 days.
-
-  <Callout>
-    We're currently testing fault proofs on OP Sepolia, so withdrawal times
-    reflect Mainnet times.
-  </Callout>
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L69 hash=55a41ac5586b8a688ffd6dfbb20f2d15
-  ```
-
-  {<h3>Relay the withdrawal on L1</h3>}
-
-  Once the withdrawal is ready to be relayed, you can finally complete the withdrawal process.
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L85 hash=f8d30944dad1664d82b9fdf14da59f9e
-  ```
-
-  {<h3>Wait until the withdrawal is relayed</h3>}
-
-  Now you simply wait until the message is relayed.
-
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L88 hash=c2c14a739c44011a058e9848a0019f15
-  ```
-
   {<h3>Check your token balance on L1</h3>}
 
   You should now have one more token on L1.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L91 hash=d7a60aa394d1055555c2aeab2a2e111d
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L222-L229 hash=e44221feb947671197dc6ce99a6f1158
   ```
 </Steps>
 
 ## Next steps
 
 Congrats!
-You've just deposited and withdrawn tokens using the Optimism SDK.
-You should now be able to write applications that use the Optimism SDK to transfer ERC-20 tokens between L1 and L2.
+You've just deposited and withdrawn tokens using `@eth-optimism/viem` package.
+You should now be able to write applications that use the `@eth-optimism/viem` package to transfer ERC-20 tokens between L1 and L2.
 Although this tutorial used Sepolia and OP Sepolia, the same process works for Ethereum and OP Mainnet.
