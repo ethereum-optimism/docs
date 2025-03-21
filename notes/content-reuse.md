@@ -30,7 +30,7 @@ Text after
 
 ### How to Use Multiple Reusable Content Components
 
-1. You can create a `index.js` file in the `content` directories and export 
+1. You can create an `index.js` file in the `content` directory and export 
 the components like this:
 
 ```
