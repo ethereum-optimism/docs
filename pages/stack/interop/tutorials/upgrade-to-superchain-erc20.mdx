@@ -1,0 +1,152 @@
+---
+title: Upgrading ERC-20 tokens to SuperchainERC20
+lang: en-US
+description: What to do if you already have an ERC-20 token, and now you need to support Interop.
+---
+
+import { Callout } from 'nextra/components'
+import { Steps } from 'nextra/components'
+
+<Callout>
+  The SuperchainERC20 standard is ready for production deployments.
+  Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
+</Callout>
+
+# Upgrading ERC-20 tokens to SuperchainERC20
+
+## Overview
+
+This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) that can then teleport across the Superchain interop cluster quickly and safely using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract. For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
+
+se the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
+
+<details>
+
+<summary>About this tutorial</summary>
+
+**What you'll learn**
+
+*   How do upgrade an ERC-20 token to enable Superchain interoperability under various conditions.
+
+**Prerequisite knowlege**
+
+*   You should already know how to [deploy SuperchainERC20 tokens with custom code](./custom-superchain-erc20).
+
+</details>
+
+### What you'll do
+
+*   Upgrade an existing ERC-20 that uses [the proxy pattern](https://docs.openzeppelin.com/upgrades-plugins/proxies) to comply with interop requirements.
+*    Create a "lockbox" SuperchainERC20 contract to permissionlessly enable interop.
+
+
+## Setup
+
+<Steps>
+
+### Install and run supersim
+
+[Follow these instructions](/app-developers/tutorials/supersim/getting-started/installation) to install and run Supersim.
+
+### Setup the ERC-20 tokens
+
+Download and run [this Node.js script](/tutorials/upgrade-erc20-setup.mjs).
+
+```sh
+curl  https://docs.optimism.io/tutorials/upgrade-erc20-setup.mjs > upgrade-erc20-setup.mjs
+node upgrade-erc20-setup.mjs
+```
+
+</Steps>
+
+## Upgrade a proxied contract
+
+There are two requirements for an ERC-20 to use Superchain interop:
+
+- The ERC-20 contract has to implement [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802) and [ERC-165](https://eips.ethereum.org/EIPS/eip-165).
+  The easiest way to achieve this is to inherit from [`SuperchainERC20`](./custom-superchain-erc20).
+  We need to modify the ERC-20 implementation for this support, which is the reason this particular technique requires a proxied contract where we control the proxy.
+- The equivalent ERC-20 contracts need to be on the same address on the other chains.
+
+The exact method to get the same address depends on how the proxy contract was initially deployed. 
+In this case we can see it in the upgrade script.
+
+```js file=<rootDir>/public/tutorials/upgrade-erc20-setup.mjs#L98-L105 hash=916df10cad1571f3a4528c5015cfe732
+```
+
+We need to follow the same steps, from the same address, with the same nonce.
+Luckily, we should be able to do it in this case.
+
+<Steps>
+
+### Create a Foundry project
+
+We create a [Foundry](https://book.getfoundry.sh/) project and import the [OpenZeppelin](https://www.openzeppelin.com/solidity-contracts) contracts, which were used for the original ERC-20 and proxy deployment.
+
+```sh
+mkdir proxy-upgrade
+cd proxy-upgrade
+forge init
+forge install OpenZeppelin/openzeppelin-contracts
+forge install OpenZeppelin/openzeppelin-contracts-upgradeable
+```
+
+### Create a deployer contract
+
+Create an `src/DeployProxy.sol` file with this content:
+
+```solidity file=<rootDir>/public/tutorials/upgrade-erc20-setup.mjs#L68-L80 hash=aab37e500300404962fccc14894b9c89 filename="src/DeployProxy.sol"
+```
+
+This is the same deployer contract used for the original deployment.
+
+### Deploy the deployer contract
+
+Run this command to deploy the deployer contract on chain B.
+Do it repeatedly until you get the same contract address as the one you have on chain A (it has to be the same deployer addresss, which we are using, *and* the same nonce).
+
+```sh
+forge create DeployProxy --rpc-url http://localhost:9546 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast
+```
+
+<Callout>
+We can do this because the address we used to deploy, `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`, has a lower nonce on chain B than the one it had on chain A when it deployed the proxy contract originally. 
+Had this not been the case, it would have been impossible to create a contract in the same address on chain B as the address of the proxy on chain A.
+</Callout>
+
+### Deploy SuperchainERC20 contracts on both chains
+
+These contracts are necessary because we need the ERC-20 tokens to support [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802) and [ERC-165](https://eips.ethereum.org/EIPS/eip-165).
+Note that we are using [the starter kit](./deploy-superchain-erc20) because it is the easiest way.
+Technically speaking we don't need it, because we don't need the actual `SuperchainERC20` contracts to be on the same address.
+The address that we need to be the same is the *proxy* address.
+
+1. Install the contracts in the starter kit, and copy `SuperchainERC20`.
+
+    ```sh
+    forge install ethereum-optimism/superchainerc20-starter
+    cp lib/superchainerc20-starter/packages/contracts/src/SuperchainERC20.sol src
+    ```
+
+1. To map the `interop-lib` library correctly, create a `remappings.txt` file.
+
+    ```text filename="remappings.txt"
+    @interop-lib/=lib/superchainerc20-starter/packages/contracts/lib/interop-lib/src/
+    ```
+
+1. Deploy `SuperchainERC20` to both chains, and keep the addresses in environment variables.
+
+    ```sh
+    PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+    URL_CHAIN_A=http://localhost:9545
+    URL_CHAIN_B=http://localhost:9546
+    SUPERCHAIN_ERC20_A=`forge create SuperchainERC20 --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY --broadcast | awk '/Deployed to:/ {print $3}'`
+    SUPERCHAIN_ERC20_B=`forge create SuperchainERC20 --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --broadcast | awk '/Deployed to:/ {print $3}'`
+    ```
+
+
+### 
+
+cast send 0x5FbDB2315678afecb367f032d93F642f64180aa3 --rpc-url http://localhost:9546 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 "deploy(address,address,bytes)" 0x5FbDB2315678afecb367f032d93F642f64180aa3 0x5FbDB2315678afecb367f032d93F642f64180aa3 0x
+
+</Steps>
