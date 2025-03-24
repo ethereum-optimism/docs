@@ -188,34 +188,3 @@ contract MyCustomL2Token is IOptimismMintableERC20, ILegacyMintableERC20, ERC20,
     }
 }
 ```
-
-{<h3>Review the example contract</h3>}
-
-Take a moment to review the example contract. It's closely based on the official [`OptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/v1.12.2/packages/contracts-bedrock/src/universal/OptimismMintableERC20.sol) contract with one key modification:
-
-The `burn` function has been modified to always revert, making it impossible to withdraw tokens back to L1.
-
-Since the bridge needs to burn tokens when users want to withdraw them to L1, this means that users will not be able to withdraw tokens from this contract. Here's the key part of the contract that prevents withdrawals:
-
-```solidity
-/// @notice Burns tokens from an account.
-/// @dev This function always reverts to prevent withdrawals to L1.
-/// @param _from   Address to burn tokens from.
-/// @param _amount Amount of tokens to burn.
-function burn(
-    address _from,
-    uint256 _amount
-)
-    external
-    virtual
-    override(IOptimismMintableERC20, ILegacyMintableERC20)
-    onlyBridge
-{
-    // Instead of calling _burn(_from, _amount), we revert
-    // This makes it impossible to withdraw tokens back to L1
-    revert("MyCustomL2Token: withdrawals are not allowed");
-    
-    // Note: The following line would normally execute but is unreachable
-    // _burn(_from, _amount);
-    // emit Burn(_from, _amount);
-}
