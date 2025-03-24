@@ -14,51 +14,48 @@ This document provides a high-level overview of the key components and processes
 
 ## Superchain target
 
-In the context of Superchain upgrades, the **[Superchain target](https://specs.optimism.io/protocol/superchain-upgrades.html#superchain-target)** refers to a set of upgrade parameters that multiple OP Chains adhere to, enabling synchronized network upgrades. 
+In the context of Superchain upgrades, the **[Superchain target](https://specs.optimism.io/protocol/superchain-upgrades.html#superchain-target)** refers to a set of upgrade parameters that multiple chains in the Superchain should adhere to, enabling synchronized network upgrades. 
 By aligning with a common Superchain Target, chains can implement consensus-breaking changes simultaneously, maintaining compatibility and coherence across the Superchain ecosystem. 
 This approach streamlines the upgrade process and reduces fragmentation within the superchain.
 
 ## ProtocolVersion L1 smart contract
 
-The **[ProtocolVersion](https://specs.optimism.io/protocol/superchain-upgrades.html#protocolversions-l1-contract)** L1 smart contract serves as an on-chain registry that records the protocol versions supported by various OP Chains within the Superchain. 
+The **[ProtocolVersion](https://specs.optimism.io/protocol/superchain-upgrades.html#protocolversions-l1-contract)** L1 smart contract serves as an on-chain registry that records the protocol versions supported by various chains within the Superchain. 
 It provides a standardized mechanism for chains to signal their current protocol version, facilitating coordination and compatibility checks among different chains. 
 This contract is instrumental in managing and tracking the progression of protocol versions across the Superchain.
 
-## Superchain Version Signaling
+## Superchain version signaling
 
-**Superchain Version Signaling** is a mechanism that allows nodes and clients to be aware of and prepare for upcoming protocol changes. Through this signaling:
+**[Superchain version signaling](https://specs.optimism.io/protocol/superchain-upgrades.html#superchain-version-signaling)** is a mechanism that allows nodes and clients to be aware of and prepare for upcoming protocol changes.
+This signaling is achieved through the **ProtocolVersion smart contract**, allowing chains to indicate their readiness for upcoming upgrades and ensuring that all participating chains are synchronized. 
+Through this signaling:
+*   Nodes can anticipate and implement necessary adjustments ahead of time.
+*   Clients are informed about the protocol version they should be compatible with, ensuring seamless interactions across the Superchain.
 
-- Nodes can anticipate and implement necessary adjustments ahead of time.
-- Clients are informed about the protocol version they should be compatible with, ensuring seamless interactions within the network.
+## Activation rules
 
-This proactive communication minimizes disruptions and promotes a smooth transition during upgrades.
+**[Activation rules](https://specs.optimism.io/protocol/superchain-upgrades.html#activation-rules)** define the conditions under which a network upgrade or hardfork becomes active within the Superchain. 
+These rules can be based on specific block numbers or timestamps, dictating when the new protocol changes take effect. 
 
-## Activation Rules
-
-**Activation Rules** define the specific conditions and timelines under which a protocol upgrade becomes active within the Superchain. These rules typically include:
-
-- **Block Height Activation:** The upgrade activates at a predetermined block number.
-- **Time-Based Activation:** The upgrade becomes effective at a specific timestamp.
-- **Conditional Activation:** Activation contingent upon certain network conditions or stakeholder approvals.
-
-Clear and well-communicated activation rules ensure that all network participants can prepare adequately for the changes.
+*   **Block Height Activation:** The upgrade activates at a predetermined block number.
+*   **Time-Based Activation:** The upgrade becomes effective at a specific timestamp.
+*   **Conditional Activation:** Activation contingent upon certain network conditions or stakeholder approvals.
 
 ## `rollup.halt` Flags on Node Binaries
 
-The `rollup.halt` flag is a configuration option available in both the execution and consensus layer node binaries. Its primary function is to:
+The [`rollup.halt`](/operators/node-operators/configuration/execution-config#rolluphalt) flag is an opt-in configuration option available in both the execution and consensus layer node binaries. 
+Its primary function is to temporarily halt node activities, during the transition phase of an upgrade, if or when it encounters an incompatible or unsupported protocol version requirement.
 
-- **Pause Node Operations:** Temporarily halt node activities to prevent processing during critical upgrade windows.
-- **Ensure Data Integrity:** By halting operations, nodes can avoid potential inconsistencies or errors that might arise during the transition phase of an upgrade.
-
-For detailed configuration instructions:
-
-- **Execution Layer (`op-geth`):** Refer to the [Execution Layer Configuration Options](https://docs.optimism.io/operators/node-operators/configuration/execution-config#rolluphalt).
-- **Consensus Layer (`op-node`):** Consult the [Consensus Layer Configuration Options](https://docs.optimism.io/operators/node-operators/configuration/consensus-config#rolluphalt).
+*   Execution layer configuration: In the execution layer *(op-geth)*, the [`--rollup.halt`](/operators/node-operators/configuration/execution-config#rolluphalt)` flag can be set to specify the level of incompatibility (major, minor, patch, none) that will trigger a halt. This ensures that nodes do not process transactions under unsupported protocol versions.
+*   Consensus layer configuration: Similarly, in the consensus layer *(op-node)*, the [`--rollup.halt`](/operators/node-operators/configuration/consensus-config#rolluphalt) flag serves the same purpose, allowing nodes to halt when encountering incompatible protocol versions.
 
 <Callout type="warning">
-Improper use of the `rollup.halt` flag can lead to node downtime or desynchronization. Ensure you understand its implications before applying it to your node configuration.
+Improper use of the `rollup.halt` flag can lead to node downtime or desynchronization. 
+Ensure you understand its implications before applying it to your node configuration.
 </Callout>
 
 ## Conclusion
 
-Coordinated upgrades within the Superchain are essential for maintaining network integrity and performance. By understanding and implementing components like the ProtocolVersion smart contract, version signaling, activation rules, and the `rollup.halt` flag, network participants can ensure smooth transitions during protocol enhancements. For comprehensive guidelines and technical specifications, refer to the [Superchain Upgrades Documentation](https://specs.optimism.io/protocol/superchain-upgrades.html).
+Coordinated upgrades within the Superchain are essential for maintaining network integrity and performance. 
+By understanding and implementing all the components mentioned in this guide, network participants can ensure smooth transitions during protocol upgrades. 
+For comprehensive guidelines and technical specifications, refer to the [Superchain upgrades spec](https://specs.optimism.io/protocol/superchain-upgrades.html).
