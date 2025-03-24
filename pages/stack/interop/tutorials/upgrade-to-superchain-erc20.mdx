@@ -1,5 +1,5 @@
 ---
-title: Upgrading ERC-20 tokens to SuperchainERC20
+title: Upgrading ERC-20 tokens for interop support
 lang: en-US
 description: What to do if you already have an ERC-20 token, and now you need to support Interop.
 ---
@@ -12,7 +12,7 @@ import { Steps } from 'nextra/components'
   Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
 </Callout>
 
-# Upgrading ERC-20 tokens to SuperchainERC20
+# Upgrading ERC-20 tokens for interop support
 
 ## Overview
 
@@ -131,7 +131,8 @@ Luckily, we should be able to do it in this case.
 
       Verify that the proxy address is the same as `$ERC20_ADDRESS`, and that the beacon address is the same as `$BEACON_ADDRESS`.
 
-        <details>
+      <details>
+
           <summary>What to do when the values are not the same</summary>
 
           This can happen when the nonce values of `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` on chain A and chain B are different.
@@ -151,7 +152,7 @@ Luckily, we should be able to do it in this case.
           ```
 
           If you do this, remember to update `$ERC20_ADDRESS` and `$BEACON_ADDRESS`.
-        </details>
+      </details>
 
   <Callout>
     Note that if we couldn't redeploy on chain A (because the ERC-20 was already in use, not just a test system) and the nonce on chain B was already higher than what it had been on chain A when the proxy contract was deployed, it would have been impossible to create on chain B an ERC-20 account with the same address as the ERC-20 on chain A.
@@ -179,7 +180,7 @@ Luckily, we should be able to do it in this case.
       ```solidity file=<rootDir>/public/tutorials/InteropToken.sol hash=007791836635608fdeb9c70c1b368f25 filename="src/InteropToken.sol"
       ```
 
-        <details>
+      <details>
           <summary>Detailed explanation</summary>
 
           ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L1-L5 hash=36b9b9d0fb1ff680dc0eaa1c48b7c56b
@@ -212,12 +213,12 @@ Luckily, we should be able to do it in this case.
           ```
 
           Standard [ERC-165](https://eips.ethereum.org/EIPS/eip-165) behavior.
-        </details>
+      </details>
 
-        <Callout>
+      <Callout>
           Copying the original ERC-20 token code with minimal differences is one method to keep the storage layout identical.
           Alternatively, if you want to use a different contract, such as `SuperchainERC20`, you can modify the storage layout to match the old one using [the Solidity docs](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html).
-        </Callout>
+      </Callout>
 
   2.  Deploy this contract on both chains, and store the addresses (which may or may not be the same).
 
