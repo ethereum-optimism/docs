@@ -176,8 +176,52 @@ Luckily, we should be able to do it in this case.
 
   1.  Create a file, `src/InteropToken.sol`:
 
-      ```solidity file=<rootDir>/public/tutorials/InteropToken.sol hash=5e728534c265028c94d60dcb6550699d filename="src/InteropToken.sol"
+      ```solidity file=<rootDir>/public/tutorials/InteropToken.sol hash=007791836635608fdeb9c70c1b368f25 filename="src/InteropToken.sol"
       ```
+
+      <details>
+
+        <summary>Detailed explanation</summary>
+
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L1-L5 hash=36b9b9d0fb1ff680dc0eaa1c48b7c56b
+        ```
+
+        Most of the code is identical to the original `MyToken`.
+
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L6-L7 hash=f06f3bd72be73dbd754008da7dd00d48        
+        ```
+
+        These are the imports needed for ERC-7802 support.
+        We need `IERC165` for documentation purposes, and `IERC7802` for the ERC-7802 events.
+
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L9 hash=ca402292e7551621669ef1a59b85d7ce     
+        ```
+
+        We also implement [ERC-165](https://eips.ethereum.org/EIPS/eip-165), but we don't need to import anything from there.
+
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L10-L14 hash=37e9b49f50a8b70971ce5d0112bd934e     
+        ```
+
+        This function is identical to the one in `MyToken`.
+
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L16-L36 hash=448a7e21e094b3fd961f2b8ee15bc6c7     
+        ```
+
+        Standard [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802) behavior.
+
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L38-L42 hash=abb2093e9681984f25afa6f9d8b237a3     
+        ```
+
+        Standard [ERC-165](https://eips.ethereum.org/EIPS/eip-165) behavior.
+
+      </details>
+
+      <Callout>
+
+        Copying the original ERC-20 token code with minimal differences is one method to keep the storage layout identical.
+        Alternatively, if you want to use a different contract, such as `SuperchainERC20`, you can modify the storage layout to match the old one using [the Solidity docs](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html).
+
+      </Callout>
 
   2.  Deploy this contract on both chains, and store the addresses (which may or may not be the same).
 
