@@ -157,6 +157,7 @@ cp config.example.json config.json
 Using OPCM, execute the following smart contract changes:
 
 1.  Call `setImplementation` on the `DisputeGameFactoryProxy` to:
+
     *   Set the implementation for the new permissionless `FaultDisputeGame` (game type `0`)
     *   Upgrade the permissioned game to the new `PermissionedDisputeGameAddress` (game type `1`) with the updated absolute prestate
 
@@ -169,6 +170,7 @@ Using OPCM, execute the following smart contract changes:
     ```
 
 2.  Upgrade the `AnchorStateRegistryProxy`:
+
     *   First upgrade to point to the `StorageSetter` contract and clear the initialized flag
     *   Then upgrade back to the `AnchorStateRegistry` implementation
     *   Call `initialize` with the anchor state for the new game type
@@ -182,7 +184,7 @@ Using OPCM, execute the following smart contract changes:
     # Then upgrade back to the proper implementation
     npx opcm upgrade anchor-registry \
       --implementation <ANCHOR_REGISTRY_IMPL_ADDR>
-    
+
     # Initialize with the correct anchor state
     npx opcm initialize anchor-registry \
       --game-type 0 \
@@ -195,7 +197,7 @@ Using OPCM, execute the following smart contract changes:
     npx opcm set-bond-amount \
       --game-type 0 \
       --bond-amount 0.08ether
-    
+
     npx opcm set-bond-amount \
       --game-type 1 \
       --bond-amount 0.08ether
@@ -207,11 +209,11 @@ The anchor state for permissionless games should match the current anchor state 
 
 This migration requires actions by privileged roles in your system:
 
-* The **ProxyAdmin Owner** has the authority to upgrade contracts and is typically controlled by a secure multisig. This role will execute most of the contract upgrades described in this guide.
+*   The **ProxyAdmin Owner** has the authority to upgrade contracts and is typically controlled by a secure multisig. This role will execute most of the contract upgrades described in this guide.
 
-* The **Guardian** has emergency powers like pausing withdrawals but more limited capabilities than the ProxyAdmin Owner.
+*   The **Guardian** has emergency powers like pausing withdrawals but more limited capabilities than the ProxyAdmin Owner.
 
-For detailed information about privileged roles and their security implications, refer to the [privileged roles documentation](/chain/security/privileged-roles).
+For detailed information about privileged roles and their security implications, refer to the [privileged roles documentation](/superchain/privileged-roles).
 
 ## 3. Testing off-chain agents
 
@@ -296,8 +298,8 @@ After completing all previous steps and verifying their successful operation:
 
 ## Next steps
 
-*   [Optimism Fault Proof Documentation](/builders/chain-operators/tools/op-challenger)
-*   [Privileged Roles Documentation](/chain/security/privileged-roles)
+*   [Optimism Fault Proof Documentation](/operators/chain-operators/tools/op-challenger)
+*   [Privileged Roles Documentation](/superchain/privileged-roles)
 *   [L2Beat OP Mainnet Upgrades](https://l2beat.com/scaling/projects/op-mainnet#upgrades-and-governance)
 *   [op-challenger GitHub](https://github.com/ethereum-optimism/optimism/tree/develop/op-challenger)
 *   [op-dispute-mon GitHub](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
