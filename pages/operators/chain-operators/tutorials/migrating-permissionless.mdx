@@ -17,7 +17,7 @@ categories:
 is_imported_content: 'false'
 ---
 
-# Transitioning from permissioned to permissionless proofs in OP Stack
+# Migrating to permissionless fault proofs on OP Stack
 
 This guide provides a high-level overview for chain operators looking to transition their OP Stack from permissioned to permissionless fault proofs. It's designed to be accessible for technical decision makers while providing sufficient detail for implementation teams.
 
@@ -27,8 +27,8 @@ The OP Stack architecture uses fault proofs to ensure the validity of transactio
 
 This migration involves several key components:
 
-*   Configuring security-critical dispute monitoring services
-*   Deploying and configuring smart contracts using OP Chain Manager (OPCM)
+*   Configuring security-critical dispute [monitoring services](/operators/chain-operators/tools/chain-monitoring)
+*   Deploying and configuring smart contracts using [OPCM](/stack/opcm)
 *   Testing the new system before activation
 *   Switching the chain to use the new permissionless system
 
@@ -37,8 +37,7 @@ This migration involves several key components:
 Before beginning this transition, your chain should:
 
 *   Be running a standard OP Stack implementation
-*   Have a functioning permissioned proof system
-*   Be operating with the recommended infrastructure components including `op-challenger` and `op-dispute-mon`
+*   Be operating with the recommended infrastructure services including [`op-challenger`](/stack/fault-proofs/challenger) and [`op-dispute-mon`](/operators/chain-operators/tools/chain-monitoring#dispute-mon)
 
 ## 1. Configure the dispute monitoring stack
 
@@ -46,11 +45,11 @@ The `op-challenger` and `op-dispute-mon` services are critical security componen
 
 ### Upgrade to the latest `op-challenger`
 
-Upgrade to version 1.3.2 or later, which contains important improvements to simplify the upgrade process.
+Upgrade to `version 1.3.3` or [later](https://github.com/ethereum-optimism/optimism/releases), which contains important improvements to simplify the upgrade process.
 
 ```bash
 # Example upgrade command (implementation may vary based on your deployment)
-git clone https://github.com/ethereum-optimism/optimism -b op-challenger/v1.3.2 --recurse-submodules
+git clone https://github.com/ethereum-optimism/optimism -b op-challenger/v1.3.3 --recurse-submodules
 cd optimism
 make op-challenger
 ```
@@ -128,18 +127,15 @@ Unlike with permissioned games, the challenger will need to post bonds with each
 
 ### Set Up `op-dispute-mon`
 
-Ensure `op-dispute-mon` is properly configured according to:
-
-*   [Optimism Documentation](/operators/chain-operators/tools/chain-monitoring#dispute-mon)
-*   [GitHub Repository](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
+Ensure `op-dispute-mon` is properly configured according to these [steps](/operators/chain-operators/tools/chain-monitoring#dispute-mon)
 
 ## 2. Deploy and configure smart contracts using OPCM
 
 This section requires privileged actions by the `ProxyAdminOwner` and may involve the `Guardian` role depending on your security setup.
 
-### Using OP Chain Manager (OPCM) for deployment
+### Using OPCM for deployment
 
-The OP Chain Manager (OPCM) is the recommended tool for safely managing OP Stack upgrades:
+OPCM is the recommended tool for safely managing OP Stack upgrades:
 
 ```bash
 # Install OPCM
@@ -308,4 +304,4 @@ After completing all previous steps and verifying their successful operation:
 
 Transitioning to permissionless proofs represents a significant security improvement for your OP Stack chain. This transition decentralizes the validation process, allowing any participant to challenge invalid state transitions rather than relying on a limited set of trusted validators.
 
-By following this guide, you'll be able to safely configure and test your system before making the final switch to permissionless proofs. Remember to thoroughly test each component before proceeding to the next step, and ensure that your security monitoring is properly configured to track the health of the system after the transition.
+By following this guide, you'll be able to safely configure and test your system before making the final switch to permissionless proofs. Remember to thoroughly test each service before proceeding to the next step, and ensure that your security monitoring is properly configured to track the health of the system after the transition.
