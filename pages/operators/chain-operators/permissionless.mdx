@@ -26,17 +26,19 @@ This guide provides a high-level overview for chain operators looking to transit
 The OP Stack architecture uses fault proofs to ensure the validity of transactions processed on Layer 2. Transitioning from permissioned to permissionless proofs represents a significant security upgrade, allowing any participant to challenge invalid state transitions rather than relying on a limited set of trusted validators.
 
 This migration involves several key components:
-- Configuring security-critical dispute monitoring services
-- Deploying and configuring smart contracts
-- Testing the new system before activation
-- Switching the chain to use the new permissionless system
+
+*   Configuring security-critical dispute monitoring services
+*   Deploying and configuring smart contracts
+*   Testing the new system before activation
+*   Switching the chain to use the new permissionless system
 
 ## Prerequisites
 
 Before beginning this transition, your chain should:
-- Be running a standard OP Stack implementation
-- Have a functioning permissioned proof system
-- Be operating with the recommended infrastructure components including `op-challenger` and `op-dispute-mon`
+
+*   Be running a standard OP Stack implementation
+*   Have a functioning permissioned proof system
+*   Be operating with the recommended infrastructure components including `op-challenger` and `op-dispute-mon`
 
 ## 1. Configure the Dispute Monitoring Stack
 
@@ -88,8 +90,9 @@ The URL can use `http`, `https`, or `file` protocols. Each prestate should be na
 ### Building Required Prestates
 
 You'll need at least two prestates:
-1. The prestate used for permissioned games
-2. The prestate matching the `faultGameAbsolutePrestate` configuration
+
+1.  The prestate used for permissioned games
+2.  The prestate matching the `faultGameAbsolutePrestate` configuration
 
 To build prestates for all tagged releases:
 
@@ -112,15 +115,17 @@ The prestate will be generated at `op-program/bin/prestate.json` (or `prestate.b
 ### Ensure Sufficient Funds for Bonds
 
 Unlike with permissioned games, the challenger will need to post bonds with each claim it makes. As a general guideline:
-- Maintain a minimum balance of 50 ETH
-- Have access to a large pool of ETH for potential attack scenarios
-- Implement monitoring to ensure sufficient funds are always available
+
+*   Maintain a minimum balance of 50 ETH
+*   Have access to a large pool of ETH for potential attack scenarios
+*   Implement monitoring to ensure sufficient funds are always available
 
 ### Set Up `op-dispute-mon`
 
 Ensure `op-dispute-mon` is properly configured according to:
-- [Optimism Documentation](https://docs.optimism.io/operators/chain-operators/tools/chain-monitoring#dispute-mon)
-- [GitHub Repository](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
+
+*   [Optimism Documentation](https://docs.optimism.io/operators/chain-operators/tools/chain-monitoring#dispute-mon)
+*   [GitHub Repository](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
 
 ## 2. Deploy and Configure Smart Contracts
 
@@ -130,16 +135,16 @@ This section requires privileged actions by the `ProxyAdminOwner`.
 
 The following smart contract changes must be made:
 
-1. Call `setImplementation` on the `DisputeGameFactoryProxy` to:
-   - Set the implementation for the new permissionless `FaultDisputeGame` (game type `0`)
-   - Upgrade the permissioned game to the new `PermissionedDisputeGameAddress` (game type `1`) with the updated absolute prestate
+1.  Call `setImplementation` on the `DisputeGameFactoryProxy` to:
+    *   Set the implementation for the new permissionless `FaultDisputeGame` (game type `0`)
+    *   Upgrade the permissioned game to the new `PermissionedDisputeGameAddress` (game type `1`) with the updated absolute prestate
 
-2. Upgrade the `AnchorStateRegistryProxy`:
-   - First upgrade to point to the `StorageSetter` contract and clear the initialized flag
-   - Then upgrade back to the `AnchorStateRegistry` implementation
-   - Call `initialize` with the anchor state for the new game type
+2.  Upgrade the `AnchorStateRegistryProxy`:
+    *   First upgrade to point to the `StorageSetter` contract and clear the initialized flag
+    *   Then upgrade back to the `AnchorStateRegistry` implementation
+    *   Call `initialize` with the anchor state for the new game type
 
-3. Initialize bond amounts for each game type to 0.08 ETH
+3.  Initialize bond amounts for each game type to 0.08 ETH
 
 The anchor state for permissionless games should match the current anchor state for permissioned games at the time of migration.
 
@@ -151,31 +156,31 @@ Before enabling permissionless proofs for withdrawals, thoroughly test your off-
 
 Create a valid proposal using the permissionless game type 0:
 
-1. Ensure the proposal is from a block at or before the `safe` head:
-   ```bash
-   cast block --rpc-url <OP_GETH_ENDPOINT> safe
-   ```
+1.  Ensure the proposal is from a block at or before the `safe` head:
+    ```bash
+    cast block --rpc-url <OP_GETH_ENDPOINT> safe
+    ```
 
-2. Get a valid output root:
-   ```bash
-   cast rpc --rpc-url <OP_NODE_ENDPOINT> optimism_outputAtBlock \
-     $(cast 2h <BLOCK_NUMBER>) | jq -r .outputRoot
-   ```
+2.  Get a valid output root:
+    ```bash
+    cast rpc --rpc-url <OP_NODE_ENDPOINT> optimism_outputAtBlock \
+      $(cast 2h <BLOCK_NUMBER>) | jq -r .outputRoot
+    ```
 
-3. Create a test game:
-   ```bash
-   ./op-challenger/bin/op-challenger create-game \
-     --l1-eth-rpc=<L1_RPC_ENDPOINT> \
-     --game-factory-address <DISPUTE_GAME_FACTORY_ADDR> \
-     --l2-block-num <BLOCK_NUMBER> \
-     --output-root <OUTPUT_ROOT> \
-     <SIGNER_OPTIONS>
-   ```
+3.  Create a test game:
+    ```bash
+    ./op-challenger/bin/op-challenger create-game \
+      --l1-eth-rpc=<L1_RPC_ENDPOINT> \
+      --game-factory-address <DISPUTE_GAME_FACTORY_ADDR> \
+      --l2-block-num <BLOCK_NUMBER> \
+      --output-root <OUTPUT_ROOT> \
+      <SIGNER_OPTIONS>
+    ```
 
-4. Verify:
-   - `op-challenger` logs a message showing the game is in progress
-   - `op-challenger` doesn't post a counter claim (as this is a valid proposal)
-   - `dispute-mon` includes the new game with `status="agree_defender_ahead"`
+4.  Verify:
+    *   `op-challenger` logs a message showing the game is in progress
+    *   `op-challenger` doesn't post a counter claim (as this is a valid proposal)
+    *   `dispute-mon` includes the new game with `status="agree_defender_ahead"`
 
 ### Test Countering Invalid Claims
 
@@ -205,26 +210,28 @@ There should be 3 claims in the game after this test.
 
 After completing all previous steps and verifying their successful operation:
 
-1. Set the `respectedGameType` on the `OptimismPortal` to `CANNON` (game type `0`)
+1.  Set the `respectedGameType` on the `OptimismPortal` to `CANNON` (game type `0`)
 
-2. Configure `op-proposer` to create proposals using the permissionless `cannon` game type:
-   ```bash
-   # Change from game-type 1 to 0
-   --game-type 0
-   ```
-   
-   Or via environment variable:
-   ```
-   OP_PROPOSER_GAME_TYPE=0
-   ```
+2.  Configure `op-proposer` to create proposals using the permissionless `cannon` game type:
+
+    ```bash
+    # Change from game-type 1 to 0
+    --game-type 0
+    ```
+
+    Or via environment variable:
+
+    ```
+    OP_PROPOSER_GAME_TYPE=0
+    ```
 
 ## References
 
-- [Optimism Fault Proof Documentation](https://docs.optimism.io/builders/chain-operators/tools/op-challenger)
-- [Privileged Roles Documentation](https://docs.optimism.io/chain/security/privileged-roles)
-- [L2Beat OP Mainnet Upgrades](https://l2beat.com/scaling/projects/op-mainnet#upgrades-and-governance)
-- [op-challenger GitHub](https://github.com/ethereum-optimism/optimism/tree/develop/op-challenger)
-- [op-dispute-mon GitHub](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
+*   [Optimism Fault Proof Documentation](https://docs.optimism.io/builders/chain-operators/tools/op-challenger)
+*   [Privileged Roles Documentation](https://docs.optimism.io/chain/security/privileged-roles)
+*   [L2Beat OP Mainnet Upgrades](https://l2beat.com/scaling/projects/op-mainnet#upgrades-and-governance)
+*   [op-challenger GitHub](https://github.com/ethereum-optimism/optimism/tree/develop/op-challenger)
+*   [op-dispute-mon GitHub](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
 
 ## Conclusion
 
