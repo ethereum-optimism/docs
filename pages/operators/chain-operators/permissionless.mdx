@@ -17,7 +17,7 @@ categories:
 is_imported_content: 'false'
 ---
 
-# Transitioning from Permissioned to Permissionless Proofs in OP Stack
+# Transitioning from permissioned to permissionless proofs in OP Stack
 
 This guide provides a high-level overview for chain operators looking to transition their OP Stack from permissioned to permissionless fault proofs. It's designed to be accessible for technical decision makers while providing sufficient detail for implementation teams.
 
@@ -40,11 +40,11 @@ Before beginning this transition, your chain should:
 *   Have a functioning permissioned proof system
 *   Be operating with the recommended infrastructure components including `op-challenger` and `op-dispute-mon`
 
-## 1. Configure the Dispute Monitoring Stack
+## 1. Configure the dispute monitoring stack
 
 The `op-challenger` and `op-dispute-mon` services are critical security components that participate in the dispute game process to challenge invalid proposals.
 
-### Upgrade to the Latest `op-challenger`
+### Upgrade to the latest `op-challenger`
 
 Upgrade to version 1.3.2 or later, which contains important improvements to simplify the upgrade process.
 
@@ -55,7 +55,7 @@ cd optimism
 make op-challenger
 ```
 
-### Update Network Configuration
+### Update network configuration
 
 Configure `op-challenger` to load your chain configuration. If your chain is included in the superchain-registry, use:
 
@@ -63,7 +63,7 @@ Configure `op-challenger` to load your chain configuration. If your chain is inc
 --network <chain-name>
 ```
 
-### Enable Cannon Trace Type
+### Enable cannon trace type
 
 Configure `op-challenger` to support both permissioned and permissionless games by setting:
 
@@ -77,7 +77,7 @@ Or by setting the environment variable:
 OP_CHALLENGER_TRACE_TYPE=permissioned,cannon
 ```
 
-### Configure Prestates Access
+### Configure prestates access
 
 Replace the `--cannon-prestate` flag with `--prestates-url`, which points to a source containing all required prestates:
 
@@ -87,7 +87,7 @@ Replace the `--cannon-prestate` flag with `--prestates-url`, which points to a s
 
 The URL can use `http`, `https`, or `file` protocols. Each prestate should be named as `<PRESTATE_HASH>.json` or `<PRESTATE_HASH>.bin.gz`.
 
-### Building Required Prestates
+### Building required prestates
 
 You'll need at least two prestates:
 
@@ -112,7 +112,7 @@ make reproducible-prestate
 
 The prestate will be generated at `op-program/bin/prestate.json` (or `prestate.bin.gz` for newer versions).
 
-### Ensure Sufficient Funds for Bonds
+### Ensure sufficient funds for bonds
 
 Unlike with permissioned games, the challenger will need to post bonds with each claim it makes. As a general guideline:
 
@@ -127,11 +127,11 @@ Ensure `op-dispute-mon` is properly configured according to:
 *   [Optimism Documentation](https://docs.optimism.io/operators/chain-operators/tools/chain-monitoring#dispute-mon)
 *   [GitHub Repository](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
 
-## 2. Deploy and Configure Smart Contracts
+## 2. Deploy and configure smart contracts
 
 This section requires privileged actions by the `ProxyAdminOwner`.
 
-### Set Game Implementations
+### Set game implementations
 
 The following smart contract changes must be made:
 
@@ -148,13 +148,13 @@ The following smart contract changes must be made:
 
 The anchor state for permissionless games should match the current anchor state for permissioned games at the time of migration.
 
-## 3. Testing Off-Chain Agents
+## 3. Testing off-chain agents
 
 Before enabling permissionless proofs for withdrawals, thoroughly test your off-chain monitoring services.
 
-### Test Defending Valid Proposals
+### Test defending valid proposals
 
-Create a valid proposal using the permissionless game type 0:
+Create a valid proposal using the permissionless game type `0`:
 
 1.  Ensure the proposal is from a block at or before the `safe` head:
     ```bash
@@ -182,7 +182,7 @@ Create a valid proposal using the permissionless game type 0:
     *   `op-challenger` doesn't post a counter claim (as this is a valid proposal)
     *   `dispute-mon` includes the new game with `status="agree_defender_ahead"`
 
-### Test Countering Invalid Claims
+### Test countering invalid claims
 
 Post an invalid counter claim to the valid proposal created above:
 
@@ -206,7 +206,7 @@ Verify that `op-challenger` posts a counter-claim to the invalid claim. You can 
 
 There should be 3 claims in the game after this test.
 
-## 4. Switch to Permissionless Proofs
+## 4. Switch to permissionless proofs
 
 After completing all previous steps and verifying their successful operation:
 
@@ -225,7 +225,7 @@ After completing all previous steps and verifying their successful operation:
     OP_PROPOSER_GAME_TYPE=0
     ```
 
-## References
+## Next steps
 
 *   [Optimism Fault Proof Documentation](https://docs.optimism.io/builders/chain-operators/tools/op-challenger)
 *   [Privileged Roles Documentation](https://docs.optimism.io/chain/security/privileged-roles)
