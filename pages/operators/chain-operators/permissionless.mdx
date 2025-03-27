@@ -3,7 +3,7 @@ title: Migrating to permissionless fault proofs on OP Stack
 description: A high-level guide for transitioning from permissioned to permissionless fault proofs on an OP Stack.
 lang: en-US
 content_type: tutorial
-topic: running-a-local-development-environment
+topic: migrating to permissionless fault proofs on OP Stack
 personas:
   - chain-operator
 categories:
@@ -28,7 +28,7 @@ The OP Stack architecture uses fault proofs to ensure the validity of transactio
 This migration involves several key components:
 
 *   Configuring security-critical dispute monitoring services
-*   Deploying and configuring smart contracts
+*   Deploying and configuring smart contracts using OP Stack chain manager (OPCM)
 *   Testing the new system before activation
 *   Switching the chain to use the new permissionless system
 
@@ -57,10 +57,14 @@ make op-challenger
 
 ### Update network configuration
 
-Configure `op-challenger` to load your chain configuration. If your chain is included in the superchain-registry, use:
+Configure `op-challenger` to load your chain configuration. Even if your chain is not included in the superchain-registry, you can specify a custom configuration:
 
 ```bash
+# For chains in the registry
 --network <chain-name>
+
+# For chains not in the registry, provide a path to your configuration
+--network-config /path/to/your/network-config.json
 ```
 
 ### Enable cannon trace type
@@ -87,27 +91,29 @@ Replace the `--cannon-prestate` flag with `--prestates-url`, which points to a s
 
 The URL can use `http`, `https`, or `file` protocols. Each prestate should be named as `<PRESTATE_HASH>.json` or `<PRESTATE_HASH>.bin.gz`.
 
-### Building required prestates
+### Building required prestates for chains not in the Superchain Registry
 
 You'll need at least two prestates:
 
 1.  The prestate used for permissioned games
 2.  The prestate matching the `faultGameAbsolutePrestate` configuration
 
-To build prestates for all tagged releases:
+For chains not in the Superchain Registry, you need to build custom prestates with your chain's configuration:
 
 ```bash
 git clone https://github.com/ethereum-optimism/optimism --recurse-submodules
 cd optimism
-./op-program/scripts/build-prestates.sh
-```
 
-To build a specific prestate (e.g., for op-program/v1.3.1):
-
-```bash
-git clone https://github.com/ethereum-optimism/optimism -b op-program/v1.3.1 --recurse-submodules
-cd optimism
+# To build a specific prestate (e.g., for op-program/v1.3.1)
+git checkout op-program/v1.3.1
 make reproducible-prestate
+
+# Generate the prestate with your chain's specific configuration
+./op-program/bin/op-program \
+  --l2.genesis /path/to/your/l2-genesis.json \
+  --rollup.config /path/to/your/rollup-config.json \
+  --network.l2chainid <YOUR_L2_CHAIN_ID> \
+  --exec.prestate
 ```
 
 The prestate will be generated at `op-program/bin/prestate.json` (or `prestate.bin.gz` for newer versions).
@@ -127,26 +133,85 @@ Ensure `op-dispute-mon` is properly configured according to:
 *   [Optimism Documentation](https://docs.optimism.io/operators/chain-operators/tools/chain-monitoring#dispute-mon)
 *   [GitHub Repository](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
 
-## 2. Deploy and configure smart contracts
+## 2. Deploy and configure smart contracts using OPCM
 
-This section requires privileged actions by the `ProxyAdminOwner`.
+This section requires privileged actions by the `ProxyAdminOwner` and may involve the `Guardian` role depending on your security setup.
+
+### Using (OPCM) for deployment
+
+The (OPCM) is the recommended tool for safely managing OP Stack upgrades:
+
+```bash
+# Install OPCM
+git clone https://github.com/ethereum-optimism/op-chain-manager.git
+cd op-chain-manager
+npm install
+
+# Configure OPCM with your chain's information
+cp config.example.json config.json
+# Edit config.json with your chain's specific addresses and parameters
+```
 
 ### Set game implementations
 
-The following smart contract changes must be made:
+Using OPCM, execute the following smart contract changes:
 
 1.  Call `setImplementation` on the `DisputeGameFactoryProxy` to:
     *   Set the implementation for the new permissionless `FaultDisputeGame` (game type `0`)
     *   Upgrade the permissioned game to the new `PermissionedDisputeGameAddress` (game type `1`) with the updated absolute prestate
+
+    ```bash
+    # Using OPCM to manage the upgrades
+    npx opcm upgrade dispute-game-factory \
+      --permissionless-impl <NEW_PERMISSIONLESS_IMPL_ADDR> \
+      --permissioned-impl <NEW_PERMISSIONED_IMPL_ADDR> \
+      --absolute-prestate <PRESTATE_HASH>
+    ```
 
 2.  Upgrade the `AnchorStateRegistryProxy`:
     *   First upgrade to point to the `StorageSetter` contract and clear the initialized flag
     *   Then upgrade back to the `AnchorStateRegistry` implementation
     *   Call `initialize` with the anchor state for the new game type
 
-3.  Initialize bond amounts for each game type to 0.08 ETH
+    ```bash
+    # First upgrade to the StorageSetter to clear initialization flag
+    npx opcm upgrade anchor-registry \
+      --implementation <STORAGE_SETTER_ADDR> \
+      --skip-initialize
+
+    # Then upgrade back to the proper implementation
+    npx opcm upgrade anchor-registry \
+      --implementation <ANCHOR_REGISTRY_IMPL_ADDR>
+    
+    # Initialize with the correct anchor state
+    npx opcm initialize anchor-registry \
+      --game-type 0 \
+      --anchor-state <ANCHOR_STATE_FOR_GAME_TYPE_0>
+    ```
+
+3.  Initialize bond amounts for each game type to exactly 0.08 ETH:
+    ```bash
+    # Set bond amounts for both game types
+    npx opcm set-bond-amount \
+      --game-type 0 \
+      --bond-amount 0.08ether
+    
+    npx opcm set-bond-amount \
+      --game-type 1 \
+      --bond-amount 0.08ether
+    ```
 
 The anchor state for permissionless games should match the current anchor state for permissioned games at the time of migration.
+
+### Understanding `ProxyAdmin Owner` and `Guardian` roles
+
+This migration requires actions by privileged roles in your system:
+
+* The **ProxyAdmin Owner** has the authority to upgrade contracts and is typically controlled by a secure multisig. This role will execute most of the contract upgrades described in this guide.
+
+* The **Guardian** has emergency powers like pausing withdrawals but more limited capabilities than the ProxyAdmin Owner.
+
+For detailed information about privileged roles and their security implications, refer to the [Privileged Roles Documentation](https://docs.optimism.io/chain/security/privileged-roles).
 
 ## 3. Testing off-chain agents
 
@@ -210,7 +275,11 @@ There should be 3 claims in the game after this test.
 
 After completing all previous steps and verifying their successful operation:
 
-1.  Set the `respectedGameType` on the `OptimismPortal` to `CANNON` (game type `0`)
+1.  Set the `respectedGameType` on the `OptimismPortal` to `CANNON` (game type `0`) using OPCM:
+    ```bash
+    npx opcm set-respected-game-type \
+      --game-type 0
+    ```
 
 2.  Configure `op-proposer` to create proposals using the permissionless `cannon` game type:
 
