@@ -1,0 +1,308 @@
+---
+title: Migrating to permissionless fault proofs on OP Stack
+description: A high-level guide for transitioning from permissioned to permissionless fault proofs on an OP Stack.
+lang: en-US
+content_type: tutorial
+topic: migrating to permissionless fault proofs on OP Stack
+personas:
+  - chain-operator
+categories:
+  - testnet
+  - local-devnet
+  - chain-deployment
+  - docker
+  - chain-configuration
+  - chain-operation
+  - node-management
+is_imported_content: 'false'
+---
+
+# Migrating to permissionless fault proofs on OP Stack
+
+This guide provides a high-level overview for chain operators looking to transition their OP Stack from permissioned to permissionless fault proofs. It's designed to be accessible for technical decision makers while providing sufficient detail for implementation teams.
+
+## Overview
+
+The OP Stack architecture uses fault proofs to ensure the validity of transactions processed on Layer 2. Transitioning from permissioned to permissionless proofs represents a significant security upgrade, allowing any participant to challenge invalid state transitions rather than relying on a limited set of trusted validators.
+
+This migration involves several key components:
+
+*   Configuring security-critical dispute [monitoring services](/operators/chain-operators/tools/chain-monitoring)
+*   Deploying and configuring smart contracts using [OPCM](/stack/opcm)
+*   Testing the new system before activation
+*   Switching the chain to use the new permissionless system
+
+## Prerequisites
+
+Before beginning this transition, your chain should:
+
+*   Be running a standard OP Stack implementation
+*   Be operating with the recommended infrastructure services including [`op-challenger`](/stack/fault-proofs/challenger) and [`op-dispute-mon`](/operators/chain-operators/tools/chain-monitoring#dispute-mon)
+
+## 1. Configure the dispute monitoring stack
+
+The `op-challenger` and `op-dispute-mon` services are critical security components that participate in the dispute game process to challenge invalid proposals.
+
+### Upgrade to the latest `op-challenger`
+
+Upgrade to `version 1.3.3` or [later](https://github.com/ethereum-optimism/optimism/releases), which contains important improvements to simplify the upgrade process.
+
+```bash
+# Example upgrade command (implementation may vary based on your deployment)
+git clone https://github.com/ethereum-optimism/optimism -b op-challenger/v1.3.3 --recurse-submodules
+cd optimism
+make op-challenger
+```
+
+### Update network configuration
+
+Configure `op-challenger` to load your chain configuration. Even if your chain is not included in the superchain-registry, you can specify a custom configuration:
+
+```bash
+# For chains in the registry
+--network <chain-name>
+
+# For chains not in the registry, provide a path to your configuration
+--network-config /path/to/your/network-config.json
+```
+
+### Enable cannon trace type
+
+Configure `op-challenger` to support both permissioned and permissionless games by setting:
+
+```bash
+--trace-type permissioned,cannon
+```
+
+Or by setting the environment variable:
+
+```
+OP_CHALLENGER_TRACE_TYPE=permissioned,cannon
+```
+
+### Configure prestates access
+
+Replace the `--cannon-prestate` flag with `--prestates-url`, which points to a source containing all required prestates:
+
+```bash
+--prestates-url <URL_TO_PRESTATES_DIRECTORY>
+```
+
+The URL can use `http`, `https`, or `file` protocols. Each prestate should be named as `<PRESTATE_HASH>.json` or `<PRESTATE_HASH>.bin.gz`.
+
+### Building required prestates for chains not in the Superchain Registry
+
+You'll need at least two prestates:
+
+1.  The prestate used for permissioned games
+2.  The prestate matching the `faultGameAbsolutePrestate` configuration
+
+For chains not in the Superchain Registry, you need to build custom prestates with your chain's configuration:
+
+```bash
+git clone https://github.com/ethereum-optimism/optimism --recurse-submodules
+cd optimism
+
+# To build a specific prestate (e.g., for op-program/v1.3.1)
+git checkout op-program/v1.3.1
+make reproducible-prestate
+
+# Generate the prestate with your chain's specific configuration
+./op-program/bin/op-program \
+  --l2.genesis /path/to/your/l2-genesis.json \
+  --rollup.config /path/to/your/rollup-config.json \
+  --network.l2chainid <YOUR_L2_CHAIN_ID> \
+  --exec.prestate
+```
+
+The prestate will be generated at `op-program/bin/prestate.json` (or `prestate.bin.gz` for newer versions).
+
+### Ensure sufficient funds for bonds
+
+Unlike with permissioned games, the challenger will need to post bonds with each claim it makes. 
+
+As a general guideline:
+*   Maintain a minimum balance of 50 ETH
+*   Have access to a large pool of ETH for potential attack scenarios
+*   Implement monitoring to ensure sufficient funds are always available
+
+### Set up `op-dispute-mon`
+
+Ensure `op-dispute-mon` is properly configured by following these [steps](/operators/chain-operators/tools/chain-monitoring#dispute-mon)
+
+## 2. Deploy and configure smart contracts using OPCM
+
+This section requires privileged actions by the `ProxyAdminOwner` and may involve the `Guardian` role depending on your security setup.
+
+### Using OPCM for deployment
+
+OPCM is the recommended tool for safely managing OP Stack upgrades:
+
+```bash
+# Install OPCM
+git clone https://github.com/ethereum-optimism/op-chain-manager.git
+cd op-chain-manager
+npm install
+
+# Configure OPCM with your chain's information
+cp config.example.json config.json
+# Edit config.json with your chain's specific addresses and parameters
+```
+
+### Set game implementations
+
+Using OPCM, execute the following smart contract changes:
+
+1.  Call `setImplementation` on the `DisputeGameFactoryProxy` to:
+
+    *   Set the implementation for the new permissionless `FaultDisputeGame` (game type `0`)
+    *   Upgrade the permissioned game to the new `PermissionedDisputeGameAddress` (game type `1`) with the updated absolute prestate
+
+    ```bash
+    # Using OPCM to manage the upgrades
+    npx opcm upgrade dispute-game-factory \
+      --permissionless-impl <NEW_PERMISSIONLESS_IMPL_ADDR> \
+      --permissioned-impl <NEW_PERMISSIONED_IMPL_ADDR> \
+      --absolute-prestate <PRESTATE_HASH>
+    ```
+
+2.  Upgrade the `AnchorStateRegistryProxy`:
+
+    *   First upgrade to point to the `StorageSetter` contract and clear the initialized flag
+    *   Then upgrade back to the `AnchorStateRegistry` implementation
+    *   Call `initialize` with the anchor state for the new game type
+
+    ```bash
+    # First upgrade to the StorageSetter to clear initialization flag
+    npx opcm upgrade anchor-registry \
+      --implementation <STORAGE_SETTER_ADDR> \
+      --skip-initialize
+
+    # Then upgrade back to the proper implementation
+    npx opcm upgrade anchor-registry \
+      --implementation <ANCHOR_REGISTRY_IMPL_ADDR>
+
+    # Initialize with the correct anchor state
+    npx opcm initialize anchor-registry \
+      --game-type 0 \
+      --anchor-state <ANCHOR_STATE_FOR_GAME_TYPE_0>
+    ```
+
+3.  Initialize bond amounts for each game type to exactly 0.08 ETH:
+    ```bash
+    # Set bond amounts for both game types
+    npx opcm set-bond-amount \
+      --game-type 0 \
+      --bond-amount 0.08ether
+
+    npx opcm set-bond-amount \
+      --game-type 1 \
+      --bond-amount 0.08ether
+    ```
+
+The anchor state for permissionless games should match the current anchor state for permissioned games at the time of migration.
+
+### Understanding ProxyAdmin Owner and Guardian roles
+
+This migration requires actions by privileged roles in your system:
+
+*   The **ProxyAdmin Owner** has the authority to upgrade contracts and is typically controlled by a secure multisig. This role will execute most of the contract upgrades described in this guide.
+
+*   The **Guardian** has emergency powers like pausing withdrawals but more limited capabilities than the ProxyAdmin Owner.
+
+For detailed information about privileged roles and their security implications, refer to the [privileged roles documentation](/superchain/privileged-roles).
+
+## 3. Testing off-chain agents
+
+Before enabling permissionless proofs for withdrawals, thoroughly test your off-chain monitoring services.
+
+### Test defending valid proposals
+
+Create a valid proposal using the permissionless game type `0`:
+
+1.  Ensure the proposal is from a block at or before the `safe` head:
+    ```bash
+    cast block --rpc-url <OP_GETH_ENDPOINT> safe
+    ```
+
+2.  Get a valid output root:
+    ```bash
+    cast rpc --rpc-url <OP_NODE_ENDPOINT> optimism_outputAtBlock \
+      $(cast 2h <BLOCK_NUMBER>) | jq -r .outputRoot
+    ```
+
+3.  Create a test game:
+    ```bash
+    ./op-challenger/bin/op-challenger create-game \
+      --l1-eth-rpc=<L1_RPC_ENDPOINT> \
+      --game-factory-address <DISPUTE_GAME_FACTORY_ADDR> \
+      --l2-block-num <BLOCK_NUMBER> \
+      --output-root <OUTPUT_ROOT> \
+      <SIGNER_OPTIONS>
+    ```
+
+4.  Verify:
+    *   `op-challenger` logs a message showing the game is in progress
+    *   `op-challenger` doesn't post a counter claim (as this is a valid proposal)
+    *   `dispute-mon` includes the new game with `status="agree_defender_ahead"`
+
+### Test countering invalid claims
+
+Post an invalid counter claim to the valid proposal created above:
+
+```bash
+./op-challenger/bin/op-challenger move \
+  --l1-eth-rpc <L1_RPC_ENDPOINT> \
+  --game-address <GAME_ADDR> \
+  --attack \
+  --parent-index 0 \
+  --claim 0x0000000000000000000000000000000000000000000000000000000000000000 \
+  <SIGNER_OPTIONS>
+```
+
+Verify that `op-challenger` posts a counter-claim to the invalid claim. You can view claims using:
+
+```bash
+./op-challenger/bin/op-challenger list-claims \
+  --l1-eth-rpc <L1_RPC_ENDPOINT> \
+  --game-address <GAME_ADDR>
+```
+
+There should be 3 claims in the game after this test.
+
+## 4. Switch to permissionless proofs
+
+After completing all previous steps and verifying their successful operation:
+
+1.  Set the `respectedGameType` on the `OptimismPortal` to `CANNON` (game type `0`) using OPCM:
+    ```bash
+    npx opcm set-respected-game-type \
+      --game-type 0
+    ```
+
+2.  Configure `op-proposer` to create proposals using the permissionless `cannon` game type:
+
+    ```bash
+    # Change from game-type 1 to 0
+    --game-type 0
+    ```
+
+    Or via environment variable:
+
+    ```
+    OP_PROPOSER_GAME_TYPE=0
+    ```
+
+## Next steps
+
+*   [Optimism Fault Proof Documentation](/operators/chain-operators/tools/op-challenger)
+*   [Privileged Roles Documentation](/superchain/privileged-roles)
+*   [L2Beat OP Mainnet Upgrades](https://l2beat.com/scaling/projects/op-mainnet#upgrades-and-governance)
+*   [op-challenger GitHub](https://github.com/ethereum-optimism/optimism/tree/develop/op-challenger)
+*   [op-dispute-mon GitHub](https://github.com/ethereum-optimism/optimism/tree/develop/op-dispute-mon)
+
+## Conclusion
+
+Transitioning to permissionless proofs represents a significant security improvement for your OP Stack chain. This transition decentralizes the validation process, allowing any participant to challenge invalid state transitions rather than relying on a limited set of trusted validators.
+
+By following this guide, you'll be able to safely configure and test your system before making the final switch to permissionless proofs. Remember to thoroughly test each service before proceeding to the next step, and ensure that your security monitoring is properly configured to track the health of the system after the transition.
