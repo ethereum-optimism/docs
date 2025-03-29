@@ -30,6 +30,21 @@ This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://git
   *   You should already know how to [deploy SuperchainERC20 tokens with custom code](./custom-superchain-erc20).
 </details>
 
+<Callout type="warning">
+  The code on the documentation site is sample code, *not* production code.
+  This means that we ran it, and it works as advertised.
+  However, it did not pass through the rigorous audit process that most Optimism code undergoes.
+  You're welcome to use it, but if you need it for production purposes you should get it audited first.
+</Callout>
+
+{/* 
+
+I put this warning here, when we don't have it on most pages, because this tutorial
+has, IMHO, code that is a lot more likely to be used in production. It doesn't just
+show what is possible, it does the exact job needed.
+
+*/}
+
 ### What you'll do
 
 *   Upgrade an existing ERC-20 that uses [the proxy pattern](https://docs.openzeppelin.com/upgrades-plugins/proxies) to comply with interop requirements (with the proper authority).
@@ -66,8 +81,21 @@ This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://git
 
   ```sh
   BEACON_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  ERC20_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+  export ERC20_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
   ```
+
+  ### Specify environment variables
+
+  Specify these variables, which will be useful later.
+
+  ```sh
+  PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+  USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+  URL_CHAIN_A=http://127.0.0.1:9545
+  URL_CHAIN_B=http://127.0.0.1:9546
+  INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
+  ```
+
 </Steps>
 
 ## Upgrade a proxied contract
@@ -75,7 +103,6 @@ This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://git
 There are several requirements for an ERC-20 to use Superchain interop:
 
 *   The ERC-20 contract has to implement [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802) and [ERC-165](https://eips.ethereum.org/EIPS/eip-165).
-    The easiest way to achieve this is to inherit from [`SuperchainERC20`](./custom-superchain-erc20).
     We need to modify the ERC-20 implementation for this support, which is the reason this particular technique requires a proxied contract where we control the proxy.
 *   The equivalent ERC-20 contracts need to be on the same address on the other chains.
 *   The storage layout of the ERC-20 contract needs to be the same as the one of `SuperchainERC20`.
@@ -112,10 +139,6 @@ Luckily, we should be able to do it in this case.
   2.  Run this command to deploy the same contracts on chain B.
 
       ```sh
-      PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-      USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-      URL_CHAIN_A=http://127.0.0.1:9545
-      URL_CHAIN_B=http://127.0.0.1:9546
       forge script script/LabSetup.s.sol --rpc-url $URL_CHAIN_B --broadcast --private-key $PRIVATE_KEY --tc LabSetup
       ```
 
@@ -255,7 +278,6 @@ Luckily, we should be able to do it in this case.
   3.  Transfer 0.1 token.
 
       ```sh
-      INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
       AMOUNT=`echo 0.1 | cast to-wei`
       cast send $INTEROP_BRIDGE --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,address,uint256,uint256)" $ERC20_ADDRESS $USER_ADDRESS $AMOUNT 902
       ```
@@ -269,3 +291,105 @@ Luckily, we should be able to do it in this case.
 </details>
 
 ## Lockboxes for permissionless interop
+
+There are many cases in which the previous technique is not usable:
+
+- The original ERC-20 contract was not deployed behind a proxy, so there is no way to make it implement [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802).
+- The original ERC-20 contract was a proxy, but it was deployed either directly or using the [`CREATE`](https://www.evm.codes/?fork=cancun#f0) opcode and that nonce value has already been used by that address on one of the chains you need to interoperate with.
+- The private key for the address that originally deployed the ERC-20 contract is not available. This could happen, for example, because the organization that deployed the ERC-20 contract does not wish to cooperate.
+
+For those cases there is an alternative solution, the lockbox.
+We create a separate ERC-20 contract, which we control.
+Users can transfer the original ERC-20 to the new ERC-20 contract, and in return get an equal number of new tokens.
+Those tokens, because we control them, are interoperable.
+Eventually, the owner of new ERC-20 tokens (either the original depositor or somebody else) can redeem them back for the original tokens.
+
+<Steps>
+
+  ### Setup environment variables
+
+  We need a few more environment variables to make token information available for the new deployment.
+
+  ```sh
+  export ERC20_ADDRESS
+  export ERC20_CHAINID=`cast chain-id --rpc-url $URL_CHAIN_A`
+  ORIGINAL_TOKEN_NAME=`cast call $ERC20_ADDRESS "name()" --rpc-url $URL_CHAIN_A | cast to-ascii`
+  export NEW_TOKEN_NAME="$ORIGINAL_TOKEN_NAME Lockbox"
+  ORIGINAL_TOKEN_SYMBOL=`cast call $ERC20_ADDRESS "symbol()" --rpc-url $URL_CHAIN_A | cast to-ascii`
+  export NEW_TOKEN_SYMBOL="$ORIGINAL_TOKEN_SYMBOL-L"
+  export TOKEN_DECIMALS=`cast call $ERC20_ADDRESS "decimals()" --rpc-url $URL_CHAIN_A | cast to-dec`
+  ```
+
+  ### Update the deployment utilities
+
+  The next `SuperchainERC20` variant is called `LockboxSuperchainERC20`, and it requires different constructor parameters.
+  To be able to deploy it, we need to modify some of the deployment utilities.
+
+  1. Replace `packages/contracts/package.json` with this code:
+
+      ```json filename="packages/contracts/package.json"
+      {
+        "name": "@superchainerc20-starter/contracts",
+        "main": "index.js",
+        "scripts": {
+          "deploy:dev": "env-cmd -f .env cross-env-shell 'wait-port http://:8420/ready && forge script scripts/Superc>    "deploy:token": "env-cmd -f .env cross-env-shell 'forge script scripts/LockboxDeployer.s.sol --broadcast -->    "update:rpcs": "cd ../.. && ./scripts/fetch-superchain-rpc-urls.sh",
+          "install": "forge install",
+          "build": "forge build",
+          "test": "forge test",
+          "init:env": "cp .env.example .env"
+        },
+        "dependencies": {
+          "viem": "^2.21.37"
+        }
+      }      
+      ```
+
+  1. Create a new file, `packages/contracts/scripts/LockboxDeployer.s.sol`:
+
+      ```solidity filename="packages/contracts/scripts/LockboxDeployer.s.sol" file=<rootDir>/public/tutorials/LockboxDeployer.s.sol hash=534b543709be173d87508a53322d8c59
+      ```
+
+      <details>
+
+        <summary>Explanation of the modified functions</summary>
+
+        For the most part, this is the standard `SuperchainERC20Deployer.s.sol` that comes with the [SuperchainERC20 starter kit](./deploy-superchain-erc20).
+        Some functions are modified, as explained below. 
+
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L46-L52 hash=302d02c3895f109e5e64d265b0473e6a
+        ```
+
+        Get the majority of the configuration from the environment.
+        Mostly of it is derived from the configuration of the original ERC-20 token.
+
+        Note that there is no `owner` here.
+        This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
+
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L54-L69 hash=c45855080dc554cece35ed87e2d68f68
+        ```
+
+        "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.      
+        If there is already a contract there, we have a problem.
+        Otherwise, deploy `LockboxSuperchainERC20`.
+
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L80-L84 hash=5d1f71b16a6f02d52a79b1a9e7588f87
+        ```
+
+        I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
+        This is not necessary, but I consider it a developer experience improvement.
+        During development you redeploy slightly modified code a lot of times.
+        It is easier if you don't need to manually change the salt every time.
+
+        <Callout type="warning">
+          Remove this before deploying to production.
+          Otherwise, as new blockchains join the Interop cluster, you may not be able to deploy your contract at the same address.
+        </Callout>
+
+      </details>
+
+  1. Create this file in `packages/contracts/src/LockboxSuperchainERC20.sol`:
+
+      ```solidity filename="packages/contracts/src/LockboxSuperchainERC20.sol" file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol hash=7fd49a23ddf10481be66dde8b0b23ccb
+      ```  
+
+</Steps>
