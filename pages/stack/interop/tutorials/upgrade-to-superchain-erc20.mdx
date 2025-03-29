@@ -95,7 +95,6 @@ show what is possible, it does the exact job needed.
   URL_CHAIN_B=http://127.0.0.1:9546
   INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
   ```
-
 </Steps>
 
 ## Upgrade a proxied contract
@@ -154,8 +153,7 @@ Luckily, we should be able to do it in this case.
 
       Verify that the proxy address is the same as `$ERC20_ADDRESS`, and that the beacon address is the same as `$BEACON_ADDRESS`.
 
-      <details>
-
+        <details>
           <summary>What to do when the values are not the same</summary>
 
           This can happen when the nonce values of `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` on chain A and chain B are different.
@@ -175,7 +173,7 @@ Luckily, we should be able to do it in this case.
           ```
 
           If you do this, remember to update `$ERC20_ADDRESS` and `$BEACON_ADDRESS`.
-      </details>
+        </details>
 
   <Callout>
     Note that if we couldn't redeploy on chain A (because the ERC-20 was already in use, not just a test system) and the nonce on chain B was already higher than what it had been on chain A when the proxy contract was deployed, it would have been impossible to create on chain B an ERC-20 account with the same address as the ERC-20 on chain A.
@@ -203,7 +201,7 @@ Luckily, we should be able to do it in this case.
       ```solidity file=<rootDir>/public/tutorials/InteropToken.sol hash=007791836635608fdeb9c70c1b368f25 filename="src/InteropToken.sol"
       ```
 
-      <details>
+        <details>
           <summary>Detailed explanation</summary>
 
           ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L1-L5 hash=36b9b9d0fb1ff680dc0eaa1c48b7c56b
@@ -236,12 +234,12 @@ Luckily, we should be able to do it in this case.
           ```
 
           Standard [ERC-165](https://eips.ethereum.org/EIPS/eip-165) behavior.
-      </details>
+        </details>
 
-      <Callout>
+        <Callout>
           Copying the original ERC-20 token code with minimal differences is one method to keep the storage layout identical.
           Alternatively, if you want to use a different contract, such as `SuperchainERC20`, you can modify the storage layout to match the old one using [the Solidity docs](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html).
-      </Callout>
+        </Callout>
 
   2.  Deploy this contract on both chains, and store the addresses (which may or may not be the same).
 
@@ -294,9 +292,9 @@ Luckily, we should be able to do it in this case.
 
 There are many cases in which the previous technique is not usable:
 
-- The original ERC-20 contract was not deployed behind a proxy, so there is no way to make it implement [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802).
-- The original ERC-20 contract was a proxy, but it was deployed either directly or using the [`CREATE`](https://www.evm.codes/?fork=cancun#f0) opcode and that nonce value has already been used by that address on one of the chains you need to interoperate with.
-- The private key for the address that originally deployed the ERC-20 contract is not available. This could happen, for example, because the organization that deployed the ERC-20 contract does not wish to cooperate.
+*   The original ERC-20 contract was not deployed behind a proxy, so there is no way to make it implement [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802).
+*   The original ERC-20 contract was a proxy, but it was deployed either directly or using the [`CREATE`](https://www.evm.codes/?fork=cancun#f0) opcode and that nonce value has already been used by that address on one of the chains you need to interoperate with.
+*   The private key for the address that originally deployed the ERC-20 contract is not available. This could happen, for example, because the organization that deployed the ERC-20 contract does not wish to cooperate.
 
 For those cases there is an alternative solution, the lockbox.
 We create a separate ERC-20 contract, which we control.
@@ -305,7 +303,6 @@ Those tokens, because we control them, are interoperable.
 Eventually, the owner of new ERC-20 tokens (either the original depositor or somebody else) can redeem them back for the original tokens.
 
 <Steps>
-
   ### Setup environment variables
 
   We need a few more environment variables to make token information available for the new deployment.
@@ -325,7 +322,7 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
   The next `SuperchainERC20` variant is called `LockboxSuperchainERC20`, and it requires different constructor parameters.
   To be able to deploy it, we need to modify some of the deployment utilities.
 
-  1. Replace `packages/contracts/package.json` with this code:
+  1.  Replace `packages/contracts/package.json` with this code:
 
       ```json filename="packages/contracts/package.json"
       {
@@ -344,52 +341,49 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
       }      
       ```
 
-  1. Create a new file, `packages/contracts/scripts/LockboxDeployer.s.sol`:
+  2.  Create a new file, `packages/contracts/scripts/LockboxDeployer.s.sol`:
 
       ```solidity filename="packages/contracts/scripts/LockboxDeployer.s.sol" file=<rootDir>/public/tutorials/LockboxDeployer.s.sol hash=534b543709be173d87508a53322d8c59
       ```
 
-      <details>
+        <details>
+          <summary>Explanation of the modified functions</summary>
 
-        <summary>Explanation of the modified functions</summary>
+          For the most part, this is the standard `SuperchainERC20Deployer.s.sol` that comes with the [SuperchainERC20 starter kit](./deploy-superchain-erc20).
+          Some functions are modified, as explained below.
 
-        For the most part, this is the standard `SuperchainERC20Deployer.s.sol` that comes with the [SuperchainERC20 starter kit](./deploy-superchain-erc20).
-        Some functions are modified, as explained below. 
+          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L46-L52 hash=302d02c3895f109e5e64d265b0473e6a
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L46-L52 hash=302d02c3895f109e5e64d265b0473e6a
-        ```
+          Get the majority of the configuration from the environment.
+          Mostly of it is derived from the configuration of the original ERC-20 token.
 
-        Get the majority of the configuration from the environment.
-        Mostly of it is derived from the configuration of the original ERC-20 token.
+          Note that there is no `owner` here.
+          This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
 
-        Note that there is no `owner` here.
-        This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
+          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L54-L69 hash=c45855080dc554cece35ed87e2d68f68
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L54-L69 hash=c45855080dc554cece35ed87e2d68f68
-        ```
+          "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.\
+          If there is already a contract there, we have a problem.
+          Otherwise, deploy `LockboxSuperchainERC20`.
 
-        "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.      
-        If there is already a contract there, we have a problem.
-        Otherwise, deploy `LockboxSuperchainERC20`.
+          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L80-L84 hash=5d1f71b16a6f02d52a79b1a9e7588f87
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L80-L84 hash=5d1f71b16a6f02d52a79b1a9e7588f87
-        ```
+          I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
+          This is not necessary, but I consider it a developer experience improvement.
+          During development you redeploy slightly modified code a lot of times.
+          It is easier if you don't need to manually change the salt every time.
 
-        I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
-        This is not necessary, but I consider it a developer experience improvement.
-        During development you redeploy slightly modified code a lot of times.
-        It is easier if you don't need to manually change the salt every time.
+          <Callout type="warning">
+            Remove this before deploying to production.
+            Otherwise, as new blockchains join the Interop cluster, you may not be able to deploy your contract at the same address.
+          </Callout>
+        </details>
 
-        <Callout type="warning">
-          Remove this before deploying to production.
-          Otherwise, as new blockchains join the Interop cluster, you may not be able to deploy your contract at the same address.
-        </Callout>
-
-      </details>
-
-  1. Create this file in `packages/contracts/src/LockboxSuperchainERC20.sol`:
+  3.  Create this file in `packages/contracts/src/LockboxSuperchainERC20.sol`:
 
       ```solidity filename="packages/contracts/src/LockboxSuperchainERC20.sol" file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol hash=7fd49a23ddf10481be66dde8b0b23ccb
-      ```  
-
+      ```
 </Steps>
