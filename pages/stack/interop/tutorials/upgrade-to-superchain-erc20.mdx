@@ -322,7 +322,7 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
   The new `SuperchainERC20` variant is called `LockboxSuperchainERC20`, and it requires different constructor parameters.
   To be able to deploy it, we need to modify some of the deployment utilities.
 
-  1. Download [the SuperchainERC20 starter kit](./deploy-superchain-erc20), and install libraries, etc.
+  1.  Download [the SuperchainERC20 starter kit](./deploy-superchain-erc20), and install libraries, etc.
 
       ```sh
       git clone https://github.com/ethereum-optimism/superchainerc20-starter.git
@@ -331,7 +331,7 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
       pnpm init:env
       ```
 
-  1.  Replace `packages/contracts/package.json` with this code:
+  2.  Replace `packages/contracts/package.json` with this code:
 
       ```json filename="packages/contracts/package.json"
       {
@@ -352,7 +352,7 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
       }      
       ```
 
-  2.  Create a new file, `packages/contracts/scripts/LockboxDeployer.s.sol`:
+  3.  Create a new file, `packages/contracts/scripts/LockboxDeployer.s.sol`:
 
       ```solidity filename="packages/contracts/scripts/LockboxDeployer.s.sol" file=<rootDir>/public/tutorials/LockboxDeployer.s.sol hash=534b543709be173d87508a53322d8c59
       ```
@@ -400,82 +400,79 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
       ```solidity filename="packages/contracts/src/LockboxSuperchainERC20.sol" file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol hash=7fd49a23ddf10481be66dde8b0b23ccb
       ```
 
-      <details>
+        <details>
+          <summary>Explanation</summary>
 
-        <summary>Explanation</summary>
+          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L11-L12 hash=45d211a19533f9b0dee310743b25459f
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L11-L12 hash=45d211a19533f9b0dee310743b25459f
-        ```
+          The lockbox contract needs to know the contract for which it is a lockbox.
+          This requires not just the address, but also to know what chain has it.
 
-        The lockbox contract needs to know the contract for which it is a lockbox.
-        This requires not just the address, but also to know what chain has it.
+          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L47-L57 hash=ba2c333c4d581d79d4b80d918b183dc8
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L47-L57 hash=ba2c333c4d581d79d4b80d918b183dc8
-        ```
+          Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
+          This function has several tests to make sure it can be called.
 
-        Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
-        This function has several tests to make sure it can be called.
+          *   Check the chain ID.
+              Locking and redeeming tokens can only be done on the original token's chain.
+          *   Use [`transferFrom`](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#transferFrom) to transfer the tokens to ourselves.
+              This call typically reverts when it fails, but it can also return `false`.
+              In that case, we revert.
+              There are two reasons it may fail.
+              *   The user (in this case, the `LockboxSuperchainERC20` contract) does not have [the allowance](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#_approve) to spend that amount of tokens from the original owner (`msg.sender`).
+              *   The original owner (`msg.sender`) does not have enough tokens to transfer.
 
-        - Check the chain ID. 
-          Locking and redeeming tokens can only be done on the original token's chain.
-        - Use [`transferFrom`](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#transferFrom) to transfer the tokens to ourselves. 
-          This call typically reverts when it fails, but it can also return `false`.
-          In that case, we revert.
-          There are two reasons it may fail.
-          - The user (in this case, the `LockboxSuperchainERC20` contract) does not have [the allowance](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#_approve) to spend that amount of tokens from the original owner (`msg.sender`).
-          - The original owner (`msg.sender`) does not have enough tokens to transfer.
+          If the tests are successful, mint the requested amount for `msg.sender`.
 
-        If the tests are successful, mint the requested amount for `msg.sender`.
+          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L59-L67 hash=4ae43aa03ebf68f5c3a6d08dfcb0a524
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L59-L67 hash=4ae43aa03ebf68f5c3a6d08dfcb0a524
-        ```
+          Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
+          It also has multiple tests.
 
-        Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
-        It also has multiple tests.
+          *   Again, check chain ID.
+          *   Try to `_burn` the amount of lockbox tokens.
+              [The solady `_burn` function](https://github.com/Vectorized/solady/blob/main/src/tokens/ERC20.sol#L539-L542), the one we inherit from `SuperchainERC20`, reverts if the user does not have enough tokens to burn.
+          *   Transfer the amount of the original ERC-20 redeemed to
+              the caller.
+              This should never fail, because lockbox ERC-20 tokens are supposed to always be backed by an equal number of the original tokens.
+              However, if it does fail for some reason, revert.
+        </details>
 
-        - Again, check chain ID.
-        - Try to `_burn` the amount of lockbox tokens. 
-          [The solady `_burn` function](https://github.com/Vectorized/solady/blob/main/src/tokens/ERC20.sol#L539-L542), the one we inherit from `SuperchainERC20`, reverts if the user does not have enough tokens to burn.
-        - Transfer the amount of the original ERC-20 redeemed to 
-          the caller. 
-          This should never fail, because lockbox ERC-20 tokens are supposed to always be backed by an equal number of the original tokens.
-          However, if it does fail for some reason, revert.
-
-      </details>
-
-  1. Actually deploy the contract.
+  2.  Actually deploy the contract.
 
       ```sh
       pnpm contracts:deploy:token
       ```
 
-  1. Get the new token address and store it in an environment variable.
+  3.  Get the new token address and store it in an environment variable.
 
       ```sh
       NEW_TOKEN_ADDRESS=`cat packages/contracts/broadcast/multi/LockboxDeployer.s.sol-latest/run.json | awk '/contractAddress/ {print $2}' | head -1 | sed 's/[",]//g'`
       ```
-
 </Steps>
 
 <details>
   <summary>Sanity check</summary>
 
-  1. Check that the user has a single token of the original ERC-20.
+  1.  Check that the user has a single token of the original ERC-20.
 
       ```sh
       cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
       ```
 
-  1. Lock a quarter token in the lockbox ERC-20 contract.
-     To do this we first need to give the lockbox ERC-20 contract an allowance and then call it.
+  2.  Lock a quarter token in the lockbox ERC-20 contract.
+      To do this we first need to give the lockbox ERC-20 contract an allowance and then call it.
 
-     ```sh
-     QUARTER_TOKEN=`echo 0.25 | cast to-wei`
-     cast send $ERC20_ADDRESS "approve(address,uint256)" $NEW_TOKEN_ADDRESS $QUARTER_TOKEN --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
-     cast send $NEW_TOKEN_ADDRESS "lockAndMint(uint256)" $QUARTER_TOKEN --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
-     ```
+      ```sh
+      QUARTER_TOKEN=`echo 0.25 | cast to-wei`
+      cast send $ERC20_ADDRESS "approve(address,uint256)" $NEW_TOKEN_ADDRESS $QUARTER_TOKEN --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+      cast send $NEW_TOKEN_ADDRESS "lockAndMint(uint256)" $QUARTER_TOKEN --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+      ```
 
-  1. See the balances of the user, both original and lockbox, and the balance of the lockbox contract itself.
+  3.  See the balances of the user, both original and lockbox, and the balance of the lockbox contract itself.
 
       ```sh
       cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
@@ -483,28 +480,28 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
       cast call $ERC20_ADDRESS "balanceOf(address)" $NEW_TOKEN_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
       ```
 
-  1. Transfer 0.1 token to chain B.
+  4.  Transfer 0.1 token to chain B.
 
       ```sh
       TENTH_TOKEN=`echo 0.1 | cast to-wei`
       cast send $INTEROP_BRIDGE --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,address,uint256,uint256)" $NEW_TOKEN_ADDRESS $USER_ADDRESS $TENTH_TOKEN 902
       ```
 
-  1. See the user's balances on both chains.
+  5.  See the user's balances on both chains.
 
       ```sh
       cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
       cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
       ```
 
-  1. Specify the configuration for another user.
+  6.  Specify the configuration for another user.
 
       ```sh
       USER_ADDRESS_2=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
       PRIVATE_KEY_2=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
       ```
 
-  1. Transfer new tokens to the new user (on chain B) and see that they were actually tansferred.
+  7.  Transfer new tokens to the new user (on chain B) and see that they were actually tansferred.
 
       ```sh
       cast send $NEW_TOKEN_ADDRESS "transfer(address,uint256)" $USER_ADDRESS_2 $TENTH_TOKEN --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
@@ -512,18 +509,17 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
       cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS_2 --rpc-url $URL_CHAIN_B | cast from-wei      
       ```
 
-  1. As the new user, transfer tokens back to chain A and redeem them.
+  8.  As the new user, transfer tokens back to chain A and redeem them.
 
       ```sh
       cast send $INTEROP_BRIDGE --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY_2 "sendERC20(address,address,uint256,uint256)" $NEW_TOKEN_ADDRESS $USER_ADDRESS_2 $TENTH_TOKEN 901
       cast send $NEW_TOKEN_ADDRESS --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY_2 "redeemAndBurn(uint256)" $TENTH_TOKEN
       ```
 
-  1. See that the second user does not have any more of the new tokens, but does have the original token.
+  9.  See that the second user does not have any more of the new tokens, but does have the original token.
 
       ```sh
       cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS_2 --rpc-url $URL_CHAIN_A | cast from-wei
       cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS_2 --rpc-url $URL_CHAIN_A | cast from-wei      
       ```
-
 </details>
