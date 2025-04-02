@@ -113,19 +113,26 @@ You'll need at least two prestates:
 For chains not in the Superchain Registry, you need to build custom prestates with your chain's configuration:
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/ethereum-optimism/optimism --recurse-submodules
 cd optimism
 
-# To build a specific prestate (e.g., for op-program/v1.5.0)
-git checkout op-program/v1.5.0
-make reproducible-prestate
+# 2. Create a branch from the latest op-program release
+git checkout -b op-program/chainconfig op-program/v1.5.0
 
-# Generate the prestate with your chain's specific configuration
-./op-program/bin/op-program \
-  --l2.genesis /path/to/your/l2-genesis.json \
-  --rollup.config /path/to/your/rollup-config.json \
-  --network.l2chainid <YOUR_L2_CHAIN_ID> \
-  --exec.prestate
+# 3. Add your chain configuration to the op-program chainconfig directory
+# Your rollup config must be named <chain-id>-rollup.json
+# Your L2 genesis must be named <chain-id>-genesis-l2.json
+mkdir -p op-program/chainconfig/configs 
+cp /path/to/your/rollup-config.json op-program/chainconfig/configs/<YOUR_L2_CHAIN_ID>-rollup.json
+cp /path/to/your/l2-genesis.json op-program/chainconfig/configs/<YOUR_L2_CHAIN_ID>-genesis-l2.json
+
+# 4. Commit your changes
+git add op-program/chainconfig/configs/
+git commit -m "Add chain configuration for <YOUR_CHAIN_NAME>"
+
+# 5. Build the reproducible prestate
+make reproducible-prestate
 ```
 
 The prestate will typically be generated at:
