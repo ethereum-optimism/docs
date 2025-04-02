@@ -160,17 +160,19 @@ Ensure `op-dispute-mon` is properly configured by following these [steps](/opera
 
 This section requires privileged actions by the `ProxyAdminOwner` and may involve the `Guardian` role depending on your security setup.
 
-### Using OPCM for deployment
+### Adding the PermissionlessDisputeGame to a chain
 
-OPCM is the recommended tool for safely managing OP Stack upgrades:
+Given that not all chains will support the `PermissionlessDisputeGame` upon deployment, an
+`OPCM.addGameType()` method will be added which will orchestrate the actions required to add a
+new game type.
 
-```bash
-# Install OPCM <TODO>
+This method will:
 
-# Configure OPCM with your chain's information
-cp config.example.json config.json
-# Edit config.json with your chain's specific addresses and parameters
-```
+1. deploy the `FaultDisputeGame` contract
+2. setup the `DelayedWethProxy` for the new game
+3. Reinitialize the `AnchorStateRegistry` to add the new game type.
+
+See a high level implementation from the (spec](https://specs.optimism.io/experimental/op-contracts-manager.html#implementation-2)
 
 ### Set game implementations
 
@@ -181,14 +183,9 @@ Execute the following smart contract changes in a single bundled transaction:
     *   Set the implementation for the new permissionless `FaultDisputeGame` (game type `0`)
     *   Upgrade the permissioned game to the new `PermissionedDisputeGameAddress` (game type `1`) with the updated absolute prestate
 
-    ```bash
-    # Using OPCM to manage the upgrades <TODO>
-
-    ```
-
 2.  Upgrade the `AnchorStateRegistryProxy` (pre-Upgrade 13 only):
 
-    After upgrade 13 (FP incident response improvements), this step is *no longer required*, as a single anchor state is shared across all game types. Before upgrade 13, perform the following:
+    After [upgrade 13](/notices/upgrade-13#whats-included-in-upgrade-13) (FP incident response improvements), this step is *no longer required*, as a single anchor state is shared across all game types. If you have not upgraded, perform the following:
 
     *   First upgrade the proxy to point to the `StorageSetter` contract and clear the initialized flag.
     *   Then upgrade back to the `AnchorStateRegistry` implementation
@@ -199,19 +196,9 @@ Execute the following smart contract changes in a single bundled transaction:
   Initial deployments at genesis always have an invalid anchor state.
 </Callout>
 
-```bash
-# First upgrade to the StorageSetter to clear initialization flag <TODO>
-
-```
-
-3.  Initialize bond amounts for each game type to exactly 0.08 ETH:
-    ```bash
-    # Set bond amounts for both game types <TODO>
-
-    ```
-
 Post-upgrade 13, the anchor state for permissionless games automatically matches the current anchor state used by permissioned games, since there's only one shared anchor state.
-Specifying this explicitly is redundant but harmless.
+
+3.  Initialize bond amounts for each game type to exactly 0.08 ETH <TODO>
 
 ### Understanding ProxyAdmin Owner and Guardian roles
 
