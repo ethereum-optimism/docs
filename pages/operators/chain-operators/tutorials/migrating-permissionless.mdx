@@ -52,8 +52,25 @@ The `op-challenger` and `op-dispute-mon` services are critical security componen
 
 Upgrade to the [latest release](https://github.com/ethereum-optimism/optimism/releases), which contains important improvements to simplify the upgrade process.
 
+We recommend using the official Docker images for reliability and ease of deployment:
+
 ```bash
-# Example upgrade command (implementation may vary based on your deployment)
+docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.3.3
+```
+Then run the image, for example:
+
+```bash
+docker run -d --name op-challenger \
+  -e OP_CHALLENGER_TRACE_TYPE=permissioned,cannon \
+  -e OP_CHALLENGER_PRESTATES_URL=<YOUR_PRESTATES_URL> \
+  us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.3.3
+
+  ```
+Replace <YOUR_PRESTATES_URL> with your actual prestates URL.
+
+If your deployment requires building from source, you can alternatively use:
+
+```bash
 git clone https://github.com/ethereum-optimism/optimism -b op-challenger/v1.3.3 --recurse-submodules
 cd optimism
 make op-challenger
@@ -68,7 +85,8 @@ Configure `op-challenger` to load your chain configuration. Even if your chain i
 --network <chain-name>
 
 # For chains not in the registry, provide a path to your rollup configuration
---network-config /path/to/your/network-config.json
+*   `<chain-id>-rollup.json` - Your rollup configuration
+*   `<chain-id>-genesis-l2.json` - Your L2 genesis file
 ```
 
 ### Enable cannon trace type
