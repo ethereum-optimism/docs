@@ -130,21 +130,20 @@ make reproducible-prestate
 
 The prestate will typically be generated at:
 
-  *   `op-program/bin/prestate.json` (for older versions)
-  *   `op-program/bin/prestate.bin.gz` (for intermediate versions)
-  *   `op-program/bin/prestate-mt64.bin.gz` (for chains upgraded to Cannon MT64, starting from [upgrade 14](/notices/upgrade-14#whats-included-in-upgrade-14))
+*   `op-program/bin/prestate.json` (for older versions)
+*   `op-program/bin/prestate.bin.gz` (for intermediate versions)
+*   `op-program/bin/prestate-mt64.bin.gz` (for chains upgraded to Cannon MT64, starting from [upgrade 14](/notices/upgrade-14#whats-included-in-upgrade-14))
 
 <Callout type="info">
-  Post-upgrade 14, chains are expected to use `prestate-mt64.bin.gz` due to the Fault Proof VM contract upgrade to `cannon-mt64`. 
+  Post-upgrade 14, chains are expected to use `prestate-mt64.bin.gz` due to the Fault Proof VM contract upgrade to `cannon-mt64`.
   The older `prestate.bin.gz` will eventually be deprecated but is temporarily retained until all chains complete the upgrade.
 </Callout>
 
-
 ### Ensure sufficient funds for bonds
 
-Bonds are required for both permissioned and permissionless games. 
-However, with permissioned games, you typically don't post claims regularly, making bond requirements less noticeable. 
-In contrast, the challenger in permissionless games will frequently need to post bonds with each claim it makes. 
+Bonds are required for both permissioned and permissionless games.
+However, with permissioned games, you typically don't post claims regularly, making bond requirements less noticeable.
+In contrast, the challenger in permissionless games will frequently need to post bonds with each claim it makes.
 Therefore, ensure your challenger has sufficient funds available.
 
 As a general guideline:
@@ -198,22 +197,23 @@ Execute the following smart contract changes in a single bundled transaction:
     *   Then upgrade back to the `AnchorStateRegistry` implementation
     *   Call `initialize` with the anchor state for the new game type
 
-  <Callout type="info">
-    Ensure a permissioned game has already resolved with the correct root and updated the anchor state to a valid value. 
-    Initial deployments at genesis always have an invalid anchor state.
-  </Callout>
+<Callout type="info">
+  Ensure a permissioned game has already resolved with the correct root and updated the anchor state to a valid value.
+  Initial deployments at genesis always have an invalid anchor state.
+</Callout>
 
-    ```bash
-    # First upgrade to the StorageSetter to clear initialization flag <TODO>
-    
-    ```
+```bash
+# First upgrade to the StorageSetter to clear initialization flag <TODO>
+
+```
 
 3.  Initialize bond amounts for each game type to exactly 0.08 ETH:
     ```bash
     # Set bond amounts for both game types <TODO>
-    
+
     ```
-Post-upgrade 13, the anchor state for permissionless games automatically matches the current anchor state used by permissioned games, since there's only one shared anchor state. 
+
+Post-upgrade 13, the anchor state for permissionless games automatically matches the current anchor state used by permissioned games, since there's only one shared anchor state.
 Specifying this explicitly is redundant but harmless.
 
 ### Understanding ProxyAdmin Owner and Guardian roles
