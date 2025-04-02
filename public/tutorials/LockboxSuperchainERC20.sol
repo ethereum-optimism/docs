@@ -17,6 +17,8 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
         uint8 decimals_,
         address originalTokenAddress_,
         uint256 originalChainId_) {
+        require(originalTokenAddress_ != address(0), "Invalid token address");
+        require(originalChainId_ != 0, "Invalid chain ID");
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
