@@ -1,5 +1,5 @@
 ---
-title: Upgrading ERC-20 tokens for interop support
+title: Upgrading ERC20 to SuperchainERC20
 lang: en-US
 description: What to do if you already have an ERC-20 token, and now you need to support Interop.
 ---
@@ -12,18 +12,18 @@ import { Steps } from 'nextra/components'
   Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
 </Callout>
 
-# Upgrading ERC-20 tokens for interop support
+# Upgrading ERC20 to SuperchainERC20
 
 ## Overview
 
-This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) that can teleport across the Superchain interop cluster quickly and safely using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract. For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
+This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) that can teleport across the [Superchain interop cluster](../explainer#superchain-interop-cluster) using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract. For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
 
 <details>
   <summary>About this tutorial</summary>
 
   **What you'll learn**
 
-  *   How do upgrade an ERC-20 token to enable Superchain interoperability under various conditions.
+  *   How to upgrade an ERC-20 token to enable Superchain interoperability under various conditions.
 
   **Prerequisite knowlege**
 
@@ -51,6 +51,8 @@ show what is possible, it does the exact job needed.
 *   Create a "lockbox" SuperchainERC20 contract to permissionlessly enable interop.
 
 ## Setup
+
+These initial setup steps are required for both the [proxy upgrade](#upgrade-a-proxied-contract) and the [lockbox solution](#lockboxes-for-permissionless-interop).
 
 <Steps>
   ### Install and run Supersim
@@ -181,7 +183,7 @@ Luckily, we should be able to do it in this case.
     There are two alternative solutions:
 
     *   [Lockboxes](#lockboxes-for-permissionless-interop), which require users to exchange their tokens for tokens that can go through interop.
-    *   Writing your own bridge, which allows for ERC-20 tokens on different addresses to be exchanged through interop.
+    *   Creating a custom bridge using the [L2toL2CrossDomainMessenger](./message-passing) to facilitate cross-chain mint/burns that does not require a deterministic address across chains but does require the token issuer to manage a token registry per chain.
   </Callout>
 
   ### Deploy ERC-7802 contracts
@@ -297,10 +299,8 @@ There are many cases in which the previous technique is not usable:
 *   The private key for the address that originally deployed the ERC-20 contract is not available. This could happen, for example, because the organization that deployed the ERC-20 contract does not wish to cooperate.
 
 For those cases there is an alternative solution, the lockbox.
-We create a separate ERC-20 contract, which we control.
-Users can transfer the original ERC-20 to the new ERC-20 contract, and in return get an equal number of new tokens.
-Those tokens, because we control them, are interoperable.
-Eventually, the owner of new ERC-20 tokens (either the original depositor or somebody else) can redeem them back for the original tokens.
+The lockbox is smart contract that accepts deposits of the original ERC-20 and issues an equivalent amount of tokens that are Superchain interop compatible. 
+Users can unwrap their Superchain interop token at any time by returning it to the contract, which burns the Superchain interop tokens and releases the corresponding original ERC-20 from the lockbox.
 
 <Steps>
   ### Setup environment variables
@@ -397,7 +397,7 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
 
   1.  Create this file in `packages/contracts/src/LockboxSuperchainERC20.sol`:
 
-      ```solidity filename="packages/contracts/src/LockboxSuperchainERC20.sol" file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol hash=7fd49a23ddf10481be66dde8b0b23ccb
+      ```solidity filename="packages/contracts/src/LockboxSuperchainERC20.sol" file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol hash=d326f0e1c26904b844263274914951cf
       ```
 
       <details>
@@ -409,7 +409,7 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
         The lockbox contract needs to know the contract for which it is a lockbox.
         This requires not just the address, but also to know what chain has it.
 
-        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L47-L57 hash=ba2c333c4d581d79d4b80d918b183dc8
+        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L47-L57 hash=20f6aa15d113dcaf992875184173cb47
         ```
 
         Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
@@ -426,7 +426,7 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
 
         If the tests are successful, mint the requested amount for `msg.sender`.
 
-        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L59-L67 hash=4ae43aa03ebf68f5c3a6d08dfcb0a524
+        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L59-L67 hash=2e63a9cd1ac1114c3fb2110e28b60924
         ```
 
         Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
@@ -526,6 +526,6 @@ Eventually, the owner of new ERC-20 tokens (either the original depositor or som
 
 ## Next steps
 
-*   Review the [Superchain Interop Explainer](/stack/interop/explainer) for answers to common questions about interoperability.
-*   Read the [Message Passing Explainer](/stack/interop/message-passing) to understand what happens "under the hood".
-*   Read the [Superchain ERC20 Explainer](/stack/interop/superchain-erc20).
+* Deploy a [SuperchainERC20](./deploy-superchain-erc20) to the Superchain 
+* [Learn more about SuperchainERC20](../superchain-erc20)
+* Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain 
