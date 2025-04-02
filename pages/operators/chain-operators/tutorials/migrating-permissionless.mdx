@@ -44,9 +44,9 @@ Before beginning this transition, your chain should:
 *   Be running a standard OP Stack implementation
 *   Be operating with the recommended infrastructure services including [`op-challenger`](/stack/fault-proofs/challenger) and [`op-dispute-mon`](/operators/chain-operators/tools/chain-monitoring#dispute-mon)
 
-## 1. Configure the dispute monitoring stack
+## 1. Configure the dispute components
 
-The `op-challenger` and `op-dispute-mon` services are critical security components that participate in the dispute game process to challenge invalid proposals.
+The `op-challenger` and `op-dispute-mon` services are critical security components that participate in the dispute game process to challenge invalid proposals and monitor active games.
 
 ### Upgrade to the latest `op-challenger`
 
@@ -67,7 +67,7 @@ Configure `op-challenger` to load your chain configuration. Even if your chain i
 # For chains in the registry
 --network <chain-name>
 
-# For chains not in the registry, provide a path to your configuration
+# For chains not in the registry, provide a path to your rollup configuration
 --network-config /path/to/your/network-config.json
 ```
 
@@ -164,7 +164,7 @@ cp config.example.json config.json
 
 ### Set game implementations
 
-Using OPCM, execute the following smart contract changes:
+Execute the following smart contract changes in a single bundled transaction:
 
 1.  Call `setImplementation` on the `DisputeGameFactoryProxy` to:
 
