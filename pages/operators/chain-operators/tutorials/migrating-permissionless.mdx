@@ -25,10 +25,10 @@ This guide provides a high-level overview for chain operators looking to transit
 
 ## Overview
 
-The OP Stack architecture uses Fault Proofs to ensure the validity of withdrawals from L2 to L1. 
-The validity of transactions on L2 is handled by the node's consensus rules. 
-Transitioning from permissioned to permissionless proofs represents a significant security upgrade, allowing any participant to propose and challenge state output roots. 
-Permissioned games previously relied on a single trusted validator—typically the proposer configured in the `PermissionedDisputeGame`, usually the network’s only sequencer.
+The OP Stack architecture uses Fault Proofs to ensure the validity of withdrawals from L2 to L1.
+The validity of transactions on L2 is handled by the node's consensus rules.
+Transitioning from permissioned to permissionless proofs represents a significant security upgrade, allowing any participant to propose and challenge state output roots.
+Permissioned games previously relied on a single trusted validator—typically the proposer configured in the `PermissionedDisputeGame`, usually the network's only sequencer.
 
 This migration involves several key components:
 
@@ -61,7 +61,7 @@ make op-challenger
 
 ### Update network configuration
 
-Configure `op-challenger` to load your chain configuration. Even if your chain is not included in the [superchain-registry](/superchain/superchain-registrys), you can specify a custom configuration:
+Configure `op-challenger` to load your chain configuration. Even if your chain is not included in the [superchain-registry](/superchain/superchain-registry), you can specify a custom configuration:
 
 ```bash
 # For chains in the registry
@@ -102,13 +102,13 @@ You'll need at least two prestates:
 1.  The prestate currently used for permissioned games
 2.  A new prestate matching the `faultGameAbsolutePrestate` configuration for permissionless games
 
-  <Callout type="info">
-    The prestate used for permissioned games typically doesn't include the necessary chain configuration for permissionless fault proofs. 
-    When deploying a new chain, you must first deploy the contracts and then generate the correct chain configuration. 
-    As a result, the original permissioned prestate usually isn't suitable for permissionless operation. 
-    Therefore, it's common practice to generate and maintain two separate prestates. 
-    The challenger will need access to both in order to properly monitor existing permissioned games and newly activated permissionless games.
-  </Callout>
+<Callout type="info">
+  The prestate used for permissioned games typically doesn't include the necessary chain configuration for permissionless fault proofs.
+  When deploying a new chain, you must first deploy the contracts and then generate the correct chain configuration.
+  As a result, the original permissioned prestate usually isn't suitable for permissionless operation.
+  Therefore, it's common practice to generate and maintain two separate prestates.
+  The challenger will need access to both in order to properly monitor existing permissioned games and newly activated permissionless games.
+</Callout>
 
 For chains not in the Superchain Registry, you need to build custom prestates with your chain's configuration:
 
@@ -132,9 +132,10 @@ The prestate will be generated at `op-program/bin/prestate.json` (or `prestate.b
 
 ### Ensure sufficient funds for bonds
 
-Unlike with permissioned games, the challenger will need to post bonds with each claim it makes. 
+Unlike with permissioned games, the challenger will need to post bonds with each claim it makes.
 
 As a general guideline:
+
 *   Maintain a minimum balance of 50 ETH
 *   Have access to a large pool of ETH for potential attack scenarios
 *   Implement monitoring to ensure sufficient funds are always available
@@ -173,7 +174,7 @@ Execute the following smart contract changes in a single bundled transaction:
 
     ```bash
     # Using OPCM to manage the upgrades <TODO>
-    
+
     ```
 
 2.  Upgrade the `AnchorStateRegistryProxy`:
