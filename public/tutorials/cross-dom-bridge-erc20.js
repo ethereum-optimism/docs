@@ -173,5 +173,13 @@
     args: [account.address]
   });
   console.log(`L1 Balance: ${formatEther(l1BalanceAgain)}`);
+
+  const l1BalanceAfterDeposit = await await publicClientL1.readContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L1 Balance after deposit: ${formatEther(l1BalanceAfterDeposit)}`);
   
 })();
