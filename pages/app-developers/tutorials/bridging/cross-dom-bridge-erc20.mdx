@@ -141,7 +141,7 @@ Let's set those up now.
 <Steps>
   {<h3>Load your private key</h3>}
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L6-L17 hash=e04c102e618a388632400c6a1afd822a
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L16-L17 hash=6a160f7ff083969091e72c90e1138563
   ```
 
   {<h3>Create the RPC providers and wallets</h3>}
@@ -244,7 +244,49 @@ You'll then receive the same number of tokens on L2 in return.
 
 </Steps>
 
+## Withdraw tokens
 
+You just bridged some tokens from L1 to L2.
+Nice!
+Now you're going to repeat the process in reverse to bridge some tokens from L2 to L1.
+
+<Steps>
+
+  {<h3>Check your token balance on L2</h3>}
+
+  You should now have one less token on L2, but your token balance on L1 will not have changed yet.
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L148-L154 hash=67b7eb08917b042c8846c627cd316ebd
+  ```
+
+    {<h3>Initiate the withdrawal</h3>}
+
+  To withdraw tokens from L2 to L1 is to prove to the bridge on L1 that the withdrawal happened on L2.
+  We are going to use the `withdrawOptimismERC20` function for that.
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L156-L163 hash=9ee233eaa1711443ff15e0d28d2da190
+  ```
+
+  {<h3>Wait for the transaction receipt</h3>}
+
+  The second step to withdrawing tokens from L2 to L1 is to prove to the bridge on L1 that the withdrawal happened on L2.
+  You first need to wait for the transaction receipt.
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L165-L167 hash=688f6479aaf1cb4d0b46c645a34ef9d3
+  ```
+
+  <Callout type="info">
+    This step can take a few minutes. Feel free to take a quick break while you
+    wait.
+  </Callout>
+
+  {<h3>Check your token balance on L1</h3>}
+
+  You should now have one more token on L1.
+
+  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L169-L175 hash=2e2f8b3416dcfc58fd1e97da3b43197e
+  ```
+</Steps>
 
 ## Next steps
 

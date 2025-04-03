@@ -165,5 +165,13 @@
   const withdrawReceipt = await publicClientL2.waitForTransactionReceipt({ hash: withdrawTx });
   console.log(`Withdrawal initiated in L2 block ${withdrawReceipt.blockNumber}`);
   console.log("Withdrawal process initiated! It will take 7 days for the tokens to be available on L1.");
+
+  const l1BalanceAgain = await publicClientL1.readContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L1 Balance: ${formatEther(l1BalanceAgain)}`);
   
 })();
