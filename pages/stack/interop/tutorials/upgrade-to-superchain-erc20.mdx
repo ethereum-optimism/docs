@@ -155,27 +155,27 @@ Luckily, we should be able to do it in this case.
 
       Verify that the proxy address is the same as `$ERC20_ADDRESS`, and that the beacon address is the same as `$BEACON_ADDRESS`.
 
-        <details>
-          <summary>What to do when the values are not the same</summary>
+      <details>
+        <summary>What to do when the values are not the same</summary>
 
-          This can happen when the nonce values of `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` on chain A and chain B are different.
+        This can happen when the nonce values of `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` on chain A and chain B are different.
 
-          You can see the nonce values using these commands:
+        You can see the nonce values using these commands:
 
-          ```sh
-          cast nonce $USER_ADDRESS --rpc-url $URL_CHAIN_A
-          cast nonce $USER_ADDRESS --rpc-url $URL_CHAIN_B
-          ```
+        ```sh
+        cast nonce $USER_ADDRESS --rpc-url $URL_CHAIN_A
+        cast nonce $USER_ADDRESS --rpc-url $URL_CHAIN_B
+        ```
 
-          The easiest solution is to send transactions to the chain with the lower nonce until the nonces are equal, and then deploy to both chains.
+        The easiest solution is to send transactions to the chain with the lower nonce until the nonces are equal, and then deploy to both chains.
 
-          ```sh
-          forge script script/LabSetup.s.sol --rpc-url $URL_CHAIN_A --broadcast --private-key $PRIVATE_KEY --tc LabSetup
-          forge script script/LabSetup.s.sol --rpc-url $URL_CHAIN_B --broadcast --private-key $PRIVATE_KEY --tc LabSetup
-          ```
+        ```sh
+        forge script script/LabSetup.s.sol --rpc-url $URL_CHAIN_A --broadcast --private-key $PRIVATE_KEY --tc LabSetup
+        forge script script/LabSetup.s.sol --rpc-url $URL_CHAIN_B --broadcast --private-key $PRIVATE_KEY --tc LabSetup
+        ```
 
-          If you do this, remember to update `$ERC20_ADDRESS` and `$BEACON_ADDRESS`.
-        </details>
+        If you do this, remember to update `$ERC20_ADDRESS` and `$BEACON_ADDRESS`.
+      </details>
 
   <Callout>
     Note that if we couldn't redeploy on chain A (because the ERC-20 was already in use, not just a test system) and the nonce on chain B was already higher than what it had been on chain A when the proxy contract was deployed, it would have been impossible to create on chain B an ERC-20 account with the same address as the ERC-20 on chain A.
@@ -204,45 +204,45 @@ Luckily, we should be able to do it in this case.
       ```solidity file=<rootDir>/public/tutorials/InteropToken.sol hash=007791836635608fdeb9c70c1b368f25 filename="src/InteropToken.sol"
       ```
 
-        <details>
-          <summary>Detailed explanation</summary>
+      <details>
+        <summary>Detailed explanation</summary>
 
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L1-L5 hash=36b9b9d0fb1ff680dc0eaa1c48b7c56b
-          ```
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L1-L5 hash=36b9b9d0fb1ff680dc0eaa1c48b7c56b
+        ```
 
-          Most of the code is identical to the original `MyToken`.
+        Most of the code is identical to the original `MyToken`.
 
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L6-L7 hash=f06f3bd72be73dbd754008da7dd00d48        
-          ```
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L6-L7 hash=f06f3bd72be73dbd754008da7dd00d48        
+        ```
 
-          These are the imports needed for ERC-7802 support.
-          We need `IERC165` for documentation purposes, and `IERC7802` for the ERC-7802 events.
+        These are the imports needed for ERC-7802 support.
+        We need `IERC165` for documentation purposes, and `IERC7802` for the ERC-7802 events.
 
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L9 hash=ca402292e7551621669ef1a59b85d7ce     
-          ```
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L9 hash=ca402292e7551621669ef1a59b85d7ce     
+        ```
 
-          We also implement [ERC-165](https://eips.ethereum.org/EIPS/eip-165), but we don't need to import anything from there.
+        We also implement [ERC-165](https://eips.ethereum.org/EIPS/eip-165), but we don't need to import anything from there.
 
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L10-L14 hash=37e9b49f50a8b70971ce5d0112bd934e     
-          ```
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L10-L14 hash=37e9b49f50a8b70971ce5d0112bd934e     
+        ```
 
-          This function is identical to the one in `MyToken`.
+        This function is identical to the one in `MyToken`.
 
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L16-L36 hash=448a7e21e094b3fd961f2b8ee15bc6c7     
-          ```
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L16-L36 hash=448a7e21e094b3fd961f2b8ee15bc6c7     
+        ```
 
-          Standard [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802) behavior.
+        Standard [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802) behavior.
 
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L38-L42 hash=abb2093e9681984f25afa6f9d8b237a3     
-          ```
+        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L38-L42 hash=abb2093e9681984f25afa6f9d8b237a3     
+        ```
 
-          Standard [ERC-165](https://eips.ethereum.org/EIPS/eip-165) behavior.
-        </details>
+        Standard [ERC-165](https://eips.ethereum.org/EIPS/eip-165) behavior.
+      </details>
 
-        <Callout>
-          Copying the original ERC-20 token code with minimal differences is one method to keep the storage layout identical.
-          Alternatively, if you want to use a different contract, such as `SuperchainERC20`, you can modify the storage layout to match the old one using [the Solidity docs](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html).
-        </Callout>
+      <Callout>
+        Copying the original ERC-20 token code with minimal differences is one method to keep the storage layout identical.
+        Alternatively, if you want to use a different contract, such as `SuperchainERC20`, you can modify the storage layout to match the old one using [the Solidity docs](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html).
+      </Callout>
 
   2.  Deploy this contract on both chains, and store the addresses (which may or may not be the same).
 
@@ -358,41 +358,41 @@ Users can unwrap their Superchain interop token at any time by returning it to t
       ```solidity filename="packages/contracts/scripts/LockboxDeployer.s.sol" file=<rootDir>/public/tutorials/LockboxDeployer.s.sol hash=534b543709be173d87508a53322d8c59
       ```
 
-        <details>
-          <summary>Explanation of the modified functions</summary>
+      <details>
+        <summary>Explanation of the modified functions</summary>
 
-          For the most part, this is the standard `SuperchainERC20Deployer.s.sol` that comes with the SuperchainERC20 starter kit.
-          Some functions are modified, as explained below.
+        For the most part, this is the standard `SuperchainERC20Deployer.s.sol` that comes with the SuperchainERC20 starter kit.
+        Some functions are modified, as explained below.
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L46-L52 hash=302d02c3895f109e5e64d265b0473e6a
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L46-L52 hash=302d02c3895f109e5e64d265b0473e6a
+        ```
 
-          Get the majority of the configuration from the environment.
-          Mostly of it is derived from the configuration of the original ERC-20 token.
+        Get the majority of the configuration from the environment.
+        Mostly of it is derived from the configuration of the original ERC-20 token.
 
-          Note that there is no `owner` here.
-          This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
+        Note that there is no `owner` here.
+        This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L54-L69 hash=c45855080dc554cece35ed87e2d68f68
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L54-L69 hash=c45855080dc554cece35ed87e2d68f68
+        ```
 
-          "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.\
-          If there is already a contract there, we have a problem.
-          Otherwise, deploy `LockboxSuperchainERC20`.
+        "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.\
+        If there is already a contract there, we have a problem.
+        Otherwise, deploy `LockboxSuperchainERC20`.
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L80-L84 hash=5d1f71b16a6f02d52a79b1a9e7588f87
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L80-L84 hash=5d1f71b16a6f02d52a79b1a9e7588f87
+        ```
 
-          I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
-          This is not necessary, but I consider it a developer experience improvement.
-          During development you redeploy slightly modified code a lot of times.
-          It is easier if you don't need to manually change the salt every time.
+        I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
+        This is not necessary, but I consider it a developer experience improvement.
+        During development you redeploy slightly modified code a lot of times.
+        It is easier if you don't need to manually change the salt every time.
 
-          <Callout type="warning">
-            Remove this before deploying to production.
-            Otherwise, as new blockchains join the Interop cluster, you may not be able to deploy your contract at the same address.
-          </Callout>
-        </details>
+        <Callout type="warning">
+          Remove this before deploying to production.
+          Otherwise, as new blockchains join the Interop cluster, you may not be able to deploy your contract at the same address.
+        </Callout>
+      </details>
 
   ### Create and deploy the new contract
 
@@ -401,46 +401,46 @@ Users can unwrap their Superchain interop token at any time by returning it to t
       ```solidity filename="packages/contracts/src/LockboxSuperchainERC20.sol" file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol hash=d326f0e1c26904b844263274914951cf
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L11-L12 hash=45d211a19533f9b0dee310743b25459f
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L11-L12 hash=45d211a19533f9b0dee310743b25459f
+        ```
 
-          The lockbox contract needs to know the contract for which it is a lockbox.
-          This requires not just the address, but also to know what chain has it.
+        The lockbox contract needs to know the contract for which it is a lockbox.
+        This requires not just the address, but also to know what chain has it.
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L47-L57 hash=20f6aa15d113dcaf992875184173cb47
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L47-L57 hash=20f6aa15d113dcaf992875184173cb47
+        ```
 
-          Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
-          This function has several tests to make sure it can be called.
+        Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
+        This function has several tests to make sure it can be called.
 
-          *   Check the chain ID.
-              Locking and redeeming tokens can only be done on the original token's chain.
-          *   Use [`transferFrom`](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#transferFrom) to transfer the tokens to ourselves.
-              This call typically reverts when it fails, but it can also return `false`.
-              In that case, we revert.
-              There are two reasons it may fail.
-              *   The user (in this case, the `LockboxSuperchainERC20` contract) does not have [the allowance](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#_approve) to spend that amount of tokens from the original owner (`msg.sender`).
-              *   The original owner (`msg.sender`) does not have enough tokens to transfer.
+        *   Check the chain ID.
+            Locking and redeeming tokens can only be done on the original token's chain.
+        *   Use [`transferFrom`](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#transferFrom) to transfer the tokens to ourselves.
+            This call typically reverts when it fails, but it can also return `false`.
+            In that case, we revert.
+            There are two reasons it may fail.
+            *   The user (in this case, the `LockboxSuperchainERC20` contract) does not have [the allowance](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#_approve) to spend that amount of tokens from the original owner (`msg.sender`).
+            *   The original owner (`msg.sender`) does not have enough tokens to transfer.
 
-          If the tests are successful, mint the requested amount for `msg.sender`.
+        If the tests are successful, mint the requested amount for `msg.sender`.
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L59-L67 hash=2e63a9cd1ac1114c3fb2110e28b60924
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L59-L67 hash=2e63a9cd1ac1114c3fb2110e28b60924
+        ```
 
-          Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
-          It also has multiple tests.
+        Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
+        It also has multiple tests.
 
-          *   Again, check chain ID.
-          *   Try to `_burn` the amount of lockbox tokens.
-              [The solady `_burn` function](https://github.com/Vectorized/solady/blob/main/src/tokens/ERC20.sol#L539-L542), the one we inherit from `SuperchainERC20`, reverts if the user does not have enough tokens to burn.
-          *   Transfer the amount of the original ERC-20 redeemed to
-              the caller.
-              This should never fail, because lockbox ERC-20 tokens are supposed to always be backed by an equal number of the original tokens.
-              However, if it does fail for some reason, revert.
-        </details>
+        *   Again, check chain ID.
+        *   Try to `_burn` the amount of lockbox tokens.
+            [The solady `_burn` function](https://github.com/Vectorized/solady/blob/main/src/tokens/ERC20.sol#L539-L542), the one we inherit from `SuperchainERC20`, reverts if the user does not have enough tokens to burn.
+        *   Transfer the amount of the original ERC-20 redeemed to
+            the caller.
+            This should never fail, because lockbox ERC-20 tokens are supposed to always be backed by an equal number of the original tokens.
+            However, if it does fail for some reason, revert.
+      </details>
 
   2.  Actually deploy the contract.
 
