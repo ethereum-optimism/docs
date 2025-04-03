@@ -1,228 +1,169 @@
 (async () => {
-    // First, import all modules using dynamic import
-    const viem = await import('viem');
-    const { createPublicClient, createWalletClient, http, parseUnits } = viem;
 
-    const accounts = await import('viem/accounts');
-    const { privateKeyToAccount } = accounts;
-
-    const viemChains = await import('viem/chains');
-    const { sepolia } = viemChains;
-
-    const opChains = await import('@eth-optimism/viem/chains');
-    const { opSepolia } = opChains;
-
-    const opActions = await import('@eth-optimism/viem/actions');
-    const { depositERC20, withdrawOptimismERC20 } = opActions;
-
-
-    const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY || '';
-    const account = privateKeyToAccount(PRIVATE_KEY);
-
-    const L1_RPC_URL = 'https://ethereum-sepolia.publicnode.com';
-    const L2_RPC_URL = 'https://sepolia.optimism.io';
-
-    const l1WalletClient = createWalletClient({
-      account,
-      chain: sepolia,
-      transport: http(L1_RPC_URL)
-    });
-
-    const l2WalletClient = createWalletClient({
-      account,
-      chain: opSepolia,
-      transport: http(L2_RPC_URL)
-    });
-
-    const l1PublicClient = createPublicClient({
-      chain: sepolia,
-      transport: http(L1_RPC_URL)
-    });
-
-    const l2PublicClient = createPublicClient({
-      chain: opSepolia,
-      transport: http(L2_RPC_URL)
-    });
-
-    // Token addresses
-    const L1_TOKEN_ADDRESS = '0x5589BB8228C07c4e15558875fAf2B859f678d129';
-    const L2_TOKEN_ADDRESS = '0xD08a2917653d4E460893203471f0000826fb4034';
-
-    // Define the ERC20 ABI 
-    const ERC20_ABI = [
-      {
-        name: 'balanceOf',
-        type: 'function',
-        stateMutability: 'view',
-        inputs: [{ name: 'account', type: 'address' }],
-        outputs: [{ name: 'balance', type: 'uint256' }]
-      },
-      {
-        name: 'approve',
-        type: 'function',
-        stateMutability: 'nonpayable',
-        inputs: [
-          { name: 'spender', type: 'address' },
-          { name: 'amount', type: 'uint256' }
-        ],
-        outputs: [{ name: 'success', type: 'bool' }]
-      },
-      {
-        name: 'allowance',
-        type: 'function',
-        stateMutability: 'view',
-        inputs: [
-          { name: 'owner', type: 'address' },
-          { name: 'spender', type: 'address' }
-        ],
-        outputs: [{ name: 'remaining', type: 'uint256' }]
-      },
-      {
-        name: 'decimals',
-        type: 'function',
-        stateMutability: 'view',
-        inputs: [],
-        outputs: [{ name: '', type: 'uint8' }]
-      },
-      {
-        name: 'symbol',
-        type: 'function',
-        stateMutability: 'view',
-        inputs: [],
-        outputs: [{ name: '', type: 'string' }]
-      }
-    ];
+  const viem = await import('viem');
+  const { createPublicClient, createWalletClient, http, formatEther } = viem;
+  const accounts = await import('viem/accounts');
+  const { privateKeyToAccount } = accounts;
+  const viemChains = await import('viem/chains');
+  const { optimismSepolia, sepolia } = viemChains;
+  const opActions = await import('@eth-optimism/viem/actions');
+  const { depositERC20, withdrawOptimismERC20 } = opActions;
   
-    console.log("--- Starting L1 to L2 Token Bridge ---");
-    const walletAddress = account.address;
-      console.log("Checking initial balances...");
-      const l1Balance = await l1PublicClient.readContract({
-        address: L1_TOKEN_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: 'balanceOf',
-        args: [walletAddress]
-      });
-      
-      console.log(`L1 Token Balance: ${l1Balance}`);
-      
-      // We'll use bridge address from the chain configuration
-      const bridgeAddress = opSepolia.contracts.l1StandardBridge[sepolia.id].address;
-      console.log(`Using L1 Standard Bridge: ${bridgeAddress}`);
-      const amountToBridge = parseUnits('0.1', 18);
-      
-      const approveTx = await l1WalletClient.writeContract({
-        address: L1_TOKEN_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: 'approve',
-        args: [bridgeAddress, amountToBridge]
-      });
-      
-      console.log(`Approval transaction hash: ${approveTx}`);
-      
-      // Wait for approval transaction to be relayed
-      console.log("Waiting for approval to be confirmed...");
-      const approveReceipt = await l1PublicClient.waitForTransactionReceipt({
-        hash: approveTx
-      });
-      
-      console.log(`Approval confirmed in block ${approveReceipt.blockNumber}`);
-      
-      // Bridge the tokens from L1 to L2 using depositERC20()
-      console.log(`Bridging 0.1 to L2...`);
-      
-      const depositTx = await depositERC20(l1WalletClient, {
-        tokenAddress: L1_TOKEN_ADDRESS,
-        remoteTokenAddress: L2_TOKEN_ADDRESS,
-        amount: amountToBridge,
-        targetChain: opSepolia,
-        to: walletAddress,
-        minGasLimit: 200000
-      });
-      
-      console.log(`Bridge transaction hash: ${depositTx}`);
-      
-      // Wait for bridge transaction to be relayed on L1
-      console.log("Waiting for bridge transaction to be confirmed on L1...");
-      const depositReceipt = await l1PublicClient.waitForTransactionReceipt({
-        hash: depositTx
-      });
-      
-      console.log(`Bridge transaction confirmed in block ${depositReceipt.blockNumber}`);
-      console.log("Token bridging initiated! The tokens will arrive on L2 in a few minutes.");
-          
-      // Check L2 initial balance
-      const initialL2Balance = await l2PublicClient.readContract({
-        address: L2_TOKEN_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: 'balanceOf',
-        args: [walletAddress]
-      });
-      console.log(`Initial L2 token balance: ${initialL2Balance}`);
+  const l1Token = "0x5589BB8228C07c4e15558875fAf2B859f678d129";
+  const l2Token = "0xD08a2917653d4E460893203471f0000826fb4034";
+  const oneToken = 1000000000000000000n
   
-      console.log("Checking initial balances...");
-      const newl1Balance = await l1PublicClient.readContract({
-        address: L1_TOKEN_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: 'balanceOf',
-        args: [walletAddress]
-      });
-      
-      console.log(`New L1 Token Balance: ${newl1Balance}`);
+  const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY || '';
+  const account = privateKeyToAccount(PRIVATE_KEY);
+
+  const L1_RPC_URL = 'https://rpc.ankr.com/eth_sepolia/<YOU_API_KEY>';
+  const L2_RPC_URL = 'https://sepolia.optimism.io';
   
-      console.log("Token bridge process complete!");
+  const publicClientL1 = createPublicClient({
+    chain: sepolia,
+    transport: http(L1_RPC_URL),
+  });
   
-      // ====== withdrawTokensToL1 using withdrawOptimismERC20 ====== 
-    
-      const walletWithdrawalAddress = account.address;
+  const walletClientL1 = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http(L1_RPC_URL),
+  });
   
-      // Check initial balances
-      console.log("Checking initial balances...");
-      
-      const l2Balance = await l2PublicClient.readContract({
-        address: L2_TOKEN_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: 'balanceOf',
-        args: [walletWithdrawalAddress]
-      });
-      
-      console.log(`L2 Token Balance: ${l2Balance}`);
-      
-      // Get the L2 Standard Bridge address
-      const l2BridgeAddress = opSepolia.contracts.l2StandardBridge.address;
-      console.log(`Using L2 Standard Bridge: ${l2BridgeAddress}`);
-      
-      const amountToWithdraw = parseUnits('0.1', 18); 
-      
-      // Initiate the withdrawal using withdrawERC20
-      console.log(`Withdrawing 0.1 to L1...`);
-      const withdrawTx = await withdrawOptimismERC20(l2WalletClient, {
-        tokenAddress: L2_TOKEN_ADDRESS,
-        amount: amountToWithdraw,
-        to: walletAddress,
-        minGasLimit: 200000,
-      });
-      
-      console.log(`Withdrawal transaction hash: ${withdrawTx}`);
-      
-      //Wait for withdraw transaction to be confirmed on L2
-      console.log("Waiting for withdrawal transaction to be confirmed on L2...");
-      const withdrawReceipt = await l2PublicClient.waitForTransactionReceipt({
-        hash: withdrawTx
-      });
-      
-      console.log(`Withdrawal initiated in L2 block ${withdrawReceipt.blockNumber}`);
-      console.log("Withdrawal process initiated! It will take 7 days for the tokens to be available on L1.");
-      console.log("This is due to the 7-day dispute period required for the security of the Optimism bridge.");
-      
-      // Check L2 balance after withdrawal
-      const updatedL2Balance = await l2PublicClient.readContract({
-        address: L2_TOKEN_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: 'balanceOf',
-        args: [walletAddress]
-      });
-      
-      console.log(`Updated L2 token balance: ${updatedL2Balance}`);
+  const publicClientL2 = createPublicClient({
+    chain: optimismSepolia,
+    transport: http(L2_RPC_URL),
+  });
   
-      console.log("Bridge operations completed!");
+  const walletClientL2 = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http(L2_RPC_URL),
+  });
+  
+  const erc20ABI = [
+    {
+      inputs: [
+        {
+          internalType: "address",
+          name: "account",
+          type: "address",
+        },
+      ],
+      name: "balanceOf",
+      outputs: [
+        {
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "faucet",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "address",
+          name: "spender",
+          type: "address"
+        },
+        {
+          internalType: "uint256",
+          name: "value",
+          type: "uint256"
+        }
+      ],
+      name: "approve",
+      outputs: [
+        {
+          internalType: "bool",
+          name: "",
+          type: "bool"
+        }
+      ],
+      stateMutability: "nonpayable",
+      type: "function"
+    },
+  ];
+  
+  console.log('Getting tokens from faucet...');
+  const tx = await walletClientL1.writeContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'faucet',
+    account,
+  });
+  console.log('Faucet transaction:', tx);
+  
+  // Wait for the transaction to be mined
+  await publicClientL1.waitForTransactionReceipt({ hash: tx });
+  
+  const l1Balance = await publicClientL1.readContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L1 Balance: ${formatEther(l1Balance)}`);
+
+  console.log('Approving tokens for bridge...');
+  const bridgeAddress = optimismSepolia.contracts.l1StandardBridge[sepolia.id].address;
+  const approveTx = await walletClientL1.writeContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'approve',
+    args: [bridgeAddress, oneToken],
+  });
+  console.log('Approval transaction:', approveTx);
+  
+  // Wait for approval transaction to be mined
+  await publicClientL1.waitForTransactionReceipt({ hash: approveTx });
+  
+  console.log('Depositing tokens to L2...');
+  const depositTx = await depositERC20(walletClientL1, {
+    tokenAddress: l1Token,
+    remoteTokenAddress: l2Token,
+    amount: oneToken,
+    targetChain: optimismSepolia,
+    to: account.address,
+    minGasLimit: 200000,
+  });
+  console.log(`Deposit transaction hash: ${depositTx}`);
+  
+  const depositReceipt = await publicClientL1.waitForTransactionReceipt({ hash: depositTx });
+  console.log(`Deposit confirmed in block ${depositReceipt.blockNumber}`);
+  console.log("Token bridging initiated! The tokens will arrive on L2 in a few minutes.");
+  
+  console.log('Waiting for tokens to arrive on L2...');
+
+  await new Promise(resolve => setTimeout(resolve, 60000)); // 1 minute
+  const l2Balance = await publicClientL2.readContract({
+    address: l2Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L2 Balance after deposit: ${formatEther(l2Balance)}`);
+  
+  console.log('Withdrawing tokens back to L1...');
+  const withdrawTx = await withdrawOptimismERC20(walletClientL2, {
+    tokenAddress: l2Token,
+    amount: oneToken / 2n, 
+    to: account.address,
+    minGasLimit: 200000,
+  });
+  console.log(`Withdrawal transaction hash: ${withdrawTx}`);
+  
+  const withdrawReceipt = await publicClientL2.waitForTransactionReceipt({ hash: withdrawTx });
+  console.log(`Withdrawal initiated in L2 block ${withdrawReceipt.blockNumber}`);
+  console.log("Withdrawal process initiated! It will take 7 days for the tokens to be available on L1.");
+  
 })();
