@@ -95,28 +95,28 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
   1.  Specify these variables, which we use later:
 
-        <Tabs items={['Supersim', 'Devnets']}>
-          <Tabs.Tab>
-            Set these parameters for Supersim.
+      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs.Tab>
+          Set these parameters for Supersim.
 
-            ```sh
-            PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-            USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-            URL_CHAIN_A=http://127.0.0.1:9545
-            URL_CHAIN_B=http://127.0.0.1:9546
-            ```
-          </Tabs.Tab>
+          ```sh
+          PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+          USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+          URL_CHAIN_A=http://127.0.0.1:9545
+          URL_CHAIN_B=http://127.0.0.1:9546
+          ```
+        </Tabs.Tab>
 
-          <Tabs.Tab>
-            For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
+        <Tabs.Tab>
+          For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
 
-            ```sh
-            USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
-            URL_CHAIN_A=https://interop-alpha-0.optimism.io
-            URL_CHAIN_B=https://interop-alpha-1.optimism.io
-            ```
-          </Tabs.Tab>
-        </Tabs>
+          ```sh
+          USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
+          URL_CHAIN_A=https://interop-alpha-0.optimism.io
+          URL_CHAIN_B=https://interop-alpha-1.optimism.io
+          ```
+        </Tabs.Tab>
+      </Tabs>
 
   2.  Regardless of whether you use Supersim or Devnet, specify these variables.
 
@@ -170,41 +170,41 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
       ```solidity filename="packages/contracts/scripts/LockboxDeployer.s.sol" file=<rootDir>/public/tutorials/LockboxDeployer.s.sol hash=534b543709be173d87508a53322d8c59
       ```
 
-        <details>
-          <summary>Explanation of the modified functions</summary>
+      <details>
+        <summary>Explanation of the modified functions</summary>
 
-          For the most part, this is the standard `SuperchainERC20Deployer.s.sol` that comes with the SuperchainERC20 starter kit.
-          Some functions are modified, as explained below.
+        For the most part, this is the standard `SuperchainERC20Deployer.s.sol` that comes with the SuperchainERC20 starter kit.
+        Some functions are modified, as explained below.
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L46-L52 hash=302d02c3895f109e5e64d265b0473e6a
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L46-L52 hash=302d02c3895f109e5e64d265b0473e6a
+        ```
 
-          Get the majority of the configuration from the environment.
-          Mostly of it is derived from the configuration of the original ERC-20 token.
+        Get the majority of the configuration from the environment.
+        Mostly of it is derived from the configuration of the original ERC-20 token.
 
-          Note that there is no `owner` here.
-          This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
+        Note that there is no `owner` here.
+        This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L54-L69 hash=c45855080dc554cece35ed87e2d68f68
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L54-L69 hash=c45855080dc554cece35ed87e2d68f68
+        ```
 
-          "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.\
-          If there is already a contract there, we have a problem.
-          Otherwise, deploy `LockboxSuperchainERC20`.
+        "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.\
+        If there is already a contract there, we have a problem.
+        Otherwise, deploy `LockboxSuperchainERC20`.
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L80-L84 hash=5d1f71b16a6f02d52a79b1a9e7588f87
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxDeployer.s.sol#L80-L84 hash=5d1f71b16a6f02d52a79b1a9e7588f87
+        ```
 
-          I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
-          This is not necessary, but I consider it a developer experience improvement.
-          During development you redeploy slightly modified code a lot of times.
-          It is easier if you don't need to manually change the salt every time.
+        I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
+        This is not necessary, but I consider it a developer experience improvement.
+        During development you redeploy slightly modified code a lot of times.
+        It is easier if you don't need to manually change the salt every time.
 
-          <Callout type="warning">
-            Remove this before deploying to production.
-            Otherwise, as new blockchains join the Interop cluster, you may not be able to deploy your contract at the same address.
-          </Callout>
-        </details>
+        <Callout type="warning">
+          Remove this before deploying to production.
+          Otherwise, as new blockchains join the Interop cluster, you may not be able to deploy your contract at the same address.
+        </Callout>
+      </details>
 
   ### Create and deploy the new contract
 
@@ -213,67 +213,67 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
       ```solidity filename="packages/contracts/src/LockboxSuperchainERC20.sol" file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol hash=d326f0e1c26904b844263274914951cf
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L11-L12 hash=45d211a19533f9b0dee310743b25459f
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L11-L12 hash=45d211a19533f9b0dee310743b25459f
+        ```
 
-          The lockbox contract needs to know the contract for which it is a lockbox.
-          This requires not just the address, but also to know what chain has it.
+        The lockbox contract needs to know the contract for which it is a lockbox.
+        This requires not just the address, but also to know what chain has it.
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L47-L57 hash=20f6aa15d113dcaf992875184173cb47
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L47-L57 hash=20f6aa15d113dcaf992875184173cb47
+        ```
 
-          Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
-          This function has several tests to make sure it can be called.
+        Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
+        This function has several tests to make sure it can be called.
 
-          *   Check the chain ID.
-              Locking and redeeming tokens can only be done on the original token's chain.
-          *   Use [`transferFrom`](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#transferFrom) to transfer the tokens to ourselves.
-              This call typically reverts when it fails, but it can also return `false`.
-              In that case, we revert.
-              There are two reasons it may fail.
-              *   The user (in this case, the `LockboxSuperchainERC20` contract) does not have [the allowance](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#_approve) to spend that amount of tokens from the original owner (`msg.sender`).
-              *   The original owner (`msg.sender`) does not have enough tokens to transfer.
+        *   Check the chain ID.
+            Locking and redeeming tokens can only be done on the original token's chain.
+        *   Use [`transferFrom`](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#transferFrom) to transfer the tokens to ourselves.
+            This call typically reverts when it fails, but it can also return `false`.
+            In that case, we revert.
+            There are two reasons it may fail.
+            *   The user (in this case, the `LockboxSuperchainERC20` contract) does not have [the allowance](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#_approve) to spend that amount of tokens from the original owner (`msg.sender`).
+            *   The original owner (`msg.sender`) does not have enough tokens to transfer.
 
-          If the tests are successful, mint the requested amount for `msg.sender`.
+        If the tests are successful, mint the requested amount for `msg.sender`.
 
-          ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L59-L67 hash=2e63a9cd1ac1114c3fb2110e28b60924
-          ```
+        ```solidity file=<rootDir>/public/tutorials/LockboxSuperchainERC20.sol#L59-L67 hash=2e63a9cd1ac1114c3fb2110e28b60924
+        ```
 
-          Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
-          It also has multiple tests.
+        Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
+        It also has multiple tests.
 
-          *   Again, check chain ID.
-          *   Try to `_burn` the amount of lockbox tokens.
-              [The solady `_burn` function](https://github.com/Vectorized/solady/blob/main/src/tokens/ERC20.sol#L539-L542), the one we inherit from `SuperchainERC20`, reverts if the user does not have enough tokens to burn.
-          *   Transfer the amount of the original ERC-20 redeemed to
-              the caller.
-              This should never fail, because lockbox ERC-20 tokens are supposed to always be backed by an equal number of the original tokens.
-              However, if it does fail for some reason, revert.
-        </details>
+        *   Again, check chain ID.
+        *   Try to `_burn` the amount of lockbox tokens.
+            [The solady `_burn` function](https://github.com/Vectorized/solady/blob/main/src/tokens/ERC20.sol#L539-L542), the one we inherit from `SuperchainERC20`, reverts if the user does not have enough tokens to burn.
+        *   Transfer the amount of the original ERC-20 redeemed to
+            the caller.
+            This should never fail, because lockbox ERC-20 tokens are supposed to always be backed by an equal number of the original tokens.
+            However, if it does fail for some reason, revert.
+      </details>
 
   2.  Actually deploy the contract.
 
-        <Tabs items={['Supersim', 'Devnets']}>
-          <Tabs.Tab>
-            ```sh
-            pnpm contracts:deploy:token
-            ```
-          </Tabs.Tab>
+      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs.Tab>
+          ```sh
+          pnpm contracts:deploy:token
+          ```
+        </Tabs.Tab>
 
-          <Tabs.Tab>
-            To deploy to the [development networks](/stack/interop/tools/devnet), follow the steps [in the tutorial](/stack/interop/tutorials/deploy-superchain-erc20#prepare-for-deployment) before you deploy the contract.
+        <Tabs.Tab>
+          To deploy to the [development networks](/stack/interop/tools/devnet), follow the steps [in the tutorial](/stack/interop/tutorials/deploy-superchain-erc20#prepare-for-deployment) before you deploy the contract.
 
-            Then, update `packages/contracts/.env` and deploy the token.
+          Then, update `packages/contracts/.env` and deploy the token.
 
-            ```sh
-            echo DEPLOYER_PRIVATE_KEY=$PRIVATE_KEY > packages/contracts/.env
-            pnpm contracts:deploy:token
-            ```
-          </Tabs.Tab>
-        </Tabs>
+          ```sh
+          echo DEPLOYER_PRIVATE_KEY=$PRIVATE_KEY > packages/contracts/.env
+          pnpm contracts:deploy:token
+          ```
+        </Tabs.Tab>
+      </Tabs>
 
   3.  Get the new token address and store it in an environment variable.
 
@@ -322,18 +322,18 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
   6.  Specify the configuration for another user.
 
-        <Tabs items={['Supersim', 'Devnets']}>
-          <Tabs.Tab>
-            ```sh
-            USER_ADDRESS_2=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
-            PRIVATE_KEY_2=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
-            ```
-          </Tabs.Tab>
+      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs.Tab>
+          ```sh
+          USER_ADDRESS_2=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+          PRIVATE_KEY_2=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
+          ```
+        </Tabs.Tab>
 
-          <Tabs.Tab>
-            Specify the private key (`PRIVATE_KEY_2`) and user address (`USER_ADDRESS_2`) of another user that has ETH on both devnets.
-          </Tabs.Tab>
-        </Tabs>
+        <Tabs.Tab>
+          Specify the private key (`PRIVATE_KEY_2`) and user address (`USER_ADDRESS_2`) of another user that has ETH on both devnets.
+        </Tabs.Tab>
+      </Tabs>
 
   7.  Transfer new tokens to the new user (on chain B) and see that they were actually transferred.
 
