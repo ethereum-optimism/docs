@@ -92,42 +92,32 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
   ### Specify environment variables
 
-  1.  Specify these variables, which we use later:
+  Specify these variables, which we use later:
 
-        <Tabs items={['Supersim', 'Devnets']}>
-          <Tabs.Tab>
-            Set these parameters for Supersim.
-
-            ```sh
-            PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-            USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-            URL_CHAIN_A=http://127.0.0.1:9545
-            URL_CHAIN_B=http://127.0.0.1:9546
-            ```
-          </Tabs.Tab>
-
-          <Tabs.Tab>
-            For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
-
-            ```sh
-            USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
-            URL_CHAIN_A=https://interop-alpha-0.optimism.io
-            URL_CHAIN_B=https://interop-alpha-1.optimism.io
-            ```
-          </Tabs.Tab>
-        </Tabs>
-
-  2.  Regardless of whether you use Supersim or Devnet, specify these variables.
+  <Tabs items={['Supersim', 'Devnets']}>
+    <Tabs.Tab>
+      Set these parameters for Supersim.
 
       ```sh
+      PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+      USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+      URL_CHAIN_A=http://127.0.0.1:9545
+      URL_CHAIN_B=http://127.0.0.1:9546
       INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
-      export ERC20_CHAINID=`cast chain-id --rpc-url $URL_CHAIN_A`
-      ORIGINAL_TOKEN_NAME=`cast call $ERC20_ADDRESS "name()" --rpc-url $URL_CHAIN_A | cast to-ascii`
-      export NEW_TOKEN_NAME="$ORIGINAL_TOKEN_NAME Lockbox"
-      ORIGINAL_TOKEN_SYMBOL=`cast call $ERC20_ADDRESS "symbol()" --rpc-url $URL_CHAIN_A | cast to-ascii`
-      export NEW_TOKEN_SYMBOL="$ORIGINAL_TOKEN_SYMBOL-L"
-      export TOKEN_DECIMALS=`cast call $ERC20_ADDRESS "decimals()" --rpc-url $URL_CHAIN_A | cast to-dec`
       ```
+    </Tabs.Tab>
+
+    <Tabs.Tab>
+      For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
+
+      ```sh
+      USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
+      URL_CHAIN_A=https://interop-alpha-0.optimism.io
+      URL_CHAIN_B=https://interop-alpha-1.optimism.io
+      INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
+      ```
+    </Tabs.Tab>
+  </Tabs>
 
   ### Create a Foundry project
 
@@ -172,7 +162,7 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
         <details>
           <summary>What to do when the values are not the same</summary>
 
-          This can happen when the nonce values of `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` on chain A and chain B are different.
+          This can happen when the nonce values of `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` (or your address in the case of using devnet) on chain A and chain B are different.
 
           You can see the nonce values using these commands:
 
@@ -189,6 +179,8 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
           ```
 
           If you do this, remember to update `$ERC20_ADDRESS` and `$BEACON_ADDRESS`.
+
+          If the nonce on chain B is already higher than the nonce was on chain A when the original proxy contract was deployed this method is not available and you have to either create a special bridge or [use a lockbox](./lockbox).
         </details>
 
   ### Deploy ERC-7802 contracts
