@@ -112,7 +112,7 @@
     functionName: 'balanceOf',
     args: [account.address]
   });
-  console.log(`L1 Balance: ${formatEther(l1Balance)}`);
+  console.log(`L1 Balance after receiving faucet: ${formatEther(l1Balance)}`);
 
   console.log('Approving tokens for bridge...');
   const bridgeAddress = optimismSepolia.contracts.l1StandardBridge[sepolia.id].address;
@@ -145,13 +145,21 @@
   console.log('Waiting for tokens to arrive on L2...');
 
   await new Promise(resolve => setTimeout(resolve, 60000)); // 1 minute
-  const l2Balance = await publicClientL2.readContract({
+  const l1BalanceAfterDeposit = await await publicClientL1.readContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L1 Balance after deposit: ${formatEther(l1BalanceAfterDeposit)}`);
+
+  const l2BalanceAfterDeposit = await await publicClientL2.readContract({
     address: l2Token,
     abi: erc20ABI,
     functionName: 'balanceOf',
     args: [account.address]
   });
-  console.log(`L2 Balance after deposit: ${formatEther(l2Balance)}`);
+  console.log(`L2 Balance after deposit: ${formatEther(l2BalanceAfterDeposit)}`);
   
   console.log('Withdrawing tokens back to L1...');
   const withdrawTx = await withdrawOptimismERC20(walletClientL2, {
@@ -166,20 +174,12 @@
   console.log(`Withdrawal initiated in L2 block ${withdrawReceipt.blockNumber}`);
   console.log("Withdrawal process initiated! It will take 7 days for the tokens to be available on L1.");
 
-  const l1BalanceAgain = await publicClientL1.readContract({
-    address: l1Token,
-    abi: erc20ABI,
-    functionName: 'balanceOf',
-    args: [account.address]
-  });
-  console.log(`L1 Balance: ${formatEther(l1BalanceAgain)}`);
-
-  const l2BalanceAfterDeposit = await await publicClientL2.readContract({
+  const l2Balance = await publicClientL2.readContract({
     address: l2Token,
     abi: erc20ABI,
     functionName: 'balanceOf',
     args: [account.address]
   });
-  console.log(`L1 Balance after deposit: ${formatEther(l2BalanceAfterDeposit)}`);
+  console.log(`L2 Balance after withdrawal: ${formatEther(l2Balance)}`);
   
 })();
