@@ -4,11 +4,20 @@ rm -rf upgrade-erc20
 mkdir upgrade-erc20
 cd upgrade-erc20
 
-PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-URL_CHAIN_A=http://127.0.0.1:9545
-URL_CHAIN_B=http://127.0.0.1:9546
+if [ -z $1 ]
+then
+  echo Supersim
+  PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+  URL_CHAIN_A=http://localhost:9545
+  URL_CHAIN_B=http://localhost:9546
+else
+  echo Devnet
+  PRIVATE_KEY=$1
+  URL_CHAIN_A=https://interop-alpha-0.optimism.io
+  URL_CHAIN_B=https://interop-alpha-1.optimism.io
+fi
 
+USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
 
 forge init
 forge install OpenZeppelin/openzeppelin-contracts-upgradeable
@@ -47,7 +56,8 @@ contract LabSetup is Script {
         console.log("UpgradeableBeacon:", address(beacon));
 
         BeaconProxy proxy = new BeaconProxy(address(beacon),
-            abi.encodeCall(MyToken.initialize, ("Test", "TST", block.chainid == 901 ? 10**18 : 0))
+            abi.encodeCall(MyToken.initialize, ("Test", "TST",
+		(block.chainid == 901) || (block.chainid == 420120000) ? 10**18 : 0))
         );
         console.log("Proxy:", address(proxy));
 
@@ -63,4 +73,4 @@ ERC20_ADDRESS=`cat setup_output | awk '/Proxy:/ {print $2}'`
 
 echo Run these commands to store the configuration:
 echo BEACON_ADDRESS=$BEACON_ADDRESS
-echo ERC20_ADDRESS=$ERC20_ADDRESS
+echo export ERC20_ADDRESS=$ERC20_ADDRESS
