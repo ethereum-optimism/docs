@@ -43,14 +43,14 @@ This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://git
 {/* 
 
 I put this warning here, when we don't have it on most pages, because this tutorial
-has, IMHO, code that is a lot more likely to be used in production. It doesn't just
+has code that is a lot more likely to be used in production. It doesn't just
 show what is possible, it does the exact job needed.
 
 */}
 
 ### What you'll do
 
-*   Upgrade an existing ERC-20 that uses [the proxy pattern](https://docs.openzeppelin.com/upgrades-plugins/proxies) to comply with interop requirements (with the proper authority).
+*   Upgrade an existing ERC20 that uses [the proxy pattern](https://docs.openzeppelin.com/upgrades-plugins/proxies) to comply with interop requirements (with the proper authority).
 
 ## How beacon proxies work
 
@@ -101,7 +101,7 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
     ```
   </Callout>
 
-  ### Setup the ERC-20 token on chain A
+  ### Setup the ERC20 token on chain A
 
   Download and run the setup script.
 
@@ -119,7 +119,7 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
   ### Store the addresses
 
-  Execute the bottom two lines of the setup script output to store the ERC-20 address and the address of the beacon contract.
+  Execute the bottom two lines of the setup script output to store the ERC20 address and the address of the beacon contract.
 
   ```sh
   BEACON_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
@@ -157,7 +157,7 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
   ### Create a Foundry project
 
-  We create a [Foundry](https://book.getfoundry.sh/) project and import the [OpenZeppelin](https://www.openzeppelin.com/solidity-contracts) contracts, which were used for the original ERC-20 and proxy deployment.
+  We create a [Foundry](https://book.getfoundry.sh/) project and import the [OpenZeppelin](https://www.openzeppelin.com/solidity-contracts) contracts, which were used for the original ERC20 and proxy deployment.
 
   ```sh
   mkdir proxy-upgrade
@@ -219,16 +219,16 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
         If the nonce on chain B is already higher than the nonce was on chain A when the original proxy contract was deployed this method is not available and you have to either create a special bridge or [use a lockbox](./lockbox).
       </details>
 
-  ### Deploy ERC-7802 contracts
+  ### Deploy ERC7802 contracts
 
-  We need to replace the ERC-20 contracts with contracts that:
+  We need to replace the ERC20 contracts with contracts that:
 
-  *   Support [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802) and [ERC-165](https://eips.ethereum.org/EIPS/eip-165).
-  *   Have the same storage layout as the ERC-20 contracts they replace.
+  *   Support [ERC7802](https://eips.ethereum.org/EIPS/eip-7802) and [ERC165](https://eips.ethereum.org/EIPS/eip-165).
+  *   Have the same storage layout as the ERC20 contracts they replace.
 
   <Callout>
     These contracts do *not* need to be deployed to the same address.
-    The address that needs to be the same is not the address of the ERC-20 contract itself, but of the proxy.
+    The address that needs to be the same is not the address of the ERC20 contract itself, but of the proxy.
   </Callout>
 
   1.  Create a file, `src/InteropToken.sol`:
@@ -247,13 +247,13 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
         ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L6-L7 hash=f06f3bd72be73dbd754008da7dd00d48        
         ```
 
-        These are the imports needed for ERC-7802 support.
-        We need `IERC165` for documentation purposes, and `IERC7802` for the ERC-7802 events.
+        These are the imports needed for ERC7802 support.
+        We need `IERC165` for documentation purposes, and `IERC7802` for the ERC7802 events.
 
         ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L9 hash=ca402292e7551621669ef1a59b85d7ce     
         ```
 
-        We also implement [ERC-165](https://eips.ethereum.org/EIPS/eip-165), but we don't need to import anything from there.
+        We also implement [ERC165](https://eips.ethereum.org/EIPS/eip-165), but we don't need to import anything from there.
 
         ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L10-L14 hash=37e9b49f50a8b70971ce5d0112bd934e     
         ```
@@ -263,16 +263,16 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
         ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L16-L36 hash=448a7e21e094b3fd961f2b8ee15bc6c7     
         ```
 
-        Standard [ERC-7802](https://eips.ethereum.org/EIPS/eip-7802) behavior.
+        Standard [ERC7802](https://eips.ethereum.org/EIPS/eip-7802) behavior.
 
         ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L38-L42 hash=abb2093e9681984f25afa6f9d8b237a3     
         ```
 
-        Standard [ERC-165](https://eips.ethereum.org/EIPS/eip-165) behavior.
+        Standard [ERC165](https://eips.ethereum.org/EIPS/eip-165) behavior.
       </details>
 
       <Callout>
-        Copying the original ERC-20 token code with minimal differences is one method to keep the storage layout identical.
+        Copying the original ERC20 token code with minimal differences is one method to keep the storage layout identical.
         Alternatively, if you want to use a different contract, such as `SuperchainERC20`, you can modify the storage layout to match the old one using [the Solidity docs](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html).
       </Callout>
 
