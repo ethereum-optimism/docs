@@ -23,9 +23,10 @@ export default function App({ Component, pageProps }) {
     };
   }, [router.events]);
 
+  // Initialize Algolia insights with environment variables
   aa.default('init', {
-    appId: 'JCF9BUJTB9',
-    apiKey: 'cc766a73d4b0004e3059677de49297a2'
+    appId: process.env.NEXT_PUBLIC_ALGOLIA_APPLICATION_ID || '',
+    apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY || ''
   });
 
   return (

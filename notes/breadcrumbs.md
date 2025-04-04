@@ -6,7 +6,7 @@ Quick guide on using our breadcrumbs automation script for the OP Stack document
 
 *   Creates `.mdx` files for each folder (breadcrumb pages)
 *   Populates Card components linking to contained files
-*   Preserves existing descriptions that already
+*   Preserves existing descriptions that already exist
 *   Maintains consistent navigation structure
 
 ## Using the Script
