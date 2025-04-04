@@ -4,8 +4,7 @@ lang: en-US
 description: Tutorial on how to upgrade a proxied ERC20 contract for use with Superchain interop.
 ---
 
-import { Callout } from 'nextra/components'
-import { Steps } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
 
 <Callout>
   The SuperchainERC20 standard is ready for production deployments.
@@ -51,10 +50,12 @@ show what is possible, it does the exact job needed.
 
 ## Step by step
 
+Some steps depend on whether you want to deploy on [supersim](/stack/interop/tools/supersim) or on the [development network](/stack/interop/tools/devnet).
+
 <Steps>
   ### Install and run Supersim
 
-  [Follow these instructions](/app-developers/tutorials/supersim/getting-started/installation) to install and run Supersim.
+  If you are going to use Supersim, [follow these instructions](/app-developers/tutorials/supersim/getting-started/installation) to install and run Supersim.
 
   <Callout>
     Make sure to run Supersim with autorelay on.
@@ -69,9 +70,15 @@ show what is possible, it does the exact job needed.
   Download and run the setup script.
 
   ```sh
-  curl  https://docs.optimism.io/tutorials/setup-for-erc20-upgrade.sh > setup-for-erc20-upgrade.sh
+  curl https://docs.optimism.io/tutorials/setup-for-erc20-upgrade.sh > setup-for-erc20-upgrade.sh
   chmod +x setup-for-erc20-upgrade.sh
   ./setup-for-erc20-upgrade.sh
+  ```
+
+  If you want to deploy to the [development networks](/stack/interop/tools/devnet), provide `setup-for-erc20-upgrade.sh` with the private key of an address with ETH on both devnets.
+
+  ```sh
+  ./setup-for-erc20-upgrade.sh <private key>
   ```
 
   ### Store the addresses
@@ -80,20 +87,47 @@ show what is possible, it does the exact job needed.
 
   ```sh
   BEACON_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  ERC20_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+  export ERC20_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
   ```
 
   ### Specify environment variables
 
-  Specify these variables, which will be useful later.
+  1.  Specify these variables, which we use later:
 
-  ```sh
-  PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-  USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-  URL_CHAIN_A=http://127.0.0.1:9545
-  URL_CHAIN_B=http://127.0.0.1:9546
-  INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
-  ```
+        <Tabs items={['Supersim', 'Devnets']}>
+          <Tabs.Tab>
+            Set these parameters for Supersim.
+
+            ```sh
+            PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+            USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+            URL_CHAIN_A=http://127.0.0.1:9545
+            URL_CHAIN_B=http://127.0.0.1:9546
+            ```
+          </Tabs.Tab>
+
+          <Tabs.Tab>
+            For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
+
+            ```sh
+            USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
+            URL_CHAIN_A=https://interop-alpha-0.optimism.io
+            URL_CHAIN_B=https://interop-alpha-1.optimism.io
+            ```
+          </Tabs.Tab>
+        </Tabs>
+
+  2.  Regardless of whether you use Supersim or Devnet, specify these variables.
+
+      ```sh
+      INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
+      export ERC20_CHAINID=`cast chain-id --rpc-url $URL_CHAIN_A`
+      ORIGINAL_TOKEN_NAME=`cast call $ERC20_ADDRESS "name()" --rpc-url $URL_CHAIN_A | cast to-ascii`
+      export NEW_TOKEN_NAME="$ORIGINAL_TOKEN_NAME Lockbox"
+      ORIGINAL_TOKEN_SYMBOL=`cast call $ERC20_ADDRESS "symbol()" --rpc-url $URL_CHAIN_A | cast to-ascii`
+      export NEW_TOKEN_SYMBOL="$ORIGINAL_TOKEN_SYMBOL-L"
+      export TOKEN_DECIMALS=`cast call $ERC20_ADDRESS "decimals()" --rpc-url $URL_CHAIN_A | cast to-dec`
+      ```
 
   ### Create a Foundry project
 
@@ -156,16 +190,6 @@ show what is possible, it does the exact job needed.
 
         If you do this, remember to update `$ERC20_ADDRESS` and `$BEACON_ADDRESS`.
       </details>
-
-  <Callout>
-    Note that if we couldn't redeploy on chain A (because the ERC-20 was already in use, not just a test system) and the nonce on chain B was already higher than what it had been on chain A when the proxy contract was deployed, it would have been impossible to create on chain B an ERC-20 account with the same address as the ERC-20 on chain A.
-
-    There are two alternative solutions:
-
-    *   [Lockboxes](#lockboxes-for-permissionless-interop) allows any existing ERC20 to become compatible with Superchain interop.
-        The Lockbox is just a simple wrapper contract, analogous to Wrapped ETH.
-    *   Creating a custom bridge using the [L2toL2CrossDomainMessenger](./message-passing) to facilitate cross-chain mint/burns that does not require a deterministic address across chains but does require the token issuer to manage a token registry per chain.
-  </Callout>
 
   ### Deploy ERC-7802 contracts
 
@@ -272,6 +296,6 @@ show what is possible, it does the exact job needed.
 
 ## Next steps
 
-*   Deploy a [SuperchainERC20](./deploy-superchain-erc20) to the Superchain
+*   Deploy a [SuperchainERC20](/stack/interop/tutorials/deploy-superchain-erc20) to the Superchain
 *   [Learn more about SuperchainERC20](/stack/interop/superchain-erc20)
 *   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
