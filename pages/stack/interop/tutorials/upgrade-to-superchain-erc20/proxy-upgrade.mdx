@@ -15,7 +15,7 @@ import { Callout, Steps, Tabs } from 'nextra/components'
 
 ## Overview
 
-This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) that can teleport across the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster) using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract. For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
+This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) that can teleport across the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster) when the original ERC20 contract was placed behind a proxy to enable future upgrades.
 
 <details>
   <summary>About this tutorial</summary>
@@ -48,7 +48,40 @@ show what is possible, it does the exact job needed.
 
 *   Upgrade an existing ERC-20 that uses [the proxy pattern](https://docs.openzeppelin.com/upgrades-plugins/proxies) to comply with interop requirements (with the proper authority).
 
-## Step by step
+
+## How beacon proxies work
+
+```mermaid
+sequenceDiagram
+  Actor User
+  User->>BeaconProxy: transfer(<address>, <amount>)
+  BeaconProxy->>UpgradeableBeacon: What is the implementation address?
+  UpgradeableBeacon->>BeaconProxy: It is 0xBAD0...60A7
+  BeaconProxy->>0xBAD0...60A7: transfer(<address>, <amount>)
+```
+
+A [beacon proxy](https://docs.openzeppelin.com/contracts/3.x/api/proxy#BeaconProxy) uses two contracts.
+The [`UpgradeableBeacon`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/beacon/UpgradeableBeacon.sol) contract holds the address of the implementation contract.
+The [`BeaconProxy`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/beacon/BeaconProxy.sol) contract is the one called for the functionality, the one that holds the storage.
+When a user (or another contract) calls `BeaconProxy`, it asks `UpgradeableBeacon` for the implementation address and then uses [`delegatecall`](https://www.evm.codes/?fork=cancun#f4) to call that contract.
+
+```mermaid
+sequenceDiagram
+  Actor User
+  Actor Owner
+  Participant BeaconProxy
+  Participant 0x600D...60A7
+  Owner->>UpgradeableBeacon: Your new implementation address is 0x600D...60A7
+  User->>BeaconProxy: transfer(<address>, <amount>)
+  BeaconProxy->>UpgradeableBeacon: What is the implementation address?
+  UpgradeableBeacon->>BeaconProxy: It is 0x600D...60A7
+  BeaconProxy->>0x600D...60A7: transfer(<address>, <amount>)  
+```
+
+To upgrade the contract, an authorized address (typically the `Owner`) calls `UpgradeableBeacon` directly to specify the new implementation contract address.
+After that happens, all new calls are sent to the new implementation.
+
+## Instructions
 
 Some steps depend on whether you want to deploy on [supersim](/stack/interop/tools/supersim) or on the [development network](/stack/interop/tools/devnet).
 
@@ -274,7 +307,7 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
       ```sh
       AMOUNT=`echo 0.1 | cast to-wei`
-      cast send $INTEROP_BRIDGE --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,address,uint256,uint256)" $ERC20_ADDRESS $USER_ADDRESS $AMOUNT 902
+      cast send $INTEROP_BRIDGE --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,address,uint256,uint256)" $ERC20_ADDRESS $USER_ADDRESS $AMOUNT `cast chain-id --rpc-url $URL_CHAIN_B`
       ```
 
   4.  See the new balances. The A chain should have 0.9 tokens, and the B chain should have 0.1 tokens.
