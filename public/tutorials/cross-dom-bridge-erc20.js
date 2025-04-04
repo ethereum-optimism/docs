@@ -145,7 +145,7 @@
   console.log('Waiting for tokens to arrive on L2...');
 
   await new Promise(resolve => setTimeout(resolve, 60000)); // 1 minute
-  const l1BalanceAfterDeposit = await await publicClientL1.readContract({
+  const l1BalanceAfterDeposit = await publicClientL1.readContract({
     address: l1Token,
     abi: erc20ABI,
     functionName: 'balanceOf',
@@ -153,7 +153,7 @@
   });
   console.log(`L1 Balance after deposit: ${formatEther(l1BalanceAfterDeposit)}`);
 
-  const l2BalanceAfterDeposit = await await publicClientL2.readContract({
+  const l2BalanceAfterDeposit = await publicClientL2.readContract({
     address: l2Token,
     abi: erc20ABI,
     functionName: 'balanceOf',
