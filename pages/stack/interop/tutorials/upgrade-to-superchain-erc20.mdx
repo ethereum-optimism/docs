@@ -1,0 +1,65 @@
+---
+title: Upgrading ERC20 to SuperchainERC20
+lang: en-US
+description: Tutorial on how to take an existing ERC20 and upgrade it to SuperchainERC20.
+topic: Interoperability
+personas: [Developer]
+categories: [Tutorial, Interop]
+content_type: article
+---
+
+import { Callout, Steps, Card, Cards } from 'nextra/components'
+
+<Callout>
+  The SuperchainERC20 standard is ready for production deployments.
+  Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
+</Callout>
+
+# Upgrading ERC20 to SuperchainERC20
+
+## Overview
+
+This guide explains how to upgrade an ERC20 to a [`SuperchainERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainERC20.sol) that can teleport across the [Superchain interop cluster](/stack/interop/explainer#superchain-interop-cluster) using the [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) contract. For more information on how it works, [see the explainer](/stack/interop/superchain-erc20).
+
+<Callout type="warning">
+  The code on the documentation site is sample code, *not* production code.
+  This means that we ran it, and it works as advertised.
+  However, it did not pass through the rigorous audit process that most Optimism code undergoes.
+  You're welcome to use it, but if you need it for production purposes you should get it audited first.
+</Callout>
+
+{/* 
+
+I put this warning here, when we don't have it on most pages, because this tutorial
+has, IMHO, code that is a lot more likely to be used in production. It doesn't just
+show what is possible, it does the exact job needed.
+
+*/}
+
+There are several ways to upgrade an existing ERC20 for interop, depending on the exact circumstances. Click any of the green rectangles for directions.
+
+```mermaid
+graph TB
+    classDef link fill:#f96
+    Deployed{Is there<br/>already an<br/>ERC20 contract<br/>in use?}
+    Deployed -- No --> New[<a href="./deploy-superchain-erc20">New SuperchainERC20 contract</a>]:::link
+    Deployed -- Yes --> Proxy{Is the<br/>existing contract</br>behind a<br/>proxy?}
+    Proxy -- No --> Lockbox[<a href="upgrade-to-superchain-erc20/lockbox">Lockbox contract</a>]:::link
+    Proxy -- Yes --> Proxy2{Can you<br/>deploy proxies on<br/>the same address<br/>on the other chains?}
+    Proxy2 -- No --> Bridge[Specialized Bridge<br/>Coming soon]
+    Proxy2 -- Yes --> Upgrade[<a href="upgrade-to-superchain-erc20/proxy-upgrade">Contract upgrade</a>]:::link
+```
+
+
+<Cards>
+
+  <Card title="Contract upgrade" href="/stack/interop/tutorials/upgrade-to-superchain-erc20/proxy-upgrade" icon={<img src="/img/icons/shapes.svg" />} />
+  <Card title="Lockboxes for permissionless interop" href="/stack/interop/tutorials/upgrade-to-superchain-erc20/lockbox" icon={<img src="/img/icons/shapes.svg" />} />
+
+</Cards>
+
+## Next steps
+
+*   Deploy a [SuperchainERC20](./deploy-superchain-erc20) to the Superchain
+*   [Learn more about SuperchainERC20](/stack/interop/superchain-erc20)
+*   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
