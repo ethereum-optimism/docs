@@ -41,3 +41,10 @@ You can find more details in the [Standard Rollup Charter documentation](/superc
 ## Joining the Registry
 
 All Superchain Ecosystem members are welcome to join the Superchain Registry, regardless of whether they adhere to the standard rollup charter or not. To join the Registry, [follow the steps in this guide](https://github.com/ethereum-optimism/superchain-registry/blob/main/docs/ops.md#adding-a-chain) to submit a pull request and join the Superchain Ecosystem. This guide will help you set up your chain, create your environment, and run all the validation checks needed to ensure your chain is ready to join the Registry.
+
+## Hard fork activation inheritance behavior 
+
+After being included into the Superchain Registry, subsequent releases of the `op-node` and `op-geth` will contain the chain's genesis and rollup configurations baked in. You can use then use the `--network` (`op-node`) and `--op-network` (`op-geth`) flags to start up your node with this information. Using these flags means that the node will automatically inherit the hard fork activation times from the Superchain Registry, so you don't need to manually set them in your node configuration. 
+
+Additionally, chains can opt into the hard fork activation inheritance behavior by specifying the `superchain_time` in the chain's TOML file to start inheriting Superchain wide activation timestamps. 
+Networks who have utilize this mechanism will activate network hard forks specified in the `superchain.toml` files: [Sepolia superchain.toml](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/sepolia/superchain.toml) and [Mainnet superchain.toml](https://github.com/ethereum-optimism/superchain-registry/blob/main/superchain/configs/mainnet/superchain.toml).
