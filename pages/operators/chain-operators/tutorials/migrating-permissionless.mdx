@@ -205,29 +205,112 @@ See a high‐level implementation from the [spec](https://specs.optimism.io/expe
 
 ### Set game implementations
 
-Execute the following smart contract changes in a single bundled transaction:
+This section applies only to chains running `op-contracts/v2.0.0` (post-upgrade 13).
 
-1.  Call `setImplementation` on the `DisputeGameFactoryProxy` to:
+<Callout type="info">
+  As stated in the prerequisites, chains must be running op-contracts/v2.0.0 (post-upgrade 13) to follow this guide. 
+  For chains on earlier versions, the upgrade process is significantly different and not covered here.
+</Callout>
 
-    *   Set the implementation for the new permissionless `FaultDisputeGame` (game type `0`)
-    *   Upgrade the permissioned game to the new `PermissionedDisputeGameAddress` (game type `1`) with the updated absolute prestate
+Since you're on post-upgrade 13, you only need to initialize bond amounts for both game types. 
+The anchor state for permissionless games automatically matches the one used by permissioned games, as there's only a single shared anchor state.
 
-2.  Upgrade the `AnchorStateRegistryProxy` (pre-Upgrade 13 only):
+To set the bond amounts, create an `input.json` file with transactions to set the initial bond values:
 
-    After [upgrade 13](/notices/upgrade-13#whats-included-in-upgrade-13) (FP incident response improvements), this step is *no longer required*, as a single anchor state is shared across all game types. If you have not upgraded, perform the following:
+```json
+{
+  "metadata": {
+    "name": "DisputeGameFactory - Set Init Bonds",
+    "description": "Set initial bonds (0.08 ETH) for gameTypes 0 and 1"
+  },
+  "transactions": [
+    {
+      "metadata": {
+        "name": "Sets the bond value for permissioned game type",
+        "description": "This sets the initial bond to 0.08 ETH to deploy a PermissionedDisputeGame."
+      },
+      "to": "<DISPUTE_GAME_FACTORY_PROXY_ADDRESS>",
+      "value": "0x0",
+      "data": "0x1e3342400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000011c37937e080000", 
+      "contractMethod": {
+        "type": "function",
+        "name": "setInitBond",
+        "inputs": [
+          {
+            "name": "_gameType",
+            "type": "uint32"
+          },
+          {
+            "name": "_initBond",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      "contractInputsValues": {
+        "_gameType": "1",
+        "_initBond": "80000000000000000"
+      }
+    },
+    {
+      "metadata": {
+        "name": "Sets the bond value for permissionless",
+        "description": "This sets the initial bond to 0.08 ETH to deploy a FaultDisputeGame."
+      },
+      "to": "<DISPUTE_GAME_FACTORY_PROXY_ADDRESS>",
+      "value": "0x0",
+      "data": "0x1e3342400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011c37937e080000", 
+      "contractMethod": {
+        "type": "function",
+        "name": "setInitBond",
+        "inputs": [
+          {
+            "name": "_gameType",
+            "type": "uint32"
+          },
+          {
+            "name": "_initBond",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      "contractInputsValues": {
+        "_gameType": "0",
+        "_initBond": "80000000000000000"
+      }
+    }
+  ]
+}
+```
 
-    *   First upgrade the proxy to point to the `StorageSetter` contract and clear the initialized flag.
-    *   Then upgrade back to the `AnchorStateRegistry` implementation
-    *   Call `initialize` with the anchor state for the new game type
+You should simulate this transaction bundle with Tenderly before execution and verify the expected state changes:
+
+For game type 0 (CANNON): The initial bond is set to 0.08 ETH
+For game type 1 (PERMISSIONED): The initial bond is set to 0.08 ETH
+
+You can verify the storage slots after execution:
+
+```bash
+# Verify bond value for game type 0 (CANNON)
+cast index uint 0 102
+```
+Where `0` is the game type and `102` is the [storage slot](https://github.com/ethereum-optimism/optimism/blob/33f06d2d5e4034125df02264a5ffe84571bd0359/packages/contracts-bedrock/snapshots/storageLayout/DisputeGameFactory.json#L48)
+
+```bash
+# Verify bond value for game type 1 (PERMISSIONED)
+cast index uint 1 102
+```
+
+Where `1` is the game type and `102` is the [storage slot](https://github.com/ethereum-optimism/optimism/blob/33f06d2d5e4034125df02264a5ffe84571bd0359/packages/contracts-bedrock/snapshots/storageLayout/DisputeGameFactory.json#L48).
 
 <Callout type="info">
   Ensure a permissioned game has already resolved with the correct root and updated the anchor state to a valid value.
   Initial deployments at genesis always have an invalid anchor state.
 </Callout>
 
-Post-upgrade 13, the anchor state for permissionless games automatically matches the current anchor state used by permissioned games, since there's only one shared anchor state.
-
-3.  Initialize bond amounts for each game type to exactly 0.08 ETH
 
 ## 3. Testing off-chain agents
 
@@ -289,26 +372,78 @@ There should be 3 claims in the game after this test.
 
 ## 4. Switch to permissionless proofs
 
-After completing all previous steps and verifying their successful operation:
+After completing all previous steps and verifying their successful operation, you need to update the `respectedGameType` in the `OptimismPortal`. This requires execution through the appropriate privileged role (typically the Deputy Guardian):
 
-1.  Set the `respectedGameType` on the `OptimismPortal` to `CANNON` (game type `0`) using OPCM:
-    ```bash
-    opcm set-respected-game-type \
-      --game-type 0
-    ```
+1. Create an `input.json` file with the transaction to update the `respectedGameType`:
 
-2.  Configure `op-proposer` to create proposals using the permissionless `cannon` game type:
+```json
+{
+  "chainId": "<YOUR_L1_CHAIN_ID>",
+  "metadata": {
+    "name": "Deputy Guardian - Enable Permissionless Dispute Game",
+    "description": "This task updates the `respectedGameType` in the `OptimismPortal` to `CANNON`, enabling users to permissionlessly propose outputs as well as for anyone to participate in the dispute of these proposals. This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` that was created after this update occurs."
+  },
+  "transactions": [
+    {
+      "metadata": {
+        "name": "Update `respectedGameType` in the `OptimismPortal`",
+        "description": "Updates the `respectedGameType` to `CANNON` in the `OptimismPortal`, enabling permissionless proposals and challenging."
+      },
+      "to": "<SUPERCHAIN_CONFIG_MANAGER_ADDRESS>",
+      "value": "0x0",
+      "data": "0xa1155ed9000000000000000000000000<OPTIMISM_PORTAL_ADDRESS>0000000000000000000000000000000000000000000000000000000000000000",
+      "contractMethod": {
+        "type": "function",
+        "name": "setRespectedGameType",
+        "inputs": [
+          {
+            "name": "_portal",
+            "type": "address"
+          },
+          {
+            "name": "_gameType",
+            "type": "uint32"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      "contractInputsValues": {
+        "_gameType": "0",
+        "_portal": "<OPTIMISM_PORTAL_ADDRESS>"
+      }
+    }
+  ]
+}
+```
 
-    ```bash
-    # Change from game-type 1 to 0
-    --game-type 0
-    ```
+2.Simulate this transaction with Tenderly before execution to verify the expected state changes:
 
-    Or via environment variable:
+*   The `respectedGameType` in the `OptimismPortal` contract will be changed from `1` (PERMISSIONED) to `0` (CANNON)
 
-    ```
-    OP_PROPOSER_GAME_TYPE=0
-    ```
+3. After execution, you can verify the storage slot change:
+
+```bash 
+#Check the storage slot 0x3b in the OptimismPortalProxy
+# The last byte should change from 0x01 to 0x00
+cast storage <OPTIMISM_PORTAL_ADDRESS> 0x3b
+```
+
+4. Configure `op-proposer` to create proposals using the permissionless `cannon` game type:
+```bash
+# Change from game-type 1 to 0
+--game-type 0
+```
+Or via environment variable:
+
+```bash
+OP_PROPOSER_GAME_TYPE=0
+```
+
+<Callout type="info">
+  This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` that will be created after this update occurs.
+</Callout>
+
 
 ## Next steps
 
