@@ -1,9 +1,9 @@
 ---
-title: Superchain ETH
+title: Superchain ETH Bridge
 description: Learn basic details about Interoperable ETH.
 lang: en-US
 content_type: guide
-topic: superchain-eth
+topic: superchain-eth-bridge
 personas:
   - protocol-developer
   - app-developer
@@ -11,7 +11,7 @@ categories:
   - protocol
   - interoperability
   - cross-chain-messaging
-  - superchain-weth
+  - superchain-eth-bridge
   - eth-bridging
   - interoperable-assets
   - cross-domain-messenger
@@ -25,7 +25,7 @@ import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
 
-# Superchain ETH
+# Superchain ETH Bridge
 
 <Callout>
   This is an explanation of how interop ETH works.
@@ -35,12 +35,12 @@ import { InteropCallout } from '@/components/WipCallout'
 
 InteroperableETH enables seamless ETH transfers across Superchain blockchains. It is implemented using three key contracts:
 
-*   [`SuperchainWETH`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol): A bridge contract that facilitates ETH transfers between Superchain blockchains.
+*   [`SuperchainETHBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainETHBridge.sol): A bridge contract that facilitates ETH transfers between Superchain blockchains.
 *   [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol): A liquidity provider for ETH transfers. 
-`SuperchainWETH` uses this contract as a liquidity repository to ensure ETH availability on the destination chain.
+`SuperchainETHBridge` uses this contract as a liquidity repository to ensure ETH availability on the destination chain.
 *   [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol): A messaging contract that [facilitates cross-chain communication](/interop/message-passing).
 
-Superchain ETH deposits ETH into the `ETHLiquidity` contract on the source chain and withdraws an equivalent amount on the destination chain. 
+Superchain ETH Bridge deposits ETH into the `ETHLiquidity` contract on the source chain and withdraws an equivalent amount on the destination chain. 
 This mechanism improves capital efficiency and eliminates liquidity fragmentation and poor user experiences caused by asset wrapping or reliance on liquidity pools.
 
 ## Features and benefits
@@ -65,39 +65,39 @@ This mechanism improves capital efficiency and eliminates liquidity fragmentatio
 sequenceDiagram
   box rgba(0,0,0,0.1) Source Chain
     participant src-liquidity as ETHLiquidity
-    participant src-weth as SuperchainWETH
+    participant src-eth-bridge as SuperchainETHBridge
   end
   actor user as User
   participant any-offchain as User, Relayer, etc.  
   box rgba(0,0,0,0.1) Destination Chain
     participant dst-l2Xl2 as L2ToL2CrossDomainMessenger
-    participant dst-weth as SuperchainWETH
+    participant dst-eth-bridge as SuperchainETHBridge
     participant dst-liquidity as ETHLiquidity       
     participant dst-final as ETH Destination
   end
   rect rgba(0,0,0,0.1)
-    note over src-weth, dst-l2Xl2: Initiating Message
-    user->>src-weth: 1. sendETH(to, chainId) with n ETH
-    src-weth->>src-liquidity: 2. Deposit n ETH
-    src-weth->>dst-l2Xl2: 3. Send relayETH to Superchain WETH on chainId
+    note over src-eth-bridge, dst-l2Xl2: Initiating Message
+    user->>src-eth-bridge: 1. sendETH(to, chainId) with n ETH
+    src-eth-bridge->>src-liquidity: 2. Deposit n ETH
+    src-eth-bridge->>dst-l2Xl2: 3. Send relayETH to SuperchainETHBridge on chainId
   end
   rect rgba(0,0,0,0.1)
-    note over any-offchain,dst-weth: Executing message
+    note over any-offchain,dst-eth-bridge: Executing message
     any-offchain->>dst-l2Xl2: 4. Relay the message
-    dst-l2Xl2->>dst-weth: 5. relayETH(from, to, amount)
-    dst-weth->>dst-liquidity: 6. Withdraw amount ETH
-    dst-weth->>dst-final: 7. Here are amount ETH
+    dst-l2Xl2->>dst-eth-bridge: 5. relayETH(from, to, amount)
+    dst-eth-bridge->>dst-liquidity: 6. Withdraw amount ETH
+    dst-eth-bridge->>dst-final: 7. Here are amount ETH
   end
 ```
 
 #### Initiating message
 
-1.  The user (or a contract operating on a user's behalf) calls `SuperchainWETH.sendETH` with a destination address and a chainId.
+1.  The user (or a contract operating on a user's behalf) calls `SuperchainETHBridge.sendETH` with a destination address and a chainId.
     ETH, in the amount to transfer must be attached to this call.
 
-2.  `SuperchainWETH` transfers the specified ETH amount to `ETHLiquidity`, removing it from circulation on the source chain.
+2.  `SuperchainETHBridge` transfers the specified ETH amount to `ETHLiquidity`, removing it from circulation on the source chain.
 
-3.  `SuperchainWETH` on the source chain sends a [`relayETH`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol#L125-L145) message to `SuperchainWETH` on the destination chain using the [`L2ToL2CrossDomainMessenger`](/interop/message-passing).
+3.  `SuperchainETHBridge` on the source chain sends a [`relayETH`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainETHBridge.sol) message to `SuperchainETHBridge` on the destination chain using the [`L2ToL2CrossDomainMessenger`](/interop/message-passing).
 
 #### Executing message
 
@@ -105,21 +105,21 @@ sequenceDiagram
     Any address can submit this transaction, but it must have ETH on the destination chain.
     Typically, this would be the chain's autorelayer.
 
-5.  `L2ToL2CrossDomainMessenger` on the destination chain calls `SuperchainWETH` with the following details:
+5.  `L2ToL2CrossDomainMessenger` on the destination chain calls `SuperchainETHBridge` with the following details:
 
     *   Source of the ETH
     *   Destination address
     *   Amount of ETH
 
-    `SuperchainWETH` performs several sanity checks:
+    `SuperchainETHBridge` performs several sanity checks:
 
     *   The `relayETH` call must originate from `L2ToL2CrossDomainMessenger`.
-    *   The interop message must have been sent by `SuperchainWETH`
+    *   The interop message must have been sent by `SuperchainETHBridge`
 
-6.  `SuperchainWETH` withdraws the specified amount of ETH from `ETHLiquidity`.
-    Only `SuperchainWETH` can withdraw from `ETHLiquidity`, ensuring that the ETH is correctly reintroduced into circulation on the destination chain.
+6.  `SuperchainETHBridge` withdraws the specified amount of ETH from `ETHLiquidity`.
+    Only `SuperchainETHBridge` can withdraw from `ETHLiquidity`, ensuring that the ETH is correctly reintroduced into circulation on the destination chain.
 
-7.  `SuperchainWETH` uses [`SafeSend`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/universal/SafeSend.sol) to send ETH.
+7.  `SuperchainETHBridge` uses [`SafeSend`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/universal/SafeSend.sol) to send ETH.
     This ensures that even if the destination is a smart contract, its custom logic is not executed.
 This behavior differs from [standard ETH transfers](https://docs.base.org/learn/address-and-payable/address-and-payable#receiving-ether-with-payable-addresses), where smart contracts can trigger custom logic upon receiving ETH.
 
@@ -147,11 +147,11 @@ Here is an example of how this works.
     The user sends 3 ETH on L1 to the bridge, which is locked in the lockbox.
     The bridge on chain A then mints 3 ETH for the user.
 
-3.  The user sent the initiating message to `SuperchainWETH` on chain A, along with 1 ETH to bridge to chain B.
+3.  The user sent the initiating message to `SuperchainETHBridge` on chain A, along with 1 ETH to bridge to chain B.
     This 1 ETH is sent to `ETHLiquidity` on chain A.
 
 4.  Somebody (the user, a relayer action on behalf of the user, etc.) sent the corresponding executing message to chain B.
-    `SuperchainWETH` transfers 1 ETH from `ETHLiquidity` on chain B to the user.
+    `SuperchainETHBridge` transfers 1 ETH from `ETHLiquidity` on chain B to the user.
 
 5.  The user decides to withdraw 1 ETH from chain B back into L1.
     Normally, a user would do this through a third-party bridge, which is faster and usually cheaper, but for illustration purposes this user uses the standard OP bridge.

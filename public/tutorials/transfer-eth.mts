@@ -24,7 +24,7 @@ import {
     contracts as optimismContracts
 } from '@eth-optimism/viem'
  
-import superchainWethAbi from './SuperchainWETH.abi.json'
+import superchainEthBridgeAbi from './SuperchainETHBridge.abi.json'
 
 const supersimAddress="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
@@ -48,8 +48,8 @@ const destinationWallet = createWalletClient({
     .extend(walletActionsL2())
  
 const wethOnSource = await getContract({
-    address: optimismContracts.superchainWETH.address,
-    abi: superchainWethAbi,
+    address: optimismContracts.superchainETHBridge.address,
+    abi: superchainEthBridgeAbi,
     client: sourceWallet
 })
 
