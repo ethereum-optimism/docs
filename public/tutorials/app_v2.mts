@@ -8,11 +8,7 @@ import {
 import { privateKeyToAccount } from 'viem/accounts'
 import { supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
 
-import {
-    walletActionsL2,
-    publicActionsL2,
-    createInteropSentL2ToL2Messages,
-} from '@eth-optimism/viem'
+import { walletActionsL2, publicActionsL2 } from '@eth-optimism/viem'
 
 import greeterData from './Greeter.json'
 import greetingSenderData from './GreetingSender.json'
@@ -58,17 +54,18 @@ const txnAHash = await greetingSender.write.setGreeting(
     ["Greeting through chain A"])
 const receiptA = await walletA.waitForTransactionReceipt({hash: txnAHash})
 
-const sentMessage =  
-    (await createInteropSentL2ToL2Messages(walletA, { receipt: receiptA }))
-        .sentMessages[0]
-const relayMsgTxnHash = await walletB.interop.relayMessage({
-    sentMessageId: sentMessage.id,
-    sentMessagePayload: sentMessage.payload,
-    })
+const sentMessages = await walletA.interop.getCrossDomainMessages({
+  logs: receiptA.logs,
+})
+const sentMessage = sentMessages[0] // We only sent 1 message
+const relayMessageParams = await walletA.interop.buildExecutingMessage({
+  log: sentMessage.log,
+})
+const relayMsgTxnHash = await walletB.interop.relayCrossDomainMessage(relayMessageParams)
 
-const receiptRelay = await walletB.waitForTransactionReceipt(
-        {hash: relayMsgTxnHash})
+const receiptRelay = await walletB.waitForTransactionReceipt({
+  hash: relayMsgTxnHash,
+})
 
 const greeting2 = await greeter.read.greet()
 console.log(`Chain A Greeting: ${greeting2}`)
-
