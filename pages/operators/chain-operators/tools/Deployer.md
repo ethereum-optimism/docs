@@ -14,13 +14,9 @@ The recommended way to install `op-deployer` is to download the latest release f
 2. Find the latest release that includes op-deployer
 3. Download the appropriate binary for your operating system
 4. Extract the binary to a location on your system PATH
-5. Make the binary executable (on Unix-based systems):
+
     
-    ```bash
-    chmod +x /path/to/op-deployer
-    ```
-    
-6. Verify installation:
+5. Verify installation:
     
     ```bash
     op-deployer --version
@@ -54,7 +50,7 @@ If you prefer to build from source:
 > Deploying an OP Stack chain can require significant gas. Ensure your deployer wallet has at least 3.5 ETH for deployment on mainnet or testnet. The exact amount will vary based on gas prices and configuration.
 > 
 
-The base use case for `op-deployer` is deploying new OP Chains. This process is broken down into three steps:
+The base use case for `op-deployer` is deploying new OP Chains. This process is broken down into four steps:
 
 ### `init`: configure your chain
 
@@ -78,6 +74,7 @@ Your intent file will need to be modified to your parameters, but it will initia
 > 
 
 ```toml
+deploymentStrategy = "live"
 configType = "standard-overrides"
 l1ChainID = 11155111# The chain ID of Sepolia (L1) you'll be deploying to.
 fundDevAccounts = true# Whether or not to fund dev accounts using the test... junk mnemonic on L2.
@@ -117,6 +114,7 @@ Here's an explanation of the key fields in the intent file:
 
 **Global configuration:**
 
+- `deploymentStrategy`: Used to deploy both to live chains and L1 genesis files. Valid values are `live` and `genesis`.
 - `configType`: Type of configuration to use ("standard-overrides" is most common)
 - `l1ChainID`: The chain ID of the L1 network you're deploying to
 - `fundDevAccounts`: Whether to fund development accounts on L2 (set to false for production)
@@ -127,30 +125,59 @@ Here's an explanation of the key fields in the intent file:
 
 - `proxyAdminOwner`: Address that can upgrade Superchain-wide contracts
 - `protocolVersionsOwner`: Address that can update protocol versions
-- `guardian`: Address with emergency powers (e.g., pausing withdrawals)
+- `guardian`: Address authorized to pause L1 withdrawals from contracts, blacklist dispute games, and set the respected game type in the `OptimismPortal`
 
 **Chain-specific configuration:**
 
 - `id`: Unique identifier for your chain
-- `baseFeeVaultRecipient`: Address that receives base fees
-- `l1FeeVaultRecipient`: Address that receives L1 fees
+- `baseFeeVaultRecipient`: Address that represents the recipient of fees accumulated in the `BaseFeeVault`
+- `l1FeeVaultRecipient`: Address that represents the recipient of fees accumulated in the `L1FeeVault`
 - `sequencerFeeVaultRecipient`: Address that receives sequencer fees
 - `eip1559DenominatorCanyon`, `eip1559Denominator`, `eip1559Elasticity`: Parameters for fee calculation
 
 **Chain roles:**
 
-- `l1ProxyAdminOwner`: Address that owns the L1 proxy admin contract
-- `l2ProxyAdminOwner`: Address that owns the L2 proxy admin contract
-- `systemConfigOwner`: Address that can update system configuration
-- `unsafeBlockSigner`: Address that signs blocks in unsafe mode
+- `l1ProxyAdminOwner`: Address authorized to update the L1 Proxy Admin
+- `l2ProxyAdminOwner`: Address authorized to upgrade protocol contracts via calls to the `ProxyAdmin`. This is the aliased L1 ProxyAdmin owner address.
+- `systemConfigOwner`: Address authorized to change values in the `SystemConfig` contract. All configuration is stored on L1 and picked up by L2 as part of the [derivation](https://specs.optimism.io/protocol/derivation.html) of the L2 chain
+- `unsafeBlockSigner`: Address which authenticates the unsafe/pre-submitted blocks for a chain at the P2P layer
 - `batcher`: Address that batches transactions from L2 to L1
-- `proposer`: Address that proposes output roots
-- `challenger`: Address that can challenge invalid output roots
+- `proposer`: Address which can create and interact with [permissioned dispute games](https://specs.optimism.io/fault-proof/stage-one/bridge-integration.html#permissioned-faultdisputegame) on L1.
+- `challenger`: Address Account which can interact with existing permissioned dispute games
+
+### Contract locator schemes
+
+op-deployer uses contract locators to find contract artifacts to deploy. 
+Locators are just URLs under the hood.
+The `l1ContractsLocator` and `l2ContractsLocator` fields support several schemes for specifying where to find the contract implementations:
+
+* `tag://` - References a specific tagged release of the contracts (e.g., `tag://op-contracts/v1.8.0-rc.4`). In this case, the contracts bytecode will be downloaded from a fixed bytecode bundle on GCS.
+* `file://` - Points to a local Forge build artifacts directory. Must point to the `forge-artifacts` directory containing the compiled contract artifacts.
+This is useful for local development, since you can point it at your local monorepo 
+e.g. `--artifacts-locator file:///Users/username/code/optimism/packages/contracts-bedrock/forge-artifacts/`
+* `http://` or `https://` - Points to a target directory containing contract artifacts. The URL should directly reference the directory containing the `forge-artifacts` directory, in this case, the bytecode will be downloaded from the URL specified.
+
+<Callout type="warning">
+When using any scheme other than `tag://`, you must set `configType` to either `custom` or `standard-overrides` in your intent file.
+</Callout>
+
+For example:
+
+```toml
+# When using tag:// scheme
+configType = "standard-overrides"
+l1ContractsLocator = "tag://op-contracts/v1.8.0-rc.4"
+l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
+
+# When using other schemes (file://, http://, https://)
+configType = "custom"  # or "standard-overrides"
+l1ContractsLocator = "file:///path/to/local/op-contracts/v1.8.0-rc.4/forge-artifacts"
+l2ContractsLocator = "https://example.com/op-contracts/v1.7.0-beta.1+l2-contracts.tar.gz"
+```
 
 By default, `op-deployer` will fill in all other configuration variables with those that match the [standard configuration](https://specs.optimism.io/protocol/configurability.html?utm_source=op-docs&utm_medium=docs). You can override these default settings by adding them to your intent file using the table below:
 
 ```toml
-toml
 [globalDeployOverrides]
   l2BlockTime = 1# 1s L2blockTime is also standard, op-deployer defaults to 2s
 
@@ -185,9 +212,6 @@ address as other chains on the Superchain.
 After deploying your contracts, you can verify them on block explorers like Etherscan:
 
 ```bash
-bash
-[ ]
-
 op-deployer verify --workdir .deployer --l1-rpc-url <rpc-url> --l1-explorer-api-url <explorer-api-url> --l1-explorer-api-key <explorer-api-key>
 
 ```
@@ -209,9 +233,6 @@ The verification tool supports various options:
 Example usage:
 
 ```bash
-bash
-[ ]
-
 op-deployer verify --workdir .deployer \
   --l1-rpc-url https://sepolia.infura.io/v3/YOUR_INFURA_KEY \
   --l1-explorer-api-url https://api-sepolia.etherscan.io/api \
@@ -228,9 +249,6 @@ op-deployer verify --workdir .deployer \
 Inspect the `state.json` file by navigating to your working directory. With the contracts deployed, generate the genesis and rollup configuration files by running the following commands:
 
 ```bash
-bash
-[ ]
-
 ./bin/op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
 ./bin/op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
 
@@ -248,534 +266,34 @@ bash
 
 ```
 
-# Bootstrap usage
+## Bootstrap usage
 
-`op-deployer` provides a set of bootstrap commands specifically designed for initializing a new superchain on an L1 network. These commands are essential when you're setting up a completely new superchain environment rather than deploying a new chain on an existing superchain.
+The bootstrap commands are specialized tools primarily used for initializing a new superchain on an L1 network that hasn't previously hosted one.
 
-## Bootstrap process overview
-
-When bootstrapping a new superchain, you typically need to follow this process:
-
-1. **Deploy proxy admin** (`bootstrap proxy`): Sets up the `ERC-1967` proxy for the superchain management contracts.
-2. **Deploy Superchain configuration** (`bootstrap superchain`): Creates the foundational superchain configuration contracts.
-3. **Deploy implementations** (`bootstrap implementations`): Deploys the implementation contracts needed for the dispute system.
-4. **Deploy validator** (`bootstrap validator`): Deploys the `StandardValidator` for the superchain.
-
-## Bootstrap proxy
-
-The `bootstrap proxy` command deploys a new `ERC-1967` proxy admin, which is required for upgradeability of the superchain contracts.
-
-### Command usage
+### Available commands
 
 ```bash
-op-deployer bootstrap proxy \
-  --l1-rpc-url <L1_RPC_ENDPOINT> \
-  --private-key <PRIVATE_KEY> \
-  --artifacts-locator <ARTIFACTS_LOCATOR> \
-  --proxy-owner <PROXY_OWNER_ADDRESS> \
-  --outfile proxy-output.json
+op-deployer bootstrap superchain --l1-chain-id <l1-chain-id> --private-key <private-key> --l1-rpc-url <l1-rpc-url>
+op-deployer bootstrap implementations
+op-deployer bootstrap proxy
 
 ```
 
-### Parameters
+### Bootstrap workflow
 
-```
-ParameterDescriptionRequiredExample--l1-rpc-urlRPC URL for the L1 chainYeshttps://sepolia.infura.io/v3/YOUR_API_KEY--private-keyPrivate key for transaction signingYes0xabcd...1234--artifacts-locatorLocation of contract artifactsYesfile:///path/to/artifacts ortag://op-contracts/v1.8.0-rc.4--proxy-ownerAddress that will own the proxyYes0x1234...abcd--outfileFile to write output JSONNoproxy-output.json--cache-dirDirectory to cache artifactsNo.artifacts-cache
-```
+The bootstrap workflow involves several steps to initialize a new superchain:
 
-### Example
+> 📌 TODO: Add detailed step-by-step instructions for a successful bootstrap flow, including expected order of operations and dependencies between commands.
+> 
 
-```bash
-bash
-[ ]
+When using the bootstrap command, you'll need to specify the following parameters:
 
-op-deployer bootstrap proxy \
-  --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-  --private-key 0xYOUR_PRIVATE_KEY \
-  --artifacts-locator file:///path/to/artifacts \
-  --proxy-owner 0xYOUR_OWNER_ADDRESS \
-  --outfile proxy-output.json
+- `-l1-chain-id`: The chain ID of the L1 network
+- `-private-key`: The private key to use for deployment
+- `-l1-rpc-url`: The RPC URL for the L1 network
 
-```
+### MIPS Version
 
-### Output
+> 📌 TODO: Document the expected format and supported values for the MIPS version parameter.
+> 
 
-The command outputs a JSON file containing the deployed proxy contract address:
-
-```json
-json
-[ ]
-
-{
-  "ProxyAdmin": "0x123...abc"
-}
-
-```
-
-## Bootstrap Superchain
-
-The `bootstrap superchain` command initializes the core superchain configuration contracts that govern the entire superchain ecosystem.
-
-### Command Usage
-
-```bash
-bash
-[ ]
-
-op-deployer bootstrap superchain \
-  --l1-rpc-url <L1_RPC_ENDPOINT> \
-  --private-key <PRIVATE_KEY> \
-  --artifacts-locator <ARTIFACTS_LOCATOR> \
-  --superchain-proxy-admin-owner <ADMIN_OWNER_ADDRESS> \
-  --protocol-versions-owner <VERSIONS_OWNER_ADDRESS> \
-  --guardian <GUARDIAN_ADDRESS> \
-  --paused <true|false> \
-  --required-protocol-version <VERSION> \
-  --recommended-protocol-version <VERSION> \
-  --outfile superchain-output.json
-
-```
-
-### Parameters
-
-```
-ParameterDescriptionRequiredExample--l1-rpc-urlRPC URL for the L1 chainYeshttps://sepolia.infura.io/v3/YOUR_API_KEY--private-keyPrivate key for transaction signingYes0xabcd...1234--artifacts-locatorLocation of contract artifactsYesfile:///path/to/artifacts ortag://op-contracts/v1.8.0-rc.4--superchain-proxy-admin-ownerAddress that owns the superchain proxy adminYes0x1234...abcd--protocol-versions-ownerAddress that can update protocol versionsYes0x2345...bcde--guardianAddress with emergency powersYes0x3456...cdef--pausedWhether the superchain starts pausedNo (defaults to false)false--required-protocol-versionMinimum required protocol versionYes1.0.0--recommended-protocol-versionRecommended protocol versionYes1.0.0--outfileFile to write output JSONNo (defaults to stdout)superchain-output.json--cache-dirDirectory to cache artifactsNo.artifacts-cache
-```
-
-### Example
-
-```bash
-bash
-[ ]
-
-op-deployer bootstrap superchain \
-  --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-  --private-key 0xYOUR_PRIVATE_KEY \
-  --artifacts-locator file:///path/to/artifacts \
-  --superchain-proxy-admin-owner 0xADMIN_OWNER_ADDRESS \
-  --protocol-versions-owner 0xVERSIONS_OWNER_ADDRESS \
-  --guardian 0xGUARDIAN_ADDRESS \
-  --paused false \
-  --required-protocol-version 1.0.0 \
-  --recommended-protocol-version 1.0.0 \
-  --outfile superchain-output.json
-
-```
-
-### Output
-
-The command outputs a JSON file containing the deployed superchain contract addresses:
-
-```json
-json
-[ ]
-
-{
-  "SuperchainConfig": "0x123...abc",
-  "ProtocolVersions": "0x456...def"
-}
-
-```
-
-## Bootstrap Implementations
-
-The `bootstrap implementations` command deploys the implementation contracts required for the dispute system of the OP Stack.
-
-### Command Usage
-
-```bash
-bash
-[ ]
-
-op-deployer bootstrap implementations \
-  --l1-rpc-url <L1_RPC_ENDPOINT> \
-  --private-key <PRIVATE_KEY> \
-  --artifacts-locator <ARTIFACTS_LOCATOR> \
-  --l1-contracts-release <RELEASE_VERSION> \
-  --mips-version <1|2> \
-  --withdrawal-delay-seconds <SECONDS> \
-  --min-proposal-size-bytes <BYTES> \
-  --challenge-period-seconds <SECONDS> \
-  --proof-maturity-delay-seconds <SECONDS> \
-  --dispute-game-finality-delay-seconds <SECONDS> \
-  --superchain-config-proxy <ADDRESS> \
-  --protocol-versions-proxy <ADDRESS> \
-  --upgrade-controller <ADDRESS> \
-  --use-interop <true|false> \
-  --outfile implementations-output.json
-
-```
-
-### Parameters
-
-```
-ParameterDescriptionRequiredDefaultExample--l1-rpc-urlRPC URL for the L1 chainYes-https://sepolia.infura.io/v3/YOUR_API_KEY--private-keyPrivate key for transaction signingYes-0xabcd...1234--artifacts-locatorLocation of contract artifactsYes-file:///path/to/artifacts--l1-contracts-releaseVersion tag for L1 contractsYes-v1.8.0-rc.4--mips-versionMIPS version for the fault proof system (1 or 2)NoFrom standard config2--withdrawal-delay-secondsDelay for withdrawals in secondsNoFrom standard config604800 (1 week)--min-proposal-size-bytesMinimum size for proposals in bytesNoFrom standard config1--challenge-period-secondsChallenge period in secondsNoFrom standard config604800 (1 week)--proof-maturity-delay-secondsProof maturity delay in secondsNoFrom standard config60--dispute-game-finality-delay-secondsDispute game finality delay in secondsNoFrom standard config604800 (1 week)--superchain-config-proxyAddress of superchain config proxyYes-Result from superchain command--protocol-versions-proxyAddress of protocol versions proxyYes-Result from superchain command--upgrade-controllerAddress of upgrade controllerYes-0x0000...0000--use-interopWhether to enable interoperability featuresNofalsetrue--outfileFile to write output JSONNostdoutimplementations-output.json--cache-dirDirectory to cache artifactsNo-.artifacts-cache
-```
-
-### Understanding MIPS Version
-
-The MIPS version parameter determines which version of the Cannon MIPS VM to use for fault proofs:
-
-- **MIPS Version 1**: Original implementation, suitable for most deployments
-- **MIPS Version 2**: Enhanced implementation with optimizations, generally preferred for new deployments
-
-For most new deployments, MIPS Version 2 is recommended unless you have specific compatibility requirements.
-
-### Example
-
-```bash
-bash
-[ ]
-
-op-deployer bootstrap implementations \
-  --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-  --private-key 0xYOUR_PRIVATE_KEY \
-  --artifacts-locator file:///path/to/artifacts \
-  --l1-contracts-release v1.8.0-rc.4 \
-  --mips-version 2 \
-  --withdrawal-delay-seconds 604800 \
-  --min-proposal-size-bytes 1 \
-  --challenge-period-seconds 604800 \
-  --proof-maturity-delay-seconds 60 \
-  --dispute-game-finality-delay-seconds 604800 \
-  --superchain-config-proxy 0xSUPERCHAIN_CONFIG_ADDRESS \
-  --protocol-versions-proxy 0xPROTOCOL_VERSIONS_ADDRESS \
-  --upgrade-controller 0x0000000000000000000000000000000000000000 \
-  --outfile implementations-output.json
-
-```
-
-### Output
-
-The command outputs a JSON file containing the deployed implementation contract addresses:
-
-```json
-json
-[ ]
-
-{
-  "L1CrossDomainMessenger": "0x123...abc",
-  "L1ERC721Bridge": "0x234...bcd",
-  "L1StandardBridge": "0x345...cde",
-  "L2OutputOracle": "0x456...def",
-  "OptimismPortal": "0x567...efg",
-  "OptimismMintableERC20Factory": "0x678...fgh",
-  "AddressManager": "0x789...ghi",
-  "ProxyAdmin": "0x89a...hij",
-  "SystemConfig": "0x9ab...ijk",
-  "DisputeGameFactory": "0xabc...jkl"
-}
-
-```
-
-## Bootstrap Validator
-
-The `bootstrap validator` command deploys the validator contracts required for the superchain. This is typically done after deploying the implementations.
-
-### Command Usage
-
-```bash
-bash
-[ ]
-
-op-deployer bootstrap validator \
-  --l1-rpc-url <L1_RPC_ENDPOINT> \
-  --private-key <PRIVATE_KEY> \
-  --artifacts-locator <ARTIFACTS_LOCATOR> \
-  --config <CONFIG_FILE_PATH> \
-  --outfile validator-output.json
-
-```
-
-### Parameters
-
-```
-ParameterDescriptionRequiredExample--l1-rpc-urlRPC URL for the L1 chainYeshttps://sepolia.infura.io/v3/YOUR_API_KEY--private-keyPrivate key for transaction signingYes0xabcd...1234--artifacts-locatorLocation of contract artifactsYesfile:///path/to/artifacts--configPath to JSON configuration fileYesvalidator-config.json--outfileFile to write output JSONNovalidator-output.json--cache-dirDirectory to cache artifactsNo.artifacts-cache
-```
-
-### Configuration File Format
-
-The configuration file should be a JSON file with the following structure:
-
-```json
-json
-[ ]
-
-{
-  "release": "v1.8.0-rc.4",
-  "superchainConfig": "0x123...abc",
-  "l1PAOMultisig": "0x234...bcd",
-  "challenger": "0x345...cde",
-  "superchainConfigImpl": "0x456...def",
-  "protocolVersionsImpl": "0x567...efg",
-  "l1ERC721BridgeImpl": "0x678...fgh",
-  "optimismPortalImpl": "0x789...ghi",
-  "ethLockboxImpl": "0x89a...hij",
-  "systemConfigImpl": "0x9ab...ijk",
-  "optimismMintableERC20FactoryImpl": "0xabc...jkl",
-  "l1CrossDomainMessengerImpl": "0xbcd...klm",
-  "l1StandardBridgeImpl": "0xcde...lmn",
-  "disputeGameFactoryImpl": "0xdef...mno",
-  "anchorStateRegistryImpl": "0xefg...nop",
-  "delayedWETHImpl": "0xfgh...opq",
-  "mipsImpl": "0xghi...pqr",
-  "withdrawalDelaySeconds": 604800
-}
-
-```
-
-Most of these addresses should come from the output of the previous bootstrap commands, particularly the `bootstrap implementations` command.
-
-### Example
-
-```bash
-bash
-[ ]
-
-op-deployer bootstrap validator \
-  --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-  --private-key 0xYOUR_PRIVATE_KEY \
-  --artifacts-locator file:///path/to/artifacts \
-  --config validator-config.json \
-  --outfile validator-output.json
-
-```
-
-### Output
-
-The command outputs a JSON file containing the deployed validator contract address:
-
-```json
-json
-[ ]
-
-{
-  "validator": "0x123...abc"
-}
-
-```
-
-## Working with Artifacts
-
-The `artifacts-locator` parameter specifies where the contract deployment artifacts are located. There are several ways to provide artifacts:
-
-### Using Local Files
-
-To use local artifacts (recommended for production or if you're experiencing issues with remote artifacts):
-
-1. Clone the contracts repository:
-    
-    ```bash
-    bash
-    [ ]
-    
-    git clone https://github.com/ethereum-optimism/optimism.git
-    cd optimism
-    git checkout v1.8.0-rc.4# Use the desired version
-    
-    ```
-    
-2. Build the artifacts:
-    
-    ```bash
-    bash
-    [ ]
-    
-    cd packages/contracts-bedrock
-    pnpm install
-    pnpm build
-    
-    ```
-    
-3. Use the local path in your command:
-    
-    ```bash
-    bash
-    [ ]
-    
-    --artifacts-locator file:///absolute/path/to/optimism/packages/contracts-bedrock/artifacts
-    
-    ```
-    
-
-### Using Tagged Artifacts
-
-For development or testing, you can try using tagged artifacts (but note there are known issues with this approach):
-
-```bash
-bash
-[ ]
-
---artifacts-locator tag://op-contracts/v1.8.0-rc.4
-
-```
-
-If you encounter the error `Application failed: failed to parse artifacts URL: unsupported tag`, you'll need to use the local files method described above.
-
-## Complete Bootstrap Workflow Example
-
-Here's a step-by-step workflow to bootstrap a complete superchain from scratch:
-
-1. **Deploy Proxy Admin**:
-    
-    ```bash
-    bash
-    [ ]
-    
-    op-deployer bootstrap proxy \
-      --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-      --private-key 0xYOUR_PRIVATE_KEY \
-      --artifacts-locator file:///path/to/artifacts \
-      --proxy-owner 0xYOUR_OWNER_ADDRESS \
-      --outfile proxy-output.json
-    
-    ```
-    
-2. **Store the proxy admin address** for use in the next steps:
-    
-    ```bash
-    bash
-    [ ]
-    
-    PROXY_ADMIN=$(jq -r '.ProxyAdmin' proxy-output.json)
-    echo "Proxy Admin: $PROXY_ADMIN"
-    
-    ```
-    
-3. **Deploy Superchain Configuration**:
-    
-    ```bash
-    bash
-    [ ]
-    
-    op-deployer bootstrap superchain \
-      --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-      --private-key 0xYOUR_PRIVATE_KEY \
-      --artifacts-locator file:///path/to/artifacts \
-      --superchain-proxy-admin-owner 0xADMIN_OWNER_ADDRESS \
-      --protocol-versions-owner 0xVERSIONS_OWNER_ADDRESS \
-      --guardian 0xGUARDIAN_ADDRESS \
-      --paused false \
-      --required-protocol-version 1.0.0 \
-      --recommended-protocol-version 1.0.0 \
-      --outfile superchain-output.json
-    
-    ```
-    
-4. **Store the superchain configuration addresses**:
-    
-    ```bash
-    bash
-    [ ]
-    
-    SUPERCHAIN_CONFIG=$(jq -r '.SuperchainConfig' superchain-output.json)
-    PROTOCOL_VERSIONS=$(jq -r '.ProtocolVersions' superchain-output.json)
-    echo "Superchain Config: $SUPERCHAIN_CONFIG"
-    echo "Protocol Versions: $PROTOCOL_VERSIONS"
-    
-    ```
-    
-5. **Deploy Implementations**:
-    
-    ```bash
-    bash
-    [ ]
-    
-    op-deployer bootstrap implementations \
-      --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-      --private-key 0xYOUR_PRIVATE_KEY \
-      --artifacts-locator file:///path/to/artifacts \
-      --l1-contracts-release v1.8.0-rc.4 \
-      --mips-version 2 \
-      --withdrawal-delay-seconds 604800 \
-      --min-proposal-size-bytes 1 \
-      --challenge-period-seconds 604800 \
-      --proof-maturity-delay-seconds 60 \
-      --dispute-game-finality-delay-seconds 604800 \
-      --superchain-config-proxy $SUPERCHAIN_CONFIG \
-      --protocol-versions-proxy $PROTOCOL_VERSIONS \
-      --upgrade-controller 0x0000000000000000000000000000000000000000 \
-      --outfile implementations-output.json
-    
-    ```
-    
-6. **Extract implementation addresses** for the validator configuration:
-    
-    ```bash
-    bash
-    [ ]
-    
-    # Example of extracting implementation addresses
-    L1_CROSS_DOMAIN_MESSENGER_IMPL=$(jq -r '.L1CrossDomainMessenger' implementations-output.json)
-    L1_ERC721_BRIDGE_IMPL=$(jq -r '.L1ERC721Bridge' implementations-output.json)
-    # ... extract other implementation addresses similarly
-    
-    ```
-    
-7. **Create a validator configuration file**:
-    
-    ```bash
-    bash
-    [ ]
-    
-    cat > validator-config.json << EOF
-    {
-      "release": "v1.8.0-rc.4",
-      "superchainConfig": "$SUPERCHAIN_CONFIG",
-      "l1PAOMultisig": "0xYOUR_PAO_MULTISIG_ADDRESS",
-      "challenger": "0xYOUR_CHALLENGER_ADDRESS",
-      "superchainConfigImpl": "$SUPERCHAIN_CONFIG_IMPL",
-      "protocolVersionsImpl": "$PROTOCOL_VERSIONS_IMPL",
-      "l1ERC721BridgeImpl": "$L1_ERC721_BRIDGE_IMPL",
-      "optimismPortalImpl": "$OPTIMISM_PORTAL_IMPL",
-      "ethLockboxImpl": "$ETH_LOCKBOX_IMPL",
-      "systemConfigImpl": "$SYSTEM_CONFIG_IMPL",
-      "optimismMintableERC20FactoryImpl": "$OPTIMISM_MINTABLE_ERC20_FACTORY_IMPL",
-      "l1CrossDomainMessengerImpl": "$L1_CROSS_DOMAIN_MESSENGER_IMPL",
-      "l1StandardBridgeImpl": "$L1_STANDARD_BRIDGE_IMPL",
-      "disputeGameFactoryImpl": "$DISPUTE_GAME_FACTORY_IMPL",
-      "anchorStateRegistryImpl": "$ANCHOR_STATE_REGISTRY_IMPL",
-      "delayedWETHImpl": "$DELAYED_WETH_IMPL",
-      "mipsImpl": "$MIPS_IMPL",
-      "withdrawalDelaySeconds": 604800
-    }
-    EOF
-    
-    ```
-    
-8. **Deploy Validator**:
-    
-    ```bash
-    bash
-    [ ]
-    
-    op-deployer bootstrap validator \
-      --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-      --private-key 0xYOUR_PRIVATE_KEY \
-      --artifacts-locator file:///path/to/artifacts \
-      --config validator-config.json \
-      --outfile validator-output.json
-    
-    ```
-    
-9. Once all these commands have successfully completed, you'll have bootstrapped the core components needed for a new superchain. You can now proceed to deploy individual chains using the standard `op-deployer apply` command.
-
-## Troubleshooting
-
-### Issue: Unsupported Tag Error
-
-If you encounter an error like `Application failed: failed to parse artifacts URL: unsupported tag` when using `tag://` format:
-
-**Solution**: Use local artifacts as described in the "Working with Artifacts" section.
-
-### Issue: MIPS Version Selection Error
-
-If you encounter an error indicating that MIPS version must be 1 or 2:
-
-**Solution**: Ensure you're specifying exactly `1` or `2` as the MIPS version value, not any other number.
-
-### Issue: Transaction Gas Issues
-
-If transactions fail due to gas limits or costs:
-
-**Solution**: Ensure your deployer account has sufficient ETH (at least 1 ETH for bootstrapping operations), and consider using a network with lower gas costs for testing.
