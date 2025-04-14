@@ -20,7 +20,7 @@ import { Steps, Callout, Tabs } from 'nextra/components'
 ## Overview
 
 Sometimes the address of an ERC20 contract is not available on a different chain.
-This means that the [standard bridge](/interop/superchain-erc20) is not an option. 
+This means that the [standard bridge](/interop/superchain-erc20) is not an option.
 However, if the original ERC20 contract is behind a proxy (so we can add [ERC7802](https://eips.ethereum.org/EIPS/eip-7802) support), we can still use interop by writing our own bridge.
 
 <details>
@@ -32,10 +32,8 @@ However, if the original ERC20 contract is behind a proxy (so we can add [ERC780
 
   **Prerequisite knowledge**
 
-  *   How to [deploy SuperchainERC20 tokens with custom code](/stack/interop/tutorials/custom-superchain-erc20).
+  *   How to [deploy SuperchainERC20 tokens with custom code](/interop/tutorials/custom-superchain-erc20).
   *   How to [transfer interop messages](/interop/tutorials/message-passing).
-
-
 </details>
 
 <Callout type="warning">
@@ -52,8 +50,6 @@ has code that is a lot more likely to be used in production. It doesn't just
 show what is possible, it does the exact job needed.
 
 */}
-
-
 
 ## How beacon proxies work
 
@@ -89,7 +85,7 @@ After that happens, all new calls are sent to the new implementation.
 
 ## Instructions
 
-Some steps depend on whether you want to deploy on [supersim](/stack/interop/tools/supersim) or on the [development network](/stack/interop/tools/devnet).
+Some steps depend on whether you want to deploy on [supersim](/interop/tools/supersim) or on the [development network](/interop/tools/devnet).
 
 <Steps>
   ### Install and run Supersim
@@ -114,7 +110,7 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
   ./setup-for-erc20-upgrade.sh
   ```
 
-  If you want to deploy to the [development networks](/stack/interop/tools/devnet), provide `setup-for-erc20-upgrade.sh` with the private key of an address with ETH on both devnets.
+  If you want to deploy to the [development networks](/interop/tools/devnet), provide `setup-for-erc20-upgrade.sh` with the private key of an address with ETH on both devnets.
 
   ```sh
   ./setup-for-erc20-upgrade.sh <private key>
@@ -128,7 +124,6 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
   BEACON_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
   export ERC20_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
   ```
-
 
   ### Specify environment variables
 
@@ -159,7 +154,7 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
   ### Advance the user's nonoce on chain B
 
-  This solution is necessary when the nonce on chain B is higher than it was on chain A when the proxy for the ERC-20 contract was installed. 
+  This solution is necessary when the nonce on chain B is higher than it was on chain A when the proxy for the ERC-20 contract was installed.
   To simulate this situation we send a few meaningless transactions on chain B and then see that the nonce on B is higher than the nonce on A.
 
   ```sh
@@ -223,34 +218,35 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
   1.  Create a file, `src/InteropToken.sol`.
 
       ```solidity file=<rootDir>/public/tutorials/InteropToken.sol hash=5e728534c265028c94d60dcb6550699d filename="src/InteropToken.sol"
+      ```
 
-  1.  This `src/InteropToken.sol` is used for contract upgrades. 
-      Edit it to allow our custom bridge to mint and burn tokens instead of the predeployed superchain token bridge.  
-  
-      - On lines 20 and 31 replace ~`PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE`~ with `bridgeAddress`.
+  2.  This `src/InteropToken.sol` is used for contract upgrades.
+      Edit it to allow our custom bridge to mint and burn tokens instead of the predeployed superchain token bridge.
 
-        ```solidity
-        require(msg.sender == bridgeAddress, "Unauthorized");
-        ```
+      *   On lines 20 and 31 replace ~~`PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE`~~ with `bridgeAddress`.
 
-      - Add these lines anywhere in the contract:
+          ```solidity
+          require(msg.sender == bridgeAddress, "Unauthorized");
+          ```
 
-        ```solidity
-            address public immutable bridgeAddress;
+      *   Add these lines anywhere in the contract:
 
-            constructor(address bridgeAddress_) {
-                bridgeAddress = bridgeAddress_;
-            }
-        ```
+          ```solidity
+              address public immutable bridgeAddress;
 
-  1.  Deploy `InteropToken` on both chains, with the bridge address.
+              constructor(address bridgeAddress_) {
+                  bridgeAddress = bridgeAddress_;
+              }
+          ```
+
+  3.  Deploy `InteropToken` on both chains, with the bridge address.
 
       ```sh
       INTEROP_TOKEN_A=`forge create InteropToken --private-key $PRIVATE_KEY --broadcast --rpc-url $URL_CHAIN_A --constructor-args $BRIDGE_ADDRESS_A | awk '/Deployed to:/ {print $3}'`
       INTEROP_TOKEN_B=`forge create InteropToken --private-key $PRIVATE_KEY --broadcast --rpc-url $URL_CHAIN_B --constructor-args $BRIDGE_ADDRESS_B | awk '/Deployed to:/ {print $3}'`
       ```
 
-  1.  Update the proxies to the new implementations.
+  4.  Update the proxies to the new implementations.
 
       ```sh
       cast send $ERC20_BEACON_ADDRESS_A "upgradeTo(address)" $INTEROP_TOKEN_A --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
@@ -259,7 +255,7 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
   ### Deploy the actual bridge
 
-  1. Create a file, `src/CustomBridge.sol`.
+  1.  Create a file, `src/CustomBridge.sol`.
 
       ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol hash=df5685626f96af100d608b5b94477888 filename="src/CustomBridge.sol"
 
@@ -271,26 +267,28 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
 
       </details>
 
-  1. Get the chainID values.
+      ```
+
+  2.  Get the chainID values.
 
       ```sh
       CHAINID_A=`cast chain-id --rpc-url $URL_CHAIN_A`
       CHAINID_B=`cast chain-id --rpc-url $URL_CHAIN_B`
-      ```     
+      ```
 
-  1. Deploy the bridges with the correct configuration.
+  3.  Deploy the bridges with the correct configuration.
 
       ```sh
       BRIDGE_IMPLEMENTATION_ADDRESS_A=`forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY --constructor-args  $ERC20_ADDRESS_A $ERC20_ADDRESS_B $CHAINID_B $BRIDGE_ADDRESS_B | awk '/Deployed to:/ {print $3}'`
       BRIDGE_IMPLEMENTATION_ADDRESS_B=`forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args  $ERC20_ADDRESS_B $ERC20_ADDRESS_A $CHAINID_A $BRIDGE_ADDRESS_A | awk '/Deployed to:/ {print $3}'`      
       ```
 
-  1. Inform the proxy beacons about the new addresses of the bridge implementation contracts.
+  4.  Inform the proxy beacons about the new addresses of the bridge implementation contracts.
 
       ```sh
       cast send $BRIDGE_BEACON_ADDRESS_A "upgradeTo(address)" $BRIDGE_IMPLEMENTATION_ADDRESS_A --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
       cast send $BRIDGE_BEACON_ADDRESS_B "upgradeTo(address)" $BRIDGE_IMPLEMENTATION_ADDRESS_B --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
-      ```  
+      ```
 
   ### Verification
 
@@ -319,13 +317,10 @@ Some steps depend on whether you want to deploy on [supersim](/stack/interop/too
       cast call $ERC20_ADDRESS_A "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
       cast call $ERC20_ADDRESS_B "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
       ```
-
 </Steps>
 
 ## Next steps
 
-*   Deploy a [SuperchainERC20](/stack/interop/tutorials/deploy-superchain-erc20) to the Superchain
-*   [Learn more about SuperchainERC20](/stack/interop/superchain-erc20)
+*   Deploy a [SuperchainERC20](/interop/tutorials/deploy-superchain-erc20) to the Superchain
+*   [Learn more about SuperchainERC20](/interop/superchain-erc20)
 *   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
-
-
