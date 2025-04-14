@@ -24,8 +24,8 @@ This page outlines breaking changes related to the Isthmus network upgrade for c
 If you experience difficulty at any stage of this process, please reach out to developer support.
 
 <Callout type="info">
-  The Isthmus hard fork for the Sepolia Superchain will be activated at **Thu Apr 17 16:00:00 UTC 2025** (`1744905600`).
-  This is for all chains who have opted into the [hard fork inheritance behavior](/superchain/superchain-registry#hard-fork-activation-inheritance-behavior). The activation for the Mainnet Superchain will be decided after Pectra activates on Ethereum. This time is still to be determined. The last tentative timeline from the Ethereum All Core Devs call is May 7th (from the call on Thursday, April 3rd).
+  The Isthmus hard fork for the Sepolia Superchain will be activated at **Thu Apr 17 16:00:00 UTC 2025** (`1744905600`) and the Mainnet Superchain will be activated at **Fri May 9 2025 16:00:01 UTC** (`1746806401`).
+  This is for all chains who have opted into the [hard fork inheritance behavior](/superchain/superchain-registry#hard-fork-activation-inheritance-behavior).
 </Callout>
 
 ## What's included in Isthmus
@@ -40,7 +40,7 @@ For more information on the Isthmus implementation details, please review [Isthm
 
 ## For chain operators
 
-Chain operators must upgrade their nodes ahead of the activation times to a release that contains the Isthmus changes and has the activation times for their chains baked in, or set the activation times manually via overrides. The details are outlined in the node operator section below. Additionally, chain operators must update `op-batcher` to [`v1.12.0`](https://github.com/ethereum-optimism/optimism/releases/tag/op-batcher%2Fv1.12.0) and should update `op-challenger` to [`v1.3.3`](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.3.3). 
+Chain operators must upgrade their nodes ahead of the activation times to a release that contains the Isthmus changes and has the activation times for their chains baked in, or set the activation times manually via overrides. The details are outlined in the node operator section below. Additionally, chain operators must update `op-batcher` to [`v1.12.0`](https://github.com/ethereum-optimism/optimism/releases/tag/op-batcher%2Fv1.12.0) and should update `op-challenger` to [``](). 
 
 In addition to this, the L1 smart contract upgrades in [upgrade 14](/notices/upgrade-14) are required to utilize this new funcationality.
 
@@ -51,11 +51,15 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
 <Steps>
   ### Verify the new absolute prestate
 
-  The absolute prestate is generated with the [op-program/v1.6.0-rc.1](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.6.0-rc.1). You can use this new absolute prestate (`0x03394563dd4a36e95e6d51ce7267ecceeb05fad23e68d2f9eed1affa73e5641a`) for the following chains:
+  <Callout type="info">
+    As of upgrade 14, the 64 bit multi-threaded version of cannon is utilized.
+  </Callout>
+
+  The absolute prestate is generated with the [op-program/v1.6.0-rc.2](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.6.0-rc.2). You can use this new absolute prestate (`0x03682932cec7ce0a3874b19675a6bbc923054a7b321efc7d3835187b172494b6`) for the following chains:
 
   *   Sepolia: Base, Creator Chain, OP, Metal, Mode, Zora, Ethernity, Unichain, Ink, and Minato (Soneium)
 
-  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/5f003211aed7469eed7df666291a62c025d1c46c/Makefile#L129-L131) in the root of the monorepo on the `op-program/v1.6.0-rc.1` tag:
+  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/d6fb90dd489e39efa206b55200766ccc075c1d9b/Makefile#L130-L132) in the root of the monorepo on the `op-program/v1.6.0-rc.2` tag:
 
   ```shell
   make reproducible-prestate
@@ -64,17 +68,17 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
   You should expect the following output at the end of the command:
 
   ```shell
-  Cannon Absolute prestate hash:
-  0x03526dfe02ab00a178e0ab77f7539561aaf5b5e3b46cd3be358f1e501b06d8a9
-  Cannon64 Absolute prestate hash:
-  0x03394563dd4a36e95e6d51ce7267ecceeb05fad23e68d2f9eed1affa73e5641a
-  CannonInterop Absolute prestate hash:
-  0x03ada038f8a81526c68596586dfc762eb5412d4d5bb7cb46110d8c47ee570d7e
+  Cannon Absolute prestate hash: 
+  0x03513e996556589f633fe1d38d694f63bc93cca5df559af37631b30875a829e9
+  Cannon64 Absolute prestate hash: 
+  0x03682932cec7ce0a3874b19675a6bbc923054a7b321efc7d3835187b172494b6
+  CannonInterop Absolute prestate hash: 
+  0x0399cfb018011977a027d1e7a85eb7ff101aec9bfc7d6500abac944c47a4581f
   ```
 
   ### Upload your new preimage file
 
-  During the previous step, you also generated the preimage of the absolute prestate, which is basically the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `0x03394563dd4a36e95e6d51ce7267ecceeb05fad23e68d2f9eed1affa73e5641a.bin.gz`.
+  During the previous step, you also generated the preimage of the absolute prestate, which is basically the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate-mt64.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `0x03682932cec7ce0a3874b19675a6bbc923054a7b321efc7d3835187b172494b6.bin.gz`.
 
   Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
 
@@ -94,6 +98,10 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
 The new op-program release that contains the Mainnet activation timestamps will be available soon.
 
 ## For node operators
+
+<Callout type="info">
+  The Mainnet node binaries will be available soon. The following versions are for the Sepolia Superchain activation.
+</Callout>
 
 Node operators will need to upgrade to the respective Isthmus releases before the activation dates.
 
