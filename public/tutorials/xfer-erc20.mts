@@ -7,12 +7,8 @@ import {
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { interopAlpha0, interopAlpha1 } from '@eth-optimism/viem/chains'
- 
-import {
-    walletActionsL2,
-    publicActionsL2,
-    createInteropSentL2ToL2Messages,
-} from '@eth-optimism/viem'
+
+import { walletActionsL2, publicActionsL2 } from '@eth-optimism/viem'
 
 const tokenAddress = "0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8"
 const balanceOf = {
@@ -79,7 +75,7 @@ await reportBalances()
 const sendTxnHash = await wallet0.interop.sendSuperchainERC20({
     tokenAddress,
     to: account.address,
-    amount: 1000000000,
+    amount: BigInt(1000000000),
     chainId: wallet1.chain.id
 })
 
@@ -89,14 +85,15 @@ const sendTxnReceipt = await wallet0.waitForTransactionReceipt({
     hash: sendTxnHash
 })
 
-const sentMessage =  
-    (await createInteropSentL2ToL2Messages(wallet0, { receipt: sendTxnReceipt }))
-        .sentMessages[0]
-
-const relayTxnHash = await wallet1.interop.relayMessage({
-    sentMessageId: sentMessage.id,
-    sentMessagePayload: sentMessage.payload,
+const sentMessages = await wallet0.interop.getCrossDomainMessages({
+    logs: sendTxnReceipt.logs
 })
+const sentMessage = sentMessages[0]
+const relayMessageParams = await wallet0.interop.buildExecutingMessage({
+    log: sentMessage.log
+})
+
+const relayTxnHash = await wallet1.interop.relayCrossDomainMessage(relayMessageParams)
 
 const relayTxnReceipt = await wallet1.waitForTransactionReceipt({
     hash: relayTxnHash

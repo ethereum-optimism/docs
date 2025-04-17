@@ -20,7 +20,6 @@ import {
 import {
     walletActionsL2,
     publicActionsL2,
-    createInteropSentL2ToL2Messages,
     contracts as optimismContracts
 } from '@eth-optimism/viem'
  
@@ -46,8 +45,8 @@ const destinationWallet = createWalletClient({
 }).extend(publicActions)
     .extend(publicActionsL2())
     .extend(walletActionsL2())
- 
-const wethOnSource = await getContract({
+
+const ethBridgeOnSource = await getContract({
     address: optimismContracts.superchainETHBridge.address,
     abi: superchainEthBridgeAbi,
     client: sourceWallet
@@ -71,12 +70,12 @@ const reportBalance = async (address: string): Promise<void> => {
 console.log("Before transfer")
 await reportBalance(account.address)
 
-const sourceHash = await wethOnSource.write.sendETH({
+const sourceHash = await ethBridgeOnSource.write.sendETH({
     value: parseEther('0.001'),
     args: [account.address, destinationChain.id]
 })
 const sourceReceipt = await sourceWallet.waitForTransactionReceipt({
-	hash: sourceHash
+    hash: sourceHash
 })
 
 
@@ -84,16 +83,17 @@ console.log("After transfer on source chain")
 await reportBalance(account.address)
 
 
-const sentMessage =  
-    (await createInteropSentL2ToL2Messages(sourceWallet, { receipt: sourceReceipt }))
-        .sentMessages[0]
-const relayMsgTxnHash = await destinationWallet.interop.relayMessage({
-    sentMessageId: sentMessage.id,
-    sentMessagePayload: sentMessage.payload,
+const sentMessages = await sourceWallet.interop.getCrossDomainMessages({
+    logs: sourceReceipt.logs,
 })
- 
+const sentMessage = sentMessages[0]
+const relayMessageParams = await sourceWallet.interop.buildExecutingMessage({
+    log: sentMessage.log,
+})
+
+const relayMsgTxnHash = await destinationWallet.interop.relayCrossDomainMessage(relayMessageParams)
 const receiptRelay = await destinationWallet.waitForTransactionReceipt(
-        {hash: relayMsgTxnHash})
- 
+    {hash: relayMsgTxnHash})
+
 console.log("After relaying message to destination chain")
 await reportBalance(account.address)

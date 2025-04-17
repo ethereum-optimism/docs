@@ -51,25 +51,25 @@ Messages sent through the `L2ToL2CrossDomainMessenger` on the source chain recei
 *   **Specs:** [`L2ToL2CrossDomainMessenger`](https://specs.optimism.io/interop/predeploys.html?utm_source=op-docs&utm_medium=docs#l2tol2crossdomainmessenger)
 *   **Source code:** [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol)
 
-{/* 
-## OptimismSuperchainERC20Factory
+## SuperchainETHBridge
 
-`OptimismSuperchainERC20Factory` creates ERC20 contracts that implement the SuperchainERC20 standard, grants mint-burn rights to the `L2StandardBridge`, and includes a remoteToken variable. These ERC20s are called `OptimismSuperchainERC20` and can be converted back and forth with `OptimismMintableERC20` tokens. The goal of the `OptimismSuperchainERC20` is to extend functionalities of the `OptimismMintableERC20` so that they are interop compatible.
+The `SuperchainETHBridge` is a predeploy contract that facilitates cross-chain ETH bridging within the Superchain interop cluster. It serves as an abstraction layer on top of the `L2toL2CrossDomainMessenger` specifically designed for native ETH transfers between chains. The contract integrates with the `ETHLiquidity` contract to manage native ETH liquidity across chains, ensuring seamless cross-chain transfers of native ETH.
 
-- **Address:** `0x4200000000000000000000000000000000000026`
-- **Specs:** [`OptimismSuperchainERC20Factory`](https://specs.optimism.io/interop/predeploys.html#optimismsuperchainerc20factory)
-- **Source code:** [`OptimismSuperchainERC20Factory`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/OptimismSuperchainERC20Factory.sol)
+*   **Address:** `0x4200000000000000000000000000000000000024`
+*   **Specs:** [`SuperchainETHBridge`](https://specs.optimism.io/interop/superchain-eth-bridge.html)
+*   **Source code:** [`SuperchainETHBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainETHBridge.sol)
 
-## OptimismSuperchainERC20Beacon
 
-To enable upgrades, `OptimismSuperchainERC20` contracts use [the `BeaconProxy` pattern](https://docs.openzeppelin.com/contracts/3.x/api/proxy#beacon).
-This contract is the `Beacon` part, which provides the implementation address for those proxies.
+## ETHLiquidity
 
-- **Address:** `0x4200000000000000000000000000000000000027`
-- **Specs:** [`OptimismSuperchainERC20Beacon`](https://specs.optimism.io/interop/predeploys.html#beaconcontract)
-- **Source code:** [`OptimismSuperchainERC20Beacon`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/OptimismSuperchainERC20Beacon.sol)
+The `ETHLiquidity` contract is a predeploy that manages native ETH liquidity for cross-chain transfers within the Superchain interop set. It works in conjunction with the `SuperchainETHBridge` to facilitate the movement of ETH between chains without requiring modifications to the EVM to generate new ETH.
 
-*/}
+The contract is initialized with a very large balance (type(uint248).max wei) to ensure it can handle all legitimate minting operations. This design allows the `SuperchainETHBridge` to have a guaranteed source of ETH liquidity on each chain, which is essential for the cross-chain ETH transfer mechanism.
+
+*   **Address:** `0x4200000000000000000000000000000000000025`
+*   **Specs:** [`ETHLiquidity`](https://specs.optimism.io/interop/eth-liquidity.html)
+*   **Source code:** [`ETHLiquidity`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/ETHLiquidity.sol)
+
 
 ## SuperchainTokenBridge
 
