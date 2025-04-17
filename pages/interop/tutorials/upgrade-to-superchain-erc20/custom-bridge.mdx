@@ -220,8 +220,8 @@ Some steps depend on whether you want to deploy on [supersim](/interop/tools/sup
       ```solidity file=<rootDir>/public/tutorials/InteropToken.sol hash=5e728534c265028c94d60dcb6550699d filename="src/InteropToken.sol"
       ```
 
-  2.  This `src/InteropToken.sol` is used for contract upgrades.
-      Edit it to allow our custom bridge to mint and burn tokens instead of the predeployed superchain token bridge.
+  2.  This `src/InteropToken.sol` is used for contract upgrades when the ERC20 contracts are at the same address.
+      Here we need to edit it to allow our custom bridge to mint and burn tokens instead of the predeployed superchain token bridge.
 
       *   On lines 20 and 31 replace ~~`PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE`~~ with `bridgeAddress`.
 
@@ -256,18 +256,47 @@ Some steps depend on whether you want to deploy on [supersim](/interop/tools/sup
   ### Deploy the actual bridge
 
   1.  Create a file, `src/CustomBridge.sol`.
+      This file is based on the standard `SuperchainERC20`  [`SuperchainTokenBridge.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol).
 
       ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol hash=df5685626f96af100d608b5b94477888 filename="src/CustomBridge.sol"
+      ```
 
       <details>
 
         <summary>Explanation</summary>
 
-        blockchains
+        These are the main differences between the generic bridge and our implementation.
+
+        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L14-L18 hash=fd42623685f26046337ea6d105f27e4a
+        ```
+
+        The configuration is [`immutable`](https://docs.soliditylang.org/en/latest/contracts.html#immutable).
+        We are deploying the contract behind a proxy, so if we need to change it we can deploy a different contract.
+
+        These parameters assume there are only two chains in the interop cluster.
+        If there are more, change the `There` variables to array.
+
+        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L48-L59 hash=f85b1508d8fe5d75fd27842f41b66240
+        ```
+
+        The constructor writes the configuration parameters. 
+
+        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L66-L69 hash=01ac207764b0d944ec4a005c7c3f01a8
+        ```
+
+        We don't need to specify the token address, or the chain ID on the other side, because they are hardwired in this bridge.
+
+        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L80 hash=d4ccbac2c6ce01bce65bc75242741f6e
+        ```
+
+        Emit the same log entry that would be emitted by the standard bridge.
+
+        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L94-L96 hash=a35005bdb47c73ac667f1b4b33079776
+        ```
+
+        Make sure any relay requests come from the correct contract on the correct chain.
 
       </details>
-
-      ```
 
   2.  Get the chainID values.
 
