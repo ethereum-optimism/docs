@@ -119,7 +119,7 @@ For development purposes, we'll first use autorelay mode to handle message execu
   1.  In the directory where Supersim is installed, start it with autorelay.
 
       ```sh
-      supersim --interop.autorelay
+      ./supersim --interop.autorelay
       ```
 
       Supersim creates three `anvil` blockchains:
@@ -221,12 +221,24 @@ For development purposes, we'll first use autorelay mode to handle message execu
   4.  Install the Optimism Solidity libraries into the project.
 
       ```sh
-      forge install ethereum-optimism/optimism --no-commit
+      cd lib
+      npm install @eth-optimism/contracts-bedrock
+      cd ..
+      echo @eth-optimism/=lib/node_modules/@eth-optimism/ >> remappings.txt
       ```
 
-  5.  Create `src/GreetingSender.sol`.
+  5.  The [`@eth-optimism/contracts-bedrock`](https://www.npmjs.com/package/@eth-optimism/contracts-bedrock) library does not have the Interop Solidity code yet.
+      Run these commands to add it.
 
-      ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L1-L28 hash=9ed77001810caf52bbaa94da8b0dc5c6
+      ```sh
+      mkdir -p lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
+      wget https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol
+      mv IL2ToL2CrossDomainMessenger.sol lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
+      ```
+
+  6.  Create `src/GreetingSender.sol`.
+
+      ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L1-L28 hash=75d197d1e1da112421785c2160f6a55a
       ```
 
   <details>
@@ -284,8 +296,8 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
       //SPDX-License-Identifier: MIT
       pragma solidity ^0.8.0;
 
-      import { Predeploys } from "lib/optimism/packages/contracts-bedrock/src/libraries/Predeploys.sol";
-      import { IL2ToL2CrossDomainMessenger } from "lib/optimism/packages/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";    
+      import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
+      import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";    
 
       contract Greeter {
 
@@ -505,29 +517,29 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
   <details>
     <summary>Explanation</summary>
 
-    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L11 hash=fef2e60f0dbefba4d1e16f4d87800993
+    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L11-L15 hash=84fb4799b2fdd18785f691d602567145
     ```
 
     Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
 
-    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L18-L24 hash=ffa76edb1191121e15eb4286e16ad041
+    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L22-L28 hash=28c42407a1a01774f25ca78535d93c6e
     ```
 
     In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions, both the public ones and the ones that require an account.
 
-    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L55 hash=23aa6f24baeb5757130361f30c1b0e9c
+    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L59 hash=fc1aae397872717a3ed364930cdab9fc
     ```
 
     To relay a message we need the information in the receipt.
     Also, we need to wait until the transaction with the relayed message is actually part of a block.
 
-    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L57-L60 hash=8cc99e67ee36474c81183108531cb295
+    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L61-L63 hash=d45ebbc0d53dfbecbd8d357eb83e1b68
     ```
 
     A single transaction can send multiple messages.
     But here we know we sent just one, so we look for the first one in the list.
 
-    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L61-L68 hash=fa49aa2a099c57f3b86671a4c0414f31
+    ```typescript file=<rootDir>/public/tutorials/app_v2.mts#L64-L70 hash=079ffd3e6fdf4eff3653ee7a74078183
     ```
 
     Here we first send the relay message on chain B, and then wait for the receipt for it.
@@ -593,15 +605,13 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
   To see what messages were relayed by a specific transaction you can use this code:
 
   ```typescript
-  const messages = await walletA.interop.getCrossDomainMessages({
-    logs: receiptRelay.logs,
-  })
+  import { decodeRelayedL2ToL2Messages } from '@eth-optimism/viem'
 
-  console.log(messages)
-  const status = await walletB.interop.getCrossDomainMessageStatus({
-    message: messages[0],
-  })
-  console.log(status)
+  const decodedRelays = decodeRelayedL2ToL2Messages(
+      {receipt: receiptRelay})
+
+  console.log(decodedRelays)
+  console.log(decodedRelays.successfulMessages[0].log)
   ```
 </Steps>
 
