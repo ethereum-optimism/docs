@@ -166,6 +166,7 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
   ### Create a Foundry project
 
   Create a [Foundry](https://book.getfoundry.sh/) project and import the [OpenZeppelin](https://www.openzeppelin.com/solidity-contracts) contracts used for the original ERC20 and proxy deployment.
+
   ```sh
   mkdir custom-bridge
   cd custom-bridge
@@ -178,7 +179,7 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
   ### Deploy proxies
 
   We need two contracts on each chain: an ERC20 and a bridge, and to enable future upgrades, we want to install each of those contracts behind a proxy.
-  You already have one contract—the ERC20 on chain A—but need to create the other three.
+  You already have one contract—the ERC20 on chain A—but need to create the other three.
 
   There's an interesting [chicken-and-egg](https://en.wikipedia.org/wiki/Chicken_or_the_egg) issue here.
   To create a proxy, we need the address of the implementation contract, the one with the actual code.
@@ -255,42 +256,40 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
       ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol hash=fc6cb08b40b7cf5bfb2b0c5793e4795e filename="src/CustomBridge.sol"
       ```
 
-      <details>
+        <details>
+          <summary>Explanation</summary>
 
-        <summary>Explanation</summary>
+          These are the main differences between the generic bridge and our implementation.
 
-        These are the main differences between the generic bridge and our implementation.
+          ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L14-L18 hash=fd42623685f26046337ea6d105f27e4a
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L14-L18 hash=fd42623685f26046337ea6d105f27e4a
-        ```
+          The configuration is [`immutable`](https://docs.soliditylang.org/en/latest/contracts.html#immutable).
+          We are deploying the contract behind a proxy, so if we need to change it we can deploy a different contract.
 
-        The configuration is [`immutable`](https://docs.soliditylang.org/en/latest/contracts.html#immutable).
-        We are deploying the contract behind a proxy, so if we need to change it we can deploy a different contract.
+          These parameters assume there are only two chains in the interop cluster.
+          If there are more, change the `There` variables to array.
 
-        These parameters assume there are only two chains in the interop cluster.
-        If there are more, change the `There` variables to array.
+          ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L48-L65 hash=87edfdbb21fe11f573eff932d6f36d82
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L48-L65 hash=87edfdbb21fe11f573eff932d6f36d82
-        ```
+          The constructor writes the configuration parameters.
 
-        The constructor writes the configuration parameters. 
+          ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L72-L75 hash=01ac207764b0d944ec4a005c7c3f01a8
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L72-L75 hash=01ac207764b0d944ec4a005c7c3f01a8
-        ```
+          We don't need to specify the token address, or the chain ID on the other side, because they are hardwired in this bridge.
 
-        We don't need to specify the token address, or the chain ID on the other side, because they are hardwired in this bridge.
+          ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L86 hash=d4ccbac2c6ce01bce65bc75242741f6e
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L86 hash=d4ccbac2c6ce01bce65bc75242741f6e
-        ```
+          Emit the same log entry that would be emitted by the standard bridge.
 
-        Emit the same log entry that would be emitted by the standard bridge.
+          ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L100-L101 hash=142a487e877cc2cbeba8e07fce451c88
+          ```
 
-        ```solidity file=<rootDir>/public/tutorials/CustomBridge.sol#L100-L101 hash=142a487e877cc2cbeba8e07fce451c88
-        ```
-
-        Make sure any relay requests come from the correct contract on the correct chain.
-
-      </details>
+          Make sure any relay requests come from the correct contract on the correct chain.
+        </details>
 
   2.  Get the chainID values.
 
