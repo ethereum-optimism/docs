@@ -52,6 +52,12 @@ contract CustomBridge {
         uint256 chainIdThere_,
         address bridgeAddressThere_        
     ) {
+        if (
+            tokenAddressHere_ == address(0) ||
+            tokenAddressThere_ == address(0) ||
+            bridgeAddressThere_ == address(0)
+        ) revert ZeroAddress();
+
         tokenAddressHere = tokenAddressHere_;
         tokenAddressThere = tokenAddressThere_;
         chainIdThere = chainIdThere_;
