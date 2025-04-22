@@ -17,11 +17,11 @@ is_imported_content: 'false'
 
 # Managing the proposer address
 
-This guide explains how to update the proposer address for chains using permissioned fault proofs. 
+This guide explains how to update the proposer address for chains using permissioned fault proofs.
 The proposer is responsible for submitting L2 outputs to L1, which is a critical component of the OP Stack.
 You will need access to the [L1ProxyAdmin](/superchain/privileged-roles#l1-proxy-admin) account, before you begin.
 
-The proposer role is defined in the [`PermissionedDisputeGame.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/PermissionedDisputeGame.sol) contract for chains running permissioned fault proofs. 
+The proposer role is defined in the [`PermissionedDisputeGame.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/PermissionedDisputeGame.sol) contract for chains running permissioned fault proofs.
 When you need to change the proposer address, you must update the implementation for `gametype 1` in the `DisputeGameFactory.sol` contract.
 
 ## Steps to update the proposer address
@@ -35,7 +35,7 @@ When you need to change the proposer address, you must update the implementation
 2.  **Prepare the new implementation**
 
     You'll need to deploy a new implementation of the `PermissionedDisputeGame.sol` contract with the updated proposer address. When deploying:
-    
+
     *   The constructor requires multiple parameters including the proposer address
     *   Use the same parameters as your existing implementation, except for the new proposer address
     *   Ensure all inherited contracts are properly initialized
@@ -55,13 +55,14 @@ When you need to change the proposer address, you must update the implementation
 4.  **Verify the update**
 
     After updating the implementation, verify the change was successful by:
-    
+
     a. Checking the implementation address is updated in the `gameImpls` mapping
-    
+
     b. Creating a new dispute game to confirm the proposer address:
-       *   Call `create()` on the DisputeGameFactory with the permissioned cannon game type
-       *   Query the `PROPOSER()` function on the newly created game
-       *   Verify it matches your new address
+
+    *   Call `create()` on the DisputeGameFactory with the permissioned cannon game type
+    *   Query the `PROPOSER()` function on the newly created game
+    *   Verify it matches your new address
 
     For verification methods, see the [DisputeGameFactory documentation](https://specs.optimism.io/fault-proof/stage-one/dispute-game-factory.html) and [game interface specs](https://specs.optimism.io/fault-proof/game-interface.html).
 
