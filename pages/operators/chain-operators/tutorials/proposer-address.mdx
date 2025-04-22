@@ -21,8 +21,6 @@ This guide explains how to update the proposer address for chains using permissi
 The proposer is responsible for submitting L2 outputs to L1, which is a critical component of the OP Stack.
 You will need access to the [L1ProxyAdmin](/superchain/privileged-roles#l1-proxy-admin) account, before you begin.
 
-## Overview
-
 The proposer role is defined in the [`PermissionedDisputeGame.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/PermissionedDisputeGame.sol) contract for chains running permissioned fault proofs. 
 When you need to change the proposer address, you must update the implementation for `gametype 1` in the `DisputeGameFactory.sol` contract.
 
@@ -30,41 +28,42 @@ When you need to change the proposer address, you must update the implementation
 
 1.  **Identify the current configuration**
 
-    First, confirm that your chain is using permissioned fault proofs by checking the `DisputeGameFactory` contract on your L1.
+    First, confirm that your chain is using permissioned fault proofs by checking the `DisputeGameFactory` contract on your L1. You can verify the current implementation by querying the `gameImpls` mapping with the permissioned cannon game type. This will return the current implementation contract for permissioned fault proof games.
+
+    See the [DisputeGameFactory contract](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol) for the `gameImpls` function details.
 
 2.  **Prepare the new implementation**
 
-    You'll need to deploy a new implementation of the `PermissionedDisputeGame.sol` contract with the updated proposer address.
+    You'll need to deploy a new implementation of the `PermissionedDisputeGame.sol` contract with the updated proposer address. When deploying:
+    
+    *   The constructor requires multiple parameters including the proposer address
+    *   Use the same parameters as your existing implementation, except for the new proposer address
+    *   Ensure all inherited contracts are properly initialized
+    *   Test deployment on a testnet first
 
-    ```solidity
-    // The PermissionedDisputeGame contract defines the proposer
-    // https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/PermissionedDisputeGame.sol
-    ```
-
-    TODO: Add specific details on preparing the new implementation contract with the updated proposer address. 
-    Confirm with Zak if a completely new contract deployment is needed or if there's another method.
+    For constructor parameters, refer to the [PermissionedDisputeGame contract](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/PermissionedDisputeGame.sol).
 
 3.  **Update the implementation in the DisputeGameFactory**
 
-    Using the L1ProxyAdmin account, call the `setImplementation()` function in the `DisputeGameFactory.sol` contract:
+    Using the L1ProxyAdmin account, call the `setImplementation()` function to update the permissioned game type:
 
-    ```solidity
-    // DisputeGameFactory.sol
-    function setImplementation(GameType _gameType, address _impl) external;
-    ```
-
-    Parameters:
-
-    *   `_gameType`: Use `1` for fault proof games as defined in `Types.sol`
+    *   `_gameType`: Use `GameType.PERMISSIONED_CANNON` (value: 1) for permissioned fault proof games
     *   `_impl`: The address of your new implementation with the updated proposer
 
-    TODO: Are there additional parameters or considerations needed when calling this function?
+    Only the owner of the DisputeGameFactory contract (typically the ProxyAdmin) can call this function. See the [DisputeGameFactory contract source](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol) for the function signature.
 
 4.  **Verify the update**
 
-    After updating the implementation, verify that the change was successful by:
+    After updating the implementation, verify the change was successful by:
+    
+    a. Checking the implementation address is updated in the `gameImpls` mapping
+    
+    b. Creating a new dispute game to confirm the proposer address:
+       *   Call `create()` on the DisputeGameFactory with the permissioned cannon game type
+       *   Query the `PROPOSER()` function on the newly created game
+       *   Verify it matches your new address
 
-    TODO: Add specific verification steps - how to check that the proposer has been properly updated.
+    For verification methods, see the [DisputeGameFactory documentation](https://specs.optimism.io/fault-proof/stage-one/dispute-game-factory.html) and [game interface specs](https://specs.optimism.io/fault-proof/game-interface.html).
 
 ## Important considerations
 
@@ -72,15 +71,11 @@ When you need to change the proposer address, you must update the implementation
 *   Ensure the new proposer address is valid and properly controlled before making the change.
 *   Consider testing the procedure on a testnet before applying to production environments.
 *   The `L1ProxyAdmin` is a highly privileged role - ensure proper access controls are in place.
+*   All existing dispute games will continue to use the old proposer address, but newly created games will use the updated proposer.
+*   The proposer must have sufficient ETH balance to post bonds when creating new dispute games.
 
 ## Next steps
 
 *   After updating the proposer address, you may need to configure the new proposer node. See the [proposer configuration](/operators/chain-operators/configuration/proposer) for details.
 
-*   [Proposer Configuration](/operators/chain-operators/configuration/proposer)
-
-*   [Dispute Game Factory Contract](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol)
-
-*   [Permissioned Dispute Game Contract](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/dispute/PermissionedDisputeGame.sol)
-
-*   [Protocol Configurability Specifications](https://specs.optimism.io/protocol/configurability.html#proposer-address)
+*   Read the [protocol configurability specifications](https://specs.optimism.io/protocol/configurability.html#proposer-address) for more in-depth details.
