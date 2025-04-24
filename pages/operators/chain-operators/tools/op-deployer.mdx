@@ -133,7 +133,8 @@ l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"# L2 smart c
 
 ### Understanding the intent.toml fields
 
-Here's an explanation of the key fields in the intent file:
+<details>
+        <summary>Here's an explanation of the key fields in the intent file:</summary>
 
 **Global configuration:**
 
@@ -168,7 +169,9 @@ Here's an explanation of the key fields in the intent file:
 *   `proposer`: Address which can create and interact with [permissioned dispute games](https://specs.optimism.io/fault-proof/stage-one/bridge-integration.html#permissioned-faultdisputegame) on L1.
 *   `challenger`: Address Account which can interact with existing permissioned dispute games
 
-## Working with artifacts
+</details>
+
+### Working with artifacts
 
 The `artifacts-locator` parameter specifies where the contract deployment artifacts are located. There are several ways to provide artifacts:
 
@@ -291,7 +294,7 @@ op-deployer verify \
 
 ```
 
-### Common options:
+**Common options:**
 
 *   `-l1-rpc-url`: RPC URL for the L1 chain
 *   `-etherscan-api-key`: API key for the block explorer (e.g., from Etherscan)
@@ -304,7 +307,7 @@ op-deployer verify \
   You don't need to specify a --workdir—op-deployer will automatically look for deployment artifacts from the deploy step, unless overridden.
 </Callout>
 
-### Example:
+**Example:**
 
 ```bash
 op-deployer verify \
@@ -353,7 +356,7 @@ When bootstrapping a new superchain, you typically need to follow this process:
 
 The `bootstrap proxy` command deploys a new `ERC-1967` proxy admin, which is required for upgradeability of the superchain contracts.
 
-### Command usage
+**Command usage**
 
 ```bash
 op-deployer bootstrap proxy \
@@ -365,7 +368,7 @@ op-deployer bootstrap proxy \
 
 ```
 
-### Parameters
+**Parameters**
 
 | Parameter           | Description                         | Required | Example                                                                                  |
 | ------------------- | ----------------------------------- | -------- | ---------------------------------------------------------------------------------------- |
@@ -376,7 +379,7 @@ op-deployer bootstrap proxy \
 | --outfile           | File to write output JSON           | No       | proxy-output.json                                                                        |
 | --cache-dir         | Directory to cache artifacts        | No       | .artifacts-cache                                                                         |
 
-### Example
+**Example:**
 
 ```bash
 op-deployer bootstrap proxy \
@@ -388,7 +391,7 @@ op-deployer bootstrap proxy \
 
 ```
 
-### Output
+**Output**
 
 The command outputs a JSON file containing the deployed proxy contract address:
 
@@ -399,11 +402,11 @@ The command outputs a JSON file containing the deployed proxy contract address:
 
 ```
 
-## Bootstrap superchain
+### Bootstrap superchain
 
 The `bootstrap superchain` command initializes the core `SuperchainConfig` and `ProtocolVersions` contracts. These contracts maintain global configuration parameters (including pause functionality) and protocol version requirements across all chains in the superchain. This step is typically performed once when establishing a new superchain on an L1 network, with the deployed addresses needed for subsequent bootstrap commands.
 
-### Command usage
+**Command usage**
 
 ```bash
 op-deployer bootstrap superchain \
@@ -420,7 +423,7 @@ op-deployer bootstrap superchain \
 
 ```
 
-### Parameters
+**Parameters**
 
 | Parameter                                                                                                 | Description                                                                                                         | Required                | Example                                                                                  |
 | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
@@ -436,7 +439,7 @@ op-deployer bootstrap superchain \
 | --outfile                                                                                                 | File to write output JSON                                                                                           | No (defaults to stdout) | superchain-output.json                                                                   |
 | --cache-dir                                                                                               | Directory to cache artifacts                                                                                        | No                      | .artifacts-cache                                                                         |
 
-### Example
+**Example:**
 
 ```bash
 op-deployer bootstrap superchain \
@@ -453,7 +456,7 @@ op-deployer bootstrap superchain \
 
 ```
 
-### Output
+**Output**
 
 The command outputs a JSON file containing the deployed superchain contract addresses:
 
@@ -465,11 +468,11 @@ The command outputs a JSON file containing the deployed superchain contract addr
 
 ```
 
-## Bootstrap implementations
+### Bootstrap implementations
 
 The `bootstrap implementations` command deploys essential OP Stack infrastructure contracts. Chain operators use this command when spinning up a brand new superchain, not when adding a chain to an existing superchain.
 
-### Command usage
+**Command usage**
 
 ```bash
 op-deployer bootstrap implementations \
@@ -483,7 +486,7 @@ op-deployer bootstrap implementations \
   --upgrade-controller <superchain-proxy-admin-owner used in bootstrap superchain>
 ```
 
-### Parameters
+**Parameters**
 
 | Parameter                             | Description                                      | Required | Default              | Example                                                                                  |
 | ------------------------------------- | ------------------------------------------------ | -------- | -------------------- | ---------------------------------------------------------------------------------------- |
@@ -512,7 +515,7 @@ The `mips-version` parameter determines which version of the Cannon MIPS VM to u
 
 For most new deployments, **MIPS Version 2 (MIPS64)** is recommended unless you have specific compatibility requirements.
 
-### Example
+**Example:**
 
 ```bash
 op-deployer bootstrap implementations \
@@ -524,7 +527,7 @@ op-deployer bootstrap implementations \
 
 ```
 
-### Output
+**Output**
 
 The command outputs a JSON file containing the deployed implementation contract addresses:
 
