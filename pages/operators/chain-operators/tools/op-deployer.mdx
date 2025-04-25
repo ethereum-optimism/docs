@@ -61,7 +61,7 @@ op-deployer --version
 ## Deployment usage
 
 <Callout type="info">
-    Deploying an OP Stack chain involves deploying multiple contracts, which can consume a substantial amount of gas. On testnets like Sepolia, costs may fluctuate significantly depending on network congestion. We recommend ensuring your deployer wallet has a buffer of **at least 1.5 to  3.5 ETH** , depending on gas prices and configuration. Always check current gas estimates before deploying.
+  Deploying an OP Stack chain involves deploying multiple contracts, which can consume a substantial amount of gas. On testnets like Sepolia, costs may fluctuate significantly depending on network congestion. We recommend ensuring your deployer wallet has a buffer of **at least 1.5 to  3.5 ETH** , depending on gas prices and configuration. Always check current gas estimates before deploying.
 </Callout>
 
 The base use case for `op-deployer` is deploying new OP Chains. This process is broken down into three steps:
@@ -71,8 +71,8 @@ The base use case for `op-deployer` is deploying new OP Chains. This process is 
 To get started with `op-deployer`, create an intent file that defines your desired chain configuration. Use the built-in `op-deployer` utility to generate this file:
 
 <Callout type="info">
-    op-deployer uses a declarative intent file to determine how a new chain should be configured. 
-    Then, it runs through a deployment pipeline to actually deploy the chain.
+  op-deployer uses a declarative intent file to determine how a new chain should be configured.
+  Then, it runs through a deployment pipeline to actually deploy the chain.
 </Callout>
 
 ```bash
@@ -92,8 +92,8 @@ This command will create a directory called `.deployer` in your current working 
 Your intent file will need to be modified to your parameters, but it will initially look something like this:
 
 <Callout type="warning">
-    Do not use the default addresses in the intent for a production chain! They are generated from the `test... junk`
-    mnemonic. **Any funds they hold will be stolen on a live chain.**
+  Do not use the default addresses in the intent for a production chain! They are generated from the `test... junk`
+  mnemonic. **Any funds they hold will be stolen on a live chain.**
 </Callout>
 
 ```toml
@@ -134,41 +134,40 @@ l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"# L2 smart c
 ### Understanding the intent.toml fields
 
 <details>
-        <summary>Here's an explanation of the key fields in the intent file:</summary>
+  <summary>Here's an explanation of the key fields in the intent file:</summary>
 
-**Global configuration:**
+  **Global configuration:**
 
-*   `deploymentStrategy`: Used to deploy both to live chains and L1 genesis files. Valid values are `live` and `genesis`.
-*   `configType`: Type of configuration to use ("standard-overrides" is most common)
-*   `l1ChainID`: The chain ID of the L1 network you're deploying to
-*   `fundDevAccounts`: Whether to fund development accounts on L2 (set to false for production)
-*   `l1ContractsLocator`: The version of L1 contracts to deploy
-*   `l2ContractsLocator`: The version of L2 contracts to deploy
+  *   `deploymentStrategy`: Used to deploy both to live chains and L1 genesis files. Valid values are `live` and `genesis`.
+  *   `configType`: Type of configuration to use ("standard-overrides" is most common)
+  *   `l1ChainID`: The chain ID of the L1 network you're deploying to
+  *   `fundDevAccounts`: Whether to fund development accounts on L2 (set to false for production)
+  *   `l1ContractsLocator`: The version of L1 contracts to deploy
+  *   `l2ContractsLocator`: The version of L2 contracts to deploy
 
-**Superchain roles:**
+  **Superchain roles:**
 
-*   `proxyAdminOwner`: Address that can upgrade Superchain-wide contracts
-*   `protocolVersionsOwner`: Address that can update protocol versions
-*   `guardian`: Address authorized to pause L1 withdrawals from contracts, blacklist dispute games, and set the respected game type in the `OptimismPortal`
+  *   `proxyAdminOwner`: Address that can upgrade Superchain-wide contracts
+  *   `protocolVersionsOwner`: Address that can update protocol versions
+  *   `guardian`: Address authorized to pause L1 withdrawals from contracts, blacklist dispute games, and set the respected game type in the `OptimismPortal`
 
-**Chain-specific configuration:**
+  **Chain-specific configuration:**
 
-*   `id`: Unique identifier for your chain
-*   `baseFeeVaultRecipient`: Address that represents the recipient of fees accumulated in the `BaseFeeVault`
-*   `l1FeeVaultRecipient`: Address that represents the recipient of fees accumulated in the `L1FeeVault`
-*   `sequencerFeeVaultRecipient`: Address that receives sequencer fees
-*   `eip1559DenominatorCanyon`, `eip1559Denominator`, `eip1559Elasticity`: Parameters for fee calculation
+  *   `id`: Unique identifier for your chain
+  *   `baseFeeVaultRecipient`: Address that represents the recipient of fees accumulated in the `BaseFeeVault`
+  *   `l1FeeVaultRecipient`: Address that represents the recipient of fees accumulated in the `L1FeeVault`
+  *   `sequencerFeeVaultRecipient`: Address that receives sequencer fees
+  *   `eip1559DenominatorCanyon`, `eip1559Denominator`, `eip1559Elasticity`: Parameters for fee calculation
 
-**Chain roles:**
+  **Chain roles:**
 
-*   `l1ProxyAdminOwner`: Address authorized to update the L1 Proxy Admin
-*   `l2ProxyAdminOwner`: Address authorized to upgrade protocol contracts via calls to the `ProxyAdmin`. This is the aliased L1 ProxyAdmin owner address.
-*   `systemConfigOwner`: Address authorized to change values in the `SystemConfig` contract. All configuration is stored on L1 and picked up by L2 as part of the [derivation](https://specs.optimism.io/protocol/derivation.html) of the L2 chain
-*   `unsafeBlockSigner`: Address which authenticates the unsafe/pre-submitted blocks for a chain at the P2P layer
-*   `batcher`: Address that batches transactions from L2 to L1
-*   `proposer`: Address which can create and interact with [permissioned dispute games](https://specs.optimism.io/fault-proof/stage-one/bridge-integration.html#permissioned-faultdisputegame) on L1.
-*   `challenger`: Address Account which can interact with existing permissioned dispute games
-
+  *   `l1ProxyAdminOwner`: Address authorized to update the L1 Proxy Admin
+  *   `l2ProxyAdminOwner`: Address authorized to upgrade protocol contracts via calls to the `ProxyAdmin`. This is the aliased L1 ProxyAdmin owner address.
+  *   `systemConfigOwner`: Address authorized to change values in the `SystemConfig` contract. All configuration is stored on L1 and picked up by L2 as part of the [derivation](https://specs.optimism.io/protocol/derivation.html) of the L2 chain
+  *   `unsafeBlockSigner`: Address which authenticates the unsafe/pre-submitted blocks for a chain at the P2P layer
+  *   `batcher`: Address that batches transactions from L2 to L1
+  *   `proposer`: Address which can create and interact with [permissioned dispute games](https://specs.optimism.io/fault-proof/stage-one/bridge-integration.html#permissioned-faultdisputegame) on L1.
+  *   `challenger`: Address Account which can interact with existing permissioned dispute games
 </details>
 
 ### Working with artifacts
@@ -299,9 +298,10 @@ op-deployer verify \
 *   `-l1-rpc-url`: RPC URL for the L1 chain
 *   `-etherscan-api-key`: API key for the block explorer (e.g., from Etherscan)
 *   `-artifacts-locator`: Path or plugin to locate contract artifacts
-*   `-input-file`: (Optional) Path to a JSON file containing deployment data
-*   `-contract-name`: (Optional) Name of a specific contract to verify
-
+*   `-input-file`: Path to a JSON file containing deployment data:
+    *   Create an `input.json` file in the same directory.
+    *   Navigate to your `state.json` file and locate the `implementationsDeployment` object.
+    *   opy everything inside the `implementationsDeployment` object (without the object name itself) and paste it into your new `input.json` file.
 
 <Callout type="info">
   You don't need to specify a `--workdir`, op-deployer will automatically look for deployment artifacts from the deploy step, unless overridden.
@@ -361,32 +361,32 @@ The `bootstrap proxy` command deploys a new `ERC-1967` proxy admin, which is req
 ```bash
 op-deployer bootstrap proxy \
   --l1-rpc-url <L1_RPC_ENDPOINT> \
-  --private-key <PRIVATE_KEY> \
-  --artifacts-locator <ARTIFACTS_LOCATOR> \
-  --proxy-owner <PROXY_OWNER_ADDRESS> \
+  --private-key <YOUR_PRIVATE_KEY> \
+  --artifacts-locator <file:///path/to/artifacts> \
+  --proxy-owner <PROXY_ADMIN_OWNER_ADDRESS> \
   --outfile proxy-output.json
 
 ```
 
 **Parameters**
 
-| Parameter           | Description                         | Required | Example                                                                                  |
-| ------------------- | ----------------------------------- | -------- | ---------------------------------------------------------------------------------------- |
-| --l1-rpc-url        | RPC URL for the L1 chain            | Yes      | [https://sepolia.infura.io/v3/YOUR\_API\_KEY](https://sepolia.infura.io/v3/YOUR_API_KEY) |
-| --private-key       | Private key for transaction signing | Yes      | 0xabcd...1234                                                                            |
-| --artifacts-locator | Location of contract artifacts      | Yes      | tag://op-contracts/v3.0.0-rc.2                                                           |
-| --proxy-owner       | Address that will own the proxy     | Yes      | 0x1234...abcd                                                                            |
-| --outfile           | File to write output JSON           | No       | proxy-output.json                                                                        |
-| --cache-dir         | Directory to cache artifacts        | No       | .artifacts-cache                                                                         |
+| Parameter           | Description                         | Required | Example                                                                                        |
+| ------------------- | ----------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| --l1-rpc-url        | RPC URL for the L1 chain            | Yes      | [https://sepolia.infura.io/v3/YOUR\_API\_KEY](https://sepolia.infura.io/v3/YOUR_API_KEY)       |
+| --private-key       | Private key for transaction signing | Yes      | 0xabcd...1234                                                                                  |
+| --artifacts-locator | Location of contract artifacts      | Yes      | Contract artifacts location, can be found in `intent.toml`, e.g tag://op-contracts/v3.0.0-rc.2 |
+| --proxy-owner       | Address that will own the proxy     | Yes      | e.g Your `proxyAdminOwner` from your `intent.toml`                                             |
+| --outfile           | File to write output JSON           | No       | proxy-output.json                                                                              |
+| --cache-dir         | Directory to cache artifacts        | No       | .artifacts-cache                                                                               |
 
 **Example:**
 
 ```bash
 op-deployer bootstrap proxy \
-  --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-  --private-key 0xYOUR_PRIVATE_KEY \
-  --artifacts-locator file:///path/to/artifacts \
-  --proxy-owner 0xYOUR_OWNER_ADDRESS \
+  --l1-rpc-url <L1_RPC_ENDPOINT> \
+  --private-key <YOUR_PRIVATE_KEY> \
+  --artifacts-locator <file:///path/to/artifacts> \
+  --proxy-owner <PROXY_ADMIN_OWNER_ADDRESS> \
   --outfile proxy-output.json
 
 ```
@@ -416,42 +416,38 @@ op-deployer bootstrap superchain \
   --superchain-proxy-admin-owner <ADMIN_OWNER_ADDRESS> \
   --protocol-versions-owner <VERSIONS_OWNER_ADDRESS> \
   --guardian <GUARDIAN_ADDRESS> \
-  --paused <true|false> \
-  --required-protocol-version <VERSION> \
-  --recommended-protocol-version <VERSION> \
+  --paused <false> \
   --outfile superchain-output.json
 
 ```
 
 **Parameters**
 
-| Parameter                                                                                                 | Description                                                                                                         | Required                | Example                                                                                  |
-| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
-| --l1-rpc-url                                                                                              | RPC URL for the L1 chain                                                                                            | Yes                     | [https://sepolia.infura.io/v3/YOUR\_API\_KEY](https://sepolia.infura.io/v3/YOUR_API_KEY) |
-| --private-key                                                                                             | Private key for signing transaction                                                                                 | Yes                     | 0xabcd...1234                                                                            |
-| --artifacts-locator                                                                                       | Contract artifacts location                                                                                         | Yes                     | tag://op-contracts/v3.0.0-rc.2                                                           |
-| --superchain-proxy-admin-owner                                                                            | Address that owns the superchain proxy admin                                                                        | Yes                     | 0x1234...abcd                                                                            |
-| --protocol-versions-owner                                                                                 | Address that can update protocol versions                                                                           | Yes                     | 0x2345...bcde                                                                            |
-| [--guardian](https://www.notion.so/Updating-the-op-deployer-docs-1d0f153ee16280b69888f290426c5ce4?pvs=21) | Address authorized to pause L1 withdrawals from contracts, blacklist dispute games, and set the respected game type | Yes                     | 0x3456...cdef                                                                            |
-| --paused                                                                                                  | Whether the superchain starts paused                                                                                | No (defaults to false)  | false                                                                                    |
-| --required-protocol-version                                                                               | Minimum required protocol version                                                                                   | Yes                     | 1.0.0                                                                                    |
-| --recommended-protocol-version                                                                            | Recommended protocol version                                                                                        | Yes                     | 1.0.0                                                                                    |
-| --outfile                                                                                                 | File to write output JSON                                                                                           | No (defaults to stdout) | superchain-output.json                                                                   |
-| --cache-dir                                                                                               | Directory to cache artifacts                                                                                        | No                      | .artifacts-cache                                                                         |
+| Parameter                      | Description                                                                                                                                       | Required                | Example                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
+| --l1-rpc-url                   | RPC URL for the L1 chain                                                                                                                          | Yes                     | [https://sepolia.infura.io/v3/YOUR\_API\_KEY](https://sepolia.infura.io/v3/YOUR_API_KEY) |
+| --private-key                  | Private key for signing transaction                                                                                                               | Yes                     | 0xabcd...1234                                                                            |
+| --artifacts-locator            | Contract artifacts location, can be found in `intent.toml`                                                                                        | Yes                     | tag://op-contracts/v3.0.0-rc.2                                                           |
+| --superchain-proxy-admin-owner | Address that owns the superchain proxy admin, can be found in `state.json`                                                                        | Yes                     | 0x1234...abcd                                                                            |
+| --protocol-versions-owner      | Address that can update protocol versions can be found in `state.json`                                                                            | Yes                     | 0x2345...bcde                                                                            |
+| --guardian                     | Address authorized to pause L1 withdrawals from contracts, blacklist dispute games, and set the respected game type, can be found in `state.json` | Yes                     | 0x3456...cdef                                                                            |
+| --paused                       | Whether the superchain starts paused                                                                                                              | No (defaults to false)  | false                                                                                    |
+| --required-protocol-version    | Minimum required protocol version address                                                                                                         | No                      | 1.0.0                                                                                    |
+| --recommended-protocol-version | Recommended protocol version                                                                                                                      | No                      | 1.0.0                                                                                    |
+| --outfile                      | File to write output JSON                                                                                                                         | No (defaults to stdout) | superchain-output.json                                                                   |
+| --cache-dir                    | Directory to cache artifacts                                                                                                                      | No                      | .artifacts-cache                                                                         |
 
 **Example:**
 
 ```bash
 op-deployer bootstrap superchain \
-  --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-  --private-key 0xYOUR_PRIVATE_KEY \
-  --artifacts-locator file:///path/to/artifacts \
-  --superchain-proxy-admin-owner 0xADMIN_OWNER_ADDRESS \
-  --protocol-versions-owner 0xVERSIONS_OWNER_ADDRESS \
-  --guardian 0xGUARDIAN_ADDRESS \
+  --l1-rpc-url <L1_RPC_ENDPOINT> \
+  --private-key <YOUR_PRIVATE_KEY> \
+  --artifacts-locator <file:///path/to/artifacts> \
+  --superchain-proxy-admin-owner <ADMIN_OWNER_ADDRESS> \
+  --protocol-versions-owner <VERSIONS_OWNER_ADDRESS> \
+  --guardian <GUARDIAN_ADDRESS> \
   --paused false \
-  --required-protocol-version 1.0.0 \
-  --recommended-protocol-version 1.0.0 \
   --outfile superchain-output.json
 
 ```
@@ -519,11 +515,14 @@ For most new deployments, **MIPS Version 2 (MIPS64)** is recommended unless you 
 
 ```bash
 op-deployer bootstrap implementations \
-  --l1-rpc-url https://sepolia.infura.io/v3/YOUR_API_KEY \
-  --private-key 0xYOUR_PRIVATE_KEY \
   --artifacts-locator file:///path/to/artifacts \
-  --l1-contracts-release v1.8.0-rc.4 \
+  --l1-rpc-url L1_RPC_ENDPOINT \
+  --outfile ./.deployer/bootstrap_implementations.json \
   --mips-version 1 \
+  --private-key YOUR_PRIVATE_KEY \
+  --protocol-versions-proxy <address output from bootstrap superchain> \
+  --superchain-config-proxy <address output from bootstrap superchain> \
+  --upgrade-controller <superchain-proxy-admin-owner used in bootstrap superchain>
 
 ```
 
