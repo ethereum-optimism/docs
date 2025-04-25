@@ -36,39 +36,36 @@ This tutorial demonstrates how to implement cross-chain communication within the
 message passing system that enables different chains to interact with each other using the `L2ToL2CrossDomainMessenger` contract.
 
 <details>
+  <summary>About this tutorial</summary>
 
-<summary>About this tutorial</summary>
+  **Prerequisite technical knowledge**
 
-**Prerequisite technical knowledge**
+  *   Intermediate Solidity programming
+  *   Basic TypeScript knowledge
+  *   Understanding of smart contract development
+  *   Familiarity with blockchain concepts
 
-*   Intermediate Solidity programming
-*   Basic TypeScript knowledge
-*   Understanding of smart contract development
-*   Familiarity with blockchain concepts
+  **What you'll learn**
 
+  *   How to deploy contracts across different chains
+  *   How to implement cross-chain message passing
+  *   How to handle sender verification across chains
+  *   How to relay messages manually between chains
 
-**What you'll learn**
+  **Development environment**
 
-*   How to deploy contracts across different chains
-*   How to implement cross-chain message passing
-*   How to handle sender verification across chains
-*   How to relay messages manually between chains
+  *   Unix-like operating system (Linux, macOS, or WSL for Windows)
+  *   Node.js version 16 or higher
+  *   Git for version control
 
-**Development environment**
+  **Required tools**
 
-*   Unix-like operating system (Linux, macOS, or WSL for Windows)
-*   Node.js version 16 or higher
-*   Git for version control
+  The tutorial uses these primary tools:
 
-**Required tools**
-
-The tutorial uses these primary tools:
-
-*   Foundry: For smart contract development
-*   Supersim: For local blockchain simulation (optional)
-*   TypeScript: For offchain code (for relaying messages manually)
-*   Viem: For interactions with the chain from the offchain app
-
+  *   Foundry: For smart contract development
+  *   Supersim: For local blockchain simulation (optional)
+  *   TypeScript: For offchain code (for relaying messages manually)
+  *   Viem: For interactions with the chain from the offchain app
 </details>
 
 ### What You'll Build
@@ -80,7 +77,7 @@ The tutorial uses these primary tools:
 <Callout>
   This tutorial provides step-by-step instructions for implementing cross-chain messaging.
   For a conceptual overview,
-  see the [message passing explainer](/stack/interop/message-passing).
+  see the [message passing explainer](/interop/message-passing).
 </Callout>
 
 In this tutorial, you will learn how to use the [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract to pass messages between interoperable blockchains.
@@ -119,9 +116,8 @@ The implementation consists of three main components:
 
       If you are using [the devnets](/interop/tools/devnet), just skip this step.
 
-      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs items={['Supersim', 'Devnets']}>
           <Tabs.Tab>
-
             Supersim creates three `anvil` blockchains:
 
             | Role     | ChainID | RPC URL                                        |
@@ -129,48 +125,46 @@ The implementation consists of three main components:
             | L1       |     900 | [http://127.0.0.1:8545](http://127.0.0.1:8545) |
             | OPChainA |     901 | [http://127.0.0.1:9545](http://127.0.0.1:9545) |
             | OPChainB |     902 | [http://127.0.0.1:9546](http://127.0.0.1:9546) |
-
           </Tabs.Tab>
 
           <Tabs.Tab>
-
             These are the three networks involved in the devnet:
 
-            | Role          | ChainID   | RPC URL                                        |
-            | ------------- | -------:  | ---------------------------------------------- |
-            | L1 (Sepolia)  | 11155111  | [https://eth-sepolia.public.blastapi.io](https://eth-sepolia.public.blastapi.io) |
-            | ChainA        | 420120000 | [https://interop-alpha-0.optimism.io](https://interop-alpha-0.optimism.io)            
-            | ChainB        | 420120001 | [https://interop-alpha-1.optimism.io](https://interop-alpha-1.optimism.io)
-
+            | Role         |   ChainID | RPC URL                                                                          |
+            | ------------ | --------: | -------------------------------------------------------------------------------- |
+            | L1 (Sepolia) |  11155111 | [https://eth-sepolia.public.blastapi.io](https://eth-sepolia.public.blastapi.io) |
+            | ChainA       | 420120000 | [https://interop-alpha-0.optimism.io](https://interop-alpha-0.optimism.io)       |
+            | ChainB       | 420120001 | [https://interop-alpha-1.optimism.io](https://interop-alpha-1.optimism.io)       |
           </Tabs.Tab>
-      </Tabs>
+        </Tabs>
 
   2.  In a separate shell, store the configuration in environment variables.
 
-      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs items={['Supersim', 'Devnets']}>
           <Tabs.Tab>
-          Set these parameters for Supersim.
+            Set these parameters for Supersim.
 
-          ```sh
-          PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-          USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-          URL_CHAIN_A=http://127.0.0.1:9545
-          URL_CHAIN_B=http://127.0.0.1:9546
-          INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
-          ```
+            ```sh
+            PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+            USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+            URL_CHAIN_A=http://127.0.0.1:9545
+            URL_CHAIN_B=http://127.0.0.1:9546
+            INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
+            ```
           </Tabs.Tab>
 
           <Tabs.Tab>
-          For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
+            For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
 
-          ```sh
-          USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
-          URL_CHAIN_A=https://interop-alpha-0.optimism.io
-          URL_CHAIN_B=https://interop-alpha-1.optimism.io
-          INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
-          ```
+            ```sh
+            USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
+            URL_CHAIN_A=https://interop-alpha-0.optimism.io
+            URL_CHAIN_B=https://interop-alpha-1.optimism.io
+            INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
+            ```
           </Tabs.Tab>
-      </Tabs>
+        </Tabs>
+
   <details>
     <summary>Sanity check</summary>
 
@@ -204,36 +198,36 @@ The implementation consists of three main components:
       GREETER_B_ADDRESS=`forge create --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
       ```
 
-      <details>
-        <summary>Explanation</summary>
+        <details>
+          <summary>Explanation</summary>
 
-        The command that deploys the contract is:
+          The command that deploys the contract is:
 
-        ```sh
-        forge create --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY Greeter --broadcast
-        ```
+          ```sh
+          forge create --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY Greeter --broadcast
+          ```
 
-        The command output gives us the deployer address, the address of the new contract, and the transaction hash:
+          The command output gives us the deployer address, the address of the new contract, and the transaction hash:
 
-        ```
-        Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-        Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
-        Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
-        ```
+          ```
+          Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+          Deployed to: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
+          Transaction hash: 0xf155d360ec70ee10fe0e02d99c16fa5d6dc2a0e79b005fec6cbf7925ff547dbf
+          ```
 
-        The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
+          The [`awk`](https://www.tutorialspoint.com/awk/index.htm) command looks for the line that has `Deployed to:` and writes the third word in that line, which is the address.
 
-        ```sh
-        awk '/Deployed to:/ {print $3}'
-        ```
+          ```sh
+          awk '/Deployed to:/ {print $3}'
+          ```
 
-        Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (\`\`\`), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
-        So we get.
+          Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (\`\`\`), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
+          So we get.
 
-        ```sh
-        GREETER_B_ADDRESS=<the address>
-        ```
-      </details>
+          ```sh
+          GREETER_B_ADDRESS=<the address>
+          ```
+        </details>
 
   <details>
     <summary>Sanity check</summary>
@@ -303,7 +297,6 @@ The implementation consists of three main components:
   ```
 
   The `sleep` call is because it can take up to two seconds until the transaction is included in chain A, and then up to two seconds until the relay transaction is included in chain B.
-
 </Steps>
 
 ## Sender information
@@ -366,7 +359,7 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
       }
       ```
 
-      <details>
+        <details>
           <summary>Explanation</summary>
 
           ```solidity
@@ -378,7 +371,7 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
           ```
 
           If we see that we got a message from `L2ToL2CrossDomainMessenger`, we call [`L2ToL2CrossDomainMessenger.crossDomainMessageContext`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L118-L126).
-      </details>
+        </details>
 
   2.  Redeploy the contracts.
       Because the address of `Greeter` is immutable in `GreetingSender`, we need to redeploy both contracts.
