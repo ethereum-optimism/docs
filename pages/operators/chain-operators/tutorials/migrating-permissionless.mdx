@@ -21,7 +21,7 @@ import { Callout } from 'nextra/components'
 
 # Migrating to permissionless fault proofs on OP Stack
 
-This guide provides a high-level overview for chain operators looking to transition their OP Stack from permissioned to permissionless fault proofs. 
+This guide provides a high-level overview for chain operators looking to transition their OP Stack from permissioned to permissionless fault proofs.
 It's designed to be accessible for technical decision makers while providing sufficient detail for implementation teams.
 
 ## Overview
@@ -65,6 +65,7 @@ We recommend using the official Docker images for reliability and ease of deploy
 # Pull a specific stable release version
 docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:<latest_version>
 ```
+
 Then run the image, for example:
 
 ```bash
@@ -81,7 +82,8 @@ docker run -d --name op-challenger \
 
 # Replace all placeholder values with your actual configuration
 
-  ```
+```
+
 Replace `<YOUR_PRESTATES_URL>` with your actual prestates URL.
 
 If your deployment requires building from source, you can alternatively use:
@@ -94,7 +96,7 @@ make op-challenger
 
 ### Update network configuration
 
-Configure `op-challenger` to load your chain configuration. 
+Configure `op-challenger` to load your chain configuration.
 Even if your chain is not included in the [superchain-registry](/superchain/superchain-registry), you can specify a custom configuration:
 
 ```bash
@@ -140,7 +142,7 @@ You'll need to deploy two new dispute game contracts with the new absolute prest
 <Callout type="info">
   The initial prestate used for permissioned games doesn't include the necessary chain configuration for the Fault Proof System. The assumption is that the chain operator, the single permissioned actor, will not challenge their own games. So the absolute prestate on the initial `PermissionedDisputeGame` will never be used.
   When deploying a new chain, you must first deploy the L1 contracts and then generate the chain genesis file and rollup configuration files.
-  These are inputs to the creation of the absolute prestate and this circular dependency is the reason chains cannot be deployed directly to the permissionless Fault Proof System. 
+  These are inputs to the creation of the absolute prestate and this circular dependency is the reason chains cannot be deployed directly to the permissionless Fault Proof System.
 </Callout>
 
 For chains not in the Superchain Registry, you need to build custom prestates with your chain's configuration:
@@ -196,11 +198,11 @@ This function orchestrates all the necessary steps to register the new dispute g
 
 This method will:
 
-1. Deploy the `FaultDisputeGame` contract
-2. Setup the `DelayedWethProxy` for the new game
-3. Reinitialize the `AnchorStateRegistry` to add the new game type.
+1.  Deploy the `FaultDisputeGame` contract
+2.  Setup the `DelayedWethProxy` for the new game
+3.  Reinitialize the `AnchorStateRegistry` to add the new game type.
 
-See a high‐level implementation from this [docs](Todo-add-the-paths).
+See a high‐level implementation from this [todo:add the docs later](/superchain/privileged-roles).
 
 ## 3. Testing off-chain agents
 
@@ -210,23 +212,23 @@ After you've set the permissionless `FaultDisputeContract` implementations on th
 
 Create a valid proposal using the permissionless game type `0`:
 
-1. Ensure the proposal is from a block at or before the `safe` head:
-    
+1.  Ensure the proposal is from a block at or before the `safe` head:
+
     ```bash
     cast block --rpc-url <OP_GETH_ENDPOINT> safe
-    
+
     ```
-    
-2. Get a valid output root:
-    
+
+2.  Get a valid output root:
+
     ```bash
     cast rpc --rpc-url <OP_NODE_ENDPOINT> optimism_outputAtBlock \
       $(cast 2h <BLOCK_NUMBER>) | jq -r .outputRoot
-    
+
     ```
-    
-3. Create a test game:
-    
+
+3.  Create a test game:
+
     ```bash
     ./op-challenger/bin/op-challenger create-game \
       --l1-eth-rpc=<L1_RPC_ENDPOINT> \
@@ -234,10 +236,10 @@ Create a valid proposal using the permissionless game type `0`:
       --l2-block-num <BLOCK_NUMBER> \
       --output-root <OUTPUT_ROOT> \
       <SIGNER_OPTIONS>
-    
+
     ```
-    
-4. Verify:
+
+4.  Verify:
     *   `op-challenger` logs a message showing the game is in progress
     *   `op-challenger` doesn't post a counter claim (as this is a valid proposal)
     *   `dispute-mon` includes the new game with `status="agree_defender_ahead"`
@@ -280,75 +282,75 @@ If your privileged role (such as the Guardian) is controlled by a multisig or DA
 
 <details>
   <summary>Create an `input.json` file with the transaction to update the `respectedGameType`: </summary>
-    
-    ```json
-    {
-      "chainId": "<YOUR_L1_CHAIN_ID>",
-      "metadata": {
-        "name": "Deputy Guardian - Enable Permissionless Dispute Game",
-        "description": "This task updates the `respectedGameType` in the `OptimismPortal` to `CANNON`, enabling users to permissionlessly propose outputs as well as for anyone to participate in the dispute of these proposals. This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` that was created after this update occurs."
-      },
-      "transactions": [
-        {
-          "metadata": {
-            "name": "Update `respectedGameType` in the `OptimismPortal`",
-            "description": "Updates the `respectedGameType` to `CANNON` in the `OptimismPortal`, enabling permissionless proposals and challenging."
-          },
-          "to": "<SUPERCHAIN_CONFIG_MANAGER_ADDRESS>",
-          "value": "0x0",
-          "data": "0xa1155ed9000000000000000000000000<OPTIMISM_PORTAL_ADDRESS>0000000000000000000000000000000000000000000000000000000000000000",
-          "contractMethod": {
-            "type": "function",
-            "name": "setRespectedGameType",
-            "inputs": [
-              {
-                "name": "_portal",
-                "type": "address"
-              },
-              {
-                "name": "_gameType",
-                "type": "uint32"
-              }
-            ],
-            "outputs": [],
-            "stateMutability": "nonpayable"
-          },
-          "contractInputsValues": {
-            "_gameType": "0",
-            "_portal": "<OPTIMISM_PORTAL_ADDRESS>"
-          }
-        }
-      ]
-    }
-    
-    ```
-  </details>
-    
-- **Submit this JSON payload** through your interface (e.g., Safe transaction builder).
-- **Simulate** this transaction using Tenderly before execution to ensure the expected state changes:
-    - The `respectedGameType` in the `OptimismPortal` should change from `1` (PERMISSIONED) to `0` (CANNON).
 
----
+  ```json
+  {
+    "chainId": "<YOUR_L1_CHAIN_ID>",
+    "metadata": {
+      "name": "Deputy Guardian - Enable Permissionless Dispute Game",
+      "description": "This task updates the `respectedGameType` in the `OptimismPortal` to `CANNON`, enabling users to permissionlessly propose outputs as well as for anyone to participate in the dispute of these proposals. This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` that was created after this update occurs."
+    },
+    "transactions": [
+      {
+        "metadata": {
+          "name": "Update `respectedGameType` in the `OptimismPortal`",
+          "description": "Updates the `respectedGameType` to `CANNON` in the `OptimismPortal`, enabling permissionless proposals and challenging."
+        },
+        "to": "<SUPERCHAIN_CONFIG_MANAGER_ADDRESS>",
+        "value": "0x0",
+        "data": "0xa1155ed9000000000000000000000000<OPTIMISM_PORTAL_ADDRESS>0000000000000000000000000000000000000000000000000000000000000000",
+        "contractMethod": {
+          "type": "function",
+          "name": "setRespectedGameType",
+          "inputs": [
+            {
+              "name": "_portal",
+              "type": "address"
+            },
+            {
+              "name": "_gameType",
+              "type": "uint32"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        "contractInputsValues": {
+          "_gameType": "0",
+          "_portal": "<OPTIMISM_PORTAL_ADDRESS>"
+        }
+      }
+    ]
+  }
+
+  ```
+</details>
+
+*   **Submit this JSON payload** through your interface (e.g., Safe transaction builder).
+*   **Simulate** this transaction using Tenderly before execution to ensure the expected state changes:
+    *   The `respectedGameType` in the `OptimismPortal` should change from `1` (PERMISSIONED) to `0` (CANNON).
+
+***
 
 ### Option 2: Direct execution via `cast` (Forge CLI)
 
 Alternatively, if you're executing directly from a single-privileged wallet or want quicker execution, use the following `cast` command template:
 
-1. First, encode the transaction calldata using `cast calldata`:
+1.  First, encode the transaction calldata using `cast calldata`:
 
 ```bash
 CALLDATA=$(cast calldata "setRespectedGameType(address,uint32)" <OPTIMISM_PORTAL_ADDRESS> 0)
 
 ```
 
-2. Send the transaction:
+2.  Send the transaction:
 
 ```bash
 # Execute the transaction
 cast send --rpc-url <YOUR_RPC_URL> --private-key <YOUR_PRIVATE_KEY> $OPCM_ADDRESS $CALLDATA
 ```
 
-3. After execution, verify the storage slot change using:
+3.  After execution, verify the storage slot change using:
 
 ```bash
 # Check storage slot 0x3b in OptimismPortal
@@ -376,7 +378,6 @@ OP_PROPOSER_GAME_TYPE=0
 <Callout type="info">
   This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` created after this update occurs.
 </Callout>
-
 
 ## Next steps
 
