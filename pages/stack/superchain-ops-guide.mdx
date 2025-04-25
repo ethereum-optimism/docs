@@ -20,7 +20,6 @@ is_imported_content: 'false'
 
 import { Callout } from 'nextra/components'
 
-
 # Chain upgrade guide: Using superchain-ops
 
 This guide outlines the process for upgrading Optimism chains using the `superchain-ops` repository. It's intended primarily for chains that are part of the Superchain, those with the Foundation or Security Council as signers, and/or chains requiring a highly secure and manual process.
@@ -31,11 +30,11 @@ This guide outlines the process for upgrading Optimism chains using the `superch
 
 `superchain-ops` is primarily intended for:
 
-1. **Chains in the Superchain**: For standard chains officially part of the Superchain, upgrades are typically handled through `superchain-ops`.
+1.  **Chains in the Superchain**: For standard chains officially part of the Superchain, upgrades are typically handled through `superchain-ops`.
 
-2. **Chains with Foundation or Security Council as signers**: If your chain has the Foundation multi-sig or Security Council as signers, your upgrade tasks should go through `superchain-ops`.
+2.  **Chains with Foundation or Security Council as signers**: If your chain has the Foundation multi-sig or Security Council as signers, your upgrade tasks should go through `superchain-ops`.
 
-3. **Chains requiring a highly secure and manual process**: For chains that prioritize security over automation, `superchain-ops` provides an intentionally manual workflow with thorough verification steps.
+3.  **Chains requiring a highly secure and manual process**: For chains that prioritize security over automation, `superchain-ops` provides an intentionally manual workflow with thorough verification steps.
 
 For chains that don't fall into these categories, you'll need to generate appropriate call data for upgrades through other means or develop your own upgrade process for non-OPCM upgrades.
 
@@ -43,9 +42,9 @@ For chains that don't fall into these categories, you'll need to generate approp
 
 `superchain-ops` uses two key concepts:
 
-- **Templates**: Define what the upgrade is and contain the code for specific upgrade paths (e.g., 1.8 to 2.0). Templates are version-specific and live in the (`/src/improvements/template`)[https://github.com/ethereum-optimism/superchain-ops/tree/main/src/improvements/template] directory.
+*   **Templates**: Define what the upgrade is and contain the code for specific upgrade paths (e.g., 1.8 to 2.0). Templates are version-specific and live in the [/src/improvements/template](https://github.com/ethereum-optimism/superchain-ops/tree/main/src/improvements/template) directory.
 
-- **Tasks**: Chain-specific implementations of templates. Multiple tasks can use the same template for different chains. Tasks are organized by network (mainnet or testnet) in the (`/src/improvements/tasks`)[https://github.com/ethereum-optimism/superchain-ops/tree/main/src/improvements/tasks] directory.
+*   **Tasks**: Chain-specific implementations of templates. Multiple tasks can use the same template for different chains. Tasks are organized by network (mainnet or testnet) in the [/src/improvements/tasks](https://github.com/ethereum-optimism/superchain-ops/tree/main/src/improvements/tasks) directory.
 
 ## General upgrade process
 
@@ -69,21 +68,21 @@ Follow the prompts to select the appropriate template (e.g., `opcm-upgrade-v200`
 
 This will create a new task directory containing a `config.toml` and `README` file. The config file will look like this:
 
-```
+```bash
 l2chains = [] # e.g. [{name = "OP Mainnet", chainId = 10}]
 templateName = "OPCMUpgradeV200"
 
 ```
 
-### Step 4: Configure the task
+### Step 3: Configure the task
 
-Look through other tasks in the directory to find the information necessary for your upgrade. For example, when upgrading from 1.8 to 2.0, you can look at the (`src/improvements/tasks/eth/002-opcm-upgrade-v200/config.toml`)[https://github.com/ethereum-optimism/superchain-ops/blob/main/src/improvements/tasks/eth/002-opcm-upgrade-v200/config.toml] file to see that your config file should look like the following:
+Look through other tasks in the directory to find the information necessary for your upgrade. For example, when upgrading from 1.8 to 2.0, you can look at the [src/improvements/tasks/eth/002-opcm-upgrade-v200/config.toml](https://github.com/ethereum-optimism/superchain-ops/blob/main/src/improvements/tasks/eth/002-opcm-upgrade-v200/config.toml) file to see that your config file should look like the following:
 
 <Callout>
-Ensure you replace all addresses and other values in the example below
+  Ensure you replace all addresses and other values in the example below
 </Callout>
 
-```
+```bash
 l2chains = [
     {name = "Unichain", chainId = 130}
 ]
@@ -108,7 +107,7 @@ ChildSafe3 = "0xc2819DC788505Aac350142A7A707BF9D03E3Bd03"
 
 Before executing the upgrade, simulate it to ensure everything is configured correctly:
 
-```
+```bash
 # Nested 
 SIMULATE_WITHOUT_LEDGER=1 just --dotenv-path $(pwd)/.env --justfile ../../../nested.just simulate <foundation|council|chain-governor|child-safe-1|child-safe-2|child-safe-3>
 # Single 
@@ -120,4 +119,3 @@ This will run through the upgrade process without actually executing the transac
 ### Step 6: Execute or submit for review
 
 For chains within the Superchain, submit a pull request to have your task reviewed. If your chain is not within the Superchain, execute the transaction yourself.
-
