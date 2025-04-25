@@ -13,7 +13,7 @@ import { supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
 import greeterData from './Greeter.json'
 import greetingSenderData from './GreetingSender.json'
 
-const account = privateKeyToAccount(process.env.PRIV_KEY as `0x${string}`)
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
 
 const walletA = createWalletClient({
   chain: supersimL2A,
@@ -28,13 +28,13 @@ const walletB = createWalletClient({
 }).extend(publicActions)
 
 const greeter = getContract({
-  address: process.env.GREETER_B_ADDR as Address,
+  address: process.env.GREETER_B_ADDRESS as Address,
   abi: greeterData.abi,
   client: walletB
 })
 
 const greetingSender = getContract({
-  address: process.env.GREETER_A_ADDR as Address,
+  address: process.env.GREETER_A_ADDRESS as Address,
   abi: greetingSenderData.abi,
   client: walletA
 })
