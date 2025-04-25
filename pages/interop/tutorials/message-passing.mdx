@@ -35,66 +35,69 @@ import { AutorelayCallout } from '@/components/AutorelayCallout'
 This tutorial demonstrates how to implement cross-chain communication within the Superchain ecosystem. You'll build a complete
 message passing system that enables different chains to interact with each other using the `L2ToL2CrossDomainMessenger` contract.
 
-### What You'll Build
+<details>
 
-*   A Greeter contract that stores and updates messages
-*   A GreetingSender contract that sends cross-chain messages
-*   A TypeScript application to relay messages between chains
+<summary>About this tutorial</summary>
 
-### What you'll learn
-
-*   How to deploy contracts across different chains
-*   How to implement cross-chain message passing
-*   How to handle sender verification across chains
-*   How to relay messages manually between chains
-
-<Callout>
-  This tutorial provides step-by-step instructions for implementing cross-chain messaging.
-  For a conceptual overview,
-  see the [message passing explainer](/interop/message-passing).
-</Callout>
-
-In this tutorial, you will learn how to use the [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract to pass messages between interoperable blockchains.
-
-## Prerequisites
-
-Before starting this tutorial, ensure your development environment meets the following requirements:
-
-### Technical knowledge
+**Prerequisite technical knowledge**
 
 *   Intermediate Solidity programming
 *   Basic TypeScript knowledge
 *   Understanding of smart contract development
 *   Familiarity with blockchain concepts
 
-### Development environment
+
+**What you'll learn**
+
+*   How to deploy contracts across different chains
+*   How to implement cross-chain message passing
+*   How to handle sender verification across chains
+*   How to relay messages manually between chains
+
+**Development environment**
 
 *   Unix-like operating system (Linux, macOS, or WSL for Windows)
 *   Node.js version 16 or higher
 *   Git for version control
 
-### Required tools
+**Required tools**
 
 The tutorial uses these primary tools:
 
 *   Foundry: For smart contract development
-*   Supersim: For local blockchain simulation
-*   TypeScript: For implementation
-*   Viem: For blockchain interaction
+*   Supersim: For local blockchain simulation (optional)
+*   TypeScript: For offchain code (for relaying messages manually)
+*   Viem: For interactions with the chain from the offchain app
+
+</details>
+
+### What You'll Build
+
+*   A `Greeter` contract that stores and updates a greeting
+*   A `GreetingSender` contract that sends cross-chain messages to update the greeting
+*   A TypeScript application to relay messages between chains
+
+<Callout>
+  This tutorial provides step-by-step instructions for implementing cross-chain messaging.
+  For a conceptual overview,
+  see the [message passing explainer](/stack/interop/message-passing).
+</Callout>
+
+In this tutorial, you will learn how to use the [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol) contract to pass messages between interoperable blockchains.
 
 ## Setting up your development environment
 
 <Steps>
   ### Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation) to install:
 
-  *   Foundry for smart contract development
-  *   Supersim for local blockchain simulation
+  *   Foundry for smart contract development (required in all cases)
+  *   Supersim for local blockchain simulation (optional)
 
   ### Verify your installation:
 
   ```sh
   forge --version
-  supersim --version
+  ./supersim --version
   ```
 </Steps>
 
@@ -104,30 +107,43 @@ The implementation consists of three main components:
 
 1.  **Greeter Contract**: Deployed on `Chain B`, receives and stores messages.
 2.  **GreetingSender Contract**: Deployed on `Chain A`, initiates cross-chain messages.
-3.  **Message relay system**: Ensures message delivery between chains.
-
-For development purposes, we'll first use autorelay mode to handle message execution automatically. Later sections cover [manual message relaying](#javascript-message-relaying) for production environments.
 
 <Steps>
   ### Setting up test networks
 
-  <Callout type="warning" emoji="⚠️">
-    If you attempt to run these steps with the [devnet](/interop/tools/devnet), you *must* Send the executing message yourself, as explained [here](#implement-manual-message-relaying).
-  </Callout>
-
-  1.  In the directory where Supersim is installed, start it with autorelay.
+  1.  If you are using [Supersim](/interop/tools/supersim), go to the the directory where Supersim is installed and start it with autorelay.
 
       ```sh
       ./supersim --interop.autorelay
       ```
 
-      Supersim creates three `anvil` blockchains:
+      If you are using [the devnets](/interop/tools/devnet), just skip this step.
 
-      | Role     | ChainID | RPC URL                                        |
-      | -------- | ------: | ---------------------------------------------- |
-      | L1       |     900 | [http://127.0.0.1:8545](http://127.0.0.1:8545) |
-      | OPChainA |     901 | [http://127.0.0.1:9545](http://127.0.0.1:9545) |
-      | OPChainB |     902 | [http://127.0.0.1:9546](http://127.0.0.1:9546) |
+      <Tabs items={['Supersim', 'Devnets']}>
+          <Tabs.Tab>
+
+            Supersim creates three `anvil` blockchains:
+
+            | Role     | ChainID | RPC URL                                        |
+            | -------- | ------: | ---------------------------------------------- |
+            | L1       |     900 | [http://127.0.0.1:8545](http://127.0.0.1:8545) |
+            | OPChainA |     901 | [http://127.0.0.1:9545](http://127.0.0.1:9545) |
+            | OPChainB |     902 | [http://127.0.0.1:9546](http://127.0.0.1:9546) |
+
+          </Tabs.Tab>
+
+          <Tabs.Tab>
+
+            These are the three networks involved in the devnet:
+
+            | Role          | ChainID   | RPC URL                                        |
+            | ------------- | -------:  | ---------------------------------------------- |
+            | L1 (Sepolia)  | 11155111  | [https://eth-sepolia.public.blastapi.io](https://eth-sepolia.public.blastapi.io) |
+            | ChainA        | 420120000 | [https://interop-alpha-0.optimism.io](https://interop-alpha-0.optimism.io)            
+            | ChainB        | 420120001 | [https://interop-alpha-1.optimism.io](https://interop-alpha-1.optimism.io)
+
+          </Tabs.Tab>
+      </Tabs>
 
   2.  In a separate shell, store the configuration in environment variables.
 
@@ -252,7 +268,7 @@ For development purposes, we'll first use autorelay mode to handle message execu
 
   6.  Create `src/GreetingSender.sol`.
 
-      ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol hash=20b41e7ec5b54c7cb4f040a35a0f50f5
+      ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol hash=75d197d1e1da112421785c2160f6a55a
       ```
 
   <details>
@@ -282,11 +298,12 @@ For development purposes, we'll first use autorelay mode to handle message execu
   ```sh
   cast call --rpc-url $URL_CHAIN_B $GREETER_B_ADDRESS "greet()" | cast --to-ascii 
   cast send --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A $GREETER_A_ADDRESS "setGreeting(string)" "Hello from chain A"
-  sleep 2
+  sleep 4
   cast call --rpc-url $URL_CHAIN_B $GREETER_B_ADDRESS "greet()" | cast --to-ascii
   ```
 
-  The `sleep` call is because the message is not relayed until the next chain B block, which can take up to two seconds.
+  The `sleep` call is because it can take up to two seconds until the transaction is included in chain A, and then up to two seconds until the relay transaction is included in chain B.
+
 </Steps>
 
 ## Sender information
@@ -378,7 +395,7 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
       ```sh
       cast call --rpc-url $URL_CHAIN_B $GREETER_B_ADDRESS "greet()" | cast --to-ascii 
       cast send --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A $GREETER_A_ADDRESS "setGreeting(string)" "Hello from chain A, with a CrossDomainSetGreeting event"
-      sleep 2
+      sleep 4
       cast call --rpc-url $URL_CHAIN_B $GREETER_B_ADDRESS "greet()" | cast --to-ascii
       ```
 
@@ -398,6 +415,9 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
 ## Implement manual message relaying
 
 <AutorelayCallout />
+
+If you are using the devnets, skip this section.
+You will not be able to see the effects anyway, because you cannot disable autoforwarding on them.
 
 <Steps>
   ### Set up
@@ -568,55 +588,6 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
       ```sh
       npm start
       ```
-
-  ### Using devnet
-
-  The same contracts are deployed on [the devnet](/interop/tools/devnet).
-  You can relay messages in exactly the same way you'd do it on Supersim.
-
-  | Contract         | Network                                            | Address                                                                                                                                                                               |
-  | ---------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | `Greeter`        | [Devnet 1](/interop/tools/devnet#interop-devnet-1) | [`0x1A183FCf61053B7dcd2322BbE766f7E1946d3718`](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718)                                                   |
-  | `GreetingSender` | [Devnet 0](/interop/tools/devnet#interop-devnet-1) | [`0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f`](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f/contract/420120000/readContract?chainid=420120000) |
-
-  To modify the program to relay messages on devnet, follow these steps:
-
-  1.  In `src/app.mts`, replace these lines to update the chains and contract addresses.
-
-      | Line number | New content                                                                |
-      | ----------: | -------------------------------------------------------------------------- |
-      |           9 | `import { interopAlpha0, interopAlpha1 } from '@eth-optimism/viem/chains'` |
-      |          23 | `    chain: interopAlpha0,`                                                |
-      |          31 | `    chain: interopAlpha1,`                                                |
-      |          39 | `    address: "0x1A183FCf61053B7dcd2322BbE766f7E1946d3718",`               |
-      |          45 | `    address: "0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f",`               |
-
-  2.  Set `PRIV_KEY` to the private key of an address that has [Sepolia ETH](https://cloud.google.com/application/web3/faucet/ethereum/sepolia).
-
-      ```sh
-      export PRIV_KEY=0x<private key here>
-      ```
-
-  3.  Send ETH to the two L2 blockchains.
-
-      ```sh
-      cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIV_KEY --value 0.001ether 0x7385d89d38ab79984e7c84fab9ce5e6f4815468a
-      cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIV_KEY --value 0.001ether 0x55f5c4653dbcde7d1254f9c690a5d761b315500c
-      ```
-
-      Wait a few minutes until you can see the ETH [on your explorer](https://sid.testnet.routescan.io/).
-
-  4.  Rerun the test.
-
-      ```sh
-      npm start
-      ```
-
-  5.  You can see the transactions in a block explorer.
-
-      *   The first transaction, which sets the greeting directly, [on the `Greeter` contract on interop1](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718).
-      *   The second transaction, the initiation message for the cross chain greeting change, [on the `GreetingSender` contract on interop0](https://sid.testnet.routescan.io/address/0x9De9f84a4EB3616B44CF1d68cD1A9098Df6cB25f).
-      *   The third transaction, the executing message for the cross chain greeting change, [on the `Greeter` contract on interop1 as an internal transaction](https://sid.testnet.routescan.io/address/0x1A183FCf61053B7dcd2322BbE766f7E1946d3718/internalTx).
 
   ### Debugging
 
