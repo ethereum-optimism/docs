@@ -18,17 +18,17 @@ import { Callout, Steps } from 'nextra/components'
 
 # Validating Your OP Stack Deployment
 
-After deploying the L1 smart contracts for your OP Stack chain, it's crucial to verify that your deployment conforms to the standard configuration. 
+After deploying the L1 smart contracts for your OP Stack chain, it's crucial to verify that your deployment conforms to the standard configuration.
 This guide walks you through using `op-validator` to validate your deployment against the Superchain standard.
 
 ## Why validate your deployment?
 
 Validating your deployment ensures:
 
-1. **Standardization** - Your chain adheres to the Superchain standards 
-2. **Interoperability** - Your chain will properly interact with other Superchain components
-3. **Security** - Your deployment follows best practices and security guidelines
-4. **Upgradeability** - Your chain can receive future protocol upgrades
+1.  **Standardization** - Your chain adheres to the Superchain standards
+2.  **Interoperability** - Your chain will properly interact with other Superchain components
+3.  **Security** - Your deployment follows best practices and security guidelines
+4.  **Upgradeability** - Your chain can receive future protocol upgrades
 
 ## Prerequisites
 
@@ -39,63 +39,62 @@ Validating your deployment ensures:
 ## Validation process
 
 <Steps>
+  ### Install op-validator
 
-### Install op-validator
+  If you haven't already installed op-validator, follow the [installation instructions](/operators/chain-operators/tools/op-validator#installation).
 
-If you haven't already installed op-validator, follow the [installation instructions](/operators/chain-operators/tools/op-validator#installation).
+  ### Prepare your configuration files
 
-### Prepare your configuration files
+  Ensure you have the following files available:
 
-Ensure you have the following files available:
+  *   `genesis.json`: The L2 genesis file generated after contract deployment
+  *   `rollup.json`: The rollup configuration file generated after contract deployment
 
-*   `genesis.json`: The L2 genesis file generated after contract deployment
-*   `rollup.json`: The rollup configuration file generated after contract deployment
+  If you used op-deployer, these files can be obtained with:
 
-If you used op-deployer, these files can be obtained with:
+  ```bash
+  op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
+  op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
+  ```
 
-```bash
-op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
-op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
-```
-### Validate against standard configuration
+  ### Validate against standard configuration
 
-Run the op-validator to check your deployment against the standard configuration:
+  Run the op-validator to check your deployment against the standard configuration:
 
-```bash
-op-validator check-deployment \
-  --l1-rpc <YOUR_L1_RPC_URL> \
-  --rollup-config /path/to/rollup.json \
-  --l2-genesis /path/to/genesis.json
+  ```bash
+  op-validator check-deployment \
+    --l1-rpc <YOUR_L1_RPC_URL> \
+    --rollup-config /path/to/rollup.json \
+    --l2-genesis /path/to/genesis.json
 
-```
-This command analyzes your deployment and checks for compliance with the standard configuration.
+  ```
 
-### Review the validation report
+  This command analyzes your deployment and checks for compliance with the standard configuration.
 
-The validation tool will output a report detailing:
+  ### Review the validation report
 
-*   Conformity to standard contract deployment parameters
-*   Any deviations from the standard configuration
-*   Warnings about potential issues
-*   Recommendations for fixing non-standard configurations
+  The validation tool will output a report detailing:
 
-Example output:
+  *   Conformity to standard contract deployment parameters
+  *   Any deviations from the standard configuration
+  *   Warnings about potential issues
+  *   Recommendations for fixing non-standard configurations
 
-```bash
-✅ SystemConfig parameters are standard
-✅ L1CrossDomainMessenger implementation is standard
-✅ L1StandardBridge implementation is standard
-⚠️ L2OutputOracle is using non-standard submission interval
-✅ OptimismPortal implementation is standard
-✅ Genesis L2 timestamp matches L1 block
-```
+  Example output:
 
-If the validator reports non-standard configurations, redeploy with corrected parameters, if you intend your chain to fully adhere to the Superchain standard.
+  ```bash
+  ✅ SystemConfig parameters are standard
+  ✅ L1CrossDomainMessenger implementation is standard
+  ✅ L1StandardBridge implementation is standard
+  ⚠️ L2OutputOracle is using non-standard submission interval
+  ✅ OptimismPortal implementation is standard
+  ✅ Genesis L2 timestamp matches L1 block
+  ```
 
+  If the validator reports non-standard configurations, redeploy with corrected parameters, if you intend your chain to fully adhere to the Superchain standard.
 </Steps>
-
 
 ## Next Steps
 
-*   If you plan to join the Superchain, follow the [Superchain onboarding guide](/superchain/blockspace-charter).
-*   Configure [monitoring and maintenance](/operators/chain-operators/management/monitoring)
+*   If you plan to join the Superchain, follow the [Standard Rollup Charter](/superchain/blockspace-charter).
+*   Configure [monitoring and maintenance](/operators/chain-operators/tools/chain-monitoring)
