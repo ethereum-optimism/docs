@@ -28,7 +28,7 @@ Before you begin, ensure that:
 
 *   Your chain is running OP Contracts version 2.0.0 or higher
 *   You have access to the chain's `ProxyAdmin`
-*   You have the forge toolkit installed for executing calls
+*   You have the [forge toolkit installed](https://book.getfoundry.sh/getting-started/installation) for executing calls
 
 ## Understanding dispute games
 
@@ -38,12 +38,13 @@ The OP Stack uses two types of dispute games:
 *   **Permissionless dispute game**: Open to anyone to propose or challenge
 
 <Callout type="warning">
-  In the Permissioned dispute game (PDG), the challenger role is a protocol-level permission assigned to specific addresses, allowing them to initiate or respond to disputes. This role is distinct from the op-challenger service, which is an off-chain monitoring service responsible for automatically detecting discrepancies and submitting challenges.
+  In the Permissioned dispute game (PDG), the [challenger role](/superchain/privileged-roles#challenger) is a protocol-level permission assigned to specific addresses, allowing them to initiate or respond to disputes. This role is distinct from the op-challenger service, which is an off-chain monitoring service responsible for automatically detecting discrepancies and submitting challenges.
   While the op-challenger service typically operates using an address that has been assigned the challenger role, the protocol-level role itself can be independently assigned, regardless of whether the op-challenger service is in use.
   Refer to the [OP Stack configurability spec](https://specs.optimism.io/protocol/configurability.html) for more details.
 </Callout>
 
-Most chains initially deploy with only the permissioned dispute game. This guide explains how to add the permissionless game.
+All chains deployed with `op-deployer` only initially include the permissioned dispute game. 
+This guide explains how to add the permissionless game.
 
 ## The `addGameType` function
 
@@ -148,4 +149,7 @@ cast send --rpc-url $RPC_URL --private-key $PRIVATE_KEY $OPCM_ADDRESS $CALLDATA
     After deploying the permissionless dispute game, you'll need to update the respectedGameType in the OptimismPortal to start using it.
     For detailed instructions on setting the respected game type and migrating your chain from permissioned to permissionless fault proofs, refer to the [Todo: Update this once it goes live- Migrating to permissionless fault proofs guide](https://deploy-preview-1539--docs-optimism.netlify.app/operators/chain-operators/tutorials/migrating-permissionless).
 
-## Todo: Update the next steps
+## Next steps
+
+*   For more detail on migrating to permissionless fault proofs, [see the docs](/operators/chain-operators/tutorials/migrating-permissionless).
+
