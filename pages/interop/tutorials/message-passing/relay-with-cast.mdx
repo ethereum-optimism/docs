@@ -54,7 +54,6 @@ Learn to relay transactions directly by sending the correct transaction.
   *   Node.js version 16 or higher
   *   Git for version control
   *   Supersim
-
 </details>
 
 ### What You'll Build
@@ -64,15 +63,14 @@ Learn to relay transactions directly by sending the correct transaction.
 ## Setup
 
 <Steps>
-
   ### Run Supersim
 
   This exercise needs to be done on Supersim.
   You cannot use the devnets because you cannot disable autorelay on them.
 
-  1. Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation).
+  1.  Follow the [Installation Guide](/app-developers/tutorials/supersim/getting-started/installation).
 
-  1. Run Supersim *without* `--interop.relay`.
+  2.  Run Supersim *without* `--interop.relay`.
 
       ```sh
       ./supersim
@@ -86,7 +84,6 @@ Learn to relay transactions directly by sending the correct transaction.
 
   ```sh file=<rootDir>/public/tutorials/setup-for-manual-relay.sh#L1-L147 hash=a63d72f58a06ca7ca78fd1592efcf4a3 
   ```
-
 </Steps>
 
 ## Manually relay a message using `cast`
@@ -127,7 +124,6 @@ Whenever `L2ToL2CrossDomainMessenger` sends a message to a different blockchain,
 Here we look for those messages, but get only the last one.
 
 <details>
-
   <summary>Example `log-entry`</summary>
 
   ```yaml
@@ -146,7 +142,6 @@ Here we look for those messages, but get only the last one.
     transactionHash: 0x1d6f2e5e2c8f3eb055e95741380ca36492f784b9782848b66b66c65c5937ff3a
     transactionIndex: 0
   ```
-
 </details>
 
 ```sh
@@ -154,7 +149,7 @@ TOPICS=`cat log-entry | grep -A4 topics | awk '{print $1}' | tail -4 | sed 's/0x
 TOPICS=`echo $TOPICS | sed 's/ //g'`
 ```
 
-Consolidate the log topics into a single hex string. 
+Consolidate the log topics into a single hex string.
 
 ```sh
 ORIGIN=0x4200000000000000000000000000000000000023
@@ -165,13 +160,13 @@ CHAIN_ID_A=`cast chain-id --rpc-url $URL_CHAIN_A`
 SENT_MESSAGE=`cat log-entry | awk '/data/ {print $2}'`
 ```
 
-Read additional fields from the log entry. 
+Read additional fields from the log entry.
 
 ```sh
 LOG_ENTRY=0x`echo $TOPICS$SENT_MESSAGE | sed 's/0x//'`
 ```
 
-Consolidate the entire log entry. 
+Consolidate the entire log entry.
 
 ```sh
 RPC_PARAMS=$(cat <<INNER_END_OF_FILE
