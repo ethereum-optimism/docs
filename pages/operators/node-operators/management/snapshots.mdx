@@ -26,16 +26,58 @@ This page contains download links for data directories and node snapshots that c
 Data directories and node snapshots are not required but can significantly simplify the node operation process.
 
 <Callout type="warning">
-  Data directories and node snapshots are **not required** for nodes using [snap sync](snap-sync) but are still required for archive nodes and in instances when you need to trace the entire chain.
+  Data directories and node snapshots are **not required** in the following cases:
+  * When using [snap sync](snap-sync) with op-geth
+  * When using Nethermind (automatically handles snapshots)
+  
+  They are still required for archive nodes and in instances when you need to trace the entire chain with op-geth.
 </Callout>
 
-## About the Bedrock migration
+## About snapshots and execution clients
 
+### op-geth
 OP Mainnet underwent a large [database migration](https://web.archive.org/web/20240110231645/https://blog.oplabs.co/reproduce-bedrock-migration/) as part of the [Bedrock Upgrade](https://web.archive.org/web/20230608050602/https://blog.oplabs.co/introducing-optimism-bedrock/) in 2023.
-Node operators must have a migrated OP Mainnet database to run a node.
-Migrated OP Mainnet databases can be generated manually or pre-migrated databases can be downloaded from the links on this page.
+Node operators using op-geth must have a migrated OP Mainnet database to run a node.
+Migrated OP Mainnet databases can be generated manually or pre-migrated databases can be downloaded from the links below.
 
-## Snapshots
+### Nethermind
+Nethermind automatically handles downloading and applying the necessary snapshots when you start the node. No manual snapshot download is required. The node will:
+1. Start with an empty database
+2. Automatically download the required ancient data
+3. Apply the data and continue syncing
+
+This process is fully automated and requires no additional configuration. The snapshot configuration is built into the `op-mainnet_archive.json` configuration file:
+
+```json
+"Snapshot": {
+  "Enabled": true,
+  "DownloadUrl": "http://optimism-snapshot.nethermind.io/op-mainnet-genesis-v1.zip",
+  "SnapshotFileName": "op-mainnet-genesis-v1.zip",
+  "Checksum": "0xd7e15b26175c4c924acf75c5790e75d5eaa044977ca8e1904dc62d5d0769eba3"
+}
+```
+
+When you run Nethermind with the `-c op-mainnet` flag, it uses this configuration automatically.
+
+## Available Snapshots
+
+### Nethermind
+
+Nethermind provides an official snapshot through their snapshot service:
+
+| Network     | Size  | Download Link                                                                                     | Checksum                                                           |
+| ----------- | ----- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| OP Mainnet  | ~2GB  | [Download](http://optimism-snapshot.nethermind.io/op-mainnet-genesis-v1.zip)                      | `0xd7e15b26175c4c924acf75c5790e75d5eaa044977ca8e1904dc62d5d0769eba3` |
+
+<Callout type="info">
+  When using Nethermind, you don't need to manually download these snapshots. They are automatically downloaded when you start the node with `-c op-mainnet`.
+</Callout>
+
+### op-geth
+
+<Callout type="warning">
+  The following snapshots are required for op-geth nodes. Unlike Nethermind, op-geth requires manual snapshot management.
+</Callout>
 
 <Callout type="warning">
   Always verify snapshots by comparing the sha256sum of the downloaded file to the sha256sum listed on this page.
