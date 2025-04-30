@@ -23,15 +23,30 @@ type DataAvailabilityType = "Ethereum" | "AltDA Plasma Mode";
 export function ChainParametersForm(): ReactElement {
   const [transactionsPerDay, setTransactionsPerDay] = useState(500000);
   const [comparableTransactionType, setComparableTransactionType] =
-    useState<ComparableTransactionType>("General OP Mainnet");
+    useState<ComparableTransactionType>("General OP Mainnet" as ComparableTransactionType);
   const [dataAvailabilityType, setDataAvailabilityType] = useState<DataAvailabilityType>("Ethereum");
-  const [isFaultProofEnabled, setIsFaultProofEnabled] = useState("yes");
+  const [isFaultProofEnabled, setIsFaultProofEnabled] = useState(true);
   const [targetDataFeeMargin, setTargetDataFeeMargin] = useState(5);
   const [maxBlobsPerL1Transaction, setMaxBlobsPerL1Transaction] = useState(5);
   const [maxChannelDuration, setMaxChannelDuration] = useState(5);
-  const [outputRootPostFrequency, setOutputRootPostFrequency] = useState(1  );
-  const [isIncludeOutputRootCosts, setIsIncludeOutputRootCosts] = useState("yes");
-  const [resultsParams, setResultsParams] = useState<ResultsParams>({});
+  const [outputRootPostFrequency, setOutputRootPostFrequency] = useState(1);
+  const [isIncludeOutputRootCosts, setIsIncludeOutputRootCosts] = useState(true);
+  const [resultsParams, setResultsParams] = useState<ResultsParams>({
+    data: {
+      dataAvailabilityType: "Ethereum",
+      l1BlobBaseFeeScalar: 0,
+      l1BaseFeeScalar: 0,
+      overallL1DataAndStateCostsMargin: 0,
+      totalL1StateProposalCostsInETH: 0,
+      modeledDAPlusStateRevenueOnL2: 0,
+      dataAvailabilityInUse: "",
+      impliedDataGasFeePerTxUsingBlobs: 0,
+      impliedDataGasFeePerTxUsingL1Calldata: 0,
+      impliedDataGasFeePerTxUsingAltDAPlasmaMode: 0,
+      assumedFeeScalarMessage: "",
+      impliedDataGasFeeMessage: "",
+    }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
@@ -52,8 +67,8 @@ export function ChainParametersForm(): ReactElement {
 
     //e37
     const l1BlobBaseFeeScalar = await displayL1BlobBaseFeeScalar(
-      stringToBoolean(isIncludeOutputRootCosts),
-      stringToBoolean(isFaultProofEnabled),
+      isIncludeOutputRootCosts,
+      isFaultProofEnabled,
       outputRootPostFrequency,
       transactionsPerDay,
       maxChannelDuration,
@@ -115,7 +130,7 @@ export function ChainParametersForm(): ReactElement {
         dataAvailabilityType,
         targetDataFeeMargin
       );
-   
+
     // e67
     const impliedDataGasFeePerTxUsingL1Calldata =
       await calculateImpliedDataGasFeePerTxUsingL1Calldata(
@@ -143,7 +158,7 @@ export function ChainParametersForm(): ReactElement {
       );
 
     const dataAvailabilityInUse = determineDAInUse(dataAvailabilityType);
-    
+
     const assumedFeeScalarMessage = resultsFeeScalarsAssumed(
       comparableTransactionType, // e15
       transactionsPerDay, // e14
@@ -168,14 +183,10 @@ export function ChainParametersForm(): ReactElement {
       assumedFeeScalarMessage,
       impliedDataGasFeeMessage,
     };
-    setResultsParams(data);
+    setResultsParams({ data });
     setIsLoading(false);
     setShowResult(true)
   };
-
-  const stringToBoolean = (value: string): boolean => {
-    return value === "yes" || value === "Yes" ? true : false;
-  }
 
   return (
     <div>
@@ -273,7 +284,7 @@ export function ChainParametersForm(): ReactElement {
         </button>
       </form>
       {isLoading && <Loader />}
-      {!isLoading && showResult && <ResultsTable data={resultsParams} />}
+      {!isLoading && showResult && <ResultsTable data={resultsParams.data} />}
     </div>
   );
 }
