@@ -29,11 +29,11 @@ export function Footer() {
            <section>
              <h3>Tools</h3>
              <ul>
-               <li><Link href="https://console.optimism.io/faucet?utm_source=docs">Superchain Faucet</Link></li>
+               <li><Link href="https://console.optimism.io/faucet?utm_source=op-docs&utm_medium=docs">Superchain Faucet</Link></li>
                <li><Link href="https://optimistic.grafana.net/public-dashboards/c84a5a9924fe4e14b270a42a8651ceb8">Gas Tracker</Link></li>
-               <li><Link href="https://status.optimism.io/">Service Status</Link></li>
+               <li><Link href="https://status.optimism.io/?utm_source=op-docs&utm_medium=docs">Service Status</Link></li>
                <li><Link href="https://github.com/ethereum-optimism/optimism/releases">Changelog</Link></li>
-               <li><Link href="https://devnets.optimism.io">Devnets</Link></li>
+               <li><Link href="https://devnets.optimism.io/?utm_source=op-docs&utm_medium=docs">Devnets</Link></li>
              </ul>
            </section>
 
@@ -44,7 +44,7 @@ export function Footer() {
                <li><Link href="https://share.hsforms.com/1yENj8CV9TzGYBASD0JC8_gqoshb">Get Launch Support</Link></li>
                <li><Link href="/connect/resources/glossary">Glossary</Link></li>
                <li><Link href="/connect/contribute/stack-contribute">Contribute to the OP Stack</Link></li>
-               <li><Link href="https://specs.optimism.io/">Protocol Specs</Link></li>
+               <li><Link href="https://specs.optimism.io/?utm_source=op-docs&utm_medium=docs">Protocol Specs</Link></li>
              </ul>
            </section>
 
@@ -85,9 +85,9 @@ export function Footer() {
        
        <div className="footer-bottom">
          <div className="policy-links">
-         <Link href="https://optimism.io/community-agreement">Community Agreement</Link>
-         <Link href="https://optimism.io/terms">Terms of Service</Link>
-         <Link href="https://optimism.io/data-privacy-policy">Privacy Policy</Link>
+         <Link href="https://optimism.io/community-agreement?utm_source=op-docs&utm_medium=docs">Community Agreement</Link>
+         <Link href="https://optimism.io/terms?utm_source=op-docs&utm_medium=docs">Terms of Service</Link>
+         <Link href="https://optimism.io/data-privacy-policy?utm_source=op-docs&utm_medium=docs">Privacy Policy</Link>
          <Link href="https://github.com/ethereum-optimism/docs?tab=coc-ov-file#readme">Code of Conduct</Link>
          </div>
          <div className="copyright">© {new Date().getFullYear()} <Link href="/">Optimism Foundation. All rights reserved.</Link></div>

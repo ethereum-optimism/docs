@@ -1,6 +1,6 @@
 ---
-title: Bridging native cross-chain ETH transfers
-description: Learn how to bridge native cross-chain ETH transfers.
+title: Transferring ETH
+description: Learn how to transfer ETH across the Superchain interop cluster
 lang: en-US
 content_type: tutorial
 topic: bridging-native-cross-chain-eth-transfers
@@ -25,19 +25,19 @@ import { AutorelayCallout } from '@/components/AutorelayCallout'
 
 <InteropCallout />
 
-# Bridging native cross-chain ETH transfers
+# Transferring ETH
 
 <Callout>
-  This tutorial provides step-by-step instructions for bridging ETH from one Superchain Interop chain to another.
+  This tutorial provides step-by-step instructions for how to send ETH from one chain in the Superchain interop cluster to another.
   For a conceptual overview,
-  see the [interoperable ETH explainer](/stack/interop/superchain-weth).
+  see the [interoperable ETH explainer](/interop/superchain-eth-bridge).
 </Callout>
 
 ## Overview
 
-Crosschain ETH transfers in the Superchain are facilitated through the [SuperchainWETH](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainWETH.sol) contract.
-This tutorial walks through how to send native ETH from one chain to another.
-You can do this on [Supersim](/stack/interop/tools/supersim), [the Interop devnet](/stack/interop/tools/devnet), or production once it is released.
+Crosschain ETH transfers in the Superchain are facilitated through the [SuperchainETHBridge](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainETHBridge.sol) contract.
+This tutorial walks through how to send ETH from one chain to another.
+You can do this on [Supersim](/interop/tools/supersim), [the Interop devnet](/interop/tools/devnet), or production once it is released.
 
 ### What you'll build
 
@@ -83,7 +83,7 @@ The tutorial uses these primary tools:
 
   ### Configure the network
 
-  You can run this tutorial either with [Supersim](/stack/interop/tools/supersim) running locally, or using the [Interop devnet](/stack/interop/tools/devnet).
+  You can run this tutorial either with [Supersim](/interop/tools/supersim) running locally, or using the [Interop devnet](/interop/tools/devnet).
   Select the correct tab and follow the directions. 
 
 
@@ -169,9 +169,9 @@ The tutorial uses these primary tools:
   ```sh
   DST_CHAINID=`cast chain-id --rpc-url $DST_URL`
   MY_ADDRESS=`cast wallet address $PRIVATE_KEY`
-  SUPERCHAIN_WETH=0x4200000000000000000000000000000000000024
+  SUPERCHAIN_ETH_BRIDGE=0x4200000000000000000000000000000000000024
   BEFORE=`cast balance $MY_ADDRESS --rpc-url $DST_URL | cast from-wei`          
-  cast send --rpc-url $SRC_URL --private-key $PRIVATE_KEY $SUPERCHAIN_WETH "sendETH(address,uint256)" $MY_ADDRESS $DST_CHAINID --value 0.001ether
+  cast send --rpc-url $SRC_URL --private-key $PRIVATE_KEY $SUPERCHAIN_ETH_BRIDGE "sendETH(address,uint256)" $MY_ADDRESS $DST_CHAINID --value 0.001ether
   sleep 10
   AFTER=`cast balance $MY_ADDRESS --rpc-url $DST_URL | cast from-wei`
   echo -e Balance before transfer\\t$BEFORE
@@ -195,15 +195,15 @@ The tutorial uses these primary tools:
       mkdir src
       ```
 
-  2.  Download the ABI for `SuperchainWETH`.
+  2.  Download the ABI for `SuperchainETHBridge`.
 
       ```sh
-      curl https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/snapshots/abi/SuperchainWETH.json > src/SuperchainWETH.abi.json
+      curl https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/snapshots/abi/SuperchainETHBridge.json > src/SuperchainETHBridge.abi.json
       ```
 
   3.  Place this in `src/transfer-eth.mts`:
 
-      ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts hash=c6032f96e0fc040ad8fff7bc2892bbb6 
+      ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts hash=9f19c28046ed792e3f04aefd8fb4453e 
       ```
 
       <details>
@@ -214,25 +214,25 @@ The tutorial uses these primary tools:
 
         Import all chain definitions from `@eth-optimism/viem`.
 
-        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L29-L32 hash=e8c21357997ea12151305337eced7d71 
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L28-L31 hash=e8c21357997ea12151305337eced7d71 
         ```
 
         If the address we use is `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`, one of the prefunded addresses on `anvil`, assume we're using Supersim.
         Otherwise, use Interop devnet.
 
-        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L78-L80 hash=4933c70a9078c2369ef90bfe163f5fd7 
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L73-L79 hash=7d892d7a6578d8efb7cbe16a0af7e342 
         ```
 
         To relay a message we need the information in the receipt.
         Also, we need to wait until the transaction with the relayed message is actually part of a block.
 
-        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L87-L89 hash=573f22b2b21415ff51c59c713fda07d1 
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L86-L89 hash=db8b76c8ca3304dd485f4a33a1dc8580 
         ```
 
         A single transaction can send multiple messages.
         But here we know we sent just one, so we look for the first one in the list.
 
-        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L90-L96 hash=4b26775b46c116262af4c7299d6f1127 
+        ```typescript file=<rootDir>/public/tutorials/transfer-eth.mts#L90-L94 hash=2f3cc02cffd52ab5b807c5e70388f0ac 
         ```
 
         This is how you use `@eth-optimism/viem` to create an executing message.
@@ -285,7 +285,7 @@ The tutorial uses these primary tools:
 
 ## Next steps
 
-*   Check out the [SuperchainWETH guide](/stack/interop/superchain-weth) for more information.
+*   Check out the [SuperchainETHBridge guide](/interop/superchain-eth-bridge) for more information.
 *   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
-*   Review the [Superchain interop explainer](/stack/interop/explainer) for answers to common questions about interoperability.
+*   Review the [Superchain interop explainer](/interop/explainer) for answers to common questions about interoperability.
 
