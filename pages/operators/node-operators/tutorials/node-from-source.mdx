@@ -15,7 +15,7 @@ categories:
 is_imported_content: 'false'
 ---
 
-import { Callout, Steps } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
 
 # Building a Superchain node from source
 
@@ -39,7 +39,49 @@ The Execution Client is responsible for executing the block payloads it receives
 The Execution Client exposes the standard JSON-RPC API that Ethereum developers are familiar with, and can be used to query blockchain data and submit transactions to the network.
 The Execution Client is largely analogous to an [execution client](https://ethereum.org/en/developers/docs/nodes-and-clients/#what-are-nodes-and-clients) in Ethereum.
 
-In this tutorial you will build the `op-geth` implementation of the Execution Client as found in the [`op-geth` repository](https://github.com/ethereum-optimism/op-geth).
+<Tabs items={['op-geth', 'Nethermind']}>
+  <Tabs.Tab>
+    The `op-geth` implementation of the Execution Client can be found in the [`op-geth` repository](https://github.com/ethereum-optimism/op-geth).
+    
+    #### Prerequisites
+    - Go 1.21 or later
+    - Make
+    
+    #### Building
+    Follow the instructions in the op-geth repository to build from source.
+  </Tabs.Tab>
+  
+  <Tabs.Tab>
+    Nethermind is an alternative execution client implementation written in .NET.
+    
+    #### Prerequisites
+    - [.NET SDK](https://aka.ms/dotnet/download) 9 or later
+    
+    #### Building
+    <Steps>
+    1. Clone the repository:
+    The Nethermind's source code can be obtained from [`nethermind` repository](https://github.com/NethermindEth/nethermind)
+    ```bash
+    git clone --recursive https://github.com/nethermindeth/nethermind.git
+    ```
+    
+    2. Build the source:
+    ```bash
+    dotnet build src/Nethermind/Nethermind.sln -c release
+    ```
+    
+    3. Run Nethermind (this will build it first if needed):
+    ```bash
+    cd src/Nethermind/Nethermind.Runner
+    dotnet run -c release -- -c mainnet
+    ```
+    
+    The build artifacts will be located in `src/Nethermind/artifacts/bin/Nethermind.Runner/release`.
+    </Steps>
+    
+    For more details about running a Nethermind node, see the [Nethermind documentation](https://docs.nethermind.io/get-started/running-node/).
+  </Tabs.Tab>
+</Tabs>
 
 ### Legacy Geth (optional)
 
