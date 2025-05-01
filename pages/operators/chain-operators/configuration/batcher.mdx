@@ -32,8 +32,6 @@ The batcher policy defines high-level constraints and responsibilities regarding
 | Data Availability Type     | Specifies whether the batcher uses **blobs**, **calldata**, or **auto** to post transaction data to L1.        | Batch submitter address | Ethereum (Blobs or Calldata)                                                               | - Alternative data availability (Alt-DA) is not yet supported in the standard configuration.<br />- The sequencer can switch at will between blob transactions and calldata, with no restrictions, because both are fully secured by L1. |
 | Batch Submission Frequency | Determines how frequently the batcher submits aggregated transaction data to L1 (via the batcher transaction). | Batch submitter address | Must target **1,800 L1 blocks** (6 hours on Ethereum, assuming 12s L1 block time) or lower | - Batches must be posted before the sequencing window closes (commonly 12 hours by default).<br />- Leave a buffer for L1 network congestion and data size to ensure that each batch is fully committed in a timely manner.              |
 
-### Additional Guidance
-
 *   **Data Availability Types**:
     *   **Calldata** is generally simpler but can be more expensive on mainnet Ethereum, depending on gas prices.
     *   **Blobs** are typically lower cost when your chain has enough transaction volume to fill large chunks of data.
@@ -44,12 +42,7 @@ The batcher policy defines high-level constraints and responsibilities regarding
     *   Your chain should never exceed your L2's sequencing window (commonly 12 hours).
     *   If targeting a longer submission window (e.g., 5 or 6 hours), be aware that the [safe head](https://github.com/ethereum-optimism/specs/blob/main/specs/glossary.md#safe-l2-head) can stall up to that duration.
 
-*   **Output Frequency**:
-    *   Used to post output roots to L1 for verification.
-    *   The recommended maximum is 24 hours (43,200 blocks at 2s each), though many chains choose smaller intervals.
-    *   Will eventually be replaced or significantly changed by the introduction of fault proofs.
-
-Include these high-level "policy" requirements when you set up or modify your `op-batcher` configuration. See the [Batcher Configuration](#global-options) reference, which explains each CLI flag and environment variable in depth.
+Include these high-level "policy" requirements when you set up or modify your `op-batcher` configuration. See the [Batcher Configuration](#all-configuration-variables) reference, which explains each CLI flag and environment variable in depth.
 
 ## Recommendations
 
@@ -148,7 +141,35 @@ GETH_WS_API: debug,eth,txpool,net,miner
 
 It is recommended to add it to both, HTTP and WS.
 
-## All Configuration Options
+## Example Configuration
+
+This is a basic example of a batcher configuration. Optimal batcher configuration is going to differ for each chain,
+however you can see some of the most important variables configured below:
+
+```
+  OP_BATCHER_WAIT_NODE_SYNC: true
+  OP_BATCHER_CHECK_RECENT_TXS_DEPTH: 5
+  OP_BATCHER_POLL_INTERVAL: "5s"
+  OP_BATCHER_BATCH_TYPE: "1" # span
+  OP_BATCHER_COMPRESSION_ALGO: brotli-10
+  OP_BATCHER_DATA_AVAILABILITY_TYPE: auto
+  OP_BATCHER_MAX_CHANNEL_DURATION: "150" # up to 30 min to fill blobs
+  OP_BATCHER_TARGET_NUM_FRAMES: "5" # 5 blobs, can go to 6 with Pectra activated on L1
+  OP_BATCHER_SUB_SAFETY_MARGIN: "300" # 1h safety margin to prevent seq window elapse
+  OP_BATCHER_NUM_CONFIRMATIONS: "4"
+  OP_BATCHER_NETWORK_TIMEOUT: "10s"
+  OP_BATCHER_TXMGR_MIN_BASEFEE: "2.0"
+  OP_BATCHER_TXMGR_MIN_TIP_CAP: "2.0"
+  OP_BATCHER_TXMGR_FEE_LIMIT_MULTIPLIER: 16 # allow up to 4 doublings
+  OP_BATCHER_MAX_PENDING_TX: "10"
+  OP_BATCHER_RESUBMISSION_TIMEOUT: "180s" # wait 3 min before bumping fees
+  OP_BATCHER_ACTIVE_SEQUENCER_CHECK_DURATION: 5s
+```
+
+Lower throughput chains, which aren't filling up channels before the MAX_CHANNEL_DURATION is hit, 
+may save gas by increasing the MAX_CHANNEL_DURATION. See the [recommendations section](#set-your--op_batcher_max_channel_duration).
+
+## All Configuration Variables
 
 ### Batch Generation
 
