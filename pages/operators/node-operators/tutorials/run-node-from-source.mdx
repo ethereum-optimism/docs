@@ -80,92 +80,92 @@ It's generally easier to start the execution client before starting `op-node`.
 You can still start the execution client without yet running `op-node`, but it will simply not receive any blocks until `op-node` is started.
 
 <Tabs items={['op-geth', 'Nethermind']}>
-<Tabs.Tab>
+  <Tabs.Tab>
+    <Steps>
+      {<h3>Navigate to your op-geth directory</h3>}
 
-<Steps>
-  {<h3>Navigate to your op-geth directory</h3>}
+      Find the directory where you built the `op-geth` binary.
 
-  Find the directory where you built the `op-geth` binary.
+      {<h3>Copy in the JWT secret</h3>}
 
-  {<h3>Copy in the JWT secret</h3>}
+      Copy the JWT secret you generated in a previous step into the `op-geth` directory.
 
-  Copy the JWT secret you generated in a previous step into the `op-geth` directory.
+      ```bash
+      cp /path/to/jwt.txt .
+      ```
 
-  ```bash
-  cp /path/to/jwt.txt .
-  ```
+      {<h3>Set environment variables</h3>}
 
-  {<h3>Set environment variables</h3>}
+      Set the following environment variables:
 
-  Set the following environment variables:
+      ```bash
+      export DATADIR_PATH=... # Path to the desired data directory for op-geth
+      ```
 
-  ```bash
-  export DATADIR_PATH=... # Path to the desired data directory for op-geth
-  ```
+      {<h3>Start op-geth</h3>}
 
-  {<h3>Start op-geth</h3>}
+      <Callout type="info">
+        If you want to run an archive node, you will need to set `--gcmode=archive`. If you want to run an OP Mainnet archive node, please refer to the [OP Mainnet archive nodes](#op-mainnet-archive-nodes) section.
+      </Callout>
 
-  <Callout type="info">
-    If you want to run an archive node, you will need to set `--gcmode=archive`. If you want to run an OP Mainnet archive node, please refer to the [OP Mainnet archive nodes](#op-mainnet-archive-nodes) section.
-  </Callout>
-  Use the following command to start `op-geth` in a default configuration.
-  The JSON-RPC API will become available on port 8545.
-  Refer to the `op-geth` [configuration documentation](/operators/node-operators/configuration/execution-config) for more detailed information about available options.
+      Use the following command to start `op-geth` in a default configuration.
+      The JSON-RPC API will become available on port 8545.
+      Refer to the `op-geth` [configuration documentation](/operators/node-operators/configuration/execution-config) for more detailed information about available options.
 
-  ```bash
-  ./build/bin/geth \
-    --http \
-    --http.port=8545 \
-    --http.addr=localhost \
-    --authrpc.addr=localhost \
-    --authrpc.jwtsecret=./jwt.txt \
-    --verbosity=3 \
-    --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
-    --op-network=op-sepolia \
-    --datadir=$DATADIR_PATH
-  ```
-</Steps>
+      ```bash
+      ./build/bin/geth \
+        --http \
+        --http.port=8545 \
+        --http.addr=localhost \
+        --authrpc.addr=localhost \
+        --authrpc.jwtsecret=./jwt.txt \
+        --verbosity=3 \
+        --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io/ \
+        --op-network=op-sepolia \
+        --datadir=$DATADIR_PATH
+      ```
+    </Steps>
+  </Tabs.Tab>
 
-</Tabs.Tab>
-<Tabs.Tab>
+  <Tabs.Tab>
+    <Steps>
+      {<h3>Navigate to your Nethermind directory</h3>}
 
-<Steps>
-  {<h3>Navigate to your Nethermind directory</h3>}
+      Find the directory where you built the Nethermind binary.
 
-  Find the directory where you built the Nethermind binary.
+      {<h3>Copy in the JWT secret</h3>}
 
-  {<h3>Copy in the JWT secret</h3>}
+      Copy the JWT secret you generated in a previous step into the Nethermind directory.
 
-  Copy the JWT secret you generated in a previous step into the Nethermind directory.
+      ```bash
+      cp /path/to/jwt.txt .
+      ```
 
-  ```bash
-  cp /path/to/jwt.txt .
-  ```
-  {<h3>Start Nethermind</h3>}
+      {<h3>Start Nethermind</h3>}
 
-  <Callout type="info">
-    If you want to run an archive node, use the `op-sepolia_archive` configuration instead of `op-sepolia`. For OP Mainnet, use `op-mainnet` or `op-mainnet_archive` configurations respectively.
-  </Callout>
+      <Callout type="info">
+        If you want to run an archive node, use the `op-sepolia_archive` configuration instead of `op-sepolia`. For OP Mainnet, use `op-mainnet` or `op-mainnet_archive` configurations respectively.
+      </Callout>
 
-  Use the following command to start Nethermind in a default configuration.
-  The JSON-RPC API will become available on port 8545.
-  Refer to the Nethermind [configuration documentation](/operators/node-operators/configuration/execution-config#nethermind) for more detailed information about available options.
+      Use the following command to start Nethermind in a default configuration.
+      The JSON-RPC API will become available on port 8545.
+      Refer to the Nethermind [configuration documentation](/operators/node-operators/configuration/execution-config#nethermind) for more detailed information about available options.
 
-  ```bash
-  ./Nethermind.Runner \
-    -c op-sepolia \
-    --data-dir path/to/data/dir \
-    --JsonRpc.JwtSecretFile=./jwt.txt
-  ```
+      ```bash
+      ./Nethermind.Runner \
+        -c op-sepolia \
+        --data-dir path/to/data/dir \
+        --JsonRpc.JwtSecretFile=./jwt.txt
+      ```
 
-  This command uses the built-in `op-sepolia` configuration which already includes the correct settings for:
-  - JSON-RPC endpoints
-  - Network ports
-  - Sequencer URL
-  - Other OP Stack specific settings
-</Steps>
+      This command uses the built-in `op-sepolia` configuration which already includes the correct settings for:
 
-</Tabs.Tab>
+      *   JSON-RPC endpoints
+      *   Network ports
+      *   Sequencer URL
+      *   Other OP Stack specific settings
+    </Steps>
+  </Tabs.Tab>
 </Tabs>
 
 ### Start `op-node`
@@ -209,8 +209,8 @@ Once you've started your execution client, you can start `op-node`.
   </Callout>
 
   <Callout type="info">
-  Sync mode is set to `--syncmode=execution-layer` to enable [snap sync](/operators/node-operators/management/snap-sync)
-  for both op-geth and Nethermind, removing the need to initialize the node with a data directory.
+    Sync mode is set to `--syncmode=execution-layer` to enable [snap sync](/operators/node-operators/management/snap-sync)
+    for both op-geth and Nethermind, removing the need to initialize the node with a data directory.
   </Callout>
 
   ```bash
@@ -234,12 +234,12 @@ Once you've started your execution client, you can start `op-node`.
 
 ### Synchronization verification
 
-Once you've started `op-geth` and `op-node` you should see the two begin to 
+Once you've started `op-geth` and `op-node` you should see the two begin to
 communicate with each other and synchronize the OP Mainnet chain.
 
 #### Snap sync (default)
 
-Initial synchronization can take several hours to complete. You will see these 
+Initial synchronization can take several hours to complete. You will see these
 `op-node` logs at the start of snap sync:
 
 ```text
@@ -260,13 +260,14 @@ There are two stages on `op-geth` for snap sync:
 
 <Steps>
   {<h3>Downloading the headers</h3>}
+
   `op-geth` log something like this as it is downloading the headers:
 
   ```text
   lvl=info msg="Syncing beacon headers" downloaded=116775778 left=1162878 eta=53.182s 
   ```
 
-  {<h3>Sync progress</h3>}  
+  {<h3>Sync progress</h3>}
 
   For the second stage, `op-geth` will log the following:
 
@@ -277,20 +278,19 @@ There are two stages on `op-geth` for snap sync:
   ```text
   msg="Syncing: chain download in progress" synced=100.00% chain="176.01 GiB" headers=116,817,399@45.82GiB bodies=116,817,286@52.87GiB receipts=116,817,286@77.32GiB eta=77.430ms
   ```
-  
+
   All the while, `op-geth` will also log the forkchoice update:
 
   ```text
   Forkchoice requested sync to new head  number=117,076,468 hash=e3884c..bf4e2b
   ```
-
 </Steps>
 
 #### Full sync
 
 <Callout type="info">
-For OP Mainnet you will need access to the migrated database to run a full node with full sync.
-You can [migrate your own data directory](https://web.archive.org/web/20240110231645/https://blog.oplabs.co/reproduce-bedrock-migration/) or follow the options available for [archive nodes](#get-the-migrated-data-directory).
+  For OP Mainnet you will need access to the migrated database to run a full node with full sync.
+  You can [migrate your own data directory](https://web.archive.org/web/20240110231645/https://blog.oplabs.co/reproduce-bedrock-migration/) or follow the options available for [archive nodes](#get-the-migrated-data-directory).
 </Callout>
 
 Initial full synchronization can take several days or weeks to complete. During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to your execution client.
