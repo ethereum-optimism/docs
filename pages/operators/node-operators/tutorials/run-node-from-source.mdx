@@ -239,68 +239,66 @@ Once you've started your execution client and `op-node` you should see them begi
 #### Snap sync (default)
 
 <Tabs items={['op-geth', 'Nethermind']}>
-<Tabs.Tab>
+  <Tabs.Tab>
+    Initial synchronization can take several hours to complete. You will see these
+    `op-node` logs at the start of snap sync:
 
-Initial synchronization can take several hours to complete. You will see these
-`op-node` logs at the start of snap sync:
+    ```text
+    INFO [03-06|10:56:55.602] Starting EL sync
+    INFO [03-06|10:56:55.615] Sync progress                            reason="unsafe payload from sequencer while in EL sync" l2_finalized=000000..000000:0 l2_safe=000000..000000:0 l2_pending_safe=000000..000000:0 l2_unsafe=4284ab..7e7e84:117076319 l2_time=1,709,751,415 l1_derived=000000..000000:0
+    INFO [03-06|10:56:57.567] Optimistically inserting unsafe L2 execution payload to drive EL sync id=4ac160..df4d12:117076320
+    ```
 
-```text
-INFO [03-06|10:56:55.602] Starting EL sync
-INFO [03-06|10:56:55.615] Sync progress                            reason="unsafe payload from sequencer while in EL sync" l2_finalized=000000..000000:0 l2_safe=000000..000000:0 l2_pending_safe=000000..000000:0 l2_unsafe=4284ab..7e7e84:117076319 l2_time=1,709,751,415 l1_derived=000000..000000:0
-INFO [03-06|10:56:57.567] Optimistically inserting unsafe L2 execution payload to drive EL sync id=4ac160..df4d12:117076320
-```
+    `Starting EL sync` is shown once and the **sync progress / inserting logs** should be repeated until done.
 
-`Starting EL sync` is shown once and the **sync progress / inserting logs** should be repeated until done.
+    `op-node` will log the following when done:
 
-`op-node` will log the following when done:
+    ```text
+    lvl=info msg="Finished EL sync" sync_duration=23h25m0.370558429s finalized_block=0x4f69e83ff1407f2e2882f2526ee8a154ac326590799889cede3af04a7742f18d:116817417
+    ```
 
-```text
-lvl=info msg="Finished EL sync" sync_duration=23h25m0.370558429s finalized_block=0x4f69e83ff1407f2e2882f2526ee8a154ac326590799889cede3af04a7742f18d:116817417
-```
+    There are two stages on `op-geth` for snap sync:
 
-There are two stages on `op-geth` for snap sync:
+    <Steps>
+      {<h3>Downloading the headers</h3>}
 
-<Steps>
-  {<h3>Downloading the headers</h3>}
+      `op-geth` log something like this as it is downloading the headers:
 
-  `op-geth` log something like this as it is downloading the headers:
+      ```text
+      lvl=info msg="Syncing beacon headers" downloaded=116775778 left=1162878 eta=53.182s 
+      ```
 
-  ```text
-  lvl=info msg="Syncing beacon headers" downloaded=116775778 left=1162878 eta=53.182s 
-  ```
+      {<h3>Sync progress</h3>}
 
-  {<h3>Sync progress</h3>}
+      For the second stage, `op-geth` will log the following:
 
-  For the second stage, `op-geth` will log the following:
+      ```text
+      lvl=info msg="Syncing: state download in progress" synced=99.75% state="191.33 GiB" accounts=124,983,227@25.62GiB slots=806,829,266@165.16GiB codes=78965@566.74MiB eta=-2m7.602s
+      ```
 
-  ```text
-  lvl=info msg="Syncing: state download in progress" synced=99.75% state="191.33 GiB" accounts=124,983,227@25.62GiB slots=806,829,266@165.16GiB codes=78965@566.74MiB eta=-2m7.602s
-  ```
+      ```text
+      msg="Syncing: chain download in progress" synced=100.00% chain="176.01 GiB" headers=116,817,399@45.82GiB bodies=116,817,286@52.87GiB receipts=116,817,286@77.32GiB eta=77.430ms
+      ```
 
-  ```text
-  msg="Syncing: chain download in progress" synced=100.00% chain="176.01 GiB" headers=116,817,399@45.82GiB bodies=116,817,286@52.87GiB receipts=116,817,286@77.32GiB eta=77.430ms
-  ```
+      All the while, `op-geth` will also log the forkchoice update:
 
-  All the while, `op-geth` will also log the forkchoice update:
+      ```text
+      Forkchoice requested sync to new head  number=117,076,468 hash=e3884c..bf4e2b
+      ```
+    </Steps>
+  </Tabs.Tab>
 
-  ```text
-  Forkchoice requested sync to new head  number=117,076,468 hash=e3884c..bf4e2b
-  ```
-</Steps>
+  <Tabs.Tab>
+    Initial synchronization can take several hours to complete.
 
-</Tabs.Tab>
-<Tabs.Tab>
+    Snap sync in Nethermind works by:
 
-Initial synchronization can take several hours to complete. 
+    1.  Downloading only the leaf nodes of the state tree
+    2.  Generating intermediate nodes locally
+    3.  Verifying the state root matches
 
-Snap sync in Nethermind works by:
-1. Downloading only the leaf nodes of the state tree
-2. Generating intermediate nodes locally
-3. Verifying the state root matches
-
-This approach is up to 10 times faster than traditional full sync.
-
-</Tabs.Tab>
+    This approach is up to 10 times faster than traditional full sync.
+  </Tabs.Tab>
 </Tabs>
 
 #### Full sync
@@ -311,28 +309,26 @@ This approach is up to 10 times faster than traditional full sync.
 </Callout>
 
 <Tabs items={['op-geth', 'Nethermind']}>
-<Tabs.Tab>
+  <Tabs.Tab>
+    Initial full synchronization can take several days or weeks to complete. During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to your execution client.
+  </Tabs.Tab>
 
-Initial full synchronization can take several days or weeks to complete. During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to your execution client.
+  <Tabs.Tab>
+    To use full sync with Nethermind, set the following configuration:
 
-</Tabs.Tab>
-<Tabs.Tab>
+    ```bash
+    ./Nethermind.Runner \
+      -c op-sepolia \
+      --Sync.SnapSync=false \
+      --Sync.FastSync=false \
+      --data-dir path/to/data/dir \
+      --JsonRpc.JwtSecretFile=./jwt.txt
+    ```
 
-To use full sync with Nethermind, set the following configuration:
-
-```bash
-./Nethermind.Runner \
-  -c op-sepolia \
-  --Sync.SnapSync=false \
-  --Sync.FastSync=false \
-  --data-dir path/to/data/dir \
-  --JsonRpc.JwtSecretFile=./jwt.txt
-```
-
-Full sync will download and verify every block from genesis, which takes significantly longer than snap sync but provides the strongest security guarantees.
-
-</Tabs.Tab>
+    Full sync will download and verify every block from genesis, which takes significantly longer than snap sync but provides the strongest security guarantees.
+  </Tabs.Tab>
 </Tabs>
+
 Both execution clients will receive blocks from `op-node` as it requests them from Ethereum one-by-one and determines the corresponding OP Mainnet blocks that were published.
 You should see logs like the following from `op-node`:
 
@@ -352,26 +348,21 @@ INFO [06-26|14:00:59.463] inserted block                           hash=e80dc4..
 You should then also begin to see logs from your execution client:
 
 <Tabs items={['op-geth', 'Nethermind']}>
-<Tabs.Tab>
+  <Tabs.Tab>
+    ```text
+    INFO [06-26|14:02:12.974] Imported new potential chain segment     number=4,068,194 hash=a334a0..609a83 blocks=1         txs=1         mgas=0.000  elapsed=1.482ms     mgasps=0.000   age=5mo2w20h dirty=2.31MiB
+    INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,194 hash=a334a0..609a83 root=e80f5e..dd06f9 elapsed="188.373µs" age=5mo2w20h
+    INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
+    ```
+  </Tabs.Tab>
 
-```text
-INFO [06-26|14:02:12.974] Imported new potential chain segment     number=4,068,194 hash=a334a0..609a83 blocks=1         txs=1         mgas=0.000  elapsed=1.482ms     mgasps=0.000   age=5mo2w20h dirty=2.31MiB
-INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,194 hash=a334a0..609a83 root=e80f5e..dd06f9 elapsed="188.373µs" age=5mo2w20h
-INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
-```
-
-</Tabs.Tab>
-<Tabs.Tab>
-
-* **Received New Block**: Block received with number, hash and extra data `21288296 (0xb61f74...cbfbe7), Extra Data: Titan (titanbuilder.xyz)`
-* **Processed**: Block or block range processed, e.g., or `x4 21288291 .. 21288295` or  `21288296`
-* **Received ForkChoice**: Updates on the blockchain's canonical chain; with safe and finalized block, e.g., `21288296 (0xb61f74...cbfbe7), Safe: 21288252 (0x46906d...7777b8), Finalized: 21288221 (0x22a7d2...ebeae9)`
-* **Synced Chain Head**: Latest synced block number and hash on the chain, e.g., `21288296 (0xb61f74...cbfbe7)`
-
-</Tabs.Tab>
+  <Tabs.Tab>
+    *   **Received New Block**: Block received with number, hash and extra data `21288296 (0xb61f74...cbfbe7), Extra Data: Titan (titanbuilder.xyz)`
+    *   **Processed**: Block or block range processed, e.g., or `x4 21288291 .. 21288295` or  `21288296`
+    *   **Received ForkChoice**: Updates on the blockchain's canonical chain; with safe and finalized block, e.g., `21288296 (0xb61f74...cbfbe7), Safe: 21288252 (0x46906d...7777b8), Finalized: 21288221 (0x22a7d2...ebeae9)`
+    *   **Synced Chain Head**: Latest synced block number and hash on the chain, e.g., `21288296 (0xb61f74...cbfbe7)`
+  </Tabs.Tab>
 </Tabs>
-
-
 
 ## OP Mainnet archive nodes
 
