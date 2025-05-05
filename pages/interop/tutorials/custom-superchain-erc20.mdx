@@ -18,8 +18,7 @@ categories:
 is_imported_content: 'false'
 ---
 
-import { Callout } from 'nextra/components'
-import { Steps } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
 
 <Callout>
   The SuperchainERC20 standard is ready for production deployments.
@@ -62,16 +61,88 @@ Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
 ## Step by step
 
 <Steps>
-  ### Prepare for deployment
+  ### General setup
 
-  1.  Follow the setup steps in the [SuperchainERC20 Starter Kit](/app-developers/starter-kit#setup).
-      Don't start the development environment (step 5).
+  Follow the setup steps in the [SuperchainERC20 Starter Kit](/app-developers/starter-kit#setup), steps 1-4.
 
-  2.  Follow [the deployment preparations steps](/interop/tutorials/deploy-superchain-erc20#prepare-for-deployment) in the issuing new assets page.
-      Don't deploy the contracts yet.
+  1.  Install [Foundry](https://book.getfoundry.sh/getting-started/installation).
 
-      **Note:** Make sure to specify a previously unused value for the salt, for example your address and a timestamp.
-      This is necessary because if the same constructor code is used with the same salt when using the deployment script, it gets the same address, which is a problem if you want a fresh deployment.
+  2.  Run these commands:
+
+      ```sh
+      git clone https://github.com/ethereum-optimism/superchainerc20-starter.git
+      cd superchainerc20-starter
+      pnpm install
+      pnpm init:env
+      ```
+
+  3.  Edit `packages/contracts/configs/deploy-config.toml`'s `[token]` section.      
+
+      | Parameter      | Meaning                  | Example                  | 
+      | -------------- | ------------------------ | ------------------------ | 
+      | owner\_address | Owner of the token       | Your address<sup>1</sup> |                                            |
+      | name           | Token name               | Quick Transfer Token     |                                            |
+      | symbol         | Token symbol             | QTT                      |                                            |
+      | decimals       | Number of decimal places | 18                       |                                            |
+
+      (1) This should be an address you control (for which you know the private key), which has some ETH on the blockchains in question.
+      In the case of Supersim, the default has 10k ETH and you can use it.
+      For the devnets, [see here](/interop/tools/devnet#sending-eth-to-the-interop-devnets) to send ETH.
+
+  4.  If you change `owner_address`, you need to also set the private key.
+      Edit `packages/contracts/.env` to set `DEPLOYER_PRIVATE_KEY` to the private key of an account that has ETH on both devnet blockchains.
+
+      ```sh
+      DEPLOYER_PRIVATE_KEY= <<<private key goes here>>>
+      ```
+
+  ### Blockchain specific setup
+
+  <Tabs items={['Supersim', 'Devnets']}> 
+    <Tabs.Tab>
+
+      The [SuperchainERC20 Starter Kit](/app-developers/starter-kit) is already set up for [Supersim](/interop/tools/supersim).
+      All you need to do is start it.
+
+      ```sh
+      ./supersim --interop.autorelay
+      ```
+
+    </Tabs.Tab>
+    <Tabs.Tab>
+      The [SuperchainERC20 Starter Kit](/app-developers/starter-kit) is already set up for [Supersim](/interop/tools/supersim).
+      If you want to use it with a different set of blockchains, for example the [Devnets](/interop/tools/devnet), follow these steps.
+
+      1.  Edit `packages/contracts/foundry.toml` to add the RPC endpoints (add the bottom two rows).
+
+          ```toml
+          [rpc_endpoints]
+          op_chain_a = "http://127.0.0.1:9545"
+          op_chain_b = "http://127.0.0.1:9546"
+          devnet0 = "https://interop-alpha-0.optimism.io"
+          devnet1 = "https://interop-alpha-1.optimism.io"
+          ```
+
+          You can import most RPC endpoints with this command, but it does not include the Interop devnet.
+
+          ```sh
+          pnpm contracts:update:rpcs
+          ```
+
+      2.  Edit `packages/contracts/configs/deploy-config.toml`'s `[deploy-config]` section.
+
+          | Parameter             | Meaning                                       | Example                |
+          | --------------------- | --------------------------------------------- | ---------------------- |
+          | salt<sup>1</sup>      | A unique identifier                           | Carthage               |
+          | chains    | The chains to deploy the contract<sup>2</sup> | \["devnet0","devnet1"] |
+
+          (1) Make sure to specify a previously unused value for the salt, for example your address and a timestamp.
+          This is necessary because if the same constructor code is used with the same salt when using the deployment script, it gets the same address, which is a problem if you want a fresh deployment.
+
+          (2) These names must correspond to the chain names in the `[rpc_endpoints]` section of `foundry.toml` you updated in the previous step.
+    </Tabs.Tab>
+  </Tabs>
+      
 
   ### Create the custom contract
 
@@ -121,43 +192,66 @@ Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
   pnpm contracts:deploy:token
   ```
 
-  <details>
-    <summary>Sanity check</summary>
+  ### Verify the installation
 
     1.  Set `TOKEN_ADDRESS` to the address where the token is deployed.
-        You can also play with the token I created, which is at address [`0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8`](https://sid.testnet.routescan.io/address/0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8).
+        You can also play with the token I created, which is at address [`0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8`](https://sid.testnet.routescan.io/address/0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8) on the devnets.
 
         ```sh
-        TOKEN_ADDRESS=0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8
+        TOKEN_ADDRESS=<<< Your token address >>>
         ```
 
     2.  Source the `.env` file to get the private key and the address to which it corresponds.
 
         ```sh
         . packages/contracts/.env
-        MY_ADDRESS=`cast wallet address $DEPLOYER_PRIVATE_KEY`
+        USER_ADDRESS=`cast wallet address $DEPLOYER_PRIVATE_KEY`
         ```
 
     3.  Set variables for the RPC URLs.
 
-        ```sh
-        RPC_DEV0=https://interop-alpha-0.optimism.io
-        RPC_DEV1=https://interop-alpha-1.optimism.io
-        ```
+        <Tabs items={['Supersim', 'Devnets']}> 
+          
+          <Tabs.Tab> 
+            
+            Set these parameters for Supersim.
+
+            ```sh
+            URL_CHAIN_A=http://127.0.0.1:9545
+            URL_CHAIN_B=http://127.0.0.1:9546
+            ```
+          </Tabs.Tab>
+
+          <Tabs.Tab>
+            For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
+
+            ```sh
+            URL_CHAIN_A=https://interop-alpha-0.optimism.io
+            URL_CHAIN_B=https://interop-alpha-1.optimism.io
+            ```
+          </Tabs.Tab>    
+        </Tabs>
 
     4.  Get your current balance (it should be zero).
 
         ```sh
-        cast call --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "balanceOf(address)" $MY_ADDRESS | cast --from-wei
+        cast call --rpc-url $URL_CHAIN_A $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS | cast --from-wei
         ```
 
     5.  Call the faucet to get a token and check the balance again.
 
         ```sh
-        cast send  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "faucet()"
-        cast call --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "balanceOf(address)" $MY_ADDRESS | cast --from-wei
+        cast send  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $URL_CHAIN_A $TOKEN_ADDRESS "faucet()"
+        cast call --rpc-url $URL_CHAIN_A $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS | cast --from-wei
         ```
-  </details>
+
+    6.  Repeat the same steps on chain B.
+
+        ```sh
+        cast call --rpc-url $URL_CHAIN_B $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS | cast --from-wei
+        cast send  --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $URL_CHAIN_B $TOKEN_ADDRESS "faucet()"
+        cast call --rpc-url $URL_CHAIN_B $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS | cast --from-wei
+
 </Steps>
 
 For more details [see the explainer](/interop/superchain-erc20).
