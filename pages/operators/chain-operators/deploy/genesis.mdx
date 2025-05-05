@@ -101,19 +101,99 @@ The `rollup.json` file contains the rollup protocol parameters, including:
 
 ## Using your configuration files
 
-Once you have generated the configuration files:
+After retrieving your configuration files, you'll need to set up your OP Stack node components:
 
-1.  **Initialize your execution client** with the genesis file:
+### Step 1: Install required components
 
-    ```bash
-    op-geth init --datadir <YOUR_DATA_DIR> .deployer/genesis.json
-    ```
+Before initializing your node, you need to install the OP Stack software components. The OP Stack architecture follows the Consensus/Execution split similar to post-Merge Ethereum L1 with two main components:
 
-2.  **Configure your consensus client** with the rollup file:
+*   **op-geth**: The execution client (similar to geth on Ethereum)
+*   **op-node**: The consensus client (rollup node)
 
-    ```bash
-    op-node --l2.genesis .deployer/genesis.json --rollup.config .deployer/rollup.json [other options]
-    ```
+You'll need to build these components from their respective source repositories:
+
+```bash
+# Clone the repositories
+git clone https://github.com/ethereum-optimism/op-geth.git
+git clone https://github.com/ethereum-optimism/optimism.git
+
+# Build op-geth (execution client)
+cd op-geth
+make geth
+cd ..
+
+# Build op-node (consensus client)
+cd optimism
+just op-node
+cd ..
+```
+
+For more detailed installation instructions, see the [OP Stack node setup guide](/operators/node-operators/tutorials/run-node-from-source).
+
+### Step 2: Initialize your execution client
+
+The op-geth execution client requires initialization with your genesis file. This creates the initial blockchain state in your data directory:
+
+```bash
+# Create a data directory for your chain
+mkdir -p <YOUR_DATA_DIR>
+
+# Initialize op-geth with your genesis file
+./op-geth/build/bin/geth init --datadir <YOUR_DATA_DIR> .deployer/genesis.json
+```
+
+### Step 3: Generate a JWT secret for secure communication
+
+op-geth and op-node communicate over the Engine API, secured using a shared JWT secret:
+
+```bash
+# Generate a JWT secret file
+openssl rand -hex 32 > <YOUR_DATA_DIR>/jwt-secret.txt
+```
+
+### Step 4: Start your execution client
+
+Start the op-geth execution client with appropriate parameters:
+
+```bash
+./op-geth/build/bin/geth \
+  --datadir <YOUR_DATA_DIR> \
+  --http \
+  --http.api eth,net,web3,debug \
+  --http.addr 0.0.0.0 \
+  --http.port 8545 \
+  --http.corsdomain "*" \
+  --authrpc.addr 0.0.0.0 \
+  --authrpc.port 8551 \
+  --authrpc.vhosts "*" \
+  --authrpc.jwtsecret <YOUR_DATA_DIR>/jwt-secret.txt
+```
+
+### Step 5: Configure your consensus client
+
+The op-node consensus client requires your rollup configuration file along with connections to both L1 and L2:
+
+```bash
+./optimism/op-node/bin/op-node \
+  --l2.genesis .deployer/genesis.json \
+  --rollup.config .deployer/rollup.json \
+  --l1.rpc <YOUR_L1_RPC_URL> \
+  --l2.engine-auth <YOUR_DATA_DIR>/jwt-secret.txt \
+  --l2.engine-sync http://localhost:8551 \
+  --rpc.addr 0.0.0.0 \
+  --rpc.port 7545 \
+  --p2p.disable
+```
+
+Replace the placeholders:
+
+*   `<YOUR_DATA_DIR>`: Path to your chain data directory
+*   `<YOUR_L1_RPC_URL>`: URL for your L1 node (Ethereum) connection
+
+For detailed configuration options:
+
+*   [op-geth configuration guide](/operators/node-operators/configuration/execution-config)
+*   [op-node configuration guide](/operators/node-operators/configuration/base-config)
 
 ## Troubleshooting
 
