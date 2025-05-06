@@ -21,7 +21,7 @@ categories:
 is_imported_content: 'false'
 ---
 
-import { Callout, Steps } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
 import { AutorelayCallout } from '@/components/AutorelayCallout'
 
 <Callout>
@@ -45,110 +45,144 @@ Note that this tutorial provides step-by-step instructions for transferring `Sup
   Cross-chain transfers cannot be reversed.
 </Callout>
 
+<details>
+  <summary>About this tutorial</summary>
+
+  **What you'll learn**
+
+  *   How to send `SuperchainERC20` tokens on the blockchain and between blockchains
+  *   How to relay messages between chains
+
+  **Technical knowledge**
+
+  *   Intermediate TypeScript knowledge
+  *   Understanding of smart contract development
+  *   Familiarity with blockchain concepts
+
+  **Development environment**
+
+  *   Unix-like operating system (Linux, macOS, or WSL for Windows)
+  *   Node.js version 16 or higher
+  *   Git for version control
+
+  **Required tools**
+
+  The tutorial uses these primary tools:
+
+  *   Node: For running TypeScript code from the command line
+  *   Viem: For blockchain interaction
+</details>
+
 ### What you'll build
 
+*   Commands to transfer `SuperchainERC20` tokens between chains
 *   A TypeScript application to transfer `SuperchainERC20` tokens between chains
-
-### What you'll learn
-
-*   How to send `SuperchainERC20` tokens on the blockchain and between blockchains
-*   How to relay messages between chains
-
-## Prerequisites
-
-Before starting this tutorial, ensure your development environment meets the following requirements:
-
-### Technical knowledge
-
-*   Intermediate TypeScript knowledge
-*   Understanding of smart contract development
-*   Familiarity with blockchain concepts
-
-### Development environment
-
-*   Unix-like operating system (Linux, macOS, or WSL for Windows)
-*   Node.js version 16 or higher
-*   Git for version control
-
-### Required tools
-
-The tutorial uses these primary tools:
-
-*   Foundry: For issuing transactions
-*   TypeScript: For implementation
-*   Node: For running TypeScript code from the command line
-*   Viem: For blockchain interaction
 
 ## Directions
 
 <Steps>
   ### Preparation
 
-  You need onchain `SuperchainERC20` tokens.
-  You can [deploy your own token](./deploy-superchain-erc20), but in this tutorial we will use [`CustomSuperchainToken`](https://sid.testnet.routescan.io/address/0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8),  existing `SuperchainERC20` token on the [Interop devnet](/interop/tools/devnet).
+  1.  If you are using Supersim, setup the [SuperchainERC20 starter kit](/app-developers/starter-kit#setup).
+      The `pnpm dev` step also starts Supersim.
 
-  1.  Create environment variables for the RPC endpoints for the blockchains and the token address.
+  2.  Store the configuration in environment variables.
 
-      ```sh
-      RPC_DEV0=https://interop-alpha-0.optimism.io
-      RPC_DEV1=https://interop-alpha-1.optimism.io
-      TOKEN_ADDRESS=0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8
-      ```
+      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs.Tab>
+          ```sh
+          PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+          USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+          URL_CHAIN_A=http://127.0.0.1:9545
+          URL_CHAIN_B=http://127.0.0.1:9546
+          CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+          TOKEN_ADDRESS=`cat superchainerc20-starter/packages/contracts/broadcast/multi/SuperchainERC20Deployer.s.sol-latest/run.json | jq --raw-output .deployments[0].transactions[0].contractAddress`
+          ```
+        </Tabs.Tab>
 
-  2.  Set `PRIVATE_KEY` to the private key of an address that has [Sepolia ETH](https://cloud.google.com/application/web3/faucet/ethereum/sepolia).
+        <Tabs.Tab>
+          1.  Set `PRIVATE_KEY` to the private key for an address that has ETH on the two devnets.
 
-      ```sh
-      export PRIVATE_KEY=0x<private key here>
-      MY_ADDRESS=`cast wallet address $PRIVATE_KEY`
-      ```
-
-  3.  Send ETH to the two L2 blockchains.
-
-      ```sh
-      cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIVATE_KEY --value 0.02ether 0x7385d89d38ab79984e7c84fab9ce5e6f4815468a
-      cast send --rpc-url https://endpoints.omniatech.io/v1/eth/sepolia/public --private-key $PRIVATE_KEY --value 0.02ether 0x55f5c4653dbcde7d1254f9c690a5d761b315500c
-      ```
-
-  4.  Wait a few minutes until you can see the ETH [on the block explorer](https://sid.testnet.routescan.io/) for your address.
-
-      <details>
-        <summary>Sanity check</summary>
-
-        Check the ETH balance of your address on both blockchains.
-
-        ```sh
-        cast balance --ether $MY_ADDRESS --rpc-url $RPC_DEV0
-        cast balance --ether $MY_ADDRESS --rpc-url $RPC_DEV1
-        ```
-      </details>
-
-  5.  Obtain tokens on Interop devnet 0.
-      When using `CustomSuperchainToken`, there are two ways to do this:
-
-      *   Use the [block explorer](https://sid.testnet.routescan.io/address/0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8/contract/420120000/writeContract?chainid=420120000) and a browser wallet to run the [faucet](https://sid.testnet.routescan.io/address/0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8/contract/420120000/writeContract?chainid=420120000#F6) function.
-
-      *   Use `cast` to call the `faucet` function.
+          2.  Run these commands to specify the rest of the environment variables.
 
           ```sh
-          cast send --rpc-url $RPC_DEV0 --private-key $PRIVATE_KEY $TOKEN_ADDRESS "faucet()"
+          USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
+          URL_CHAIN_A=https://interop-alpha-0.optimism.io
+          URL_CHAIN_B=https://interop-alpha-1.optimism.io
+          CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+          TOKEN_ADDRESS=0x0FAe7deDb9CfC2d8288d432B85998e6b263F3A72
           ```
+        </Tabs.Tab>
+      </Tabs>
+
+  3.  Obtain tokens on chain A.
+
+      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs.Tab>
+          ```sh
+          ONE=`echo 1 | cast to-wei`
+          cast send $TOKEN_ADDRESS "mintTo(address,uint256)" $USER_ADDRESS $ONE --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+          ```
+        </Tabs.Tab>
+
+        <Tabs.Tab>
+          ```sh
+          cast send $TOKEN_ADDRESS "faucet()" --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+          ```
+        </Tabs.Tab>
+      </Tabs>
 
       <details>
         <summary>Sanity check</summary>
 
-        Run this command to check your token balance.
+        Check that you have at least one token on chain A.
 
         ```sh
-        cast call --rpc-url $RPC_DEV0 $TOKEN_ADDRESS "balanceOf(address)" $MY_ADDRESS | cast --from-wei
+        cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         ```
       </details>
+
+  ### Transfer tokens using the command line
+
+  1.  Specify configuration variables.
+
+      ```sh
+      TENTH=`echo 0.1 | cast to-wei`
+      INTEROP_BRIDGE=0x4200000000000000000000000000000000000028      
+      ```
+
+  2.  See your balance on both blockchains.
+
+      ```sh
+      cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
+      cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei      
+      ```
+
+  3.  Call [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) to transfer tokens.
+
+      ```sh
+      cast send $INTEROP_BRIDGE "sendERC20(address,address,uint256,uint256)" $TOKEN_ADDRESS $USER_ADDRESS $TENTH $CHAIN_B_ID --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+      ```
+
+  4.  See your balance on both blockchains.
+
+      ```sh
+      cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
+      cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei      
+      ```
 
   ### Transfer tokens using TypeScript
 
   We are going to use a [Node](https://nodejs.org/en) project, to be able to use [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) to send the executing message.
   We use [TypeScript](https://www.typescriptlang.org/) to have [type safety](https://en.wikipedia.org/wiki/Type_safety) combined with JavaScript functionality.
 
-  1.  Initialize a new Node project.
+  1.  Export environment variables
+
+      ```sh
+      export PRIVATE_KEY TOKEN_ADDRESS CHAIN_B_ID
+      ```
+
+  2.  Initialize a new Node project.
 
       ```sh
       mkdir xfer-erc20
@@ -158,69 +192,25 @@ The tutorial uses these primary tools:
       mkdir src
       ```
 
-  2.  Edit `package.json` to add the `start` script.
-
-      ```json
-      {
-        "name": "xfer-erc20",
-        "version": "1.0.0",
-        "main": "index.js",
-        "scripts": {
-          "test": "echo \"Error: no test specified\" && exit 1",
-          "start": "tsx src/xfer-erc20.mts"
-        },
-        "keywords": [],
-        "author": "",
-        "license": "ISC",
-        "type": "module",
-        "description": "",
-        "devDependencies": {
-          "@eth-optimism/viem": "^0.3.2",
-          "@types/node": "^22.13.4",
-          "tsx": "^4.19.3",
-          "viem": "^2.23.3"
-        }
-      }      
-      ```
-
   3.  Create `src/xfer-erc20.mts`:
 
-      ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts hash=26d412ead555cdd59c16676a4dcd91e8
+      ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts hash=2964a6dcafacb8b7dc1e115a54fb3b7c
       ```
 
       <details>
         <summary>Explanation of `xfer-erc20.mts`</summary>
 
-        ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts#L79-L84 hash=5084a0cf4064dc7cfaf1cf0f88e1f2d1
+        ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts#L76-L81 hash=b144852a4fa9ae45e79ec6f124e48e79
         ```
 
         Use `@eth-optimism/viem`'s `walletActionsL2().sendSuperchainERC20` to send the `SuperchainERC20` tokens.
         Internally, this function calls [`SuperchainTokenBridge.sendERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol#L52-L78) to send the tokens.
-
-        <AutorelayCallout />
-
-        ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts#L88-L90 hash=b353aebabd92c4af52858461d18fe8cd 
-        ```
-
-        To relay a message, we need the information in the receipt.
-        Also, we need to wait until the transaction with the relayed message is actually part of a block.
-
-        ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts#L92-L94 hash=47d2387a65e4a5f5dbfa98868c2c5abc 
-        ```
-
-        A single transaction can send multiple messages.
-        But here we know we sent just one, so we look for the first one in the list.
-
-        ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts#L96-L99 hash=4cf177987a894a8cb58ae5a3e9d731e8 
-        ```
-
-        This is how you use `@eth-optimism/viem` to create an executing message.
       </details>
 
-  4.  Run the TypeScript program, and see the change in your `CustomSuperchainToken` balances.
+  4.  Run the TypeScript program, and see the change in your token balances.
 
       ```sh
-      npm start
+      pnpm tsx src/xfer-erc20.mts
       ```
 </Steps>
 

@@ -3,14 +3,14 @@ import {
     http,
     publicActions,
     getContract,
-    Address,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { interopAlpha0, interopAlpha1 } from '@eth-optimism/viem/chains'
-
+import { interopAlpha0, interopAlpha1, supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
 import { walletActionsL2, publicActionsL2 } from '@eth-optimism/viem'
 
-const tokenAddress = "0xF3Ce0794cB4Ef75A902e07e5D2b75E4D71495ee8"
+const tokenAddress = process.env.TOKEN_ADDRESS
+const useSupersim = process.env.CHAIN_B_ID == "902"
+
 const balanceOf = {
     "constant": true,
     "inputs": [{
@@ -30,15 +30,15 @@ const balanceOf = {
 const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
 
 const wallet0 = createWalletClient({
-    chain: interopAlpha0,
+    chain: useSupersim ? supersimL2A : interopAlpha0,
     transport: http(),
     account
 }).extend(publicActions)
-    .extend(publicActionsL2())
+//    .extend(publicActionsL2())
     .extend(walletActionsL2())
  
 const wallet1 = createWalletClient({
-    chain: interopAlpha1,
+    chain: useSupersim ? supersimL2B : interopAlpha1,
     transport: http(),
     account
 }).extend(publicActions)
@@ -70,6 +70,7 @@ Address: ${account.address}
 `)
 }
 
+console.log("Initial balances")
 await reportBalances()
 
 const sendTxnHash = await wallet0.interop.sendSuperchainERC20({
@@ -79,26 +80,15 @@ const sendTxnHash = await wallet0.interop.sendSuperchainERC20({
     chainId: wallet1.chain.id
 })
 
-console.log(`Send transaction: https://sid.testnet.routescan.io/tx/${sendTxnHash}`)
-
-const sendTxnReceipt = await wallet0.waitForTransactionReceipt({
+console.log(`Send transaction: ${sendTxnHash}`)
+await wallet0.waitForTransactionReceipt({
     hash: sendTxnHash
 })
 
-const sentMessages = await wallet0.interop.getCrossDomainMessages({
-    logs: sendTxnReceipt.logs
-})
-const sentMessage = sentMessages[0]
-const relayMessageParams = await wallet0.interop.buildExecutingMessage({
-    log: sentMessage.log
-})
+console.log("Immediately after the transaction is processed")
+await reportBalances()
 
-const relayTxnHash = await wallet1.interop.relayCrossDomainMessage(relayMessageParams)
+await new Promise(resolve => setTimeout(resolve, 5000));
 
-const relayTxnReceipt = await wallet1.waitForTransactionReceipt({
-    hash: relayTxnHash
-})
-
-console.log(`Relay transaction: https://sid.testnet.routescan.io/tx/${relayTxnHash}`)
-
+console.log("After waiting (hopefully, until the message is relayed)")
 await reportBalances()
