@@ -1,5 +1,5 @@
 ---
-title: Manual relay transaction tutorial
+title: Relay transactions manually
 description: >-
   Learn to relay transactions directly by sending the correct transaction.
 lang: en-US
@@ -26,7 +26,7 @@ import { Steps } from 'nextra/components'
 import { InteropCallout } from '@/components/WipCallout'
 import { AutorelayCallout } from '@/components/AutorelayCallout'
 
-# Manual relay transactions tutorial
+# Relay transactions manually
 
 <InteropCallout />
 
@@ -190,7 +190,9 @@ This lets sequencers know what executing messages to expect in a transaction, wh
 
 The [algorithm to calculate the access list](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L87-L115) is a bit complicated, but you don't need to worry about it.
 Supersim exposes [RPC calls](https://supersim.pages.dev/guides/interop/cast?highlight=manuall#7-construct-the-access-list-for-the-message) that calculates it for you on port 8420.
-Even if you use a different interop cluster that lost autorelay for some reason, the code above should calculate the correct access list because this is a [pure function](https://en.wikipedia.org/wiki/Pure_function). The other RPC call, `admin_getAccessListByMsgHash` is not and therefore is less flexible.
+The code above will calculate the correct access list even if you're using a different interop cluster where autorelay is not functioning. 
+This is because the code implements a [pure function](https://en.wikipedia.org/wiki/Pure_function), which produces consistent results regardless of external state.
+In contrast, the `admin_getAccessListByMsgHash` RPC call is not a pure function, it is dependent on system state and therefore less flexible in these situations.
 
 ```sh
 echo Old greeting
