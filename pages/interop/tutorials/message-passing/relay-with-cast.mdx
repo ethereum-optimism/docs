@@ -46,7 +46,7 @@ Learn to relay transactions directly by sending the correct transaction.
 
   **What you'll learn**
 
-  *   How to use `cast` to relay transactions with autorelay does not work
+  *   How to use `cast` to relay transactions when autorelay does not work
 
   **Development environment requirements**
 
@@ -57,7 +57,7 @@ Learn to relay transactions directly by sending the correct transaction.
   *   Foundry tools installed (forge, cast, anvil)
 </details>
 
-### What You'll Build
+### What you'll Build
 
 *   A script to relay messages without using [the JavaScript library](https://www.npmjs.com/package/@eth-optimism/viem)
 
@@ -109,7 +109,7 @@ CHAIN_ID_B=902
 ```
 
 This is the configuration.
-The greeter addresses are the same because the nonce for the user address' nonce is the same.
+The greeter addresses are identical because the nonce for the user address has the same nonce on both chains.
 
 ```sh
 cast send -q --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A $GREETER_A_ADDRESS "setGreeting(string)" "Hello from chain A $$"
@@ -122,7 +122,7 @@ cast logs "SentMessage(uint256,address,uint256,address,bytes)" --rpc-url $URL_CH
 ```
 
 Whenever `L2ToL2CrossDomainMessenger` sends a message to a different blockchain, it emits a [`SendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L83-L91) event.
-Here we look for those messages, but get only the last one.
+Extract only the latest `SendMessage` event from the logs.
 
 <details>
   <summary>Example `log-entry`</summary>
@@ -185,7 +185,7 @@ INNER_END_OF_FILE
 ACCESS_LIST=`cast rpc admin_getAccessListForIdentifier --rpc-url http://localhost:8420 "$RPC_PARAMS" | jq .accessList`
 ```
 
-To secure cross-chain messaging and prevent potential [denial of service attacks](https://github.com/ethereum-optimism/design-docs/blob/main/protocol/interop-access-list.md), relay transactions require properly formatted access lists that include a checksum derived from the message data.
+To secure cross-chain messaging and prevent potential [denial-of-service attacks](https://github.com/ethereum-optimism/design-docs/blob/main/protocol/interop-access-list.md), relay transactions require properly formatted access lists that include a checksum derived from the message data.
 This lets sequencers know what executing messages to expect in a transaction, which makes it easy not to include transactions that are invalid because they rely on messages that were never sent.
 
 The [algorithm to calculate the access list](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L87-L115) is a bit complicated, but you don't need to worry about it.
