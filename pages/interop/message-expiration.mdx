@@ -1,0 +1,44 @@
+---
+title: Message expiration
+description: What message expiration is, why it exists, and how to reemit a previously sent message if it has expired and was never relayed.
+lang: en-US
+content_type: guide
+topic: message-expiration
+personas:
+  - protocol-developer
+  - chain-operator
+  - app-developer
+categories:
+  - protocol
+  - interoperability
+  - cross-chain-messaging
+  - security
+  - block-safety
+  - message-passing
+  - reorgs
+  - superchain
+is_imported_content: 'false'
+---
+
+# Message expiration
+
+[Initiating messages](/interop/message-passing) sent between OP Stack chains have a limited validity period called the expiry window. Once this window elapses, the initiating message becomes invalid and can no longer be executed on the destination chain.
+
+If a message expires before being relayed, developers can reemit the message on the source chain. This triggers a fresh `SentMessage` event, allowing offchain infrastructure to pick it up and relay it again ensuring successful delivery.
+
+## The expiry window
+
+The expiry window is an offchain constant that defines how long a cross-chain message remains valid. For the [Superchain interop cluster](/interop/explainer), messages must be executed within 7 days (604,800 seconds) of the initiating message being sent.
+
+After this period, a message can no longer be executed on the destination chain unless the event is remitted on the source chain.
+
+## Reemitting an expired message
+
+The `resendMessage` function on the [`L2ToL2CrossDomainMessenger`](/interop/message-passing) contract allows developers to reemit a message that was sent but not yet relayed.
+
+This emits a new `SentMessage` log with the same content as the original message, enabling offchain relayers to pick it up again.
+
+The process to reemit an expired message:
+
+1.  Call `resendMessage(messageHash)` on the origin chain to reemit the message event. The contract verifies the message hash was originally sent.
+2.  Relay the new message as normal.
