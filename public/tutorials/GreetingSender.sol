@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
  
-import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
-import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";
+import { Predeploys } from "lib/optimism/packages/contracts-bedrock/src/libraries/Predeploys.sol";
+import { IL2ToL2CrossDomainMessenger } from "lib/optimism/packages/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";
  
 import { Greeter } from "src/Greeter.sol";
  
