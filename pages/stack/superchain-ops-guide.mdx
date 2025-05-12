@@ -108,6 +108,10 @@ ChildSafe3 = "0xc2819DC788505Aac350142A7A707BF9D03E3Bd03"
 Before executing the upgrade, simulate it to ensure everything is configured correctly:
 
 ```bash
+just clean && just install
+```
+
+```bash
 # Nested 
 SIMULATE_WITHOUT_LEDGER=1 just --dotenv-path $(pwd)/.env --justfile ../../../nested.just simulate <foundation|council|chain-governor|child-safe-1|child-safe-2|child-safe-3>
 # Single 
@@ -119,3 +123,9 @@ This will run through the upgrade process without actually executing the transac
 ### Step 6: Execute or submit for review
 
 For chains within the Superchain, submit a pull request to have your task reviewed. If your chain is not within the Superchain, execute the transaction yourself.
+
+## Using op-deployer to create calldata
+
+The `upgrade` command in op-deployer allows you to upgrade a chain from one version to another. It consists of several subcommands, one for each upgrade version. Think of it like a database migration: each upgrade command upgrades a chain from exactly one previous version to the next. A chain that is several versions behind can be upgrade to the latest version by running multiple upgrade commands in sequence.
+
+To learn about the `upgrade` command, check out our [devdocs](https://devdocs.optimism.io/op-deployer/user-guide/upgrade.html).
