@@ -1,5 +1,5 @@
 ---
-title: Upgrading Smart Contracts from v1.6.0 to v1.8.0
+title: Upgrading Smart Contracts from v1.6.0 or v1.3.0 to v1.8.0
 description: Learn about upgrading the smart contracts that make up the OP Stack.
 lang: en-US
 content_type: guide
@@ -22,7 +22,7 @@ is_imported_content: 'false'
 
 import { Callout } from 'nextra/components'
 
-# Upgrading Optimism L1 smart contracts from v1.6.0 to v1.8.0
+# Upgrading Optimism L1 smart contracts from v1.6.0 or v1.3.0 to v1.8.0
 
 This guide provides specific instructions for upgrading Optimism's Layer 1 contracts from `op-contracts/v1.6.0` to `op-contracts/v1.8.0`. This upgrade includes important changes to the system configuration and fault proof system.
 
@@ -50,16 +50,112 @@ Before starting the upgrade process, ensure you have the following tools install
 
 For the complete set of dependencies and detailed installation instructions, refer to the [superchain-ops README](https://github.com/ethereum-optimism/superchain-ops/tree/main).
 
+### Formatting config files
+Before starting, make sure you have access to your chain's `deployments.json` and `deploy-config.json`.
+
+You might need to make some edits to your files, to ensure all the info is there and address names are correct:
+
+`deployments.json`:
+```
+{
+- rename to AddressManager "Lib_AddressManager": "0xEF8115234234237c756402Fc1deaa56550Ef",
+  "L2OutputOracleProxy": "0x9E6204F2341423909123we5f95c",
+  "OptimismMintableERC20FactoryProxy": "0xc52BC712391090idsaklmasBcFf",
+- rename to L1StandardBridgeProxy "Proxy__OVM_L1StandardBridge": "0x3e2Ea9B92ewm1ioo12389195284631",
+  "ProxyAdmin": "0xD4ef175B9e72cAEe9f1fe7660a6Ec19009903b49",
+- rename to L1CrossDomainMessengerProxy "Proxy__OVM_L1CrossDomainMessenger": "0xdC40a14d9abd6F41283989jads03441ca506",
+  "L1ERC721BridgeProxy": "0x831231asda87f3a971B169C5A0E1d34481c3",
+  "OptimismPortalProxy": "0x1a0123res30f69f6A19DF447A0CfD9551054",
+  "SystemConfigProxy": "0xA3cA2312easdasq23543fe212BBBF17930d86"
+}
+```
+
+`deploy-config.json`:
+```
+{
+  "l1StartingBlockTag": "0x10aa183",
+  "l1ChainID": 1,
+  "l2ChainID": 7777777,
+  "l2BlockTime": 2,
+  "finalizationPeriodSeconds": 604800,
+- check this address is the actually the current one from the SCR "systemConfigOwner": "0xC72aE5c7cc9a332699305E29F68Be66c73b60542",
+- same as PortalGuardian "superchainConfigGuardian": "0x9BA6e03D8B90dE867373Db8cF1A58d2F7F006b3A",
+  "baseFeeVaultRecipient": "0xe900b3Edc1BA0430CFa9a204A1027B90825ac951",
+  "l1FeeVaultRecipient": "0xe900b3Edc1BA0430CFa9a204A1027B90825ac951",
+  "sequencerFeeVaultRecipient": "0xe900b3Edc1BA0430CFa9a204A1027B90825ac951",
+  "l2GenesisBlockBaseFeePerGas": "0x3b9aca00",
+  "governanceTokenSymbol": "OP",
+  "governanceTokenName": "Optimism",
+  "maxSequencerDrift": 600,
+  "sequencerWindowSize": 3600,
+  "channelTimeout": 300,
+  "p2pSequencerAddress": "0x3Dc8Dfd0709C835cAd15a6A27e089FF4cF4C9228",
+  "optimismL2FeeRecipient": "0x63AA492609175d1824dD668BDadF0042E74b0fC8",
+  "batchInboxAddress": "0x6F54Ca6F6EdE96662024Ffd61BFd18f3f4e34DFf",
+  "batchSenderAddress": "0x625726c858dBF78c0125436C943Bf4b4bE9d9033",
+  "l2GenesisRegolithTimeOffset": "0x0",
+- make sure this is the STANDARD Guardian "portalGuardian": "0xC72aE5c7cc9a332699305E29F68Be66c73b60542",
+  "l2OutputOracleSubmissionInterval": 180,
+  "l2OutputOracleStartingTimestamp": -1,
+  "l2OutputOracleStartingBlockNumber": "0x0",
+- make sure it's the Chain Operator's  "l2OutputOracleProposer": "0x48247032092e7b0ecf5dEF611ad89eaf3fC888Dd",
+- make sure it's updated to the PAO "l2OutputOracleOwner": "0xDA1F62857EA7f10444725c6c435235243D623540",
+  "l2GenesisBlockGasLimit": "0x1c9c380",
+  "fundDevAccounts": false,
+  "gasPriceOracleOverhead": 188,
+  "gasPriceOracleScalar": 684000,
+  "eip1559Denominator": 50,
+  "eip1559Elasticity": 6,
+- make sure this is updated from SCR chain toml "proxyAdmin": "0x027860cA56cF779371461C14c3a483c94e1aA8a0",
+- make sure this is updated from SCR chain toml  "proxyAdminOwner": "0xb0cCdbD6fe09D2199171BE19450aF249250518A0",
+  "optimismBaseFeeRecipient": "0xea4591A6e5a31CF0b822A4f563163CeeBeEe4eb1",
+  "optimismL1FeeRecipient": "0xdD7aCF916c3E3Fb959CA3bB29beFffcAD2e90be6",
+  "l2CrossDomainMessengerOwner": "0xA53EF9bBec25fdA4b6Da7EF5617565794369A2A5",
+  "gasPriceOracleOwner": "0x9c3651E0B3CE47A0b17d775077E3d9B712582be0",
+- update this to the STANDARD role Challenger "l2OutputOracleChallenger": "0xcA4571b1ecBeC86Ea2E660d242c1c29FcB55Dc72",
+- add the below if not in the config 
+  "useFaultProofs": true,
+  "faultGameMaxDepth": 73,
+  "faultGameSplitDepth": 30,
+  "faultGameWithdrawalDelay": 604800,
+  "faultGameMaxClockDuration": 302400,
+  "faultGameClockExtension": 10800,
+- make sure it's updated to the latest "faultGameAbsolutePrestate": "0x03925193e3e89f87835bbdf3a813f60b2aa818a36bbe71cd5d8fd7e79f52bafe",
+  "faultGameGenesisBlock": 0,
+  "faultGameGenesisOutputRoot": "0xdead000000000000000000000000000000000000000000000000000000000000",
+  "respectedGameType": 1,
+  "preimageOracleMinProposalSize": 126000,
+  "preimageOracleChallengePeriod": 86400,
+  "proofMaturityDelaySeconds": 604800,
+  "disputeGameFinalityDelaySeconds": 302400,
+  "enableGovernance": false,
+  "systemConfigStartBlock": 0,
+  "requiredProtocolVersion": "0x0000000000000000000000000000000000000003000000010000000000000000",
+  "recommendedProtocolVersion": "0x0000000000000000000000000000000000000003000000010000000000000000",
+- make sure to add the below if not present already, these value won't matter but the script needs them to be present in the config  
+  "sequencerFeeVaultWithdrawalNetwork": 0,
+  "baseFeeVaultWithdrawalNetwork": 0,
+  "l1FeeVaultWithdrawalNetwork": 0,
+  "baseFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
+  "l1FeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
+  "sequencerFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000"
+}
+```
+
+Make sure that important addresses (like the ProxyAdmin, PAO, all L1 addresses, L2OO) are actually up to date by cross checking the Superchain Registry and on-chain (you can do this easily with [`op-fetcher`](https://github.com/ethereum-optimism/optimism/tree/develop/op-fetcher), especially for the `deployments.json`.
+
 ## Step-by-step upgrade process
 
 ### 1. Clone the repository
 
 ```sh
-git clone --branch proposal/op-contracts/v1.8.0 --depth 1 git@github.com:ethereum-optimism/monorepo.git
+git clone --branch proposal/op-contracts/v1.8.0 --depth 1 git@github.com:ethereum-optimism/monorepo.git && \
 cd monorepo/packages/contracts-bedrock/scripts/upgrades/holocene
 ```
 
 ### 2. Configure environment
+
+Update your `.env` file with the required information. Here's an [example `.env` files](https://github.com/ethereum-optimism/optimism/blob/a7a4c10c79c3c8546a11c002773246cd54d380e2/packages/contracts-bedrock/scripts/upgrades/holocene/.env.example).
 
 ```sh
 cp .env.example .env
