@@ -69,8 +69,6 @@ import {
 	walletActionsL2,
     supersimL2A,
     supersimL2B,
-    createInteropSentL2ToL2Messages,
-    decodeRelayedL2ToL2Messages,
 } from "@eth-optimism/viem";
 
 // SuperERC20 is in development so we manually define the address here
@@ -121,21 +119,20 @@ await opChainAClient.waitForTransactionReceipt({ hash: mintTxHash });
 // 2. Initiate sendERC20 tx to bridge funds to chain B
 
 console.log("Initiating sendERC20 on OPChainA to OPChainB...");
-const sendERC20TxHash = await opChainAClient.writeContract({
-	address: SUPERCHAIN_TOKEN_BRIDGE_ADDRESS,
-	abi: parseAbi([
-		"function sendERC20(address _token, address _to, uint256 _amount, uint256 _chainId)",
-	]),
-	functionName: "sendERC20",
-	args: [L2_NATIVE_SUPERCHAINERC20_ADDRESS, account.address, 1000n, BigInt(supersimL2B.id)],
+const sendERC20TxHash = await opChainAClient.interop.sendSuperchainERC20({
+	tokenAddress: SUPERSIM_SUPERC20_ADDRESS,
+	to: testAccount.address,
+        amount: AMOUNT_TO_SEND,
+        chainId: supersimL2B.id,
 });
 
 const sendERC20Receipt = await opChainAClient.waitForTransactionReceipt({ hash: sendERC20TxHash });
 
 // 3. Construct the interoperable log data from the sent message
 
-const { sentMessages } = await createInteropSentL2ToL2Messages(opChainAClient, { receipt: sendERC20Receipt })
+const sentMessages = await opChainAClient.interop.getCrossDomainMessages({ logs: sendERC20Receipt.logs })
 const sentMessage = sentMessages[0] // We only sent 1 message
+const relayMessageParams = await opChainAClient.interop.buildExecutingMessage({ log: sentMessage.log })
 ```
 
 ### Relay the sent message on the destination chain
@@ -148,17 +145,14 @@ const sentMessage = sentMessages[0] // We only sent 1 message
 // 4. Relay the sent message
 
 console.log("Relaying message on OPChainB...");
-const relayTxHash = await opChainBClient.relayL2ToL2Message({
-    sentMessageId: sentMessage.id,
-    sentMessagePayload: sentMessage.payload,
-});
+const relayTxHash = await opChainBClient.interop.relayCrossDomainMessage(relayMessageParams);
 
 const relayReceipt = await opChainBClient.waitForTransactionReceipt({ hash: relayTxHash });
 
 // 5. Ensure the message was relayed successfully
 
-const { successfulMessages, failedMessages } = decodeRelayedL2ToL2Messages({ receipt: relayReceipt });
-if (successfulMessages.length != 1) {
+const status = await opChainBClient.interop.getCrossDomainMessageStatus({ message: sentMessage })
+if (status != 'relayed') {
     throw new Error("failed to relay message!")
 }
 
@@ -177,7 +171,7 @@ console.log(`Balance on OPChainB: ${balance}`);
 ## Next steps
 *   Check out the collection of [Supersim tutorials](/app-developers/tutorials/supersim) for more resources on building with Interop.
 *   Use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit) to deploy your token across the Superchain.
-*   Review the [Superchain Interop Explainer](/stack/interop/explainer) for answers to common questions about interoperability.
+*   Review the [Superchain Interop Explainer](/interop/explainer) for answers to common questions about interoperability.
 
 ## Full code snippet
 
@@ -202,8 +196,6 @@ import {
 	walletActionsL2,
     supersimL2A,
     supersimL2B,
-    createInteropSentL2ToL2Messages,
-    decodeRelayedL2ToL2Messages,
 } from "@eth-optimism/viem";
 
 // SuperERC20 is in development so we manually define the address here
@@ -250,22 +242,21 @@ await opChainAClient.waitForTransactionReceipt({ hash: mintTxHash });
 
 // 2. Initiate sendERC20 tx to bridge funds to chain B
 
-console.log("Initiating sendERC20 on OPChainA...");
-const sendERC20TxHash = await opChainAClient.writeContract({
-	address: SUPERCHAIN_TOKEN_BRIDGE_ADDRESS,
-	abi: parseAbi([
-		"function sendERC20(address _token, address _to, uint256 _amount, uint256 _chainId)",
-	]),
-	functionName: "sendERC20",
-	args: [L2_NATIVE_SUPERCHAINERC20_ADDRESS, account.address, 1000n, BigInt(supersimL2B.id)],
+console.log("Initiating sendERC20 on OPChainA to OPChainB...");
+const sendERC20TxHash = await opChainAClient.interop.sendSuperchainERC20({
+	tokenAddress: SUPERSIM_SUPERC20_ADDRESS,
+	to: testAccount.address,
+        amount: AMOUNT_TO_SEND,
+        chainId: supersimL2B.id,
 });
 
 const sendERC20Receipt = await opChainAClient.waitForTransactionReceipt({ hash: sendERC20TxHash });
 
 // 3. Construct the interoperable log data from the sent message
 
-const { sentMessages } = await createInteropSentL2ToL2Messages(opChainAClient, { receipt: sendERC20Receipt })
+const sentMessages = await opChainAClient.interop.getCrossDomainMessages({ logs: sendERC20Receipt.logs })
 const sentMessage = sentMessages[0] // We only sent 1 message
+const relayMessageParams = await opChainAClient.interop.buildExecutingMessage({ log: sentMessage.log })
 
 // ##########
 // OP Chain B
@@ -274,17 +265,14 @@ const sentMessage = sentMessages[0] // We only sent 1 message
 // 4. Relay the sent message
 
 console.log("Relaying message on OPChainB...");
-const relayTxHash = await opChainBClient.relayL2ToL2Message({
-    sentMessageId: sentMessage.id,
-    sentMessagePayload: sentMessage.payload,
-});
+const relayTxHash = await opChainBClient.interop.relayCrossDomainMessage(relayMessageParams);
 
 const relayReceipt = await opChainBClient.waitForTransactionReceipt({ hash: relayTxHash });
 
 // 5. Ensure the message was relayed successfully
 
-const { successfulMessages, failedMessages } = decodeRelayedL2ToL2Messages({ receipt: relayReceipt });
-if (successfulMessages.length != 1) {
+const status = await opChainBClient.interop.getCrossDomainMessageStatus({ message: sentMessage })
+if (status != 'relayed') {
     throw new Error("failed to relay message!")
 }
 
