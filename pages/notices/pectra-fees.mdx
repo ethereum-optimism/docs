@@ -27,7 +27,9 @@ Chains configured for blob data availability remain unaffected by the Pectra upg
 
 ## Actions required
 
-Please review your Ecotone scalar chain configuration stored in the SystemConfig. If your chain uses a zero blob fee scalar, meaning it's configured to price for calldata only, you may need to update it. Otherwise, no action is necessary.
+Since the Ecotone upgrade, the Optimism protocol prices L2 transactions using a function that incorporates L1 base fee, L1 blob base fee, and estimated data availability costs. "Ecotone scalars" in the SystemConfig contract determine this pricing.
+
+Please review your [Ecotone scalar chain configuration](../operators/chain-operators/management/blobs.mdx) stored in the SystemConfig. If your chain uses a zero blob fee scalar, meaning it's configured to price for calldata only, you may need to update it. Otherwise, no action is necessary.
 
 If your batcher is configured to submit using calldata _only_, then you should scale your blob base fee scalar by 16/10. This will ensure that, since you are paying exclusively for calldata DA, you are charging users appropriately such that your target profit margin is the same as it was before Pectra.
 
@@ -35,54 +37,6 @@ If your batcher is configured to submit using blob DA, or configured to automati
 
 As ever, you may continue to tweak the Ecotone scalars as desired in order to adjust the profitability of your chain.
 
-## Technical background
-
-Since the Ecotone upgrade, the Optimism protocol prices L2 transactions using a function that incorporates L1 base fee, L1 blob base fee, and estimated data availability costs. "Ecotone scalars" in the SystemConfig contract determine this pricing.
-
-The current fee pricing formula is:
-
-```
-c = e(16sC·C + sB·B)·10^-6
-```
-
-Where:
-
-*   e = estimated transaction size
-*   C = L1 base fee
-*   B = L1 blob base fee
-*   sC = L1 base fee scalar
-*   sB = L1 blob base fee scalar
-*   16 = calldata cost per byte (pre-Pectra)
-
-## Impact on chains
-
-The Pectra upgrade through EIP-7623 increases calldata gas costs by a factor of 10/4 (from 16 to 40 gas per byte).
-
-**No impact for chains that:**
-
-*   Use blob data availability (most OP Stack chains)
-*   Have ecotone scalars configured for a healthy profit margin (\~5%)
-
-**Potential impact for chains that:**
-
-*   Use calldata exclusively for batch posting
-*   Have scalars configured only for calldata pricing (sB=0)
-
-In extreme cases of unchecked negative profitability, a batcher might eventually exhaust its funds, resulting in a safe head stall.
-
-### Detection
-
-Chain operators should monitor their profitability by tracking the L1 Fee Vault balance and comparing this to the batcher balance.
-
-### Mitigation
-
-If adjustments are needed:
-
-1.  **For chains using calldata by design:**  // What is the fix here??
-
-2.  **For chains using or able to use blobs:** Ensure your blob fee scalar (sB) properly accounts for blob pricing, as the Pectra changes do not affect blob transactions.
-
-Chain operators can update their ecotone scalars through the standard governance process for their deployment.
 
 ### Technical References
 
