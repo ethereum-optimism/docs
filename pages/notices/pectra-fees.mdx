@@ -17,23 +17,23 @@ is_imported_content: 'false'
 
 # Pectra impact on user fees and chain profitability
 
-The Ethereum L1 Pectra upgrade has introduced changes to calldata gas costs via EIP-7623 that will affect OP Stack chain profitability in specific configurations. This notice outlines the potential impact on your chain and recommends specific actions.
+The Ethereum L1 Pectra upgrade has introduced changes to calldata gas costs via [EIP-7623](https://eips.ethereum.org/EIPS/eip-7623) that may affect OP Stack chain profitability in specific configurations and market conditions. This notice outlines the potential impact on your chain and recommends specific actions.
 
-EIP-7623 increases the amount of gas payable for calldata transactions. These include such transactions as those used by OPStack chains _before the Ecotone upgrade_ when blob data availability (blob DA) was introduced.
+[EIP-7623](https://eips.ethereum.org/EIPS/eip-7623) increases the amount of gas payable for calldata transactions. These include such transactions as those used by OPStack chains _before the [Ecotone upgrade](https://specs.optimism.io/protocol/ecotone/overview.html)_ when blob data availability (blob DA) was introduced.
 
-Blob DA has now been the default and recommended option for the OPStack for some time, so almost all chains make use of it. Therefore the Optimism protocol's current fee pricing formula has remained unchanged.
+Blob DA has now been the default and recommended option for the OPStack for some time, so almost all chains make use of it. In order to continue to optimize for chains operating with blob DA, the Optimism protocol's current DA fee pricing formula has remained unchanged despite Pectra activating on Ethereum.
 
-Chains configured for blob data availability remain unaffected by the Pectra upgrade. However, chains configured for calldata (i.e. a legacy mode) may experience a reduction in profitability. It is even possible for such chains to be making a loss on data availabilty costs. Therefore all chains should check their config.
+Chains configured for blob data availability remain entirely unaffected by the Pectra upgrade. However, chains configured for calldata (i.e. operating in a legacy DA mode) may experience a reduction in profitability. It possible for such chains to be making a loss on data availabilty costs under certain market conditions. Therefore all chains should check their fee scalar config.
 
 ## Actions required
 
-Since the Ecotone upgrade, the Optimism protocol prices L2 transactions using a function that incorporates L1 base fee, L1 blob base fee, and estimated data availability costs. "Ecotone scalars" in the SystemConfig contract determine this pricing.
+Since the Ecotone upgrade, the Optimism protocol prices L2 transactions using a function that incorporates L1 base fee, L1 blob base fee, and estimated data availability costs. The so-called "Ecotone scalars" are operator-controlled parameters stored in the SystemConfig contract and can be used to tune the target profit margin.
 
-Please review your [Ecotone scalar chain configuration](../operators/chain-operators/management/blobs.mdx) stored in the SystemConfig. If your chain uses a zero blob fee scalar, meaning it's configured to price for calldata only, you may need to update it. Otherwise, no action is necessary.
+Please review your [Ecotone scalar chain configuration](../operators/chain-operators/management/blobs.mdx). If your chain uses a zero blob base fee scalar, meaning it's configured to price for calldata only, you may need to update the base fee scalar and/or the blob base fee scalar. Otherwise, no action is necessary.
 
-If your batcher is configured to submit using calldata _only_, then you should scale your blob base fee scalar by 16/10. This will ensure that, since you are paying exclusively for calldata DA, you are charging users appropriately such that your target profit margin is the same as it was before Pectra.
+If your batcher is configured to submit using calldata _only_, then you should scale your base fee scalar by 16/10. This will ensure that, since you are paying exclusively for calldata DA, you are charging users appropriately such that your target profit margin is the same as it was before Pectra.
 
-If your batcher is configured to submit using blob DA, or configured to automatically choose the cheaper of the two DA modes, then you should adjust your Ecotone scalars for blob DA pricing (meaning a nonzero blob base fee scalar). This will ensure that you are charging accurately for using blob DA. Without such a change it is likely that you are overcharging users.
+If your batcher is configured to submit using blob DA, or configured to automatically choose the cheaper of the two DA modes, then you should adjust your Ecotone scalars for blob DA pricing (meaning a nonzero blob base fee scalar). You are referred back to [this guide](../operators/chain-operators/management/blobs.mdx). Doing so will ensure that you are charging accurately for using blob DA. Without such a change it is likely that you are overcharging users most of the time.
 
 As ever, you may continue to tweak the Ecotone scalars as desired in order to adjust the profitability of your chain.
 
@@ -43,4 +43,3 @@ As ever, you may continue to tweak the Ecotone scalars as desired in order to ad
 *   [Optimism Protocol Specification - Ecotone L1 Cost Fee Changes](https://specs.optimism.io/protocol/exec-engine.html#ecotone-l1-cost-fee-changes-eip-4844-da)
 *   [Optimism Protocol Specification - Fjord Execution Engine Fees](https://specs.optimism.io/protocol/fjord/exec-engine.html#fees)
 *   [Implementation Source Code](https://github.com/ethereum-optimism/op-geth/blob/3d7afdc2701b74c5987e31521e2c336c4511afdf/core/types/rollup_cost.go#L527)
-*   [EIP-7623](https://eips.ethereum.org/EIPS/eip-7623)
