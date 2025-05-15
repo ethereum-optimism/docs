@@ -55,42 +55,54 @@ This upgrade offers several advantages:
   git clone https://github.com/ethereum-optimism/optimism.git
   cd optimism
   git checkout op-program/v1.6.1-rc.1  # Use the latest tagged version
+  git submodule update --init --recursive
 
-  ```
+```
 
-  <Callout type="important">
+<Callout type="important">
     Always use a specific tagged version of op-program as specified in the Superchain registry or official release notes. Current releases use versions like `op-program/v1.6.0-rc.2` for Isthmus hardfork support.
   </Callout>
 
-  ### Initialize the repository
+### Build the op-program
 
-  Initialize the repository with all necessary dependencies:
+Build the op-program binary:
 
-  ```bash
-  make devnet-genesis
-  ```
+```bash
+make op-program
+```
 
-  Generate the absolute prestate by running:
+### Generate the absolute prestate
 
-  ```bash
-  cd op-program
-  make cannon-prestate
-  ```
+Generate the prestate by running the op-program binary directly:
 
-  This command will:
+```bash
 
-  1.  Compile the op-program
-  2.  Generate the absolute prestate hash
-  3.  Create the preimage file
+bash
+./op-program/bin/op-program prestate
 
-  ### Verify the generated prestate
+```
 
-  Verify the absolute prestate by checking the hash:
+For older versions (prior to Upgrade 14), you might use:
 
-  ```bash
-  cd ..# Return to monorepo root
-  ./op-program/bin/op-program --version
-  ```
+```bash
+cd op-program
+make reproducible-prestate
+cd ..
+
+```
+
+<Callout type="note">
+    The exact command may vary based on the specific version you're using. Check the available commands with `./op-program/bin/op-program --help` or `make -C op-program help`.
+  </Callout>
+
+### Verify the generated prestate
+
+Verify the absolute prestate by checking the hash:
+
+```bash
+./op-program/bin/op-program --version
+
+```
 
   The output should display three prestate hashes:
 
