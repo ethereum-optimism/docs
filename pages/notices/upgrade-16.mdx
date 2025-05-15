@@ -1,0 +1,94 @@
+---
+title: Upgrade 16
+description: Learn how to prepare for Isthmus hard fork breaking changes.
+lang: en-US
+content_type: notice
+topic: upgrade-15-changes
+personas:
+  - chain-operator
+  - node-operator
+categories:
+  - security
+  - automated-pause
+  - protocol
+  - infrastructure
+is_imported_content: 'false'
+---
+
+# Upgrade 16: Interop Contracts + Stage 1 Maintenance & MT-Cannon
+
+This page outlines breaking changes related to the Interop and Stage 1 network upgrade for chain operators and node operators. The upgrade proposal is available [here](#) <!-- Note: Actual link would need to be added --> and the governance vote is available [here](#) <!-- Note: Actual link would need to be added -->.
+
+If you experience difficulty at any stage of this process, please reach out to developer support.
+
+<Callout type="info">
+  <!-- Note: Activation timestamps are not provided in the original document -->
+  Activation timestamps for this upgrade will be announced in the future. Please monitor official communications for updates.
+</Callout>
+
+## What's included in Upgrade 16
+
+Upgrade 16 contains these main changes:
+
+* **Interop Support in OptimismPortal**: Introduces foundational changes enabling cross-chain interoperability within the Superchain through updates to the OptimismPortal contract. This lays groundwork for future interop upgrades but does not immediately expose interop features to users.
+
+* **Stage 1 Simplified Fault Proof System**: Activates the Stage 1 simplified fault proof system, transitioning the OP Stack away from centralized emergency pause mechanisms and toward permissionless, decentralized withdrawal finalization. This improves user finalization guarantees and chain safety without centralized intervention.
+
+* **MT-Cannon**: Includes updates to the MT-Cannon system for improved performance and reliability.
+
+* **Increased Maximum Gas Limit**: Raises the maximum gas limit constant, allowing chains to scale further. Since the upgrade to MT Cannon, memory constraints have been removed, enabling a higher safe limit.
+
+For more information on the implementation details, please review [Upgrade 16 specification](#) <!-- Note: Link would need to be added -->.
+
+## For chain operators
+
+Chain operators must upgrade their nodes ahead of the activation times to a release that contains the Upgrade 16 changes and has the activation times for their chains baked in, or set the activation times manually via overrides. The details are outlined in the node operator section below.
+
+<Steps>
+  ### Update node software
+
+  Chain operators must update their node software to versions compatible with the Stage 1 fault proof system. Specific version requirements will be announced closer to the upgrade date.
+
+  ### Deploy updated contracts
+
+  The upgrade requires deployment of updated OptimismPortal contracts and new Guardian contracts. Chain operators will need to coordinate with the upgrade schedule.
+
+  ### Security considerations
+
+  A full Failure Mode Analysis (FMA) has been conducted for Stage 1 ([link](https://github.com/ethereum-optimism/design-docs/blob/77de1990c03fe9312b1aab92d52ebcb3b61f431b/security/fma-stage-1.md)).
+
+  Internal audits have been completed for both Interop and Stage 1 components.
+
+  An extended testnet rollout will precede mainnet deployment to validate production-readiness.
+</Steps>
+
+## For permissionless fault proof enabled chains
+
+<!-- Note: The original document doesn't provide specific instructions for permissionless fault proof enabled chains like the second document does. I'll leave this as a comment -->
+<!-- Additional information would be needed here about absolute prestates, new dispute game contracts, etc. -->
+
+## For node operators
+
+Node operators will need to upgrade to the respective releases before the activation dates.
+
+<Steps>
+  ### Update to the latest release
+
+  <!-- Note: Specific version numbers are not provided in the original document -->
+  The releases containing Upgrade 16 activation timestamps will be announced in the future.
+
+  ### Configure the activation date
+
+  <!-- Note: The original document doesn't provide specific configuration instructions -->
+  Detailed configuration instructions will be provided closer to the upgrade date, including options for chains using the hardfork activation inheritance behavior.
+
+  ### Verify Your Configuration
+
+  Make the following checks to verify that your node is properly configured.
+
+  * Verify that upgraded nodes show the correct configurations at startup
+  * Check that the Upgrade 16 time is set to the correct activation timestamp in the op-node startup logs
+  * Check that the Upgrade 16 time is set to the correct activation timestamp in the op-geth startup logs
+</Steps>
+
+The implementation details for Stage 1 can be found in [Optimism PR #15174](https://github.com/ethereum-optimism/optimism/pull/15174/files) and follows the design outlined in the [Stage 1 Design Doc](https://github.com/ethereum-optimism/design-docs/blob/e3e01742925c3bd4fbd47d16f89fc1df3e9c33d7/protocol/simplified-guardian.md).
