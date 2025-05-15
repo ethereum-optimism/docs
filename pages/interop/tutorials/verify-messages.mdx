@@ -1,0 +1,221 @@
+---
+title: Verifying log entries
+description: >-
+  Learn how to verify log entires on a different chain using CrossL2Inbox.
+lang: en-US
+content_type: tutorial
+topic: verify-message
+personas:
+  - protocol-developer
+  - chain-operator
+  - app-developer
+categories:
+  - protocol
+  - interoperability
+  - cross-chain-messaging
+  - message-relaying
+  - superchain
+is_imported_content: 'false'
+---
+
+import { Callout, Steps, Tabs } from 'nextra/components'
+import { AutorelayCallout } from '@/components/AutorelayCallout'
+
+
+# Verifying log entries
+
+This guide shows how to verify log entries from a specific chain on a different chain in an interop cluster.
+This lets you use interoperability with applications on a different chain that was never written with interoperability in mind.
+
+To demonstrate this functionality, we'll use an [attestation](https://attest.org/) from one chain in another.
+
+## Overview
+
+<details>
+
+  <summary>About this tutorial</summary>
+
+  **What you'll learn**
+
+  *   How to verify log messages from one blockchain on another.
+  *   How to use the EAS SDK to attest for facts and add schemas from offchain code.
+
+  **Technical knowledge**
+
+  *   Intermediate JavaScript knowledge
+  *   Understanding of smart contract development
+  *   Familiarity with blockchain concepts
+
+  **Development environment**
+
+  *   Unix-like operating system (Linux, macOS, or WSL for Windows)
+  *   Node.js version 16 or higher
+  *   Git for version control
+
+  **Required tools**
+
+  The tutorial uses these primary tools:
+
+  *   Node: For running TypeScript code from the command line
+  *   Viem: For blockchain interaction
+  *   Foundry: For smart contract development
+
+</details>
+
+### What you'll build
+
+*   A JavaScript program to create an attestation and then verify it on a different chain.
+*   A Solidity contract that can verify attestations onchain. 
+
+## Directions
+
+<Steps>
+  ### Preparation
+
+  1.  If you are using Supersim, setup the [SuperchainERC20 starter kit](/app-developers/starter-kit#setup).
+      The `pnpm dev` step also starts Supersim.
+
+  2.  Store the configuration in environment variables.
+
+      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs.Tab>
+          ```sh
+          export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+          URL_CHAIN_A=http://127.0.0.1:9545
+          URL_CHAIN_B=http://127.0.0.1:9546
+          export CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+          ```
+        </Tabs.Tab>
+
+        <Tabs.Tab>
+          1.  Set `PRIVATE_KEY` to the private key for an address that has ETH on the two devnets.
+
+          2.  Run these commands to specify the rest of the environment variables.
+
+          ```sh
+          export PRIVATE_KEY
+          URL_CHAIN_A=https://interop-alpha-0.optimism.io
+          URL_CHAIN_B=https://interop-alpha-1.optimism.io
+          export CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+          ```
+        </Tabs.Tab>
+      </Tabs>
+
+  ### Create an attestation
+
+  There are already attestations in the production chains.
+  However, that may not be the case in the devnets, and it is definitely not the case in the Supersim instance you just started.
+
+  So the first step is to actually send an attestation to one of the chains.
+
+  1.  Create a new JavaScript project.
+
+      ```sh
+      mkdir verify-messages
+      cd verify-messages
+      npm init -y
+      npm install @eth-optimism/viem @ethereum-attestation-service/eas-sdk ethers viem
+      ```
+
+  2.  Create a file, `attest.mjs`.
+
+      ```js file=<rootDir>/public/tutorials/attest.mjs hash=41df7a53bd4803473a57d464e614691c 
+      ```     
+
+      <details>
+
+        <summary>Explanation</summary>
+
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L23-L42 hash=afc5bb44d71c09c6853bf6bd0b7c9661 
+        ```
+
+        The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) we use for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
+        This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer). 
+
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L65-L76 hash=b2979dabbf38960d5a8ad78a89b8b366
+        ```
+
+        Register the [EAS Schema](https://docs.attest.org/docs/tutorials/create-a-schema) if necessary.
+        This schema ties Ethereum addresses to names.
+
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L78-L91 hash=0cc7174d12f3c31109aaa9e6d5b38cb6
+        ```
+
+        [Attest](https://docs.attest.org/docs/tutorials/make-an-attestation) that the name for Ethereum address `0x0123456789012345678901234567890123456789` is `Bill Hamm`.
+
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L93-L95 hash=0897bec3f88600ffc2c52db3dd4d124e
+        ```
+
+        This is the recommended way to execute the attestation transaction, which provides you with the attestation's UID.
+        However, for our purpose we need the transaction receipt, which you do not get.
+        We can either use this and search for the log entry or just use the EAS SDK to create the transaction and send it ourselves.
+        Here we use the second solution.
+
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L97-L99 hash=fd5549e8b39af5b5652b889ca2a8cc05
+        ```
+
+        Here we send the attestation transaction created by the EAS SDK ourselves (using viem's [`sendRawTransaction`](https://viem.sh/docs/actions/wallet/sendRawTransaction)), so we'll have the transaction hash.
+
+      </details>
+
+  3.  Run the attestation program.
+
+      ```sh
+      node attest.mjs
+      ```
+
+  4.  The program output includes an `export ATTEST_TXN` line.
+      Run it.
+      The value here is for a fresh Supersim install.
+
+      ```sh
+      export ATTEST_TXN=0x607d1259ac309edb8c8b125c994c979178d1ce02765e419dcbdeb7f01244f270
+      ```
+
+  ### Verify the attestation on another chain (offchain code)
+
+  The next step is to call `CrossL2Inbox.verifyMessage`.
+  For testing purposes, we'll start by calling it offchain. 
+
+  1.  Create a file, `verify-attestation.mjs`.
+
+      ```js file=<rootDir>/public/tutorials/verify-attestation.mjs hash=4052bb9c76d16630dca7081bb2117057 
+      ```     
+
+      <details>
+
+        <summary>Explanation</summary>
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L36-L45 hash=2e0e75ab322c05fb2eb8177978f47c55 
+        ```
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L47 hash=2d9c5e52695aa90f1f0f9a5769f98814 
+        ```
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L49-L51 hash=fbfb20fa0614cb9fb52ec678df6fffa9 
+        ```
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L61-L74 hash=5c410cd233b0e4e68f33170de7da3b7f 
+        ```
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L78-L84 hash=a7865101bb68b80c8d68af592c485bfd 
+        ```
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L86-L88 hash=acf14f27db2d1ab8c65142ce61ded3f2 
+        ```
+
+      </details>
+
+  2.  Execute this program.
+
+      ```sh
+      node verify-attestation.mjs
+      ```
+
+</Steps>
+
+## Next steps
+
+*   Read the [Superchain Interop Explainer](/interop/explainer#faqs) or check out this [Superchain interop design video walk-thru](https://www.youtube.com/watch?v=FKc5RgjtGes).
+*   Use [Supersim](/app-developers/tools/supersim), a local dev environment that simulates Superchain interop for testing applications against a local version of the Superchain.
+*   Find a cool dapp that only works on a single blockchain and extend it to the entire interop cluster, at least for reading information.
