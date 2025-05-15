@@ -1,0 +1,209 @@
+---
+title: Generating absolute prestate and preimage files
+description: A guide for chain operators on how to generate the absolute prestate and preimage files necessary for running cannon/permissionless proofs.
+lang: en-US
+content_type: tutorial
+topic: generating absolute prestate files
+personas:
+-   chain-operator
+categories:
+-   fault proofs
+-   cannon
+-   permissionless proofs
+-   proof system
+is_imported_content: 'false'
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Overview
+
+This guide will show chain operators how to generate the absolute prestate and preimage files necessary for running cannon/permissionless proofs.
+
+Permissionless fault proofs are a critical component of the OP Stack's security model. They allow anyone to challenge invalid state proposals, ensuring the correctness of L2 to L1 withdrawals without relying on trusted third parties. 
+To enable this functionality, chain operators must generate and maintain the necessary absolute prestate and preimage files.
+The absolute prestate is a commitment to the initial state of the fault proof program, and the preimage is the serialized binary representation of this program state. 
+These files are essential for the op-challenger tool to participate in dispute games when challenging invalid claims.
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+*   Run `op-contracts/v2.0.0` or higher on your chain
+*   You have sufficient system resources (memory and disk space)
+
+## Using the latest AP and multi-threaded Cannon
+
+As of the latest releases, OP Stack chains should utilize the `64-bit` MIPS multi-threaded version of Cannon. 
+This upgrade offers several advantages:
+
+*   Improved performance through parallelized execution
+*   Enhanced fault proof VM capabilities
+*   Support for the latest network upgrades
+
+<Callout type="info">
+  Beginning with [Upgrade 14](/notices/upgrade-14), all chains should use the `64-bit` multi-threaded version of Cannon. 
+  The absolute prestate files for this version typically have the format `prestate-mt64.bin.gz`.
+</Callout>
+
+## Generating the absolute prestate
+
+<Steps>
+  ### Clone and checkout the tagged version
+
+  First, clone the Optimism monorepo and check out the appropriate release tag for op-program:
+
+  ```bash
+  git clone https://github.com/ethereum-optimism/optimism.git
+  cd optimism
+  git checkout op-program/v1.6.0-rc.2  # Use the latest tagged version
+
+  ```
+
+  <Callout type="important">
+    Always use a specific tagged version of op-program as specified in the Superchain registry or official release notes. Current releases use versions like `op-program/v1.6.0-rc.2` for Isthmus hardfork support.
+  </Callout>
+
+  ### Initialize the repository
+
+  Initialize the repository with all necessary dependencies:
+
+  ```bash
+  make devnet-genesis
+  ```
+
+  Generate the absolute prestate by running:
+
+  ```bash
+  cd op-program
+  make cannon-prestate
+  ```
+
+  This command will:
+
+  1.  Compile the op-program
+  2.  Generate the absolute prestate hash
+  3.  Create the preimage file
+
+  ### Verify the generated prestate
+
+  Verify the absolute prestate by checking the hash:
+
+  ```bash
+  cd ..# Return to monorepo root
+  ./op-program/bin/op-program --version
+  ```
+
+  The output should display three prestate hashes:
+
+  *   Cannon absolute prestate hash (legacy)
+  *   Cannon64 absolute prestate hash (64-bit version)
+  *   CannonInterop absolute prestate hash (for interoperability)
+
+  For permissionless fault proofs, you'll primarily use the Cannon64 absolute prestate hash.
+
+  ### Prepare the preimage file
+
+  The preimage file is located at `op-program/bin/prestate-mt64.bin.gz`. Rename it to match the prestate hash:
+
+  ```bash
+  cd op-program/bin
+  mv prestate-mt64.bin.gz 0x[CANNON64_PRESTATE_HASH].bin.gz
+  ```
+
+  Replace `[CANNON64_PRESTATE_HASH]` with the actual `Cannon64` absolute prestate hash value from the output.
+</Steps>
+
+## Official prestate hashes for Superchain registry chains
+
+The Superchain registry maintains official absolute prestate hashes for chains that are part of the registry. 
+These prestates include the configurations of all chains in the Superchain registry.
+
+<Callout type="note">
+  For chains listed in the Superchain registry, you should use the official prestate hashes rather than generating your own.
+</Callout>
+
+You can find the latest prestate tags in the [Superchain registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml).
+
+Current official prestate hashes for Isthmus hardfork (as of writing):
+
+*   Sepolia chains: `0x03682932cec7ce0a3874b19675a6bbc923054a7b321efc7d3835187b172494b6` (using op-program/v1.6.0-rc.2)
+
+## Handling unannounced chain configurations
+
+If your chain is not included in the Superchain registry, you'll need to generate a custom prestate with your specific chain configuration. This applies to:
+
+*   New chains
+*   Chains with custom configurations
+*   "Stealth launches" or other unannounced chains
+
+For these cases, follow these additional steps:
+
+### For chains not in the Superchain registry
+
+<Steps>
+  ### Prepare configuration files
+
+  Ensure your chain's rollup configuration and L2 genesis file are accessible
+
+  ### Generate custom prestate
+  Generate the absolute prestate using your specific configuration:
+
+  ```bash
+  cd op-program
+  make cannon-prestate ROLLUP_CONFIG=/path/to/your/rollup.json L2_GENESIS=/path/to/your/genesis-l2.json
+  ```
+
+  ### Process and verify
+
+  Verify and prepare the preimage file as described in Steps 4-5 above
+</Steps>
+
+<Callout type="warning">
+  The initial prestate used for permissioned games doesn't include the necessary chain configuration for the Fault proof system. 
+  The assumption is that the chain operator, the single permissioned actor, will not challenge their own games. 
+  So the absolute prestate on the initial `PermissionedDisputeGame` will never be used.
+
+  When deploying a new chain, you must first deploy the L1 contracts and then retrieve the artifacts. 
+  These are inputs to the creation of the absolute prestate and this circular dependency is the reason chains cannot be deployed directly to the permissionless Fault Proof System.
+</Callout>
+
+## Deploying and configuring with the absolute prestate
+
+After generating the absolute prestate and preimage files, you'll need to:
+
+<Steps>
+  ### Upload preimage file
+
+  Upload the preimage file to a location accessible by your op-challenger instances
+
+  ### Configure op-challenger
+
+  Configure the op-challenger to use this prestate:
+
+  ```bash
+  op-challenger \
+    --trace-type permissioned,cannon \
+    --prestates-url <URL_TO_PRESTATES_DIRECTORY> \
+    --l1-eth-rpc <YOUR_L1_RPC_URL> \
+    --game-factory-address <YOUR_DISPUTE_GAME_FACTORY> \
+    --network <YOUR_NETWORK>
+  ```
+
+  Replace `<URL_TO_PRESTATES_DIRECTORY>` with the URL where you've stored your prestate files.
+
+</Steps>
+
+## Next Steps
+
+After successfully generating and deploying the absolute prestate:
+
+1.  Monitor your op-challenger service to ensure it can properly participate in dispute games
+2.  Consider setting up redundant challenger instances for enhanced reliability
+3.  Keep track of future upgrades that may require new absolute prestates
+
+For more information, refer to the following resources:
+
+*   [Migrating to Permissionless Fault Proofs Guide](/operators/chain-operators/tutorials/migrating-permissionless)
+*   [Deploying New Dispute Games with OPCM](/operators/chain-operators/tutorials/dispute-games)
+*   [Fault Proofs Explainer](/stack/fault-proofs/explainer)
