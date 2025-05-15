@@ -42,5 +42,11 @@ The process to reemit an expired message:
 
 1.  Call [`resendMessage`](https://github.com/ethereum-optimism/optimism/blob/a979a9444dbb482843f2a42f437ced54a8ac1053/packages/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol#L110-L128) on the origin chain to reemit the message event. The contract verifies the message hash was originally sent. The call required the following parameters:
 
+    *   The origin (of the log entry) is `L2ToL2CrossDomainMessenger` on the other side.
+    *   The destination chain ID is correct.
+    *   The target is neither `CrossL2Inbox` nor `L2ToL2CrossDomainMessenger`.
+    *   This message has not been relayed before.
+    
+    This is the reason we need the nonce value, to enable us to send multiple messages that would be otherwise identical.
 
-2.  Relay the new message as normal.
+2.  [Relay the new message](/interop/message-passing#executing-message) as normal.
