@@ -22,15 +22,15 @@ is_imported_content: 'false'
 
 # Message expiration
 
-[Initiating messages](/interop/message-passing) sent between OP Stack chains have a limited validity period called the expiry window. Once this window elapses, the initiating message becomes invalid and can no longer be referenced on the destination chain.
+[Messages](/interop/message-passing) referenced between OP Stack chains have a limited validity period called the expiry window. Once this window elapses, the referenced message becomes invalid and can no longer be referenced.
 
-If a message expires before being relayed, developers can reemit the message on the source chain. This triggers a fresh `SentMessage` event, allowing offchain infrastructure to pick it up and relay it again ensuring successful delivery.
+For messages using [`L2ToL2CrossDomainMessenger`](/interop/message-passing), if a message expires before being referenced, developers can reemit the message on the source chain. This triggers a fresh `SentMessage` event, allowing offchain infrastructure to pick it up and relay it again ensuring successful delivery.
 
 ## The expiry window
 
-The expiry window is an offchain constant, defined by [op-supervisor](/interop/op-supervisor), that defines how long a cross-chain message or event emmitted by a chain remains valid. For any chain in the [interop set](/interop/explainer#superchain-interop-cluster), messages must be executed within 7 days (604,800 seconds) of the initiating message being sent.
+The expiry window is an offchain constant, defined by [OP-Supervisor](/interop/op-supervisor), that defines how long a cross-chain message or event emmitted remains valid. For any chain in the [Superchain interop cluster](/interop/explainer#superchain-interop-cluster), messages must be reference within 7 days (604,800 seconds) of the log being created.
 
-After this period, a message can no longer be executed on the destination chain unless the event is remitted on the source chain.
+After this period, a message can no longer be referenced unless the event is remitted.
 
 ## Reemitting an expired message
 
