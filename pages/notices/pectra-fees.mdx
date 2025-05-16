@@ -37,12 +37,14 @@ Please review your [Ecotone scalar chain configuration](/operators/chain-operato
 If your chain uses a zero blob base fee scalar, meaning it's configured to price for calldata only, you may need to update the base fee scalar and/or the blob base fee scalar. Otherwise, no action is necessary and the rest of this section does not apply.
 </Callout>
 
+The impact and recommended actions for each of the possible configurations are summarised in the followsing table, and explained in more detail below:
 
-    | `baseFeeScalar` | `blobBaseFeeScalar` | batcher DA                    | Action                                                                                   |
-    |-----------------|---------------------|-------------------------------|----------------------------------------------------------------------------------------- |
-    | any             | >~10^4              | `calldata`,  `blob` or `auto` | No action required                                                                       |
-    | b_s             | 0                   | `calldata`                    | Check scalar config, and considering setting b_s -> b_s * 10/4 to preserve profit margin |
-    | any             | 0                   | `blob` or `auto`              | Check scalar config, and considering setting a positive `blobBaseFeeScalar`              |
+
+    | `baseFeeScalar` | `blobBaseFeeScalar` | batcher DA                    | Impact | Action                                                                                   |
+    |-----------------|---------------------|-------------------------------|------- | ---------------------------------------------------------------------------------------- |
+    | any             | >~10^4              | `calldata`,  `blob` or `auto` |        | No action required                                                                       |
+    | `x`             | 0                   | `calldata`                    | Undercharging L2 Users       | Check scalar config, and considering setting `baseFeeScalar` to `x * 10/4` to preserve profit margin |
+    | any             | 0                   | `blob` or `auto`              | Overcharging L2 Users most of the time      | Check scalar config, and considering setting a positive `blobBaseFeeScalar`              |
 
 
 
@@ -54,7 +56,9 @@ If your profit margin was perfectly tuned before Pectra, then you should scale y
 ### Chains charging for calldata DA and spending on blob DA
 If your chain uses a zero blob base fee scalar and your batcher is configured to submit using blob DA, or configured to automatically choose the cheaper of the two DA modes, then you should adjust your Ecotone scalars for blob DA pricing (meaning a nonzero blob base fee scalar). You are referred back to [this guide](/operators/chain-operators/management/blobs). Doing so will ensure that you are charging accurately for using blob DA. Without such a change it is likely that you are overcharging users most of the time, and undercharging them in the rare occasions where blob DA is more expensive than calldata DA on Ethereum mainnet.
 
-As ever, you may continue to tweak the Ecotone scalars as desired in order to adjust the profitability of your chain.
+
+### General remarks
+As ever, you may continue to tweak the Ecotone scalars as desired in order to adjust the profitability of your chain. We recommend profitability is monitored continually so that you can adjust the scalars as necessary.
 
 ### Technical references
 
