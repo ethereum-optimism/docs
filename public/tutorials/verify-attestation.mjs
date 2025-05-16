@@ -77,7 +77,7 @@ try {
   executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
     hash: executingTransaction,
     timeout: 10_000 
-  })  
+  })    
 } catch (err) {
   console.log("Verification failed (timeout)")
   process.exit(0)
@@ -85,7 +85,10 @@ try {
 
 const verified = 
   executingTransactionReceipt.logs.filter(
-    x => x.address="0x4200000000000000000000000000000000000022").length > 0
+    x => x.address=="0x4200000000000000000000000000000000000022" &&
+         x.topics[0] == "0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7" &&
+         x.topics[1] == keccak256(toBytes(relayMessageParams.payload))
+  ).length > 0
 
 if (verified) {
   console.log("Verification successful")

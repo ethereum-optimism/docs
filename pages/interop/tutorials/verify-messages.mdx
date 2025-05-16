@@ -108,8 +108,8 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
   1.  Create a new JavaScript project.
 
       ```sh
-      mkdir verify-messages
-      cd verify-messages
+      mkdir -p verify-messages/offchain
+      cd verify-messages/offchain
       npm init -y
       npm install @eth-optimism/viem @ethereum-attestation-service/eas-sdk ethers viem
       ```
@@ -174,36 +174,99 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
 
   1.  Create a file, `verify-attestation.mjs`.
 
-      ```js file=<rootDir>/public/tutorials/verify-attestation.mjs hash=4052bb9c76d16630dca7081bb2117057 
+      ```js file=<rootDir>/public/tutorials/verify-attestation.mjs hash=405d9493c3bf15f85aa9c24a936cf7a4 
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L36-L45 hash=2e0e75ab322c05fb2eb8177978f47c55 
-          ```
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L36-L45 hash=2e0e75ab322c05fb2eb8177978f47c55 
+        ```
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L47 hash=2d9c5e52695aa90f1f0f9a5769f98814 
-          ```
+        To create the [executing message](/interop/message-passing#executing-message), we need several fields that appear in the log entry we are verifying. 
+        This is how we obtain the relevant log entry.
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L49-L51 hash=fbfb20fa0614cb9fb52ec678df6fffa9 
-          ```
+        The first topic in a log entry emitted by Solidity is the event type. 
+        [This event type](https://www.4byte.directory/event-signatures/?bytes_signature=0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) is emitted when an attestation is created.
+        Of course, we only care about attestations created in the official attestations contract.
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L61-L74 hash=5c410cd233b0e4e68f33170de7da3b7f 
-          ```
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L47 hash=2d9c5e52695aa90f1f0f9a5769f98814
+        ```
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L78-L84 hash=a7865101bb68b80c8d68af592c485bfd 
-          ```
+        Part of testing a system is ensuring that it does not accept invalid input.
+        You can uncomment this line to see that the verification fails with an incorrect log entry.
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L86-L88 hash=acf14f27db2d1ab8c65142ce61ded3f2 
-          ```
-        </details>
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L49-L51 hash=fbfb20fa0614cb9fb52ec678df6fffa9 
+        ```
+
+        [Build the executing message](https://github.com/ethereum-optimism/ecosystem/blob/main/packages/viem/docs/actions/interop/functions/buildExecutingMessage.md).
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L61-L74 hash=5c410cd233b0e4e68f33170de7da3b7f 
+        ```
+
+        Call [`CrossL2Inbox.validateMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L68-L82).
+        For some invalid inputs this function reverts, which means that the log entry requested is not validated.
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L76-L84 hash=2476aec8e2b27708ce812797e9e5dfe7 
+        ```
+
+        Wait for the transaction receipt for the executing message. 
+        Note the timeout, it is necessary because if the executing message is valid, but the log entry has not been seen yet the sequencer does not put the transaction with the message into a block.
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L86-L91 hash=e870ee89daa5f2a31b0adc6a97f670a9 
+        ```
+
+        Look for the log entry from `CrossL2Inbox`.
+        To ensure this is the correct log entry, we look at the [message type](https://www.4byte.directory/event-signatures/?bytes_signature=0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7) and check that the ID is the correct one.
+
+      </details>
 
   2.  Execute this program.
 
       ```sh
       node verify-attestation.mjs
       ```
+
+  ### Onchain verifications
+
+  The code in the above example is not very useful, because it is running offchain.
+  Offchain code can talk to any chain it wants, so it can verify the attestation directly on the chain where it originated.
+
+  The real value of interop is when you have onchain code from one chain verify information from another chain.
+  This is what we'll build now.
+
+  The access list of the transaction has to be calculated offchain, so we might as well just use the same `interop.buildExecutingMessage` function and just parse the `relayParam.payload` value to see what exactly we are validating.
+
+  | Bytes | Meaning | Sample value |
+  | - | - | - |
+  | 0-31 | [Event signature](https://www.4byte.directory/event-signatures/?bytes_signature=8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) | 0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35 
+  | 32-63 | Emitting address (EAS contract) | 0x0000000000000000000000004200000000000000000000000000000000000021 
+  | 64-95 | Block number| 0x0000000000000000000000000000000000000000000000000000000000002294 
+  | 96-127 | Log index in the block | 0x0000000000000000000000000000000000000000000000000000000000000000 
+  | 128-159 | Timestamp | 0x00000000000000000000000000000000000000000000000000000000682752ee 
+  | 160-191 | Source chain ID | 0x0000000000000000000000000000000000000000000000000000000000000385 
+  | 192-223 | Hash of the log entry | 0x41083d67fc7e4a91096348578fa4d22a95ebdbd795fdda8665d42e960240830a 
+
+  The hash of the log entry is sufficient to verify that it has been emitted, but we want to know what exactly is being attested to, so we need the data that created it.
+  That data is in `attestLogEntry`.
+
+  | Data | Meaning | Sample value |
+  | - | - | - |
+  | topics[0] | [Event signature](https://www.4byte.directory/event-signatures/?bytes_signature=8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) | 0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35 
+  | topics[1] | Attestation recipient | 0x0000000000000000000000000123456789012345678901234567890123456789
+  | topics[2] | Attestation source | 0x000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266
+  | topics[3] | Attestation schema | 0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58 
+
+  1.  Create a new Foundry project.
+
+      ```sh
+      mkdir ../onchain
+      cd ../onchain
+      forge init
+      ```
+
+  To 
+
 </Steps>
 
 ## Next steps
