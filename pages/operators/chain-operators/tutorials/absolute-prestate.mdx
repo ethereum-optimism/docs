@@ -77,37 +77,35 @@ make op-program
 Generate the prestate by running the op-program binary directly:
 
 ```bash
-./op-program/bin/op-program prestate
-
-```
-
-For older versions (prior to Upgrade 14), you might use:
-
-```bash
 cd op-program
 make reproducible-prestate
 cd ..
-
 ```
 
-<Callout type="note">
-    The exact command may vary based on the specific version you're using. Check the available commands with `./op-program/bin/op-program --help` or `make -C op-program help`.
-  </Callout>
-
-### Verify the generated prestate
-
-Verify the absolute prestate by checking the hash:
+The output should look like this:
 
 ```bash
-./op-program/bin/op-program --version
+
+-------------------- Production Prestates --------------------
+
+Cannon64 Absolute prestate hash: 
+0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+
+-------------------- Experimental Prestates --------------------
+
+CannonInterop Absolute prestate hash: 
+0x03fc3b4d091527d53f1ff369ea8ed65e5e17cc7fc98ebf75380238151cdc949c
+
+Cannon64Next Absolute prestate hash: 
+0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
 
 ```
 
   The output should display three prestate hashes:
 
-  *   Cannon absolute prestate hash (legacy)
-  *   Cannon64 absolute prestate hash (64-bit version)
-  *   CannonInterop absolute prestate hash (for interoperability)
+  *   `Cannon64`: The current production absolute prestate hash for the 64-bit version of Cannon
+  *   `CannonInterop`: The absolute prestate hash used for interoperability
+  *   `Cannon64Next`: The next state version for Cannon with in-progress features (like Go 1.24 support)
 
   For permissionless fault proofs, you'll primarily use the Cannon64 absolute prestate hash.
 
@@ -127,16 +125,9 @@ Verify the absolute prestate by checking the hash:
 
 The Superchain registry maintains official absolute prestate hashes for chains that are part of the registry. 
 These prestates include the configurations of all chains in the Superchain registry.
-
-<Callout type="note">
-  For chains listed in the Superchain registry, you should use the official prestate hashes rather than generating your own.
-</Callout>
+For chains listed in the Superchain registry, you should use the official prestate hashes rather than generating your own.
 
 You can find the latest prestate tags in the [Superchain registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml).
-
-Current official prestate hashes for Isthmus hardfork (as of writing):
-
-*   Sepolia chains: `0x03682932cec7ce0a3874b19675a6bbc923054a7b321efc7d3835187b172494b6` (using op-program/v1.6.0-rc.2)
 
 ## Handling unannounced chain configurations
 
@@ -144,7 +135,6 @@ If your chain is not included in the Superchain registry, you'll need to generat
 
 *   New chains
 *   Chains with custom configurations
-*   "Stealth launches" or other unannounced chains
 
 For these cases, follow these additional steps:
 
@@ -163,19 +153,14 @@ For these cases, follow these additional steps:
   make cannon-prestate ROLLUP_CONFIG=/path/to/your/rollup.json L2_GENESIS=/path/to/your/genesis-l2.json
   ```
 
-  ### Process and verify
-
-  Verify and prepare the preimage file as described in Steps 4-5 above
 </Steps>
 
-<Callout type="warning">
   The initial prestate used for permissioned games doesn't include the necessary chain configuration for the Fault proof system. 
   The assumption is that the chain operator, the single permissioned actor, will not challenge their own games. 
   So the absolute prestate on the initial `PermissionedDisputeGame` will never be used.
 
   When deploying a new chain, you must first deploy the L1 contracts and then retrieve the artifacts. 
   These are inputs to the creation of the absolute prestate and this circular dependency is the reason chains cannot be deployed directly to the permissionless Fault Proof System.
-</Callout>
 
 ## Deploying and configuring with the absolute prestate
 
