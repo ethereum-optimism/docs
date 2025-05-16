@@ -37,6 +37,15 @@ Please review your [Ecotone scalar chain configuration](/operators/chain-operato
 If your chain uses a zero blob base fee scalar, meaning it's configured to price for calldata only, you may need to update the base fee scalar and/or the blob base fee scalar. Otherwise, no action is necessary and the rest of this section does not apply.
 </Callout>
 
+
+    | `baseFeeScalar` | `blobBaseFeeScalar` | batcher DA                    | Action                                                                                   |
+    |-----------------|---------------------|-------------------------------|----------------------------------------------------------------------------------------- |
+    | any             | >~10^4              | `calldata`,  `blob` or `auto` | No action required                                                                       |
+    | b_s             | 0                   | `calldata`                    | Check scalar config, and considering setting b_s -> b_s * 10/4 to preserve profit margin |
+    | any             | 0                   | `blob` or `auto`              | Check scalar config, and considering setting a positive `blobBaseFeeScalar`              |
+
+
+
 ### Chains charging for calldata DA and spending on calldata DA
 If your chain uses a zero blob base fee scalar and your batcher is configured to submit using calldata *only*, then you should take the opportunity to check your chain's profit margin according to [this guide](/operators/chain-operators/management/blobs) and make any adjustments to your Ecotone scalars as necessary. This will ensure that, since you are paying exclusively for calldata DA, you are charging users appropriately such that your target profit margin is as desired.
 
