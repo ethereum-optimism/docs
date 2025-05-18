@@ -74,29 +74,29 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
 
   2.  Store the configuration in environment variables.
 
-        <Tabs items={['Supersim', 'Devnets']}>
-          <Tabs.Tab>
-            ```sh
-            export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-            URL_CHAIN_A=http://127.0.0.1:9545
-            URL_CHAIN_B=http://127.0.0.1:9546
-            export CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
-            ```
-          </Tabs.Tab>
+      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs.Tab>
+          ```sh
+          export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+          URL_CHAIN_A=http://127.0.0.1:9545
+          URL_CHAIN_B=http://127.0.0.1:9546
+          export CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+          ```
+        </Tabs.Tab>
 
-          <Tabs.Tab>
-            1.  Set `PRIVATE_KEY` to the private key for an address that has ETH on the two devnets.
+        <Tabs.Tab>
+          1.  Set `PRIVATE_KEY` to the private key for an address that has ETH on the two devnets.
 
-            2.  Run these commands to specify the rest of the environment variables.
+          2.  Run these commands to specify the rest of the environment variables.
 
-            ```sh
-            export PRIVATE_KEY
-            URL_CHAIN_A=https://interop-alpha-0.optimism.io
-            URL_CHAIN_B=https://interop-alpha-1.optimism.io
-            export CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
-            ```
-          </Tabs.Tab>
-        </Tabs>
+          ```sh
+          export PRIVATE_KEY
+          URL_CHAIN_A=https://interop-alpha-0.optimism.io
+          URL_CHAIN_B=https://interop-alpha-1.optimism.io
+          export CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+          ```
+        </Tabs.Tab>
+      </Tabs>
 
   ### Create an attestation
 
@@ -119,39 +119,39 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
       ```js file=<rootDir>/public/tutorials/attest.mjs hash=d626bf0d9a623a87f6c186df9ebe4be7 
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```js file=<rootDir>/public/tutorials/attest.mjs#L23-L39 hash=e60b8cd94e438dee61d76a86b71ba0fd 
-          ```
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L23-L39 hash=e60b8cd94e438dee61d76a86b71ba0fd 
+        ```
 
-          The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) we use for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
-          This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer).
+        The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) we use for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
+        This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer).
 
-          ```js file=<rootDir>/public/tutorials/attest.mjs#L60-L71 hash=b51f57bde9ff4f29ee476a0ccff6826c
-          ```
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L60-L71 hash=b51f57bde9ff4f29ee476a0ccff6826c
+        ```
 
-          Register the [EAS Schema](https://docs.attest.org/docs/tutorials/create-a-schema) if necessary.
-          This schema ties Ethereum addresses to names.
+        Register the [EAS Schema](https://docs.attest.org/docs/tutorials/create-a-schema) if necessary.
+        This schema ties Ethereum addresses to names.
 
-          ```js file=<rootDir>/public/tutorials/attest.mjs#L73-L86 hash=e358a615a7ab6d28c6f3bba58b523f66
-          ```
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L73-L86 hash=e358a615a7ab6d28c6f3bba58b523f66
+        ```
 
-          [Attest](https://docs.attest.org/docs/tutorials/make-an-attestation) that the name for Ethereum address `0x0123456789012345678901234567890123456789` is `Bill Hamm`.
+        [Attest](https://docs.attest.org/docs/tutorials/make-an-attestation) that the name for Ethereum address `0x0123456789012345678901234567890123456789` is `Bill Hamm`.
 
-          ```js file=<rootDir>/public/tutorials/attest.mjs#L88-L90 hash=d31631fd94b69699177a1cccf4e4ec1a
-          ```
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L88-L90 hash=d31631fd94b69699177a1cccf4e4ec1a
+        ```
 
-          This is the recommended way to execute the attestation transaction, which provides you with the attestation's UID.
-          However, for our purpose we need the transaction receipt, which you do not get.
-          We can either use this and search for the log entry or just use the EAS SDK to create the transaction and send it ourselves.
-          Here we use the second solution.
+        This is the recommended way to execute the attestation transaction, which provides you with the attestation's UID.
+        However, for our purpose we need the transaction receipt, which you do not get.
+        We can either use this and search for the log entry or just use the EAS SDK to create the transaction and send it ourselves.
+        Here we use the second solution.
 
-          ```js file=<rootDir>/public/tutorials/attest.mjs#L92-L94 hash=1452cf7f6e9e00d7b3cd3560ca355bd8
-          ```
+        ```js file=<rootDir>/public/tutorials/attest.mjs#L92-L94 hash=1452cf7f6e9e00d7b3cd3560ca355bd8
+        ```
 
-          Here we send the attestation transaction created by the EAS SDK ourselves (using viem's [`sendRawTransaction`](https://viem.sh/docs/actions/wallet/sendRawTransaction)), so we'll have the transaction hash.
-        </details>
+        Here we send the attestation transaction created by the EAS SDK ourselves (using viem's [`sendRawTransaction`](https://viem.sh/docs/actions/wallet/sendRawTransaction)), so we'll have the transaction hash.
+      </details>
 
   3.  Run the attestation program.
 
@@ -172,48 +172,48 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
       ```js file=<rootDir>/public/tutorials/verify-attestation.mjs hash=405d9493c3bf15f85aa9c24a936cf7a4 
       ```
 
-        <details>
-          <summary>Explanation</summary>
+      <details>
+        <summary>Explanation</summary>
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L36-L45 hash=2e0e75ab322c05fb2eb8177978f47c55 
-          ```
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L36-L45 hash=2e0e75ab322c05fb2eb8177978f47c55 
+        ```
 
-          To create the [executing message](/interop/message-passing#executing-message), we need several fields that appear in the log entry we are verifying.
-          This is how we obtain the relevant log entry.
+        To create the [executing message](/interop/message-passing#executing-message), we need several fields that appear in the log entry we are verifying.
+        This is how we obtain the relevant log entry.
 
-          The first topic in a log entry emitted by Solidity is the event type.
-          [This event type](https://www.4byte.directory/event-signatures/?bytes_signature=0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) is emitted when an attestation is created.
-          Of course, we only care about attestations created in the official attestations contract.
+        The first topic in a log entry emitted by Solidity is the event type.
+        [This event type](https://www.4byte.directory/event-signatures/?bytes_signature=0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) is emitted when an attestation is created.
+        Of course, we only care about attestations created in the official attestations contract.
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L47 hash=2d9c5e52695aa90f1f0f9a5769f98814
-          ```
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L47 hash=2d9c5e52695aa90f1f0f9a5769f98814
+        ```
 
-          Part of testing a system is ensuring that it does not accept invalid input.
-          You can uncomment this line to see that the verification fails with an incorrect log entry.
+        Part of testing a system is ensuring that it does not accept invalid input.
+        You can uncomment this line to see that the verification fails with an incorrect log entry.
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L49-L51 hash=fbfb20fa0614cb9fb52ec678df6fffa9 
-          ```
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L49-L51 hash=fbfb20fa0614cb9fb52ec678df6fffa9 
+        ```
 
-          [Build the executing message](https://github.com/ethereum-optimism/ecosystem/blob/main/packages/viem/docs/actions/interop/functions/buildExecutingMessage.md).
+        [Build the executing message](https://github.com/ethereum-optimism/ecosystem/blob/main/packages/viem/docs/actions/interop/functions/buildExecutingMessage.md).
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L61-L74 hash=5c410cd233b0e4e68f33170de7da3b7f 
-          ```
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L61-L74 hash=5c410cd233b0e4e68f33170de7da3b7f 
+        ```
 
-          Call [`CrossL2Inbox.validateMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L68-L82).
-          For some invalid inputs this function reverts, which means that the log entry requested is not validated.
+        Call [`CrossL2Inbox.validateMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L68-L82).
+        For some invalid inputs this function reverts, which means that the log entry requested is not validated.
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L76-L84 hash=2476aec8e2b27708ce812797e9e5dfe7 
-          ```
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L76-L84 hash=2476aec8e2b27708ce812797e9e5dfe7 
+        ```
 
-          Wait for the transaction receipt for the executing message.
-          Note the timeout, it is necessary because if the executing message is valid, but the log entry has not been seen yet the sequencer does not put the transaction with the message into a block.
+        Wait for the transaction receipt for the executing message.
+        Note the timeout, it is necessary because if the executing message is valid, but the log entry has not been seen yet the sequencer does not put the transaction with the message into a block.
 
-          ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L86-L91 hash=e870ee89daa5f2a31b0adc6a97f670a9 
-          ```
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L86-L91 hash=e870ee89daa5f2a31b0adc6a97f670a9 
+        ```
 
-          Look for the log entry from `CrossL2Inbox`.
-          To ensure this is the correct log entry, we look at the [message type](https://www.4byte.directory/event-signatures/?bytes_signature=0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7) and check that the ID is the correct one.
-        </details>
+        Look for the log entry from `CrossL2Inbox`.
+        To ensure this is the correct log entry, we look at the [message type](https://www.4byte.directory/event-signatures/?bytes_signature=0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7) and check that the ID is the correct one.
+      </details>
 
   2.  Execute this program.
 
@@ -230,18 +230,18 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
 
   The access list of the transaction has to be calculated offchain, so we might as well just use the same `interop.buildExecutingMessage` function and just use `relayParams` to see what exactly we are validating.
 
-  | Value | Location | Sample value |
-  | - | - | - |
-  | [Event signature](https://www.4byte.directory/event-signatures/?bytes_signature=8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) | `relayMessageParams.payload.slice(2,66)` | 8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35
-  | Recipient address | `relayMessageParams.payload.slice(90,130)` | 0123456789012345678901234567890123456789 |
-  | Attester address | `relayMessageParams.payload.slice(154,194)` | f39fd6e51aad88f6f4ce6ab8827279cfffb92266 |
-  | Schema | `relayMessageParams.payload.slice(194,258)` | 234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58 |
-  | Attestation ID | `relayMessageParams.payload.slice(194,258)` | c88cbbc15b9fb4aa12f70c9c97e6c1dd733a29db2816142809504718d615ff9f |
-  | Log entry origin | `relayMessageParams.id.origin` | 0x4200000000000000000000000000000000000021 |
-  | Log entry location | `relayMessageParams.id.logIndex` | 0n |
-  | Block number | `relayMessageParams.id.blockNumber` | 6746n |
-  | Timestamp | `relayMessageParams.id.timestamp` | 1747518156n |
-  | Chain Id | `relayMessageParams.id.chainId` | 901n |
+  | Value                                                                                                                                             | Location                                    | Sample value                                                     |
+  | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
+  | [Event signature](https://www.4byte.directory/event-signatures/?bytes_signature=8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) | `relayMessageParams.payload.slice(2,66)`    | 8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35 |
+  | Recipient address                                                                                                                                 | `relayMessageParams.payload.slice(90,130)`  | 0123456789012345678901234567890123456789                         |
+  | Attester address                                                                                                                                  | `relayMessageParams.payload.slice(154,194)` | f39fd6e51aad88f6f4ce6ab8827279cfffb92266                         |
+  | Schema                                                                                                                                            | `relayMessageParams.payload.slice(194,258)` | 234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58 |
+  | Attestation ID                                                                                                                                    | `relayMessageParams.payload.slice(194,258)` | c88cbbc15b9fb4aa12f70c9c97e6c1dd733a29db2816142809504718d615ff9f |
+  | Log entry origin                                                                                                                                  | `relayMessageParams.id.origin`              | 0x4200000000000000000000000000000000000021                       |
+  | Log entry location                                                                                                                                | `relayMessageParams.id.logIndex`            | 0n                                                               |
+  | Block number                                                                                                                                      | `relayMessageParams.id.blockNumber`         | 6746n                                                            |
+  | Timestamp                                                                                                                                         | `relayMessageParams.id.timestamp`           | 1747518156n                                                      |
+  | Chain Id                                                                                                                                          | `relayMessageParams.id.chainId`             | 901n                                                             |
 
   The attestation ID itself [is also a hash](https://github.com/ethereum-attestation-service/eas-contracts/blob/master/contracts/EAS.sol#L692-L711), but luckily most of the fields are either unused (such as `revocationTime`) or are already known to us (such as the schema).
   The sole exception is the data, which in our case includes the name being attested to.
@@ -267,10 +267,9 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
   3.  Create `src/Verifier.sol`.
 
       ```solidity file=<rootDir>/public/tutorials/Verifier.sol hash=2a05d192f106b2102bf01a30267557c2 
-      ```  
+      ```
 
       <details>
-
         <summary>Explanation</summary>
 
         ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L6-L18 hash=64aecb7206a0fa13918ea9ac47ee3dc2 
@@ -284,21 +283,20 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
         This function is part of the [EAS contract code](https://github.com/ethereum-attestation-service/eas-contracts/blob/master/contracts/EAS.sol#L692-L711) that calculates the attestation ID.
 
         ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L48-L62 hash=7c912d2eb9fa21a3abf297f7c27a89d2 
-        ```         
+        ```
 
         Calculate the payload hash.
 
         ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L64-L92 hash=80799162cceb4183360481672f3fb7d4 
         ```
 
-        This is the function that gets the attestation information, builds the call, and calls `CrossL2Inbox`. 
+        This is the function that gets the attestation information, builds the call, and calls `CrossL2Inbox`.
 
         ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L94 hash=b728334118d486dc5e020c5b84d41411 
         ```
 
         Here you would do anything that requires the attesattion to have been verified.
         There is nothing here because it is sample code, but in a real world application this would be the most important part.
-
       </details>
 
   4.  Deploy the new contract and preserve the address.
@@ -320,7 +318,6 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
       ```
 
       <details>
-
         <summary>Explanation</summary>
 
         This is a modified version of the `verify-attestation.mjs` we used earlier, so we only go over the new parts.
@@ -339,7 +336,6 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
         ```
 
         Report the transaction hash.
-
       </details>
 
   7.  Run the verification program.
@@ -358,7 +354,6 @@ To demonstrate this functionality, we'll use an [attestation](https://attest.org
       ```
 
   10. Modify the name in line 73 and see that false attestations don't get verified.
-
 </Steps>
 
 ## Next steps
