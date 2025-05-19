@@ -27,9 +27,8 @@ These files are essential for the op-challenger tool to participate in dispute g
 
 Before starting, ensure you have:
 
-*   Run `op-contracts/v2.0.0` or higher on your chain
-*   Have [docker](https://docs.docker.com/engine/install/) running
-*   You have sufficient system resources (memory and disk space)
+*   [Docker](https://docs.docker.com/engine/install/) running
+*   Have sufficient disk space and memory
 
 ## Using the latest AP and multi-threaded Cannon
 
@@ -56,13 +55,9 @@ This upgrade offers several advantages:
   git clone https://github.com/ethereum-optimism/optimism.git
   cd optimism
   git checkout op-program/v1.6.1-rc.1  # Use the latest tagged version
-  git submodule update --init --recursive
+  git submodule update --init --recursive # Initialize submodules
 
 ```
-
-<Callout type="important">
-    Always use a specific tagged version of op-program as specified in the Superchain registry or official release notes. Current releases use versions like `op-program/v1.6.0-rc.2` for Isthmus hardfork support.
-  </Callout>
 
 ### Build the op-program
 
@@ -111,6 +106,9 @@ Cannon64Next Absolute prestate hash:
 
   ### Prepare the preimage file
 
+  After generating the prestate, find the preimage file.
+  You should see a file named `prestate-mt64.bin.gz` or similar (the exact name might vary based on the version).
+  Rename this file to include the prestate hash:
   The preimage file is located at `op-program/bin/prestate-mt64.bin.gz`. Rename it to match the prestate hash:
 
   ```bash
@@ -119,6 +117,7 @@ Cannon64Next Absolute prestate hash:
   ```
 
   Replace `[CANNON64_PRESTATE_HASH]` with the actual `Cannon64` absolute prestate hash value from the output.
+  This file needs to be uploaded to a location that's accessible by your op-challenger instances.
 </Steps>
 
 ## Official prestate hashes for Superchain registry chains
@@ -138,29 +137,71 @@ If your chain is not included in the Superchain registry, you'll need to generat
 
 For these cases, follow these additional steps:
 
-### For chains not in the Superchain registry
-
 <Steps>
-  ### Prepare configuration files
 
-  Ensure your chain's rollup configuration and L2 genesis file are accessible
+### Create a directory for your custom chain configuration
+```bash
+mkdir -p op-program/chainconfig/configs
+```
 
-  ### Generate custom prestate
-  Generate the absolute prestate using your specific configuration:
+### Copy your chain configuration files to this directory
 
-  ```bash
-  cd op-program
-  make cannon-prestate ROLLUP_CONFIG=/path/to/your/rollup.json L2_GENESIS=/path/to/your/genesis-l2.json
-  ```
+First, you need to obtain your chain's configuration files. These are typically generated when you [deploy your L2 chain](/operators/chain-operators/deploy/smart-contracts) with op-deployer:
+
+*   ***rollup.json**: The rollup configuration file
+*   **genesis.json**: The L2 genesis file 
+
+Name them according to the required format:
+
+```bash
+# Replace 67865 with your actual chain ID
+cp /path/to/rollup.json op-program/chainconfig/configs/67865-rollup.json
+cp /path/to/genesis.json op-program/chainconfig/configs/67865-genesis-l2.json
+```
+Note: The naming format is critical - the files must be named as:
+
+*   `<L2-chain-id>-rollup.json`
+*   `<L2-chain-id>-genesis-l2.json`
+
+These files are outputs from your L2 chain deployment process using op-deployer.
+
+### Generate the prestate
+
+From the root of the monorepo, run:
+
+```bash
+make reproducible-prestate
+```
+Alternatively, you can also specify the paths directly:
+
+```bash
+make reproducible-prestate ROLLUP_CONFIG=/path/to/67865-rollup.json L2_GENESIS=/path/to/67865-genesis-l2.json
+```
+
+This should generate output containing three prestate hashes:
+
+```bash
+-------------------- Production Prestates --------------------
+
+Cannon64 Absolute prestate hash: 
+0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+
+-------------------- Experimental Prestates --------------------
+
+CannonInterop Absolute prestate hash: 
+0x03fc3b4d091527d53f1ff369ea8ed65e5e17cc7fc98ebf75380238151cdc949c
+
+Cannon64Next Absolute prestate hash: 
+0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+
+```
+
+For current production use, you should use the `Cannon64` Absolute prestate hash.
+
+### Locate and prepare the preimage File
+Follow this [step](/operators/chain-operators/tutorials/absolute-prestate#prepare-the-preimage-file)
 
 </Steps>
-
-  The initial prestate used for permissioned games doesn't include the necessary chain configuration for the Fault proof system. 
-  The assumption is that the chain operator, the single permissioned actor, will not challenge their own games. 
-  So the absolute prestate on the initial `PermissionedDisputeGame` will never be used.
-
-  When deploying a new chain, you must first deploy the L1 contracts and then retrieve the artifacts. 
-  These are inputs to the creation of the absolute prestate and this circular dependency is the reason chains cannot be deployed directly to the permissionless Fault Proof System.
 
 ## Deploying and configuring with the absolute prestate
 
@@ -180,24 +221,29 @@ After generating the absolute prestate and preimage files, you'll need to:
     --trace-type permissioned,cannon \
     --prestates-url <URL_TO_PRESTATES_DIRECTORY> \
     --l1-eth-rpc <YOUR_L1_RPC_URL> \
+    --rollup-rpc <YOUR_ROLLUP_RPC_URL> \
     --game-factory-address <YOUR_DISPUTE_GAME_FACTORY> \
-    --network <YOUR_NETWORK>
+    --cannon-rollup-config /path/to/your/<chain-id>-rollup.json \
+    --cannon-l2-genesis /path/to/your/<chain-id>-genesis-l2.json \
+    --network <YOUR_NETWORK_NAME> \
+    --datadir <YOUR_DATA_DIR>
   ```
 
+
   Replace `<URL_TO_PRESTATES_DIRECTORY>` with the URL where you've stored your prestate files.
+  The `--prestates-url` should point to the directory where you've uploaded the renamed prestate file from step 3.
 
 </Steps>
 
+<Callout type="info">
+Ensure you're using the latest op-challenger version, see the [release page](https://github.com/ethereum-optimism/optimism/release)
+The dispute game factory address must be manually specified via the `--game-factory-address` option.
+If your chain uses interoperability features, you'll need to add a `depsets.json` file to the `op-program/chainconfig/configs` directory. 
+This file contains dependency set configurations in the same format as the op-supervisor's configs. You can extract this from your existing op-supervisor setup.
+</Callout>
+
 ## Next Steps
 
-After successfully generating and deploying the absolute prestate:
-
-1.  Monitor your op-challenger service to ensure it can properly participate in dispute games
-2.  Consider setting up redundant challenger instances for enhanced reliability
-3.  Keep track of future upgrades that may require new absolute prestates
-
-For more information, refer to the following resources:
-
-*   [Migrating to Permissionless Fault Proofs Guide](/operators/chain-operators/tutorials/migrating-permissionless)
-*   [Deploying New Dispute Games with OPCM](/operators/chain-operators/tutorials/dispute-games)
-*   [Fault Proofs Explainer](/stack/fault-proofs/explainer)
+*   [Deploying new dispute games with OPCM](/operators/chain-operators/tutorials/dispute-games)
+*   [Migrating to permissionless fault proofs](/operators/chain-operators/tutorials/migrating-permissionless)
+*   [Fault proofs explainer](/stack/fault-proofs/explainer)
