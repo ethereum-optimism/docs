@@ -1,0 +1,223 @@
+---
+title: Relay transactions manually
+description: >-
+  Learn to relay transactions directly by sending the correct transaction.
+lang: en-US
+content_type: tutorial
+topic: interop-cast-manual-relay-tutorial
+personas:
+  - protocol-developer
+  - chain-operator
+  - app-developer
+categories:
+  - protocol
+  - interoperability
+  - cross-chain-messaging
+  - message-relaying
+  - cross-domain-messenger
+  - smart-contracts
+  - testnet
+  - superchain
+is_imported_content: 'false'
+---
+
+import { Callout } from 'nextra/components'
+import { Steps } from 'nextra/components'
+import { InteropCallout } from '@/components/WipCallout'
+import { AutorelayCallout } from '@/components/AutorelayCallout'
+
+# Relay transactions manually
+
+<InteropCallout />
+
+<AutorelayCallout />
+
+## Overview
+
+Learn to relay transactions directly by sending the correct transaction.
+
+<details>
+  <summary>About this tutorial</summary>
+
+  **Prerequisite technical knowledge**
+
+  *   Familiarity with blockchain concepts
+  *   Familiarity with [Foundry](https://book.getfoundry.sh/getting-started/installation), especially `cast`
+
+  **What you'll learn**
+
+  *   How to use `cast` to relay transactions when autorelay does not work
+
+  **Development environment requirements**
+
+  *   Unix-like operating system (Linux, macOS, or WSL for Windows)
+  *   Node.js version 16 or higher
+  *   Git for version control
+  *   Supersim environment configured and running
+  *   Foundry tools installed (forge, cast, anvil)
+</details>
+
+### What you'll build
+
+*   A script to relay messages without using [the JavaScript library](https://www.npmjs.com/package/@eth-optimism/viem)
+
+## Setup
+
+<Steps>
+  ### Run Supersim
+
+  This exercise needs to be done on Supersim.
+  You cannot use the devnets because you cannot disable autorelay on them.
+
+  1.  Follow the [installation guide](/app-developers/tutorials/supersim/getting-started/installation).
+
+  2.  Run Supersim *without* `--interop.relay`.
+
+      ```sh
+      ./supersim
+      ```
+
+  ### Create the state for relaying messages
+
+  The results of this step are similar to what the [message passing tutorial](/interop/tutorials/message-passing) would produce if you did not have autorelay on.
+
+  Execute this script.
+
+  ```sh file=<rootDir>/public/tutorials/setup-for-manual-relay.sh#L1-L147 hash=a63d72f58a06ca7ca78fd1592efcf4a3 
+  ```
+</Steps>
+
+## Manually relay a message using `cast`
+
+Run this script:
+
+```sh
+./manual-relay/sendAndRelay.sh
+```
+
+### Explanation
+
+```sh
+#! /bin/sh
+PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+URL_CHAIN_A=http://localhost:9545
+URL_CHAIN_B=http://localhost:9546
+GREETER_A_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+GREETER_B_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+CHAIN_ID_B=902
+```
+
+This is the configuration.
+The greeter addresses are identical because the nonce for the user address has the same nonce on both chains.
+
+```sh
+cast send -q --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A $GREETER_A_ADDRESS "setGreeting(string)" "Hello from chain A $$"
+```
+
+Send a message from chain A to chain B. The `$$` is the process ID, so if you rerun the script you'll see that the information changes.
+
+```sh
+cast logs "SentMessage(uint256,address,uint256,address,bytes)" --rpc-url $URL_CHAIN_A | tail -14 > log-entry
+```
+
+Whenever `L2ToL2CrossDomainMessenger` sends a message to a different blockchain, it emits a [`SendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L83-L91) event.
+Extract only the latest `SendMessage` event from the logs.
+
+<details>
+  <summary>Example `log-entry`</summary>
+
+  ```yaml
+  - address: 0x4200000000000000000000000000000000000023
+    blockHash: 0xcd0be97ffb41694faf3a172ac612a23f224afc1bfecd7cb737a7a464cf5d133e
+    blockNumber: 426
+    data: 0x0000000000000000000000005fbdb2315678afecb367f032d93f642f64180aa300000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000064a41368620000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001948656c6c6f2066726f6d20636861696e2041203131333030370000000000000000000000000000000000000000000000000000000000000000000000
+    logIndex: 0
+    removed: false
+    topics: [
+            0x382409ac69001e11931a28435afef442cbfd20d9891907e8fa373ba7d351f320
+            0x0000000000000000000000000000000000000000000000000000000000000386
+            0x0000000000000000000000005fbdb2315678afecb367f032d93f642f64180aa3
+            0x0000000000000000000000000000000000000000000000000000000000000000
+    ]
+    transactionHash: 0x1d6f2e5e2c8f3eb055e95741380ca36492f784b9782848b66b66c65c5937ff3a
+    transactionIndex: 0
+  ```
+</details>
+
+```sh
+TOPICS=`cat log-entry | grep -A4 topics | awk '{print $1}' | tail -4 | sed 's/0x//'`
+TOPICS=`echo $TOPICS | sed 's/ //g'`
+```
+
+Consolidate the log topics into a single hex string.
+
+```sh
+ORIGIN=0x4200000000000000000000000000000000000023
+BLOCK_NUMBER=`cat log-entry | awk '/blockNumber/ {print $2}'`
+LOG_INDEX=`cat log-entry | awk '/logIndex/ {print $2}'`
+TIMESTAMP=`cast block $BLOCK_NUMBER --rpc-url $URL_CHAIN_A | awk '/timestamp/ {print $2}'`
+CHAIN_ID_A=`cast chain-id --rpc-url $URL_CHAIN_A`
+SENT_MESSAGE=`cat log-entry | awk '/data/ {print $2}'`
+```
+
+Read additional fields from the log entry.
+
+```sh
+LOG_ENTRY=0x`echo $TOPICS$SENT_MESSAGE | sed 's/0x//'`
+```
+
+Consolidate the entire log entry.
+
+```sh
+RPC_PARAMS=$(cat <<INNER_END_OF_FILE
+{
+    "origin": "$ORIGIN",
+    "blockNumber": "$BLOCK_NUMBER",
+    "logIndex": "$LOG_INDEX",
+    "timestamp": "$TIMESTAMP",
+    "chainId": "$CHAIN_ID_A",
+    "payload": "$LOG_ENTRY"
+}
+INNER_END_OF_FILE
+)
+
+ACCESS_LIST=`cast rpc admin_getAccessListForIdentifier --rpc-url http://localhost:8420 "$RPC_PARAMS" | jq .accessList`
+```
+
+To secure cross-chain messaging and prevent potential [denial-of-service attacks](https://github.com/ethereum-optimism/design-docs/blob/main/protocol/interop-access-list.md), relay transactions require properly formatted access lists that include a checksum derived from the message data.
+This lets sequencers know what executing messages to expect in a transaction, which makes it easy not to include transactions that are invalid because they rely on messages that were never sent.
+
+The [algorithm to calculate the access list](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L87-L115) is a bit complicated, but you don't need to worry about it.
+Supersim exposes [RPC calls](https://supersim.pages.dev/guides/interop/cast?highlight=manuall#7-construct-the-access-list-for-the-message) that calculates it for you on port 8420.
+The code above will calculate the correct access list even if you're using a different interop cluster where autorelay is not functioning. 
+This is because the code implements a [pure function](https://en.wikipedia.org/wiki/Pure_function), which produces consistent results regardless of external state.
+In contrast, the `admin_getAccessListByMsgHash` RPC call is not a pure function, it is dependent on system state and therefore less flexible in these situations.
+
+```sh
+echo Old greeting
+cast call $GREETER_B_ADDRESS "greet()(string)" --rpc-url $URL_CHAIN_B
+```
+
+Show the current greeting.
+The message has not been relayed yet, so it's still the old greeting.
+
+```sh
+cast send -q $ORIGIN "relayMessage((address,uint256,uint256,uint256,uint256),bytes)" "($ORIGIN,$BLOCK_NUMBER,$LOG_INDEX,$TIMESTAMP,$CHAIN_ID_A)" $LOG_ENTRY --access-list "$ACCESS_LIST" --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY
+```
+
+Call [`relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L197-L256) to relay the message.
+
+```sh
+echo New greeting
+cast call $GREETER_B_ADDRESS "greet()(string)" --rpc-url $URL_CHAIN_B
+```
+
+Again, show the current greeting.
+Now it's the new one.
+
+## Next steps
+
+*   Review the [Superchain interop explainer](/interop/explainer) for answers to common questions about interoperability.
+*   Read the [message passing explainer](/interop/message-passing) to understand what happens "under the hood".
+*   Write a revolutionary app that uses multiple blockchains within the Superchain.
