@@ -55,7 +55,7 @@ export function resultsFeeScalarsAssumed(
   transactionsPerDay: number, // e14
   dataAvailabilityType: string, // E16
   targetDataMargin: number, // E18
-  isStateEnabled: string, // E24
+  isStateEnabled: boolean, // E24
   maxChannelDuration: number // E22
 ): string {
   const n25: number = calculateBlobLevelImpliedBlobFullness(
@@ -75,7 +75,7 @@ export function resultsFeeScalarsAssumed(
       : `${Math.round(n25 * 100)}% Blob Fullness and ${
           Math.round(n26 * 10) / 10
         } Blobs per L1 Tx (Avg), `;
-  const state = isStateEnabled === "Yes" ? " & State" : "";
+  const state = isStateEnabled === true ? " & State" : "";
   return `Fee Scalars Assume: ${mode}Target a ${Math.round(
     targetDataMargin
   )}% Margin on DA${state}, ${

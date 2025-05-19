@@ -41,16 +41,31 @@ See the [Software Releases](/operators/node-operators/releases) page for the min
 ### Configure the Ecotone activation date
 
 *   If you are operating a node for an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json), 
-the Ecotone activation date is part of the `op-node` and `op-geth` nodes. So, 
-no action is needed for the sequencer after upgrading to the latest release.
-*   For node operators of custom chains not included in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json), 
-the activation dates can be set in the `rollup.json` (set `ecotone_time`) or 
-set the activation time via overrides (CLI) in both `op-node` and `op-geth`. 
-These will need to be set on `op-node` and `op-geth` for the sequencer and all other nodes.
+the Ecotone activation date is handled automatically by both execution clients:
+
+<Tabs items={['op-geth', 'Nethermind']}>
+  <Tabs.Tab>
+    The activation date is part of the node configuration. No action needed after upgrading to the latest release.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    The activation date is included in the built-in chain configuration. No action needed after upgrading to the latest release.
+  </Tabs.Tab>
+</Tabs>
+
+*   For node operators of custom chains not included in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json):
+
+<Tabs items={['op-geth', 'Nethermind']}>
+  <Tabs.Tab>
+    Set the activation time in `rollup.json` (`ecotone_time`) and via CLI overrides
+  </Tabs.Tab>
+  <Tabs.Tab>
+    Use the chain configuration examples in `src/Nethermind/Chains` as templates for your custom chain configuration
+  </Tabs.Tab>
+</Tabs>
 
 <Callout type="warning">
-  Even if the ecotone activation is configured via the `rollup.json`, it still 
-  needs to be configured separately on `op-geth` via command line flag.
+  When using `op-geth`, even if the ecotone activation is configured via the `rollup.json`, it still 
+  needs to be configured separately via command line flag.
 </Callout>
 
 <Tabs items={['op-node', 'op-geth']}>
