@@ -1,0 +1,76 @@
+---
+title: Upgrade 16 - Protocol upgrade
+description: Learn how to prepare for the Upgrade 16 protocol changes.
+lang: en-US
+content_type: notice
+topic: upgrade-16-changes
+personas:
+  - chain-operator
+  - node-operator
+categories:
+  - security
+  - protocol
+  - infrastructure
+  - interoperability
+is_imported_content: 'false'
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Upgrade 16: Protocol upgrade
+
+This page outlines important changes related to Upgrade 16 for chain operators and node operators. The upgrade proposal includes modifications to the OP Stack that will set the Superchain up for continued success through the remainder of 2025.
+
+## What's included in Upgrade 16
+
+Upgrade 16 contains these main changes:
+
+* **Interop-Ready smart contracts**: Interoperability is critical to realizing the Superchain as a unified network of OP Chains. This upgrade begins the rollout of foundational interoperability features by updating the `OptimismPortal` to handle future cross-chain messaging safely and extensibly.
+* **Stage 1 updates**: Modifications to meet L2Beat's updated Stage 1 requirements from January 2025, including removal of `DeputyGuardianModule` and updates to `DeputyPauseModule`.
+* **Go 1.23 Support in Cannon**: Updates to Cannon to support Go 1.23, allowing OP Stack to benefit from upstream go-ethereum changes.
+* **Max gas limit increase**: Update to `MAX_GAS_LIMIT` from 200m to 500m gas after improvements to OP Stack infrastructure and the Cannon proof system.
+* **Additional safety improvements**: Authentication for critical contract functions and simplification of `DelayedWETH` contract control.
+
+For more information on the Upgrade 16 implementation details, please review the [upgrade proposal](https://gov.optimism.io)[Need actual link to the proposal].
+
+## For chain operators
+
+Upgrade 16 is a largely standard upgrade to the L1 smart contracts for the OP Stack. We do not expect any downtime or changes in performance.
+
+Chain operators should be aware that Upgrade 16 involves a one-time invalidation of all existing withdrawal proofs. Users who have proven withdrawals can either finalize withdrawals prior to the activation of Upgrade 16 or will be required to re-prove these withdrawals after the upgrade activates.
+
+If this proposal is accepted, multisig ceremonies will be coordinated to execute upgrade transactions. The following transactions will be executed on the respective chains: `OP Mainnet`, `Soneium Mainnet`, `Ink Mainnet`, `Base Mainnet`, `Unichain Mainnet`, `Mode Mainnet`, `Zora Mainnet`, `Arena Z Mainnet`, `Swell Mainnet`, and `Metal Mainnet`. Depending on the current state of the chain the execution times will vary. If your Optimism governed chain is not in this list, please reach out to OP Labs Solutions Engineering to coordinate your upgrade.
+
+## For node operators
+
+WHAT ARE THE NODE OPERATOR STEPS?
+
+## Technical details
+
+### Interop-ready smart contracts
+
+Upgrade 16 updates the core bridge contracts of the OP Stack to support native interoperability. Key modifications include:
+
+* The `OptimismPortal` now relies on the `AnchorStateRegistry` as the source of truth for the validity of dispute games
+* The `OptimismPortal` now stores ETH in a dedicated `ETHLockbox` contract
+* The `OptimismPortal` includes a version of the `proveWithdrawalTransaction` function that supports the updated `SuperFaultDisputeGame` implementation (disabled by default)
+
+### Stage 1 updates
+
+* The `DeputyGuardianModule` has been removed
+* The `DeputyPauseModule` has been updated to be installed into the Security Council's guardian safe
+* The pause action now expires automatically after 3 months
+* The pause action can now be applied on a per-chain basis as well as a Superchain-wide basis
+
+### Go 1.23 support in Cannon
+
+Cannon has been updated to support Go 1.23, allowing the OP Stack to benefit from upstream changes in go-ethereum.
+
+### `MAX_GAS_LIMIT` increases
+
+The `MAX_GAS_LIMIT` variable in the `SystemConfig` contract is being updated from 200m gas to 500m gas.
+
+### Security reviews
+
+* Changes to the bridge contracts were audited via a Cantina contest with no Medium+ severity issues found
+* Upgrade 16 as a whole was audited by Spearbit with no Medium+ severity issues found
