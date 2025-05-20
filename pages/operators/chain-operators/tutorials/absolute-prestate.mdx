@@ -217,16 +217,15 @@ After generating the absolute prestate and preimage files, you'll need to:
   Configure the op-challenger to use this prestate:
 
   ```bash
-  op-challenger \
-    --trace-type permissioned,cannon \
-    --prestates-url <URL_TO_PRESTATES_DIRECTORY> \
-    --l1-eth-rpc <YOUR_L1_RPC_URL> \
-    --rollup-rpc <YOUR_ROLLUP_RPC_URL> \
-    --game-factory-address <YOUR_DISPUTE_GAME_FACTORY> \
-    --cannon-rollup-config /path/to/your/<chain-id>-rollup.json \
-    --cannon-l2-genesis /path/to/your/<chain-id>-genesis-l2.json \
-    --network <YOUR_NETWORK_NAME> \
-    --datadir <YOUR_DATA_DIR>
+  docker run -d --name op-challenger \
+    -e OP_CHALLENGER_TRACE_TYPE=permissioned,cannon \
+    -e OP_CHALLENGER_PRESTATES_URL=<YOUR_PRESTATES_URL> \
+    -e OP_CHALLENGER_L1_ETH_RPC=<YOUR_L1_RPC_URL> \
+    -e OP_CHALLENGER_GAME_FACTORY_ADDRESS=<YOUR_DISPUTE_GAME_FACTORY> \
+    -e OP_CHALLENGER_PRIVATE_KEY=<YOUR_PRIVATE_KEY_OR_USE_WALLET_SIGNER> \
+    -e OP_CHALLENGER_NETWORK=<YOUR_NETWORK> \
+    -v /path/to/local/prestates:/prestates \
+    us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:latest #use the latest version
   ```
 
 
