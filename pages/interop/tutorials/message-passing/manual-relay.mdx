@@ -21,8 +21,7 @@ categories:
 is_imported_content: 'false'
 ---
 
-import { Callout } from 'nextra/components'
-import { Steps } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
 import { InteropCallout } from '@/components/WipCallout'
 import { AutorelayCallout } from '@/components/AutorelayCallout'
 
@@ -47,6 +46,7 @@ Learn to relay transactions directly by sending the correct transaction.
   **What you'll learn**
 
   *   How to use `cast` to relay transactions when autorelay does not work
+  *   How to relay transactions using JavaScript
 
   **Development environment requirements**
 
@@ -59,9 +59,12 @@ Learn to relay transactions directly by sending the correct transaction.
 
 ### What you'll build
 
-*   A script to relay messages without using [the JavaScript library](https://www.npmjs.com/package/@eth-optimism/viem)
+*   A program to relay messages without using [the JavaScript library](https://www.npmjs.com/package/@eth-optimism/viem)
+*   A shell script to relay messages using [`cast`](https://book.getfoundry.sh/cast/)
 
 ## Setup
+
+These steps are necessary to run the tutorial, regardless of whether you are using `cast` or the JavaScript API.
 
 <Steps>
   ### Run Supersim
@@ -83,19 +86,110 @@ Learn to relay transactions directly by sending the correct transaction.
 
   Execute this script.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-manual-relay.sh#L1-L147 hash=a63d72f58a06ca7ca78fd1592efcf4a3 
+  ```sh file=<rootDir>/public/tutorials/setup-for-manual-relay.sh hash=eea0a71ff6b4c27b91225a715eb2718e 
   ```
 </Steps>
 
-## Manually relay a message using `cast`
+## Manual relay using the API
 
-Run this script:
+<Steps>
+  ### Setup
+
+  We are going to use a [Node](https://nodejs.org/en) project.
+
+  1.  Initialize a new Node project.
+
+      ```sh
+      mkdir -p manual-relay/offchain
+      cd manual-relay/offchain
+      npm init -y
+      npm install --save-dev -y viem @eth-optimism/viem
+      mkdir src
+      ```
+
+  2.  Export environment variables.
+      This is necessary because those variables are currently limited to the shell process.
+      We need them in the Node process that the shell creates.
+
+      ```sh
+      export GREETER_A_ADDRESS GREETER_B_ADDRESS PRIVATE_KEY
+      ```
+
+  ### Manual relaying app
+
+  1.  Create a file `manual-relay.mjs` with:
+
+      ```javascript file=<rootDir>/public/tutorials/manual-relay.mjs hash=b0c44b327af300437f3d71ff049842f9
+      ```
+
+      <details>
+        <summary>Explanation</summary>
+
+        ```javascript file=<rootDir>/public/tutorials/manual-relay.mjs#L8-L9 hash=2d062eb374989a8a40199a4d7dc8be6e
+        ```
+
+        Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
+
+        ```javascript file=<rootDir>/public/tutorials/manual-relay.mjs#L18-L32 hash=cf5ce47bcbcd80327230a6da689688f8
+        ```
+
+        In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions.
+        On wallet A we need the public actions, those that only read information.
+        On wallet B we need the wallet actions, the ones that require an account.
+
+        ```javascript file=<rootDir>/public/tutorials/manual-relay.mjs#L55 hash=23aa6f24baeb5757130361f30c1b0e9c
+        ```
+
+        To relay a message we need the information in the receipt.
+        Also, we need to wait until the transaction with the relayed message is actually part of a block.
+
+        ```javascript file=<rootDir>/public/tutorials/manual-relay.mjs#L57-L58 hash=c0d3d8a60143c30b93db256518e8b583
+        ```        
+
+        Show the user that until the relay transaction happens on chain B, the greeting is unchanged.
+
+        ```javascript file=<rootDir>/public/tutorials/manual-relay.mjs#L60-L63 hash=8cc99e67ee36474c81183108531cb295
+        ```
+
+        A single transaction can send multiple messages.
+        But here we know we sent just one, so we look for the first one in the list.
+
+        ```javascript file=<rootDir>/public/tutorials/manual-relay.mjs#L64-L71 hash=b7ed7d70ba5ec84322beee5369c5bee5
+        ```
+
+        Here we first send the relay message on chain B, and then wait for the receipt for it.
+      </details>
+
+  2.  Run JavaScript program, and see that the message is relayed.
+
+      ```sh
+      node manual-relay.mjs
+      ```
+
+  ### Debugging
+
+  To see what messages were relayed by a specific transaction you can use this code:
+
+  ```javascript
+  import { decodeRelayedL2ToL2Messages } from '@eth-optimism/viem'
+
+  const decodedRelays = decodeRelayedL2ToL2Messages(
+      {receipt: receiptRelay})
+
+  console.log(decodedRelays)
+  console.log(decodedRelays.successfulMessages[0].log)
+  ```
+</Steps>
+
+## Manual relay using `cast`
+
+Run this` script:
 
 ```sh
 ./manual-relay/sendAndRelay.sh
 ```
 
-### Explanation
+### What does the script do?
 
 ```sh
 #! /bin/sh
@@ -109,7 +203,7 @@ CHAIN_ID_B=902
 ```
 
 This is the configuration.
-The greeter addresses are identical because the nonce for the user address has the same nonce on both chains.
+The greeter addresses are identical because the nonce for the user address has an identical nonce on both chains.
 
 ```sh
 cast send -q --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A $GREETER_A_ADDRESS "setGreeting(string)" "Hello from chain A $$"
