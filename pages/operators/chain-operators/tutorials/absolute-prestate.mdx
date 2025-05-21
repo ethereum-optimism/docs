@@ -18,9 +18,9 @@ import { Callout, Steps } from 'nextra/components'
 
 # Overview
 
-Permissionless fault proofs are a critical component of the OP Stack's security model. They allow anyone to challenge invalid state proposals, ensuring the correctness of L2 to L1 withdrawals without relying on trusted third parties. 
+Permissionless fault proofs are a critical component of the OP Stack's security model. They allow anyone to challenge invalid state proposals, ensuring the correctness of L2 to L1 withdrawals without relying on trusted third parties.
 To enable this functionality, chain operators must generate and maintain the necessary absolute prestate and preimage files.
-The absolute prestate is a commitment to the initial state of the fault proof program, and the preimage is the serialized binary representation of this program state. 
+The absolute prestate is a commitment to the initial state of the fault proof program, and the preimage is the serialized binary representation of this program state.
 These files are essential for the op-challenger tool to participate in dispute games when challenging invalid claims.
 
 ## Prerequisites
@@ -32,7 +32,7 @@ Before starting, ensure you have:
 
 ## Using the latest absolute prestate and multi-threaded Cannon
 
-As of the latest releases, OP Stack chains should utilize the `64-bit` MIPS multi-threaded version of Cannon. 
+As of the latest releases, OP Stack chains should utilize the `64-bit` MIPS multi-threaded version of Cannon.
 This upgrade offers several advantages:
 
 *   Improved performance through parallelized execution
@@ -40,7 +40,7 @@ This upgrade offers several advantages:
 *   Support for the latest network upgrades
 
 <Callout type="info">
-  Beginning with [Upgrade 14](/notices/upgrade-14), all chains should use the `64-bit` multi-threaded version of Cannon. 
+  Beginning with [Upgrade 14](/notices/upgrade-14), all chains should use the `64-bit` multi-threaded version of Cannon.
   The absolute prestate files for this version typically have the format `prestate-mt64.bin.gz`.
 </Callout>
 
@@ -60,43 +60,43 @@ This upgrade offers several advantages:
   git checkout op-program/v1.6.1-rc.1
   git submodule update --init --recursive # Initialize submodules
 
-```
+  ```
 
-### Generate the absolute prestate
+  ### Generate the absolute prestate
 
-After placing your configuration files in the proper location, run the following command from the root of the monorepo:
+  After placing your configuration files in the proper location, run the following command from the root of the monorepo:
 
-```bash
-make reproducible-prestate
-```
+  ```bash
+  make reproducible-prestate
+  ```
 
-The command will automatically detect and use the configuration files you placed in the `op-program/chainconfig/configs` directory.
+  The command will automatically detect and use the configuration files you placed in the `op-program/chainconfig/configs` directory.
 
-The output should look like this:
+  The output should look like this:
 
-```bash
+  ```bash
 
--------------------- Production Prestates --------------------
+  -------------------- Production Prestates --------------------
 
-Cannon64 Absolute prestate hash: 
-0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+  Cannon64 Absolute prestate hash: 
+  0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
 
--------------------- Experimental Prestates --------------------
+  -------------------- Experimental Prestates --------------------
 
-CannonInterop Absolute prestate hash: 
-0x03fc3b4d091527d53f1ff369ea8ed65e5e17cc7fc98ebf75380238151cdc949c
+  CannonInterop Absolute prestate hash: 
+  0x03fc3b4d091527d53f1ff369ea8ed65e5e17cc7fc98ebf75380238151cdc949c
 
-Cannon64Next Absolute prestate hash: 
-0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+  Cannon64Next Absolute prestate hash: 
+  0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
 
-```
+  ```
 
   The output will display production and experimental prestate hashes:
 
-  * **Production prestates**: Contains the `Cannon64` prestate, which is the current production absolute prestate hash for the 64-bit version of Cannon. 
-  This is the hash you should use for permissionless fault proofs.
-  
-  * **Experimental prestates**: These contain prestates for versions that are in development and not yet ready for production use.
+  *   **Production prestates**: Contains the `Cannon64` prestate, which is the current production absolute prestate hash for the 64-bit version of Cannon.
+      This is the hash you should use for permissionless fault proofs.
+
+  *   **Experimental prestates**: These contain prestates for versions that are in development and not yet ready for production use.
 
   ### Prepare the preimage file
 
@@ -116,16 +116,17 @@ Cannon64Next Absolute prestate hash:
 
 ## Official prestate hashes for Superchain registry chains
 
-The Superchain registry maintains official absolute prestate hashes for chains that are part of the registry. 
+The Superchain registry maintains official absolute prestate hashes for chains that are part of the registry.
 These prestates include the configurations of chains that were in the Superchain registry at the time the prestate was created.
 
 <Callout type="warning">
   Important: A prestate listed in the Superchain registry may not be suitable for your chain if:
-  * Your chain was added to the registry after the prestate was created
-  * The configuration for your chain has been updated since the prestate was created
-  
-  Before using a prestate from the registry, verify that it contains the latest configuration for your chain. 
-  
+
+  *   Your chain was added to the registry after the prestate was created
+  *   The configuration for your chain has been updated since the prestate was created
+
+  Before using a prestate from the registry, verify that it contains the latest configuration for your chain.
+
   When in doubt, generating your own prestate with your specific chain configuration is the safest approach.
 </Callout>
 
@@ -141,74 +142,74 @@ If your chain is not included in the Superchain registry, you'll need to generat
 For these cases, follow these additional steps:
 
 <Steps>
+  ### Verify the chain configuration directory exists
 
-### Verify the chain configuration directory exists
-The directory for custom chain configurations already exists in a valid checkout of the monorepo:
+  The directory for custom chain configurations already exists in a valid checkout of the monorepo:
 
-```bash
-# Verify the directory exists
-ls -la op-program/chainconfig/configs
-```
+  ```bash
+  # Verify the directory exists
+  ls -la op-program/chainconfig/configs
+  ```
 
-If this directory doesn't exist, you may be using a version of the monorepo that doesn't support custom configs.
+  If this directory doesn't exist, you may be using a version of the monorepo that doesn't support custom configs.
 
-### Copy your chain configuration files to this directory
+  ### Copy your chain configuration files to this directory
 
-First, you need to obtain your chain's configuration files. These are typically generated when you [deploy your L2 chain](/operators/chain-operators/deploy/smart-contracts) with op-deployer:
+  First, you need to obtain your chain's configuration files. These are typically generated when you [deploy your L2 chain](/operators/chain-operators/deploy/smart-contracts) with op-deployer:
 
-*   ***rollup.json**: The rollup configuration file
-*   **genesis.json**: The L2 genesis file 
+  *   \***rollup.json**: The rollup configuration file
+  *   **genesis.json**: The L2 genesis file
 
-Name them according to the required format:
+  Name them according to the required format:
 
-```bash
-# Replace 67865 with your actual chain ID
-cp /path/to/rollup.json op-program/chainconfig/configs/67865-rollup.json
-cp /path/to/genesis.json op-program/chainconfig/configs/67865-genesis-l2.json
-```
-Note: The naming format is critical - the files must be named as:
+  ```bash
+  # Replace 67865 with your actual chain ID
+  cp /path/to/rollup.json op-program/chainconfig/configs/67865-rollup.json
+  cp /path/to/genesis.json op-program/chainconfig/configs/67865-genesis-l2.json
+  ```
 
-*   `<L2-chain-id>-rollup.json`
-*   `<L2-chain-id>-genesis-l2.json`
+  Note: The naming format is critical - the files must be named as:
 
-These files are outputs from your L2 chain deployment process using op-deployer.
-For long-term preservation and reproducibility, commit these configuration files to a git branch in your own fork of the monorepo. 
-This ensures you can always rebuild the prestate in the future by checking out that branch and running `make reproducible-prestate`, even if your original files are lost.
+  *   `<L2-chain-id>-rollup.json`
+  *   `<L2-chain-id>-genesis-l2.json`
 
+  These files are outputs from your L2 chain deployment process using op-deployer.
+  For long-term preservation and reproducibility, commit these configuration files to a git branch in your own fork of the monorepo.
+  This ensures you can always rebuild the prestate in the future by checking out that branch and running `make reproducible-prestate`, even if your original files are lost.
 
-### Generate the prestate
+  ### Generate the prestate
 
-After placing your configuration files in the proper location, run the following command from the root of the monorepo:
+  After placing your configuration files in the proper location, run the following command from the root of the monorepo:
 
-```bash
-make reproducible-prestate
-```
+  ```bash
+  make reproducible-prestate
+  ```
 
-The command will automatically detect and use the configuration files you placed in the `op-program/chainconfig/configs` directory.
+  The command will automatically detect and use the configuration files you placed in the `op-program/chainconfig/configs` directory.
 
-This should generate output containing three prestate hashes:
+  This should generate output containing three prestate hashes:
 
-```bash
--------------------- Production Prestates --------------------
+  ```bash
+  -------------------- Production Prestates --------------------
 
-Cannon64 Absolute prestate hash: 
-0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+  Cannon64 Absolute prestate hash: 
+  0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
 
--------------------- Experimental Prestates --------------------
+  -------------------- Experimental Prestates --------------------
 
-CannonInterop Absolute prestate hash: 
-0x03fc3b4d091527d53f1ff369ea8ed65e5e17cc7fc98ebf75380238151cdc949c
+  CannonInterop Absolute prestate hash: 
+  0x03fc3b4d091527d53f1ff369ea8ed65e5e17cc7fc98ebf75380238151cdc949c
 
-Cannon64Next Absolute prestate hash: 
-0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+  Cannon64Next Absolute prestate hash: 
+  0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
 
-```
+  ```
 
-For current production use, you should use the `Cannon64` Absolute prestate hash.
+  For current production use, you should use the `Cannon64` Absolute prestate hash.
 
-### Locate and prepare the preimage File
-Follow this [step](/operators/chain-operators/tutorials/absolute-prestate#prepare-the-preimage-file)
+  ### Locate and prepare the preimage File
 
+  Follow this [step](/operators/chain-operators/tutorials/absolute-prestate#prepare-the-preimage-file)
 </Steps>
 
 ## Deploying and configuring with the absolute prestate
@@ -223,10 +224,12 @@ After generating the absolute prestate and preimage files, you'll need to:
   ### Configure op-challenger
 
   Configure the op-challenger to use the generated prestate. There are two ways to provide prestates:
+</Steps>
 
 <Steps>
- ### Option 1: Using HTTP URL (Recommended for production)
- If your prestate files are hosted on a web server, you can simply provide the URL to the directory containing those files:
+  ### Option 1: Using HTTP URL (Recommended for production)
+
+  If your prestate files are hosted on a web server, you can simply provide the URL to the directory containing those files:
 
   ```bash
   docker run -d --name op-challenger \
@@ -269,10 +272,10 @@ After generating the absolute prestate and preimage files, you'll need to:
 </Steps>
 
 <Callout type="info">
-Ensure you're using the latest op-challenger version, see the [release page](https://github.com/ethereum-optimism/optimism/release)
-The dispute game factory address must be manually specified via the `--game-factory-address` option.
-If your chain uses interoperability features, you'll need to add a `depsets.json` file to the `op-program/chainconfig/configs` directory. 
-This file contains dependency set configurations in the same format as the op-supervisor's configs. You can extract this from your existing op-supervisor setup.
+  *   Ensure you're using the latest op-challenger version, see the [release page](https://github.com/ethereum-optimism/optimism/release).
+  *   The dispute game factory address must be manually specified via the `--game-factory-address` option.
+  *   If your chain uses interoperability features, you'll need to add a `depsets.json` file to the `op-program/chainconfig/configs` directory.
+  *   This file contains dependency set configurations in the same format as the op-supervisor's configs. You can extract this from your existing op-supervisor setup.
 </Callout>
 
 ## Next Steps
