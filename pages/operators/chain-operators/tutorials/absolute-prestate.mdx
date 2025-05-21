@@ -64,13 +64,13 @@ This upgrade offers several advantages:
 
 ### Generate the absolute prestate
 
-Generate the prestate by running the op-program binary directly:
+After placing your configuration files in the proper location, run the following command from the root of the monorepo:
 
 ```bash
-cd op-program
 make reproducible-prestate
-cd ..
 ```
+
+The command will automatically detect and use the configuration files you placed in the `op-program/chainconfig/configs` directory.
 
 The output should look like this:
 
@@ -91,13 +91,12 @@ Cannon64Next Absolute prestate hash:
 
 ```
 
-  The output should display three prestate hashes:
+  The output will display production and experimental prestate hashes:
 
-  *   `Cannon64`: The current production absolute prestate hash for the 64-bit version of Cannon
-  *   `CannonInterop`: The absolute prestate hash used for interoperability
-  *   `Cannon64Next`: The next state version for Cannon with in-progress features (like Go 1.24 support)
-
-  For permissionless fault proofs, you'll primarily use the Cannon64 absolute prestate hash.
+  * **Production prestates**: Contains the `Cannon64` prestate, which is the current production absolute prestate hash for the 64-bit version of Cannon. 
+  This is the hash you should use for permissionless fault proofs.
+  
+  * **Experimental prestates**: These contain prestates for versions that are in development and not yet ready for production use.
 
   ### Prepare the preimage file
 
@@ -118,8 +117,17 @@ Cannon64Next Absolute prestate hash:
 ## Official prestate hashes for Superchain registry chains
 
 The Superchain registry maintains official absolute prestate hashes for chains that are part of the registry. 
-These prestates include the configurations of all chains in the Superchain registry.
-For chains listed in the Superchain registry, you should use the official prestate hashes rather than generating your own.
+These prestates include the configurations of chains that were in the Superchain registry at the time the prestate was created.
+
+<Callout type="warning">
+  Important: A prestate listed in the Superchain registry may not be suitable for your chain if:
+  * Your chain was added to the registry after the prestate was created
+  * The configuration for your chain has been updated since the prestate was created
+  
+  Before using a prestate from the registry, verify that it contains the latest configuration for your chain. 
+  
+  When in doubt, generating your own prestate with your specific chain configuration is the safest approach.
+</Callout>
 
 You can find the latest prestate tags in the [Superchain registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml).
 
@@ -134,10 +142,15 @@ For these cases, follow these additional steps:
 
 <Steps>
 
-### Create a directory for your custom chain configuration
+### Verify the chain configuration directory exists
+The directory for custom chain configurations already exists in a valid checkout of the monorepo:
+
 ```bash
-mkdir -p op-program/chainconfig/configs
+# Verify the directory exists
+ls -la op-program/chainconfig/configs
 ```
+
+If this directory doesn't exist, you may be using a version of the monorepo that doesn't support custom configs.
 
 ### Copy your chain configuration files to this directory
 
@@ -159,19 +172,19 @@ Note: The naming format is critical - the files must be named as:
 *   `<L2-chain-id>-genesis-l2.json`
 
 These files are outputs from your L2 chain deployment process using op-deployer.
+For long-term preservation and reproducibility, commit these configuration files to a git branch in your own fork of the monorepo. 
+This ensures you can always rebuild the prestate in the future by checking out that branch and running `make reproducible-prestate`, even if your original files are lost.
+
 
 ### Generate the prestate
 
-From the root of the monorepo, run:
+After placing your configuration files in the proper location, run the following command from the root of the monorepo:
 
 ```bash
 make reproducible-prestate
 ```
-Alternatively, you can also specify the paths directly:
 
-```bash
-make reproducible-prestate ROLLUP_CONFIG=/path/to/67865-rollup.json L2_GENESIS=/path/to/67865-genesis-l2.json
-```
+The command will automatically detect and use the configuration files you placed in the `op-program/chainconfig/configs` directory.
 
 This should generate output containing three prestate hashes:
 
