@@ -222,12 +222,37 @@ After generating the absolute prestate and preimage files, you'll need to:
 
   ### Configure op-challenger
 
-  Configure the op-challenger to use this prestate:
+  Configure the op-challenger to use the generated prestate. There are two ways to provide prestates:
+
+<Steps>
+ ### Option 1: Using HTTP URL (Recommended for production)
+ If your prestate files are hosted on a web server, you can simply provide the URL to the directory containing those files:
+
+  ```bash
+  docker run -d --name op-challenger \
+   -e OP_CHALLENGER_TRACE_TYPE=permissioned,cannon \
+   -e OP_CHALLENGER_PRESTATES_URL=<HTTP_URL_PATH_TO_PRESTATE> \
+   -e OP_CHALLENGER_L1_ETH_RPC=<YOUR_L1_RPC_URL> \
+   -e OP_CHALLENGER_GAME_FACTORY_ADDRESS=<YOUR_DISPUTE_GAME_FACTORY> \
+   -e OP_CHALLENGER_PRIVATE_KEY=<YOUR_PRIVATE_KEY_OR_USE_WALLET_SIGNER> \
+   -e OP_CHALLENGER_NETWORK=<YOUR_NETWORK> \
+   -e OP_CHALLENGER_CANNON_ROLLUP_CONFIG=<PATH_TO_ROLLUP_CONFIG> \
+   -e OP_CHALLENGER_CANNON_L2_GENESIS=<PATH_TO_GENESIS_CONFIG> \
+   us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:latest
+  ```
+
+  <Callout type="info">
+    When using an HTTP URL, no volume mount is required. The challenger will download the prestate files as needed.
+  </Callout>
+
+  ### Option 2: Using local files
+
+  If you have prestate files stored locally, you'll need to mount them as a volume and use the `file://` protocol:
 
   ```bash
   docker run -d --name op-challenger \
     -e OP_CHALLENGER_TRACE_TYPE=permissioned,cannon \
-    -e OP_CHALLENGER_PRESTATES_URL=<YOUR_PRESTATES_URL> \
+    -e OP_CHALLENGER_PRESTATES_URL=file:///prestates \
     -e OP_CHALLENGER_L1_ETH_RPC=<YOUR_L1_RPC_URL> \
     -e OP_CHALLENGER_GAME_FACTORY_ADDRESS=<YOUR_DISPUTE_GAME_FACTORY> \
     -e OP_CHALLENGER_PRIVATE_KEY=<YOUR_PRIVATE_KEY_OR_USE_WALLET_SIGNER> \
@@ -235,13 +260,12 @@ After generating the absolute prestate and preimage files, you'll need to:
     -e OP_CHALLENGER_CANNON_ROLLUP_CONFIG=<PATH_TO_ROLLUP_CONFIG> \
     -e OP_CHALLENGER_CANNON_L2_GENESIS=<PATH_TO_GENESIS_CONFIG> \
     -v /path/to/local/prestates:/prestates \
-    us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:latest #use the latest version
+    us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:latest
   ```
 
-
-  Replace `<URL_TO_PRESTATES_DIRECTORY>` with the URL where you've stored your prestate files.
-  The `--prestates-url` should point to the directory where you've uploaded the renamed prestate file from step 3.
-
+  <Callout type="warning">
+    When using local files, ensure your prestate files are in the mounted directory and properly named with their hash (e.g., `0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8.bin.gz`).
+  </Callout>
 </Steps>
 
 <Callout type="info">
