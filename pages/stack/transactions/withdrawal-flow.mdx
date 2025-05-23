@@ -109,7 +109,7 @@ Behind the scenes, this process triggers the following:
 1.  When you call `initiateWithdrawal`, the transaction interacts with the [`L2ToL1MessagePasser`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2ToL1MessagePasser.sol#L19) contract on L2.
 2.  The transaction calculates a hash of the withdrawal fields and marks it as a sent message in the contract's storage.
 3.  A [`MessagePassed`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2ToL1MessagePasser.sol#L40) event is emitted with the withdrawal details and hash.
-4.  When `op-proposer` proposes a new output, it includes the output root which commits to the state of the `L2ToL1MessagePasser` contract's storage, allowing your withdrawal to be proven on L1.
+4.  When [`op-proposer`](/operators/chain-operators/architecture#op-proposer) proposes a new output, it includes the output root which commits to the state of the `L2ToL1MessagePasser` contract's storage, allowing your withdrawal to be proven on L1.
 
 The raw withdrawal fields included in this process are:
 
@@ -150,7 +150,7 @@ The proving process works as follows:
 
 1.  The `waitToProve` function waits until the L2 output containing your withdrawal has been proposed on L1.
 2.  The `buildProveWithdrawal` function prepares the necessary parameters for proving, including the withdrawal details and the output proof.
-3.  The `proveWithdrawal` function calls `OptimismPortal.proveWithdrawalTransaction()` on L1.
+3.  The `proveWithdrawal` function calls [`OptimismPortal.proveWithdrawalTransaction()`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/interfaces/L1/IOptimismPortal2.sol#L97) on L1.
 4.  The portal contract verifies that the withdrawal hash exists in `L2ToL1MessagePasser.sentMessages` on L2, and that this proof hasn't been submitted before.
 5.  If verification passes, the contract writes the output root, timestamp, and L2 output index to `provenWithdrawals` and emits an event.
 
