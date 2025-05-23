@@ -1,0 +1,60 @@
+---
+title: Estimating the cost of interop messages
+description: Learn the basics of Superchain interoperability.
+lang: en-US
+content_type: guide
+topic: interop-gas-estimate
+personas:
+  - protocol-developer
+  - app-developer
+categories:
+  - interoperability
+  - cross-chain-messaging
+  - superchain
+  - message-passing
+  - gas-cost
+is_imported_content: 'false'
+---
+
+import { Callout } from 'nextra/components'
+import Image from 'next/image'
+
+import { InteropCallout } from '@/components/WipCallout'
+
+<InteropCallout />
+
+# Estimating the cost of interop messages
+
+There are several factors that determinate the cost of an [interop transaction](/interop/message-passing) (in addition to gas cost, etc. that apply to all transactions):
+
+- How you pass the message.
+  You can either use [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) directly, or use the cross domain messenger, [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol), which uses `CrossL2Inbox` internally. 
+- The transaction type.
+  Every interop message has two transactions, an [initiating message](/interop/message-passing#initiating-message) in a transaction to the source chain, and an [executing message](/interop/message-passing#executing-message) in the destination chain.
+- Whether autorelay is turned on.
+  If it is turned on for a particular chain there is still an executing message, but the chain operator pays for it.
+
+## CrossL2Inbox
+
+This is the low level protocol.
+
+### Initiating message
+
+The initiating message here is just any log entry.
+The cost of a log entry is [`375 + 375 per topic + 8 per byte of unstructured data`](https://www.evm.codes/?fork=cancun#a1).
+A log entry emitted by Solidity always has one 
+
+### Executing message
+
+## Cross domain messenger
+
+### Initiating message
+
+### Executing message
+
+## Next steps
+
+*   Build a [revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
+*   Deploy a [SuperchainERC20](/interop/tutorials/deploy-superchain-erc20) to the Superchain
+*   Learn [how messages get from one chain to another chain](/interop/message-passing)
+*   Watch [this video](https://www.youtube.com/watch?v=FKc5RgjtGes), which gives an overview of Superchain interoperability.
