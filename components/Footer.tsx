@@ -41,7 +41,7 @@ export function Footer() {
              <h3>Resources</h3>
              <ul>
                <li><Link href="https://github.com/ethereum-optimism/developers/discussions">Developer Support</Link></li>
-               <li><Link href="https://guild.xyz/superchain-devs">Superchain Developer Discord</Link></li>
+               <li><Link href="https://guild.xyz/superchain-devs">Superchain Dev Discord</Link></li>
                <li><Link href="https://share.hsforms.com/1yENj8CV9TzGYBASD0JC8_gqoshb">Get Launch Support</Link></li>
                <li><Link href="/connect/resources/glossary">Glossary</Link></li>
                <li><Link href="/connect/contribute/stack-contribute">Contribute to the OP Stack</Link></li>
