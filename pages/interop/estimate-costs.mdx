@@ -1,6 +1,6 @@
 ---
 title: Estimating the cost of interop messages
-description: Learn the basics of Superchain interoperability.
+description: Estimate the gas cost of Superchain interop messages.
 lang: en-US
 content_type: guide
 topic: interop-gas-estimate
@@ -23,21 +23,21 @@ import { InteropCallout } from '@/components/WipCallout'
 
 # Estimating the cost of interop messages
 
-<Callout type="info" heading="xxx">
-  At writing (May 2025) the cost of a hundred interop messages is just a few cents.
+<Callout type="info">
+  At the time of writing (May 2025) the cost of a hundred interop messages is just a few cents.
   Unless the cost of OP Stack transactions rises significantly, the cost of interop is not an important consideration.
 
   To see the current cost of gas, go to a [block explorer](https://optimism.blockscout.com/) and look at a recent transaction.
 </Callout>
 
-There are several factors that determinate the cost of an [interop transaction](/interop/message-passing):
+There are several factors that determine the cost of an [interop transaction](/interop/message-passing):
 
 *   How you pass the message.
     You can either use [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) directly, or use the cross domain messenger, [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol), which uses `CrossL2Inbox` internally.
 *   The transaction type.
     Every interop message has two transactions, an [initiating message](/interop/message-passing#initiating-message) in a transaction to the source chain, and an [executing message](/interop/message-passing#executing-message) in the destination chain.
 *   Whether autorelay is turned on.
-    If it is turned on for a particular chain there is still an executing message when using `L2ToL2CrossDomainMessenger`, but the chain operator pays for it so you may not care.
+    If it is turned on for a particular chain, there is still an executing message when using `L2ToL2CrossDomainMessenger`, but the chain operator pays for it so you may not care.
 
 ## CrossL2Inbox
 
@@ -46,7 +46,7 @@ This is the low level protocol used by all interop protocols, including `L2ToL2C
 ### Initiating message
 
 The initiating message here is just any log entry.
-A log entry emitted by Solidity code has 1-4 topics (t) and an unlimited number of unstructured data bytes (n).
+A log entry emitted by Solidity code has 1–4 topics (t) and an unlimited number of unstructured data bytes (n).
 The gas cost is  [*375(t+1)+8n*](https://www.evm.codes/?fork=cancun#a1).
 
 ### Executing message
