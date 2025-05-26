@@ -62,10 +62,10 @@ The first and second components depend on the log entry.
 `CrossL2Inbox.validateMessage` only requires a 32 byte hash of the log entry, but actually using it typically requires the information that has been hashed.
 
 Additionally, you need to provide the `CrossL2Inbox` with how to find the log entry.
-This is encoded in a [five member structure](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L7-L19), so *32×5=128* bytes.
+This is encoded in a [five member structure](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L7-L19), so *32×5=160* bytes.
 And, of course, you need to call a function which requires a four byte selector.
 
-So the number of bytes required is *132+32t+n*.
+So the number of bytes required is *164+32t+n*.
 
 Every transaction posted costs at least *21,000* gas.
 Compared with that, the hashing which costs approximately [*30+0.2×\<number of bytes>*](https://www.evm.codes/?fork=cancun#20), is negligible.
@@ -73,7 +73,7 @@ We can usually ignore the [memory expansion cost](https://www.evm.codes/about#me
 
 The cost of using the message is beyond the scope here, because it depends on your application.
 
-So the main cost drivers are the 21,000 transaction gas cost has plus the cost of posting a *132+32t+n* byte transaction.
+So the main cost drivers are the 21,000 transaction gas cost has plus the cost of posting a *164+32t+n* byte transaction.
 
 ## Cross domain messenger
 
