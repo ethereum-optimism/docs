@@ -17,40 +17,96 @@ is_imported_content: 'false'
 ---
 
 import { Callout } from 'nextra/components'
-import Image from 'next/image'
-
 import { InteropCallout } from '@/components/WipCallout'
 
 <InteropCallout />
 
 # Estimating the cost of interop messages
 
-There are several factors that determinate the cost of an [interop transaction](/interop/message-passing) (in addition to gas cost, etc. that apply to all transactions):
+<Callout type="info" heading="xxx">
+  At writing (May 2025) the cost of a hundred interop messages is just a few cents.
+  Unless the cost of OP Stack transactions rises significantly, the cost of interop is not an important consideration.
+
+  To see the current cost of gas, go to a [block explorer](https://optimism.blockscout.com/) and look at a recent transaction.
+</Callout>
+
+There are several factors that determinate the cost of an [interop transaction](/interop/message-passing):
 
 - How you pass the message.
   You can either use [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) directly, or use the cross domain messenger, [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol), which uses `CrossL2Inbox` internally. 
 - The transaction type.
   Every interop message has two transactions, an [initiating message](/interop/message-passing#initiating-message) in a transaction to the source chain, and an [executing message](/interop/message-passing#executing-message) in the destination chain.
 - Whether autorelay is turned on.
-  If it is turned on for a particular chain there is still an executing message, but the chain operator pays for it.
+  If it is turned on for a particular chain there is still an executing message when using `L2ToL2CrossDomainMessenger`, but the chain operator pays for it so you may not care.
 
 ## CrossL2Inbox
 
-This is the low level protocol.
+This is the low level protocol used by all interop protocols, including `L2ToL2CrossDomainMessenger`. 
 
 ### Initiating message
 
 The initiating message here is just any log entry.
-The cost of a log entry is [`375 + 375 per topic + 8 per byte of unstructured data`](https://www.evm.codes/?fork=cancun#a1).
-A log entry emitted by Solidity always has at least one topic. 
+A log entry emitted by Solidity code has 1-4 topics (t) and an unlimited number of unstructured data bytes (n). 
+The gas cost is  [*375(t+1)+8n*](https://www.evm.codes/?fork=cancun#a1).
 
 ### Executing message
+
+The executing message cost has several components:
+
+1.  The cost of posting the transaction.
+2.  The cost of hashing the message.
+3.  The cost of `CrossL2Inbox.validateMessage`.
+4.  The cost of using the message.
+
+The first and second components depend on the log entry.
+`CrossL2Inbox.validateMessage` only requires a 32 byte hash of the log entry, but actually using it typically requires the information that has been hashed.
+
+Additionally, you need to provide the `CrossL2Inbox` with how to find the log entry.
+This is encoded in a [five member structure](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L7-L19), so *32×5=128* bytes.
+And, of course, you need to call a function which requires a four byte selector.
+
+So the number of bytes required is *132+32t+n*.
+
+Every transaction posted costs at least *21,000* gas. 
+Compared with that, the hashing which costs approximately [*30+0.2×\<number of bytes\>*](https://www.evm.codes/?fork=cancun#20), is negligible.
+We can usually ignore the [memory expansion cost](https://www.evm.codes/about#memoryexpansion), unless the validating contract uses a really large amount of memory.
+
+The cost of using the message is beyond the scope here, because it depends on your application.
+
+So the main cost drivers are the 21,000 transaction gas cost has plus the cost of posting a *132+32t+n* byte transaction. 
 
 ## Cross domain messenger
 
+This higher level protocol adds some expenses, mostly because replay protection requires storage, and [writing to storage](https://www.evm.codes/?fork=cancun#55) is a relatively expensive operation.
+
 ### Initiating message
 
+The initiating message is sent by [`L2ToL2CrossDomainMessenger.sendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L128-L161). This function writes to storage twice.
+
+It writes to [specify that the hash has a sent message](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L157).
+This would typically be written to previously empty storage, so the cost is *22,100* gas.
+
+Then it [increments the nonce value](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L158). 
+Overwriting previously used storage (which means storage where the present value is *not* zero) only costs *5,000* gas.
+
+So, the initiating message costs a little over *27,100* gas, plus the negligible cost of emitting the log message, a few if statements, etc.
+Of course, it is created as part of a transaction, so we might want to include the *21,000* transaction cost too.
+
 ### Executing message
+
+If autorelay is turned on in a blockchain, then you don't care about the cost of the executing message.
+The chain operator will bear the cost.
+
+If autorelay is not turned on, the executing message is a call to [`L2ToL2CrossDomainMessenger.relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L197-L256).
+The only storage operation here is [noting the hash has been used for a message already](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L241).
+This is previously unwritten storage, so we can expect to pay the tull *22,100* in gas.
+Plus, of course, the *21,000* that any transaction costs.
+All the other gas costs are negligible.
+
+## Conclusion
+
+Unless the message is *extremely* long, the cost of an interop message, taking both sides together, is unlikely to exceed *100,000* gas.
+At writing, each of gas units costs approximately $*3×10<sup>-9</sup>*, so it would take about thirty messages to add up to a full cent.
 
 ## Next steps
 
