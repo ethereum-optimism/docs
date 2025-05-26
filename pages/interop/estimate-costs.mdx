@@ -32,21 +32,21 @@ import { InteropCallout } from '@/components/WipCallout'
 
 There are several factors that determinate the cost of an [interop transaction](/interop/message-passing):
 
-- How you pass the message.
-  You can either use [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) directly, or use the cross domain messenger, [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol), which uses `CrossL2Inbox` internally. 
-- The transaction type.
-  Every interop message has two transactions, an [initiating message](/interop/message-passing#initiating-message) in a transaction to the source chain, and an [executing message](/interop/message-passing#executing-message) in the destination chain.
-- Whether autorelay is turned on.
-  If it is turned on for a particular chain there is still an executing message when using `L2ToL2CrossDomainMessenger`, but the chain operator pays for it so you may not care.
+*   How you pass the message.
+    You can either use [`CrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol) directly, or use the cross domain messenger, [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol), which uses `CrossL2Inbox` internally.
+*   The transaction type.
+    Every interop message has two transactions, an [initiating message](/interop/message-passing#initiating-message) in a transaction to the source chain, and an [executing message](/interop/message-passing#executing-message) in the destination chain.
+*   Whether autorelay is turned on.
+    If it is turned on for a particular chain there is still an executing message when using `L2ToL2CrossDomainMessenger`, but the chain operator pays for it so you may not care.
 
 ## CrossL2Inbox
 
-This is the low level protocol used by all interop protocols, including `L2ToL2CrossDomainMessenger`. 
+This is the low level protocol used by all interop protocols, including `L2ToL2CrossDomainMessenger`.
 
 ### Initiating message
 
 The initiating message here is just any log entry.
-A log entry emitted by Solidity code has 1-4 topics (t) and an unlimited number of unstructured data bytes (n). 
+A log entry emitted by Solidity code has 1-4 topics (t) and an unlimited number of unstructured data bytes (n).
 The gas cost is  [*375(t+1)+8n*](https://www.evm.codes/?fork=cancun#a1).
 
 ### Executing message
@@ -67,13 +67,13 @@ And, of course, you need to call a function which requires a four byte selector.
 
 So the number of bytes required is *132+32t+n*.
 
-Every transaction posted costs at least *21,000* gas. 
-Compared with that, the hashing which costs approximately [*30+0.2×\<number of bytes\>*](https://www.evm.codes/?fork=cancun#20), is negligible.
+Every transaction posted costs at least *21,000* gas.
+Compared with that, the hashing which costs approximately [*30+0.2×\<number of bytes>*](https://www.evm.codes/?fork=cancun#20), is negligible.
 We can usually ignore the [memory expansion cost](https://www.evm.codes/about#memoryexpansion), unless the validating contract uses a really large amount of memory.
 
 The cost of using the message is beyond the scope here, because it depends on your application.
 
-So the main cost drivers are the 21,000 transaction gas cost has plus the cost of posting a *132+32t+n* byte transaction. 
+So the main cost drivers are the 21,000 transaction gas cost has plus the cost of posting a *132+32t+n* byte transaction.
 
 ## Cross domain messenger
 
@@ -86,7 +86,7 @@ The initiating message is sent by [`L2ToL2CrossDomainMessenger.sendMessage`](htt
 It writes to [specify that the hash has a sent message](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L157).
 This would typically be written to previously empty storage, so the cost is *22,100* gas.
 
-Then it [increments the nonce value](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L158). 
+Then it [increments the nonce value](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L158).
 Overwriting previously used storage (which means storage where the present value is *not* zero) only costs *5,000* gas.
 
 So, the initiating message costs a little over *27,100* gas, plus the negligible cost of emitting the log message, a few if statements, etc.
