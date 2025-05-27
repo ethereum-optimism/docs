@@ -1,0 +1,453 @@
+---
+title: Setting up an Optimism sequencer node
+lang: en-US
+description: Learn how to spin up a single sequencer node for your OP Stack chain after verifying L1 smart contract deployment. Includes latest releases, configuration, expected logs, and troubleshooting.
+content_type: tutorial
+topic: sequencer-deployment
+personas:
+  - chain-operator
+  - node-operator
+  - protocol-developer
+categories:
+  - chain-operation
+  - chain-deployment
+  - node-management
+  - sequencer-configuration
+  - op-stack
+is_imported_content: 'false'
+---
+
+## Overview
+
+This guide provides step-by-step instructions for spinning up a single sequencer node after verifying your L1 smart contract deployment. A sequencer node is responsible for ordering transactions, building L2 blocks, and submitting batches to the L1 chain.
+
+**Important**: This guide is for **custom OP Stack chain operators** who deploy their own L2 chains using the OP Stack. When you deploy your own OP Stack chain, you run your own sequencer node. This is different from OP Mainnet, where the sequencer is currently operated only by OP Labs PBC. 
+
+**For Custom OP Stack Chains**: Chain operators can and do run their own sequencer nodes as part of deploying their custom L2 chains.
+
+**For OP Mainnet**: Currently only OP Labs PBC operates the sequencer, though this may become decentralized in the future.
+
+## Prerequisites
+
+### Hardware requirements
+- **CPU**: 8+ cores (16+ recommended for production)
+- **RAM**: 32GB minimum (64GB+ recommended for production)
+- **Storage**: 2TB+ NVMe SSD (5TB+ for archive nodes)
+- **Network**: Stable internet connection with low latency to Ethereum L1
+- **Bandwidth**: 1Gbps recommended
+
+### Software requirements
+- Linux (Ubuntu 20.04+ or similar)
+- Docker and Docker Compose (optional but recommended)
+- Go 1.23+ (if building from source)
+- Git
+- OpenSSL
+
+## Latest release information
+
+### Current stable releases (May 2025)
+
+**op-node**: v1.13.2 (required for Mainnet Superchain by May 9, 2025 for Isthmus fork)
+
+**op-geth**: v1.101503.3 (Isthmus release for Mainnet Superchain, mandatory upgrade by May 9, 2025)
+
+**op-batcher**: v1.12.0 (required before activating Isthmus on chains)
+
+### Version naming convention
+op-geth embeds upstream geth's version inside its own version as follows: vMAJOR.GETH_MAJOR GETH_MINOR GETH_PATCH.PATCH. For example, if geth is at v1.12.0, the corresponding op-geth version would be v1.101200.0.
+
+## Network flags and superchain registry
+
+### Using network flags
+The Superchain configs are stored in a minimal form and embedded in downstream OP-Stack software (op-node and op-geth). This means that after a chain has been added to the registry and the dependency on the registry updates in the downstream software, it is possible to start an op-node instance using the --network flag (and also an op-geth instance using the --op-network tag).
+
+### Supported networks
+For the latest supported networks, check the `--help` output for the `--op-network` option in op-geth and `--network` option in op-node.
+
+Common networks include:
+- `op-mainnet` - OP Mainnet
+- `op-sepolia` - OP Sepolia testnet
+- `base` - Base mainnet
+- `base-sepolia` - Base Sepolia testnet
+
+## Installation options
+
+### Option 1: Docker-based Setup (Recommended)
+
+#### 1. Download latest docker images
+
+```bash
+# Pull latest op-node image
+docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.2
+
+# Pull latest op-geth image
+docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.3
+```
+
+### Option 2: building from source
+
+#### 1. Clone and build op-node
+
+```bash
+# Clone the optimism monorepo
+git clone https://github.com/ethereum-optimism/optimism.git
+cd optimism
+
+# Checkout the latest release tag
+git checkout op-node/v1.13.2
+
+# Build op-node
+cd op-node
+make op-node
+
+# Binary will be available at ./bin/op-node
+```
+
+#### 2. Clone and build op-geth
+
+```bash
+# Clone op-geth repository
+git clone https://github.com/ethereum-optimism/op-geth.git
+cd op-geth
+
+# Checkout the latest release tag
+git checkout v1.101503.3
+
+# Build op-geth
+make geth
+
+# Binary will be available at ./build/bin/geth
+```
+
+## Configuration setup
+
+### 1. Generate JWT secret
+
+To communicate with op-node and enable the Engine API, you'll also need to generate a JWT secret file and enable Geth's authenticated RPC endpoint.
+
+```bash
+# Generate JWT secret
+openssl rand -hex 32 > jwt.txt
+
+# Set appropriate permissions
+chmod 600 jwt.txt
+```
+
+### 2. Directory structure
+
+Create the following directory structure:
+
+```
+sequencer-node/
+├── jwt.txt
+├── data/
+│   ├── op-geth/
+│   └── op-node/
+├── configs/
+│   ├── rollup.json (if not using network flags)
+│   └── genesis.json (if not using network flags)
+└── scripts/
+    ├── start-op-geth.sh
+    └── start-op-node.sh
+```
+
+### 3. Environment variables
+
+Create a `.env` file:
+
+```bash
+# L1 Configuration
+L1_RPC_URL=https://mainnet.infura.io/v3/YOUR_INFURA_KEY
+L1_BEACON_URL=https://beacon-nd-123-456-789.p2pify.com/YOUR_BEACON_KEY
+
+# Network configuration
+NETWORK=op-mainnet  # or your target network
+OP_NETWORK=op-mainnet
+
+# Sequencer configuration
+SEQUENCER_ENABLED=true
+SEQUENCER_STOPPED=false
+
+# P2P configuration
+P2P_LISTEN_PORT=9222
+P2P_ADVERTISE_IP=YOUR_PUBLIC_IP
+
+# RPC configuration
+OP_NODE_RPC_PORT=8547
+OP_GETH_HTTP_PORT=8545
+OP_GETH_WS_PORT=8546
+OP_GETH_AUTH_PORT=8551
+
+# Data directories
+DATA_DIR=./data
+JWT_SECRET=./jwt.txt
+```
+
+## Sequencer specific configuration
+
+### op-geth configuration for sequencer
+
+Create `scripts/start-op-geth.sh`:
+
+```bash
+#!/bin/bash
+source .env
+
+./build/bin/geth \
+  --datadir=$DATA_DIR/op-geth \
+  --http \
+  --http.addr=0.0.0.0 \
+  --http.port=$OP_GETH_HTTP_PORT \
+  --http.vhosts="*" \
+  --http.corsdomain="*" \
+  --http.api=eth,net,web3,debug,txpool \
+  --ws \
+  --ws.addr=0.0.0.0 \
+  --ws.port=$OP_GETH_WS_PORT \
+  --ws.origins="*" \
+  --ws.api=eth,net,web3,debug,txpool \
+  --authrpc.addr=0.0.0.0 \
+  --authrpc.port=$OP_GETH_AUTH_PORT \
+  --authrpc.vhosts="*" \
+  --authrpc.jwtsecret=$JWT_SECRET \
+  --op-network=$OP_NETWORK \
+  --rollup.disabletxpoolgossip=false \
+  --rollup.sequencerhttp=http://localhost:$OP_GETH_HTTP_PORT \
+  --miner.gaslimit=30000000 \
+  --verbosity=3
+```
+
+### op-node configuration for sequencer
+
+The sequencer can be initialized in a stopped state using the sequencer.stopped flag. The sequencer can be started using the admin_startSequencer RPC.
+
+Create `scripts/start-op-node.sh`:
+
+```bash
+#!/bin/bash
+source .env
+
+./bin/op-node \
+  --l1=$L1_RPC_URL \
+  --l1.beacon=$L1_BEACON_URL \
+  --l2=http://localhost:$OP_GETH_AUTH_PORT \
+  --l2.jwt-secret=$JWT_SECRET \
+  --network=$NETWORK \
+  --sequencer.enabled=$SEQUENCER_ENABLED \
+  --sequencer.stopped=$SEQUENCER_STOPPED \
+  --sequencer.max-safe-lag=3600 \
+  --verifier.l1-confs=4 \
+  --p2p.listen.ip=0.0.0.0 \
+  --p2p.listen.tcp=$P2P_LISTEN_PORT \
+  --p2p.listen.udp=$P2P_LISTEN_PORT \
+  --p2p.advertise.ip=$P2P_ADVERTISE_IP \
+  --p2p.advertise.tcp=$P2P_LISTEN_PORT \
+  --p2p.advertise.udp=$P2P_LISTEN_PORT \
+  --p2p.bootnodes="$(op-node p2p discover --network=$NETWORK)" \
+  --rpc.addr=0.0.0.0 \
+  --rpc.port=$OP_NODE_RPC_PORT \
+  --log.level=info \
+  --log.format=json
+```
+
+## Expected logs and monitoring
+
+### op-geth expected logs
+
+**Initialization:**
+```
+INFO [timestamp] Starting Geth on Optimism optimism=bedrock
+INFO [timestamp] Maximum peer count                       ETH=50 LES=0 total=50
+INFO [timestamp] Smartcard socket not found, disabling    err="stat /run/pcscd/pcscd.comm: no such file or directory"
+INFO [timestamp] Set global gas cap                       cap=50,000,000
+```
+
+**Block Building (Sequencer Mode):**
+```
+INFO [timestamp] Commit new sealing work                  number=12345 sealhash=0x1234... uncles=0 txs=5 gas=210,000 fees=0.005 elapsed=5.123ms
+INFO [timestamp] Successfully sealed new block            number=12345 sealhash=0x1234... hash=0x5678... elapsed=12.345ms
+```
+
+**Forkchoice updates:**
+```
+INFO [timestamp] Forkchoice requested sync to new head    number=12345 hash=0x1234...
+```
+
+### op-node expected logs
+
+**Startup:**
+```json
+{"level":"info","ts":"timestamp","msg":"Initializing Rollup Node","version":"v1.13.2"}
+{"level":"info","ts":"timestamp","msg":"Starting JSON-RPC server","addr":"0.0.0.0:8547"}
+```
+
+**Sequencer mode:**
+```json
+{"level":"info","ts":"timestamp","msg":"Sequencer enabled"}
+{"level":"info","ts":"timestamp","msg":"Sequencing new L2 block","l2_block":12345,"l1_origin":"0x1234"}
+```
+
+**P2P networking:**
+```json
+{"level":"info","ts":"timestamp","msg":"Started P2P networking","self":"16Uiu2HAm...","listen_addr":"/ip4/0.0.0.0/tcp/9222"}
+{"level":"info","ts":"timestamp","msg":"Connected to peer","peer":"16Uiu2HAm...","direction":"outbound"}
+```
+
+**Block Ddrivation:**
+```json
+{"level":"info","ts":"timestamp","msg":"Advancing derivation","l1_block":18500000,"l2_block":12345}
+{"level":"info","ts":"timestamp","msg":"Generated attributes in payload queue","txs":5,"timestamp":1683123456}
+```
+
+### Warning and error logs to monitor
+
+**Critical Warnings:**
+- `"Sequencer drift detected"` - Clock synchronization issues
+- `"Failed to submit batch to L1"` - L1 connectivity problems
+- `"Block building interrupted"` - Resource constraints
+- `"Unsafe reorg detected"` - Chain reorganization
+
+**P2P issues:**
+- `"no configured p2p sequencer address, ignoring gossiped block"` - P2P configuration issue requiring sequencer address configuration
+
+## Starting the sequencer
+
+### 1. Initialize op-geth (if using network flags)
+
+```bash
+# For networks using the superchain registry (recommended)
+cd sequencer-node
+chmod +x scripts/start-op-geth.sh
+./scripts/start-op-geth.sh
+```
+
+### 2. Start op-node
+
+```bash
+# In a separate terminal
+chmod +x scripts/start-op-node.sh
+./scripts/start-op-node.sh
+```
+
+### 3. Enable sequencing (if started in stopped state)
+
+```bash
+# Use the admin RPC to start sequencing
+curl -X POST http://localhost:8547 \
+  -H "Content-Type: application/json" \
+  -d '{"method":"admin_startSequencer","params":[],"id":1,"jsonrpc":"2.0"}'
+```
+
+## Verification and health checks
+
+### 1. Check node status
+
+```bash
+# Check op-geth sync status
+curl -X POST http://localhost:8545 \
+  -H "Content-Type: application/json" \
+  -d '{"method":"eth_syncing","params":[],"id":1,"jsonrpc":"2.0"}'
+
+# Check current block number
+curl -X POST http://localhost:8545 \
+  -H "Content-Type: application/json" \
+  -d '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}'
+```
+
+### 2. Monitor P2P connectivity
+
+```bash
+# Check peer count
+curl -X POST http://localhost:8545 \
+  -H "Content-Type: application/json" \
+  -d '{"method":"net_peerCount","params":[],"id":1,"jsonrpc":"2.0"}'
+```
+
+### 3. Verify sequencer status
+
+```bash
+# Check if sequencer is active
+curl -X POST http://localhost:8547 \
+  -H "Content-Type: application/json" \
+  -d '{"method":"optimism_sequencerActive","params":[],"id":1,"jsonrpc":"2.0"}'
+```
+
+## Security considerations
+
+### 1. Network Security
+- Configure firewall to allow only necessary ports
+- Use VPN or private networks when possible
+- Regular security updates
+
+### 2. Key Management
+- Secure JWT secret file with appropriate permissions
+- Regular rotation of authentication secrets
+- Hardware security modules for production
+
+### 3. Monitoring
+- Set up alerting for sequencer downtime
+- Monitor L1 connectivity
+- Track block production metrics
+
+## Troubleshooting
+
+### Common Issues
+
+**Sequencer Not Starting:**
+- Verify L1 RPC connectivity
+- Check JWT secret configuration
+- Ensure proper network flags
+
+**P2P Connection Issues:**
+- Verify firewall settings for port 9222
+- Check public IP configuration
+- Validate bootnode connectivity
+
+**Block Building Failures:**
+- Monitor resource usage (CPU, memory)
+- Check L1 gas prices and availability
+- Verify execution engine connectivity
+
+### Log Analysis
+
+Node log levels determine the verbosity of log messages. The log levels for the op-node are: Silent (0), Error (1), Warn (2), Info (3), Debug (4). Info (3) is the default level and provides a balanced view of the node's operations.
+
+For debugging, increase verbosity:
+```bash
+# For op-geth
+--verbosity=4
+
+# For op-node
+--log.level=debug
+```
+
+## Production Considerations
+
+### 1. High Availability
+- Implement redundant sequencer setups
+- Use load balancers for RPC endpoints
+- Regular backup procedures
+
+### 2. Performance Optimization
+- SSD storage with high IOPS
+- Adequate CPU and memory allocation
+- Network optimization for low latency
+
+### 3. Monitoring and Alerting
+- Prometheus metrics collection
+- Grafana dashboards
+- PagerDuty or similar alerting systems
+
+## Resources
+
+- [Optimism Documentation](https://docs.optimism.io)
+- [OP Stack Specifications](https://github.com/ethereum-optimism/specs)
+- [Superchain Registry](https://github.com/ethereum-optimism/superchain-registry)
+- [Node Software Releases](https://docs.optimism.io/builders/node-operators/releases)
+- [Developer Forum](https://github.com/ethereum-optimism/developers/discussions)
+
+## Conclusion
+
+This guide provides the foundation for setting up an Optimism sequencer node. Remember that currently only OP Labs PBC can run sequencer nodes, but this is expected to change in the future as the network becomes more decentralized. Always use the latest releases and monitor the official documentation for updates and changes to the setup process.
+
+For production deployments, thorough testing in a staging environment and comprehensive monitoring are essential for reliable operation.
