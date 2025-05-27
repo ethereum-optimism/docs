@@ -21,7 +21,7 @@ is_imported_content: 'false'
 
 This guide provides step-by-step instructions for spinning up a single sequencer node after verifying your L1 smart contract deployment. A sequencer node is responsible for ordering transactions, building L2 blocks, and submitting batches to the L1 chain.
 
-**Important**: This guide is for **custom OP Stack chain operators** who deploy their own L2 chains using the OP Stack. When you deploy your own OP Stack chain, you run your own sequencer node. This is different from OP Mainnet, where the sequencer is currently operated only by OP Labs PBC. 
+**Important**: This guide is for **custom OP Stack chain operators** who deploy their own L2 chains using the OP Stack. When you deploy your own OP Stack chain, you run your own sequencer node. This is different from OP Mainnet, where the sequencer is currently operated only by OP Labs PBC.
 
 **For Custom OP Stack Chains**: Chain operators can and do run their own sequencer nodes as part of deploying their custom L2 chains.
 
@@ -30,18 +30,20 @@ This guide provides step-by-step instructions for spinning up a single sequencer
 ## Prerequisites
 
 ### Hardware requirements
-- **CPU**: 8+ cores (16+ recommended for production)
-- **RAM**: 32GB minimum (64GB+ recommended for production)
-- **Storage**: 2TB+ NVMe SSD (5TB+ for archive nodes)
-- **Network**: Stable internet connection with low latency to Ethereum L1
-- **Bandwidth**: 1Gbps recommended
+
+*   **CPU**: 8+ cores (16+ recommended for production)
+*   **RAM**: 32GB minimum (64GB+ recommended for production)
+*   **Storage**: 2TB+ NVMe SSD (5TB+ for archive nodes)
+*   **Network**: Stable internet connection with low latency to Ethereum L1
+*   **Bandwidth**: 1Gbps recommended
 
 ### Software requirements
-- Linux (Ubuntu 20.04+ or similar)
-- Docker and Docker Compose (optional but recommended)
-- Go 1.23+ (if building from source)
-- Git
-- OpenSSL
+
+*   Linux (Ubuntu 20.04+ or similar)
+*   Docker and Docker Compose (optional but recommended)
+*   Go 1.23+ (if building from source)
+*   Git
+*   OpenSSL
 
 ## Latest release information
 
@@ -54,21 +56,25 @@ This guide provides step-by-step instructions for spinning up a single sequencer
 **op-batcher**: v1.12.0 (required before activating Isthmus on chains)
 
 ### Version naming convention
-op-geth embeds upstream geth's version inside its own version as follows: vMAJOR.GETH_MAJOR GETH_MINOR GETH_PATCH.PATCH. For example, if geth is at v1.12.0, the corresponding op-geth version would be v1.101200.0.
+
+op-geth embeds upstream geth's version inside its own version as follows: vMAJOR.GETH\_MAJOR GETH\_MINOR GETH\_PATCH.PATCH. For example, if geth is at v1.12.0, the corresponding op-geth version would be v1.101200.0.
 
 ## Network flags and superchain registry
 
 ### Using network flags
+
 The Superchain configs are stored in a minimal form and embedded in downstream OP-Stack software (op-node and op-geth). This means that after a chain has been added to the registry and the dependency on the registry updates in the downstream software, it is possible to start an op-node instance using the --network flag (and also an op-geth instance using the --op-network tag).
 
 ### Supported networks
+
 For the latest supported networks, check the `--help` output for the `--op-network` option in op-geth and `--network` option in op-node.
 
 Common networks include:
-- `op-mainnet` - OP Mainnet
-- `op-sepolia` - OP Sepolia testnet
-- `base` - Base mainnet
-- `base-sepolia` - Base Sepolia testnet
+
+*   `op-mainnet` - OP Mainnet
+*   `op-sepolia` - OP Sepolia testnet
+*   `base` - Base mainnet
+*   `base-sepolia` - Base Sepolia testnet
 
 ## Installation options
 
@@ -219,7 +225,7 @@ source .env
 
 ### op-node configuration for sequencer
 
-The sequencer can be initialized in a stopped state using the sequencer.stopped flag. The sequencer can be started using the admin_startSequencer RPC.
+The sequencer can be initialized in a stopped state using the sequencer.stopped flag. The sequencer can be started using the admin\_startSequencer RPC.
 
 Create `scripts/start-op-node.sh`:
 
@@ -255,6 +261,7 @@ source .env
 ### op-geth expected logs
 
 **Initialization:**
+
 ```
 INFO [timestamp] Starting Geth on Optimism optimism=bedrock
 INFO [timestamp] Maximum peer count                       ETH=50 LES=0 total=50
@@ -263,12 +270,14 @@ INFO [timestamp] Set global gas cap                       cap=50,000,000
 ```
 
 **Block Building (Sequencer Mode):**
+
 ```
 INFO [timestamp] Commit new sealing work                  number=12345 sealhash=0x1234... uncles=0 txs=5 gas=210,000 fees=0.005 elapsed=5.123ms
 INFO [timestamp] Successfully sealed new block            number=12345 sealhash=0x1234... hash=0x5678... elapsed=12.345ms
 ```
 
 **Forkchoice updates:**
+
 ```
 INFO [timestamp] Forkchoice requested sync to new head    number=12345 hash=0x1234...
 ```
@@ -276,24 +285,28 @@ INFO [timestamp] Forkchoice requested sync to new head    number=12345 hash=0x12
 ### op-node expected logs
 
 **Startup:**
+
 ```json
 {"level":"info","ts":"timestamp","msg":"Initializing Rollup Node","version":"v1.13.2"}
 {"level":"info","ts":"timestamp","msg":"Starting JSON-RPC server","addr":"0.0.0.0:8547"}
 ```
 
 **Sequencer mode:**
+
 ```json
 {"level":"info","ts":"timestamp","msg":"Sequencer enabled"}
 {"level":"info","ts":"timestamp","msg":"Sequencing new L2 block","l2_block":12345,"l1_origin":"0x1234"}
 ```
 
 **P2P networking:**
+
 ```json
 {"level":"info","ts":"timestamp","msg":"Started P2P networking","self":"16Uiu2HAm...","listen_addr":"/ip4/0.0.0.0/tcp/9222"}
 {"level":"info","ts":"timestamp","msg":"Connected to peer","peer":"16Uiu2HAm...","direction":"outbound"}
 ```
 
 **Block Ddrivation:**
+
 ```json
 {"level":"info","ts":"timestamp","msg":"Advancing derivation","l1_block":18500000,"l2_block":12345}
 {"level":"info","ts":"timestamp","msg":"Generated attributes in payload queue","txs":5,"timestamp":1683123456}
@@ -302,13 +315,15 @@ INFO [timestamp] Forkchoice requested sync to new head    number=12345 hash=0x12
 ### Warning and error logs to monitor
 
 **Critical Warnings:**
-- `"Sequencer drift detected"` - Clock synchronization issues
-- `"Failed to submit batch to L1"` - L1 connectivity problems
-- `"Block building interrupted"` - Resource constraints
-- `"Unsafe reorg detected"` - Chain reorganization
+
+*   `"Sequencer drift detected"` - Clock synchronization issues
+*   `"Failed to submit batch to L1"` - L1 connectivity problems
+*   `"Block building interrupted"` - Resource constraints
+*   `"Unsafe reorg detected"` - Chain reorganization
 
 **P2P issues:**
-- `"no configured p2p sequencer address, ignoring gossiped block"` - P2P configuration issue requiring sequencer address configuration
+
+*   `"no configured p2p sequencer address, ignoring gossiped block"` - P2P configuration issue requiring sequencer address configuration
 
 ## Starting the sequencer
 
@@ -375,44 +390,51 @@ curl -X POST http://localhost:8547 \
 ## Security considerations
 
 ### 1. Network Security
-- Configure firewall to allow only necessary ports
-- Use VPN or private networks when possible
-- Regular security updates
+
+*   Configure firewall to allow only necessary ports
+*   Use VPN or private networks when possible
+*   Regular security updates
 
 ### 2. Key Management
-- Secure JWT secret file with appropriate permissions
-- Regular rotation of authentication secrets
-- Hardware security modules for production
+
+*   Secure JWT secret file with appropriate permissions
+*   Regular rotation of authentication secrets
+*   Hardware security modules for production
 
 ### 3. Monitoring
-- Set up alerting for sequencer downtime
-- Monitor L1 connectivity
-- Track block production metrics
+
+*   Set up alerting for sequencer downtime
+*   Monitor L1 connectivity
+*   Track block production metrics
 
 ## Troubleshooting
 
 ### Common Issues
 
 **Sequencer Not Starting:**
-- Verify L1 RPC connectivity
-- Check JWT secret configuration
-- Ensure proper network flags
+
+*   Verify L1 RPC connectivity
+*   Check JWT secret configuration
+*   Ensure proper network flags
 
 **P2P Connection Issues:**
-- Verify firewall settings for port 9222
-- Check public IP configuration
-- Validate bootnode connectivity
+
+*   Verify firewall settings for port 9222
+*   Check public IP configuration
+*   Validate bootnode connectivity
 
 **Block Building Failures:**
-- Monitor resource usage (CPU, memory)
-- Check L1 gas prices and availability
-- Verify execution engine connectivity
+
+*   Monitor resource usage (CPU, memory)
+*   Check L1 gas prices and availability
+*   Verify execution engine connectivity
 
 ### Log Analysis
 
 Node log levels determine the verbosity of log messages. The log levels for the op-node are: Silent (0), Error (1), Warn (2), Info (3), Debug (4). Info (3) is the default level and provides a balanced view of the node's operations.
 
 For debugging, increase verbosity:
+
 ```bash
 # For op-geth
 --verbosity=4
@@ -424,27 +446,30 @@ For debugging, increase verbosity:
 ## Production Considerations
 
 ### 1. High Availability
-- Implement redundant sequencer setups
-- Use load balancers for RPC endpoints
-- Regular backup procedures
+
+*   Implement redundant sequencer setups
+*   Use load balancers for RPC endpoints
+*   Regular backup procedures
 
 ### 2. Performance Optimization
-- SSD storage with high IOPS
-- Adequate CPU and memory allocation
-- Network optimization for low latency
+
+*   SSD storage with high IOPS
+*   Adequate CPU and memory allocation
+*   Network optimization for low latency
 
 ### 3. Monitoring and Alerting
-- Prometheus metrics collection
-- Grafana dashboards
-- PagerDuty or similar alerting systems
+
+*   Prometheus metrics collection
+*   Grafana dashboards
+*   PagerDuty or similar alerting systems
 
 ## Resources
 
-- [Optimism Documentation](https://docs.optimism.io)
-- [OP Stack Specifications](https://github.com/ethereum-optimism/specs)
-- [Superchain Registry](https://github.com/ethereum-optimism/superchain-registry)
-- [Node Software Releases](https://docs.optimism.io/builders/node-operators/releases)
-- [Developer Forum](https://github.com/ethereum-optimism/developers/discussions)
+*   [Optimism Documentation](https://docs.optimism.io)
+*   [OP Stack Specifications](https://github.com/ethereum-optimism/specs)
+*   [Superchain Registry](https://github.com/ethereum-optimism/superchain-registry)
+*   [Node Software Releases](https://docs.optimism.io/builders/node-operators/releases)
+*   [Developer Forum](https://github.com/ethereum-optimism/developers/discussions)
 
 ## Conclusion
 
