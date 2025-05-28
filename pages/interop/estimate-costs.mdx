@@ -24,10 +24,10 @@ import { InteropCallout } from '@/components/WipCallout'
 # Estimating the cost of interop messages
 
 <Callout type="info">
-  At the time of writing (May 2025) the cost of a hundred interop messages is just a few cents.
-  Unless the cost of OP Stack transactions rises significantly, the cost of interop is not an important consideration.
+As of May 2025, the cost of 100 interop messages is just a few cents.
+Unless OP Stack transaction costs increase significantly, interop costs should not be a primary consideration in your implementation decisions.
 
-  To see the current cost of gas, go to a [block explorer](https://optimism.blockscout.com/) and look at a recent transaction.
+To see the current cost of gas, go to a [block explorer](https://optimism.blockscout.com/) and look at a recent transaction.
 </Callout>
 
 There are several factors that determine the cost of an [interop transaction](/interop/message-passing):
@@ -37,7 +37,7 @@ There are several factors that determine the cost of an [interop transaction](/i
 *   The transaction type.
     Every interop message has two transactions, an [initiating message](/interop/message-passing#initiating-message) in a transaction to the source chain, and an [executing message](/interop/message-passing#executing-message) in the destination chain.
 *   Whether autorelay is turned on.
-    If it is turned on for a particular chain, there is still an executing message when using `L2ToL2CrossDomainMessenger`, but the chain operator pays for it so you may not care.
+When enabled for a specific chain, the `L2ToL2CrossDomainMessenger` still executes a message, but the chain operator covers the execution costs.
 
 ## CrossL2Inbox
 
@@ -45,9 +45,9 @@ This is the low level protocol used by all interop protocols, including `L2ToL2C
 
 ### Initiating message
 
-The initiating message here is just any log entry.
-A log entry emitted by Solidity code has 1–4 topics (t) and an unlimited number of unstructured data bytes (n).
-The gas cost is  [*375(t+1)+8n*](https://www.evm.codes/?fork=cancun#a1).
+The initiating message is any log entry. 
+A log entry emitted by Solidity code contains 1-4 topics (t) and unlimited unstructured data bytes (n). 
+The gas cost is calculated as [375(t+1)+8n](https://www.evm.codes/?fork=cancun#a1).
 
 ### Executing message
 
@@ -61,19 +61,24 @@ The executing message cost has several components:
 The first and second components depend on the log entry.
 `CrossL2Inbox.validateMessage` only requires a 32 byte hash of the log entry, but actually using it typically requires the information that has been hashed.
 
-Additionally, you need to provide the `CrossL2Inbox` with how to find the log entry.
-This is encoded in a [five member structure](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L7-L19), so *32×5=160* bytes.
-And, of course, you need to call a function which requires a four byte selector.
+Additionally, you must provide the `CrossL2Inbox` with the information needed to locate the log entry. 
+This information is encoded in a [five-member structure](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L7-L19) that requires 160 bytes (32 bytes × 5 members). 
+Lastly, you need to call a function which requires a 4-byte selector.
 
-So the number of bytes required is *164+32t+n*.
+Therefore, the total bytes required is: **164 + 32t + n**
+
+Where:
+*   `164` = base overhead (160 bytes for the structure + 4 bytes for the function selector)
+*   `t` = number of topics in the log entry
+*   `n` = number of data bytes in the log entry
 
 Every transaction posted costs at least *21,000* gas.
-Compared with that, the hashing which costs approximately [*30+0.2×\<number of bytes>*](https://www.evm.codes/?fork=cancun#20), is negligible.
+In comparison, the hashing operation costs approximately [*30+0.2×\<number of bytes>*](https://www.evm.codes/?fork=cancun#20), which is negligible by comparison.
 We can usually ignore the [memory expansion cost](https://www.evm.codes/about#memoryexpansion), unless the validating contract uses a really large amount of memory.
 
 The cost of using the message is beyond the scope here, because it depends on your application.
 
-So the main cost drivers are the 21,000 transaction gas cost has plus the cost of posting a *164+32t+n* byte transaction.
+The main cost drivers are the 21,000 gas transaction cost plus the cost of posting a *164+32t+n* byte transaction.
 
 ## Cross domain messenger
 
@@ -99,7 +104,7 @@ The chain operator will bear the cost.
 
 If autorelay is not turned on, the executing message is a call to [`L2ToL2CrossDomainMessenger.relayMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L197-L256).
 The only storage operation here is [noting the hash has been used for a message already](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L241).
-This is previously unwritten storage, so we can expect to pay the tull *22,100* in gas.
+This is previously unwritten storage, so we can expect to pay the full *22,100* in gas.
 Plus, of course, the *21,000* that any transaction costs.
 All the other gas costs are negligible.
 
