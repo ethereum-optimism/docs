@@ -24,7 +24,7 @@ import { AutorelayCallout } from '@/components/AutorelayCallout'
 # Verifying log entries
 
 This guide shows how to verify log entries from a specific chain on a different chain in an interop cluster.
-This lets you use interoperability with applications on a different chain that was never written with interoperability in mind.
+This lets developers use interoperability with applications on a different chain, even if those applications were not written with interoperability in mind.
 
 To demonstrate this functionality, this guide uses an [attestation](https://attest.org/) from one chain in another.
 
@@ -107,7 +107,7 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
   There are already attestations in the production chains.
   However, that may not be the case in the devnets, and it is definitely not the case in the Supersim instance you just started.
 
-  So the first step is to actually send an attestation to one of the chains.
+  So to begin we send an attestation to one of the chains.
 
   1.  Create a new JavaScript project.
 
@@ -129,7 +129,7 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
         ```js file=<rootDir>/public/tutorials/attest.mjs#L23-L39 hash=e60b8cd94e438dee61d76a86b71ba0fd 
         ```
 
-        The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) we use for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
+        The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) used for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
         This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer).
 
         ```js file=<rootDir>/public/tutorials/attest.mjs#L60-L71 hash=b51f57bde9ff4f29ee476a0ccff6826c
@@ -148,8 +148,8 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
 
         This is the recommended way to execute the attestation transaction, which provides you with the attestation's UID.
         However, for our purpose we need the transaction receipt, which you do not get.
-        We can either use this and search for the log entry or just use the EAS SDK to create the transaction and send it ourselves.
-        Here we use the second solution.
+        We can either use this and search for the log entry, or just use the EAS SDK to create the transaction and send it ourselves.
+        The code here uses the second solution.
 
         ```js file=<rootDir>/public/tutorials/attest.mjs#L92-L94 hash=1452cf7f6e9e00d7b3cd3560ca355bd8
         ```
@@ -204,13 +204,15 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
         ```
 
         Call [`CrossL2Inbox.validateMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L68-L82).
-        For some invalid inputs this function reverts, which means that the log entry requested is not validated.
+        For some invalid inputs, this function reverts.
+        If it reverts, it means that the log entry requested is not valid.
 
         ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L76-L84 hash=2476aec8e2b27708ce812797e9e5dfe7 
         ```
 
         Wait for the transaction receipt for the executing message.
-        Note the timeout, it is necessary because if the executing message is valid, but the log entry has not been seen yet the sequencer does not put the transaction with the message into a block.
+        The timeout is necessary because if the executing message is valid, but the log entry has not been seen yet, the sequencer does not put the transaction with the message into a block.
+        We need to distinguish between this situation and the situation where the log entry does not exist.
 
         ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L86-L91 hash=e870ee89daa5f2a31b0adc6a97f670a9 
         ```
@@ -227,12 +229,12 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
 
   ### Onchain verification
 
-  The code in the above example is not very useful, because it is running offchain.
+  The code in the above example is not very useful because it is running offchain.
   Offchain code can talk to any chain it wants, so it can verify the attestation directly on the chain where it originated.
-  The real value of interop is when you have onchain code from one chain verify information from another chain.
-  This is what we'll build now.
-
-  The access list of the transaction has to be calculated offchain, so we might as well just use the same `interop.buildExecutingMessage` function and just use `relayParams` to see what exactly we are validating.
+  The real value of interoperability is when on-chain code on one chain verifies information from another chain. 
+  Follow the steps below to build this.
+  
+  Calculate the transaction access list offchain using `interop.buildExecutingMessage`, then inspect `relayParams` to determine the exact validation parameters.
 
   | Value                                                                                                                                             | Location                                    | Sample value                                                     |
   | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
@@ -299,8 +301,8 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
         ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L94 hash=b728334118d486dc5e020c5b84d41411 
         ```
 
-        Here you would do anything that requires the attestation to have been verified.
-        There is nothing here because it is sample code, but in a real world application this would be the most important part.
+        This section is reserved for actions that depend on a successful attestation verification. 
+        In real-world applications, implement your core logic here.
       </details>
 
   4.  Deploy the new contract and preserve the address.
