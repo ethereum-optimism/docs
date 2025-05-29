@@ -1,5 +1,5 @@
 ---
-title: Upgrade using op-deployer
+title: Upgrade L1 contracts using `op-deployer`
 description: Learn about how to upgrade smart contracts using op-deployer
 lang: en-US
 content_type: guide
@@ -7,16 +7,10 @@ topic: smart-contract-overview
 personas:
   - protocol-developer
   - chain-operator
-  - app-developer
 categories:
-  - mainnet
   - protocol
   - l1-contracts
-  - predeploys
-  - contract-addresses
   - contract-upgrades
-  - architecture
-  - fault-proofs
 is_imported_content: 'false'
 ---
 
@@ -24,20 +18,17 @@ import { Steps } from 'nextra/components'
 
 # Upgrade L1 contracts using `op-deployer`
 
-[`op-deployer`](/operators/chain-operators/tools/op-deployer) simplifies the process of deploying the OP Stack. Using the `upgrade` command, you can upgrade a chain from one version to another.
+[`op-deployer`](/operators/chain-operators/tools/op-deployer) simplifies the process of deploying and upgrading the OP Stack. Using the `upgrade` command, you can upgrade a chain from one version to the next.
 
 It consists of several subcommands, one for each upgrade version. Think of it like a database migration: each upgrade command upgrades a chain from exactly one previous version to the next. A chain that is several versions behind can be upgrade to the latest version by running multiple upgrade commands in sequence.
 
-Unlike the bootstrap or apply commands, upgrade does not directly interact with the chain. Instead, it generates calldata. You can then use this calldate with cast, Gnosis SAFE, superchain-ops, or whatever tooling you use to manage your L1.
+Unlike the bootstrap or apply commands, upgrade does not directly interact with the chain. Instead, it generates calldata. You can then use this calldate with cast, Gnosis SAFE, or whatever tooling you use to manage your L1.
 
 ## Limitations of `upgrade`
 
 There are a few limitations to `upgrade`:
 
-*   Your chain must be owned by a smart contract for upgrade to work because the OPCM can only be called via `DELEGATECALL`.
-*   Only versions `1.8`, `2.0`, and `3.0` are supported. Upgrading from previous versions requires [a different workflow](/stack/smart-contracts/upgrade-op-contracts-1-6-1-8).
-
-You can use `upgrade` alongside or independently from [`superchain-ops`](/stack/smart-contracts/superchain-ops-guide).
+Using the standard OP Contracts Manager currently requires you to be using the standard shared SuperchainConfig contract. If you're not using this, you will need to utilize the `bootstrap` command to deploy your own Superchain target, including your own `opcm` instance.
 
 ## Using `upgrade`
 
@@ -53,7 +44,7 @@ Create a `config.json` file using the following example:
 
 ```json
 {
-  "prank": "<address of the contract that owns the chain>",
+  "prank": "<address of the contract of the L1 ProxyAdmin owner>",
   "opcm": "<address of the chain's OPCM>",
   "chainConfigs": [
     {
@@ -65,7 +56,11 @@ Create a `config.json` file using the following example:
 }
 ```
 
-### Generate call data
+The standard OPCM instances (`opcm` in the example above) and absolute prestates (`absolutePrestate`) are found in the superchain registry:
+*   `opcm`: under `op_contracts_manager` for [Mainnet](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-versions-mainnet.toml) and [Sepolia](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-versions-sepolia.toml).
+*   `absolutePrestate`: the `hash` under your [chosen upgrade](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml)
+
+### Generate calldata
 
 Run the following command:
 
@@ -74,7 +69,7 @@ op-deployer upgrade <version> \
   --config <path to config JSON>
 ```
 
-`version` must be either `2.0` or higher.
+`version` must be either major release `2.0` or higher.
 
 The output should look like:
 
@@ -86,6 +81,6 @@ The output should look like:
 }
 ```
 
-You can use the `<calldata>` field as the input for your upgrade transaction. 
+Now you have the calldata that can be executed onchain to perform the L1 contract upgrade. You should simulate this upgrade and make sure the changes are expected. You can reference the validation files of previously executed upgrade tasks in the superchain-ops repo (https://github.com/ethereum-optimism/superchain-ops/blob/main/tasks/eth/022-holocene-fp-upgrade/NestedSignFromJson.s.sol) to see what the expected changes are. Once you're confident the state changes are expected, you can sign and execute the upgrade.
 
 </Steps>
