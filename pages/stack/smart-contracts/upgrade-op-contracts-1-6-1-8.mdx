@@ -27,10 +27,7 @@ This guide provides specific instructions for upgrading Optimism's Layer 1 contr
 
 ## Overview of the Holocene upgrade
 
-The Holocene Upgrade supports two primary upgrade paths, each with specific components and considerations:
-
-*   Deploy and upgrade `op-contracts/v1.3.0` -> `op-contracts/v1.8.0`, which this doc covers.
-*   Deploy and upgrade `op-contracts/1.6.0` -> `op-contracts/v1.8.0`, which you can read more about in our [Holocene notice page](https://docs.optimism.io/notices/holocene-changes).
+The Holocene upgrade is a large network upgrade. Learn more about it in the [Holocene notice page](https://docs.optimism.io/notices/holocene-changes).
 
 ## Required dependencies
 
@@ -44,7 +41,7 @@ For the complete set of dependencies and detailed installation instructions, ref
 
 ### Formatting config files
 
-You need chain's `deployments.json` and `deploy-config.json`
+You need your chain's `deployments.json` and `deploy-config.json`
 
 Ensure both files are correctly formatted, using the exact field names shown in the below examples, with **ALL** values - particularly the relevant ones - updated for **your specific chain**:
 
@@ -152,69 +149,99 @@ Make sure that important addresses (like the ProxyAdmin, PAO, all L1 addresses, 
 
 ## Step-by-step upgrade process
 
-### 1. Clone the repository
+### 1. Clone the repository and checkout the upgrade branch
 
 ```sh
-git clone --branch proposal/op-contracts/v1.8.0 --depth 1 git@github.com:ethereum-optimism/monorepo.git && \
-cd monorepo/packages/contracts-bedrock/scripts/upgrades/holocene
+git clone https://github.com/ethereum-optimism/optimism.git
+cd optimism
+git checkout perm/op-contracts/v1.8.0/packages/contracts-bedrock/scripts/upgrades/v1.3.0/v1.8.0-permissioned
 ```
 
-### 2. Configure environment
-
-Update your `.env` file with the required information. Here's an [example `.env` file](https://github.com/ethereum-optimism/optimism/blob/a7a4c10c79c3c8546a11c002773246cd54d380e2/packages/contracts-bedrock/scripts/upgrades/holocene/.env.example).
-
-```sh
-cp .env.example .env
-# Edit .env with your specific configuration requirements
-vim .env
-```
-
-### 3. Build Docker image
-
-```sh
-just build-image
-```
-
-**Note:** Ensure Docker has at least 16GB of memory allocated (the default is 8GB), or the Solidity compilations may fail due to memory constraints.
-
-### 4. Execute upgrade
-
-```sh
-just run $(realpath path/to/deploy-config.json)
-```
-
-This command performs several critical functions:
-
-*   Deploys the new smart contract implementations required for the upgrade
-*   Optionally generates a safe upgrade bundle for multisig execution
-*   Optionally generates a `superchain-ops` upgrade task for coordination
-
-To specify a custom output folder path instead of the default `output/` directory:
-
-```sh
-just run $(realpath path/to/deploy-config.json) $(realpath path/to/output)
-```
-
-## Configuration requirements
-
-### Fault game prestate value (Only for permissionless chains)
-
-The `deploy-config.json` that you use for your chain must set the latest `faultGameAbsolutePrestate` value, not the original value that was set during initial deployment of the chain.
-
-You can use the following recommended value, which is based on `op-program/v1.4.0-rc.3` and includes Holocene activations for various networks:
+Create a working directory:
 
 ```
-0x03f89406817db1ed7fd8b31e13300444652cdb0b9c509a674de43483b2f83568
+mkdir upgrade-dir
+cd upgrade-dir
 ```
 
-This prestate includes Holocene activations for the following networks:
+And then  create an outputs directory:
 
-*   **Sepolia networks:** Base, OP, Metal, Mode, Zora, Ethernity, Unichain, Ink
-*   **Mainnet networks:** Base, OP, Orderly, L  yra, Metal, Mode, Zora, Lisk, Ethernity, Binary
+```
+mkdir outputs
+```
 
-### Script modifications
 
-If you need to make local modifications to the scripts in the `scripts/` directory to accommodate your specific network requirements, you must rebuild the Docker image with `just build-image` before running `just run` again.
+### 2. Copy config files
+
+Copy your `deployments.json` and `deploy-config.json` into the working directory
+
+### 3. Configure and deploy environment
+
+Create and update an `.env` file with the required information:
+
+```
+##############################################
+#               ↓  Required  ↓               #
+##############################################
+
+# Can be "mainnet" or "sepolia"
+NETWORK=
+
+# Etherscan API key used to verify contract bytecode
+ETHERSCAN_API_KEY=
+
+# RPC URL for the L1 network that matches $NETWORK
+ETH_RPC_URL=
+
+# Private key used to deploy the new contracts for this upgrade
+PRIVATE_KEY=
+
+# Check if required files and folders exist
+if [ ! -f "./deploy_config.json" ]; then
+    echo "Error: deploy_config.json not found"
+fi
+if [ ! -f "./deployments.json" ]; then
+    echo "Error: deployments.json not found"
+fi
+if [ ! -d "./outputs" ]; then
+    echo "Error: outputs folder not found"
+fi
+```
+
+Then load your `.env` file:
+
+```
+source .env
+```
+
+
+
+### 4. Run the deployment process
+
+Run the deployment process with the following command:
+
+```docker run -t \
+    --env-file .env \
+    -v ./deploy_config:/deploy_config.json \
+    -v ./deployments.json:/deployments.json \
+    -v ./outputs:/outputs \
+    kfoplabs/upgrade-v1.3.0-v1.6.0-permissioned@sha256:dfb661ac34e997694eb0aaa2536515992cc0a3d663bfe3adbac0deb7aa1dd159 \
+    /deploy_config.json \
+    /deployments.json
+```
+
+### 5. Verify outputs
+
+The deployment should output four files:
+
+*   `deploy.log` is a log of the deployment process
+*   `deployments.json` includes the newly deployed contract addresses
+*   `bundle.json` is the finalization transaction bundle
+*   `validation.txt` is used for Tenderly state diff validation
+
+### 6. Verify outputs
+
+Now you have the calldata that can be executed onchain to perform the L1 contract upgrade. You should simulate this upgrade and make sure the changes are expected. You can reference the validation files of previously executed upgrade tasks in the superchain-ops repo ([https://github.com/ethereum-optimism/superchain-ops/blob/main/tasks/eth/022-holocene-fp-upgrade/NestedSignFromJson.s.sol](https://github.com/ethereum-optimism/superchain-ops/blob/main/tasks/eth/022-holocene-fp-upgrade/NestedSignFromJson.s.sol)) to see what the expected changes are. Once you're confident the state changes are expected, you can sign and execute the upgrade.
 
 ## Additional Resources
 
