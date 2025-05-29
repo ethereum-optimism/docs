@@ -27,7 +27,7 @@ import { Callout } from 'nextra/components'
   The OP Stack maintains a distinct gas limit compared to the Ethereum mainnet.
   While both chains use the same underlying transaction formats, Optimism's gas limits are tailored for optimal Layer 2 performance and scalability.
   As a result, transactions on Optimism may behave differently from the mainnet regarding gas usage and fee estimation.
-  For a detailed comparison of gas limits between Optimism and Ethereum, see the [Optimism Chain Differences documentation](https://docs.optimism.io/chain/differences?utm_source=op-docs&utm_medium=docs#transaction-fees).
+  For a detailed comparison of gas limits between Optimism and Ethereum, see the [Optimism Chain Differences documentation](https://docs.optimism.io/chain/differences?utm_source=op-docs\&utm_medium=docs#transaction-fees).
 </Callout>
 
 # Transaction fees on OP Mainnet
@@ -40,11 +40,13 @@ OP Mainnet transaction fees are composed of an [Execution Gas Fee](#execution-ga
 The total cost of a transaction is the sum of these fee components:
 
 **Before Isthmus:**
+
 ```
 Total Fee = Execution Gas Fee + L1 Data Fee
 ```
 
 **After Isthmus:**
+
 ```
 Total Fee = Execution Gas Fee + L1 Data Fee + Operator Fee
 ```
@@ -262,6 +264,7 @@ operatorFee = (gas × operatorFeeScalar ÷ 10^6) + operatorFeeConstant
 ```
 
 Where:
+
 *   `gas` is the amount of gas that the transaction used
 *   `operatorFeeScalar` is a `uint32` scalar set by the chain operator, scaled by 1e6
 *   `operatorFeeConstant` is a `uint64` scalar set by the chain operator
@@ -270,21 +273,21 @@ Where:
 
 The `operatorFeeScalar` and `operatorFeeConstant` parameters can be accessed in two ways:
 
-1. **From deposited L1 attributes** of the current L2 block
-2. **From the L1 Block Info contract** (`0x4200000000000000000000000000000000000015`):
-   *   Using solidity getter functions (`operatorFeeScalar`, `operatorFeeConstant`)
-   *   Using direct storage reads:
-     *   Operator fee scalar as big-endian `uint32` in slot `8` at offset `0`
-     *   Operator fee constant as big-endian `uint64` in slot `8` at offset `4`
+1.  **From deposited L1 attributes** of the current L2 block
+2.  **From the L1 Block Info contract** (`0x4200000000000000000000000000000000000015`):
+    *   Using solidity getter functions (`operatorFeeScalar`, `operatorFeeConstant`)
+    *   Using direct storage reads:
+    *   Operator fee scalar as big-endian `uint32` in slot `8` at offset `0`
+    *   Operator fee constant as big-endian `uint64` in slot `8` at offset `4`
 
 ### EVM Integration
 
 The Operator fee follows standard EVM fee semantics:
 
-1. **Pre-execution validation**: Account must have enough ETH to cover worst-case gas + L1 data fees + worst-case operator fee
-2. **Gas purchase**: Account is charged the worst-case operator fee before execution
-3. **Refunds**: After execution, unused operator fee gas is refunded to the account
-4. **Fee distribution**: The spent operator fee is sent to the Operator Fee Vault
+1.  **Pre-execution validation**: Account must have enough ETH to cover worst-case gas + L1 data fees + worst-case operator fee
+2.  **Gas purchase**: Account is charged the worst-case operator fee before execution
+3.  **Refunds**: After execution, unused operator fee gas is refunded to the account
+4.  **Fee distribution**: The spent operator fee is sent to the Operator Fee Vault
 
 ### Transaction pool impact
 
