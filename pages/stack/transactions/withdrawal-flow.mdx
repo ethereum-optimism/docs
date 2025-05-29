@@ -48,60 +48,16 @@ The complete withdrawal process using viem has the following steps:
 
 ## Setting up the viem clients
 
-Before working with withdrawals, you need to set up viem clients for both L1 and L2 chains with the appropriate extensions:
+Before working with withdrawals, you need to set up viem clients for both L1 and L2 chains with the appropriate OP Stack extensions:
 
-```javascript
-// Import Viem modules
-import { createPublicClient, createWalletClient, http } from 'viem'
-import { mainnet, optimism } from 'viem/chains'
-import { 
-  publicActionsL1, 
-  walletActionsL1, 
-  publicActionsL2, 
-  walletActionsL2 
-} from 'viem/op-stack'
-
-// Set up L1 clients (Ethereum)
-const publicClientL1 = createPublicClient({
-  chain: mainnet,
-  transport: http()
-}).extend(publicActionsL1())
-
-const walletClientL1 = createWalletClient({
-  account,
-  chain: mainnet,
-  transport: http()
-}).extend(walletActionsL1())
-
-// Set up L2 clients (Optimism)
-const publicClientL2 = createPublicClient({
-  chain: optimism,
-  transport: http()
-}).extend(publicActionsL2())
-
-const walletClientL2 = createWalletClient({
-  account,
-  chain: optimism,
-  transport: http()
-}).extend(walletActionsL2())
+```js file=<rootDir>/public/tutorials/withdrawal-flow.js#L3-L41 hash=9d315e38bbf5f0f6cebcab266a675657
 ```
 
 ## Withdrawal initiating transaction
 
 The first step is to initiate a withdrawal on L2 by using the `buildInitiateWithdrawal` and `initiateWithdrawal` functions:
 
-```javascript
-// 1. Build parameters to initiate the withdrawal transaction
-const args = await publicClientL1.buildInitiateWithdrawal({
-  to: account.address,
-  value: parseEther('1') // Amount to withdraw
-})
-
-// 2. Execute the initiate withdrawal transaction on L2
-const hash = await walletClientL2.initiateWithdrawal(args)
-
-// 3. Wait for the transaction receipt
-const receipt = await publicClientL2.waitForTransactionReceipt({ hash })
+```js file=<rootDir>/public/tutorials/withdrawal-flow.js#L43-L47 hash=a5958f7bf103652287e81582bd217a3f
 ```
 
 Behind the scenes, this process triggers the following:
@@ -124,26 +80,7 @@ The raw withdrawal fields included in this process are:
 
 Once an output root that includes your withdrawal is published to L1, you need to prove that the withdrawal is legitimate:
 
-```javascript
-// 1. Wait until the withdrawal is ready to prove
-const { output, withdrawal } = await publicClientL1.waitToProve({
-  receipt,
-  targetChain: walletClientL2.chain
-})
-
-// 2. Build parameters to prove the withdrawal
-const proveArgs = await publicClientL2.buildProveWithdrawal({
-  output,
-  withdrawal
-})
-
-// 3. Prove the withdrawal on L1
-const proveHash = await walletClientL1.proveWithdrawal(proveArgs)
-
-// 4. Wait for the prove transaction to be processed
-const proveReceipt = await publicClientL1.waitForTransactionReceipt({
-  hash: proveHash
-})
+```js file=<rootDir>/public/tutorials/withdrawal-flow.js#L49-L73 hash=e8674293cd269e10b9fcefe2a101b225
 ```
 
 The proving process works as follows:
@@ -171,23 +108,7 @@ if (status === 'ready-to-prove') {
 
 After the fault challenge period passes (7 days on mainnet), you can finalize and execute the withdrawal on L1:
 
-```javascript
-// 1. Wait until the withdrawal is ready to finalize
-await publicClientL1.waitToFinalize({
-  targetChain: walletClientL2.chain,
-  withdrawalHash: withdrawal.withdrawalHash
-})
-
-// 2. Finalize the withdrawal
-const finalizeHash = await walletClientL1.finalizeWithdrawal({
-  targetChain: walletClientL2.chain,
-  withdrawal
-})
-
-// 3. Wait for the finalization transaction to be processed
-const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
-  hash: finalizeHash
-})
+```js file=<rootDir>/public/tutorials/withdrawal-flow.js#L75-L92 hash=d983519f2c3465bea63c1f27e4aa7b5f
 ```
 
 The finalization process:
@@ -218,8 +139,8 @@ console.log(`Time until finalization: ${seconds} seconds`)
 
 Here's a complete example of the withdrawal flow:
 
-  ```js file=<rootDir>/public/tutorials/withdrawal-flow.js#L3-L79 hash=b95fb51749c32eb4fa89e33b291e6fd6
-  ```
+```js file=<rootDir>/public/tutorials/withdrawal-flow.js#L3-L92 hash=35ea41209638633005a1023433cce7b7
+```
 
 ## Expected internal reverts in withdrawal transactions
 

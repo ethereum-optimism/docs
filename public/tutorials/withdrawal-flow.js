@@ -1,35 +1,48 @@
 (async () => {
 
-  const viem = await import('viem');
-  const { parseEther } = viem;
-  const { privateKeyToAccount } = accounts;
+  const { createPublicClient, createWalletClient, http, parseEther } = require('viem');
+  const { sepolia, optimismSepolia } = require('viem/chains');
+  const { privateKeyToAccount } = require('viem/accounts');
+  const { 
+    publicActionsL1, 
+    walletActionsL1, 
+    publicActionsL2, 
+    walletActionsL2,
+    getWithdrawals 
+  } = require('viem/op-stack');
 
   //Replace <YOU_API_KEY> with your API keys
   const L1_RPC_URL = 'https://rpc.ankr.com/eth_sepolia/<YOU_API_KEY>';
   const L2_RPC_URL = 'https://sepolia.optimism.io';
 
   const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
-  const accounts = privateKeyToAccount(PRIVATE_KEY);
+  const account = privateKeyToAccount(PRIVATE_KEY);
   
   const publicClientL1 = createPublicClient({
     chain: sepolia,
     transport: http(L1_RPC_URL),
-  });
+  }).extend(publicActionsL1());
+  
+  const walletClientL1 = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http(L1_RPC_URL),
+  }).extend(walletActionsL1());
   
   const publicClientL2 = createPublicClient({
     chain: optimismSepolia,
     transport: http(L2_RPC_URL),
-  });
+  }).extend(publicActionsL2());
   
   const walletClientL2 = createWalletClient({
-    accounts,
+    account,
     chain: optimismSepolia,
     transport: http(L2_RPC_URL),
-  });
+  }).extend(walletActionsL2());
   
 // Build parameters to initiate the withdrawal transaction
 const args = await publicClientL1.buildInitiateWithdrawal({
-  to: accounts.address,
+  to: account.address,
   value: parseEther('1')
 })
  
