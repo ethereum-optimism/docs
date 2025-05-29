@@ -36,19 +36,21 @@ OP Mainnet is designed to be [EVM equivalent](https://web.archive.org/web/202311
 However, transaction fees on all Layer 2 systems need to diverge from Ethereum to some extent for a number of reasons.
 This page provides a detailed look at exactly how transaction fees work on OP Mainnet so you can properly account for them in your application.
 
-OP Mainnet transaction fees are composed of an [Execution Gas Fee](#execution-gas-fee), an [L1 Data Fee](#l1-data-fee), and after the Isthmus upgrade, an [Operator Fee](#operator-fee).
+OP Mainnet transaction fees are composed of an [Execution gas fee](#execution-gas-fee), an [L1 data fee](#l1-data-fee), and after the Isthmus upgrade, an [Operator Fee](#operator-fee).
 The total cost of a transaction is the sum of these fee components:
 
 **Before Isthmus:**
 
-```
-Total Fee = Execution Gas Fee + L1 Data Fee
+```bash
+totalFee = Execution Gas Fee + L1 Data Fee
 ```
 
 **After Isthmus:**
 
-```
-Total Fee = Execution Gas Fee + L1 Data Fee + Operator Fee
+```bash
+operatorFee = operatorFeeConstant + operatorFeeScalar * gasUsed / 1e6
+
+totalFee = Execution Gas Fee + L1 Data Fee + Operator Fee
 ```
 
 Continue reading to learn more about exactly how each of these fee components are charged.
@@ -241,7 +243,7 @@ The new cost function takes into account the compression ratio, so chain operato
 ## Operator fee
 
 <Callout>
-  The Operator fee is introduced with the Isthmus upgrade and provides OP Stack chains with more flexible pricing models.
+  The Operator fee is introduced with the [Isthmus upgrade](/notices/upgrade-14#operator-fee) and provides OP Stack chains with more flexible pricing models.
   Refer to the [Network upgrade overview](/operators/node-operators/network-upgrades) for network upgrade activation timestamps.
 </Callout>
 
