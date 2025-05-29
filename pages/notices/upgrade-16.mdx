@@ -41,6 +41,9 @@ Chain operators should be aware that Upgrade 16 involves a one-time invalidation
 
 If this proposal is accepted, multisig ceremonies will be coordinated to execute upgrade transactions. The following transactions will be executed on the respective chains: `OP Mainnet`, `Soneium Mainnet`, `Ink Mainnet`, `Base Mainnet`, `Unichain Mainnet`, `Mode Mainnet`, `Zora Mainnet`, `Arena Z Mainnet`, `Swell Mainnet`, and `Metal Mainnet`. Depending on the current state of the chain the execution times will vary. If your Optimism governed chain is not in this list, please reach out to OP Labs Solutions Engineering to coordinate your upgrade.
 
+### For permissionless fault proof enabled chains
+Chains running permissionless fault proofs will need to deploy new dispute game contracts with new absolute prestates.
+
 <Steps>
   ### Verify the new absolute prestate
 
@@ -48,11 +51,11 @@ If this proposal is accepted, multisig ceremonies will be coordinated to execute
     As of upgrade 14, the 64 bit multi-threaded version of cannon is utilized.
   </Callout>
 
-  The absolute prestate is generated with the [op-program/v1.6.0-rc.2](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.6.0-rc.2). You can use this new absolute prestate (`NEED PRESTATE`) for the following chains:
+  The absolute prestate is generated with the [op-program/v1.6.0-rc.2](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.6.0-rc.2). You can use this new absolute prestate (`0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8`) for the following chains:
 
   *   Sepolia: Base, Creator Chain, OP, Metal, Mode, Zora, Ethernity, Unichain, Ink, and Minato (Soneium)
 
-  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/d6fb90dd489e39efa206b55200766ccc075c1d9b/Makefile#L130-L132) in the root of the monorepo on the `op-program/v1.6.0-rc.2` tag:
+  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/d6fb90dd489e39efa206b55200766ccc075c1d9b/Makefile#L130-L132) in the root of the monorepo on the `op-program/v1.6.1-rc.1` tag:
 
   ```shell
   make reproducible-prestate
@@ -61,17 +64,15 @@ If this proposal is accepted, multisig ceremonies will be coordinated to execute
   You should expect the following output at the end of the command:
 
   ```shell
-  Cannon Absolute prestate hash: 
-  NEED PRESTATE
-  Cannon64 Absolute prestate hash: 
-  0x03682932cec7ce0a3874b19675a6bbc923054a7b321efc7d3835187b172494b6
-  CannonInterop Absolute prestate hash: 
-  0x0399cfb018011977a027d1e7a85eb7ff101aec9bfc7d6500abac944c47a4581f
+Cannon64 Absolute prestate hash: 
+0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+CannonInterop Absolute prestate hash: 
+0x03fc3b4d091527d53f1ff369ea8ed65e5e17cc7fc98ebf75380238151cdc949c
   ```
 
   ### Upload your new preimage file
 
-  During the previous step, you also generated the preimage of the absolute prestate, which is basically the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate-mt64.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `0x03682932cec7ce0a3874b19675a6bbc923054a7b321efc7d3835187b172494b6.bin.gz`.
+  During the previous step, you also generated the preimage of the absolute prestate, which is basically the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate-mt64.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `PRESTATEHASH.bin.gz`.
 
   Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
 
@@ -87,10 +88,6 @@ If this proposal is accepted, multisig ceremonies will be coordinated to execute
 
   Once your `op-challenger` is ready with the new preimage, you can execute the "Set Dispute Game Implementation" transaction. Please simulate and validate that the expected output prior to executing the transaction.
 </Steps>
-
-## For node operators
-
-WHAT ARE THE NODE OPERATOR STEPS?
 
 ## Technical details
 
