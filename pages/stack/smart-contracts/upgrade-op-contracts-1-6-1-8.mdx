@@ -1,5 +1,5 @@
 ---
-title: Upgrading Smart Contracts from v1.6.0 or v1.3.0 to v1.8.0
+title: Upgrading Smart Contracts from v1.3.0 to v1.8.0
 description: Learn about upgrading the smart contracts that make up the OP Stack.
 lang: en-US
 content_type: guide
@@ -170,7 +170,6 @@ And then  create an outputs directory:
 mkdir outputs
 ```
 
-
 ### 2. Copy config files
 
 Copy your `deployments.json` and `deploy-config.json` into the working directory
@@ -220,12 +219,13 @@ source .env
 
 Run the deployment process with the following command:
 
-```docker run -t \
+```docker 
+    run -t \
     --env-file .env \
     -v ./deploy_config:/deploy_config.json \
     -v ./deployments.json:/deployments.json \
     -v ./outputs:/outputs \
-    kfoplabs/upgrade-v1.3.0-v1.6.0-permissioned@sha256:dfb661ac34e997694eb0aaa2536515992cc0a3d663bfe3adbac0deb7aa1dd159 \
+    kfoplabs/upgrade-v1.3.0-v1.8.0-permissioned \
     /deploy_config.json \
     /deployments.json
 ```
@@ -241,7 +241,7 @@ The deployment should output four files:
 
 ### 6. Verify outputs
 
-Now you have the calldata that can be executed onchain to perform the L1 contract upgrade. You should simulate this upgrade and make sure the changes are expected. You can reference the validation files of previously executed upgrade tasks in the superchain-ops repo ([https://github.com/ethereum-optimism/superchain-ops/blob/main/tasks/eth/022-holocene-fp-upgrade/NestedSignFromJson.s.sol](https://github.com/ethereum-optimism/superchain-ops/blob/main/tasks/eth/022-holocene-fp-upgrade/NestedSignFromJson.s.sol)) to see what the expected changes are. Once you're confident the state changes are expected, you can sign and execute the upgrade.
+Now you have the calldata that can be executed onchain to perform the L1 contract upgrade. You should simulate this upgrade and make sure the changes are expected. You can reference the validation files of previously executed upgrade tasks in the [superchain-ops repo](https://github.com/ethereum-optimism/superchain-ops/blob/main/tasks/eth/022-holocene-fp-upgrade/NestedSignFromJson.s.sol) to see what the expected changes are. Once you're confident the state changes are expected, you can sign and execute the upgrade.
 
 ## Additional Resources
 
