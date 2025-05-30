@@ -11,8 +11,6 @@ categories:
   - mainnet
   - protocol
   - l1-contracts
-  - predeploys
-  - contract-addresses
   - contract-upgrades
   - architecture
   - fault-proofs
@@ -23,11 +21,11 @@ import { Callout } from 'nextra/components'
 
 # Upgrading Optimism L1 smart contracts from v1.3.0 to v1.8.0
 
-This guide provides specific instructions for upgrading Optimism's Layer 1 contracts from `op-contracts/v1.3.0` to `op-contracts/v1.8.0`. This upgrade includes important changes to the system configuration and fault proof system.
+This guide provides specific instructions for upgrading the OP Stack's Layer 1 contracts from `op-contracts/v1.3.0` to `op-contracts/v1.8.0`. This upgrade includes important changes to the system configuration and introduces the Fault Proof System.
 
 ## Overview of the Holocene upgrade
 
-The Holocene upgrade is a large network upgrade. Learn more about it in the [Holocene notice page](https://docs.optimism.io/notices/holocene-changes).
+The Holocene upgrade is a protocol upgrade. Learn more about it in the [Holocene notice page](https://docs.optimism.io/notices/holocene-changes). This guide shows you how to take your OP Stack chain from the L2 Output Oracle System to a permissioned Fault Proof System contract version associated with the Holocene upgrade. 
 
 ### Formatting config files
 
@@ -135,7 +133,7 @@ Ensure both files are correctly formatted, using the exact field names shown in 
 }
 ```
 
-Make sure that important addresses (like the `ProxyAdmin`, `PAO`, all L1 addresses, `L2OO`) are actually up to date by cross checking the Superchain Registry and on-chain (you can do this easily with [`op-fetcher`](https://github.com/ethereum-optimism/optimism/tree/develop/op-fetcher), especially for the `deployments.json`.
+Make sure that important addresses (like the `ProxyAdmin`, `ProxyAdminOwner`, all L1 addresses, `L2OO`) are actually up to date by cross checking the Superchain Registry and on-chain (you can do this easily with [`op-fetcher`](https://github.com/ethereum-optimism/optimism/tree/develop/op-fetcher), especially for the `deployments.json`.
 
 ## Step-by-step upgrade process
 
@@ -216,7 +214,7 @@ The deployment should output four files:
 
 *   `deploy.log` is a log of the deployment process
 *   `deployments.json` includes the newly deployed contract addresses
-*   `bundle.json` is the finalization transaction bundle
+*   `bundle.json` is the safe transaction bundle
 *   `transactions.json` is the summary of the executed deployment transactions
 *   `standard-addresses.json` is the addresses of `SystemConfigImpl`, `OptimismPortal2Impl`, `L1CrossDomainMessengerImpl`, `L1StandardBridgeImpl`, `L1ERC721BridgeImpl`, and `OptimismMintableERC20FactoryImpl`
 *   `validation.txt` is used for Tenderly state diff validation. Some info needed for the superchain-ops task might be missing from this file, and will instead be generated during the Tenderly simulation. 
