@@ -47,17 +47,27 @@ This guide provides step-by-step instructions for spinning up a single sequencer
 
 ## Latest release information
 
-### Current stable releases (May 2025)
+### Finding the current stable releases
 
-**op-node**: v1.13.2 (required for Mainnet Superchain by May 9, 2025 for Isthmus fork)
+To ensure you're using the latest compatible versions of OP Stack components, always check the official releases page:
 
-**op-geth**: v1.101503.3 (Isthmus release for Mainnet Superchain, mandatory upgrade by May 9, 2025)
+**[release page](https://github.com/ethereum-optimism/optimism/releases)**
 
-**op-batcher**: v1.12.0 (required before activating Isthmus on chains)
+The main components you'll need for sequencer deployment are:
 
-### Version naming convention
+*   **op-node**: Look for the latest `op-node/v*` release
+*   **op-geth**: Look for the latest `op-geth/v*` release (found at [https://github.com/ethereum-optimism/op-geth/releases](https://github.com/ethereum-optimism/op-geth/releases))
+*   **op-batcher**: Look for the latest `op-batcher/v*` release
 
-op-geth embeds upstream geth's version inside its own version as follows: vMAJOR.GETH\_MAJOR GETH\_MINOR GETH\_PATCH.PATCH. For example, if geth is at v1.12.0, the corresponding op-geth version would be v1.101200.0.
+### Docker images
+
+Pre-built Docker images are available for all releases at:
+
+*   `us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:[VERSION]`
+*   `us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:[VERSION]`
+*   `us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:[VERSION]`
+
+Replace `[VERSION]` with the specific version tag from the releases page.
 
 ## Network flags and superchain registry
 
@@ -78,16 +88,17 @@ Common networks include:
 
 ## Installation options
 
-### Option 1: Docker-based Setup (Recommended)
-
-#### 1. Download latest docker images
+### Option 1: Docker-based setup (Recommended)
 
 ```bash
 # Pull latest op-node image
 docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.2
 
-# Pull latest op-geth image
-docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.3
+# Pull latest op-geth image  
+docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4
+
+# Pull latest op-batcher image
+docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:v1.13.1
 ```
 
 ### Option 2: building from source
@@ -125,11 +136,27 @@ make geth
 # Binary will be available at ./build/bin/geth
 ```
 
+#### 3. Clone and build op-batcher
+
+```bash
+# op-batcher is part of the optimism monorepo
+cd optimism
+
+# Checkout the latest release tag (if not already done)
+git checkout op-batcher/v1.13.1
+
+# Build op-batcher
+cd op-batcher
+make op-batcher
+
+# Binary will be available at ./bin/op-batcher
+```
+
 ## Configuration setup
 
 ### 1. Generate JWT secret
 
-To communicate with op-node and enable the Engine API, you'll also need to generate a JWT secret file and enable Geth's authenticated RPC endpoint.
+To communicate with op-node and enable the Engine API, you'll also need to generate a JWT secret file and enable `op-geth's` authenticated RPC endpoint.
 
 ```bash
 # Generate JWT secret
@@ -148,13 +175,15 @@ sequencer-node/
 ├── jwt.txt
 ├── data/
 │   ├── op-geth/
-│   └── op-node/
+│   ├── op-node/
+│   └── op-batcher/
 ├── configs/
 │   ├── rollup.json (if not using network flags)
 │   └── genesis.json (if not using network flags)
 └── scripts/
     ├── start-op-geth.sh
-    └── start-op-node.sh
+    ├── start-op-node.sh
+    └── start-op-batcher.sh
 ```
 
 ### 3. Environment variables
@@ -164,7 +193,7 @@ Create a `.env` file:
 ```bash
 # L1 Configuration
 L1_RPC_URL=https://mainnet.infura.io/v3/YOUR_INFURA_KEY
-L1_BEACON_URL=https://beacon-nd-123-456-789.p2pify.com/YOUR_BEACON_KEY
+L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
 
 # Network configuration
 NETWORK=op-mainnet  # or your target network
@@ -225,7 +254,7 @@ source .env
 
 ### op-node configuration for sequencer
 
-The sequencer can be initialized in a stopped state using the sequencer.stopped flag. The sequencer can be started using the admin\_startSequencer RPC.
+The sequencer can be initialized in a stopped state using the sequencer.stopped flag. The sequencer can be started using the `admin\_startSequencer` RPC.
 
 Create `scripts/start-op-node.sh`:
 
@@ -387,92 +416,9 @@ curl -X POST http://localhost:8547 \
   -d '{"method":"optimism_sequencerActive","params":[],"id":1,"jsonrpc":"2.0"}'
 ```
 
-## Security considerations
+## Next steps
 
-### 1. Network Security
-
-*   Configure firewall to allow only necessary ports
-*   Use VPN or private networks when possible
-*   Regular security updates
-
-### 2. Key Management
-
-*   Secure JWT secret file with appropriate permissions
-*   Regular rotation of authentication secrets
-*   Hardware security modules for production
-
-### 3. Monitoring
-
-*   Set up alerting for sequencer downtime
-*   Monitor L1 connectivity
-*   Track block production metrics
-
-## Troubleshooting
-
-### Common Issues
-
-**Sequencer Not Starting:**
-
-*   Verify L1 RPC connectivity
-*   Check JWT secret configuration
-*   Ensure proper network flags
-
-**P2P Connection Issues:**
-
-*   Verify firewall settings for port 9222
-*   Check public IP configuration
-*   Validate bootnode connectivity
-
-**Block Building Failures:**
-
-*   Monitor resource usage (CPU, memory)
-*   Check L1 gas prices and availability
-*   Verify execution engine connectivity
-
-### Log Analysis
-
-Node log levels determine the verbosity of log messages. The log levels for the op-node are: Silent (0), Error (1), Warn (2), Info (3), Debug (4). Info (3) is the default level and provides a balanced view of the node's operations.
-
-For debugging, increase verbosity:
-
-```bash
-# For op-geth
---verbosity=4
-
-# For op-node
---log.level=debug
-```
-
-## Production Considerations
-
-### 1. High Availability
-
-*   Implement redundant sequencer setups
-*   Use load balancers for RPC endpoints
-*   Regular backup procedures
-
-### 2. Performance Optimization
-
-*   SSD storage with high IOPS
-*   Adequate CPU and memory allocation
-*   Network optimization for low latency
-
-### 3. Monitoring and Alerting
-
-*   Prometheus metrics collection
-*   Grafana dashboards
-*   PagerDuty or similar alerting systems
-
-## Resources
-
-*   [Optimism Documentation](https://docs.optimism.io)
-*   [OP Stack Specifications](https://github.com/ethereum-optimism/specs)
-*   [Superchain Registry](https://github.com/ethereum-optimism/superchain-registry)
-*   [Node Software Releases](https://docs.optimism.io/builders/node-operators/releases)
+*   [OP Stack specs](https://github.com/ethereum-optimism/specs)
+*   [Superchain registry](https://github.com/ethereum-optimism/superchain-registry)
+*   [Node software releases](/operators/node-operators/releases)
 *   [Developer Forum](https://github.com/ethereum-optimism/developers/discussions)
-
-## Conclusion
-
-This guide provides the foundation for setting up an Optimism sequencer node. Remember that currently only OP Labs PBC can run sequencer nodes, but this is expected to change in the future as the network becomes more decentralized. Always use the latest releases and monitor the official documentation for updates and changes to the setup process.
-
-For production deployments, thorough testing in a staging environment and comprehensive monitoring are essential for reliable operation.
