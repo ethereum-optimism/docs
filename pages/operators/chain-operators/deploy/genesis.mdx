@@ -1,7 +1,7 @@
 ---
-title: OP Stack genesis creation
+title: Chain artifacts creation
 lang: en-US
-description: Learn how to create a genesis file for the OP Stack.
+description: Learn how to create genesis and rollup configuration files using op-deployer after L1 contract deployment.
 content_type: guide
 topic: genesis-creation
 personas:
@@ -20,160 +20,93 @@ is_imported_content: 'false'
 
 import { Callout } from 'nextra/components'
 
-# OP Stack genesis creation
+# Overview
 
-<Callout type="info">
-  The recommended way to generate genesis and rollup configuration files is using `op-deployer`.
-  This ensures standardization and compatibility with the Superchain.
-</Callout>
+After deploying the L1 system contracts for your OP Stack chain, you need to generate two files to run nodes on the L2 network:
 
-The `op-deployer` tool simplifies the creation of genesis and rollup configuration files (`genesis.json` and `rollup.json`).
-These files are crucial for initializing the execution client (`op-geth`) and consensus client (`op-node`) for your network.
+*   **Genesis file** (`genesis.json`): Initializes the execution client (`op-geth`)
+*   **Rollup configuration file** (`rollup.json`): Configures the consensus client (`op-node`)
 
-The recommended flow for creating a genesis file and rollup configuration file on the OP Stack is as follows:
+This guide shows you how to generate these files from your L1 contract deployment data using `op-deployer`.
 
-1.  **Deploy the L1 contracts** using [op-deployer](/operators/chain-operators/tools/op-deployer).
-2.  **Generate** both the L2 genesis file (`genesis.json`) and the rollup configuration file (`rollup.json`) using op-deployer's `inspect` commands.
-3.  **Initialize** your off-chain components (e.g., execution client, consensus client).
+## Prerequisites
 
-## Recommended method: using op-deployer
+Before generating genesis and rollup configuration files, ensure you have:
 
-### Prerequisites
+1.  Deployed the L1 contracts successfully using the [`op-deployer apply`](/operators/chain-operators/tools/op-deployer#apply-deploy-your-chain) command
 
-1.  You have installed the `op-deployer` binary following the instructions in [deployer docs](/operators/chain-operators/tools/op-deployer#installation).
-    After installation, extract the `op-deployer` into your `PATH` and `cd op-deployer`.
+2.  Access to your deployment workspace directory (`.deployer` if you've followed the instructions in the L1 deployment contracts guide)
 
-2.  You have created and customized an intent file in a `.deployer` directory, typically by running:
+## Generating genesis and rollup files
 
-    ```bash
-    ./bin/op-deployer init --l1-chain-id <YOUR_L1_CHAIN_ID> --l2-chain-ids <YOUR_L2_CHAIN_ID> --workdir .deployer
-    ```
+After your L1 contracts have been deployed, follow these steps to generate the configuration files:
 
-    Replace `<YOUR_L1_CHAIN_ID>` and `<YOUR_L2_CHAIN_ID>` with their respective values, see a list of [`chainIds`](https://chainid.network/).
+### Step 1: Locate your deployment state file
 
-3.  You have edited that intent file to your liking (roles, addresses, etc.).
+The `op-deployer` tool creates a `state.json` file in your workspace directory that contains all the necessary information about your deployed contracts.
 
-### Step 1: Deploy the L1 contracts
-
-To deploy your chain to L1, run:
+Verify that this file exists in your workspace:
 
 ```bash
-./bin/op-deployer apply --workdir .deployer \
-  --l1-rpc-url <RPC_URL_FOR_L1> \
-  --private-key <DEPLOYER_PRIVATE_KEY_HEX>
+ls -la .deployer/state.json
 ```
 
-This command:
+### Step 2: Generate the L2 genesis file
 
-*   Reads your intent file in `.deployer/.`
-*   Deploys the OP Stack contracts to the specified L1.
-*   Updates a local `state.json` file with the results of the deployment.
-
-### Step 2: Generate your L2 genesis file and rollup file
-
-After your L1 contracts have been deployed, generate the L2 genesis and rollup configuration files by inspecting the deployer's `state.json`
+Use the `inspect genesis` command to retrieve your L2 genesis file:
 
 ```bash
-./bin/op-deployer inspect genesis --workdir .deployer <L2_CHAIN_ID> > .deployer/genesis.json
-./bin/op-deployer inspect rollup --workdir .deployer <L2_CHAIN_ID> > .deployer/rollup.json
+op-deployer inspect genesis --workdir .deployer <L2_CHAIN_ID> > .deployer/genesis.json
 ```
 
-*   genesis.json is the file you will provide to your execution client (e.g. op-geth).
-*   rollup.json is the file you will provide to your consensus client (e.g. op-node).
+Replace `<L2_CHAIN_ID>` with your L2 network's chain ID.
 
-### Step 3: Initialize your off-chain components
+### Step 3: Generate the rollup configuration file
 
-Once you have `genesis.json` and `rollup.json`:
+Use the `inspect rollup` command to retrieve your rollup configuration file:
 
-1.  Initialize op-geth using genesis.json.
-2.  Configure op-node with rollup.json.
-3.  Set up additional off-chain infrastructure as needed (block explorer, indexers, etc.). For more on architecture, see [Architecture overview](/operators/chain-operators/architecture).
+```bash
+op-deployer inspect rollup --workdir .deployer <L2_CHAIN_ID> > .deployer/rollup.json
+```
 
-## Legacy method: using foundry script
+### Step 4: Verify the generated files
 
-The following guide shows you how to generate the L2 genesis file `genesis.json`. This is a JSON
-file that represents the L2 genesis. You will provide this file to the
-execution client (op-geth) to initialize your network. There is also the rollup configuration file, `rollup.json`, which will be
-provided to the consensus client (op-node).
+Examine the generated files to ensure they contain the expected configuration:
+
+```bash
+# View the genesis file structure
+jq . .deployer/genesis.json | head -20
+
+# View the rollup configuration
+jq . .deployer/rollup.json
+```
+
+The `genesis.json` file contains the initial state of your L2 blockchain, including:
+
+*   Chain configuration parameters
+*   Initial account states
+*   Genesis block properties
+
+The `rollup.json` file contains the rollup protocol parameters, including:
+
+*   L1 contract addresses
+*   Sequencing settings
+*   Protocol upgrade activation times
+
+## Troubleshooting
+
+If you encounter issues with the generated files:
+
+*   [Verify](/operators/chain-operators/tools/op-deployer#verify-verify-contract-source-code-on-block-explorers) that your L1 contract deployment was successful
+*   Check that you're using the correct **L2 chain ID** in the generation commands
+*   Ensure your `state.json` file is up-to-date with your latest deployment
 
 <Callout type="warning">
-  The following genesis creation information is the legacy method for creating OP Stack configuration files.
-  This method is not recommended. It's preserved here for historical context.
+  Never manually edit the generated genesis or rollup files unless you fully understand the implications. Incorrect configurations can lead to consensus failures or chain security issues.
 </Callout>
-
-
-### Solidity script (Legacy)
-
-You can also use the foundry script
-located in the monorepo to generate an "L2 state dump" and then pass this into the op-node genesis subcommand.
-The foundry script can be found at
-[packages/contracts-bedrock/scripts/L2Genesis.s.sol](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/scripts/L2Genesis.s.sol).
-
-<Callout type="info">
-When generating the genesis file, please use the same `op-contracts/vX.Y.Z` release commit used for L1 contract deployments.
-</Callout>
-
-### Configuration
-
-Create or modify a file `<network-name>.json` inside the `deploy-config`
-folder in the monorepo. The script will read the latest active fork from the
-deploy config and the L2 genesis allocs generated will be compatible with this
-fork. The automatically detected fork can be overwritten by setting the
-environment variable `FORK` either to the lower-case fork name (currently
-`delta`, `ecotone`, or `fjord`) or to `latest`, which will select the latest fork
-available (currently `fjord`).
-
-By default, the script will dump the L2 genesis allocs (aka "state dump") of the detected or
-selected fork only, to the file at `STATE_DUMP_PATH`. The optional environment
-variable `OUTPUT_MODE` allows you to modify this behavior by setting it to one of
-the following values:
-
-*   `latest` (default) - only dump the selected fork's allocs.
-*   `all` - also dump all intermediary fork's allocs. This only works if
-    `STATE_DUMP_PATH` is not set. In this case, all allocs will be written to files
-    `/state-dump-<fork>.json`. Another path cannot currently be specified for this
-    use case.
-*   `none` - won't dump any allocs. Only makes sense for internal test usage.
-
-### Creation
-
-*   `CONTRACT_ADDRESSES_PATH` represents the deployment artifact that was
-    generated during a contract deployment.
-*   `DEPLOY_CONFIG_PATH` represents a path on the filesystem that points to a
-    deployment config. The same deploy config JSON file should be used for L1 contracts
-    deployment as when generating the L2 genesis allocs.
-*   `STATE_DUMP_PATH` represents the filepath at which the allocs will be
-    written to on disk.
-
-```bash
-CONTRACT_ADDRESSES_PATH=<CONTRACT_ADDRESSES_PATH> \
-DEPLOY_CONFIG_PATH=<PATH_TO_MY_DEPLOY_CONFIG> \
-STATE_DUMP_PATH=<PATH_TO_WRITE_L2_ALLOCS> \
-  forge script scripts/L2Genesis.s.sol:L2Genesis \
-  --sig 'runWithStateDump()'
-  ```
-
-## Subcommand (op-node genesis l2)
-
-The genesis file creation is handled by the `genesis l2`
-subcommand, provided by the `op-node`. The following is an example of its usage
-from [v1.7.6](https://github.com/ethereum-optimism/optimism/releases/tag/v1.7.6) --
-note that you need to pass the path to the l2 genesis state dump file output by
-the foundry script above:
-
-```bash
-go run cmd/main.go genesis l2 \
-  --deploy-config=<Path to deploy config file> \
-  --l1-deployments=<Path to L1 deployments JSON file as in superchain-registry> \
-  --l2-allocs=<Path to L2 genesis state dump> \
-  --outfile.l2=<Path to L2 genesis output file: i.e. ./genesis.json> \
-  --outfile.rollup=<Path to rollup output file: i.e. ./rollup.json> \
-  --l1-rpc=<RPC URL for an Ethereum L1 node. Cannot be used with --l1-starting-block>>
-```
 
 ## Next steps
 
-*   Learn how to [initialize](/operators/node-operators/configuration/base-config#initialization-via-genesis-file)
-    `op-geth` with your `genesis.json` file.
-*   Learn how to [initialize](/operators/node-operators/configuration/base-config#configuring-op-node) `op-node` with your `rollup.json` file.
-*   Learn more about the off chain [architecture](/operators/chain-operators/architecture).
+*   Learn how to [initialize](/operators/node-operators/configuration/base-config#initialization-via-genesis-file) `op-geth` with your `genesis.json` file
+*   Learn how to [configure](/operators/node-operators/configuration/base-config#configuring-op-node) `op-node` with your `rollup.json` file
+*   Learn more about the off-chain [architecture](/operators/chain-operators/architecture)
