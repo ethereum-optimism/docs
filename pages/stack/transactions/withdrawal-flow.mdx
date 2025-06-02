@@ -41,6 +41,7 @@ Withdrawals require the user to submit three transactions:
 1.  On L2, a user, either an externally owned account (EOA) directly or a contract acting on behalf of an EOA, calls the [`sendMessage`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/universal/CrossDomainMessenger.sol#L191) function of the [`L2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2CrossDomainMessenger.sol#L21) contract.
 
     This function accepts three parameters:
+
     *   `_target`, target address on L1.
     *   `_message`, the L1 transaction's calldata, formatted as per the [ABI](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html) of the target address.
     *   `_minGasLimit`, The minimum amount of gas that the withdrawal finalizing transaction can provide to the withdrawal transaction. This is enforced by the `SafeCall` library, and if the minimum amount of gas cannot be met at the time of the external call from the `OptimismPortal` -> `L1CrossDomainMessenger`, the finalization transaction will revert to allow for re-attempting with a higher gas limit. In order to account for the gas consumed in the `L1CrossDomainMessenger.relayMessage` function's execution, extra gas will be added on top of the `_minGasLimit` value by the `CrossDomainMessenger.baseGas` function when `sendMessage` is called on L2.
@@ -50,6 +51,7 @@ Withdrawals require the user to submit three transactions:
 3.  `_sendMessage` calls [`initiateWithdrawal`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2ToL1MessagePasser.sol#L71) on [`L2ToL1MessagePasser`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2ToL1MessagePasser.sol#L19). This function calculates the hash of the raw withdrawal fields. It then marks that hash as a sent message in [`sentMessages`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2ToL1MessagePasser.sol#L30) and emits the fields with the hash in a [`MessagePassed`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2ToL1MessagePasser.sol#L40) event.
 
     The raw withdrawal fields are:
+
     *   `nonce` - A single use value to prevent two otherwise identical withdrawals from hashing to the same value
     *   `sender` - The L2 address that initiated the transfer, typically [`L2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2CrossDomainMessenger.sol#L21)
     *   `target` - The L1 target address
@@ -57,8 +59,8 @@ Withdrawals require the user to submit three transactions:
     *   `gasLimit` - Gas limit for the transaction, the system guarantees that at least this amount of gas will be available to the transaction on L1. Note that if the gas limit is not enough, or if the L1 finalizing transaction does not have enough gas to provide that gas limit, the finalizing transaction returns a failure, it does not revert.
     *   `data` - The calldata for the withdrawal transaction
 
-4.  When `op-proposer`proposes a new `output`, the output proposal includes the [output root](https://specs.optimism.io/glossary.html?utm_source=op-docs&utm_medium=docs#l2-output-root), provided as part of the block by `op-node`. 
-This new output root commits to the state of the `sentMessages` mapping in the `L2ToL1MessagePasser` contract's storage on L2, and it can be used to prove the presence of a pending withdrawal within it.
+4.  When `op-proposer`proposes a new `output`, the output proposal includes the [output root](https://specs.optimism.io/glossary.html?utm_source=op-docs\&utm_medium=docs#l2-output-root), provided as part of the block by `op-node`.
+    This new output root commits to the state of the `sentMessages` mapping in the `L2ToL1MessagePasser` contract's storage on L2, and it can be used to prove the presence of a pending withdrawal within it.
 
 ## Withdrawal proving transaction
 
