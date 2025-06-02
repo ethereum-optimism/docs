@@ -725,20 +725,40 @@ Active returns true if the op-conductor is active (not paused or stopped).
 </Callout>
 
 CommitUnsafePayload commits an unsafe payload (latest head) to the consensus
-layer. TODO - usage examples that include required params are needed
+layer. This method is typically called by the op-node to commit execution payload envelopes.
 
 <Tabs items={['curl', 'cast']}>
   <Tabs.Tab>
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"conductor_commitUnsafePayload","params":[],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"conductor_commitUnsafePayload","params":[{
+            "executionPayload": {
+                "parentHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+                "feeRecipient": "0x4200000000000000000000000000000000000019",
+                "stateRoot": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+                "receiptsRoot": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+                "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "prevRandao": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+                "blockNumber": "0x64",
+                "gasLimit": "0x1c9c380",
+                "gasUsed": "0x5208",
+                "timestamp": "0x12345678",
+                "extraData": "0x",
+                "baseFeePerGas": "0x7",
+                "blockHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba",
+                "transactions": []
+            }
+        }],"id":1}'  \
         http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 
   <Tabs.Tab>
     ```sh
-    cast rpc conductor_commitUnsafePayload --rpc-url http://127.0.0.1:8547
+    # Example with basic payload structure
+    cast rpc conductor_commitUnsafePayload \
+        '{"executionPayload":{"parentHash":"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef","feeRecipient":"0x4200000000000000000000000000000000000019","stateRoot":"0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890","receiptsRoot":"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef","logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","prevRandao":"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef","blockNumber":"0x64","gasLimit":"0x1c9c380","gasUsed":"0x5208","timestamp":"0x12345678","extraData":"0x","baseFeePerGas":"0x7","blockHash":"0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba","transactions":[]}}' \
+        --rpc-url http://127.0.0.1:8547
     ```
   </Tabs.Tab>
 </Tabs>
