@@ -15,6 +15,7 @@ categories:
   - gas
   - l1-data-fee
   - execution-gas-fee
+  - operator-fee
   - eip-1559
   - sequencer-fee-vault
 is_imported_content: 'false'
@@ -26,7 +27,7 @@ import { Callout } from 'nextra/components'
   The OP Stack maintains a distinct gas limit compared to the Ethereum mainnet.
   While both chains use the same underlying transaction formats, Optimism's gas limits are tailored for optimal Layer 2 performance and scalability.
   As a result, transactions on Optimism may behave differently from the mainnet regarding gas usage and fee estimation.
-  For a detailed comparison of gas limits between Optimism and Ethereum, see the [Optimism Chain Differences documentation](https://docs.optimism.io/chain/differences?utm_source=op-docs&utm_medium=docs#transaction-fees).
+  For a detailed comparison of gas limits between Optimism and Ethereum, see the [Differences between Ethereum and OP Stack Chains](https://docs.optimism.io/chain/differences?utm_source=op-docs\&utm_medium=docs#transaction-fees).
 </Callout>
 
 # Transaction fees on OP Mainnet
@@ -35,8 +36,23 @@ OP Mainnet is designed to be [EVM equivalent](https://web.archive.org/web/202311
 However, transaction fees on all Layer 2 systems need to diverge from Ethereum to some extent for a number of reasons.
 This page provides a detailed look at exactly how transaction fees work on OP Mainnet so you can properly account for them in your application.
 
-OP Mainnet transaction fees are composed of an [Execution Gas Fee](#execution-gas-fee) and an [L1 Data Fee](#l1-data-fee).
-The total cost of a transaction is the sum of these two fees.
+OP Mainnet transaction fees are composed of an [Execution gas fee](#execution-gas-fee), an [L1 data fee](#l1-data-fee), and after the [Isthmus upgrade](/notices/upgrade-14#operator-fee), an [operator fee](#operator-fee).
+The total cost of a transaction is the sum of these fee components:
+
+**Before Isthmus:**
+
+```
+totalFee = gasUsed * (baseFee + priorityFee) + l1Fee
+```
+
+**After Isthmus:**
+
+```
+operatorFee = operatorFeeConstant + operatorFeeScalar * gasUsed / 1e6
+
+totalFee = operatorFee + gasUsed * (baseFee + priorityFee) + l1Fee
+```
+
 Continue reading to learn more about exactly how each of these fee components are charged.
 
 ## Execution gas fee
@@ -112,7 +128,7 @@ the L1 Data Fee are generally quite small and should not impact the average tran
 
 <Callout>
   The L1 Data Fee formula changed with the Ecotone upgrade.
-  Refer to the [Network Upgrade Overview](/operators/node-operators/network-upgrades) for network upgrade activation timestamps for OP Sepolia and OP Mainnet.
+  Refer to the [Network upgrade overview](/operators/node-operators/network-upgrades) for network upgrade activation timestamps for OP Sepolia and OP Mainnet.
 </Callout>
 
 Prior to the Ecotone upgrade, the L1 Data Fee is calculated based on the following parameters:
@@ -224,20 +240,75 @@ l1Cost = estimatedSizeScaled * l1FeeScaled / 1e12
 
 The new cost function takes into account the compression ratio, so chain operators will need to adjust their `baseFeeScalar` and `blobFeeScalar`  to account for any previous compression ratios that they encountered on their chains. Chain operators can use the [Fjord fee parameter calculator](https://docs.google.com/spreadsheets/d/1V3CWpeUzXv5Iopw8lBSS8tWoSzyR4PDDwV9cu2kKOrs/edit#gid=186414307) to get a better estimate of scalar values to use for their chain.
 
-## Sequencer Fee Vault
+## Operator fee
 
-The Sequencer Fee Vault collects and holds transaction fees paid to the sequencer during block production on OP Mainnet. These fees cover the cost of posting transaction data to L1, ensuring network sustainability and data availability.
+<Callout>
+  The Operator fee is introduced with the [Isthmus upgrade](/notices/upgrade-14#operator-fee) and provides OP Stack chains with more flexible pricing models.
+  Refer to the [Network upgrade overview](/operators/node-operators/network-upgrades) for network upgrade activation timestamps.
+</Callout>
 
-### Fee Collection and Distribution
+The Operator fee is a new fee component introduced with the Isthmus upgrade that enables more customizable fee structures for OP Stack chains. This fee is integrated directly into the EVM alongside the standard gas fee and L1 data fee, allowing chain operators to implement additional revenue models or cover specific operational costs.
 
-*   **Purpose**: The sequencer deposits collected fees into the Sequencer Fee Vault. These fees reimburse the sequencer for gas costs when submitting transaction batches to L1.
-*   **Vault Address**: The Sequencer Fee Vault is predeployed at the address `0x4200000000000000000000000000000000000011` on the OP Mainnet.
-*   **Fee Usage**: Stored fees are eventually transferred to a designated recipient address (e.g., a treasury or distribution contract).
+### Mechanism
+
+The Operator fee is automatically charged for any transaction that is included in a block after the Isthmus activation. This fee is deducted directly from the address that sent the transaction and follows the same semantics as existing fees charged in the EVM. The collected operator fees are sent to the **Operator Fee Vault**, a new vault similar to existing fee vaults.
+
+<Callout>
+  **Deposit transactions do not get charged operator fees.** For all deposit transactions, regardless of the operator fee parameter configuration, the operator fee is always zero.
+</Callout>
+
+### Formula
+
+The Operator fee is calculated using the following formula:
+
+```
+operatorFee = (gas × operatorFeeScalar ÷ 10^6) + operatorFeeConstant
+```
+
+Where:
+
+*   `gas` is the amount of gas that the transaction used
+*   `operatorFeeScalar` is a `uint32` scalar set by the chain operator, scaled by 1e6
+*   `operatorFeeConstant` is a `uint64` scalar set by the chain operator
+
+### Configuration
+
+The `operatorFeeScalar` and `operatorFeeConstant` parameters can be accessed in two ways:
+
+1.  **From deposited L1 attributes** of the current L2 block
+2.  **From the L1 Block Info contract** (`0x4200000000000000000000000000000000000015`):
+    *   Using solidity getter functions (`operatorFeeScalar`, `operatorFeeConstant`)
+    *   Using direct storage reads:
+    *   Operator fee scalar as big-endian `uint32` in slot `8` at offset `0`
+    *   Operator fee constant as big-endian `uint64` in slot `8` at offset `4`
+
+### EVM Integration
+
+The Operator fee follows standard EVM fee semantics:
+
+1.  **Pre-execution validation**: Account must have enough ETH to cover worst-case gas + L1 data fees + worst-case operator fee
+2.  **Gas purchase**: Account is charged the worst-case operator fee before execution
+3.  **Refunds**: After execution, unused operator fee gas is refunded to the account
+4.  **Fee distribution**: The spent operator fee is sent to the Operator Fee Vault
+
+### Transaction pool impact
+
+Transaction pools must account for the additional operator fee when validating transactions. Transactions without sufficient balance to cover the worst-case total cost (including operator fee) will be rejected.
+
+## Sequencer fee vault
+
+The Sequencer fee vault collects and holds transaction fees paid to the sequencer during block production on OP Mainnet. These fees cover the cost of posting transaction data to L1, ensuring network sustainability and data availability.
+
+### Fee collection and distribution
+
+*   **Purpose**: The sequencer deposits collected fees into the Sequencer fee vault. These fees reimburse the sequencer for gas costs when submitting transaction batches to L1.
+*   **Vault address**: The Sequencer fee vault is predeployed at the address `0x4200000000000000000000000000000000000011` on the OP Mainnet.
+*   **Fee usage**: Stored fees are eventually transferred to a designated recipient address (e.g., a treasury or distribution contract).
 
 ### How it works
 
-1.  **Fee Collection**: During the processing of transactions, the sequencer collects fees from users as part of their transaction costs. These fees are primarily used to cover the gas expenses of posting transaction data to Ethereum L1.
-2.  **Storage**: Collected fees are deposited into the Sequencer Fee Vault contract.
+1.  **Fee collection**: During the processing of transactions, the sequencer collects fees from users as part of their transaction costs. These fees are primarily used to cover the gas expenses of posting transaction data to Ethereum L1.
+2.  **Storage**: Collected fees are deposited into the Sequencer fee vault contract.
 3.  **Distribution**: The fees are later distributed to the appropriate recipient, typically covering operational costs like L1 gas fees for data availability.
 
 This system ensures effective fee management, maintaining the security and operation of the Optimism network.
