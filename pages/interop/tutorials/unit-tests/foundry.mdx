@@ -53,39 +53,37 @@ The default [`anvil`](https://book.getfoundry.sh/anvil/overview) instance create
 The test is implemented by `tests/GreetingSender.t.sol`.
 
 <details>
+  <summary>Explanation</summary>
 
-    <summary>Explanation</summary>
+  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L109-L117 hash=e8c77299b01dd6f03d3e36d2e9d82608 
+  ```
 
-    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L109-L117 hash=e8c77299b01dd6f03d3e36d2e9d82608 
-    ```
+  The definition for the event we expect to see, [from the `L2ToL2CrossDomainMessenger` source code](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L160).
 
-    The definition for the event we expect to see, [from the `L2ToL2CrossDomainMessenger` source code](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L160).
+  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L119-L121 hash=645c522fafccb282df37b7d3df27bd3f 
+  ```
 
-    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L119-L121 hash=645c522fafccb282df37b7d3df27bd3f 
-    ```
+  Create a new `GreetingSender` instance for each test.
 
-    Create a new `GreetingSender` instance for each test.
+  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L124-L129 hash=5e79ce67c4e5f54eee5b8d09ace39860 
+  ```
 
-    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L124-L129 hash=5e79ce67c4e5f54eee5b8d09ace39860 
-    ```
+  Calculate the message to be sent, the same way that `GreetingSender` does.
 
-    Calculate the message to be sent, the same way that `GreetingSender` does.
+  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L132-L132 hash=028411291cccc262557abde834549fc2 
+  ```
 
-    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L132-L132 hash=028411291cccc262557abde834549fc2 
-    ```
+  Out of the indexed topics, verify the first (destination chain) and second (address on the destination chain).
+  Ignore the third topic, the nonce, because it can vary.
+  Finally, verify that the unindexed data of the log entry (the sender address and the message) is correct.
 
-    Out of the indexed topics, verify the first (destination chain) and second (address on the destination chain).
-    Ignore the third topic, the nonce, because it can vary.
-    Finally, verify that the unindexed data of the log entry (the sender address and the message) is correct.
+  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L133-L133 hash=37203df9264e95e763befaf2e5dbbfab 
+  ```
 
-    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L133-L133 hash=37203df9264e95e763befaf2e5dbbfab 
-    ```
+  Emit the message we expect to see.
 
-    Emit the message we expect to see.
+  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L135-L135 hash=9322933b2f965ddc75bb8d3b2ab4c95d 
+  ```
 
-    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L135-L135 hash=9322933b2f965ddc75bb8d3b2ab4c95d 
-    ```
-
-    Call the code being tested, which should emit a similar log entry to the one we just emitted.
-
+  Call the code being tested, which should emit a similar log entry to the one we just emitted.
 </details>
