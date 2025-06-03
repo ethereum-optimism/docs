@@ -1,12 +1,13 @@
 #! /bin/sh
 
-rm -rf upgrade-erc20
-mkdir upgrade-erc20
-cd upgrade-erc20
+rm -rf upgrade-erc20 || { echo "Failed to remove directory"; exit 1; }
+mkdir upgrade-erc20 || { echo "Failed to create directory"; exit 1; }
+cd upgrade-erc20 || { echo "Failed to change directory"; exit 1; }
 
 if [ -z $1 ]
 then
   echo Supersim
+  # This is a well-known development private key – never use in production
   PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
   URL_CHAIN_A=http://localhost:9545
   URL_CHAIN_B=http://localhost:9546
