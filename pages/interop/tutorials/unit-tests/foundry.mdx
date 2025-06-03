@@ -1,0 +1,91 @@
+---
+title: Interop and unit tests using Foundry
+description: Learn how to write unit tests for interop when using Foundry
+lang: en-US
+content_type: tutorial
+topic: interop-tutorial-unit-tests-foundry
+personas:
+  - app-developer
+categories:
+  - protocol
+  - interoperability
+  - cross-chain-messaging
+  - tutorial
+  - testing
+  - foundry
+is_imported_content: 'false'
+---
+
+import { Callout, Steps } from 'nextra/components'
+import { InteropCallout } from '@/components/WipCallout'
+
+<InteropCallout />
+
+# Interop and unit tests using Foundry
+
+Most of parts of the contracts can be [tested normally](/app-developers/testing-apps).
+This tutorials teaches you how to verify that a message has been sent successfully, and how to fake receiving a message, the two functions that tie directly into interop.
+To show how this works, we test [the `Greeter` and `GreetingSender` contracts](/interop/tutorials/message-passing).
+
+## Setup
+
+The results of this step are similar to what the [message passing tutorial](/interop/tutorials/message-passing) would produce,
+
+This script creates a Foundry project (in `testing/forge`) and a Hardhat project (in `testing/hardhat`) with the necessary files.
+Execute it in a UNIX or Linux environment.
+
+```sh file=<rootDir>/public/tutorials/setup-for-testing.sh hash=a77f9926b61271c1895ad2c9527f9fd1 
+```
+
+## Test sending a message
+
+The easiest way to test sending a message is to see [the event emitted by `L2ToL2CrossDomainMessenger.sendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L160).
+
+To see this in action, run these commands:
+
+```
+cd testing/forge
+forge test GreetingSender --fork-url https://interop-alpha-0.optimism.io
+```
+
+The default [`anvil`](https://book.getfoundry.sh/anvil/overview) instance created by `forge test` does not contain the interop contracts, so we need to fork [a blockchain that does](/interop/tools/devnet).
+
+The test is implemented by `tests/GreetingSender.t.sol`.
+
+<details>
+
+    <summary>Explanation</summary>
+
+    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L109-L117 hash=e8c77299b01dd6f03d3e36d2e9d82608 
+    ```
+
+    The definition for the event we expect to see, [from the `L2ToL2CrossDomainMessenger` source code](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L160).
+
+    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L119-L121 hash=645c522fafccb282df37b7d3df27bd3f 
+    ```
+
+    Create a new `GreetingSender` instance for each test.
+
+    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L124-L129 hash=5e79ce67c4e5f54eee5b8d09ace39860 
+    ```
+
+    Calculate the message to be sent, the same way that `GreetingSender` does.
+
+    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L132-L132 hash=028411291cccc262557abde834549fc2 
+    ```
+
+    Out of the indexed topics, verify the first (destination chain) and second (address on the destination chain).
+    Ignore the third topic, the nonce, because it can vary.
+    Finally, verify that the unindexed data of the log entry (the sender address and the message) is correct.
+
+    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L133-L133 hash=37203df9264e95e763befaf2e5dbbfab 
+    ```
+
+    Emit the message we expect to see.
+
+    ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L135-L135 hash=9322933b2f965ddc75bb8d3b2ab4c95d 
+    ```
+
+    Call the code being tested, which should emit a similar log entry to the one we just emitted.
+
+</details>
