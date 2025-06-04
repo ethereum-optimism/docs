@@ -137,4 +137,76 @@ contract GreetingSenderTest is Test {
 }
 EOF
 
+cat > test/Greeter.t.sol <<EOF
+pragma solidity ^0.8.0;
+ 
+import { Test } from "forge-std/Test.sol";
 
+import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
+import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/src/L2/IL2ToL2CrossDomainMessenger.sol";
+
+import { Greeter } from "src/Greeter.sol";
+
+contract GreeterTest is Test {
+    uint256 constant fakeSourceChain = 901;
+    address constant fakeSender = address(0x0123456789012345678901234567890123456789);
+
+    event SetGreeting(
+        address indexed sender,     // msg.sender
+        string greeting
+    ); 
+ 
+    event CrossDomainSetGreeting(
+        address indexed sender,   // Sender on the other side
+        uint256 indexed chainId,  // ChainID of the other side
+        string greeting
+    );
+
+    Greeter greeter;
+
+    function setUp() public {
+        greeter = new Greeter();        
+    }
+
+    function prepareRemoteCall() private {
+        // Mock calls 
+        vm.mockCall(
+            Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER,
+            bytes(abi.encodePacked(IL2ToL2CrossDomainMessenger.crossDomainMessageSender.selector)),
+            bytes(abi.encode(fakeSender))
+        );
+        vm.mockCall(
+            Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER,
+            bytes(abi.encodePacked(IL2ToL2CrossDomainMessenger.crossDomainMessageSource.selector)),
+            bytes(abi.encode(fakeSourceChain))
+        );
+        vm.mockCall(
+            Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER,
+            bytes(abi.encodePacked(bytes4(keccak256("crossDomainMessageContext()")))),
+            bytes(abi.encode(fakeSender, fakeSourceChain))
+        );
+        vm.prank(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
+    }
+
+    function test_InteropSetGreeting() public {
+        string memory greeting = "Hello";
+
+        prepareRemoteCall();
+        vm.expectEmit(true, false, false, true);
+        emit SetGreeting(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER, greeting);
+        vm.expectEmit(true, true, false, true);                
+        emit CrossDomainSetGreeting(fakeSender, fakeSourceChain, greeting);
+
+        greeter.setGreeting(greeting);
+    }
+
+    function test_LocalSetGreeting() public {
+        string memory greeting = "Hello";
+
+        vm.expectEmit(true, false, false, true);
+        emit SetGreeting(address(this), greeting);
+
+        greeter.setGreeting(greeting);
+    }    
+}
+EOF
