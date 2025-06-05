@@ -66,7 +66,7 @@ Information is encapsulated in lower layer packets on the sending side and then 
 1.  The `op-node` component [looks for `TransactionDeposited` events on L1](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/op-node/rollup/derive/deposits.go#L13-L33).
     If it sees any such events, it [parses](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/op-node/rollup/derive/deposit_log.go) them.
 
-2.  Next, `op-node` [converts](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/op-node/rollup/derive/deposits.go#L35-L51) those `TransactionDeposited` events into [deposit transactions](https://specs.optimism.io/protocol/deposits.html?utm_source=op-docs&utm_medium=docs#user-deposited-transactions).
+2.  Next, `op-node` [converts](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/op-node/rollup/derive/deposits.go#L35-L51) those `TransactionDeposited` events into [deposit transactions](https://specs.optimism.io/protocol/deposits.html?utm_source=op-docs\&utm_medium=docs#user-deposited-transactions).
 
 3.  In most cases, user deposit transactions call the [`relayMessage`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol#L291-L413) function of [`L2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/62c7f3b05a70027b30054d4c8974f44000606fb7/packages/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol).
 
@@ -96,11 +96,12 @@ It is possible to replay a failed deposit, possibly with more gas.
 
 <Callout type="info">
   **L1 vs L2 Network Clarification**
-  
+
   This tutorial involves **two different networks**:
-  - **L1**: Ethereum Sepolia testnet (`https://sepolia.infura.io/v3/YOUR_KEY`)
-  - **L2**: OP Sepolia testnet (`https://sepolia.optimism.io`)
-  
+
+  *   **L1**: Ethereum Sepolia testnet (`https://sepolia.infura.io/v3/YOUR_KEY`)
+  *   **L2**: OP Sepolia testnet (`https://sepolia.optimism.io`)
+
   You'll send transactions on L1 that trigger actions on L2. Make sure you're using the correct RPC URLs for each step.
 </Callout>
 
@@ -153,15 +154,15 @@ To see how replays work, you can use [this contract on OP Sepolia](https://sepol
 5.  The next step is to find the hash of the failed relay. There are several ways to do this:
 
     **Method A: Using Etherscan Internal Transactions**
-    
+
     Look in [the internal transactions of the destination contract](https://sepolia-optimism.etherscan.io/address/0xEF60cF6C6D0C1c755be104843bb72CDa3D778630#internaltx), and select the latest one that appears as a failure. It should be a call to `L2CrossDomainMessenger` at address `0x420...007`.
 
     **Method B: Using Contract Events (if internal transactions aren't visible)**
-    
+
     If you can't see internal transactions on Etherscan, check the [L2CrossDomainMessenger contract events](https://sepolia-optimism.etherscan.io/address/0x4200000000000000000000000000000000000007#events) and look for `FailedRelayedMessage` events with your contract address.
 
     **Method C: Using cast to query failed messages**
-    
+
     ```sh
     # First, you need the message hash. You can derive it from the L1 transaction, or check events
     L2XDM_ADDRESS=0x4200000000000000000000000000000000000007
@@ -175,7 +176,7 @@ To see how replays work, you can use [this contract on OP Sepolia](https://sepol
 
     <Callout type="warning">
       **Wait for the failed relay transaction**
-      
+
       Make sure you wait for the deposit to be processed on L2 and fail before proceeding. This can take 2-5 minutes. You should see a failed transaction in one of the methods from step 5.
     </Callout>
 
