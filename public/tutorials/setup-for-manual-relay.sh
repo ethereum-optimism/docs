@@ -1,8 +1,8 @@
 #! /bin/sh
 
 rm -rf manual-relay
-mkdir manual-relay
-cd manual-relay
+mkdir -p manual-relay/onchain
+cd manual-relay/onchain
 
 PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
@@ -10,28 +10,20 @@ URL_CHAIN_A=http://localhost:9545
 URL_CHAIN_B=http://localhost:9546
 
 forge init
+cd lib
+npm install @eth-optimism/contracts-bedrock
+cd ..
+echo @eth-optimism/=lib/node_modules/@eth-optimism/ >> remappings.txt
+
 cat > src/Greeter.sol <<EOF
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
-import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";    
-
 contract Greeter {
-
-    IL2ToL2CrossDomainMessenger public immutable messenger =
-        IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
-
     string greeting;
 
     event SetGreeting(
         address indexed sender,     // msg.sender
-        string greeting
-    );
-
-    event CrossDomainSetGreeting(
-        address indexed sender,   // Sender on the other side
-        uint256 indexed chainId,  // ChainID of the other side
         string greeting
     );
 
@@ -42,12 +34,6 @@ contract Greeter {
     function setGreeting(string memory _greeting) public {
         greeting = _greeting;
         emit SetGreeting(msg.sender, _greeting);
-
-        if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
-            (address sender, uint256 chainId) =
-                messenger.crossDomainMessageContext();
-            emit CrossDomainSetGreeting(sender, chainId, _greeting);
-        }
     }
 }
 EOF
@@ -57,7 +43,7 @@ cat > src/GreetingSender.sol <<EOF
 pragma solidity ^0.8.0;
 
 import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
-import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol";
+import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/src/L2/IL2ToL2CrossDomainMessenger.sol";
 
 import { Greeter } from "src/Greeter.sol";
 
@@ -83,18 +69,13 @@ contract GreetingSender {
 }
 EOF
 
-cd lib
-npm install @eth-optimism/contracts-bedrock
-cd ..
-echo @eth-optimism/=lib/node_modules/@eth-optimism/ >> remappings.txt
-mkdir -p lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
-wget https://raw.githubusercontent.com/ethereum-optimism/optimism/refs/heads/develop/packages/contracts-bedrock/interfaces/L2/IL2ToL2CrossDomainMessenger.sol
-mv IL2ToL2CrossDomainMessenger.sol lib/node_modules/@eth-optimism/contracts-bedrock/interfaces/L2
 CHAIN_ID_B=`cast chain-id --rpc-url $URL_CHAIN_B`
 GREETER_B_ADDRESS=`forge create --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY Greeter --broadcast | awk '/Deployed to:/ {print $3}'`
 GREETER_A_ADDRESS=`forge create --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY --broadcast GreetingSender --constructor-args $GREETER_B_ADDRESS $CHAIN_ID_B | awk '/Deployed to:/ {print $3}'`
 
 echo Setup done
+
+cd ..
 
 cat > sendAndRelay.sh <<EOF
 #! /bin/sh
