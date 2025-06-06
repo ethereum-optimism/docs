@@ -210,3 +210,207 @@ contract GreeterTest is Test {
     }    
 }
 EOF
+
+cd ..
+mkdir hardhat
+cd hardhat
+npm init -y
+npm install --save-dev hardhat
+export HARDHAT_CREATE_JAVASCRIPT_PROJECT_WITH_DEFAULTS=1
+export HARDHAT_DISABLE_TELEMETRY_PROMPT=true
+npx hardhat init --yes
+cp ../forge/src/Greeter.sol contracts
+cat ../forge/src/GreetingSender.sol | sed 's/src\/Greeter.sol/contracts\/Greeter.sol/' > contracts/GreetingSender.sol
+find . -name 'Lock*' -exec rm {} \;
+npm install @eth-optimism/contracts-bedrock dotenv @eth-optimism/viem
+
+cat > hardhat.config.js <<EOF
+require("@nomicfoundation/hardhat-toolbox");
+
+/** @type import('hardhat/config').HardhatUserConfig */
+module.exports = {
+  solidity: "0.8.28",
+  networks: {
+    hardhat: {
+      forking: {
+        url: "https://interop-alpha-0.optimism.io",
+      },
+    },
+  },
+};
+EOF
+
+cat > test/GreetingSender.js <<EOF
+/* eslint-disable node/no-unsupported-es-syntax */
+const { expect } = require("chai")
+const { ethers } = require("hardhat")
+const { anyValue } = require(
+  "@nomicfoundation/hardhat-chai-matchers/withArgs"
+)
+const { contracts, l2ToL2CrossDomainMessengerAbi } = require("@eth-optimism/viem")
+
+describe("GreetingSender", function () {
+  const targetGreeter = "0x0123456789012345678901234567890123456789"
+  const targetChain = 902
+
+  const deployFixture = async () => {
+
+    const GreetingSender = await ethers.getContractFactory(
+      "GreetingSender"
+    )
+    const greetingSender = await GreetingSender.deploy(
+      targetGreeter,
+      targetChain
+    )
+    
+    const messenger = new ethers.Contract(
+      contracts.l2ToL2CrossDomainMessenger.address,
+      l2ToL2CrossDomainMessengerAbi,     
+      ethers.provider
+    );
+
+    return { greetingSender, messenger };
+  }
+
+  it("emits SentMessage with the right arguments", async () => {
+    const { greetingSender, messenger } = await deployFixture()
+
+    const greeting = "Hello"
+
+    // build the exact calldata the test expects
+    const iface = new ethers.Interface([
+      "function setGreeting(string)",
+    ])
+    const calldata = iface.encodeFunctionData("setGreeting", [
+      greeting,
+    ])
+
+    await expect(greetingSender.setGreeting(greeting))
+      .to.emit(messenger, "SentMessage")
+      .withArgs(
+        targetChain,
+        targetGreeter,
+        anyValue,
+        greetingSender.target,
+        calldata
+      )
+  })
+})
+EOF
+
+cat > test/Greeter.js <<EOF
+const { expect } = require("chai");
+const { ethers, network } = require("hardhat");
+const { contracts } = require("@eth-optimism/viem")
+
+describe("Greeter", () => {
+  const fakeSender = "0x0123456789012345678901234567890123456789";
+  const fakeSourceChain = 901;
+
+  async function deployFixture() {
+
+    const MockMessenger = await ethers.getContractFactory("MockL2ToL2Messenger");
+    const mock = await MockMessenger.deploy(fakeSender, fakeSourceChain);
+
+    // overwrite predeploy with mock code
+    await network.provider.send("hardhat_setCode", [
+      contracts.l2ToL2CrossDomainMessenger.address,
+      await ethers.provider.getCode(mock.target),
+    ]);
+
+    const Greeter = await ethers.getContractFactory("Greeter");
+    const greeter = await Greeter.deploy();
+
+    const messenger = new ethers.Contract(
+      contracts.l2ToL2CrossDomainMessenger.address,
+      MockMessenger.interface,
+      ethers.provider
+    );
+
+    return { greeter, messenger, mockMessenger: mock };
+  }
+
+  it("emits SetGreeting with the right arguments when called locally", async () => {
+    const { greeter } = await deployFixture();
+    const greeting = "Hello";
+
+    await expect(greeter.setGreeting(greeting))
+      .to.emit(greeter, "SetGreeting")
+      .withArgs((await ethers.getSigners())[0].address, greeting);
+  });
+
+  it("emits SetGreeting and CrossDomainSetGreeting with the right arguments when called remotely", 
+    async () => {
+        const { greeter } = await deployFixture();
+        const greeting = "Hello";
+
+        const impersonatedMessenger = 
+            await ethers.getImpersonatedSigner(contracts.l2ToL2CrossDomainMessenger.address);
+        const tx = await (await ethers.getSigners())[0].sendTransaction({
+            to: contracts.l2ToL2CrossDomainMessenger.address,
+            value: ethers.parseEther("1.0")
+        });
+
+
+        await expect(
+        greeter.connect(impersonatedMessenger).setGreeting(greeting)
+        )
+        .to.emit(greeter, "SetGreeting")
+        .withArgs(contracts.l2ToL2CrossDomainMessenger.address, greeting);
+
+        await expect(
+        greeter.connect(impersonatedMessenger).setGreeting(greeting)
+        )
+        .to.emit(greeter, "CrossDomainSetGreeting")
+        .withArgs(fakeSender, fakeSourceChain, greeting);
+    });
+});
+EOF
+
+cat > contracts/MockL2ToL2Messenger.sol <<EOF
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract MockL2ToL2Messenger {
+    address immutable public fakeSender;
+    uint256 immutable public fakeSource;
+
+    constructor(address _fakeSender, uint256 _fakeSource) {
+        fakeSender = _fakeSender;
+        fakeSource = _fakeSource;
+    }
+
+    function crossDomainMessageSender() external view returns (address) {
+        return fakeSender;
+    }
+
+    function crossDomainMessageSource() external view returns (uint256) {
+        return fakeSource;
+    }
+
+    function crossDomainMessageContext() external view returns (address, uint256) {
+        return (fakeSender, fakeSource);
+    }
+
+    // Taken from https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol
+    event SentMessage(
+        uint256 indexed destination, address indexed target, uint256 indexed messageNonce, address sender, bytes message
+    );
+
+    function sendMessage(
+        uint256 _destination,
+        address _target,
+        bytes calldata _message
+    )
+        external
+    {
+        uint256 nonce = 0xdead60a7;   // nonoce
+        emit SentMessage(_destination, _target, nonce, msg.sender, _message);
+    }
+
+    // We need to receive ETH to be able to call Greeter.
+    receive() external payable {
+        // Accept ETH. No logic needed.
+    }       
+}
+EOF
