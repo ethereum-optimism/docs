@@ -1,7 +1,7 @@
 ---
 title: Data glossary
 description: >-
-  This glossary explains various data terms.
+  This glossary explains various data terms and metrics used across the Superchain ecosystem.
 lang: en-US
 content_type: guide
 topic: data-glossary
@@ -12,11 +12,13 @@ categories:
 is_imported_content: 'false'
 ---
 
+import { Callout } from 'nextra/components'
+
 # Data glossary
 
-This glossary is a living document and will be updated over time as new metrics emerge or definitions evolve.
+This glossary is a living document that will be updated over time as new metrics emerge or definitions evolve. Each metric includes its definition, calculation method, and importance to the ecosystem.
 
-## Measure Demand
+## Measuring demand
 
 ### Transaction Fees Paid
 
@@ -24,36 +26,65 @@ This glossary is a living document and will be updated over time as new metrics 
 
 **Definition:** The total fees paid to execute a transaction onchain. This includes both the traditional gas fees required for inclusion onchain and additional fees paid to transaction execution services (e.g., Jito, Flashbots, Timeboost).
 
-**Calculation:** Gas Fees + Out-of-Protocol Tips (e.g., Jito, Flashbots, Timeboost)
+**Calculation:**
 
-*   Out-of-Protocol Tips can be sourced from Defillama's MEV category
+```
+REV = Gas Fees + Out-Of-Protocol Tips
+```
+
+<Callout type="info">
+Out-Of-Protocol tips can be sourced from DefiLlama's MEV category*
+</Callout>
 
 **Why it matters:**
-
-*   REV is a topline metric that "measures the monetary demand to transact onchain" (Blockworks).
-*   It's used as a proxy for users' willingness to pay, capturing all transaction fees to better reflect real demand (excludes app-level fees like DEX swap costs).
+REV serves as a topline metric that "measures the monetary demand to transact onchain" (Blockworks). It acts as a proxy for users' willingness to pay, capturing all transaction fees to better reflect real demand while excluding app-level fees like DEX swap costs.
 
 ### Revenue
 
 **Metric:** Estimated Optimism Collective Revenue (Collective Revenue)
 
-**Definition:** The amount of ETH expected to be earned by the Optimism Collective from revenue sharing.
+**Definition:** The amount of ETH expected to be earned by the Optimism Collective from revenue sharing across the Superchain.
 
-**Calculation:** For each chain, take the greater of (a) 2.5% of Chain Revenue or (b) 15% of Net Onchain Profit. OP Mainnet contributes 100% of Net Onchain Profit.
+**Calculation:**
+For each chain, the collective revenue is the greater of:
+
+```
+max(2.5% × Chain Revenue, 15% × Net Onchain Profit)
+```
+*Special case: OP Mainnet contributes 100% of net Onchain profit*
 
 **Key Components:**
 
-*   **Net Onchain Profit:** Chain Revenue - L1 Gas Fees
-*   **Chain Revenue:** Sum of the L1 Data Fee + L2 Base Fee + L2 Priority Fee + L2 Operator Fee (Also includes any additional fee types added in the future.)
-*   *L1 Gas Fees:*\* Total gas fees spent by the chain on L1 in transaction batches (including blob costs) and state output submissions or dispute games.
-*   **Transaction Batches:** All transactions where the transaction from address is the `batcherHash` address and the transaction to address is the `batchInbox` as defined in the chains' `SystemConfigProxy` contract.
-*   **State Output Submissions or Dispute Games:** All transactions where the transaction from address is the `Proposer` and the transaction to address is either the `outputOracleProxy` or the `disputeGameFactoryProxy` as defined in the chains' `SystemConfigProxy` contract.
-*   Each chain's `SystemConfigProxy` contract can be found in the Superchain Registry.
+*   **Net Onchain Profit:**
+    ```
+    Net Onchain Profit = Chain Revenue - L1 Gas Fees
+    ```
+
+*   **Chain Revenue:**
+    ```
+    Chain Revenue = L1 Data Fee + L2 Base Fee + L2 Priority Fee + L2 Operator Fee
+    ```
+    *(Includes any additional fee types added in the future)*
+
+*   **L1 Gas Fees:** Total gas fees spent by the chain on L1, including:
+    *   Transaction batches (including blob costs)
+    *   State output submissions or dispute games
+
+**Transaction classification:**
+
+*   **Transaction batches:** Transactions where:
+    *   `from` address = `batcherHash` address
+    *   `to` address = `batchInbox` address
+    *   Both are defined in the chain's [`SystemConfigProxy`](/stack/smart-contracts/smart-contracts#systemconfig) contract
+
+*   **State output submissions/dispute games:** Transactions where:
+    *   `from` address = `Proposer`
+    *   `to` address = `outputOracleProxy` OR `disputeGameFactoryProxy`
+    *   Both are defined in the chain's `SystemConfigProxy` contract
+        *Each chain's `SystemConfigProxy` contract can be found in the [Superchain Registry](/superchain/superchain-registry)*
 
 **Why it matters:**
-
-*   This is what the Optimism Collective earns by operating the Superchain, which can be directed by governance to support ecosystem growth.
-*   See How (and why) the Superchain drives fees to the Optimism Collective (Optimism blog, Aug 2024)
+This represents what the Optimism Collective earns by operating the Superchain, which can be directed by governance to support ecosystem growth. See [How (and why) the Superchain drives fees to the Optimism Collective](https://optimism.mirror.xyz/ZfAOqiAH8-xjpgfX_PdQBa1dG4QRgKkJkYe08GvGJR8) (Optimism blog, Aug 2024).
 
 ## Onchain Signals
 
@@ -61,52 +92,97 @@ This glossary is a living document and will be updated over time as new metrics 
 
 **Metric:** Total Value Locked (TVL)
 
-**Definition:** "Value of all coins held in smart contracts of the protocol" (Defillama).
+**Definition:** The total USD value of all assets held in smart contracts across the protocol, as defined by DefiLlama.
 
-**Calculation:** The sum of all USD value of assets locked in applications, as reported by DefiLlama.
+**Calculation:**
 
-*   TVL can be priced in USD or a crypto asset like ETH, but both are subject to price volatility. USD is often used because it's easier to interpret and consistent across the broader crypto ecosystem.
+```
+TVL = Σ (USD value of assets locked)
+```
+<Callout type="info">
+TVL can be priced in USD or a crypto asset like ETH, but both are subject to price volatility. USD is often used because it's easier to interpret and consistent across the broader crypto ecosystem.
+</Callout>
 
-**Why it Matters:** TVL represents the supply side of onchain economic activity for use in protocols such as Decentralized Exchanges (DEXs) and lending markets. Strong TVL in the right places may enable greater onchain demand.
+**Why it matters:**
+TVL represents the supply side of onchain economic activity, particularly for protocols such as Decentralized Exchanges (DEXs) and lending markets. Strong TVL in strategic locations enables greater onchain demand.
 
-#### How to Measure Growth: Net TVL Flows
+#### Measuring growth: Net TVL Flows
 
-Because TVL is influenced by market fluctuations, it can be misleading when trying to measure true growth or user behavior. Net TVL Flows can adjust for this by tracking the net change in token balances, valued at current prices.
+Since TVL is influenced by market fluctuations, it can be misleading for measuring true growth. Net TVL Flows adjusts for this by tracking net changes in token balances at current prices.
 
-**Calculation:** ( `# of Tokens on Day N` - `# of Tokens on Day 0` ) \* `Price of Tokens on Day N`
+**Calculation:**
 
-**Example:** If an app has 100,000 ETH locked on Day 0 when ETH/USD is $2,000, and 90,000 ETH locked at $3,000 on Day N:
+```
+Net TVL Flows = (tokens on day N - tokens on day 0) × price on day N
+```
 
-*   Net TVL Flows = −10,000 ETH × $3,000 = $30 million in net outflows
-*   Naive TVL change would suggest growth: $200 million → $270 million
+**Example:**
 
-## Network Usage & Infrastructure
+*   Day 0: 100,000 ETH locked at $2,000/ETH = $200M TVL
+*   Day N: 90,000 ETH locked at $3,000/ETH = $270M TVL
+
+**Analysis:**
+
+*   Net TVL Flows = −10,000 ETH × $3,000 = **$30M net outflows**
+*   Naive TVL change would suggest growth: $200M → $270M
+
+## Network usage & infrastructure
+
+### Computational demand
 
 **Metric:** Gas Used per Second (gas/s)
 
-**Definition:** "Gas refers to the unit that measures the amount of computational effort required to execute specific operations on Ethereum" (ethereum.org). Gas Used is tracked as an average rate per second for simplicity.
+**Definition:** Gas refers to the unit that measures the amount of computational effort required to execute specific operations on [Ethereum](https://ethereum.org/en/developers/docs/gas/#what-is-gas). 
+Gas Used is tracked as an average rate per second for simplicity.
 
-**Why it Matters:** Gas, sometimes referred to as blockspace, is the limited resource that blockchains provide. Gas used shows how much of that resource is actually being consumed.
+**Why it matters:**
+Gas (also called blockspace) is the limited resource that blockchains provide. Gas usage shows how much of that resource is actually being consumed, indicating network utilization and demand.
 
-**Caution:** Gas is only comparable across chains that use Ethereum-equivalent gas units.
+<Callout type="info">
+Gas is only comparable across chains that use Ethereum-equivalent gas units.
+</Callout>
 
 ### User Experience (UX)
 
 **Metric:** Median Transaction Fee (USD)
 
-**Definition:** The median gas fee paid to submit a transaction, expressed in USD for simplicity and easier comparison across ecosystems.
+**Definition:** The median gas fee paid to submit a transaction, expressed in USD for simplicity and cross-ecosystem comparison.
 
-**Calculation:** Median of all transaction fees over a period of time, marked at the USD price at the time of the transaction.
+**Calculation:**
 
-**Why it Matters:** This metric serves as a proxy for the cost to transact. Lower median fees enable broader usage by reducing friction, lowering breakeven costs, and unlocking use cases that would otherwise be cost-prohibitive.
+```
+Median Fee = median(All transaction fees over period)
+```
 
-## Market Share
+*Converted to USD at transaction time*
 
-**Definition:** The Superchain's share of a broader market segment for any measure (e.g., L2s, total crypto).
+**Why it matters:**
+This metric serves as a proxy for transaction cost accessibility. Lower median fees:
 
-**Calculation:** Superchain Metric Value / Total Market Metric Value
+*   Enable broader usage by reducing friction
+*   Lower breakeven costs for applications
+*   Unlock use cases that would otherwise be cost-prohibitive
 
-**Why it Matters:** Market share helps isolate whether growth is driven by the Superchain itself, or is simply part of a broader market trend. A rising share signals outperformance, while a declining share suggests that other ecosystems are growing faster.
+## Market position
+
+### Market share
+
+**Definition:** The Superchain's share of any given metric within a broader market segment (e.g., L2 ecosystem, total crypto market).
+
+**Calculation:**
+
+```
+Market share = (Superchain Metric Value / Total Market Metric Value)
+```
+
+**Why it matters:**
+Market share helps isolate whether growth is driven by Superchain-specific factors or broader market trends:
+
+*   **Rising share** → Superchain is outperforming the market
+*   **Declining share** → Other ecosystems are growing faster
+*   **Stable share** → Growth is proportional to market trends
+
+## Metrics summary
 
 | Metric                    | What It Measures                                                 | Why It Matters                                                    |
 | ------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------- |
