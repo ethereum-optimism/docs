@@ -351,15 +351,14 @@ describe("Greeter", () => {
             value: ethers.parseEther("1.0")
         });
 
-
         await expect(
-        greeter.connect(impersonatedMessenger).setGreeting(greeting)
+            greeter.connect(impersonatedMessenger).setGreeting(greeting)
         )
         .to.emit(greeter, "SetGreeting")
         .withArgs(contracts.l2ToL2CrossDomainMessenger.address, greeting);
 
         await expect(
-        greeter.connect(impersonatedMessenger).setGreeting(greeting)
+            greeter.connect(impersonatedMessenger).setGreeting(greeting)
         )
         .to.emit(greeter, "CrossDomainSetGreeting")
         .withArgs(fakeSender, fakeSourceChain, greeting);

@@ -34,7 +34,7 @@ Execute it in a UNIX or Linux environment.
 
 The results of this step are similar to what the [message passing tutorial](/interop/tutorials/message-passing) produces.
 
-```sh file=<rootDir>/public/tutorials/setup-for-testing.sh hash=1a87986e9f78d6d233d9f1ebb4022c7c 
+```sh file=<rootDir>/public/tutorials/setup-for-testing.sh hash=4d0fa175564131911ab6a12fb110294c 
 ```
 
 ## Test sending a message
@@ -43,7 +43,7 @@ The easiest way to test sending a message is to see [the event emitted by `L2ToL
 
 To see this in action, run these commands:
 
-```
+```sh
 cd testing/forge
 forge test GreetingSender --fork-url https://interop-alpha-0.optimism.io
 ```
@@ -55,34 +55,34 @@ The test is implemented by `tests/GreetingSender.t.sol`.
 <details>
   <summary>Explanation</summary>
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L109-L117 hash=e8c77299b01dd6f03d3e36d2e9d82608 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L109-L117 hash=e8c77299b01dd6f03d3e36d2e9d82608 
   ```
 
   The definition for the event we expect to see, [from the `L2ToL2CrossDomainMessenger` source code](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L160).
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L119-L121 hash=645c522fafccb282df37b7d3df27bd3f 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L119-L121 hash=645c522fafccb282df37b7d3df27bd3f 
   ```
 
   Create a new `GreetingSender` instance for each test.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L124-L129 hash=5e79ce67c4e5f54eee5b8d09ace39860 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L124-L129 hash=5e79ce67c4e5f54eee5b8d09ace39860 
   ```
 
   Calculate the message to be sent, the same way that `GreetingSender` does.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L132-L132 hash=028411291cccc262557abde834549fc2 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L132-L132 hash=028411291cccc262557abde834549fc2 
   ```
 
   Out of the indexed topics, verify the first (destination chain) and second (address on the destination chain).
   Ignore the third topic, the nonce, because it can vary.
   Finally, verify that the unindexed data of the log entry (the sender address and the message) is correct.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L133-L133 hash=37203df9264e95e763befaf2e5dbbfab 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L133-L133 hash=37203df9264e95e763befaf2e5dbbfab 
   ```
 
   Emit the message we expect to see.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L135-L135 hash=9322933b2f965ddc75bb8d3b2ab4c95d 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L135-L135 hash=9322933b2f965ddc75bb8d3b2ab4c95d 
   ```
 
   Call the code being tested, which should emit a similar log entry to the one we just emitted.
@@ -110,33 +110,39 @@ The test is implemented by `tests/Greeter.t.sol`.
 <details>
   <summary>Explanation</summary>
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L171 hash=d9bb7b8ca88e8856bd86c256934a0b0b 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L171 hash=d9bb7b8ca88e8856bd86c256934a0b0b 
   ```
 
   This function sets up the environment for a pretend interop call.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L172-L182 hash=65aae51c8573ecb296b942c7073a3379 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L172-L182 hash=65aae51c8573ecb296b942c7073a3379 
   ```
 
   Use [`vm.mockCall`](https://book.getfoundry.sh/reference/cheatcodes/mock-call) to specify the responses to calls to `L2ToL2CrossDomainMessenger`.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L183-L187 hash=478229c219493adbbfea088cf266dec5 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L183-L187 hash=478229c219493adbbfea088cf266dec5 
   ```
 
   At writing `crossDomainMessageContext` is not available in the [contracts npm package](https://www.npmjs.com/package/@eth-optimism/contracts-bedrock), so we calculate the selector directly using `bytes4(keccak256("crossDomainMessageContext()"))`.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L188-L189 hash=18498ce1031cf749a13f6207d0828ca7 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L188-L189 hash=18498ce1031cf749a13f6207d0828ca7 
   ```
 
   Use [`vm.prank`](https://book.getfoundry.sh/reference/cheatcodes/prank) to make it appear the tested code is called by `L2ToL2CrossDomainMessenger`.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L191-L201 hash=035afa3348edfa18a0be06b9f9991c38 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L191-L201 hash=035afa3348edfa18a0be06b9f9991c38 
   ```
 
   Test how `Greeter` acts when the greeting is set from another chain.
 
-  ```sh file=<rootDir>/public/tutorials/setup-for-testing.sh#L203-L210 hash=ea83b0fcf27566b5ae9221d1091bfc6b 
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L203-L210 hash=ea83b0fcf27566b5ae9221d1091bfc6b 
   ```
 
   Test how `Greeter` acts when the greeting is set from this chain.
 </details>
+
+
+## Next steps
+
+*   Write a revolutionary app that uses multiple blockchains within the Superchain.
+*   Write tests to make sure it works correctly.

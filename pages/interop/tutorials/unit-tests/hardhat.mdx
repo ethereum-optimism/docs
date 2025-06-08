@@ -34,5 +34,156 @@ Execute it in a UNIX or Linux environment.
 
 The results of this step are similar to what the [message passing tutorial](/interop/tutorials/message-passing) produces.
 
-```sh file=<rootDir>/public/tutorials/setup-for-testing.sh hash=1a87986e9f78d6d233d9f1ebb4022c7c 
+```sh file=<rootDir>/public/tutorials/setup-for-testing.sh hash=4d0fa175564131911ab6a12fb110294c 
 ```
+
+## Test sending a message
+
+The easiest way to test sending a message is to see [the event emitted by `L2ToL2CrossDomainMessenger.sendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L160).
+
+To see this in action, run these commands:
+
+```sh
+cd testing/hardhat
+npx hardhat test test/GreetingSender.js
+```
+
+Of course, Hardhat does not include the interop contracts by default. 
+To have `L2ToL2CrossDomainMessenger.sendMessage` we fork [a blockchain that does have it](/interop/tools/devnet).
+This is specified in `hardhat.config.js`.
+
+The test is implemented by `test/GreetingSender.js`.
+
+<details>
+  <summary>Explanation</summary>
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L258-L264 hash=3f669191f745ca77f1186d5d6b8dd062 
+  ```
+
+  Deploy a `GreetingSender`.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L266-L270 hash=40785947670a88582c43f31e37d7cb28 
+  ```
+
+  Create a contract object for `L2ToL2CrossDomainMessenger`.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L280-L286 hash=80f81c9dafbea8a958f0bfacb12e9389 
+  ```
+
+  Calculate the calldata that will be sent by `L2ToL2CrossDomainMessenger`.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L288 hash=ea3c2728d499ef1536178d53fdb5497a 
+  ```
+
+  The operation we're testing, `greetingSender.setGreeting(greeting)`.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L289 hash=76eeeefe7b7605474ab8e43105e7dc0d 
+  ```
+
+  The expected result, to have the `messenger` contract emit a `SentMessage` log entry.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L290-L296 hash=14bf71dc909944de148fda7bcc4d0f2d 
+  ```
+
+  The parameters in the log entry.
+  We use `anyValue` for the nonce because we do not know in advance what value it would be.
+
+</details>
+
+## Test receiving a message
+
+To simulate receiving a message, we need to ensure two conditions are fulfilled:
+
+*   The tested code is called by [`L2ToL2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol).
+*   The tested code can receive additional information through simulations of:
+    *   [`L2ToL2CrossDomainMessenger.crossDomainMessageSender`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L102-L108)
+    *   [`L2ToL2CrossDomainMessenger.crossDomainMessageSource`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L110-L116)
+    *   [`L2ToL2CrossDomainMessenger.crossDomainMessageContext`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L118-L126)
+
+To see this in action, run these commands:
+
+```
+cd testing/hardhat
+npx hardhat test test/Greeter.js
+```
+
+This test is implemented by two files, `contracts/MockL2ToL2Messenger.sol` which replaces `L2ToL2CrossDomainMessenger` with a contract we control, and `test/Greeter.js` which actually has the tests.
+
+<details>
+  <summary>Explanation of `contracts/MockL2ToL2Messenger.sol`</summary>
+
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L374-L380 hash=870b143463550d8f0915a4db9d584cea 
+  ```
+
+  When the tested code receive a message, these are the source chain and address where it originates.
+
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L382-L392 hash=7f9cf709fa17ce391ec40728267b82a0 
+  ```
+
+  These are the three functions we need to implement for tested code, such as `Greeter`, to call.
+
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L394-L408 hash=13b29fd8bbcccfc6c7a5201f5d316d0a 
+  ```
+
+  Because we are replacing the `L2ToL2CrossDomainMessenger` with this contract, and the orer in which tests are executed is not deterministic, we need this contract to work for the `GreetingSender` test.
+  The code here is copied from [`L2ToL2CrossDomainMessenger.sendMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/L2ToL2CrossDomainMessenger.sol#L128-L161), with the irrelevant parts removed.
+
+  ```solidity file=<rootDir>/public/tutorials/setup-for-testing.sh#L410-L413 hash=0797417fc01fcc3a27511f55729e1cbe 
+  ```
+
+  The interop message `Greeter` gets has to come from the `L2ToL2CrossDomainMessenger` address. 
+  We can either send a transaction into `MockL2ToL2Messenger` that then calls `Greeter`, or give the `L2ToL2CrossDomainMessenger` address some ETH and send the transaction directly from it.
+  This function enables us to give the contract ETH.
+
+</details>
+
+<details>
+  <summary>Explanation of `test/Greeter.js`</summary>
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L310 hash=6fd176fc44208d2f92f0210015c8e806 
+  ```
+
+  This function deploys the fixtures we need to run the tests.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L312-L319 hash=7d218ce8fead9bc8412e79303d026c16 
+  ```
+
+  This is the code that first deploys `MockL2ToL2Messenger` and then tells Hardhat to direct calls to the `L2ToL2CrossDomainMessenger` contract to it instead.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L321-L322 hash=b6df4166a44f7b5f006d269f97a4e34a 
+  ```
+
+  Deploy a `Greeter` to test.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L324-L328 hash=ee7023cfaf1b9672914aa77b75e77285 
+  ```
+
+  Create a contract object for `L2ToL2CrossDomainMessenger`.  
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L334-L340 hash=d44100c903a4fd42aedadce81455226a 
+  ```
+
+  Run the test for local messages.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L347-L352 hash=b37199ac43cee36514ab508d763049f8 
+  ```        
+
+  Create an object for `MockL2ToL2Messenger` and give it some ETH to be able to send transactions.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L354-L358 hash=7ae6ae561d95426670ea1d0311bc9711 
+  ```
+
+  Test that when receiving an interop message, `Greeter` still emits `SetGreeting` correctly.
+
+  ```js file=<rootDir>/public/tutorials/setup-for-testing.sh#L360-L364 hash=e0b49ce1ca70cc58378abcfba8d1d2ca 
+  ```
+
+  Test that when receiving an interop, `Greeter` also emits `CrossDomainSetGreeting`.
+
+</details>
+
+
+## Next steps
+
+*   Write a revolutionary app that uses multiple blockchains within the Superchain.
+*   Write tests to make sure it works correctly.
