@@ -106,7 +106,7 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
   There are already attestations in the production chains.
   However, that may not be the case in the devnets, and it is definitely not the case in the Supersim instance you just started.
 
-  So, to begin, we send an attestation to one of the chains.
+  To begin, send an attestation to one of the chains.
 
   1.  Create a new JavaScript project.
 
@@ -153,7 +153,8 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
         ```js file=<rootDir>/public/tutorials/attest.mjs#L92-L94 hash=1452cf7f6e9e00d7b3cd3560ca355bd8
         ```
 
-        Here we send the attestation transaction created by the EAS SDK ourselves (using viem's [`sendRawTransaction`](https://viem.sh/docs/actions/wallet/sendRawTransaction)), so we'll have the transaction hash.
+        Send the attestation transaction created by the EAS SDK manually (using viem's [`sendRawTransaction`(https://viem.sh/docs/actions/wallet/sendRawTransaction)) to obtain the transaction hash.
+        Here we send the attestation transaction created by the EAS SDK ourselves (using viem's [`sendRawTransaction`]), so we'll have the transaction hash.
       </details>
 
   3.  Run the attestation program.
@@ -168,7 +169,7 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
   ### Offchain verification
 
   The next step is to call `CrossL2Inbox.verifyMessage`.
-  For testing purposes, we'll start by calling it offchain.
+  For testing purposes, start by calling it offchain.
 
   1.  Create a file, `verify-attestation.mjs`.
 
@@ -211,7 +212,7 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
 
         Wait for the transaction receipt for the executing message.
         The timeout is necessary because if the executing message is valid, but the log entry has not been seen yet, the sequencer does not put the transaction with the message into a block.
-        We need to distinguish between this situation and the situation where the log entry does not exist.
+        The timeout distinguishes between a valid executing message pending inclusion and a non-existent log entry.
 
         ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L86-L91 hash=e870ee89daa5f2a31b0adc6a97f670a9 
         ```
