@@ -71,28 +71,12 @@ Here's a production-ready configuration template for your proposer:
 
 | Parameter              | Recommended Value | Description                                            |
 | ---------------------- | ----------------- | ------------------------------------------------------ |
-| `poll-interval`        | `12s`             | How frequently to check for new L2 blocks              |
+| `poll-interval`        | `20s`             | How frequently to check for new L2 blocks              |
 | `proposal-interval`    | `3600s` (1 hour)  | Interval between output proposals                      |
-| `num-confirmations`    | `10`              | L1 confirmations to wait before considering a tx final |
-| `resubmission-timeout` | `48s`             | Time before resubmitting a failed transaction          |
-| `fee-limit-multiplier` | `5`               | Maximum fee bump multiplier for stuck transactions     |
+| `num-confirmations`    | `1`               | L1 confirmations to wait before considering a tx final |
+| `resubmission-timeout` | `30s`             | Time before resubmitting a failed transaction          |
+| `allow-non-finalized`  | `false`           | Only propose from finalized L1 blocks (safer)          |
 
-### Network and connectivity
-
-| Parameter                         | Recommended Value | Description                                   |
-| --------------------------------- | ----------------- | --------------------------------------------- |
-| `network-timeout`                 | `10s`             | Timeout for network operations                |
-| `active-sequencer-check-duration` | `2m0s`            | Frequency to check active sequencer           |
-| `allow-non-finalized`             | `false`           | Only propose from finalized L1 blocks (safer) |
-
-### Transaction management
-
-| Parameter                        | Recommended Value | Description                              |
-| -------------------------------- | ----------------- | ---------------------------------------- |
-| `txmgr.min-basefee`              | `1` (gwei)        | Minimum base fee to assume               |
-| `txmgr.min-tip-cap`              | `1` (gwei)        | Minimum tip cap for transactions         |
-| `txmgr.fee-limit-threshold`      | `100` (gwei)      | Fee threshold for capping bumps          |
-| `safe-abort-nonce-too-low-count` | `3`               | Retries before giving up on nonce issues |
 
 ## Step-by-step setup
 
@@ -153,7 +137,7 @@ Configure and start your proposer with fault proof mode:
 
 ```bash
 ./bin/op-proposer \
-  --poll-interval=12s \
+  --poll-interval=20s \
   --rpc.port=8560 \
   --rpc.enable-admin \
   --rollup-rpc=$ROLLUP_RPC_URL \
@@ -162,9 +146,8 @@ Configure and start your proposer with fault proof mode:
   --game-factory-address=$GAME_FACTORY_ADDRESS \
   --game-type=0 \
   --proposal-interval=3600s \
-  --num-confirmations=10 \
-  --resubmission-timeout=48s \
-  --fee-limit-multiplier=5 \
+  --num-confirmations=1 \
+  --resubmission-timeout=30s \
   --metrics.enabled=true \
   --metrics.port=7300 \
   --log.level=INFO
