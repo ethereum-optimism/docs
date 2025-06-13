@@ -438,7 +438,7 @@ Create `scripts/start-op-geth.sh`:
 source .env
 
 # Path to the op-geth binary we built
-../op-geth/build/bin/geth \
+./data/op-geth/bin/op-geth \
   --datadir=$DATA_DIR/op-geth \
   --http \
   --http.addr=0.0.0.0 \
@@ -469,7 +469,7 @@ Create `scripts/start-op-node.sh`:
 source .env
 
 # Path to the op-node binary we built
-../optimism/op-node/bin/op-node \
+./data/op-node/bin/op-node \
   --l1=$L1_RPC_URL \
   --l1.beacon=$L1_BEACON_URL \
   --l2=http://localhost:$OP_GETH_AUTH_PORT \
@@ -528,49 +528,6 @@ curl -X POST http://localhost:8547 \
   -d '{"method":"admin_startSequencer","params":[],"id":1,"jsonrpc":"2.0"}'
 ```
 
-## Verification and health checks
-
-### 1. Check node status
-
-```bash
-# Check op-geth sync status
-curl -X POST http://localhost:8545 \
-  -H "Content-Type: application/json" \
-  -d '{"method":"eth_syncing","params":[],"id":1,"jsonrpc":"2.0"}'
-
-# Check current block number
-curl -X POST http://localhost:8545 \
-  -H "Content-Type: application/json" \
-  -d '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}'
-```
-
-### 2. Monitor P2P connectivity
-
-```bash
-# Check peer count
-curl -X POST http://localhost:8545 \
-  -H "Content-Type: application/json" \
-  -d '{"method":"net_peerCount","params":[],"id":1,"jsonrpc":"2.0"}'
-```
-
-### 3. Verify sequencer status
-
-```bash
-# Check if sequencer is active
-curl -X POST http://localhost:8547 \
-  -H "Content-Type: application/json" \
-  -d '{"method":"optimism_sequencerActive","params":[],"id":1,"jsonrpc":"2.0"}'
-```
-
-## When you'll need additional components
-
-This guide covers spinning up the core sequencer (op-node + op-geth).
-For a complete, production-ready chain, you'll eventually need:
-
-*   **op-batcher**: Submits transaction batches to L1 for data availability
-*   **op-proposer**: Submits state root proposals to L1 for dispute resolution
-
-These services can be added after your sequencer is running and creating blocks.
 
 ## Next steps(TODO: Update this after other pages have been merged)
 
