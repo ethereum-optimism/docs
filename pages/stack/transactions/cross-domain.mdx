@@ -34,16 +34,16 @@ Cross-domain communication in the OP Stack involves moving assets and messages b
 Depositing assets from L1 to L2 follows a structured process that ensures funds are securely transferred and credited to the user's L2 account. The steps are as follows:
 
 1.  **User Initiation (L1 Standard Bridge):**
-  The user initiates a deposit by sending assets (e.g., ETH or tokens) to the L1 Standard Bridge contract. This contract receives the assets and prepares a message to relay to L2.
+    The user initiates a deposit by sending assets (e.g., ETH or tokens) to the L1 Standard Bridge contract. This contract receives the assets and prepares a message to relay to L2.
 
 2.  **Message Relaying (L1 CrossDomain Messenger):**
-  The L1 Standard Bridge sends a message to the L1 CrossDomain Messenger, which is responsible for handling inter-layer communication. The messenger emits a `TransactionDeposited` event to signal the start of the deposit process.
+    The L1 Standard Bridge sends a message to the L1 CrossDomain Messenger, which is responsible for handling inter-layer communication. The messenger emits a `TransactionDeposited` event to signal the start of the deposit process.
 
 3.  **Processing on L2 (OptimismPortal):**
-  The message is received by the OptimismPortal. Here, the deposited assets are held securely until the transaction is finalized. The portal initiates the deposit transaction, updating the user's balance on L2.
+    The message is received by the OptimismPortal. Here, the deposited assets are held securely until the transaction is finalized. The portal initiates the deposit transaction, updating the user's balance on L2.
 
 4.  **Finalization (L2 CrossDomain Messenger):**
-  The L2 CrossDomain Messenger processes the deposit deriving the message from L1 into the L2. If this is a deposit of ETH or a token the user's account balance will be reflected in their account making the assets available for use on L2.
+    The L2 CrossDomain Messenger processes the deposit deriving the message from L1 into the L2. If this is a deposit of ETH or a token the user's account balance will be reflected in their account making the assets available for use on L2.
 
 For a more detailed breakdown of the deposit process, refer to the [Deposit Flow](/stack/transactions/deposit-flow) documentation.
 
@@ -52,29 +52,28 @@ For a more detailed breakdown of the deposit process, refer to the [Deposit Flow
 The transaction flow covers the steps involved in cross-domain message passing and state updates between L1 and L2:
 
 1.  **Message Queuing (L2ToL1MessagePasser):**
-During cross-layer communication, certain messages are queued for processing. The `L2ToL1MessagePasser` prepares these messages for state updates or withdrawals, ensuring they are available for proving and relaying.
+    During cross-layer communication, certain messages are queued for processing. The `L2ToL1MessagePasser` prepares these messages for state updates or withdrawals, ensuring they are available for proving and relaying.
 
 2.  **State Reading and Proving (DisputeGameFactory and OptimismPortal):**
-The `DisputeGameFactory` and `OptimismPortal` play a critical role in validating L2 state changes on L1. New state proposals are created when someone creates a new dispute game through the `DisputeGameFactory`. This proposal includes information about queued messages or state changes that need to be relayed to L1. Users can prove their withdrawals through the `OptimismPortal` and then finalize on the `OptimismPortal` once the challenge period has passed.
+    The `DisputeGameFactory` and `OptimismPortal` play a critical role in validating L2 state changes on L1. New state proposals are created when someone creates a new dispute game through the `DisputeGameFactory`. This proposal includes information about queued messages or state changes that need to be relayed to L1. Users can prove their withdrawals through the `OptimismPortal` and then finalize on the `OptimismPortal` once the challenge period has passed.
 
 3.  **Message Relay (CrossDomain Messengers):**
-Messages are relayed between the L1 and L2 CrossDomain Messengers as part of transaction execution. This includes updating state or finalizing transactions on the target layer.
-
+    Messages are relayed between the L1 and L2 CrossDomain Messengers as part of transaction execution. This includes updating state or finalizing transactions on the target layer.
 
 ## Withdrawal Flow
 
 Withdrawing assets from L2 back to L1 involves a multi-step process to ensure the transaction is validated and executed correctly:
 
 1.  **User Initiation:**
-The withdrawal process starts when the user calls the `withdraw()` function on the L2 Standard Bridge, specifying the amount and asset to be withdrawn.
+    The withdrawal process starts when the user calls the `withdraw()` function on the L2 Standard Bridge, specifying the amount and asset to be withdrawn.
 
 2.  **Message Relay:**
-The L2 CrossDomain Messenger receives the withdrawal request and relays the message for processing. It may involve queuing the message in the `L2ToL1MessagePasser` for further steps.
+    The L2 CrossDomain Messenger receives the withdrawal request and relays the message for processing. It may involve queuing the message in the `L2ToL1MessagePasser` for further steps.
 
 3.  **Proving:**
-The withdrawal message is proven using the `DisputeGameFactory` and `OptimismPortal`. New state outputs are created as dispute games through the `DisputeGameFactory`. The `OptimismPortal` references those dispute games. The user proves the withdrawal on the `OptimismPortal`. This step involves reading the state and generating the required proofs during the proving time.
+    The withdrawal message is proven using the `DisputeGameFactory` and `OptimismPortal`. New state outputs are created as dispute games through the `DisputeGameFactory`. The `OptimismPortal` references those dispute games. The user proves the withdrawal on the `OptimismPortal`. This step involves reading the state and generating the required proofs during the proving time.
 
 4.  **Finalization (L1 CrossDomain Messenger and L1 Standard Bridge):**
-Once the withdrawal is proven, the user waits for the challenge period to pass. Then they finalize it on the `OptimismPortal` and the message is finalized by the L1 CrossDomain Messenger. The L1 Standard Bridge completes the process by releasing the withdrawn assets to the user's L1 account.
+    Once the withdrawal is proven, the user waits for the challenge period to pass. Then they finalize it on the `OptimismPortal` and the message is finalized by the L1 CrossDomain Messenger. The L1 Standard Bridge completes the process by releasing the withdrawn assets to the user's L1 account.
 
 For a more detailed breakdown of the withdrawal process, refer to the [Withdrawal Flow](/stack/transactions/withdrawal-flow) documentation.
