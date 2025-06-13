@@ -29,7 +29,7 @@ The proposer (`op-proposer`) serves as a crucial bridge between your L2 chain an
 *   **State commitment**: Proposing L2 state roots to L1 at regular intervals
 *   **Withdrawal enablement**: Providing the necessary commitments for users to prove and finalize withdrawals
 
-The proposer creates dispute games via the `DisputeGameFactory` contract, enabling permissionless challenging of proposed state roots and providing a robust fault proof system.
+The proposer creates dispute games via the `DisputeGameFactory` contract, enabling permissionless challenging of proposed state roots.
 
 ## Prerequisites
 
@@ -44,11 +44,11 @@ Before setting up your proposer, ensure you have:
 **From op-deployer deployment:**
 
 *   Successfully deployed L1 contracts using `op-deployer apply`
-*   Access to your deployment output files
+*   Access to your deployment output (`genesis` and `rollup`) files.
 
 **Security setup:**
 
-*   A dedicated proposer private key with sufficient L1 ETH for gas fees
+*   A dedicated proposer private key
 
 **Network information:**
 
@@ -90,8 +90,8 @@ Create your proposer working directory:
 
 ```bash
 # Create proposer directory at the same level as your sequencer
-mkdir ~/proposer-node
-cd ~/proposer-node
+mkdir proposer-node
+cd proposer-node
 
 # Create scripts directory
 mkdir scripts
@@ -103,13 +103,13 @@ Extract the necessary contract addresses from your op-deployer output:
 
 ```bash
 # Extract L1 contract addresses from your op-deployer deployment
-cd ~/proposer-node
+cd proposer-node
 
-# Copy the L1 contracts file from op-deployer
-cp ~/.deployer/state.json .
+# Copy the L1 contracts file from op-deployer, update to paths to wherever your `.deployer/state.json` live
+cp ../.deployer/state.json .
 
 # Extract the DisputeGameFactory address
-GAME_FACTORY_ADDRESS=$(cat state.json | jq -r '.opChainDeployment.disputeGameFactoryProxyAddress')
+GAME_FACTORY_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].disputeGameFactoryProxyAddress')
 echo "DisputeGameFactory Address: $GAME_FACTORY_ADDRESS"
 ```
 
