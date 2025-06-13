@@ -397,7 +397,6 @@ Now create your `.env` file with the actual values:
 
 ```bash
 # Create .env file with your actual values
-cat > .env << 'EOF'
 # L1 Configuration - Replace with your actual RPC URLs
 L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
 L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
@@ -422,7 +421,6 @@ OP_GETH_AUTH_PORT=8551
 # Data directories
 DATA_DIR=./data
 JWT_SECRET=./jwt.txt
-EOF
 ```
 
 **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values!
@@ -435,22 +433,23 @@ Create `scripts/start-op-geth.sh`:
 
 ```bash
 #!/bin/bash
+
 source .env
 
 # Path to the op-geth binary we built
-./data/op-geth/bin/op-geth \
+../op-geth/build/bin/geth \
   --datadir=$DATA_DIR/op-geth \
   --http \
   --http.addr=0.0.0.0 \
   --http.port=$OP_GETH_HTTP_PORT \
   --http.vhosts="*" \
   --http.corsdomain="*" \
-  --http.api=eth,net,web3,debug,txpool,miner \
+  --http.api=eth,net,web3,debug,txpool,admin \
   --ws \
   --ws.addr=0.0.0.0 \
   --ws.port=$OP_GETH_WS_PORT \
   --ws.origins="*" \
-  --ws.api=eth,net,web3,debug,txpool,miner \
+  --ws.api=eth,net,web3,debug,txpool,admin \
   --authrpc.addr=0.0.0.0 \
   --authrpc.port=$OP_GETH_AUTH_PORT \
   --authrpc.vhosts="*" \
@@ -458,6 +457,7 @@ source .env
   --syncmode=full \
   --gcmode=archive \
   --rollup.disabletxpoolgossip=true \
+  --rollup.sequencerhttp=http://localhost:$OP_NODE_RPC_PORT
 ```
 
 ### op-node configuration for sequencer
@@ -466,10 +466,11 @@ Create `scripts/start-op-node.sh`:
 
 ```bash
 #!/bin/bash
+
 source .env
 
 # Path to the op-node binary we built
-./data/op-node/bin/op-node \
+../optimism/op-node/bin/op-node \
   --l1=$L1_RPC_URL \
   --l1.beacon=$L1_BEACON_URL \
   --l2=http://localhost:$OP_GETH_AUTH_PORT \
@@ -492,6 +493,7 @@ source .env
   --log.level=info \
   --log.format=json
 ```
+
 ## Initializing and starting the sequencer
 
 ### 1. Initialize op-geth with your genesis file
@@ -507,19 +509,50 @@ cd ~/sequencer-node
 ### 2. Start op-geth
 
 ```bash
+# Make scripts executable
 chmod +x scripts/start-op-geth.sh
+chmod +x scripts/start-op-node.sh
+
+# Start op-geth in the background or in a separate terminal
 ./scripts/start-op-geth.sh
 ```
+
+**Note**: You should see output indicating that op-geth is starting and listening on the configured ports.
 
 ### 3. Start op-node
 
 ```bash
-# In a separate terminal
-chmod +x scripts/start-op-node.sh
+# In a separate terminal, navigate to the sequencer directory
+cd ~/sequencer-node
+
+# Start op-node
 ./scripts/start-op-node.sh
 ```
 
-### 4. Enable sequencing (if started in stopped state)
+### 4. Verify sequencer is running
+
+Once both services are running, verify they're working correctly:
+
+```bash
+# Check op-geth is responding
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+  http://localhost:8545
+
+# Check op-node is responding
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"optimism_version","params":[],"id":1}' \
+  http://localhost:8547
+
+# Check sequencer status
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"admin_sequencerActive","params":[],"id":1}' \
+  http://localhost:8547
+```
+
+### 5. Enable sequencing (if started in stopped state)
+
+If you started with `SEQUENCER_STOPPED=true`, enable sequencing:
 
 ```bash
 # Use the admin RPC to start sequencing
@@ -528,6 +561,6 @@ curl -X POST http://localhost:8547 \
   -d '{"method":"admin_startSequencer","params":[],"id":1,"jsonrpc":"2.0"}'
 ```
 
+Your sequencer node is now operational and ready to process transactions.
 
 ## Next steps(TODO: Update this after other pages have been merged)
-
