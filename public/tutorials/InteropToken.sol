@@ -41,4 +41,3 @@ contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IE
             || _interfaceId == type(IERC165).interfaceId;
     }
 }
-
