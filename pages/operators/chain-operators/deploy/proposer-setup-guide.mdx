@@ -1,7 +1,7 @@
 ---
 title: Spin up your proposer
 lang: en-US
-description: Learn how to set up and configure an OP Stack proposer to post L2 state roots to L1 for withdrawal verification.
+description: Learn how to set up and configure an OP Stack proposer to post L2 state roots.
 content_type: tutorial
 topic: proposer-setup
 personas:
@@ -20,15 +20,17 @@ import { Callout, Steps } from 'nextra/components'
 
 # Spin up your proposer
 
-After you have spun up your sequencer, you need to attach a proposer to post your L2 state roots data back onto L1 so we can prove withdrawal validity. The proposer is a critical component that enables trustless L2-to-L1 messaging and creates the authoritative view of L2 state from L1's perspective.
+After you have spun up your sequencer, you need to attach a proposer to post your L2 state roots data back onto L1 so we can prove withdrawal validity. 
+The proposer is a critical component that enables trustless L2-to-L1 messaging and creates the authoritative view of L2 state from L1's perspective.
 
 <Callout type="info">
-  This guide assumes you already have a functioning sequencer and the necessary L1 contracts deployed. If you haven't set up your sequencer yet, please refer to the [rollup creation tutorial](/operators/chain-operators/tutorials/create-l2-rollup) first.
+  This guide assumes you already have a functioning sequencer and the necessary [L1 contracts deployed](/operators/chain-operators/deploy/overview). 
+  If you haven't set up your sequencer yet, please refer to the [sequencer guide](Todo - Add a link to the spining up your sequencer) first.
 </Callout>
 
 ## Understanding the proposer's role
 
-The proposer (`op-proposer`) serves as a crucial bridge between your L2 chain and L1 Ethereum. Its primary responsibilities include:
+The proposer (`op-proposer`) serves as a crucial bridge between your L2 chain and L1. Its primary responsibilities include:
 
 *   **State commitment**: Proposing L2 state roots to L1 at regular intervals
 *   **Withdrawal enablement**: Providing the necessary commitments for users to prove and finalize withdrawalsz
@@ -61,21 +63,6 @@ Before setting up your proposer, ensure you have:
   *   L1 network details (chain ID, RPC endpoints)
 </Steps>
 
-## Recommended configuration
-
-Here's a production-ready configuration template for your proposer:
-
-### Essential parameters
-
-| Parameter              | Recommended Value | Description                                            |
-| ---------------------- | ----------------- | ------------------------------------------------------ |
-| `poll-interval`        | `20s`             | How frequently to check for new L2 blocks              |
-| `proposal-interval`    | `3600s` (1 hour)  | Interval between output proposals                      |
-| `num-confirmations`    | `1`               | L1 confirmations to wait before considering a tx final |
-| `resubmission-timeout` | `30s`             | Time before resubmitting a failed transaction          |
-| `allow-non-finalized`  | `false`           | Only propose from finalized L1 blocks (safer)          |
-
-
 ## Step-by-step setup
 
 ### Step 1: Prepare your environment
@@ -96,15 +83,6 @@ Here's a production-ready configuration template for your proposer:
 
   # Security
   export PROPOSER_PRIVATE_KEY="0xYourProposerPrivateKey"
-  ```
-
-  ### Verify contract deployment
-
-  Confirm your contracts are properly deployed and accessible:
-
-  ```bash
-  # Check DisputeGameFactory
-  cast call $GAME_FACTORY_ADDRESS "gameCount()" --rpc-url $L1_RPC_URL
   ```
 
   ### Test connectivity
@@ -150,77 +128,6 @@ Configure and start your proposer with fault proof mode:
   --metrics.port=7300 \
   --log.level=INFO
 ```
-
-### Step 3: Production deployment considerations
-
-<Steps>
-  ### Service configuration
-
-  Create a systemd service file for production deployment:
-
-  ```ini
-  [Unit]
-  Description=OP Stack Proposer
-  After=network.target
-
-  [Service]
-  Type=simple
-  User=optimism
-  WorkingDirectory=/opt/optimism
-  ExecStart=/opt/optimism/bin/op-proposer \
-    --poll-interval=12s \
-    --rpc.port=8560 \
-    --rpc.enable-admin \
-    --rollup-rpc=http://localhost:9545 \
-    --l1-eth-rpc=$L1_RPC_URL \
-    --private-key=$PROPOSER_PRIVATE_KEY \
-    --game-factory-address=$GAME_FACTORY_ADDRESS \
-    --game-type=0 \
-    --proposal-interval=3600s \
-    --num-confirmations=10 \
-    --resubmission-timeout=48s \
-    --fee-limit-multiplier=5 \
-    --metrics.enabled=true \
-    --metrics.port=7300 \
-    --log.level=INFO
-
-  Restart=always
-  RestartSec=10
-
-  [Install]
-  WantedBy=multi-user.target
-  ```
-
-  ### Monitoring setup
-
-  Set up monitoring for your proposer:
-
-  ```bash
-  # Check service status
-  sudo systemctl status op-proposer
-
-  # Monitor logs
-  sudo journalctl -u op-proposer -f
-
-  # Monitor metrics (if enabled)
-  curl http://localhost:7300/metrics
-  ```
-</Steps>
-
-## Output frequency policy
-
-The proposer policy defines how frequently L2 output roots are posted to L1:
-
-| Network Type       | Recommended Frequency | Notes                             |
-| ------------------ | --------------------- | --------------------------------- |
-| Mainnet Production | 1-6 hours             | Balance cost vs. withdrawal speed |
-| High-Value Testnet | 30-60 minutes         | More frequent for testing         |
-| Development        | 5-15 minutes          | Fast iteration cycles             |
-
-<Callout type="warning">
-  **Important**: The output frequency cannot be set to 0 - there must be some cadence for outputs. This will eventually be replaced or significantly changed by the introduction of fault proofs.
-</Callout>
-
 ## Verification and monitoring
 
 Verify your proposer is working correctly:
@@ -236,18 +143,6 @@ Verify your proposer is working correctly:
 
   # Check latest dispute game
   cast call $GAME_FACTORY_ADDRESS "gameCount()" --rpc-url $L1_RPC_URL
-  ```
-
-  ### Monitor proposal activity
-
-  ```bash
-  # Watch for new proposals
-  cast logs --from-block latest \
-    --address $GAME_FACTORY_ADDRESS \
-    --rpc-url $L1_RPC_URL
-
-  # Check proposer wallet balance
-  cast balance $PROPOSER_ADDRESS --rpc-url $L1_RPC_URL
   ```
 </Steps>
 
