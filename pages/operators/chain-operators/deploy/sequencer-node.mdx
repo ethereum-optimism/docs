@@ -17,6 +17,8 @@ categories:
 is_imported_content: 'false'
 ---
 
+import { Callout } from 'nextra/components'
+
 ## Overview
 
 This guide provides step-by-step instructions for spinning up a sequencer node after deploying your L1 smart contracts for your OP Stack chain with [`op-deployer`](/operators/chain-operators/tools/op-deployer).
@@ -32,15 +34,9 @@ The sequencer is responsible for:
 *   Building L2 blocks
 *   Signing blocks on the P2P network
 
-This guide assumes you have already:
-
-*   Successfully deployed L1 contracts using `op-deployer apply`
-*   Generated your `genesis.json` and `rollup.json` configuration files
-*   Have access to the required private keys for sequencer, batcher, and proposer roles
-
 ## Prerequisites
 
-### Essential requirements after op-deployer deployment
+### Essential requirements 
 
 Before spinning up your sequencer, ensure you have completed these steps:
 
@@ -118,7 +114,7 @@ git checkout op-node/v1.13.2
 
 # Build op-node
 cd op-node
-make op-node
+just
 
 # Binary will be available at ./bin/op-node
 ```
@@ -256,10 +252,10 @@ Regardless of your chosen method, verify your installation:
 docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.2 --version
 docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4 version
 ```
-
-**Note:** The rest of this guide assumes you're using the **build-from-source** approach.
+<Callout type="warning">
+  The rest of this guide assumes you're using the **build-from-source** approach.
 If you chose Docker, refer to the command equivalents above or the Docker setup guide in the collapsible section.
-
+</Callout>
 ## Configuration setup
 
 ### 1. Organize your workspace
@@ -503,7 +499,7 @@ source .env
 cd ~/sequencer-node
 
 # Initialize op-geth with your genesis file
-../op-geth/build/bin/geth init --datadir=./data/op-geth --state.scheme=hash ./genesis.json
+./data/op-geth/build/bin/geth init --datadir=./data/op-geth --state.scheme=hash ./genesis.json
 ```
 
 ### 2. Start op-geth
