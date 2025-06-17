@@ -145,101 +145,7 @@ make geth
 
 If you prefer containerized deployment, you can use the official Docker images.
 Note that all subsequent configuration examples will need to be adapted for Docker usage.
-Jump to the [complete docker setup](/operators/chain-operators/deploy/sequencer-node#complete-docker-setup-guide)
 
-#### Pull the required images
-
-```bash
-# Pull this op-node image
-docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3
-
-# Pull this op-geth image  
-docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0
-```
-
-#### Docker command equivalents
-
-When following the rest of this guide with Docker, replace the binary commands as follows:
-
-**Instead of local binary:**
-
-```bash
-./build/bin/geth [other other arguments]
-```
-
-**Use Docker:**
-
-```bash
-
-source .env
-
-docker run --rm \
-  -v $(pwd):/workspace \
-  -v $(pwd)/op-geth-data:/workspace/op-geth-data \
-  --network host \
-  us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 \
-  geth \
-  --datadir=/workspace/op-geth-data \
-  --http \
-  --http.addr=0.0.0.0 \
-  --http.port=$OP_GETH_HTTP_PORT \
-  --http.vhosts="*" \
-  --http.corsdomain="*" \
-  --http.api=eth,net,web3,debug,txpool,admin \
-  --ws \
-  --ws.addr=0.0.0.0 \
-  --ws.port=$OP_GETH_WS_PORT \
-  --ws.origins="*" \
-  --ws.api=eth,net,web3,debug,txpool,admin \
-  --authrpc.addr=0.0.0.0 \
-  --authrpc.port=$OP_GETH_AUTH_PORT \
-  --authrpc.vhosts="*" \
-  --authrpc.jwtsecret=/workspace/$JWT_SECRET \
-  --syncmode=full \
-  --gcmode=archive \
-  --rollup.disabletxpoolgossip=true \
-  --rollup.sequencerhttp=http://localhost:$OP_NODE_RPC_PORT
-```
-
-**Instead of local binary:**
-
-```bash
-./bin/op-node [other arguments]
-```
-
-**Use Docker:**
-
-```bash
-source .env
-
-docker run --rm \
-  -v $(pwd):/workspace \
-  -v $(pwd)/.env:/workspace/.env \
-  --network host \
-  us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3 \
-  op-node \
-  --l1=$L1_RPC_URL \
-  --l1.beacon=$L1_BEACON_URL \
-  --l2=http://localhost:$OP_GETH_AUTH_PORT \
-  --l2.jwt-secret=/workspace/$JWT_SECRET \
-  --rollup.config=/workspace/rollup.json \
-  --sequencer.enabled=$SEQUENCER_ENABLED \
-  --sequencer.stopped=$SEQUENCER_STOPPED \
-  --sequencer.max-safe-lag=3600 \
-  --verifier.l1-confs=4 \
-  --p2p.listen.ip=0.0.0.0 \
-  --p2p.listen.tcp=$P2P_LISTEN_PORT \
-  --p2p.listen.udp=$P2P_LISTEN_PORT \
-  --p2p.advertise.ip=$P2P_ADVERTISE_IP \
-  --p2p.advertise.tcp=$P2P_LISTEN_PORT \
-  --p2p.advertise.udp=$P2P_LISTEN_PORT \
-  --p2p.sequencer.key=$PRIVATE_KEY \
-  --rpc.addr=0.0.0.0 \
-  --rpc.port=$OP_NODE_RPC_PORT \
-  --rpc.enable-admin \
-  --log.level=info \
-  --log.format=json
-```
 
 ### Verify installation
 
@@ -252,12 +158,6 @@ Regardless of your chosen method, verify your installation:
 ./build/bin/geth version
 ```
 
-**For Docker:**
-
-```bash
-docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3 op-node --version
-docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 version
-```
 ### Complete Docker setup guide
 
 <details>
@@ -374,6 +274,13 @@ docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.10151
   ```
 
 </details>
+
+**For Docker:**
+
+```bash
+docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3 op-node --version
+docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 version
+```
 
 <Callout type="warning">
   The rest of this guide assumes you're using the **build-from-source** approach.
