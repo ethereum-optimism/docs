@@ -84,6 +84,12 @@ The main components you'll need for sequencer deployment are:
 *   **op-node**: Look for the latest `op-node/v*` release
 *   **op-geth**: Look for the latest `op-geth/v*` release (found at [https://github.com/ethereum-optimism/op-geth/releases](https://github.com/ethereum-optimism/op-geth/releases))
 
+<Callout type="info">
+The versions used in this guide (op-node/v1.13.3 and op-geth/v1.101511.0) are verified compatible versions. 
+According to the [op-node v1.13.3 release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.13.3), this op-node version specifically corresponds to op-geth v1.101511.0. 
+Always check the release notes to ensure you're using compatible versions.
+</Callout>
+
 ### Docker images
 
 Pre-built Docker images are available for all releases at:
@@ -312,9 +318,11 @@ chmod 600 jwt.txt
 
 ### 3. Set up directory structure and copy files
 
+In this guide, we're going to be using the binaries from their original build locations, we only need to create directories for configuration files and scripts.
+
 ```bash
-# Create data directories
-mkdir -p data/op-geth data/op-node scripts
+# Create scripts directory
+mkdir scripts
 
 # Copy configuration files from op-deployer
 cp ~/.deployer/genesis.json .
@@ -328,9 +336,6 @@ Your final directory structure should look like:
 ├── jwt.txt
 ├── genesis.json
 ├── rollup.json
-├── data/
-│   ├── op-geth/
-│   └── op-node/
 └── scripts/
     ├── start-op-geth.sh    # (to be created)
     └── start-op-node.sh    # (to be created)
@@ -412,8 +417,7 @@ OP_GETH_HTTP_PORT=8545
 OP_GETH_WS_PORT=8546
 OP_GETH_AUTH_PORT=8551
 
-# Data directories
-DATA_DIR=./data
+# JWT secret location
 JWT_SECRET=./jwt.txt
 ```
 
@@ -432,7 +436,7 @@ source .env
 
 # Path to the op-geth binary we built
 ../op-geth/build/bin/geth \
-  --datadir=$DATA_DIR/op-geth \
+  --datadir=./op-geth-data \
   --http \
   --http.addr=0.0.0.0 \
   --http.port=$OP_GETH_HTTP_PORT \
@@ -497,7 +501,7 @@ source .env
 cd ~/sequencer-node
 
 # Initialize op-geth with your genesis file
-./data/op-geth/build/bin/geth init --datadir=./data/op-geth --state.scheme=hash ./genesis.json
+../op-geth/build/bin/geth init --datadir=./op-geth-data --state.scheme=hash ./genesis.json
 ```
 
 ### 2. Start op-geth
