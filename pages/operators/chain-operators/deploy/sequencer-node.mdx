@@ -170,8 +170,35 @@ When following the rest of this guide with Docker, replace the binary commands a
 **Use Docker:**
 
 ```bash
-docker run --rm -v $(pwd):/workspace \
+
+source .env
+
+docker run --rm \
+  -v $(pwd):/workspace \
+  -v $(pwd)/op-geth-data:/workspace/op-geth-data \
+  --network host \
   us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 \
+  geth \
+  --datadir=/workspace/op-geth-data \
+  --http \
+  --http.addr=0.0.0.0 \
+  --http.port=$OP_GETH_HTTP_PORT \
+  --http.vhosts="*" \
+  --http.corsdomain="*" \
+  --http.api=eth,net,web3,debug,txpool,admin \
+  --ws \
+  --ws.addr=0.0.0.0 \
+  --ws.port=$OP_GETH_WS_PORT \
+  --ws.origins="*" \
+  --ws.api=eth,net,web3,debug,txpool,admin \
+  --authrpc.addr=0.0.0.0 \
+  --authrpc.port=$OP_GETH_AUTH_PORT \
+  --authrpc.vhosts="*" \
+  --authrpc.jwtsecret=/workspace/$JWT_SECRET \
+  --syncmode=full \
+  --gcmode=archive \
+  --rollup.disabletxpoolgossip=true \
+  --rollup.sequencerhttp=http://localhost:$OP_NODE_RPC_PORT
 ```
 
 **Instead of local binary:**
@@ -183,9 +210,35 @@ docker run --rm -v $(pwd):/workspace \
 **Use Docker:**
 
 ```bash
-docker run --rm -v $(pwd):/workspace \
+source .env
+
+docker run --rm \
+  -v $(pwd):/workspace \
+  -v $(pwd)/.env:/workspace/.env \
   --network host \
   us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3 \
+  op-node \
+  --l1=$L1_RPC_URL \
+  --l1.beacon=$L1_BEACON_URL \
+  --l2=http://localhost:$OP_GETH_AUTH_PORT \
+  --l2.jwt-secret=/workspace/$JWT_SECRET \
+  --rollup.config=/workspace/rollup.json \
+  --sequencer.enabled=$SEQUENCER_ENABLED \
+  --sequencer.stopped=$SEQUENCER_STOPPED \
+  --sequencer.max-safe-lag=3600 \
+  --verifier.l1-confs=4 \
+  --p2p.listen.ip=0.0.0.0 \
+  --p2p.listen.tcp=$P2P_LISTEN_PORT \
+  --p2p.listen.udp=$P2P_LISTEN_PORT \
+  --p2p.advertise.ip=$P2P_ADVERTISE_IP \
+  --p2p.advertise.tcp=$P2P_LISTEN_PORT \
+  --p2p.advertise.udp=$P2P_LISTEN_PORT \
+  --p2p.sequencer.key=$PRIVATE_KEY \
+  --rpc.addr=0.0.0.0 \
+  --rpc.port=$OP_NODE_RPC_PORT \
+  --rpc.enable-admin \
+  --log.level=info \
+  --log.format=json
 ```
 
 ### Verify installation
