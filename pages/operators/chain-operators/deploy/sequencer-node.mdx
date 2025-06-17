@@ -189,57 +189,6 @@ docker run --rm -v $(pwd):/workspace \
   [other arguments]
 ```
 
-<details>
-  <summary>Complete Docker setup guide</summary>
-
-  If you choose the Docker approach, you'll need to:
-
-  1.  **Create a docker-compose.yml** for easier management:
-
-  ```yaml
-  version: '3.8'
-
-  services:
-    op-geth:
-      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0
-      volumes:
-        - ./data/op-geth:/data
-        - ./genesis.json:/genesis.json
-        - ./jwt.txt:/jwt.txt
-      ports:
-        - "8545:8545"
-        - "8546:8546"
-        - "8551:8551"
-      command: |
-        --datadir=/data
-        --http --http.addr=0.0.0.0 --http.port=8545
-        --ws --ws.addr=0.0.0.0 --ws.port=8546
-        --authrpc.addr=0.0.0.0 --authrpc.port=8551
-        --authrpc.jwtsecret=/jwt.txt
-        # ... other geth flags, see the build-with-source section for all of them
-
-    op-node:
-      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3
-      depends_on:
-        - op-geth
-      volumes:
-        - ./rollup.json:/rollup.json
-        - ./jwt.txt:/jwt.txt
-      ports:
-        - "8547:8547"
-        - "9222:9222"
-      command: |
-        --l1=${L1_RPC_URL}
-        --l2=http://op-geth:8551
-        --rollup.config=/rollup.json
-        --sequencer.enabled=true
-        # ... other op-node flags, see the build-with-source section for all of them
-  ```
-
-  2.  **Adapt all subsequent commands** to use `docker-compose` or individual `docker run` commands
-
-</details>
-
 ### Verify installation
 
 Regardless of your chosen method, verify your installation:
@@ -257,6 +206,122 @@ Regardless of your chosen method, verify your installation:
 docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3 --version
 docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 version
 ```
+
+<details>
+  <summary>Complete Docker setup guide</summary>
+
+  If you choose the Docker approach, you'll need to:
+
+  1.  **Create a docker-compose.yml** for easier management:
+
+  ```yaml
+  version: '3.8'
+
+  services:
+    op-geth:
+      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0
+      volumes:
+        - ./op-geth-data:/op-geth-data
+        - ./genesis.json:/genesis.json
+        - ./jwt.txt:/jwt.txt
+      ports:
+        - "8545:8545"
+        - "8546:8546"
+        - "8551:8551"
+      command: |
+        --datadir=/op-geth-data
+        --http --http.addr=0.0.0.0 --http.port=8545
+        --ws --ws.addr=0.0.0.0 --ws.port=8546
+        --authrpc.addr=0.0.0.0 --authrpc.port=8551
+        --authrpc.jwtsecret=/jwt.txt
+        --syncmode=full
+        --gcmode=archive
+        --rollup.disabletxpoolgossip=true
+        --rollup.sequencerhttp=http://op-node:8547
+        --http.vhosts="*"
+        --http.corsdomain="*"
+        --http.api=eth,net,web3,debug,txpool,admin
+        --ws.origins="*"
+        --ws.api=eth,net,web3,debug,txpool,admin
+        --authrpc.vhosts="*"
+
+    op-node:
+      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3
+      depends_on:
+        - op-geth
+      volumes:
+        - ./rollup.json:/rollup.json
+        - ./jwt.txt:/jwt.txt
+        - ./.env:/.env
+      ports:
+        - "8547:8547"
+        - "9222:9222"
+      environment:
+        - L1_RPC_URL=${L1_RPC_URL}
+        - L1_BEACON_URL=${L1_BEACON_URL}
+        - PRIVATE_KEY=${PRIVATE_KEY}
+        - P2P_ADVERTISE_IP=${P2P_ADVERTISE_IP}
+      command: |
+        --l1=${L1_RPC_URL}
+        --l1.beacon=${L1_BEACON_URL}
+        --l2=http://op-geth:8551
+        --l2.jwt-secret=/jwt.txt
+        --rollup.config=/rollup.json
+        --sequencer.enabled=true
+        --sequencer.stopped=false
+        --sequencer.max-safe-lag=3600
+        --verifier.l1-confs=4
+        --p2p.listen.ip=0.0.0.0
+        --p2p.listen.tcp=9222
+        --p2p.listen.udp=9222
+        --p2p.advertise.ip=${P2P_ADVERTISE_IP}
+        --p2p.advertise.tcp=9222
+        --p2p.advertise.udp=9222
+        --p2p.sequencer.key=${PRIVATE_KEY}
+        --rpc.addr=0.0.0.0
+        --rpc.port=8547
+        --rpc.enable-admin
+        --log.level=info
+        --log.format=json
+  ```
+
+  2.  **Initialize op-geth with Docker before starting services:**
+
+  ```bash
+  # Initialize op-geth using Docker
+  docker run --rm \
+    -v $(pwd)/op-geth-data:/op-geth-data \
+    -v $(pwd)/genesis.json:/genesis.json \
+    us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 \
+    init --datadir=/op-geth-data --state.scheme=hash /genesis.json
+  ```
+
+  3.  **Start the services:**
+
+  ```bash
+  # Start both services
+  docker-compose up -d
+
+  # View logs
+  docker-compose logs -f
+  ```
+
+  4.  **Directory structure for Docker approach:**
+
+  ```bash
+  ~/sequencer-node/
+  ├── jwt.txt
+  ├── genesis.json
+  ├── rollup.json
+  ├── .env                    # Environment variables
+  ├── docker-compose.yml      # Docker configuration
+  └── op-geth-data/          # Created by Docker during initialization
+      ├── geth/              # Geth data
+      └── keystore/          # Key files
+  ```
+
+</details>
+
 <Callout type="warning">
   The rest of this guide assumes you're using the **build-from-source** approach.
 If you chose Docker, refer to the command equivalents above or the Docker setup guide in the collapsible section.
@@ -359,19 +424,9 @@ You need access to the L1 network (Ethereum mainnet or Sepolia testnet) and its 
 *   **Public beacon APIs**: `https://ethereum-sepolia-beacon-api.publicnode.com` (Sepolia) or `https://ethereum-beacon-api.publicnode.com` (Mainnet)
 *   **Infura beacon**: `https://sepolia.infura.io/v3/YOUR_KEY` (if your Infura plan includes beacon access)
 
-#### 4.2. Extract sequencer private key from op-deployer
+#### 4.2. Get private key from your wallet
 
-For this basic sequencer setup, you only need the sequencer private key.
-The sequencer private key is used for signing blocks on the P2P network. Find it in your op-deployer intent file:
-
-```bash
-# View your intent file to find the sequencer private key
-cat ~/.deployer/intent.toml
-
-# Look for a section like:
-# [chains.my-chain.roles.sequencer]
-# privateKey = "0x..."
-```
+For this basic sequencer setup, you only need a private key during op-node initialization.
 
 #### 4.3. Get your public IP address
 
@@ -404,8 +459,8 @@ L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
 SEQUENCER_ENABLED=true
 SEQUENCER_STOPPED=false
 
-# Private keys - Only sequencer key needed for this
-SEQUENCER_PRIVATE_KEY=0xYOUR_ACTUAL_SEQUENCER_PRIVATE_KEY
+# Private keys
+PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
 
 # P2P configuration - Replace with your actual public IP
 P2P_LISTEN_PORT=9222
@@ -431,7 +486,6 @@ Create `scripts/start-op-geth.sh`:
 
 ```bash
 #!/bin/bash
-
 source .env
 
 # Path to the op-geth binary we built
@@ -484,7 +538,7 @@ source .env
   --p2p.advertise.ip=$P2P_ADVERTISE_IP \
   --p2p.advertise.tcp=$P2P_LISTEN_PORT \
   --p2p.advertise.udp=$P2P_LISTEN_PORT \
-  --p2p.sequencer.key=$SEQUENCER_PRIVATE_KEY \
+  --p2p.sequencer.key=$PRIVATE_KEY \
   --rpc.addr=0.0.0.0 \
   --rpc.port=$OP_NODE_RPC_PORT \
   --rpc.enable-admin \
@@ -532,7 +586,7 @@ cd ~/sequencer-node
 Once both services are running, verify they're working correctly:
 
 ```bash
-# Check op-geth is responding
+# Check op-geth is responding in another terminal
 curl -X POST -H "Content-Type: application/json" \
   --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
   http://localhost:8545
@@ -546,17 +600,6 @@ curl -X POST -H "Content-Type: application/json" \
 curl -X POST -H "Content-Type: application/json" \
   --data '{"jsonrpc":"2.0","method":"admin_sequencerActive","params":[],"id":1}' \
   http://localhost:8547
-```
-
-### 5. Enable sequencing (if started in stopped state)
-
-If you started with `SEQUENCER_STOPPED=true`, enable sequencing:
-
-```bash
-# Use the admin RPC to start sequencing
-curl -X POST http://localhost:8547 \
-  -H "Content-Type: application/json" \
-  -d '{"method":"admin_startSequencer","params":[],"id":1,"jsonrpc":"2.0"}'
 ```
 
 Your sequencer node is now operational and ready to process transactions.
