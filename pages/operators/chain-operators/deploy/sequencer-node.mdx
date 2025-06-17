@@ -98,7 +98,7 @@ Replace `[VERSION]` with the specific version tag from the releases page.
 For spinning up a sequencer, we recommend **building from source** as it provides better control, and helps with debugging.
 A Docker alternative is also provided for development or containerized environments.
 
-### Build from source (Recommended for production)
+### Build from source (Recommended)
 
 Building from source gives you full control over the binaries and is the preferred approach for this guide.
 
@@ -110,7 +110,7 @@ git clone https://github.com/ethereum-optimism/optimism.git
 cd optimism
 
 # Checkout the latest release tag
-git checkout op-node/v1.13.2
+git checkout op-node/v1.13.3
 
 # Build op-node
 cd op-node
@@ -126,8 +126,8 @@ just
 git clone https://github.com/ethereum-optimism/op-geth.git
 cd op-geth
 
-# Checkout the latest release tag
-git checkout v1.101503.4
+# Checkout to this release tag
+git checkout v1.101511.0
 
 # Build op-geth
 make geth
@@ -144,10 +144,10 @@ Note that all subsequent configuration examples will need to be adapted for Dock
 
 ```bash
 # Pull latest op-node image
-docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.2
+docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3
 
 # Pull latest op-geth image  
-docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4
+docker pull us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0
 ```
 
 #### Docker command equivalents
@@ -157,21 +157,21 @@ When following the rest of this guide with Docker, replace the binary commands a
 **Instead of local binary:**
 
 ```bash
-./build/bin/geth [arguments]
+./build/bin/geth [other other arguments]
 ```
 
 **Use Docker:**
 
 ```bash
 docker run --rm -v $(pwd):/workspace \
-  us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4 \
-  [arguments]
+  us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 \
+  [other arguments]
 ```
 
 **Instead of local binary:**
 
 ```bash
-./bin/op-node [arguments]
+./bin/op-node [other arguments]
 ```
 
 **Use Docker:**
@@ -179,8 +179,8 @@ docker run --rm -v $(pwd):/workspace \
 ```bash
 docker run --rm -v $(pwd):/workspace \
   --network host \
-  us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.2 \
-  [arguments]
+  us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3 \
+  [other arguments]
 ```
 
 <details>
@@ -195,7 +195,7 @@ docker run --rm -v $(pwd):/workspace \
 
   services:
     op-geth:
-      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4
+      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0
       volumes:
         - ./data/op-geth:/data
         - ./genesis.json:/genesis.json
@@ -210,10 +210,10 @@ docker run --rm -v $(pwd):/workspace \
         --ws --ws.addr=0.0.0.0 --ws.port=8546
         --authrpc.addr=0.0.0.0 --authrpc.port=8551
         --authrpc.jwtsecret=/jwt.txt
-        # ... other geth flags
+        # ... other geth flags, see the build-with-source section for all of them
 
     op-node:
-      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.2
+      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3
       depends_on:
         - op-geth
       volumes:
@@ -227,12 +227,11 @@ docker run --rm -v $(pwd):/workspace \
         --l2=http://op-geth:8551
         --rollup.config=/rollup.json
         --sequencer.enabled=true
-        # ... other op-node flags
+        # ... other op-node flags, see the build-with-source section for all of them
   ```
 
   2.  **Adapt all subsequent commands** to use `docker-compose` or individual `docker run` commands
 
-  3.  **Handle networking** - containers need to communicate with each other and external services
 </details>
 
 ### Verify installation
@@ -249,8 +248,8 @@ Regardless of your chosen method, verify your installation:
 **For Docker:**
 
 ```bash
-docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.2 --version
-docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4 version
+docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3 --version
+docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 version
 ```
 <Callout type="warning">
   The rest of this guide assumes you're using the **build-from-source** approach.
@@ -324,7 +323,7 @@ cp ~/.deployer/rollup.json .
 
 Your final directory structure should look like:
 
-```
+```bash
 ~/sequencer-node/
 ├── jwt.txt
 ├── genesis.json
@@ -357,6 +356,7 @@ You need access to the L1 network (Ethereum mainnet or Sepolia testnet) and its 
 
 #### 4.2. Extract sequencer private key from op-deployer
 
+For this basic sequencer setup, you only need the sequencer private key.
 The sequencer private key is used for signing blocks on the P2P network. Find it in your op-deployer intent file:
 
 ```bash
@@ -367,8 +367,6 @@ cat ~/.deployer/intent.toml
 # [chains.my-chain.roles.sequencer]
 # privateKey = "0x..."
 ```
-
-**Note**: For this basic sequencer setup, you only need the sequencer private key.
 
 #### 4.3. Get your public IP address
 
@@ -401,7 +399,7 @@ L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
 SEQUENCER_ENABLED=true
 SEQUENCER_STOPPED=false
 
-# Private keys - Only sequencer key needed for this setup
+# Private keys - Only sequencer key needed for this
 SEQUENCER_PRIVATE_KEY=0xYOUR_ACTUAL_SEQUENCER_PRIVATE_KEY
 
 # P2P configuration - Replace with your actual public IP
@@ -419,7 +417,7 @@ DATA_DIR=./data
 JWT_SECRET=./jwt.txt
 ```
 
-**Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values!
+**Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
 
 ## Sequencer specific configuration
 
