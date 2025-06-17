@@ -37,14 +37,9 @@ Before setting up your proposer, ensure you have:
 
 **Running infrastructure:**
 
-*   A synced and operational sequencer node
+*   An operational sequencer node
 *   Access to a L1 RPC endpoint
 *   The rollup node (`op-node`) running and accessible
-
-**From op-deployer deployment:**
-
-*   Successfully deployed L1 contracts using `op-deployer apply`
-*   Access to your deployment output (`genesis` and `rollup`) files.
 
 **Security setup:**
 
@@ -71,7 +66,7 @@ git checkout op-proposer/v1.10.0
 
 # Build op-proposer
 cd op-proposer
-make op-proposer
+just
 
 # Binary will be available at ./bin/op-proposer
 ```
@@ -105,7 +100,7 @@ Extract the necessary contract addresses from your op-deployer output:
 # Extract L1 contract addresses from your op-deployer deployment
 cd proposer-node
 
-# Copy the L1 contracts file from op-deployer, update to paths to wherever your `.deployer/state.json` live
+# Copy the L1 contracts file from op-deployer, update to paths to wherever your `.deployer/state.json` lives
 cp ../.deployer/state.json .
 
 # Extract the DisputeGameFactory address
@@ -129,8 +124,8 @@ ROLLUP_RPC_URL=http://localhost:8547
 # Contract addresses - Extract from your op-deployer output
 GAME_FACTORY_ADDRESS=YOUR_ACTUAL_GAME_FACTORY_ADDRESS
 
-# Private key - Replace with your actual proposer private key
-PROPOSER_PRIVATE_KEY=0xYOUR_ACTUAL_PROPOSER_PRIVATE_KEY
+# Private key - Replace with your actual private key
+PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
 
 # Proposer configuration
 PROPOSAL_INTERVAL=3600s
@@ -143,18 +138,9 @@ PROPOSER_RPC_PORT=8560
 
 **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values!
 
-### 4. Get your proposer private key
+### 4. Get your private key
 
-Extract the proposer private key from your op-deployer intent file:
-
-```bash
-# View your intent file to find the proposer private key
-cat ~/.deployer/intent.toml
-
-# Look for a section like:
-# [chains.my-chain.roles.proposer]
-# privateKey = "0x..."
-```
+Get a private key from your wallet
 
 ## Proposer configuration
 
@@ -189,7 +175,13 @@ source .env
 Ensure your sequencer and op-node are running:
 
 ```bash
+
 # Test L1 connectivity
+# Note: Make sure you have exported these environment variables to your current shell session:
+# export L1_RPC_URL="https://sepolia.infura.io/v3/YOUR_KEY"
+# export L2_RPC_URL="http://localhost:8545"  
+# export ROLLUP_RPC_URL="http://localhost:8547"
+
 curl -X POST -H "Content-Type: application/json" \
   --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
   $L1_RPC_URL
@@ -222,20 +214,16 @@ Verify your proposer is working correctly:
 ### Check proposer status
 
 ```bash
-# Verify proposer is responsive
+# Check current L1 block number
 curl -X POST -H "Content-Type: application/json" \
-  --data '{"jsonrpc":"2.0","method":"optimism_version","params":[],"id":1}' \
-  http://localhost:8560
+  --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+  $L1_RPC_URL
+
+# Check your rollup's sync status
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"optimism_syncStatus","params":[],"id":1}' \
+  http://localhost:8547
 ```
-
-### Monitor dispute games on L1
-
-```bash
-# Check latest dispute game count (requires cast from foundry)
-cast call $GAME_FACTORY_ADDRESS "gameCount()" --rpc-url $L1_RPC_URL
-```
-
-Monitor your proposer's ETH balance and gas usage to ensure continuous operation.
 Your proposer is now operational!
 
 ## Next steps
