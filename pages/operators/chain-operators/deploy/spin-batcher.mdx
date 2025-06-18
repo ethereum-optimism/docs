@@ -20,7 +20,7 @@ import { Callout, Steps } from 'nextra/components'
 
 # Spinning up the batcher
 
-After you have spun up your [sequencer](Add link later), you need to configure a batcher to submit L2 transaction batches to L1. The batcher is a critical component that ensures L2 transaction data is available on L1 for data availability and enables users to reconstruct the L2 state.
+After you have spun up your \[sequencer]\(Add link later), you need to configure a batcher to submit L2 transaction batches to L1. The batcher is a critical component that ensures L2 transaction data is available on L1 for data availability and enables users to reconstruct the L2 state.
 
 This guide assumes you already have a functioning sequencer and the necessary L1 contracts deployed using [`op-deployer`](/operators/chain-operators/tools/op-deployer). If you haven't set up your sequencer yet, please refer to the \[sequencer guide]\(add this later) first.
 
@@ -156,33 +156,35 @@ If you prefer containerized deployment, you can use the official Docker images.
     This configuration assumes your sequencer is running in a Docker container named `sequencer-node` on the same `op-stack` network. Make sure your sequencer is running before starting the batcher.
   </Callout>
 
-    volumes:
-      - .:/workspace
-    working_dir: /workspace
-    ports:
-      - "8548:8548"
-    env_file:
-      - .env
-    command: |
-      --l2-eth-rpc=${L2_RPC_URL}
-      --rollup-rpc=${ROLLUP_RPC_URL}
-      --poll-interval=${POLL_INTERVAL}
-      --sub-safety-margin=${SUB_SAFETY_MARGIN}
-      --num-confirmations=${NUM_CONFIRMATIONS}
-      --safe-abort-nonce-too-low-count=${SAFE_ABORT_NONCE_TOO_LOW_COUNT}
-      --resubmission-timeout=${RESUBMISSION_TIMEOUT}
-      --rpc.addr=0.0.0.0
-      --rpc.port=${BATCHER_RPC_PORT}
-      --rpc.enable-admin
-      --max-channel-duration=${MAX_CHANNEL_DURATION}
-      --l1-eth-rpc=${L1_RPC_URL}
-      --private-key=${BATCHER_PRIVATE_KEY}
-      --batch-type=1
-      --data-availability-type=blobs
-      --compress
-      --log.level=info
-    restart: unless-stopped
-  ```
+  volumes:
+
+  *   .:/workspace
+      working\_dir: /workspace
+      ports:
+  *   "8548:8548"
+      env\_file:
+  *   .env
+      command: |
+      \--l2-eth-rpc=${L2_RPC_URL}
+      \--rollup-rpc=${ROLLUP_RPC_URL}
+      \--poll-interval=${POLL_INTERVAL}
+      \--sub-safety-margin=${SUB_SAFETY_MARGIN}
+      \--num-confirmations=${NUM_CONFIRMATIONS}
+      \--safe-abort-nonce-too-low-count=${SAFE_ABORT_NONCE_TOO_LOW_COUNT}
+      \--resubmission-timeout=${RESUBMISSION_TIMEOUT}
+      \--rpc.addr=0.0.0.0
+      \--rpc.port=${BATCHER_RPC_PORT}
+      \--rpc.enable-admin
+      \--max-channel-duration=${MAX_CHANNEL_DURATION}
+      \--l1-eth-rpc=${L1_RPC_URL}
+      \--private-key=${BATCHER_PRIVATE_KEY}
+      \--batch-type=1
+      \--data-availability-type=blobs
+      \--compress
+      \--log.level=info
+      restart: unless-stopped
+
+  ````
 
   4.  **Start the batcher service:**
 
@@ -195,7 +197,7 @@ If you prefer containerized deployment, you can use the official Docker images.
 
   # View logs
   docker-compose logs -f op-batcher
-  ```
+  ````
 
   5.  **Verify batcher is running:**
 
