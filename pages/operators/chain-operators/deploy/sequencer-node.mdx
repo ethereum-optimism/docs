@@ -42,7 +42,7 @@ Before spinning up your sequencer, ensure you have completed these steps:
 
 **1. Successful L1 contract deployment:**
 
-*   Deployed L1 contracts using [`op-deployer apply`](/operators/chain-operators/tools/op-deployer#apply-deploy-your-chain)
+*   Deployed L1 contracts using [`op-deployer apply`](/operators/chain-operators/tools/op-deployer#apply-deploy-your-chain) commad.
 *   Generated genesis and rollup configuration files using:
     ```bash
     op-deployer inspect genesis --workdir .deployer <L2_CHAIN_ID> > .deployer/genesis.json
@@ -55,13 +55,7 @@ Before spinning up your sequencer, ensure you have completed these steps:
 *   `rollup.json` - Rollup configuration file for op-node
 *   Access to your deployment `state.json` file from op-deployer
 
-**3. Essential addresses and keys:**
-
-*   **Sequencer private key** - For signing blocks on the P2P network
-*   **Batcher private key** - For submitting transaction batches to L1
-*   **Proposer private key** - For submitting state roots to L1
-
-**4. L1 network access:**
+**3. L1 network access:**
 
 *   L1 RPC endpoint (Ethereum, Sepolia, etc.)
 *   L1 Beacon node endpoint
@@ -82,27 +76,19 @@ To ensure you're using the latest compatible versions of OP Stack components, al
 The main components you'll need for sequencer deployment are:
 
 *   **op-node**: Look for the latest `op-node/v*` release
-*   **op-geth**: Look for the latest `op-geth/v*` release (found at [https://github.com/ethereum-optimism/op-geth/releases](https://github.com/ethereum-optimism/op-geth/releases))
+*   **op-geth**: Look for the latest `op-geth/v*` [release](https://github.com/ethereum-optimism/op-geth/releases)
 
 <Callout type="info">
-The versions used in this guide (op-node/v1.13.3 and op-geth/v1.101511.0) are verified compatible versions. 
-According to the [op-node v1.13.3 release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.13.3), this op-node version specifically corresponds to op-geth v1.101511.0. 
+The versions used in this guide (**op-node/v1.13.3** and **op-geth/v1.101511.0**) are verified compatible versions. 
+
+According to the **op-node v1.13.3** [release notes](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.13.3), this op-node version specifically corresponds to **op-geth v1.101511.0**. 
 Always check the release notes to ensure you're using compatible versions.
 </Callout>
-
-### Docker images
-
-Pre-built Docker images are available for all releases at:
-
-*   `us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:[VERSION]`
-*   `us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:[VERSION]`
-
-Replace `[VERSION]` with the specific version tag from the releases page.
 
 ## Software installation
 
 For spinning up a sequencer, we recommend **building from source** as it provides better control, and helps with debugging.
-A Docker alternative is also provided for development or containerized environments.
+In this guide, a Docker alternative is also provided.
 
 ### Build from source (Recommended)
 
@@ -141,22 +127,19 @@ make geth
 # Binary will be available at ./build/bin/geth
 ```
 
-### Docker alternative (For containerized environments)
-
-If you prefer containerized deployment, you can use the official Docker images.
-Note that all subsequent configuration examples will need to be adapted for Docker usage.
-
-
 ### Verify installation
 
-Regardless of your chosen method, verify your installation:
-
-**For build-from-source:**
+Check that you have properly installed the needed components.
 
 ```bash
+# Make sure you're in the right directory
 ./bin/op-node --version
 ./build/bin/geth version
 ```
+
+### Docker alternative (For containerized environments)
+
+If you prefer containerized deployment, you can use the official Docker images.
 
 ### Complete Docker setup guide
 
@@ -165,91 +148,135 @@ Regardless of your chosen method, verify your installation:
 
   If you choose the Docker approach, you'll need to:
 
-  1.  **Create a docker-compose.yml** for easier management:
-
-  ```yaml
-  version: '3.8'
-
-  services:
-    op-geth:
-      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0
-      volumes:
-        - ./op-geth-data:/op-geth-data
-        - ./genesis.json:/genesis.json
-        - ./jwt.txt:/jwt.txt
-      ports:
-        - "8545:8545"
-        - "8546:8546"
-        - "8551:8551"
-      command: |
-        --datadir=/op-geth-data
-        --http --http.addr=0.0.0.0 --http.port=8545
-        --ws --ws.addr=0.0.0.0 --ws.port=8546
-        --authrpc.addr=0.0.0.0 --authrpc.port=8551
-        --authrpc.jwtsecret=/jwt.txt
-        --syncmode=full
-        --gcmode=archive
-        --rollup.disabletxpoolgossip=true
-        --rollup.sequencerhttp=http://op-node:8547
-        --http.vhosts="*"
-        --http.corsdomain="*"
-        --http.api=eth,net,web3,debug,txpool,admin
-        --ws.origins="*"
-        --ws.api=eth,net,web3,debug,txpool,admin
-        --authrpc.vhosts="*"
-
-    op-node:
-      image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3
-      depends_on:
-        - op-geth
-      volumes:
-        - ./rollup.json:/rollup.json
-        - ./jwt.txt:/jwt.txt
-        - ./.env:/.env
-      ports:
-        - "8547:8547"
-        - "9222:9222"
-      environment:
-        - L1_RPC_URL=${L1_RPC_URL}
-        - L1_BEACON_URL=${L1_BEACON_URL}
-        - PRIVATE_KEY=${PRIVATE_KEY}
-        - P2P_ADVERTISE_IP=${P2P_ADVERTISE_IP}
-      command: |
-        --l1=${L1_RPC_URL}
-        --l1.beacon=${L1_BEACON_URL}
-        --l2=http://op-geth:8551
-        --l2.jwt-secret=/jwt.txt
-        --rollup.config=/rollup.json
-        --sequencer.enabled=true
-        --sequencer.stopped=false
-        --sequencer.max-safe-lag=3600
-        --verifier.l1-confs=4
-        --p2p.listen.ip=0.0.0.0
-        --p2p.listen.tcp=9222
-        --p2p.listen.udp=9222
-        --p2p.advertise.ip=${P2P_ADVERTISE_IP}
-        --p2p.advertise.tcp=9222
-        --p2p.advertise.udp=9222
-        --p2p.sequencer.key=${PRIVATE_KEY}
-        --rpc.addr=0.0.0.0
-        --rpc.port=8547
-        --rpc.enable-admin
-        --log.level=info
-        --log.format=json
-  ```
-
-  2.  **Initialize op-geth with Docker before starting services:**
+  1.  **Set up directory structure and copy configuration files:**
 
   ```bash
-  # Initialize op-geth using Docker
-  docker run --rm \
-    -v $(pwd)/op-geth-data:/op-geth-data \
-    -v $(pwd)/genesis.json:/genesis.json \
-    us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 \
-    init --datadir=/op-geth-data --state.scheme=hash /genesis.json
+  # Create your sequencer working directory
+  mkdir ~/sequencer-node
+  cd ~/sequencer-node
+
+  # Copy configuration files from op-deployer output
+  # Note: Adjust the path if your .deployer directory is located elsewhere
+  cp ~/.deployer/genesis.json .
+  cp ~/.deployer/rollup.json .
+
+  # Generate JWT secret
+  openssl rand -hex 32 > jwt.txt
+  chmod 600 jwt.txt
   ```
 
-  3.  **Start the services:**
+  2.  **Create environment variables file:**
+
+  ```bash
+  # Create .env file with your actual values
+  cat > .env << 'EOF'
+  # L1 Configuration - Replace with your actual RPC URLs
+  L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+  L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
+
+  # Private keys - Replace with your actual private key
+  PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
+
+  # P2P configuration - Replace with your actual public IP
+  P2P_ADVERTISE_IP=YOUR_ACTUAL_PUBLIC_IP
+  EOF
+  ```
+
+  **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
+
+  3.  **Create docker-compose.yml:**
+
+  ```yaml
+version: '3.8'
+
+services:
+  op-geth:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0
+    volumes:
+      # Mount entire directory to avoid file mounting issues
+      - .:/workspace
+    working_dir: /workspace
+    ports:
+      - "8545:8545"
+      - "8546:8546"
+      - "8551:8551"
+    command:
+      - "--datadir=/workspace/op-geth-data"
+      - "--http"
+      - "--http.addr=0.0.0.0"
+      - "--http.port=8545"
+      - "--ws"
+      - "--ws.addr=0.0.0.0"
+      - "--ws.port=8546"
+      - "--authrpc.addr=0.0.0.0"
+      - "--authrpc.port=8551"
+      - "--authrpc.jwtsecret=/workspace/jwt.txt"
+      - "--syncmode=full"
+      - "--gcmode=archive"
+      - "--rollup.disabletxpoolgossip=true"
+      - "--rollup.sequencerhttp=http://op-node:8547"
+      - "--http.vhosts=*"
+      - "--http.corsdomain=*"
+      - "--http.api=eth,net,web3,debug,txpool,admin"
+      - "--ws.origins=*"
+      - "--ws.api=eth,net,web3,debug,txpool,admin"
+      - "--authrpc.vhosts=*"
+
+  op-node:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3
+    depends_on:
+      - op-geth
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    ports:
+      - "8547:8547"
+      - "9222:9222"
+    environment:
+      - L1_RPC_URL=${L1_RPC_URL}
+      - L1_BEACON_URL=${L1_BEACON_URL}
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - P2P_ADVERTISE_IP=${P2P_ADVERTISE_IP}
+    command:
+      - "op-node"
+      - "--l1=${L1_RPC_URL}"
+      - "--l1.beacon=${L1_BEACON_URL}"
+      - "--l2=http://op-geth:8551"
+      - "--l2.jwt-secret=/workspace/jwt.txt"
+      - "--rollup.config=/workspace/rollup.json"
+      - "--sequencer.enabled=true"
+      - "--sequencer.stopped=false"
+      - "--sequencer.max-safe-lag=3600"
+      - "--verifier.l1-confs=4"
+      - "--p2p.listen.ip=0.0.0.0"
+      - "--p2p.listen.tcp=9222"
+      - "--p2p.listen.udp=9222"
+      - "--p2p.advertise.ip=${P2P_ADVERTISE_IP}"
+      - "--p2p.advertise.tcp=9222"
+      - "--p2p.advertise.udp=9222"
+      - "--p2p.sequencer.key=${PRIVATE_KEY}"
+      - "--rpc.addr=0.0.0.0"
+      - "--rpc.port=8547"
+      - "--rpc.enable-admin"
+      - "--log.level=info"
+      - "--log.format=json"
+  ```
+
+  4.  **Initialize op-geth with Docker:**
+
+  ```bash
+  # Make sure you're in the sequencer-node directory with all files copied
+  cd ~/sequencer-node
+
+  # Initialize op-geth using Docker
+  docker run --rm \
+    -v $(pwd):/workspace \
+    -w /workspace \
+    us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 \
+    init --datadir=./op-geth-data --state.scheme=hash ./genesis.json
+  ```
+
+  5.  **Start the services:**
 
   ```bash
   # Start both services
@@ -259,31 +286,24 @@ Regardless of your chosen method, verify your installation:
   docker-compose logs -f
   ```
 
-  4.  **Directory structure for Docker approach:**
+  6.  **Final directory structure:**
 
   ```bash
   ~/sequencer-node/
-  ├── jwt.txt
-  ├── genesis.json
-  ├── rollup.json
-  ├── .env                    # Environment variables
-  ├── docker-compose.yml      # Docker configuration
-  └── op-geth-data/          # Created by Docker during initialization
-      ├── geth/              # Geth data
-      └── keystore/          # Key files
+  ├── jwt.txt                 # Generated JWT secret
+  ├── genesis.json           # Copied from ~/.deployer/
+  ├── rollup.json            # Copied from ~/.deployer/
+  ├── .env                   # Environment variables
+  ├── docker-compose.yml     # Docker configuration
+  └── op-geth-data/         # Created by Docker during initialization
+      ├── geth/             # Geth data
+      └── keystore/         # Key files
   ```
 
 </details>
 
-**For Docker:**
-
-```bash
-docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.3 op-node --version
-docker run --rm us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.0 version
-```
-
 <Callout type="warning">
-  The rest of this guide assumes you're using the **build-from-source** approach.
+The rest of this guide assumes you're using the **build-from-source** approach.
 If you chose Docker, refer to the command equivalents above or the Docker setup guide in the collapsible section.
 </Callout>
 ## Configuration setup
