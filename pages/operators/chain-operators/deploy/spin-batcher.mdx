@@ -153,38 +153,44 @@ If you prefer containerized deployment, you can use the official Docker images.
   3.  **Create docker-compose.yml:**
 
   <Callout type="info">
-    This configuration assumes your sequencer is running in a Docker container named `sequencer-node` on the same `op-stack` network. Make sure your sequencer is running before starting the batcher.
+    This configuration assumes your sequencer is running in a Docker container named `sequencer-node` on the same `op-stack` network. 
+    Make sure your sequencer is running before starting the batcher.
   </Callout>
 
-  volumes:
+  ```yaml
+  version: '3.8'
 
-  *   .:/workspace
-      working\_dir: /workspace
-      ports:
-  *   "8548:8548"
-      env\_file:
-  *   .env
-      command: |
-      \--l2-eth-rpc=${L2_RPC_URL}
-      \--rollup-rpc=${ROLLUP_RPC_URL}
-      \--poll-interval=${POLL_INTERVAL}
-      \--sub-safety-margin=${SUB_SAFETY_MARGIN}
-      \--num-confirmations=${NUM_CONFIRMATIONS}
-      \--safe-abort-nonce-too-low-count=${SAFE_ABORT_NONCE_TOO_LOW_COUNT}
-      \--resubmission-timeout=${RESUBMISSION_TIMEOUT}
-      \--rpc.addr=0.0.0.0
-      \--rpc.port=${BATCHER_RPC_PORT}
-      \--rpc.enable-admin
-      \--max-channel-duration=${MAX_CHANNEL_DURATION}
-      \--l1-eth-rpc=${L1_RPC_URL}
-      \--private-key=${BATCHER_PRIVATE_KEY}
-      \--batch-type=1
-      \--data-availability-type=blobs
-      \--compress
-      \--log.level=info
-      restart: unless-stopped
-
-  ````
+services:
+  op-batcher:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:v1.13.1
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    ports:
+      - "8548:8548"
+    env_file:
+      - .env
+    command:
+      - "op-batcher"
+      - "--l2-eth-rpc=${L2_RPC_URL}"
+      - "--rollup-rpc=${ROLLUP_RPC_URL}"
+      - "--poll-interval=${POLL_INTERVAL}"
+      - "--sub-safety-margin=${SUB_SAFETY_MARGIN}"
+      - "--num-confirmations=${NUM_CONFIRMATIONS}"
+      - "--safe-abort-nonce-too-low-count=${SAFE_ABORT_NONCE_TOO_LOW_COUNT}"
+      - "--resubmission-timeout=${RESUBMISSION_TIMEOUT}"
+      - "--rpc.addr=0.0.0.0"
+      - "--rpc.port=${BATCHER_RPC_PORT}"
+      - "--rpc.enable-admin"
+      - "--max-channel-duration=${MAX_CHANNEL_DURATION}"
+      - "--l1-eth-rpc=${L1_RPC_URL}"
+      - "--private-key=${BATCHER_PRIVATE_KEY}"
+      - "--batch-type=1"
+      - "--data-availability-type=blobs"
+      - "--compress"
+      - "--log.level=info"
+    restart: unless-stopped
+  ```
 
   4.  **Start the batcher service:**
 
