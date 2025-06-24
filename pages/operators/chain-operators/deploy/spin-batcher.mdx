@@ -90,150 +90,6 @@ Run this command to verify the installation:
 ./bin/op-batcher --version
 ```
 
-### Docker alternative (For containerized environments)
-
-If you prefer containerized deployment, you can use the official Docker images.
-
-### Complete Docker setup guide
-
-<details>
-  <summary>Complete Docker setup guide</summary>
-
-  If you choose the Docker approach, you'll need to:
-
-  1.  **Set up directory structure and copy configuration files:**
-
-  ```bash
-  # Create your batcher working directory
-  mkdir ~/batcher-node
-  cd ~/batcher-node
-
-  # Copy configuration files from op-deployer output
-  # Note: Adjust the path if your .deployer directory is located elsewhere
-  cp ~/.deployer/state.json .
-
-  # Extract the BatchInbox address
-  BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].systemConfigProxyAddress')
-  echo "BatchInbox Address: $BATCH_INBOX_ADDRESS"
-  ```
-
-  2.  **Create environment variables file:**
-
-  ```bash
-  # Create .env file with your actual values
-  cat > .env << 'EOF'
-  # L1 Configuration - Replace with your actual RPC URLs
-  L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
-
-  # L2 Configuration - Should match your sequencer setup
-  L2_RPC_URL=http://sequencer-node:8545
-  ROLLUP_RPC_URL=http://sequencer-node:8547
-
-  # Contract addresses - Extract from your op-deployer output
-  BATCH_INBOX_ADDRESS=YOUR_ACTUAL_BATCH_INBOX_ADDRESS
-
-  # Private key - Replace with your actual private key
-  BATCHER_PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
-
-  # Batcher configuration
-  POLL_INTERVAL=1s
-  SUB_SAFETY_MARGIN=6
-  NUM_CONFIRMATIONS=1
-  SAFE_ABORT_NONCE_TOO_LOW_COUNT=3
-  RESUBMISSION_TIMEOUT=30s
-  MAX_CHANNEL_DURATION=25
-
-  # RPC configuration
-  BATCHER_RPC_PORT=8548
-  EOF
-  ```
-
-  **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
-
-  3.  **Create docker-compose.yml:**
-
-  <Callout type="info">
-    This configuration assumes your sequencer is running in a Docker container named `sequencer-node` on the same `op-stack` network. Make sure your sequencer is running before starting the batcher.
-  </Callout>
-
-  ```yaml
-  version: '3.8'
-
-  # IMPORTANT: This batcher depends on a running sequencer node.
-  # Make sure your sequencer (op-geth and op-node) is running before starting this batcher.
-  # The sequencer should be accessible at the L2_RPC_URL and ROLLUP_RPC_URL specified in your .env file.
-
-  services:
-  op-batcher:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:v1.13.1
-    volumes:
-      - .:/workspace
-    working_dir: /workspace
-    ports:
-      - "8548:8548"
-    env_file:
-      - .env
-    command: |
-      --l2-eth-rpc=${L2_RPC_URL}
-      --rollup-rpc=${ROLLUP_RPC_URL}
-      --poll-interval=${POLL_INTERVAL}
-      --sub-safety-margin=${SUB_SAFETY_MARGIN}
-      --num-confirmations=${NUM_CONFIRMATIONS}
-      --safe-abort-nonce-too-low-count=${SAFE_ABORT_NONCE_TOO_LOW_COUNT}
-      --resubmission-timeout=${RESUBMISSION_TIMEOUT}
-      --rpc.addr=0.0.0.0
-      --rpc.port=${BATCHER_RPC_PORT}
-      --rpc.enable-admin
-      --max-channel-duration=${MAX_CHANNEL_DURATION}
-      --l1-eth-rpc=${L1_RPC_URL}
-      --private-key=${BATCHER_PRIVATE_KEY}
-      --batch-type=1
-      --data-availability-type=blobs
-      --compress
-      --log.level=info
-    restart: unless-stopped
-  ```
-
-  4.  **Start the batcher service:**
-
-  ```bash
-  # Make sure your sequencer network exists
-  docker network create op-stack 2>/dev/null || true
-
-  # Start the batcher
-  docker-compose up -d
-
-  # View logs
-  docker-compose logs -f op-batcher
-  ```
-
-  5.  **Verify batcher is running:**
-
-  ```bash
-  # Check batcher RPC is responding
-  curl -X POST -H "Content-Type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"admin_startBatcher","params":[],"id":1}' \
-    http://localhost:8548
-
-  # Check container status
-  docker-compose ps
-  ```
-
-  6.  **Final directory structure:**
-
-  ```bash
-  ~/batcher-node/
-  ├── state.json             # Copied from ~/.deployer/
-  ├── .env                   # Environment variables
-  └── docker-compose.yml     # Docker configuration
-  ```
-</details>
-
-<Callout type="warning">
-  The rest of this guide assumes you're using the **build-from-source** approach.
-  If you chose Docker, refer to the command equivalents above or the Docker setup guide in the collapsible section.
-</Callout>
-
 ## Configuration setup
 
 ### 1. Organize your workspace
@@ -439,6 +295,151 @@ curl -X POST -H "Content-Type: application/json" \
 
 <Callout type="info">
   For detailed cost analysis and optimization strategies, refer to the [Fee calculation tools](/operators/chain-operators/tools/fee-calculator).
+</Callout>
+
+
+## Docker alternative (For containerized environments)
+
+If you prefer containerized deployment, you can use the official Docker images.
+
+### Complete Docker setup guide
+
+<details>
+  <summary>Complete Docker setup guide</summary>
+
+  If you choose the Docker approach, you'll need to:
+
+  1.  **Set up directory structure and copy configuration files:**
+
+  ```bash
+  # Create your batcher working directory
+  mkdir ~/batcher-node
+  cd ~/batcher-node
+
+  # Copy configuration files from op-deployer output
+  # Note: Adjust the path if your .deployer directory is located elsewhere
+  cp ~/.deployer/state.json .
+
+  # Extract the BatchInbox address
+  BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].systemConfigProxyAddress')
+  echo "BatchInbox Address: $BATCH_INBOX_ADDRESS"
+  ```
+
+  2.  **Create environment variables file:**
+
+  ```bash
+  # Create .env file with your actual values
+  cat > .env << 'EOF'
+  # L1 Configuration - Replace with your actual RPC URLs
+  L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+
+  # L2 Configuration - Should match your sequencer setup
+  L2_RPC_URL=http://sequencer-node:8545
+  ROLLUP_RPC_URL=http://sequencer-node:8547
+
+  # Contract addresses - Extract from your op-deployer output
+  BATCH_INBOX_ADDRESS=YOUR_ACTUAL_BATCH_INBOX_ADDRESS
+
+  # Private key - Replace with your actual private key
+  BATCHER_PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
+
+  # Batcher configuration
+  POLL_INTERVAL=1s
+  SUB_SAFETY_MARGIN=6
+  NUM_CONFIRMATIONS=1
+  SAFE_ABORT_NONCE_TOO_LOW_COUNT=3
+  RESUBMISSION_TIMEOUT=30s
+  MAX_CHANNEL_DURATION=25
+
+  # RPC configuration
+  BATCHER_RPC_PORT=8548
+  EOF
+  ```
+
+  **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
+
+  3.  **Create docker-compose.yml:**
+
+  <Callout type="info">
+    This configuration assumes your sequencer is running in a Docker container named `sequencer-node` on the same `op-stack` network. Make sure your sequencer is running before starting the batcher.
+  </Callout>
+
+  ```yaml
+  version: '3.8'
+
+  # IMPORTANT: This batcher depends on a running sequencer node.
+  # Make sure your sequencer (op-geth and op-node) is running before starting this batcher.
+  # The sequencer should be accessible at the L2_RPC_URL and ROLLUP_RPC_URL specified in your .env file.
+
+  services:
+  op-batcher:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:v1.13.1
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    ports:
+      - "8548:8548"
+    env_file:
+      - .env
+    command: |
+      --l2-eth-rpc=${L2_RPC_URL}
+      --rollup-rpc=${ROLLUP_RPC_URL}
+      --poll-interval=${POLL_INTERVAL}
+      --sub-safety-margin=${SUB_SAFETY_MARGIN}
+      --num-confirmations=${NUM_CONFIRMATIONS}
+      --safe-abort-nonce-too-low-count=${SAFE_ABORT_NONCE_TOO_LOW_COUNT}
+      --resubmission-timeout=${RESUBMISSION_TIMEOUT}
+      --rpc.addr=0.0.0.0
+      --rpc.port=${BATCHER_RPC_PORT}
+      --rpc.enable-admin
+      --max-channel-duration=${MAX_CHANNEL_DURATION}
+      --l1-eth-rpc=${L1_RPC_URL}
+      --private-key=${BATCHER_PRIVATE_KEY}
+      --batch-type=1
+      --data-availability-type=blobs
+      --compress
+      --log.level=info
+    restart: unless-stopped
+  ```
+
+  4.  **Start the batcher service:**
+
+  ```bash
+  # Make sure your sequencer network exists
+  docker network create op-stack 2>/dev/null || true
+
+  # Start the batcher
+  docker-compose up -d
+
+  # View logs
+  docker-compose logs -f op-batcher
+  ```
+
+  5.  **Verify batcher is running:**
+
+  ```bash
+  # Check batcher RPC is responding
+  curl -X POST -H "Content-Type: application/json" \
+    --data '{"jsonrpc":"2.0","method":"admin_startBatcher","params":[],"id":1}' \
+    http://localhost:8548
+
+  # Check container status
+  docker-compose ps
+  ```
+
+  6.  **Final directory structure:**
+
+  ```bash
+  ~/batcher-node/
+  ├── state.json             # Copied from ~/.deployer/
+  ├── .env                   # Environment variables
+  └── docker-compose.yml     # Docker configuration
+  ```
+</details>
+
+<Callout type="warning">
+  The rest of this guide assumes you're using the **build-from-source** approach.
+  If you chose Docker, refer to the command equivalents above or the Docker setup guide in the collapsible section.
 </Callout>
 
 ## Next steps
