@@ -20,9 +20,11 @@ import { Callout, Steps } from 'nextra/components'
 
 # Spinning up the proposer
 
-After you have (spun up your sequencer)[link-to-sequencer-guide], you need to attach a proposer to post your L2 state roots data back onto L1 so we can prove withdrawal validity. The proposer is a critical component that enables trustless L2-to-L1 messaging and creates the authoritative view of L2 state from L1's perspective.
+After you have \[spun up your sequencer]\(link to sequencer guide), you need to attach a proposer to post your L2 state roots data back onto L1 so we can prove withdrawal validity. The proposer is a critical component that enables trustless L2-to-L1 messaging and creates the authoritative view of L2 state from L1's perspective.
 
-This guide assumes you already have a functioning sequencer and the necessary L1 contracts deployed using [`op-deployer`](/operators/chain-operators/tools/op-deployer). If you haven't set up your sequencer yet, please refer to the \[sequencer guide]\(Todo - Add this link when it's live) first.
+This guide assumes you already have a functioning sequencer and the necessary L1 contracts deployed using [`op-deployer`](/operators/chain-operators/tools/op-deployer). If you haven't set up your sequencer yet, please refer to the \[sequencer guide]\(link to sequencerguide) first.
+
+To see configuration info for the proposer, check out the [configuration page](/operators/chain-operators/configuration/proposer).
 
 ## Understanding the proposer's role
 
@@ -146,21 +148,6 @@ POLL_INTERVAL=20s
 PROPOSER_RPC_PORT=8560
 ```
 
-Your final directory structure should look like:
-
-```bash
-~/
-├── optimism/               # Contains op-proposer binary
-├── sequencer-node/         # Your sequencer setup
-├── .deployer/             # From op-deployer
-│   └── state.json
-└── proposer-node/         # Your proposer working directory
-    ├── state.json         # Copied from .deployer
-    ├── .env
-    └── scripts/
-        └── start-proposer.sh
-```
-
 **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values!
 
 ### 4. Get your private key
@@ -191,6 +178,21 @@ source .env
   --resubmission-timeout=30s \
   --wait-node-sync=true \
   --log.level=info
+```
+
+Your final directory structure should look like:
+
+```bash
+~/
+├── optimism/               # Contains op-proposer binary
+├── sequencer-node/         # Your sequencer setup
+├── .deployer/              # From op-deployer
+│   └── state.json
+└── proposer-node/          # Your proposer working directory
+    ├── state.json          # Copied from .deployer
+    ├── .env
+    └── scripts/
+        └── start-proposer.sh
 ```
 
 ## Starting the proposer
