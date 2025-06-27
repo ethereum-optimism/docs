@@ -204,16 +204,15 @@ To use local artifacts (recommended for production or if you're experiencing iss
 
     ```bash
     git clone https://github.com/ethereum-optimism/optimism.git
-        cd optimism
-        git checkout v1.8.0-rc.4  # Use the desired version
-
+    cd optimism
+    git checkout v1.8.0-rc.4  # Use the desired version
     ```
 
 2.  Build the contract artifacts:
 
     ```bash
-        cd packages/contracts-bedrock
-        just build
+    cd packages/contracts-bedrock
+    just build
     ```
 
 3.  Use the local path in your command, referencing the artifacts from:
@@ -264,7 +263,6 @@ By default, `op-deployer` will fill in all other configuration variables with th
 ```toml
 [globalDeployOverrides]
   l2BlockTime = 1# 1s L2blockTime is also standard, op-deployer defaults to 2s
-
 ```
 
 You can also do chain by chain configurations in the `chains` table.
@@ -279,7 +277,6 @@ Now that you've created your intent file, you can apply it to your chain to depl
 
 ```bash
 op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
-
 ```
 
 *   Replace `<rpc-url>` with your `L1_RPC_URL` and `<private key>` with your private key
@@ -311,7 +308,6 @@ op-deployer verify \
   --input-file <filepath to input .json file> \
   --etherscan-api-key <your free etherscan api key> \
   --artifacts-locator <file:///path/to/artifacts>
-
 ```
 
 **Common options:**
@@ -322,7 +318,7 @@ op-deployer verify \
 *   `-input-file`: Path to a JSON file containing deployment data:
     *   Create an `input.json` file in the same directory.
     *   Navigate to your `state.json` file and locate the `implementationsDeployment` object.
-    *   opy everything inside the `implementationsDeployment` object (without the object name itself) and paste it into your new `input.json` file.
+    *   Copy everything inside the `implementationsDeployment` object (without the object name itself) and paste it into your new `input.json` file.
 
 <Callout type="info">
   You don't need to specify a `--workdir`, op-deployer will automatically look for deployment artifacts from the deploy step, unless overridden.
@@ -349,7 +345,6 @@ Inspect the `state.json` file by navigating to your working directory. With the 
 ```bash
 op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
 op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
-
 ```
 
 Now that you have your `genesis.json` and `rollup.json` you can spin up a node on your network. You can also use the following inspect subcommands to get additional chain artifacts:
@@ -358,7 +353,6 @@ Now that you have your `genesis.json` and `rollup.json` you can spin up a node o
 op-deployer inspect l1 --workdir .deployer <l2-chain-id># outputs all L1 contract addresses for an L2 chain
 op-deployer inspect deploy-config --workdir .deployer <l2-chain-id># outputs the deploy config for an L2 chain
 op-deployer inspect l2-semvers --workdir .deployer <l2-chain-id># outputs the semvers for all L2 chains
-
 ```
 
 ## Bootstrap usage
@@ -387,7 +381,6 @@ op-deployer bootstrap proxy \
   --artifacts-locator <file:///path/to/artifacts> \
   --proxy-owner <PROXY_ADMIN_OWNER_ADDRESS> \
   --outfile proxy-output.json
-
 ```
 
 **Parameters**
@@ -421,7 +414,6 @@ The command outputs a JSON file containing the deployed proxy contract address:
 {
   "Proxy": "0x123...abc"
 }
-
 ```
 
 ### Bootstrap superchain
@@ -440,7 +432,6 @@ op-deployer bootstrap superchain \
   --guardian <GUARDIAN_ADDRESS> \
   --paused <false> \
   --outfile superchain-output.json
-
 ```
 
 **Parameters**
@@ -471,7 +462,6 @@ op-deployer bootstrap superchain \
   --guardian <GUARDIAN_ADDRESS> \
   --paused false \
   --outfile superchain-output.json
-
 ```
 
 **Output**
@@ -483,7 +473,6 @@ The command outputs a JSON file containing the deployed superchain contract addr
   "SuperchainConfig": "0x123...abc",
   "ProtocolVersions": "0x456...def"
 }
-
 ```
 
 ### Bootstrap implementations
@@ -545,7 +534,6 @@ op-deployer bootstrap implementations \
   --protocol-versions-proxy <address output from bootstrap superchain> \
   --superchain-config-proxy <address output from bootstrap superchain> \
   --upgrade-controller <superchain-proxy-admin-owner used in bootstrap superchain>
-
 ```
 
 **Output**
@@ -575,7 +563,6 @@ The command outputs a JSON file containing the deployed implementation contract 
   "superchainConfigImplAddress": "0x4da82a327773965b8d4d85fa3db8249b387458e7",
   "protocolVersionsImplAddress": "0x37e15e4d6dffa9e5e320ee1ec036922e563cb76c"
 }
-
 ```
 
 ## Next steps
