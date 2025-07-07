@@ -34,9 +34,8 @@ Upgrade 16 contains these main changes:
 
 Upgrade 16 is an L1 smart contracts upgrade for the OP Stack. We do not expect any downtime or changes in performance.
 
-Chain operators must complete two tasks:
+Chain operators must complete the following tasks:
 
-*   Deploy new dispute game contracts with new absolute prestates
 *   Update `op-challenger` to [op-challenger/v1.5.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.5.1)
 
 Chain operators should be aware that Upgrade 16 involves a one-time invalidation of all existing withdrawal proofs. Users who have proven withdrawals can either finalize withdrawals prior to the activation of Upgrade 16 or will be required to re-prove these withdrawals after the upgrade activates.
@@ -95,17 +94,11 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
 
   Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
 
-  ### Deploy new dispute game contracts
-
-  You will then take the absolute prestate and deploy new `FaultDisputeGame` and `PermissionedDisputeGame` contracts with that value.
-
-  ### Update the DisputeGameFactory
-
-  You will then need to update the `DisputeGameFactory` to point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`.
-
   ### Execute the upgrade
 
-  Once your `op-challenger` is ready with the new preimage, you can execute the "Set Dispute Game Implementation" transaction. Please simulate and validate that the expected output prior to executing the transaction.
+  Once your `op-challenger` is ready with the new preimage, you can execute the upgrade transaction. This should be done by making a delegatecall to the `upgrade()` function of the OP Contract Manager (at the address listed in [the registry](https://github.com/ethereum-optimism/superchain-registry/blob/6621a0f13ce523fe1bb8deea739fe37abe20f90d/validation/standard/standard-versions-mainnet.toml#L22).
+
+  Please simulate and validate the expected output prior to executing the transaction.
 </Steps>
 
 ## For bridges and users
