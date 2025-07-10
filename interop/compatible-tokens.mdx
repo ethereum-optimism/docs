@@ -1,0 +1,120 @@
+---
+title: Compatible Tokens
+description: Learn about SuperchainERC20 tokens and how they work with Superchain interoperability.
+---
+
+# Compatible Tokens
+
+<Warning>
+SuperchainERC20 tokens are currently in active development and not yet available in production.
+</Warning>
+
+SuperchainERC20 tokens are a new token standard that enables native cross-chain functionality within the Superchain. These tokens can move seamlessly between OP Stack chains without the need for traditional bridges.
+
+## What are SuperchainERC20 Tokens?
+
+SuperchainERC20 tokens extend the standard ERC20 interface to support native cross-chain transfers. They maintain the same properties as regular ERC20 tokens while adding the ability to:
+
+- Move between chains via native minting and burning
+- Maintain consistent total supply across the Superchain
+- Avoid liquidity fragmentation issues
+- Provide better user experience than wrapped tokens
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Native Cross-Chain" icon="link">
+    No bridges required - tokens move via native minting/burning
+  </Card>
+  <Card title="Consistent Supply" icon="balance-scale">
+    Total supply remains constant across all chains
+  </Card>
+  <Card title="ERC20 Compatible" icon="check-circle">
+    Maintains full compatibility with existing ERC20 infrastructure
+  </Card>
+  <Card title="No Liquidity Fragmentation" icon="droplet">
+    Eliminates the need for wrapped tokens and liquidity pools
+  </Card>
+</CardGroup>
+
+## How They Work
+
+SuperchainERC20 tokens implement a mint-and-burn mechanism:
+
+<Steps>
+  <Step title="Initiate Transfer">
+    User initiates a cross-chain transfer on the source chain
+  </Step>
+  <Step title="Burn on Source">
+    Tokens are burned on the source chain, reducing local supply
+  </Step>
+  <Step title="Cross-Chain Message">
+    A cross-chain message is sent to the destination chain
+  </Step>
+  <Step title="Mint on Destination">
+    Tokens are minted on the destination chain for the recipient
+  </Step>
+</Steps>
+
+## Benefits Over Traditional Bridges
+
+<Accordion title="No Liquidity Requirements">
+  Traditional bridges require liquidity pools on both chains. SuperchainERC20 tokens eliminate this requirement through native minting and burning.
+</Accordion>
+
+<Accordion title="Reduced Complexity">
+  No need to manage wrapped tokens or multiple token contracts across chains.
+</Accordion>
+
+<Accordion title="Better Security">
+  Eliminates bridge-related security risks by using native chain functionality.
+</Accordion>
+
+<Accordion title="Improved UX">
+  Users interact with the same token contract interface across all chains.
+</Accordion>
+
+## Implementation
+
+SuperchainERC20 tokens implement additional interface functions:
+
+```solidity
+interface ISuperchainERC20 {
+    function crosschainMint(address to, uint256 amount) external;
+    function crosschainBurn(address from, uint256 amount) external;
+    
+    event CrosschainMint(address indexed to, uint256 amount);
+    event CrosschainBurn(address indexed from, uint256 amount);
+}
+```
+
+## Token Migration
+
+Existing ERC20 tokens can be migrated to SuperchainERC20:
+
+1. **Deploy SuperchainERC20 Version**: Create a new version of your token with SuperchainERC20 interface
+2. **Migration Contract**: Deploy a migration contract to handle the conversion
+3. **User Migration**: Users can migrate their tokens to the new SuperchainERC20 version
+4. **Gradual Transition**: Both versions can coexist during the transition period
+
+## Development Tools
+
+<CardGroup cols={2}>
+  <Card title="Supersim" href="/interop/tools/supersim" icon="play">
+    Local development environment for testing SuperchainERC20 tokens
+  </Card>
+  <Card title="OpenZeppelin Contracts" href="https://github.com/OpenZeppelin/openzeppelin-contracts" icon="shield">
+    Battle-tested smart contract library with SuperchainERC20 support
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Started" href="/get-started/interop" icon="rocket">
+    Learn how to build with Superchain interoperability
+  </Card>
+  <Card title="Estimate Costs" href="/interop/estimate-costs" icon="calculator">
+    Calculate the costs of cross-chain token transfers
+  </Card>
+</CardGroup> 
