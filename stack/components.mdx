@@ -1,227 +1,107 @@
 ---
-title: OP Stack Components
-description: Learn about the modular components that make up the OP Stack.
+title: OP Stack components
+description: >-
+  Learn about OP Stack components including the different layers and modules
+  available for development.
 ---
 
-# OP Stack Components
 
-The OP Stack is built as a modular system with interchangeable components. Understanding these components is key to working with the OP Stack.
+# OP Stack components
 
-## Architecture Overview
+**The OP Stack is a common development stack for building L2 blockchain ecosystems, built by the Optimism Collective to power Optimism.**
 
-The OP Stack consists of several layers, each with specific responsibilities:
+The OP Stack is best thought of as a collection of software components maintained by the Optimism Collective that either help to define new layers of the stack or fit in as modules within the stack.
 
-<CardGroup cols={2}>
-  <Card title="Data Availability Layer" icon="database">
-    Handles how transaction data is stored and made available
-  </Card>
-  <Card title="Sequencing Layer" icon="list">
-    Manages the ordering and batching of transactions
-  </Card>
-  <Card title="Derivation Layer" icon="arrow-right">
-    Processes L1 data to derive the L2 state
-  </Card>
-  <Card title="Execution Layer" icon="play">
-    Executes transactions and maintains state
-  </Card>
-  <Card title="Settlement Layer" icon="check">
-    Finalizes transactions and handles dispute resolution
-  </Card>
-  <Card title="Governance Layer" icon="users">
-    Manages protocol upgrades and parameter changes
-  </Card>
-</CardGroup>
+Because the OP Stack is a work in progress, the different layers and modules are still evolving.
+This page sketches out the different conceptual layers of the stack as they exist today and introduces some of the modules that fit into those layers.
+This doesn't include all of the modules or layers that may exist in the future, but it gives a good overview of the major OP Stack components.
 
-## Core Components
+<Info>
+  Please note that not all of the modules described on this page already exist in a production state — these are explicitly marked as either "**in development**"or "**proposed**."
+</Info>
 
-### Rollup Node (op-node)
+## Layers
 
-The rollup node is the consensus client for OP Stack chains:
+### Data availability
 
-<Accordion title="Key Functions">
-- **Block Derivation**: Derives L2 blocks from L1 data
-- **State Validation**: Validates proposed state transitions
-- **P2P Networking**: Communicates with other nodes
-- **Unsafe Block Production**: Produces blocks from mempool transactions
-</Accordion>
+The Data Availability Layer defines where the raw inputs to an OP Stack based chain are published. An OP Stack chain can use a single Data Availability module to source its input data. Because an OP Stack chain is derived from the Data Availability Layer, the Data Availability module used has a significant impact on the security model of a system. For example, if a certain piece of data can no longer be retrieved from the Data Availability Layer, it may not be possible to sync the chain.
 
-### Execution Engine (op-geth)
+#### Ethereum DA
 
-The execution engine processes transactions and maintains state:
+Ethereum DA is currently the most widely used Data Availability module for the OP Stack. When using the Ethereum DA module, source data can be derived from any piece of information accessible on the Ethereum blockchain. This includes Ethereum calldata, events, and 4844 data blobs.
 
-<Accordion title="Key Functions">
-- **Transaction Processing**: Executes smart contracts and transactions
-- **State Management**: Maintains the current state of the blockchain
-- **RPC Interface**: Provides JSON-RPC API for applications
-- **Block Production**: Builds blocks from transaction pools
-</Accordion>
+*   [Specifications](https://specs.optimism.io/protocol/derivation.html#batch-submission-wire-format?utm_source=op-docs&utm_medium=docs)
+*   [Source code](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/op-batcher)
 
-### Batcher
+### Sequencing
 
-The batcher submits transaction data to L1:
+The Sequencing Layer determines how user transactions on an OP Stack chain are collected and published to the Data Availability Layer module(s) in use. In the default Rollup configuration of the OP Stack, Sequencing is typically handled by a single dedicated Sequencer. Rules defined in the Derivation Layer generally restrict the Sequencer's ability to withhold transactions for more than a specific period of time. In the future, Sequencing will be modular such that chains can easily select and change the mechanism that controls their current Sequencer.
 
-<Accordion title="Key Functions">
-- **Data Compression**: Compresses transaction data for efficiency
-- **L1 Submission**: Submits compressed data to L1 smart contracts
-- **Cost Optimization**: Optimizes for L1 gas costs
-- **Reliability**: Ensures data availability on L1
-</Accordion>
+#### Single sequencer
 
-### Proposer
+The default Sequencer module for the OP Stack is the Single Sequencer module in which a dedicated actor is given the ability to act as the Sequencer. The Single Sequencer module allows a governance mechanism to determine who may act as the Sequencer at any given time.
 
-The proposer submits state root proposals to L1:
+#### Multiple sequencer
 
-<Accordion title="Key Functions">
-- **State Root Calculation**: Computes state roots for L2 blocks
-- **L1 Submission**: Submits state root proposals to L1
-- **Finality**: Enables withdrawal finalization
-- **Dispute Resolution**: Participates in fault proof system
-</Accordion>
+A simple modification to the Single Sequencer module is the Multiple Sequencer module in which the Sequencer at any given time is selected from a pre-defined set of possible actors. Individual OP Stack based chains would be able to determine the exact mechanism that defines the set of possible Sequencers and the mechanism that selects a Sequencer from the set.
 
-## Modular Design
+### Derivation
 
-### Benefits of Modularity
+The Derivation Layer defines how the raw data in the Data Availability Layer is processed to form the processed inputs that are sent to the Execution Layer via the standard [Ethereum Engine API](https://github.com/ethereum/execution-apis/blob/94164851c1630ff0a9c31d8d7d3d4fb886e196c0/src/engine/README.md). The Derivation Layer may also use the current system state, as defined by the Execution Layer, to inform the parsing of raw input data. The Derivation Layer can be modified to derive Engine API inputs from many different data sources. The Derivation Layer is typically tied closely to the Data Availability Layer because it must understand how to parse any raw input data.
 
-- **Flexibility**: Swap components based on requirements
-- **Upgradability**: Upgrade individual components independently
-- **Customization**: Customize specific layers for use cases
-- **Innovation**: Experiment with new implementations
+#### Rollup
 
-### Component Interfaces
+The Rollup module derives Engine API inputs from Ethereum block data, Sequencer transaction batches, Deposited transaction events, and more.
 
-Each layer has well-defined interfaces:
+*   [Specifications](https://specs.optimism.io/protocol/derivation.html#l2-chain-derivation-pipeline?utm_source=op-docs&utm_medium=docs)
+*   [Source code](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/op-node)
 
-```typescript
-interface DataAvailabilityLayer {
-  publishData(data: bytes): Promise<void>;
-  retrieveData(reference: string): Promise<bytes>;
-}
+#### Indexer
 
-interface SequencingLayer {
-  submitTransaction(tx: Transaction): Promise<void>;
-  getBlockTemplate(): Promise<BlockTemplate>;
-}
-```
+The Indexer module is a Derivation Layer module that would derive Engine API inputs when transactions are sent to, events are emitted by, or storage is modified in specific smart contracts on a Data Availability Layer module like Ethereum DA.
 
-## Alternative Implementations
+### Execution
 
-### Data Availability Alternatives
+The Execution Layer defines the structure of state within an OP Stack system and defines the state transition function that mutates this state. State transitions are triggered when inputs are received from the Derivation Layer via the Engine API. The Execution Layer abstraction opens up the door to EVM modifications or different underlying VMs entirely.
 
-<CardGroup cols={2}>
-  <Card title="Ethereum DA" icon="ethereum">
-    Use Ethereum L1 for data availability (default)
-  </Card>
-  <Card title="Celestia DA" icon="star">
-    Use Celestia for cheaper data availability
-  </Card>
-  <Card title="EigenDA" icon="layers">
-    Use EigenLayer's data availability solution
-  </Card>
-  <Card title="Custom DA" icon="cog">
-    Implement custom data availability solution
-  </Card>
-</CardGroup>
+#### EVM
 
-### Execution Alternatives
+The EVM is an Execution Layer module that uses the same state representation and state transition function as the Ethereum Virtual Machine. The EVM module in the Ethereum Rollup configuration of the OP Stack is a [lightly modified](https://op-geth.optimism.io/?utm_source=op-docs&utm_medium=docs) version of the EVM that adds support for L2 transactions initiated on Ethereum and adds an extra L1 Data Fee to each transaction to account for the cost of publishing transactions to Ethereum.
 
-<CardGroup cols={2}>
-  <Card title="EVM" icon="code">
-    Standard Ethereum Virtual Machine (default)
-  </Card>
-  <Card title="Alt-VM" icon="cpu">
-    Alternative virtual machines (experimental)
-  </Card>
-</CardGroup>
+*   [Specifications](https://specs.optimism.io/protocol/exec-engine.html?utm_source=op-docs&utm_medium=docs) (where it differs from [geth](https://geth.ethereum.org/))
+*   [Source code](https://github.com/ethereum-optimism/op-geth/tree/09ade3df6d1d3a4f8f308553825348be132bc960)
 
-## Configuration
+### Settlement layer
 
-### Chain Configuration
+The Settlement Layer is a mechanism on external blockchains that establish a **view** of the state of an OP Stack chain (target) on those external, third-party chains (including other OP Stack chains). For each target chain, there may be one or more Settlement mechanisms on one or more external chains. Settlement Layer mechanisms are **read-only** and allow a third-party chain to make decisions, potentially impacting their own state, based on the state of the target OP Stack chain.
 
-```json
-{
-  "genesis": {
-    "l1": {
-      "hash": "0x...",
-      "number": 12345
-    },
-    "l2": {
-      "hash": "0x...",
-      "number": 0
-    }
-  },
-  "block_time": 2,
-  "seq_window_size": 3600,
-  "max_seq_drift": 600
-}
-```
+The term "Settlement Layer" has its origins in the fact that Settlement Layer mechanisms are often used to handle withdrawals of ETH and tokens out of a blockchain. This sort of withdrawal system first involves proving the state of the target blockchain to some third-party chain and then processing a withdrawal based on that state. The Settlement Layer, at its core, simply allows a third-party chain to become convinced of the state of the target chain.
 
-### Node Configuration
+Once a transaction is published and finalized on the corresponding Data Availability layer, the transaction is also finalized on the OP Stack chain. Short of breaking the underlying Data Availability layer, it can no longer be modified or removed. It may not be accepted by the Settlement Layer yet because the Settlement Layer needs to be able to verify transaction *results*, but the transaction itself is already immutable.
 
-```yaml
-# Rollup configuration
-rollup:
-  l1_rpc: "https://ethereum-rpc"
-  l2_rpc: "http://op-geth:8545"
-  
-# Execution configuration
-execution:
-  engine_endpoint: "http://op-geth:8551"
-  jwt_secret: "/path/to/jwt-secret"
-```
+#### Attestation-based fault proof
 
-## Development and Testing
+An Attestation-based Fault Proof mechanism uses an optimistic protocol to establish a view of an OP Stack chain. In optimistic settlement mechanisms generally, **Proposer** entities can propose what they believe to be the current valid state of the OP Stack chain. If these proposals are not invalidated within a certain period of time (the "challenge period"), then the proposals are assumed by the mechanism to be correct. In the Attestation Proof mechanism in particular, a proposal can be invalidated if some threshold of pre-defined parties provide attestations to a valid state that is different than the state in the proposal. This places a trust assumption on the honesty of at least a threshold number of the pre-defined participants.
 
-### Local Development
+*   [Specifications](https://specs.optimism.io/protocol/withdrawals.html?utm_source=op-docs&utm_medium=docs) (called [withdrawal transactions](/app-developers/bridging/messaging))
+*   [Source code](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/packages/contracts-bedrock/src)
 
-<Steps>
-  <Step title="Install Dependencies">
-    Set up the required development tools
-  </Step>
-  <Step title="Configure Environment">
-    Set up configuration files for local testing
-  </Step>
-  <Step title="Start Components">
-    Launch all necessary components
-  </Step>
-  <Step title="Test Interactions">
-    Verify component interactions work correctly
-  </Step>
-</Steps>
+#### Fault Proof Optimistic Settlement
 
-### Testing Tools
+A Fault Proof Optimistic Settlement mechanism is mostly identical to the Attestation-based Fault Proof mechanism used today but it replaces the MultiSig challenger with a permissionless fault proving process. A correctly constructed fault proof should be able to invalidate any incorrect proposals during the allocated challenge period. This places a trust assumption on the correctness of the fault proof construction. At this time, work on the development of a Fault Proof mechanism is well underway.
 
-<CardGroup cols={2}>
-  <Card title="Supersim" href="/interop/tools/supersim" icon="play">
-    Multi-chain development environment
-  </Card>
-  <Card title="Devnet" href="https://devnets.optimism.io" icon="globe">
-    Hosted development networks
-  </Card>
-</CardGroup>
+#### Validity Proof Settlement 
 
-## Best Practices
+A Validity Proof Settlement mechanism uses a mathematical proof to attest to the correctness of a proposed view. When a proposed state is accompanied by a valid proof, it is immediately and unconditionally accepted; otherwise, it is rejected. This mechanism relies on cryptographic assumptions, rather than trust in certain participants or processes. While it eliminates the need for a challenge period, it requires significant upfront computation to generate the proof.
 
-### Component Selection
+### Governance
 
-1. **Requirements Analysis**: Understand your specific needs
-2. **Performance Evaluation**: Test different implementations
-3. **Security Assessment**: Evaluate security implications
-4. **Maintenance Considerations**: Consider long-term maintenance
+The Governance Layer refers to the general set of tools and processes used to manage system configuration, upgrades, and design decisions. This is a relatively abstract layer that can contain a wide range of mechanisms on a target OP Stack chain and on third-party chains that impact many of the other layers of the OP Stack.
 
-### Configuration Management
+#### MultiSig contracts
 
-1. **Version Control**: Track configuration changes
-2. **Environment Separation**: Use different configs for different environments
-3. **Documentation**: Document configuration choices
-4. **Validation**: Validate configurations before deployment
+MultiSig Contracts are smart contracts that carry out actions when they receive a threshold of signatures from some pre-defined set of participants. These are often used to manage upgrades of components of an OP Stack based system. Currently, this is the mechanism used to manage upgrades of the bridge contracts on OP Mainnet. The security of a MultiSig Contract system depends on many different factors, including the number of participants, the threshold, and the safety procedures of each individual participant.
 
-## Next Steps
+#### Governance tokens
 
-<CardGroup cols={2}>
-  <Card title="Deploy a Chain" href="/operators/chain-operators" icon="rocket">
-    Learn how to deploy your own OP Stack chain
-  </Card>
-  <Card title="Beta Features" href="/stack/beta-features" icon="flask">
-    Explore experimental OP Stack features
-  </Card>
-</CardGroup> 
+Governance Tokens are widely used to decentralize decision-making. Although the exact functionality of a Governance Token varies on a case-by-case basis, the most common mechanisms allow token holders to vote on some subset of decisions that a project must make. Voting can either be carried out directly or via delegation.

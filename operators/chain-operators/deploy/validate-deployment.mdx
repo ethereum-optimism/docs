@@ -1,0 +1,102 @@
+---
+title: Validate your contract deployment
+description: Learn how to validate your OP Stack deployment using op-validator
+---
+
+
+# Overview
+
+After deploying the L1 smart contracts for your OP Stack chain, it's crucial to verify that your deployment conforms to the standard configuration.
+This guide walks you through using `op-validator` to validate your deployment against the Superchain standard.
+
+## Prerequisites
+
+*   Complete deployment of L1 smart contracts using [op-deployer](/operators/chain-operators/deploy/smart-contracts).
+*   Generate [genesis and rollup](/operators/chain-operators/deploy/genesis) files.
+*   Install [op-validator](/operators/chain-operators/tools/op-validator).
+## Validation process
+
+<Steps>
+  ### Install op-validator
+
+  If you haven't already installed op-validator, follow the [installation instructions](/operators/chain-operators/tools/op-validator#installation).
+
+  ### Gather required information
+
+  You'll need the following information to validate your deployment:
+
+  *   **L1 RPC URL:** A reliable RPC endpoint for your L1 network
+  *   **Absolute prestate:** The absolute prestate hash of your deployment
+  *   **Proxy admin address:** Your chain's proxy admin contract address (not the proxy admin owner)
+  *   **System config address:** Your chain's SystemConfig contract address
+  *   **L2 chain ID:** The chain ID of your L2 network
+
+  Use `op-deployer` to retrieve the following information:
+
+  ```bash
+    # Get deployment information
+    op-deployer inspect l1 --workdir .deployer <l2-chain-id>
+  ```
+
+  ### Run validation for your contract version
+
+  Run the op-validator with the appropriate version parameter matching your deployed contracts:
+
+  **For op-contracts v1.8.0:**
+
+  ```bash
+      ./bin/op-validator validate v1.8.0 \
+      --l1-rpc-url "<YOUR_L1_RPC_URL>" \
+      --absolute-prestate "<YOUR_ABSOLUTE_PRESTATE>" \
+      --proxy-admin "<YOUR_PROXY_ADMIN_ADDRESS>" \
+      --system-config "<YOUR_SYSTEM_CONFIG_ADDRESS>" \
+      --l2-chain-id "<YOUR_L2_CHAIN_ID>" \
+      --fail
+  ```
+
+  **For op-contracts v2.0.0:**
+
+  ```bash
+    ./bin/op-validator validate v2.0.0 \
+    --l1-rpc-url "<YOUR_L1_RPC_URL>" \
+    --absolute-prestate "<YOUR_ABSOLUTE_PRESTATE>" \
+    --proxy-admin "<YOUR_PROXY_ADMIN_ADDRESS>" \
+    --system-config "<YOUR_SYSTEM_CONFIG_ADDRESS>" \
+    --l2-chain-id "<YOUR_L2_CHAIN_ID>" \
+    --fail
+  ```
+
+  ### Review the validation results
+
+  The validator will check multiple aspects of your deployment against the standard configuration:
+
+  *   Contract implementations and versions
+  *   Proxy configurations
+  *   System parameters
+  *   Cross-component relationships
+  *   Security settings
+
+  If validation passes, you'll see a success message. If there are issues, you'll see error codes with descriptions like:
+
+  | ERROR     | DESCRIPTION                                            |
+  | --------- | ------------------------------------------------------ |
+  | SYSCON-10 | SystemConfig version mismatch                          |
+  | SYSCON-40 | SystemConfig implementation address mismatch           |
+  | L1xDM-10  | L1CrossDomainMessenger version mismatch                |
+  | L1xDM-20  | L1CrossDomainMessenger implementation address mismatch |
+  | L1SB-10   | L1StandardBridge version mismatch                      |
+  | L1SB-20   | L1StandardBridge implementation address                |
+
+  ### Address any validation errors
+
+  If your deployment has validation errors:
+
+  1.  Understand the errors - Review the error codes and descriptions.
+  2.  Consider redeployment - For critical issues, redeploying with corrected parameters may be necessary.
+</Steps>
+
+## Next Steps
+
+*   If you plan to join the Superchain, follow the [Standard Rollup Charter](/superchain/blockspace-charter).
+*   Configure [monitoring and maintenance](/operators/chain-operators/tools/chain-monitoring)
+*   Read the [op-deployer docs](/operators/chain-operators/tools/op-deployer)

@@ -1,109 +1,63 @@
 ---
-title: Get Started with Superchain Interoperability  
-description: Learn the basics of Superchain interoperability and how to build cross-chain applications.
+title: Superchain Interoperability
+description: Learn the basics of interoperability and how to get started building cross-chain applications.
 ---
 
-# Get Started with Superchain Interoperability
+# Superchain Interoperability
 
-<Warning>
-Superchain interoperability is currently in active development and not yet available in production.
-</Warning>
-
-Superchain interoperability is the next major scalability improvement to the OP Stack that enables a network of chains, the Superchain, to feel like a single blockchain.
+Superchain interoperability is the next major scalability improvement to the OP Stack which enables a network of chains, the Superchain, to feel like a single blockchain. This revolutionary approach unlocks 1-block latency and trust-minimized cross-chain composability.
 
 ## What is Superchain Interoperability?
 
-Superchain interoperability is a set of protocols and services that lets OP Stack blockchains read each other's state. It provides:
+Superchain interoperability enables:
 
-- **Native Asset Movement**: ETH and ERC-20 tokens move securely between chains via native minting and burning
-- **Cross-Chain Composability**: Apps can compose with data that exists on other chains  
-- **Horizontal Scalability**: Applications can scale across multiple chains seamlessly
+- **Native asset transfers**: ETH and ERC-20 tokens move securely between chains via native minting and burning
+- **Cross-chain composability**: Smart contracts can compose with data across multiple chains
+- **Horizontal scalability**: Applications can scale across multiple chains seamlessly
 
 ## Key Benefits
 
 <CardGroup cols={2}>
-  <Card title="Solve Liquidity Fragmentation" icon="droplet">
-    No more wrapped tokens or complex liquidity pools - assets move natively between chains
+  <Card title="Liquidity Efficiency" icon="droplet">
+    Eliminates liquidity fragmentation by enabling native asset transfers without wrapping or liquidity pools
   </Card>
-  <Card title="1-Block Latency" icon="clock">
-    Near-instant cross-chain interactions with minimal latency
+  <Card title="Enhanced UX" icon="user">
+    Users experience seamless cross-chain interactions without complex bridging processes
   </Card>
-  <Card title="Trust Minimized" icon="shield">
-    Secure cross-chain messaging without additional trust assumptions
+  <Card title="Developer Flexibility" icon="code">
+    Build applications that can leverage resources and data from multiple chains
   </Card>
-  <Card title="Seamless UX" icon="sparkles">
-    Users experience the Superchain as a single unified blockchain
+  <Card title="Scalability" icon="arrow-trend-up">
+    Horizontal scaling across multiple chains while maintaining security
   </Card>
 </CardGroup>
 
-## Architecture Overview
-
-Superchain interoperability is enabled by a new service called **OP Supervisor** that every node operator runs alongside their existing infrastructure:
-
-```mermaid
-graph LR
-  subgraph "OP Stack Chain"
-    node[OP Node]
-    super[OP-Supervisor]
-    geth[Execution Engine]
-    node<-->super--->geth<-->node
-  end
-  
-  subgraph "Other Chains"
-    chain2[Chain #2]
-    chain3[Chain #3]
-    l1[L1 Consensus]
-  end
-
-  chain2-->|log events|super
-  chain3-->|log events|super
-  l1-->|block status|super
-```
-
-## How Cross-Chain Messages Work
-
-Cross-chain messages require two transactions:
-
-1. **Initiating Message**: A transaction on the source chain creates a log event
-2. **Executing Message**: A transaction on the destination chain calls `CrossL2Inbox` to execute or verify the message
+## Getting Started
 
 <Steps>
-  <Step title="Create Initiating Message">
-    Execute a transaction on the source chain that emits a log event
+  <Step title="Learn the Basics">
+    Understand how Superchain interoperability works by reading our [comprehensive explainer](/interop/explainer)
   </Step>
-  <Step title="Message Propagation">
-    OP-Supervisor detects the log event and validates it happened on the source chain
+  <Step title="Try the Starter Kit">
+    Get hands-on experience with our [SuperchainERC20 starter kit](/interop/starter-kit)
   </Step>
-  <Step title="Execute Message">
-    Call `CrossL2Inbox` on the destination chain to execute the cross-chain message
+  <Step title="Estimate Costs">
+    Learn about [cross-chain transaction costs](/interop/estimate-costs) and how to optimize them
+  </Step>
+  <Step title="Build Your App">
+    Start building with our [development tools and tutorials](/interop/tutorials)
   </Step>
 </Steps>
 
-## Safety Levels
-
-Superchain interop introduces new safety levels for blocks:
-
-- **Local Safe**: Block is written to L1
-- **Cross Safe**: Block and all its dependencies are written to L1
-- **Unsafe**: Block is shared via gossip protocol but not yet on L1
-
-<Note>
-Unsafe blocks require additional trust assumptions in the sequencer dependency set.
-</Note>
-
 ## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Learn More" href="/interop/explainer" icon="book">
-    Deep dive into the technical details of Superchain interoperability
-  </Card>
-  <Card title="Compatible Tokens" href="/interop/compatible-tokens" icon="coins">
-    Understand which tokens work with native cross-chain transfers
-  </Card>
-  <Card title="Estimate Costs" href="/interop/estimate-costs" icon="calculator">
-    Calculate the costs of cross-chain interactions
-  </Card>
-  <Card title="Development Tools" href="/interop/tools/supersim" icon="wrench">
-    Set up your local development environment
-  </Card>
-</CardGroup> 
+Ready to start building? Check out these resources:
+
+- [Superchain Interoperability Explainer](/interop/explainer) - Deep dive into the technical details
+- [Compatible Tokens Guide](/interop/compatible-tokens) - Learn about SuperchainERC20 tokens
+- [Development Tools](/interop/tools) - Discover tools for building cross-chain applications
+- [Tutorials](/interop/tutorials) - Step-by-step guides for common use cases
+
+<Info>
+Superchain interop is in active development. Some features may be experimental or subject to change.
+</Info>

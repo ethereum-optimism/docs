@@ -1,0 +1,353 @@
+---
+title: Verifying log entries
+description: >-
+  Learn how to verify log entries on a different chain using CrossL2Inbox.
+---
+
+
+# Verifying log entries
+
+This guide shows how to verify log entries from a specific chain on a different chain in an interop cluster.
+This lets developers use interoperability with applications on a different chain, even if those applications were not written with interoperability in mind.
+
+To demonstrate this functionality, this guide uses an [attestation](https://attest.org/) from one chain on another.
+
+<Info>
+  Because of [message expiration](/interop/message-expiration), this solution can only validate log messages emitted in the last seven days (on the Superchain, other interop clusters may vary).
+</Info>
+
+## Overview
+
+<details>
+  <summary>About this tutorial</summary>
+
+  **What you'll learn**
+
+  *   How to verify log messages from one blockchain on another.
+  *   How to use the EAS SDK to attest for facts and add schemas from offchain code.
+
+  **Technical knowledge**
+
+  *   Intermediate JavaScript knowledge
+  *   Understanding of smart contract development
+  *   Familiarity with blockchain concepts
+
+  **Development environment**
+
+  *   Unix-like operating system (Linux, macOS, or WSL for Windows)
+  *   Node.js version 16 or higher
+  *   Git for version control
+
+  **Required tools**
+
+  The tutorial uses these primary tools:
+
+  *   Node: For running TypeScript code from the command line
+  *   Viem: For blockchain interaction
+  *   Foundry: For smart contract development
+</details>
+
+### What you'll build
+
+*   A JavaScript program to create an attestation and then verify it on a different chain.
+*   A Solidity contract that can verify attestations onchain.
+
+## Directions
+
+<Steps>
+  ### Preparation
+
+  1.  If you are using Supersim, set up the [SuperchainERC20 starter kit](/app-developers/starter-kit#setup).
+      The `pnpm dev` step also starts Supersim.
+
+  2.  Store the configuration in environment variables.
+
+      <Tabs items={['Supersim', 'Devnets']}>
+        <Tabs.Tab>
+          ```sh
+          export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+          URL_CHAIN_A=http://127.0.0.1:9545
+          URL_CHAIN_B=http://127.0.0.1:9546
+          export CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+          ```
+        </Tabs.Tab>
+
+        <Tabs.Tab>
+          1.  Set `PRIVATE_KEY` to the private key for an address that has ETH on the two devnets.
+
+          2.  Run these commands to specify the rest of the environment variables.
+
+          ```sh
+          export PRIVATE_KEY
+          URL_CHAIN_A=https://interop-alpha-0.optimism.io
+          URL_CHAIN_B=https://interop-alpha-1.optimism.io
+          export CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+          ```
+        </Tabs.Tab>
+      </Tabs>
+
+  ### Create an attestation
+
+  There are already attestations in the production chains.
+  However, that may not be the case in the devnets, and it is definitely not the case in the Supersim instance you just started.
+
+  To begin, send an attestation to one of the chains.
+
+  1.  Create a new JavaScript project.
+
+      ```sh
+      mkdir -p verify-messages/offchain
+      cd verify-messages/offchain
+      npm init -y
+      npm install @eth-optimism/viem @ethereum-attestation-service/eas-sdk ethers viem
+      ```
+
+  2.  Create a file, `attest.mjs`.
+
+      ```js file=<rootDir>/public/tutorials/attest.mjs hash=d626bf0d9a623a87f6c186df9ebe4be7 
+      ```
+
+    <details>
+      <summary>Explanation</summary>
+
+      ```js file=<rootDir>/public/tutorials/attest.mjs#L23-L39 hash=e60b8cd94e438dee61d76a86b71ba0fd 
+      ```
+
+      The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) used for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
+      This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer).
+
+      ```js file=<rootDir>/public/tutorials/attest.mjs#L60-L71 hash=b51f57bde9ff4f29ee476a0ccff6826c
+      ```
+
+      Register the [EAS Schema](https://docs.attest.org/docs/tutorials/create-a-schema) if necessary.
+      This schema ties Ethereum addresses to names.
+
+      ```js file=<rootDir>/public/tutorials/attest.mjs#L73-L86 hash=e358a615a7ab6d28c6f3bba58b523f66
+      ```
+
+      [Attest](https://docs.attest.org/docs/tutorials/make-an-attestation) that the name for Ethereum address `0x0123456789012345678901234567890123456789` is `Bill Hamm`.
+
+      ```js file=<rootDir>/public/tutorials/attest.mjs#L88-L90 hash=d31631fd94b69699177a1cccf4e4ec1a
+      ```
+
+      This is the recommended way to execute the attestation transaction, which provides you with the attestation's UID.
+      However, for our purpose we need the transaction receipt, which you do not get.
+      Either search the transaction receipt for the log entry, or use the EAS SDK to create the transaction but then send it manually.
+      The code here uses the second solution.
+
+      ```js file=<rootDir>/public/tutorials/attest.mjs#L92-L94 hash=1452cf7f6e9e00d7b3cd3560ca355bd8
+      ```
+
+      Send the attestation transaction created by the EAS SDK manually (using viem's [`sendRawTransaction`](https://viem.sh/docs/actions/wallet/sendRawTransaction)) to obtain the transaction hash.
+    </details>
+
+  3.  Run the attestation program.
+
+      ```sh
+      node attest.mjs
+      ```
+
+  4.  The program output includes an `export ATTEST_TXN` line.
+      Run it to inform our verification code where to find the attestation.
+
+  ### Offchain verification
+
+  The next step is to call `CrossL2Inbox.verifyMessage`.
+  For testing purposes, start by calling it offchain.
+
+  1.  Create a file, `verify-attestation.mjs`.
+
+      ```js file=<rootDir>/public/tutorials/verify-attestation.mjs hash=405d9493c3bf15f85aa9c24a936cf7a4 
+      ```
+
+      <details>
+        <summary>Explanation</summary>
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L36-L45 hash=2e0e75ab322c05fb2eb8177978f47c55 
+        ```
+
+        To create the [executing message](/interop/message-passing#executing-message), we need several fields that appear in the log entry we are verifying.
+        This is how we obtain the relevant log entry.
+
+        The first topic in a log entry emitted by Solidity is the event type.
+        [This event type](https://www.4byte.directory/event-signatures/?bytes_signature=0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) is emitted when an attestation is created.
+        Of course, we only care about attestations created in the official attestations contract.
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L47 hash=2d9c5e52695aa90f1f0f9a5769f98814
+        ```
+
+        Part of testing a system is ensuring that it does not accept invalid input.
+        You can uncomment this line to see that the verification fails with an incorrect log entry.
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L49-L51 hash=fbfb20fa0614cb9fb52ec678df6fffa9 
+        ```
+
+        [Build the executing message](https://github.com/ethereum-optimism/ecosystem/blob/main/packages/viem/docs/actions/interop/functions/buildExecutingMessage.md).
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L61-L74 hash=5c410cd233b0e4e68f33170de7da3b7f 
+        ```
+
+        Call [`CrossL2Inbox.validateMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L68-L82).
+        For some invalid inputs, this function reverts.
+        If it reverts, it means that the log entry requested is not valid.
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L76-L84 hash=2476aec8e2b27708ce812797e9e5dfe7 
+        ```
+
+        Wait for the transaction receipt for the executing message.
+        The timeout is necessary because if the executing message is valid, but the log entry has not been seen yet, the sequencer does not put the transaction with the message into a block.
+        The timeout distinguishes between a valid executing message pending inclusion and a non-existent log entry.
+
+        ```js file=<rootDir>/public/tutorials/verify-attestation.mjs#L86-L91 hash=e870ee89daa5f2a31b0adc6a97f670a9 
+        ```
+
+        Look for the log entry from `CrossL2Inbox`.
+        To ensure this is the correct log entry, we look at the [message type](https://www.4byte.directory/event-signatures/?bytes_signature=0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7) and check that the ID is the correct one.
+      </details>
+
+  2.  Execute this program.
+
+      ```sh
+      node verify-attestation.mjs
+      ```
+
+  ### Onchain verification
+
+  The code in the above example is not very useful because it is running offchain.
+  Offchain code can talk to any chain it wants, so it can verify the attestation directly on the chain where it originated.
+  The real value of interoperability is when on-chain code on one chain verifies information from another chain.
+  Follow the steps below to build this functionality.
+
+  Calculate the transaction access list offchain using `interop.buildExecutingMessage`, then inspect `relayParams` to determine the exact validation parameters.
+
+  | Value                                                                                                                                             | Location                                    | Sample value                                                     |
+  | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
+  | [Event signature](https://www.4byte.directory/event-signatures/?bytes_signature=8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) | `relayMessageParams.payload.slice(2,66)`    | 8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35 |
+  | Recipient address                                                                                                                                 | `relayMessageParams.payload.slice(90,130)`  | 0123456789012345678901234567890123456789                         |
+  | Attester address                                                                                                                                  | `relayMessageParams.payload.slice(154,194)` | f39fd6e51aad88f6f4ce6ab8827279cfffb92266                         |
+  | Schema                                                                                                                                            | `relayMessageParams.payload.slice(194,258)` | 234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58 |
+  | Attestation ID                                                                                                                                    | `relayMessageParams.payload.slice(194,258)` | c88cbbc15b9fb4aa12f70c9c97e6c1dd733a29db2816142809504718d615ff9f |
+  | Log entry origin                                                                                                                                  | `relayMessageParams.id.origin`              | 0x4200000000000000000000000000000000000021                       |
+  | Log entry location                                                                                                                                | `relayMessageParams.id.logIndex`            | 0n                                                               |
+  | Block number                                                                                                                                      | `relayMessageParams.id.blockNumber`         | 6746n                                                            |
+  | Timestamp                                                                                                                                         | `relayMessageParams.id.timestamp`           | 1747518156n                                                      |
+  | Chain Id                                                                                                                                          | `relayMessageParams.id.chainId`             | 901n                                                             |
+
+  The attestation ID itself [is also a hash](https://github.com/ethereum-attestation-service/eas-contracts/blob/master/contracts/EAS.sol#L692-L711), but luckily most of the fields are either unused (such as `revocationTime`) or are already known to us (such as the schema).
+  The sole exception is the data, which in our case includes the name being attested to.
+  We can provide this data to the Solidity code as a parameter.
+
+  1.  Create a new Foundry project.
+
+      ```sh
+      mkdir ../onchain
+      cd ../onchain
+      forge init
+      ```
+
+  2.  Add the [EAS contracts](https://www.npmjs.com/package/@ethereum-attestation-service/eas-contracts) and Optimism contract to the project.
+
+      ```sh
+      cd lib
+      npm install @ethereum-attestation-service/eas-contracts
+      cd ..
+      echo @ethereum-attestation-service/=lib/node_modules/@ethereum-attestation-service/ >> remappings.txt
+      ```
+
+  3.  Create `src/Verifier.sol`.
+
+      ```solidity file=<rootDir>/public/tutorials/Verifier.sol hash=2a05d192f106b2102bf01a30267557c2 
+      ```
+
+      <details>
+        <summary>Explanation</summary>
+
+        ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L6-L18 hash=64aecb7206a0fa13918ea9ac47ee3dc2 
+        ```
+
+        At writing these definitions from [`ICrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol) are not yet part of the [npm package](https://www.npmjs.com/package/@eth-optimism/contracts), so we include them here for now.
+
+        ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L27-L46 hash=73afc3cedf0863c12150ffe6aaed676b 
+        ```
+
+        This function is part of the [EAS contract code](https://github.com/ethereum-attestation-service/eas-contracts/blob/master/contracts/EAS.sol#L692-L711) that calculates the attestation ID.
+
+        ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L48-L62 hash=7c912d2eb9fa21a3abf297f7c27a89d2 
+        ```
+
+        Calculate the payload hash.
+
+        ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L64-L92 hash=80799162cceb4183360481672f3fb7d4 
+        ```
+
+        This is the function that gets the attestation information, builds the call, and calls `CrossL2Inbox`.
+
+        ```solidity file=<rootDir>/public/tutorials/Verifier.sol#L94 hash=b728334118d486dc5e020c5b84d41411 
+        ```
+
+        This section is reserved for actions that depend on a successful attestation verification.
+        In real-world applications, implement your core logic here.
+      </details>
+
+  4.  Deploy the new contract and preserve the address.
+
+      ```sh
+      export VERIFIER_ADDRESS=`forge create Verifier --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --broadcast | awk '/Deployed to:/ {print $3}'`
+      ```
+
+  5.  You can try to just call `verifyAttestation` directly, but without the correct access list it is guaranteed to fail.
+      Instead, get back to the offchain part of the project.
+
+      ```sh
+      cd ../offchain
+      ```
+
+  6.  Create a file, `onchain-verification.mjs`.
+
+      ```javascript file=<rootDir>/public/tutorials/onchain-verification.mjs hash=0a71974948ba96b474d602a703ae7466 
+      ```
+
+      <details>
+        <summary>Explanation</summary>
+
+        This is a modified version of the `verify-attestation.mjs` we used earlier, so we only go over the new parts.
+
+        ```javascript file=<rootDir>/public/tutorials/onchain-verification.mjs#L11-L18 hash=e21e60f14d0d6a89e24ad74fcc3fde25 
+        ```
+
+        Read the ABI for `Verifier` we created onchain.
+
+        ```javascript file=<rootDir>/public/tutorials/onchain-verification.mjs#L57-L74 hash=456446f9f3aa7911b7e83a191102bdaf 
+        ```
+
+        Call `Verifier` with the information needed to verify the attestation.
+
+        ```javascript file=<rootDir>/public/tutorials/onchain-verification.mjs#L76 hash=e32ded7cb46f9480474ad06d0f968ec1 
+        ```
+
+        Report the transaction hash.
+      </details>
+
+  7.  Run the verification program.
+
+      ```sh
+      node onchain-verification.mjs
+      ```
+
+  8.  The program output includes a `VERIFICATION_TRANSACTION_HASH=` line.
+      Run it to keep track of the verification transaction.
+
+  9.  See the receipt for the verification transaction.
+
+      ```sh
+      cast receipt $VERIFICATION_TRANSACTION_HASH --rpc-url $URL_CHAIN_B
+      ```
+
+  10. Modify the name in line 73 of `onchain-verification.mjs` and see that false attestations don't get verified.
+</Steps>
+
+## Next steps
+
+*   Read the [Superchain Interop Explainer](/interop/explainer#faqs) or check out this [Superchain interop design video walk-thru](https://www.youtube.com/watch?v=FKc5RgjtGes).
+*   Use [Supersim](/app-developers/tools/supersim), a local dev environment that simulates Superchain interop for testing applications against a local version of the Superchain.
+*   Find a cool dapp that only works on a single blockchain and extend it to the entire interop cluster, at least for reading information.
