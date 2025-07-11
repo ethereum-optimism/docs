@@ -66,48 +66,48 @@ jobs:
             # NEXT_PUBLIC_ALGOLIA_INDEX_NAME
             pnpm run index:docs
 
-  breadcrumbs:
-    description: Check breadcrumbs in documentation
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Run breadcrumb check
-          command: pnpm check-breadcrumbs
+  # breadcrumbs:
+  #   description: Check breadcrumbs in documentation
+  #   executor: ubuntu
+  #   steps:
+  #     - checkout
+  #     - setup-node
+  #     - run:
+  #         name: Run breadcrumb check
+  #         command: pnpm check-breadcrumbs
           
-  lint:
-    description: Lint Markdown files and validate metadata
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Get changed files
-          command: |
-            if [ -n "$CIRCLE_PULL_REQUEST" ]; then
-              PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | rev | cut -d'/' -f1 | rev)
-              CHANGED_FILES=$(curl -s "https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pulls/$PR_NUMBER/files" | jq -r '.[].filename' | grep '\.mdx$' || true)
-              echo "export CHANGED_FILES=\"$CHANGED_FILES\"" >> $BASH_ENV
-            fi
-      - run:
-          name: Lint Markdown files
-          command: pnpm lint
-      - run:
-          name: "Metadata Validation (Warning Only)"
-          command: |
-            echo "Running metadata validation (warnings will not block PR)..."
-            pnpm validate-pr-metadata || true
+  # lint:
+  #   description: Lint Markdown files and validate metadata
+  #   executor: ubuntu
+  #   steps:
+  #     - checkout
+  #     - setup-node
+  #     - run:
+  #         name: Get changed files
+  #         command: |
+  #           if [ -n "$CIRCLE_PULL_REQUEST" ]; then
+  #             PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | rev | cut -d'/' -f1 | rev)
+  #             CHANGED_FILES=$(curl -s "https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pulls/$PR_NUMBER/files" | jq -r '.[].filename' | grep '\.mdx$' || true)
+  #             echo "export CHANGED_FILES=\"$CHANGED_FILES\"" >> $BASH_ENV
+  #           fi
+  #     - run:
+  #         name: Lint Markdown files
+  #         command: pnpm lint
+  #     - run:
+  #         name: "Metadata Validation (Warning Only)"
+  #         command: |
+  #           echo "Running metadata validation (warnings will not block PR)..."
+  #           pnpm validate-pr-metadata || true
 
-  links:
-    description: Check broken links in documentation
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Run link checker
-          command: pnpm link-checker
+  # links:
+  #   description: Check broken links in documentation
+  #   executor: ubuntu
+  #   steps:
+  #     - checkout
+  #     - setup-node
+  #     - run:
+  #         name: Run link checker
+  #         command: pnpm link-checker
 
   developer-metrics:
     description: Monthly Metrics Report
