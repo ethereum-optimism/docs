@@ -4,11 +4,19 @@
   "description": "Optimism Docs",
   "type": "module",
   "scripts": {
-    "lint": "eslint . --ext mdx --max-warnings 0 && pnpm spellcheck:lint && pnpm check-breadcrumbs && pnpm check-redirects && pnpm validate-metadata && pnpm link-checker",
+    "lint": "eslint . --ext mdx --max-warnings 0",
     "fix": "eslint . --ext mdx --fix && pnpm spellcheck:fix",
     "spellcheck:lint": "cspell lint \"**/*.mdx\"",
     "prepare": "husky",
     "spellcheck:fix": "cspell --words-only --unique \"**/*.mdx\" | sort --ignore-case | uniq > words.txt",
+    "breadcrumbs": "NODE_NO_WARNINGS=1 node --loader ts-node/esm utils/create-breadcrumbs.ts",
+    "check-breadcrumbs": "NODE_NO_WARNINGS=1 node --loader ts-node/esm utils/breadcrumbs.ts",
+    "check-redirects": "NODE_NO_WARNINGS=1 node --loader ts-node/esm utils/redirects.ts",
+    "fix-redirects": "NODE_NO_WARNINGS=1 node --loader ts-node/esm utils/fix-redirects.ts",
+    "link-checker": "NODE_NO_WARNINGS=1 node --loader ts-node/esm utils/link-checker.ts",
+    "fix-links": "NODE_NO_WARNINGS=1 node --loader ts-node/esm utils/fix-broken-links.ts",
+    "validate-metadata": "CHANGED_FILES=$(git diff --name-only --cached) NODE_NO_WARNINGS=1 node --loader ts-node/esm utils/metadata-validator.ts",
+    "validate-pr-metadata": "NODE_NO_WARNINGS=1 node --loader ts-node/esm utils/metadata-validator.ts --pr",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -69,5 +77,12 @@
     "typescript": "^5.3.2",
     "unified-lint-rule": "^2.1.2",
     "unist-util-visit": "^5.0.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "remark-lint-frontmatter-schema@3.15.4": "patches/remark-lint-frontmatter-schema@3.15.4.patch",
+      "remark-code-import@1.2.0": "patches/remark-code-import@1.2.0.patch",
+      "nextra@2.13.2": "patches/nextra@2.13.2.patch"
+    }
   }
 }
