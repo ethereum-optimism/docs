@@ -55,7 +55,7 @@ export function resultsFeeScalarsAssumed(
   transactionsPerDay: number, // e14
   dataAvailabilityType: string, // E16
   targetDataMargin: number, // E18
-  isStateEnabled: boolean, // E24
+  sStateEnabled: string, // E24
   maxChannelDuration: number // E22
 ): string {
   const n25: number = calculateBlobLevelImpliedBlobFullness(

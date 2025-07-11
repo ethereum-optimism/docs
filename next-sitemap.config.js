@@ -1,5 +1,5 @@
 /** @type {import('next-sitemap').IConfig} */
-export default {
+module.exports = {
   siteUrl: process.env.SITE_URL || 'https://docs.optimism.io/',
   generateRobotsTxt: true, // (optional)
   generateIndexSitemap: true,
