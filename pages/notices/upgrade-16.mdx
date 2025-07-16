@@ -30,7 +30,7 @@ This page outlines important changes related to Upgrade 16 for chain operators a
 
 Upgrade 16 contains these main changes:
 
-*   **Interop-Ready smart contracts**: Interoperability is critical to realizing the Superchain as a unified network of OP Chains. This upgrade begins the rollout of foundational interoperability features by updating the `OptimismPortal` to handle future cross-chain messaging safely and extensibly. This upgrade does not turn on interop yet.
+*   **Interop-Ready smart contracts**: Interoperability is critical to realizing the Superchain as a unified network of OP Chains. This upgrade begins the rollout of foundational interoperability features by updating the `OptimismPortal` to handle future cross-chain messaging safely and extensibly. Although Upgrade 16 does not turn interop on, it includes all of the smart contract changes required to support the interop launch date.
 *   **Stage 1 updates**: Modifications to meet [L2Beat's updated Stage 1 requirements](https://forum.l2beat.com/t/stages-update-a-high-level-guiding-principle-for-stage-1/338) from January 2025, including removal of `DeputyGuardianModule` and updates to `DeputyPauseModule`.
 *   **Go 1.23 Support in Cannon**: Updates to Cannon to support Go 1.23, allowing OP Stack to benefit from upstream go-ethereum changes.
 *   **Max gas limit increase**: Update to `MAX_GAS_LIMIT` from 200m to 500m gas after improvements to OP Stack infrastructure and the Cannon proof system.
@@ -46,7 +46,14 @@ Chain operators must complete the following tasks:
 
 Chain operators should be aware that Upgrade 16 involves a one-time invalidation of all existing withdrawal proofs. Users who have proven withdrawals can either finalize withdrawals prior to the activation of Upgrade 16 or will be required to re-prove these withdrawals after the upgrade activates.
 
+### Implementation
+
 If this proposal is accepted, multisig ceremonies will be coordinated to execute upgrade transactions. The following transactions will be executed on the respective chains: `OP`, `Soneium`, `Ink`, `Base`, `Unichain`, `Mode`, `Zora`, `Arena Z`, `Swell`, `World Chain`, and `Metal ` on both Mainnet and Sepolia. Depending on the current state of the chain the execution times will vary. If your Optimism governed chain is not in this list, please reach out to OP Labs Solutions Engineering to coordinate your upgrade. These upgrade tasks will be prepared in the [superchain-ops repo](https://github.com/ethereum-optimism/superchain-ops/tree/main/src/improvements/tasks).
+
+This upgrade will be executed using a newly deployed OP Contracts Manger instance which brings these OP Stack chains to op-contracts/v4.0.0.
+
+*   The OPCM source code for this release is available at [release op-contracts/v4.0.0-rc.7](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv4.0.0-rc.7)
+*   This deployment address for this OPCM is [available in the superchain-registry:](https://github.com/ethereum-optimism/superchain-registry/blob/c072b5e4447af38f327cf819c2d1315094166547/validation/standard/standard-versions-mainnet.toml#L22) [0x4fefd0c327d08143be8037c45f8a29fa0d711e50](https://etherscan.io/address/0x4fefd0c327d08143be8037c45f8a29fa0d711e50)
 
 The tentative execution dates of these upgrades tasks can be tracked in our [release board](https://github.com/orgs/ethereum-optimism/projects/117/views/12).
 
