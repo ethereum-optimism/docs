@@ -38,7 +38,7 @@ export const CHAIN_CONSTANTS = {
     explorer: 'https://goerli.etherscan.io',
   },
   10: {
-    explorer: 'https://optimistic.etherscan.io',
+    explorer: 'https://explorer.optimism.io',
   },
   420: {
     explorer: 'https://goerli-optimism.etherscan.io',
