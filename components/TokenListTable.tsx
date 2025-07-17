@@ -7,7 +7,7 @@ const explorers = {
   '10': 'https://explorer.optimism.io',
   '420': 'https://goerli-optimism.etherscan.io',
   '11155111': 'https://sepolia.etherscan.io/',
-  '11155420': 'https://sepolia-optimism.etherscan.io/',
+  '11155420': 'https://testnet-explorer.optimism.io/',
 }
 
 export function TokenListTable({

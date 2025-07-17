@@ -36,7 +36,7 @@ const chains: {
   opsepolia: {
     name: 'OP Sepolia',
     id: 11155420,
-    explorer: 'https://sepolia-optimistic.etherscan.io/',
+    explorer: 'https://testnet-explorer.optimism.io/',
   },
 }
 
