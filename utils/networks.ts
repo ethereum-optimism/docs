@@ -26,7 +26,7 @@ const chains: {
   opmainnet: {
     name: 'OP Mainnet',
     id: 10,
-    explorer: 'https://optimistic.etherscan.io',
+    explorer: 'https://explorer.optimism.io',
   },
   sepolia: {
     name: 'Sepolia',
@@ -36,7 +36,7 @@ const chains: {
   opsepolia: {
     name: 'OP Sepolia',
     id: 11155420,
-    explorer: 'https://sepolia-optimistic.etherscan.io/',
+    explorer: 'https://testnet-explorer.optimism.io/',
   },
 }
 
