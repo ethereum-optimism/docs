@@ -55,8 +55,9 @@ OP Stack rollup nodes can be configured for individual needs. The following step
 <Steps>
   {<h3>Setup Your Working Base Configs</h3>}
 
-  *   Configure `op-geth` using the [base configuration](/operators/node-operators/configuration/base-config#working-base-configuration).
-  *   Set the [recommended flags for `op-geth`](/operators/node-operators/configuration/base-config#recommended-flags-for-op-geth-configuration) to follow best practices for configuring OP Stack rollup nodes.
+  *   Configure your execution client:
+      *   For `op-geth`: Use the [base configuration](/operators/node-operators/configuration/base-config#working-base-configuration) and set the [recommended flags](/operators/node-operators/configuration/base-config#recommended-flags-for-op-geth-configuration)
+      *   For `nethermind`: Use the [base configuration](/operators/node-operators/configuration/base-config#working-base-configuration-nethermind) and set the [recommended flags](/operators/node-operators/configuration/base-config#recommended-flags-for-nethermind-configuration)
   *   Configure `op-node` using the [base configuration](/operators/node-operators/configuration/base-config#working-base-configuration-1).
 
   {<h3>Enable Snap Sync</h3>}
@@ -65,7 +66,7 @@ OP Stack rollup nodes can be configured for individual needs. The following step
       This is an **optional** feature but highly recommended for node providers.
 
   <Callout type="info">
-    Additional configuration options exist for [`op-geth`](/operators/node-operators/configuration/execution-config) and [`op-node`](/operators/node-operators/configuration/consensus-config), respectively.
+    Additional configuration options exist for execution clients and `op-node`. See the [Execution Client Configuration](/operators/node-operators/configuration/execution-config) and [`op-node`](/operators/node-operators/configuration/consensus-config), respectively.
   </Callout>
 </Steps>
 
@@ -94,7 +95,7 @@ Now, you will run your node and set your node debugging log level for more granu
 
 ## Monitor your node
 
-It is important to regularly monitor your node, and you can optionally configure prometheus and grafana dashboard to make this process easier for you.
+It is important to regularly monitor your node, and you can optionally configure Prometheus and Grafana dashboard to make this process easier for you.
 
 <Steps>
   {<h3>Enable the Metrics Port</h3>}
@@ -102,15 +103,20 @@ It is important to regularly monitor your node, and you can optionally configure
   *   Enable the [metrics port](/operators/node-operators/management/metrics) for your node by passing the `--metrics.enabled` flag to `op-node`.
   *   Optionally, you can customize the metrics port and address via the `--metrics.port` and `--metrics.addr` flags, respectively.
 
-  {<h3>Setup Prometheus & Grafana</h3>}
+  {<h3>Set up Prometheus & Grafana</h3>}
 
   <Callout type="warning">
-    The following steps are intended for `go-ethereum`, so it must be tweaked to work for rollup nodes running within the Superchain.
+    The following steps vary depending on your execution client.
   </Callout>
 
-  *   Setup [influxdb](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-influxdb) to hold metrics data.
-  *   Setup [prometheus](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-prometheus) to read your endpoint.
-  *   Setup your [grafana dashboard](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-grafana) to provide UI for metrics.
+  For `op-geth`:
+  *   Set up [InfluxDB](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-influxdb) to hold metrics data
+  *   Set up [Prometheus](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-prometheus) to read your endpoint
+  *   Set up your [Grafana dashboard](https://geth.ethereum.org/docs/monitoring/dashboards#setting-up-grafana) to provide a UI for metrics
+
+  For `Nethermind`:
+  *   Set up [Grafana and Prometheus](https://docs.nethermind.io/monitoring/metrics/grafana-and-prometheus/#step-1-set-up-grafana-and-prometheus)
+  *   Follow the [metrics documentation](https://docs.nethermind.io/monitoring/metrics/) for detailed monitoring setup
 </Steps>
 
 ## Follow node updates
