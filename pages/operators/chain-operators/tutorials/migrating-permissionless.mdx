@@ -32,8 +32,8 @@ Permissioned games previously relied on a single trusted validator, this is typi
 
 This migration involves several key components:
 
-*   Configuring security-critical dispute [monitoring services](/operators/chain-operators/tools/chain-monitoring)
-*   Deploying and configuring smart contracts using [op-deployer](/operators/chain-operators/tools/op-deployer)
+*   Configuring security-critical dispute [monitoring services](/chain-operators/tools/monitoring)
+*   Deploying and configuring smart contracts using [op-deployer](/chain-operators/tools/op-deployer)
 *   Testing the new system before activation
 *   Setting the respected game type to permissionless fault proofs, specifically using the [`FaultDisputeGame`](https://github.com/ethereum-optimism/optimism/blob/6e563de4a847c54ddd4e6d2e38bc21e8f6067680/packages/contracts-bedrock/src/dispute/FaultDisputeGame.sol)
 
@@ -43,7 +43,7 @@ Before beginning this transition, your chain should:
 
 *   Be running a standard OP Stack implementation
 *   Use contracts version [**v2.0.0**](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv2.0.0).
-*   Be operating with the required infrastructure services including [`op-challenger`](/stack/fault-proofs/challenger) and [`op-dispute-mon`](/operators/chain-operators/tools/chain-monitoring#dispute-mon).
+*   Be operating with the required infrastructure services including [`op-challenger`](/concepts/architecture/fault-proofs/op-challenger) and [`op-dispute-mon`](/operators/chain-operators/tools/chain-monitoring#dispute-mon).
 
 ## Migration steps
 
@@ -97,7 +97,7 @@ make op-challenger
 ### Update network configuration
 
 Configure `op-challenger` to load your chain configuration.
-Even if your chain is not included in the [superchain-registry](/superchain/superchain-registry), you can specify a custom configuration:
+Even if your chain is not included in the [superchain-registry](/chain-operators/reference/superchain-registry), you can specify a custom configuration:
 
 ```bash
 # For chains in the registry
@@ -186,7 +186,7 @@ This migration requires actions by privileged roles in your system:
 *   The **ProxyAdmin Owner** has the authority to upgrade proxy contracts.
 *   The **Guardian** has emergency powers like pausing withdrawals and changing the respected game type.
 
-For detailed information about privileged roles and their security implications, refer to the [privileged roles documentation](/superchain/privileged-roles).
+For detailed information about privileged roles and their security implications, refer to the [privileged roles documentation](/chain-operators/reference/privileged-roles).
 
 ### Adding the PermissionlessDisputeGame to a chain
 
@@ -202,7 +202,7 @@ This method will:
 2.  Setup the `DelayedWethProxy` for the new game
 3.  Reinitialize the `AnchorStateRegistry` to add the new game type.
 
-See a high‐level implementation from this [docs](/operators/chain-operators/tutorials/dispute-games).
+See a high‐level implementation from this [docs](/chain-operators/tutorials/deploy-dispute-games).
 
 ## 3. Testing off-chain agents
 
@@ -381,7 +381,7 @@ OP_PROPOSER_GAME_TYPE=0
 
 ## Next steps
 
-*   For more detail on deploying new dispute games with OPCM, [see the docs](/operators/chain-operators/tutorials/dispute-games).
-*   Deploy new dispute games with OPCM via [this tutorial](/operators/chain-operators/tutorials/dispute-games).
+*   For more detail on deploying new dispute games with OPCM, [see the docs](/chain-operators/tutorials/deploy-dispute-games).
+*   Deploy new dispute games with OPCM via [this tutorial](/chain-operators/tutorials/deploy-dispute-games).
 *   Generate an absolute prestate using the [absolute prestate guide](/operators/chain-operators/tutorials/absolute-prestate).
-*   Understand fault proofs in the [Fault proofs explainer](/stack/fault-proofs/explainer).
+*   Understand fault proofs in the [Fault proofs explainer](/concepts/architecture/fault-proofs/explainer).
