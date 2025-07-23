@@ -1,0 +1,399 @@
+---
+title: How to configure challenger for your chain
+description: Learn how to configure challenger for your OP Stack chain.
+lang: en-US
+content_type: tutorial
+topic: configure-challenger-for-your-chain
+personas:
+  - chain-operator
+categories:
+  - mainnet
+  - testnet
+  - fault-proofs
+  - op-challenger
+  - chain-configuration
+is_imported_content: 'false'
+---
+
+# How to configure challenger for your chain
+
+## Overview
+
+This guide provides step-by-step instructions for setting up the configuration and monitoring options for `op-challenger`. The challenger is a critical fault proofs component that monitors dispute games and challenges invalid claims to protect your OP Stack chain.
+
+See the [OP-Challenger Explainer](/stack/fault-proofs/challenger) for a general overview of this fault proofs feature.
+
+The challenger is responsible for:
+
+*   Monitoring dispute games created by the fault proof system
+*   Challenging invalid claims in dispute games
+*   Defending valid state transitions
+*   Resolving games when possible
+
+## Prerequisites
+
+### Essential requirements
+
+Before configuring your challenger, complete the following steps:
+
+1.  **Deployed OP Stack chain with fault proofs enabled:**
+    *   L1 contracts deployed with dispute game factory
+    *   Fault proof system active on your chain
+    *   Access to your chain's contract addresses
+
+2.  **Required infrastructure access:**
+    *   L1 RPC endpoint (Ethereum, Sepolia, etc.)
+    *   L1 Beacon node endpoint (for blob access)
+    *   L2 archive node with debug API enabled
+    *   Rollup node (op-node) with historical data
+
+3.  **Configuration files:**
+    *   `rollup.json` - Rollup configuration file
+    *   `genesis-l2.json` - L2 genesis file
+    *   Prestate files for your network version
+
+### Software requirements
+
+*   Git (for cloning repositories)
+*   Go 1.21+ (if building from source)
+*   Docker and Docker Compose (optional but recommended)
+*   Access to a funded Ethereum account for challenger operations
+
+### Finding the current stable releases
+
+To ensure you're using the latest compatible versions of OP Stack components, always check the official releases page:
+
+[OP Stack releases page](https://github.com/ethereum-optimism/optimism/releases)
+
+Look for the latest `op-challenger/v*` release. The challenger version used in this guide (op-challenger/v0.2.11) is a verified stable version.
+
+Always check the release notes to ensure you're using compatible versions with your chain's deployment.
+
+## Software installation
+
+For challenger deployment, we recommend building from source as it provides better control and helps with debugging. A Docker alternative is also provided.
+
+### Build from source (Recommended)
+
+Building from source gives you full control over the binaries and is the preferred approach for production deployments.
+
+1.  **Clone and build op-challenger**
+
+```bash
+# Clone the optimism monorepo
+git clone https://github.com/ethereum-optimism/optimism.git
+cd optimism
+
+# Check out the latest release of op-challenger
+git checkout op-challenger/v0.2.11
+
+# Install dependencies and build
+pnpm install
+make op-challenger
+
+# Binary will be available at ./op-challenger/bin/op-challenger
+```
+
+### Verify installation
+
+Check that you have properly installed the challenger component:
+
+```bash
+# Make sure you're in the optimism directory
+./op-challenger/bin/op-challenger --help
+```
+
+## Configuration setup
+
+### 1. Organize your workspace
+
+After building the binaries, create your challenger working directory:
+
+```bash
+# Create challenger directory
+mkdir ~/challenger-node
+cd ~/challenger-node
+
+# Create necessary subdirectories
+mkdir scripts
+mkdir challenger-data
+```
+
+### 2. Copy configuration files
+
+```bash
+# Copy configuration files to your challenger directory
+# Adjust paths based on your deployment setup
+cp /path/to/your/rollup.json .
+cp /path/to/your/genesis-l2.json .
+```
+
+### 3. Environment variables
+
+You'll need to gather several pieces of information before creating your configuration. Here's where to get each value:
+
+**L1 network access:**
+
+*   L1 RPC URL: Your L1 node endpoint (Infura, Alchemy, or self-hosted)
+*   L1 Beacon URL: Beacon chain API endpoint for blob access
+
+**L2 network access:**
+
+*   L2 RPC URL: Your op-geth archive node endpoint
+*   Rollup RPC URL: Your op-node endpoint with historical data
+
+**Challenger wallet:**
+
+*   Private key for challenger operations (must be funded)
+
+**Network configuration:**
+
+*   Game factory address from your contract deployment
+*   Network identifier (e.g., op-sepolia, op-mainnet, or custom)
+
+Create your `.env` file with the actual values:
+
+```bash
+# Create .env file with your actual values
+cat > .env << 'EOF'
+# L1 Configuration - Replace with your actual RPC URLs
+L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
+
+# L2 Configuration - Replace with your actual node endpoints  
+L2_RPC_URL=http://your-op-geth-archive:8545
+ROLLUP_RPC_URL=http://your-op-node:8547
+
+# Challenger wallet - Replace with your actual private key
+PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
+
+# Network configuration
+NETWORK=op-sepolia
+GAME_FACTORY_ADDRESS=0xYOUR_GAME_FACTORY_ADDRESS
+
+# Data directory
+DATADIR=./challenger-data
+
+# Cannon configuration
+CANNON_PRESTATES_URL=https://example.com/prestates
+CANNON_ROLLUP_CONFIG=./rollup.json
+CANNON_L2_GENESIS=./genesis-l2.json
+EOF
+```
+
+**Important:** Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
+
+## Challenger configuration
+
+### Understanding key configuration flags
+
+#### `--l1-eth-rpc`
+
+*   HTTP provider URL for a standard L1 node, can be a full node
+*   `op-challenger` will be sending many requests, so use a trusted node that can handle many transactions
+*   **Critical:** Challenger controls significant funds and will spend if needed to defend games
+
+#### `--l1-beacon`
+
+*   Needed for blob access from L1 consensus layer
+*   **Important considerations:**
+    *   If your chain posts regularly: standard beacon node is sufficient
+    *   If your chain doesn't post valid output roots within 18 days: blob archiver is required
+    *   Configure consensus node to not prune blobs if needed
+
+#### `--l2-eth-rpc`
+
+*   Must be an `op-geth` archive node with `debug` API enabled
+*   Doesn't need full bedrock history but needs access to data from any active game start
+
+#### `--rollup-rpc`
+
+*   Must be an `op-node` archive node with historical output roots
+*   **SafeDB Configuration:** The `op-node` must have SafeDB enabled:
+    *   Set `--safedb.path` to persist safe head update data
+    *   Example: `--safedb.path /path/to/safe-head-db`
+    *   If path not set, SafeDB will be disabled
+
+#### `--network`
+
+*   Identifies the L2 network (e.g., `op-sepolia`, `op-mainnet`)
+*   When using `--network` flag, `--game-factory-address` is auto-loaded from [superchain-registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json)
+*   For custom networks, you must specify `--game-factory-address` and related configs manually
+
+#### `--cannon-prestates-url`
+
+*   The prestate is the version of `op-program` deployed on chain
+*   **Critical:** Must use the correct version to avoid invalid claims
+*   Challenger will refuse to interact with games that have different prestate hash
+*   Two options:
+    *   `--cannon-prestate`: path to single prestate JSON file
+    *   `--cannon-prestates-url`: URL to load multiple prestates (recommended)
+
+### Create challenger startup script
+
+Create `scripts/start-challenger.sh`:
+
+```bash
+#!/bin/bash
+source .env
+
+# Path to the challenger binary
+../optimism/op-challenger/bin/op-challenger \
+  --l1-eth-rpc=$L1_RPC_URL \
+  --l1-beacon=$L1_BEACON_URL \
+  --l2-eth-rpc=$L2_RPC_URL \
+  --rollup-rpc=$ROLLUP_RPC_URL \
+  --selective-claim-resolution \
+  --private-key=$PRIVATE_KEY \
+  --network=$NETWORK \
+  --datadir=$DATADIR \
+  --cannon-prestates-url=$CANNON_PRESTATES_URL \
+  --cannon-rollup-config=$CANNON_ROLLUP_CONFIG \
+  --cannon-l2-genesis=$CANNON_L2_GENESIS \
+  --trace-type=permissioned,cannon \
+  --log.level=info \
+  --log.format=json
+```
+
+### Custom network configuration
+
+For custom networks not in the superchain-registry, additional flags are required:
+
+```bash
+# Additional flags for custom networks
+--cannon-rollup-config rollup.json \
+--cannon-l2-genesis genesis-l2.json \
+--cannon-server ./op-program/bin/op-program \
+--cannon-prestate ./op-program/bin/prestate.json \
+--game-factory-address=0xYOUR_GAME_FACTORY_ADDRESS
+```
+
+**Warning:** These options vary based on which `--network` is specified. Chain operators always need to specify a way to load prestates and must also specify the cannon-server when not using Docker images.
+
+## Initializing and starting the challenger
+
+### Start the challenger
+
+```bash
+# Make sure you're in the challenger-node directory
+cd ~/challenger-node
+
+# Make script executable
+chmod +x scripts/start-challenger.sh
+
+# Start challenger
+./scripts/start-challenger.sh
+```
+
+### Verify challenger is running
+
+Monitor challenger logs to ensure it's operating correctly:
+
+```bash
+# Check challenger logs
+tail -f challenger-data/challenger.log
+
+# Or if running in foreground, monitor the output
+```
+
+The challenger should show logs indicating:
+
+*   Successful connection to L1 and L2 nodes
+*   Loading of prestates and configuration
+*   Monitoring of dispute games
+
+## Docker alternative
+
+If you prefer containerized deployment, you can use the official Docker images that include embedded `op-program` server and Cannon executable.
+
+### Complete Docker setup
+
+Create `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  challenger:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v0.2.11
+    user: "1000"
+    volumes:
+      - ./challenger-data:/data
+      - ./rollup.json:/workspace/rollup.json:ro
+      - ./genesis-l2.json:/workspace/genesis-l2.json:ro
+    environment:
+      - L1_RPC_URL=${L1_RPC_URL}
+      - L1_BEACON_URL=${L1_BEACON_URL}
+      - L2_RPC_URL=${L2_RPC_URL}
+      - ROLLUP_RPC_URL=${ROLLUP_RPC_URL}
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - NETWORK=${NETWORK}
+    command:
+      - "op-challenger"
+      - "--l1-eth-rpc=${L1_RPC_URL}"
+      - "--l1-beacon=${L1_BEACON_URL}"
+      - "--l2-eth-rpc=${L2_RPC_URL}"
+      - "--rollup-rpc=${ROLLUP_RPC_URL}"
+      - "--selective-claim-resolution"
+      - "--private-key=${PRIVATE_KEY}"
+      - "--network=${NETWORK}"
+      - "--datadir=/data"
+      - "--cannon-prestates-url=${CANNON_PRESTATES_URL}"
+    restart: unless-stopped
+    ports:
+      - "8548:8548"  # If challenger exposes metrics endpoint
+```
+
+Start with Docker:
+
+```bash
+# Start the challenger service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f challenger
+```
+
+## Testing and debugging (Optional)
+
+Use `op-challenger` subcommands to interact with the Fault Proof System for testing and debugging purposes:
+
+### Available subcommands
+
+| Subcommand      | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| `list-games`    | List the games created by a dispute game factory         |
+| `list-claims`   | List the claims in a dispute game                        |
+| `list-credits`  | List the credits in a dispute game                       |
+| `create-game`   | Creates a dispute game via the factory                   |
+| `move`          | Creates and sends a move transaction to the dispute game |
+| `resolve`       | Resolves the specified dispute game if possible          |
+| `resolve-claim` | Resolves the specified claim if possible                 |
+
+### Example testing commands
+
+```bash
+# List recent games
+./op-challenger/bin/op-challenger list-games \
+  --l1-eth-rpc=$L1_RPC_URL \
+  --game-factory-address=$GAME_FACTORY_ADDRESS
+
+# List claims in a specific game
+./op-challenger/bin/op-challenger list-claims \
+  --l1-eth-rpc=$L1_RPC_URL \
+  --game-address=0xGAME_ADDRESS
+```
+
+### Monitoring with op-dispute-mon
+
+Consider running `op-dispute-mon` for enhanced security monitoring:
+
+*   Provides visibility into all game statuses for the last 28 days
+*   Essential for production challenger deployments
+*   Create Grafana dashboards using: [Download the Dispute Monitor JSON](/resources/grafana/dispute-monitor-1718214549035.json)
+
+## Next steps
+
+*   Read the [OP-Challenger Explainer](/stack/fault-proofs/challenger) for additional context and FAQ
+*   Review the detailed [challenger specifications](https://specs.optimism.io/fault-proof/stage-one/honest-challenger-fdg.html) for implementation details
+*   If you experience any problems, reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions)
