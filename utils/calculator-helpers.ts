@@ -75,7 +75,7 @@ export function resultsFeeScalarsAssumed(
       : `${Math.round(n25 * 100)}% Blob Fullness and ${
           Math.round(n26 * 10) / 10
         } Blobs per L1 Tx (Avg), `;
-  const state = isStateEnabled === true ? " & State" : "";
+  const state = isStateEnabled === "Yes" ? " & State" : "";
   return `Fee Scalars Assume: ${mode}Target a ${Math.round(
     targetDataMargin
   )}% Margin on DA${state}, ${
