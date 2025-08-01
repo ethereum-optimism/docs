@@ -1,6 +1,6 @@
 ---
 title: Creating your own L2 rollup testnet
-description: A complete guide to deploying an OP Stack testnet using op-deployer and running all required components.
+description: Learn how to orchestrate and integrate all OP Stack components for a complete testnet deployment.
 lang: en-US
 content_type: tutorial
 topic: creating-your-own-l2-rollup-testnet
@@ -14,6 +14,7 @@ categories:
   - batcher
   - proposer
   - challenger
+  - integration
 is_imported_content: 'false'
 ---
 
@@ -21,7 +22,7 @@ import { Callout, Card, Steps } from 'nextra/components'
 
 # Creating your own L2 rollup testnet
 
-This tutorial walks you through deploying a complete OP Stack testnet chain using the modern **op-deployer** approach. You'll deploy L1 smart contracts, generate chain artifacts, and run all required off-chain components.
+This tutorial focuses on **orchestrating and integrating** all OP Stack components for a complete testnet deployment. Rather than repeating component-specific installation details, this guide emphasizes the unique challenges of getting all components working together seamlessly.
 
 ## What you'll deploy
 
@@ -40,53 +41,61 @@ This guide is for **testnet deployment only**. Never use the generated keys or c
 
 ## Prerequisites
 
-### Required Software
+### Component Installation
 
-| Tool                                       | Version | Installation Guide                                              |
-| ------------------------------------------ | ------- | --------------------------------------------------------------- |
-| [Git](https://git-scm.com/)                | ^2.0    | System package manager                                          |
-| [Go](https://golang.org/)                  | ^1.21   | [Go Installation](https://golang.org/doc/install)               |
-| [Make](https://www.gnu.org/software/make/) | ^3.0    | System package manager                                          |
-| [jq](https://stedolan.github.io/jq/)       | ^1.6    | System package manager                                          |
-| [Just](https://just.systems/)              | Latest  | [Just Installation](https://just.systems/man/en/chapter_4.html) |
+This tutorial requires several OP Stack components. Install them using the specialized guides:
 
-### Sepolia testnet access
+| Component | Installation Guide | Purpose |
+|-----------|-------------------|---------|
+| **op-deployer** | [Installation Guide](/operators/chain-operators/tools/op-deployer#installation) | Smart contract deployment |
+| **op-geth** | [Build Guide](/operators/chain-operators/deploy/sequencer-node#building-op-geth) | Execution client |
+| **op-node** | [Build Guide](/operators/chain-operators/deploy/sequencer-node#building-optimism-components) | Consensus client |
+| **op-batcher** | [Build Guide](/operators/chain-operators/deploy/spin-batcher#build-the-software) | Transaction batching |
+| **op-proposer** | [Build Guide](/operators/chain-operators/deploy/proposer-setup-guide#building-the-proposer) | State root proposals |
+| **op-challenger** | [Build Guide](/operators/chain-operators/tools/op-challenger#build-the-executable) | Dispute monitoring |
 
-You'll need:
+### Testnet Requirements
+
+For this tutorial, you'll need:
 
 *   **Sepolia RPC URL** - Get from [Alchemy](https://www.alchemy.com/), [Infura](https://infura.io/), or [QuickNode](https://www.quicknode.com/)
-*   **Sepolia ETH** - Get from [Superchain Faucet](https://console.optimism.io/faucet)
-*   **Private Keys** - For deployer, admin, batcher, proposer, and sequencer roles
+*   **Sepolia ETH** - Get from [Superchain Faucet](https://console.optimism.io/faucet) (~2-3 ETH recommended)
+*   **Private Keys** - For deployer, admin, batcher, proposer, and sequencer roles (5 separate keys)
 
-<Callout type="info">
-We recommend using Sepolia testnet as it's well-supported and has reliable faucets. You can adapt this guide for other EVM-compatible testnets.
+<Callout type="warning">
+**Security Note**: Never use testnet private keys in production. Generate fresh keys for mainnet deployments.
 </Callout>
 
-## Step 1: Install op-deployer
+## Step 1: Verify Component Installation
 
-The op-deployer tool simplifies OP Stack deployments and is required for standard chains.
+Before starting the deployment, verify all required components are properly installed:
 
 <Steps>
 
-### Download op-deployer
-
-1. Go to [https://github.com/ethereum-optimism/optimism/releases](https://github.com/ethereum-optimism/optimism/releases)
-2. Find the latest release that includes op-deployer
-3. Under **assets**, download the binary that matches your operating system:
-   * `op-deployer-linux-amd64` for Linux
-   * `op-deployer-darwin-amd64` or `op-deployer-darwin-arm64` for macOS
-   * `op-deployer-windows-amd64.exe` for Windows
-4. Extract the binary to a location on your system PATH
-
-### Verify installation
+### Verify installations
 
 ```bash
-./op-deployer --version
+# Verify all components are available
+op-deployer --version
+op-geth version  
+op-node --version
+op-batcher --version
+op-proposer --version
+op-challenger --version
+```
+
+If any component is missing, install it using the links in the [Prerequisites](#prerequisites) section.
+
+### Set up workspace
+
+Create and organize your deployment workspace:
+
+```bash
+mkdir testnet-rollup && cd testnet-rollup
+mkdir -p .deployer logs data components
 ```
 
 </Steps>
-
-For detailed installation instructions, see the [op-deployer installation guide](/operators/chain-operators/tools/op-deployer#installation).
 
 ## Step 2: Initialize deployment configuration
 
@@ -123,191 +132,163 @@ Update the `[[chains]]` section with your wallet addresses and preferences. For 
 
 </Steps>
 
-## Step 3: Deploy L1 smart contracts
+## Step 3: Deploy L1 Smart Contracts
+
+Deploy the L1 smart contracts and generate chain artifacts:
 
 <Steps>
 
-### Set deployment credentials
+### Quick deployment
 
 ```bash
-# Your Sepolia RPC URL
-export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
-# Private key for deployment (ensure this account has Sepolia ETH)
+# Set deployment parameters
+export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"  
 export DEPLOYER_PRIVATE_KEY="0xYOUR_PRIVATE_KEY"
+
+# Deploy contracts and generate artifacts
+op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY
+op-deployer inspect genesis --workdir .deployer $L2_CHAIN_ID > .deployer/genesis.json
+op-deployer inspect rollup --workdir .deployer $L2_CHAIN_ID > .deployer/rollup.json  
+op-deployer inspect l1 --workdir .deployer $L2_CHAIN_ID > .deployer/l1-contracts.json
 ```
 
-### Deploy contracts to L1
+### Verify deployment
 
 ```bash
-./op-deployer apply --workdir .deployer \
-  --l1-rpc-url $L1_RPC_URL \
-  --private-key $DEPLOYER_PRIVATE_KEY
-```
-
-This deploys all necessary L1 contracts and updates the local state file.
-
-### Generate chain artifacts
-
-```bash
-# Generate genesis file for op-geth
-./op-deployer inspect genesis --workdir .deployer $L2_CHAIN_ID > .deployer/genesis.json
-
-# Generate rollup config for op-node
-./op-deployer inspect rollup --workdir .deployer $L2_CHAIN_ID > .deployer/rollup.json
-
-# Export contract addresses for other components
-./op-deployer inspect l1 --workdir .deployer $L2_CHAIN_ID > .deployer/l1-contracts.json
+# Check that all artifacts were generated
+ls -la .deployer/
+# Should show: genesis.json, rollup.json, l1-contracts.json, state.json
 ```
 
 </Steps>
 
-For comprehensive deployment details, see the [L1 smart contracts deployment guide](/operators/chain-operators/deploy/smart-contracts).
+**For detailed contract deployment and configuration**: [Smart Contract Deployment Guide](/operators/chain-operators/deploy/smart-contracts)
 
-## Step 4: Build required components
+## Step 4: Environment Setup and Configuration
+
+Set up the runtime environment and configuration files for component integration:
 
 <Steps>
-
-### Download and build op-geth
-
-1. Go to [https://github.com/ethereum-optimism/op-geth/releases](https://github.com/ethereum-optimism/op-geth/releases)
-2. Download the latest source code archive for your platform
-3. Extract the downloaded archive
-4. Navigate to the extracted directory
-5. Build the binary (requires make and Go):
-
-```bash
-make geth
-```
-
-### Clone and build Optimism components
-
-1. Clone the Optimism monorepo:
-
-```bash
-git clone https://github.com/ethereum-optimism/optimism.git
-cd optimism
-```
-
-# Build op-node
-git checkout op-node/v1.12.2
-cd op-node
-just build  # Uses the 'just' command runner
-cd ..
-
-# Build op-batcher  
-git checkout op-batcher/v1.11.5
-cd op-batcher
-just build
-cd ..
-
-# Build op-proposer
-git checkout op-proposer/v1.10.0  
-cd op-proposer
-just build
-cd ..
-
-# Build op-challenger
-git checkout op-challenger/v1.3.3
-cd op-challenger
-just build
-cd ..
-```
 
 ### Generate JWT secret
 
-Navigate to your op-node directory and generate a JWT secret for authentication:
+Create a shared JWT secret for op-geth and op-node authentication:
 
 ```bash
-cd optimism/op-node
-# Generate a random JWT secret for authentication between op-geth and op-node
+# Generate JWT secret
 openssl rand -hex 32 > jwt.txt
+echo "JWT secret generated: jwt.txt"
 ```
 
-### Copy configuration files
+### Set up environment variables
 
-Copy the JWT secret and deployment artifacts to the appropriate directories:
-
-1. Copy the JWT secret to your op-geth directory
-2. Copy `genesis.json` from your `.deployer` directory to your op-geth directory  
-3. Copy `rollup.json` from your `.deployer` directory to your op-node directory
-
-</Steps>
-
-## Step 5: Initialize and start op-geth
-
-<Steps>
-
-### Initialize op-geth datadir
-
-Navigate to your op-geth directory and initialize the data directory:
+Configure environment variables for all components:
 
 ```bash
-cd op-geth
-mkdir datadir
-./build/bin/geth init --state.scheme=hash --datadir=datadir genesis.json
-```
-
-### Start op-geth (in new terminal window)
-
-Navigate to your op-geth directory and start the node:
-
-```bash
-cd op-geth
-./build/bin/geth \
-  --datadir ./datadir \
-  --http \
-  --http.corsdomain="*" \
-  --http.vhosts="*" \
-  --http.addr=0.0.0.0 \
-  --http.api=web3,debug,eth,txpool,net,engine \
-  --ws \
-  --ws.addr=0.0.0.0 \
-  --ws.port=8546 \
-  --ws.origins="*" \
-  --ws.api=debug,eth,txpool,net,engine \
-  --syncmode=full \
-  --gcmode=archive \
-  --nodiscover \
-  --maxpeers=0 \
-  --networkid=$L2_CHAIN_ID \
-  --authrpc.vhosts="*" \
-  --authrpc.addr=0.0.0.0 \
-  --authrpc.port=8551 \
-  --authrpc.jwtsecret=./jwt.txt \
-  --rollup.disabletxpoolgossip=true
-```
-
-</Steps>
-
-For detailed op-geth configuration, see the [op-geth deployment guide](/operators/chain-operators/deploy/sequencer-node#2-clone-and-build-op-geth).
-
-## Step 6: Start op-node
-
-<Steps>
-
-### Configure environment variables
-
-```bash
-export GS_SEQUENCER_PRIVATE_KEY="0xYOUR_SEQUENCER_PRIVATE_KEY"
-export L1_RPC_KIND="alchemy"  # or your RPC provider
+# L1 and L2 configuration
+export L1_CHAIN_ID=11155111
+export L2_CHAIN_ID=42069
 export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
 export L1_BEACON_URL="https://ethereum-sepolia-beacon-api.publicnode.com"
+export L1_RPC_KIND="alchemy"
+
+# Component private keys (use different keys for each role)
+export GS_SEQUENCER_PRIVATE_KEY="0xYOUR_SEQUENCER_PRIVATE_KEY"
+export GS_BATCHER_PRIVATE_KEY="0xYOUR_BATCHER_PRIVATE_KEY"  
+export GS_PROPOSER_PRIVATE_KEY="0xYOUR_PROPOSER_PRIVATE_KEY"
+export GS_CHALLENGER_PRIVATE_KEY="0xYOUR_CHALLENGER_PRIVATE_KEY"
+
+# Extract contract addresses from deployment
+export OP_PROPOSER_GAME_FACTORY_ADDRESS=$(cat .deployer/l1-contracts.json | jq -r .opChainDeployment.disputeGameFactoryProxyAddress)
 ```
 
-### Start op-node (in new terminal window)
-
-Navigate to your op-node directory and start the consensus client:
+### Organize configuration files
 
 ```bash
-cd optimism/op-node
-./bin/op-node \
+# Copy configuration files to accessible locations
+cp .deployer/genesis.json ./genesis.json
+cp .deployer/rollup.json ./rollup.json
+cp jwt.txt ./jwt.txt
+```
+
+</Steps>
+
+**For detailed component building**: See individual component guides in [Prerequisites](#prerequisites)
+
+## Step 5: Start op-geth (Execution Layer)
+
+**Start components in order**: op-geth must be running before starting op-node.
+
+<Steps>
+
+### Initialize op-geth
+
+```bash
+# Initialize the data directory
+mkdir -p data/geth
+op-geth init --state.scheme=hash --datadir=data/geth genesis.json
+```
+
+### Start op-geth
+
+```bash
+# Start in a new terminal window
+op-geth \
+  --datadir=./op-geth-data \
+  --http \
+  --http.addr=0.0.0.0 \
+  --http.port=$OP_GETH_HTTP_PORT \
+  --http.vhosts="*" \
+  --http.corsdomain="*" \
+  --http.api=eth,net,web3,debug,txpool,admin \
+  --ws \
+  --ws.addr=0.0.0.0 \
+  --ws.port=$OP_GETH_WS_PORT \
+  --ws.origins="*" \
+  --ws.api=eth,net,web3,debug,txpool,admin \
+  --authrpc.addr=0.0.0.0 \
+  --authrpc.port=$OP_GETH_AUTH_PORT \
+  --authrpc.vhosts="*" \
+  --authrpc.jwtsecret=$JWT_SECRET \
+  --syncmode=full \
+  --gcmode=archive \
+  --rollup.disabletxpoolgossip=true \
+  --rollup.sequencerhttp=http://localhost:$OP_NODE_RPC_PORT
+```
+
+### Verify op-geth is running
+
+```bash
+# Check if op-geth is responding (wait ~30 seconds after startup)
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+  http://localhost:8545
+
+# Should return: {"jsonrpc":"2.0","id":1,"result":"0x0"}
+```
+
+</Steps>
+
+**For detailed op-geth configuration**: [Sequencer Node Setup](/operators/chain-operators/deploy/sequencer-node)
+
+## Step 6: Start op-node (Consensus Layer)
+
+**Prerequisite**: op-geth must be running and verified before starting op-node.
+
+<Steps>
+
+### Start op-node
+
+```bash
+# Start in a new terminal window (ensure op-geth is running first)
+op-node \
   --l2=http://localhost:8551 \
   --l2.jwt-secret=./jwt.txt \
   --sequencer.enabled \
   --sequencer.l1-confs=5 \
   --verifier.l1-confs=4 \
   --rollup.config=./rollup.json \
-  --rpc.addr=0.0.0.0 \
+  --rpc.addr=0.0.0.0 --rpc.port=9545 \
   --p2p.disable \
   --rpc.enable-admin \
   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY \
@@ -316,24 +297,35 @@ cd optimism/op-node
   --l1.beacon=$L1_BEACON_URL
 ```
 
+### Verify op-node sync
+
+```bash
+# Check op-node status (wait ~1 minute after startup)  
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"optimism_syncStatus","params":[],"id":1}' \
+  http://localhost:9545
+
+# Verify L2 block production
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+  http://localhost:8545
+```
+
 </Steps>
 
-For advanced op-node configuration, see the [op-node deployment guide](/operators/chain-operators/deploy/sequencer-node#1-clone-and-build-op-node).
+**For detailed op-node configuration**: [Sequencer Node Setup](/operators/chain-operators/deploy/sequencer-node)
 
-## Step 7: Start op-batcher
+## Step 7: Start op-batcher (Data Publishing)
+
+**Prerequisite**: Both op-geth and op-node must be running and synced.
 
 <Steps>
 
-### Start op-batcher (in new terminal window)
-
-Navigate to your op-batcher directory and start the batcher:
+### Start op-batcher
 
 ```bash
-cd optimism/op-batcher
-export GS_BATCHER_PRIVATE_KEY="0xYOUR_BATCHER_PRIVATE_KEY"
-export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
-
-./bin/op-batcher \
+# Start in a new terminal window
+op-batcher \
   --l2-eth-rpc=http://localhost:8545 \
   --rollup-rpc=http://localhost:9545 \
   --poll-interval=1s \
@@ -341,129 +333,128 @@ export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
   --num-confirmations=1 \
   --safe-abort-nonce-too-low-count=3 \
   --resubmission-timeout=30s \
-  --rpc.addr=0.0.0.0 \
-  --rpc.port=8548 \
+  --rpc.addr=0.0.0.0 --rpc.port=8548 \
   --rpc.enable-admin \
   --max-channel-duration=25 \
   --l1-eth-rpc=$L1_RPC_URL \
   --private-key=$GS_BATCHER_PRIVATE_KEY
 ```
 
+### Verify op-batcher
+
+```bash
+# Check batcher health (wait ~2 minutes after startup)
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"admin_nodeInfo","params":[],"id":1}' \
+  http://localhost:8548
+
+# Monitor for batch submissions in batcher logs
+# Look for: "batch submitted successfully" or "published transaction"
+```
+
 </Steps>
 
-For detailed batcher configuration, see the [op-batcher deployment guide](/operators/chain-operators/deploy/spin-batcher).
+**For detailed batcher configuration**: [op-batcher Deployment Guide](/operators/chain-operators/deploy/spin-batcher)
 
-## Step 8: Start op-proposer
+## Step 8: Start op-proposer (State Root Proposals)
+
+**Prerequisite**: All previous components must be running and healthy.
 
 <Steps>
 
-### Configure proposer environment
+### Start op-proposer
 
 ```bash
-export OP_PROPOSER_WAIT_NODE_SYNC=true
-export OP_PROPOSER_GAME_FACTORY_ADDRESS=$(cat .deployer/l1-contracts.json | jq -r .opChainDeployment.disputeGameFactoryProxyAddress)
-export OP_PROPOSER_PROPOSAL_INTERVAL=4m
-export OP_PROPOSER_GAME_TYPE=1
-export GS_PROPOSER_PRIVATE_KEY="0xYOUR_PROPOSER_PRIVATE_KEY"
-export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
-```
-
-### Start op-proposer (in new terminal window)
-
-Navigate to your op-proposer directory and start the proposer:
-
-```bash
-cd optimism/op-proposer
-./bin/op-proposer \
+# Start in a new terminal window
+op-proposer \
   --poll-interval=12s \
   --rpc.port=8560 \
   --rollup-rpc=http://localhost:9545 \
+  --game-factory-address=$OP_PROPOSER_GAME_FACTORY_ADDRESS \
+  --proposal-interval=4m \
+  --game-type=1 \
   --private-key=$GS_PROPOSER_PRIVATE_KEY \
   --l1-eth-rpc=$L1_RPC_URL
 ```
 
+### Verify op-proposer
+
+```bash
+# Check proposer health (wait ~1 minute after startup)
+curl -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"admin_nodeInfo","params":[],"id":1}' \
+  http://localhost:8560
+
+# Monitor for state root proposals in proposer logs  
+# Look for: "state update proposal confirmed" or "proposal submitted"
+```
+
 </Steps>
 
-For comprehensive proposer setup, see the [op-proposer deployment guide](/operators/chain-operators/deploy/proposer-setup-guide).
+**For detailed proposer configuration**: [op-proposer Deployment Guide](/operators/chain-operators/deploy/proposer-setup-guide)
 
-## Step 9: Start op-challenger
+## Step 9: Start op-challenger (Dispute Monitoring)
+
+**Prerequisite**: All other components must be running and proposing state roots.
 
 <Steps>
 
-### Start op-challenger (in new terminal window)
-
-Navigate to your op-challenger directory and start the challenger:
+### Start op-challenger
 
 ```bash
-cd optimism/op-challenger
-export GS_CHALLENGER_PRIVATE_KEY="0xYOUR_CHALLENGER_PRIVATE_KEY"
-export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
-
-./bin/op-challenger \
+# Start in a new terminal window
+mkdir -p data/challenger
+op-challenger \
   --trace-type=permissioned,cannon \
   --l1-eth-rpc=$L1_RPC_URL \
   --l2-eth-rpc=http://localhost:8545 \
   --rollup-rpc=http://localhost:9545 \
   --private-key=$GS_CHALLENGER_PRIVATE_KEY \
   --network=op-sepolia \
-  --datadir=./challenger-data
+  --datadir=./data/challenger
 ```
 
-</Steps>
-
-For detailed challenger configuration, see the [op-challenger deployment guide](/operators/chain-operators/deploy/sequencer-node).
-
-## Step 10: Configure dispute resolution (Optional)
-
-To enable proper dispute resolution, configure the initial bond for dispute games:
-
-<Steps>
-
-### Update dispute game factory
-
-Visit the Game Factory contract on Etherscan:
-`https://sepolia.etherscan.io/address/<OP_PROPOSER_GAME_FACTORY_ADDRESS>#writeProxyContract`
-
-Call `setInitBond` with:
-
-*   `_gameType`: 0
-*   `_initBond`: 800000000000000 (0.0008 ETH)
-
-</Steps>
-
-## Testing your rollup
-
-<Steps>
-
-### Connect wallet
-
-Your rollup is now running at `http://localhost:8545`. You can connect MetaMask or any other wallet using:
-
-*   **RPC URL**: `http://localhost:8545`
-*   **Chain ID**: Your L2_CHAIN_ID (e.g., 42069)
-*   **Currency**: ETH
-
-### Bridge ETH to L2
-
-Get the L1StandardBridge address from your deployment artifacts:
+### Verify op-challenger
 
 ```bash
-cd .deployer
-cat l1-contracts.json | jq -r .opChainDeployment.l1StandardBridgeProxyAddress
+# Check challenger health (wait ~1 minute after startup)
+# Challenger doesn't have an RPC endpoint, monitor logs for:
+# "monitoring dispute games" or "challenger started successfully"
+
+# Verify challenger is monitoring the game factory
+echo "Monitor challenger logs for dispute game monitoring messages"
 ```
-
-Send Sepolia ETH to this address to bridge funds to your L2.
-
-### Send test transactions
-
-Once you have ETH on L2, try:
-
-*   Sending ETH between accounts
-*   Deploying simple contracts
-*   Interacting with dApps
 
 </Steps>
 
+**For detailed challenger configuration**: [op-challenger Configuration Guide](/operators/chain-operators/tools/op-challenger)
+
+### Configure dispute resolution (Optional)
+
+```bash
+# Get the Game Factory address for manual configuration
+echo "Game Factory Address: $OP_PROPOSER_GAME_FACTORY_ADDRESS"
+echo "Visit: https://sepolia.etherscan.io/address/$OP_PROPOSER_GAME_FACTORY_ADDRESS#writeProxyContract"
+echo "Call setInitBond with _gameType: 1, _initBond: 800000000000000"
+```
+
+
+## Troubleshooting
+
+Common integration issues and solutions:
+
+<Callout>
+**Component Dependencies**: Always start components in order: op-geth → op-node → op-batcher → op-proposer → op-challenger
+</Callout>
+
+### Common Issues
+
+| Problem | Symptom | Solution |
+|---------|---------|----------|
+| **op-node won't sync** | "connection refused" errors | Verify op-geth is running and JWT secret matches |
+| **Batcher not submitting** | No batch submissions in logs | Check L1 RPC connection and batcher private key has ETH |
+| **Proposer not proposing** | No state root proposals | Verify rollup-rpc connection and proposal interval |
+| **Challenger not monitoring** | No dispute monitoring logs | Check network parameter and L1/L2 RPC connections |
 
 ## Next steps
 
