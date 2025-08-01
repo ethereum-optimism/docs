@@ -23,12 +23,6 @@ import { Callout, Card, Steps } from 'nextra/components'
 
 This tutorial walks you through deploying a complete OP Stack testnet chain using the modern **op-deployer** approach. You'll deploy L1 smart contracts, generate chain artifacts, and run all required off-chain components.
 
-<Callout type="info">
-  **Time Required:** Approximately 1-2 hours\
-  **Skill Level:** Intermediate to Advanced\
-  **Prerequisites:** Familiarity with command line, Ethereum concepts, and node management
-</Callout>
-
 ## What you'll deploy
 
 This tutorial will guide you through setting up:
@@ -76,15 +70,13 @@ The op-deployer tool simplifies OP Stack deployments and is required for standar
 
 ### Download op-deployer
 
-```bash
-cd ~
-# Download the appropriate version for your OS from the releases page
-# Linux example shown below - adjust for macOS or Windows as needed
-wget https://github.com/ethereum-optimism/optimism/releases/latest/download/op-deployer-linux-amd64.tar.gz
-tar -xzf op-deployer-linux-amd64.tar.gz
-mv op-deployer-* op-deployer
-cd op-deployer
-```
+1. Go to [https://github.com/ethereum-optimism/optimism/releases](https://github.com/ethereum-optimism/optimism/releases)
+2. Find the latest release that includes op-deployer
+3. Under **assets**, download the binary that matches your operating system:
+   * `op-deployer-linux-amd64` for Linux
+   * `op-deployer-darwin-amd64` or `op-deployer-darwin-arm64` for macOS
+   * `op-deployer-windows-amd64.exe` for Windows
+4. Extract the binary to a location on your system PATH
 
 ### Verify installation
 
@@ -177,24 +169,24 @@ For comprehensive deployment details, see the [L1 smart contracts deployment gui
 
 ### Download and build op-geth
 
+1. Go to [https://github.com/ethereum-optimism/op-geth/releases](https://github.com/ethereum-optimism/op-geth/releases)
+2. Download the latest source code archive for your platform
+3. Extract the downloaded archive
+4. Navigate to the extracted directory
+5. Build the binary (requires make and Go):
+
 ```bash
-cd ~
-# Download and extract op-geth
-wget https://github.com/ethereum-optimism/op-geth/archive/refs/tags/v1.101503.1.tar.gz
-tar -xzf v1.101503.1.tar.gz
-mv op-geth-* op-geth
-cd op-geth
-# Build the binary (requires make and Go)
 make geth
 ```
 
 ### Clone and build Optimism components
 
+1. Clone the Optimism monorepo:
+
 ```bash
-cd ~
-# Clone the Optimism monorepo
 git clone https://github.com/ethereum-optimism/optimism.git
 cd optimism
+```
 
 # Build op-node
 git checkout op-node/v1.12.2
@@ -223,22 +215,21 @@ cd ..
 
 ### Generate JWT secret
 
+Navigate to your op-node directory and generate a JWT secret for authentication:
+
 ```bash
-cd ~/optimism/op-node
+cd optimism/op-node
 # Generate a random JWT secret for authentication between op-geth and op-node
 openssl rand -hex 32 > jwt.txt
-# Copy the JWT secret to op-geth directory
-cp jwt.txt ~/op-geth/
 ```
 
 ### Copy configuration files
 
-```bash
-cd ~/op-deployer/.deployer
-# Copy configuration files to the appropriate directories
-cp genesis.json ~/op-geth/
-cp rollup.json ~/optimism/op-node/
-```
+Copy the JWT secret and deployment artifacts to the appropriate directories:
+
+1. Copy the JWT secret to your op-geth directory
+2. Copy `genesis.json` from your `.deployer` directory to your op-geth directory  
+3. Copy `rollup.json` from your `.deployer` directory to your op-node directory
 
 </Steps>
 
@@ -248,16 +239,20 @@ cp rollup.json ~/optimism/op-node/
 
 ### Initialize op-geth datadir
 
+Navigate to your op-geth directory and initialize the data directory:
+
 ```bash
-cd ~/op-geth
+cd op-geth
 mkdir datadir
 ./build/bin/geth init --state.scheme=hash --datadir=datadir genesis.json
 ```
 
 ### Start op-geth (in new terminal window)
 
+Navigate to your op-geth directory and start the node:
+
 ```bash
-cd ~/op-geth
+cd op-geth
 ./build/bin/geth \
   --datadir ./datadir \
   --http \
@@ -301,8 +296,10 @@ export L1_BEACON_URL="https://ethereum-sepolia-beacon-api.publicnode.com"
 
 ### Start op-node (in new terminal window)
 
+Navigate to your op-node directory and start the consensus client:
+
 ```bash
-cd ~/optimism/op-node
+cd optimism/op-node
 ./bin/op-node \
   --l2=http://localhost:8551 \
   --l2.jwt-secret=./jwt.txt \
@@ -329,8 +326,10 @@ For advanced op-node configuration, see the [op-node deployment guide](/operator
 
 ### Start op-batcher (in new terminal window)
 
+Navigate to your op-batcher directory and start the batcher:
+
 ```bash
-cd ~/optimism/op-batcher
+cd optimism/op-batcher
 export GS_BATCHER_PRIVATE_KEY="0xYOUR_BATCHER_PRIVATE_KEY"
 export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
 
@@ -362,7 +361,7 @@ For detailed batcher configuration, see the [op-batcher deployment guide](/opera
 
 ```bash
 export OP_PROPOSER_WAIT_NODE_SYNC=true
-export OP_PROPOSER_GAME_FACTORY_ADDRESS=$(cat ~/op-deployer/.deployer/l1-contracts.json | jq -r .opChainDeployment.disputeGameFactoryProxyAddress)
+export OP_PROPOSER_GAME_FACTORY_ADDRESS=$(cat .deployer/l1-contracts.json | jq -r .opChainDeployment.disputeGameFactoryProxyAddress)
 export OP_PROPOSER_PROPOSAL_INTERVAL=4m
 export OP_PROPOSER_GAME_TYPE=1
 export GS_PROPOSER_PRIVATE_KEY="0xYOUR_PROPOSER_PRIVATE_KEY"
@@ -371,8 +370,10 @@ export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
 
 ### Start op-proposer (in new terminal window)
 
+Navigate to your op-proposer directory and start the proposer:
+
 ```bash
-cd ~/optimism/op-proposer
+cd optimism/op-proposer
 ./bin/op-proposer \
   --poll-interval=12s \
   --rpc.port=8560 \
@@ -391,8 +392,10 @@ For comprehensive proposer setup, see the [op-proposer deployment guide](/operat
 
 ### Start op-challenger (in new terminal window)
 
+Navigate to your op-challenger directory and start the challenger:
+
 ```bash
-cd ~/optimism/op-challenger
+cd optimism/op-challenger
 export GS_CHALLENGER_PRIVATE_KEY="0xYOUR_CHALLENGER_PRIVATE_KEY"
 export L1_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY"
 
@@ -423,7 +426,7 @@ Visit the Game Factory contract on Etherscan:
 
 Call `setInitBond` with:
 
-*   `_gameType`: 1
+*   `_gameType`: 0
 *   `_initBond`: 800000000000000 (0.0008 ETH)
 
 </Steps>
@@ -442,10 +445,10 @@ Your rollup is now running at `http://localhost:8545`. You can connect MetaMask 
 
 ### Bridge ETH to L2
 
-Get the L1StandardBridge address:
+Get the L1StandardBridge address from your deployment artifacts:
 
 ```bash
-cd ~/op-deployer/.deployer
+cd .deployer
 cat l1-contracts.json | jq -r .opChainDeployment.l1StandardBridgeProxyAddress
 ```
 
