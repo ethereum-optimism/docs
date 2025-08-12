@@ -154,7 +154,7 @@ For setting up the batcher, we recommend building from source as it provides bet
 
       **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
 
-      ### Create docker-compose.yml
+      ### Create a docker-compose.yml file
 
       <Callout type="info">
         This configuration assumes your sequencer is running in a Docker container named `sequencer-node` on the same `op-stack` network.
@@ -166,7 +166,7 @@ For setting up the batcher, we recommend building from source as it provides bet
 
       services:
         op-batcher:
-          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:v1.13.1
+          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:v1.13.2
           volumes:
             - .:/workspace
           working_dir: /workspace
@@ -191,7 +191,6 @@ For setting up the batcher, we recommend building from source as it provides bet
             - "--private-key=${BATCHER_PRIVATE_KEY}"
             - "--batch-type=1"
             - "--data-availability-type=blobs"
-            - "--compress"
             - "--log.level=info"
           restart: unless-stopped
       ```
@@ -200,8 +199,6 @@ For setting up the batcher, we recommend building from source as it provides bet
 
       ```bash
       # Make sure your sequencer network exists
-      docker network create op-stack 2>/dev/null || true
-
       # Start the batcher
       docker-compose up -d
 
@@ -361,7 +358,6 @@ source .env
   --private-key=$BATCHER_PRIVATE_KEY \
   --batch-type=1 \
   --data-availability-type=blobs \
-  --compress \
   --log.level=info
 ```
 
@@ -372,7 +368,6 @@ source .env
 *   **`--max-channel-duration`**: Maximum time (in L1 blocks) to keep a channel open
 *   **`--batch-type`**: Type of batch encoding (1 for span batches, 0 for singular batches)
 *   **`--data-availability-type`**: Whether to use blobs or calldata for data availability
-*   **`--compress`**: Enable compression to reduce L1 data costs
 
 ## Starting the batcher
 
