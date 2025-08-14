@@ -89,7 +89,7 @@ const CustomHeader = () => {
 
         {/* Search Bar - hidden on mobile, shown on larger screens */}
         {isDesktop && (
-          <div className='nx-flex nx-flex-1 nx-max-w-2xl nx-mx-auto'>
+          <div className='nx-flex nx-mx-auto nx-relative' style={{ width: '400px' }}>
             <Search className='nx-w-full' directories={[]} />
           </div>
         )}
