@@ -238,11 +238,7 @@ const CustomHeader = () => {
                     prefetch={true}
                     onTouchStart={() => handleMouseEnter(item.href)}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`nx-text-lg nx-font-semibold nx-py-2 nx-rounded-xl nx-transition-all nx-duration-200 nx-block ${
-                      isActive(item.href)
-                        ? 'nx-text-primary-600 dark:nx-text-primary-400 nx-bg-primary-50 dark:nx-bg-primary-900/20'
-                        : 'nx-text-gray-700 hover:nx-text-gray-900 dark:nx-text-gray-300 dark:hover:nx-text-gray-100 hover:nx-bg-gray-50 dark:hover:nx-bg-gray-800'
-                    } ${isNavigating ? 'nx-opacity-70 nx-pointer-events-none' : ''}`}
+                    className={`nx-text-lg nx-font-semibold nx-py-2 nx-transition-all nx-duration-200 nx-block nx-text-gray-700 hover:nx-text-gray-900 dark:nx-text-gray-300 dark:hover:nx-text-gray-100 ${isNavigating ? 'nx-opacity-70 nx-pointer-events-none' : ''}`}
                   >
                     {item.title}
                   </Link>
