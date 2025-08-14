@@ -96,8 +96,8 @@ const CustomHeader = () => {
 
         {/* Right side: Ask AI + Theme Toggle + Mobile Menu Button */}
         <div className='nx-flex nx-items-center nx-gap-2'>
+          <AskAIButton />
           <div className='nx-hidden sm:nx-flex nx-items-center nx-gap-2'>
-            <AskAIButton />
             <button
               type='button'
               aria-label='Toggle dark mode'
@@ -228,22 +228,19 @@ const CustomHeader = () => {
 
             {/* Mobile Actions - Bottom of menu */}
             <div className='nx-mt-auto nx-px-6 nx-py-8 nx-border-t nx-border-gray-200 dark:nx-border-neutral-800'>
-              <div className='nx-flex nx-flex-col nx-gap-4'>
-                <AskAIButton fullWidth={true} large={true} />
-                <div className='nx-flex nx-justify-center'>
-                  <button
-                    type='button'
-                    aria-label='Toggle dark mode'
-                    className='nx-p-4 nx-rounded-xl nx-text-gray-500 hover:nx-text-gray-900 dark:nx-text-gray-400 dark:hover:nx-text-gray-100 hover:nx-bg-gray-50 dark:hover:nx-bg-gray-800 nx-transition-colors'
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  >
-                    {theme === 'dark' ? (
-                      <SunIcon className='nx-h-6 nx-w-6' />
-                    ) : (
-                      <MoonIcon className='nx-h-6 nx-w-6' />
-                    )}
-                  </button>
-                </div>
+              <div className='nx-flex nx-justify-center'>
+                <button
+                  type='button'
+                  aria-label='Toggle dark mode'
+                  className='nx-p-4 nx-rounded-xl nx-text-gray-500 hover:nx-text-gray-900 dark:nx-text-gray-400 dark:hover:nx-text-gray-100 hover:nx-bg-gray-50 dark:hover:nx-bg-gray-800 nx-transition-colors'
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                >
+                  {theme === 'dark' ? (
+                    <SunIcon className='nx-h-6 nx-w-6' />
+                  ) : (
+                    <MoonIcon className='nx-h-6 nx-w-6' />
+                  )}
+                </button>
               </div>
             </div>
           </div>

@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react';
 interface AskAIButtonProps {
   fullWidth?: boolean;
   large?: boolean;
+  id?: string;
 }
 
-const AskAIButton = ({ fullWidth = false, large = false }: AskAIButtonProps) => {
+const AskAIButton = ({ fullWidth = false, large = false, id = 'custom-ask-ai-button' }: AskAIButtonProps) => {
   const [mounted, setMounted] = useState(false);
   const enableDocsAIWidget = useFeature('enable_docs_ai_widget').on;
   
@@ -33,7 +34,7 @@ const AskAIButton = ({ fullWidth = false, large = false }: AskAIButtonProps) => 
 
   return (
         <button 
-        id='custom-ask-ai-button' 
+        id={id} 
         className={`${baseClasses} ${sizeClasses} ${widthClasses}`}
         style={{ 
           backgroundColor: '#FF0420', 
