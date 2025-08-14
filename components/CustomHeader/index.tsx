@@ -14,6 +14,7 @@ const CustomHeader = () => {
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -27,6 +28,21 @@ const CustomHeader = () => {
 
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
+
+  useEffect(() => {
+    const handleStart = () => setIsNavigating(true);
+    const handleComplete = () => setIsNavigating(false);
+
+    router.events.on('routeChangeStart', handleStart);
+    router.events.on('routeChangeComplete', handleComplete);
+    router.events.on('routeChangeError', handleComplete);
+
+    return () => {
+      router.events.off('routeChangeStart', handleStart);
+      router.events.off('routeChangeComplete', handleComplete);
+      router.events.off('routeChangeError', handleComplete);
+    };
+  }, [router]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -48,16 +64,20 @@ const CustomHeader = () => {
   }, [isMobileMenuOpen]);
 
   const navItems = [
-    { title: 'Get started', href: '/get-started' },
-    { title: 'Superchain', href: '/superchain' },
-    { title: 'Interoperability', href: '/interop' },
-    { title: 'App Devs', href: '/app-developers' },
-    { title: 'Operators', href: '/operators' },
-    { title: 'OP Stack', href: '/stack' }
+    { title: 'Get started', href: '/get-started/superchain' },
+    { title: 'Superchain', href: '/superchain/superchain-explainer' },
+    { title: 'Interoperability', href: '/interop/get-started' },
+    { title: 'App Devs', href: '/app-developers/get-started' },
+    { title: 'Operators', href: '/operators/chain-operators/architecture' },
+    { title: 'OP Stack', href: '/stack/getting-started' }
   ];
 
   const isActive = (href: string) => {
     return router.pathname.startsWith(href);
+  };
+
+  const handleMouseEnter = (href: string) => {
+    router.prefetch(href);
   };
 
   if (!mounted) return null;
@@ -146,11 +166,13 @@ const CustomHeader = () => {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`nx-text-sm nx-font-semibold nx-px-4 nx-py-2 nx-transition-colors ${
+                  prefetch={true}
+                  onMouseEnter={() => handleMouseEnter(item.href)}
+                  className={`nx-text-sm nx-font-semibold nx-px-4 nx-py-2 nx-transition-all nx-duration-200 ${
                     isActive(item.href)
                       ? 'nx-text-primary-600 dark:nx-text-primary-400'
                       : 'nx-text-gray-600 hover:nx-text-gray-900 dark:nx-text-gray-400 dark:hover:nx-text-gray-100'
-                  }`}
+                  } ${isNavigating ? 'nx-opacity-70 nx-pointer-events-none' : ''}`}
                 >
                   {item.title}
                 </Link>
@@ -213,12 +235,14 @@ const CustomHeader = () => {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={true}
+                    onTouchStart={() => handleMouseEnter(item.href)}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`nx-text-lg nx-font-semibold nx-py-2 nx-rounded-xl nx-transition-colors nx-block ${
+                    className={`nx-text-lg nx-font-semibold nx-py-2 nx-rounded-xl nx-transition-all nx-duration-200 nx-block ${
                       isActive(item.href)
                         ? 'nx-text-primary-600 dark:nx-text-primary-400 nx-bg-primary-50 dark:nx-bg-primary-900/20'
                         : 'nx-text-gray-700 hover:nx-text-gray-900 dark:nx-text-gray-300 dark:hover:nx-text-gray-100 hover:nx-bg-gray-50 dark:hover:nx-bg-gray-800'
-                    }`}
+                    } ${isNavigating ? 'nx-opacity-70 nx-pointer-events-none' : ''}`}
                   >
                     {item.title}
                   </Link>

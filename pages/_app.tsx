@@ -6,6 +6,7 @@ import * as gtag from '../utils/gtag';
 import * as aa from 'search-insights';
 import AlgoliaContext from '@/utils/contexts/AlgoliaContext';
 import ScrollDispatcher from '@/components/ScrollDispatcher';
+import LoadingBar from '@/components/LoadingBar';
 import { CustomGrowthBookProvider } from '../providers/GrowthbookProvider';
 
 export default function App({ Component, pageProps }) {
@@ -31,6 +32,7 @@ export default function App({ Component, pageProps }) {
 
   return (
     <CustomGrowthBookProvider>
+      <LoadingBar />
       <AlgoliaContext.Provider
         value={{
           queryID,
