@@ -1,0 +1,41 @@
+---
+title: Flashblocks
+description: Flashblocks provide near-instant pre-confirmations on OP Stack chains through logical sub blocks built at 200 to 250 ms intervals.
+lang: en-US
+content_type: guide
+topic: flashblocks
+personas:
+  - app-developer
+  - protocol-developer
+  - chain-operator
+categories:
+  - protocol
+  - block-production
+  - developer-tools
+is_imported_content: 'false'
+---
+
+# Flashblocks
+
+Flashblocks enable OP Stack to produce logical sub-blocks of transactions at a much higher frequency (every 250ms) compared to the standard 2-second block time. This gives users the impression of near-instant inclusion and execution.
+
+They work by offering pre-confirmations, which are early signals that a transaction will likely be included well before final block production. Since we operate in a Layer 2 environment where consensus finality isn't a hard requirement, we can offer these fast, highly reliable confirmations.
+
+Flashblocks divide each 2-second block into 8 sub-blocks, allowing transactions to be processed and pre-confirmed at 250ms intervals.
+
+Think of Flashblocks like sending a message one sentence at a time in a chat, rather than waiting to send the full message all at once. The recipient can begin reading (processing transactions) immediately, without waiting for the entire block.
+
+## Developer usage
+
+Developers can access Flashblocks data using the same Ethereum JSON-RPC calls they already know. The key is using the `pending` tag, which tells the RPC provider to look at the pre-confirmed state instead of the last finalized block.
+
+For example, calling `eth_getBlockByNumber("pending")` will return a block that includes all the transactions processed in the latest Flashblock, even though the final block hasn't been created yet.
+
+### Supported methods and behavior with `pending`:
+
+*   **`eth_getTransactionReceipt`**: returns a receipt for pre-confirmed transactions from the cache. Some fields are placeholders at pre-confirmation time.
+*   **`eth_getBlockByNumber`**: use `"pending"` to retrieve the latest Flashblock view. Responses are append-only within the block window and include cumulative fields like `stateRoot` and `receiptsRoot`.
+*   **`eth_getBalance`**, **`eth_getTransactionCount`**: return values from `AccountMetadata` if present.
+*   **`eth_getCode`**: returns contract bytecode from the cache if created in the Flashblock stream.
+*   **`eth_getStorageAt`**: returns values from `storage_slots` in the cache.
+*   **`eth_call`**: executes the call on top of the pre-confirmation overlay.
