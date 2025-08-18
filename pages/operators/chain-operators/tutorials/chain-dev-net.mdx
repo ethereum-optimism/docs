@@ -70,14 +70,28 @@ accepts a YAML file which configures how many network participants there are, wh
 the network's topology. An example YAML file is below:
 
 ```yaml
+# Check https://github.com/ethpandaops/optimism-package for more details.
+
 optimism_package:
-  chains: # you can define multiple L2s, which will be deployed against the same L1 as a single Superchain
-    - participants: # each participant is a node in the network. here we've defined two, one running op-geth and one running op-reth
-          - el_type: op-geth # this node will be the sequencer since it's first in the list
-          - el_type: op-reth
-      network_params:
-        name: rollup-1 # can be anything as long as it is unique
-        network_id: 12345 # can be anything as long as it is unique
+  # An array of L2 networks to run.
+  chains:
+    # Chains are keyed by their network name.
+    rollup-1:
+      # Specification of the optimism-participants in the network.
+      participants:
+        # Nodes are keyed by their name.
+        node0:
+          # EL(Execution Layer) Specific flags.
+          el:
+            type: op-geth
+          # CL(Consensus Layer) Specific flags
+          cl:
+            type: op-node
+        node1:
+          el:
+            type: op-reth
+          cl:
+            type: op-node
 ```
 
 Save the above configuration to a file. For the rest of this tutorial, we'll assume you've saved it to `network-config.yaml`.
