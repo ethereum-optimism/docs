@@ -59,7 +59,7 @@ To ensure you're using the latest compatible versions of OP Stack components, al
 Look for the latest `op-batcher/v*` release that's compatible with your sequencer setup.
 
 <Callout type="info">
-  This guide uses `op-batcher/v1.13.2` which is compatible with op-node/v1.13.3 and op-geth/v1.101511.1 from the sequencer setup.
+  This guide uses `op-batcher/v1.13.1` which is compatible with op-node/v1.13.3 and op-geth/v1.101511.0 from the sequencer setup.
   Always check the [release notes](https://github.com/ethereum-optimism/optimism/releases) for compatibility information.
 </Callout>
 
@@ -73,7 +73,7 @@ git clone https://github.com/ethereum-optimism/optimism.git
 cd optimism
 
 # Checkout the latest release tag
-git checkout op-batcher/v1.13.2
+git checkout op-batcher/v1.13.1
 
 # Build op-batcher
 cd op-batcher
@@ -113,7 +113,7 @@ If you prefer containerized deployment, you can use the official Docker images.
   cp ~/.deployer/state.json .
 
   # Extract the BatchInbox address
-  BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].systemConfigProxyAddress')
+  BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].SystemConfigProxy')
   echo "BatchInbox Address: $BATCH_INBOX_ADDRESS"
   ```
 
@@ -187,6 +187,7 @@ services:
       - "--private-key=${BATCHER_PRIVATE_KEY}"
       - "--batch-type=1"
       - "--data-availability-type=blobs"
+      - "--compress"
       - "--log.level=info"
     restart: unless-stopped
   ```
@@ -275,7 +276,7 @@ cd ~/batcher-node
 cp ../.deployer/state.json .
 
 # Extract the BatchInbox address
-BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].systemConfigProxyAddress')
+BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].SystemConfigProxy')
 echo "BatchInbox Address: $BATCH_INBOX_ADDRESS"
 ```
 
@@ -350,6 +351,7 @@ source .env
   --private-key=$BATCHER_PRIVATE_KEY \
   --batch-type=1 \
   --data-availability-type=blobs \
+  --compress \
   --log.level=info
 ```
 
