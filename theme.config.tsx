@@ -111,7 +111,7 @@ const config: DocsThemeConfig = {
           content={frontMatter.description || 'Optimism Docs for developers'}
         />
         <meta name='twitter:image' content='https://docs.optimism.io/logos/docs-header.png' />
-        <link rel='icon' href='/img/icons/favicon.ico' type='image/x-icon'></link>
+        <link rel='icon' href='/logos/op-logo.png' type='image/png'></link>
         {enableDocsAIWidget && (
           <script
             async
