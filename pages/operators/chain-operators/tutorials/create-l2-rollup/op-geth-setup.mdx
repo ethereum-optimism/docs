@@ -60,7 +60,183 @@ The main components you'll need for sequencer deployment are:
 For spinning up a sequencer, we recommend building from source as it provides better control, and helps with debugging.
 In this guide Docker alternative is also provided.
 
-<Tabs items={['Build from source', 'Using docker']}>
+<Tabs items={['Using docker (Recommended)','Build from source']}>
+  
+    <Tabs.Tab>
+
+  <Steps>
+    If you prefer containerized deployment, you can use the official Docker images, and do the following:
+
+    ### Set up directory structure and copy configuration files
+
+    ```bash
+    # Create your sequencer working directory
+    mkdir ~/sequencer-node
+    cd ~/sequencer-node
+
+    # Copy configuration files from op-deployer output
+    # Note: Adjust the path if your .deployer directory is located elsewhere
+    cp ~/.deployer/genesis.json .
+    cp ~/.deployer/rollup.json .
+
+    # Generate JWT secret
+    openssl rand -hex 32 > jwt.txt
+    chmod 600 jwt.txt
+    ```
+
+    ### Create environment variables file
+
+    ```bash
+    # Create .env file with your actual values
+    cat > .env << 'EOF'
+    # L1 Configuration - Replace with your actual RPC URLs
+    L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+    L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
+
+    # Private keys - Replace with your actual private key
+    PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
+
+    # (Run `curl ifconfig.me` in a separate shell to obtain the value, then paste it below)
+
+    # P2P configuration - Replace with your actual public IP
+    P2P_ADVERTISE_IP=YOUR_ACTUAL_PUBLIC_IP
+
+    EOF
+    ```
+
+    ### Get your public IP address
+
+    ```bash
+    # Find your public IP address, once you get it, update the P2P_ADVERTISE_IP in your .env
+    curl ifconfig.me
+    # or
+    curl ipinfo.io/ip
+    ```
+
+    **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
+
+    ### Make sure your docker application is running
+    Create a `docker-compose.yml` file 
+
+    ```yaml
+      version: '3.8'
+
+      services:
+        op-geth:
+          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.1
+          volumes:
+            # Mount entire directory to avoid file mounting issues
+            - .:/workspace
+          working_dir: /workspace
+          ports:
+            - "8545:8545"
+            - "8546:8546"
+            - "8551:8551"
+          command:
+            - "--datadir=/workspace/op-geth-data"
+            - "--http"
+            - "--http.addr=0.0.0.0"
+            - "--http.port=8545"
+            - "--ws"
+            - "--ws.addr=0.0.0.0"
+            - "--ws.port=8546"
+            - "--authrpc.addr=0.0.0.0"
+            - "--authrpc.port=8551"
+            - "--authrpc.jwtsecret=/workspace/jwt.txt"
+            - "--syncmode=full"
+            - "--gcmode=archive"
+            - "--rollup.disabletxpoolgossip=true"
+            - "--rollup.sequencerhttp=http://op-node:8547"
+            - "--http.vhosts=*"
+            - "--http.corsdomain=*"
+            - "--http.api=eth,net,web3,debug,txpool,admin"
+            - "--ws.origins=*"
+            - "--ws.api=eth,net,web3,debug,txpool,admin"
+            - "--authrpc.vhosts=*"
+
+        op-node:
+          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.5
+          depends_on:
+            - op-geth
+          volumes:
+            - .:/workspace
+          working_dir: /workspace
+          ports:
+            - "8547:8547"
+            - "9222:9222"
+          environment:
+            - L1_RPC_URL=${L1_RPC_URL}
+            - L1_BEACON_URL=${L1_BEACON_URL}
+            - PRIVATE_KEY=${PRIVATE_KEY}
+            - P2P_ADVERTISE_IP=${P2P_ADVERTISE_IP}
+          command:
+            - "op-node"
+            - "--l1=${L1_RPC_URL}"
+            - "--l1.beacon=${L1_BEACON_URL}"
+            - "--l2=http://op-geth:8551"
+            - "--l2.jwt-secret=/workspace/jwt.txt"
+            - "--rollup.config=/workspace/rollup.json"
+            - "--sequencer.enabled=true"
+            - "--sequencer.stopped=false"
+            - "--sequencer.max-safe-lag=3600"
+            - "--verifier.l1-confs=4"
+            - "--p2p.listen.ip=0.0.0.0"
+            - "--p2p.listen.tcp=9222"
+            - "--p2p.listen.udp=9222"
+            - "--p2p.advertise.ip=${P2P_ADVERTISE_IP}"
+            - "--p2p.advertise.tcp=9222"
+            - "--p2p.advertise.udp=9222"
+            - "--p2p.sequencer.key=${PRIVATE_KEY}"
+            - "--rpc.addr=0.0.0.0"
+            - "--rpc.port=8547"
+            - "--rpc.enable-admin"
+            - "--log.level=info"
+            - "--log.format=json"
+    ```
+
+    ### Initialize op-geth with Docker
+
+    ```bash
+    # Make sure you're in the sequencer-node directory with all files copied
+    cd ~/sequencer-node
+
+    # Initialize op-geth using Docker
+    docker run --rm \
+      -v $(pwd):/workspace \
+      -w /workspace \
+      us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.1 \
+      init --datadir=./op-geth-data --state.scheme=hash ./genesis.json
+    ```
+
+    ### Start the services
+
+    ```bash
+    # Start both services
+    docker-compose up -d
+
+    # View logs
+    docker-compose logs -f
+    ```
+
+    ### Final directory structure
+
+    ```bash
+    ~/sequencer-node/
+    ├── jwt.txt                 # Generated JWT secret
+    ├── genesis.json           # Copied from ~/.deployer/
+    ├── rollup.json            # Copied from ~/.deployer/
+    ├── .env                   # Environment variables
+    ├── docker-compose.yml     # Docker configuration
+    └── op-geth-data/         # Created by Docker during initialization
+        ├── geth/             # Geth data
+        └── keystore/         # Key files
+    ```
+
+    Your sequencer node is now operational and ready to process transactions.
+  </Steps>
+  </Tabs.Tab>
+
+  
   <Tabs.Tab>
     Building from source gives you full control over the binaries and is the preferred approach for this guide.
 
@@ -389,179 +565,6 @@ In this guide Docker alternative is also provided.
     </Steps>
 
     Your sequencer node is now operational and ready to process transactions.
-  </Tabs.Tab>
-
-  <Tabs.Tab>
-
-  <Steps>
-    If you prefer containerized deployment, you can use the official Docker images, and do the following:
-
-    ### Set up directory structure and copy configuration files
-
-    ```bash
-    # Create your sequencer working directory
-    mkdir ~/sequencer-node
-    cd ~/sequencer-node
-
-    # Copy configuration files from op-deployer output
-    # Note: Adjust the path if your .deployer directory is located elsewhere
-    cp ~/.deployer/genesis.json .
-    cp ~/.deployer/rollup.json .
-
-    # Generate JWT secret
-    openssl rand -hex 32 > jwt.txt
-    chmod 600 jwt.txt
-    ```
-
-    ### Create environment variables file
-
-    ```bash
-    # Create .env file with your actual values
-    cat > .env << 'EOF'
-    # L1 Configuration - Replace with your actual RPC URLs
-    L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
-    L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
-
-    # Private keys - Replace with your actual private key
-    PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
-
-    # (Run `curl ifconfig.me` in a separate shell to obtain the value, then paste it below)
-
-    # P2P configuration - Replace with your actual public IP
-    P2P_ADVERTISE_IP=YOUR_ACTUAL_PUBLIC_IP
-
-    EOF
-    ```
-
-    ### Get your public IP address
-
-    ```bash
-    # Find your public IP address, once you get it, update the P2P_ADVERTISE_IP in your .env
-    curl ifconfig.me
-    # or
-    curl ipinfo.io/ip
-    ```
-
-    **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
-
-    ### Create a docker-compose.yml file:
-
-    ```yaml
-      version: '3.8'
-
-      services:
-        op-geth:
-          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.1
-          volumes:
-            # Mount entire directory to avoid file mounting issues
-            - .:/workspace
-          working_dir: /workspace
-          ports:
-            - "8545:8545"
-            - "8546:8546"
-            - "8551:8551"
-          command:
-            - "--datadir=/workspace/op-geth-data"
-            - "--http"
-            - "--http.addr=0.0.0.0"
-            - "--http.port=8545"
-            - "--ws"
-            - "--ws.addr=0.0.0.0"
-            - "--ws.port=8546"
-            - "--authrpc.addr=0.0.0.0"
-            - "--authrpc.port=8551"
-            - "--authrpc.jwtsecret=/workspace/jwt.txt"
-            - "--syncmode=full"
-            - "--gcmode=archive"
-            - "--rollup.disabletxpoolgossip=true"
-            - "--rollup.sequencerhttp=http://op-node:8547"
-            - "--http.vhosts=*"
-            - "--http.corsdomain=*"
-            - "--http.api=eth,net,web3,debug,txpool,admin"
-            - "--ws.origins=*"
-            - "--ws.api=eth,net,web3,debug,txpool,admin"
-            - "--authrpc.vhosts=*"
-
-        op-node:
-          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.5
-          depends_on:
-            - op-geth
-          volumes:
-            - .:/workspace
-          working_dir: /workspace
-          ports:
-            - "8547:8547"
-            - "9222:9222"
-          environment:
-            - L1_RPC_URL=${L1_RPC_URL}
-            - L1_BEACON_URL=${L1_BEACON_URL}
-            - PRIVATE_KEY=${PRIVATE_KEY}
-            - P2P_ADVERTISE_IP=${P2P_ADVERTISE_IP}
-          command:
-            - "op-node"
-            - "--l1=${L1_RPC_URL}"
-            - "--l1.beacon=${L1_BEACON_URL}"
-            - "--l2=http://op-geth:8551"
-            - "--l2.jwt-secret=/workspace/jwt.txt"
-            - "--rollup.config=/workspace/rollup.json"
-            - "--sequencer.enabled=true"
-            - "--sequencer.stopped=false"
-            - "--sequencer.max-safe-lag=3600"
-            - "--verifier.l1-confs=4"
-            - "--p2p.listen.ip=0.0.0.0"
-            - "--p2p.listen.tcp=9222"
-            - "--p2p.listen.udp=9222"
-            - "--p2p.advertise.ip=${P2P_ADVERTISE_IP}"
-            - "--p2p.advertise.tcp=9222"
-            - "--p2p.advertise.udp=9222"
-            - "--p2p.sequencer.key=${PRIVATE_KEY}"
-            - "--rpc.addr=0.0.0.0"
-            - "--rpc.port=8547"
-            - "--rpc.enable-admin"
-            - "--log.level=info"
-            - "--log.format=json"
-    ```
-
-    ### Initialize op-geth with Docker
-
-    ```bash
-    # Make sure you're in the sequencer-node directory with all files copied
-    cd ~/sequencer-node
-
-    # Initialize op-geth using Docker
-    docker run --rm \
-      -v $(pwd):/workspace \
-      -w /workspace \
-      us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.1 \
-      init --datadir=./op-geth-data --state.scheme=hash ./genesis.json
-    ```
-
-    ### Start the services
-
-    ```bash
-    # Start both services
-    docker-compose up -d
-
-    # View logs
-    docker-compose logs -f
-    ```
-
-    ### Final directory structure
-
-    ```bash
-    ~/sequencer-node/
-    ├── jwt.txt                 # Generated JWT secret
-    ├── genesis.json           # Copied from ~/.deployer/
-    ├── rollup.json            # Copied from ~/.deployer/
-    ├── .env                   # Environment variables
-    ├── docker-compose.yml     # Docker configuration
-    └── op-geth-data/         # Created by Docker during initialization
-        ├── geth/             # Geth data
-        └── keystore/         # Key files
-    ```
-
-    Your sequencer node is now operational and ready to process transactions.
-  </Steps>
   </Tabs.Tab>
 
 </Tabs>
