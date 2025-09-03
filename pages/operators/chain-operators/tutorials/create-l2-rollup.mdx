@@ -53,43 +53,41 @@ By the end of this tutorial, you'll have a complete OP Stack testnet with:
 ### Notes on specific dependencies
 
 <Callout type="info">
-Expand each dependency below for details
+  Expand each dependency below for details
 </Callout>
 
 <details>
-<summary><code>node</code></summary>
+  <summary><code>node</code></summary>
 
-We recommend using the latest LTS version of Node.js (currently v20).  
-[`nvm`](https://github.com/nvm-sh/nvm) is a useful tool that can help you manage multiple versions of Node.js on your machine.  
-You may experience unexpected errors on older versions of Node.js.
-
+  We recommend using the latest LTS version of Node.js (currently v20).\
+  [`nvm`](https://github.com/nvm-sh/nvm) is a useful tool that can help you manage multiple versions of Node.js on your machine.\
+  You may experience unexpected errors on older versions of Node.js.
 </details>
 
 <details>
-<summary><code>foundry</code></summary>
+  <summary><code>foundry</code></summary>
 
-It's recommended to use the scripts in the monorepo's `package.json` for managing `foundry` to ensure you're always working with the correct version.  
-This approach simplifies the installation, update, and version checking process.  
-Make sure to clone the monorepo locally before proceeding.
-
+  It's recommended to use the scripts in the monorepo's `package.json` for managing `foundry` to ensure you're always working with the correct version.\
+  This approach simplifies the installation, update, and version checking process.\
+  Make sure to clone the monorepo locally before proceeding.
 </details>
 
 <details>
-<summary><code>direnv</code></summary>
+  <summary><code>direnv</code></summary>
 
-Parts of this tutorial use [`direnv`](https://direnv.net) as a way of loading environment variables from `.envrc` files into your shell.  
-This means you won't have to manually export environment variables every time you want to use them.  
-`direnv` only ever has access to files that you explicitly allow it to see.
+  Parts of this tutorial use [`direnv`](https://direnv.net) as a way of loading environment variables from `.envrc` files into your shell.\
+  This means you won't have to manually export environment variables every time you want to use them.\
+  `direnv` only ever has access to files that you explicitly allow it to see.
 
-After [installing `direnv`](https://direnv.net/docs/installation.html), you will need to **make sure that [`direnv` is hooked into your shell](https://direnv.net/docs/hook.html)**.  
-Make sure you've followed [the guide on the `direnv` website](https://direnv.net/docs/hook.html), then **close your terminal and reopen it** so that the changes take effect (or `source` your config file if you know how to do that).
+  After [installing `direnv`](https://direnv.net/docs/installation.html), you will need to **make sure that [`direnv` is hooked into your shell](https://direnv.net/docs/hook.html)**.\
+  Make sure you've followed [the guide on the `direnv` website](https://direnv.net/docs/hook.html), then **close your terminal and reopen it** so that the changes take effect (or `source` your config file if you know how to do that).
 
-<Callout>
-Make sure that you have correctly hooked `direnv` into your shell by modifying your shell configuration file (like `~/.bashrc` or `~/.zshrc`).  
-If you haven't edited a config file then you probably haven't configured `direnv` properly (and things might not work later).
-</Callout>
-
+  <Callout>
+    Make sure that you have correctly hooked `direnv` into your shell by modifying your shell configuration file (like `~/.bashrc` or `~/.zshrc`).\
+    If you haven't edited a config file then you probably haven't configured `direnv` properly (and things might not work later).
+  </Callout>
 </details>
+
 ### Get access to a sepolia node
 
 Since you're deploying your OP Stack chain to Sepolia, you'll need to have access to a Sepolia node.
@@ -99,11 +97,16 @@ You can either use a node provider like [Alchemy](https://www.alchemy.com/) (eas
 
 *   **Sepolia ETH** - Get from [Superchain Faucet](https://console.optimism.io/faucet) (\~2-3 ETH recommended)
 *   **Private Keys** - You'll need 5 separate keys for different roles (we'll generate these in the first step)
+*   **L1 RPC URL** - An RPC endpoint to connect to the Sepolia network. You can get this from node providers like [Alchemy](https://www.alchemy.com/), [Infura](https://www.infura.io/). This is required so `op-deployer` and other services can read from and send transactions to L1.
+*   **L1 Beacon URL** - A consensus-layer endpoint for Sepolia. This comes from your node provider or your own beacon node. It allows components like `op-node` to verify the L1 chain's consensus state.
+
+<Callout type="warning">
+  **Testnet Only**: This guide is for **testnet deployment only**. Never use the generated keys or configurations in production environments.
+</Callout>
 
 <Callout type="info">
   **Follow in Order**: Each step builds on the previous one. Start with spinning up op-deployer and complete them sequentially for the best experience.
 </Callout>
-
 
 ## Tutorial Overview
 
@@ -130,11 +133,6 @@ This tutorial is organized into sequential steps that build upon each other:
 
   Configure op-challenger for dispute resolution monitoring
 </Steps>
-
-<Callout type="warning">
-  **Testnet Only**: This guide is for **testnet deployment only**. Never use the generated keys or configurations in production environments.
-</Callout>
-
 
 ## Ready to Start?
 
