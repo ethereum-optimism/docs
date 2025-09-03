@@ -56,7 +56,6 @@ There are a couple of ways to install `op-deployer`:
     After installing all of that, run following:
 
     ```bash
-
     git clone https://github.com/ethereum-optimism/optimism.git # you can skip this if you already have the repo
     cd optimism/op-deployer
     just build
@@ -110,6 +109,34 @@ There are a couple of ways to install `op-deployer`:
         If you use an invalid tag, the command will display all valid options.
       </Tabs.Tab>
     </Tabs>
+
+    #### Contract locator schemes
+
+    When building from source, you'll need to understand contract locators. These are used to find contract artifacts for deployment.
+    The `l1ContractsLocator` and `l2ContractsLocator` fields in your intent file support several URL schemes:
+
+    *   `tag://` - References a specific tagged release (e.g., `tag://op-contracts/v1.8.0-rc.4`). Downloads bytecode from a fixed bundle on GCS.
+    *   `file://` - Points to local artifacts directory, useful when building from source.
+        Example: `file://<path-to-repo-root>/packages/contracts-bedrock/forge-artifacts`
+    *   `http://` or `https://` - Points to a remote artifacts directory containing `forge-artifacts`.
+
+    <Callout type="info">
+      When using `file://`, `http://`, or `https://` schemes, set `configType` to either `custom` or `standard-overrides` in your intent file.
+    </Callout>
+
+    For example:
+
+    ```toml
+    # When using tag:// scheme (recommended for binary installation)
+    configType = "standard-overrides"
+    l1ContractsLocator = "tag://op-contracts/v1.8.0-rc.4"
+    l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
+
+    # When building from source (using file://, http://, https://)
+    configType = "custom"  # or "standard-overrides"
+    l1ContractsLocator = "file:///path/to/local/op-contracts/v1.8.0-rc.4/forge-artifacts"
+    l2ContractsLocator = "<https://example.com/op-contracts/v1.7.0-beta.1+l2-contracts.tar.gz>"
+    ```
   </Tabs.Tab>
 </Tabs>
 
@@ -137,7 +164,6 @@ The base use case for `op-deployer` is deploying new OP Chains. This process is 
     --l2-chain-ids <comma-separated list of chain IDs for your L2s> \
     --workdir .deployer \
     --intent-type <standard|custom|standard-overrides>
-
   ```
 
   *   Replace `<l2-chain-id>` with the exact value.
@@ -184,7 +210,6 @@ The base use case for `op-deployer` is deploying new OP Chains. This process is 
       batcher = "0x8680d36811420359093fd321ED386a6e76BE2AF3"
       proposer = "0x41b3B204099771aDf857F826015703A1030b6675"
       challenger = "0x7B51A480dAeE699CA3a4F68F9AAA434452112eF7"
-
   ```
 
   <Callout type="info">
@@ -246,36 +271,6 @@ The base use case for `op-deployer` is deploying new OP Chains. This process is 
     *   `challenger`: Address Account which can interact with existing permissioned dispute games
   </details>
 
-  #### Contract locator schemes
-
-  op-deployer uses contract locators to find contract artifacts to deploy.
-  Locators are just URLs under the hood.
-  The `l1ContractsLocator` and `l2ContractsLocator` fields support several schemes for specifying where to find the contract implementations:
-
-  *   `tag://` - References a specific tagged release of the contracts (e.g., `tag://op-contracts/v1.8.0-rc.4`). In this case, the contracts bytecode will be downloaded from a fixed bytecode bundle on GCS.
-  *   `file://` - Points to a directory on local disk containing the artifacts.
-      This is useful for local development, since you can point it at your local monorepo
-      e.g. `file://<path-to-repo-root>/packages/contracts-bedrock/forge-artifacts`
-  *   `http://` or `https://` - Points to a target directory containing contract artifacts. The URL should directly reference the directory containing the `forge-artifacts` directory, in this case, the bytecode will be downloaded from the URL specified.
-
-  <Callout type="info">
-    When using any scheme other than tag://, you must set configType to either custom or standard-overrides in your intent file.
-  </Callout>
-
-  For example:
-
-  ```toml
-  # When using tag:// scheme
-  configType = "standard-overrides"
-  l1ContractsLocator = "tag://op-contracts/v1.8.0-rc.4"
-  l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
-
-  # When using other schemes (file://, http://, https://)
-  configType = "custom"  # or "standard-overrides"
-  l1ContractsLocator = "file:///path/to/local/op-contracts/v1.8.0-rc.4/forge-artifacts"
-  l2ContractsLocator = "<https://example.com/op-contracts/v1.7.0-beta.1+l2-contracts.tar.gz>"
-  ```
-
   By default, `op-deployer` will fill in all other configuration variables with those that match the [standard configuration](https://specs.optimism.io/protocol/configurability.html?utm_source=op-docs\&utm_medium=docs). You can override these default settings by adding them to your intent file using the table below:
 
   ```toml
@@ -315,42 +310,6 @@ The base use case for `op-deployer` is deploying new OP Chains. This process is 
       *   `noop`: Performs a dry-run without actual deployment, useful for testing configurations.
 
       Choose the deployment target that best fits your use case.
-
-  {/* ### `verify`: verify contract source code on block explorers //THIS IS NO LONGER SUPPORTED
-
-  After deploying your contracts, you can verify them on block explorers like Etherscan:
-
-  ```bash
-  op-deployer verify \
-    --l1-rpc-url <l1 rpc url> \
-    --input-file <filepath to input .json file> \
-    --etherscan-api-key <your free etherscan api key> \
-    --artifacts-locator <file:///path/to/artifacts>
-  ```
-
-  **Common options:**
-
-  *   `-l1-rpc-url`: RPC URL for the L1 chain
-  *   `-etherscan-api-key`: API key for the block explorer (e.g., from Etherscan)
-  *   `-artifacts-locator`: Path or plugin to locate contract artifacts
-  *   `-input-file`: Path to a JSON file containing deployment data:
-      *   Create an `input.json` file in the same directory(`./deployer`).
-      *   Navigate to your `state.json` file and locate the `implementationsDeployment` object.
-      *   Copy everything inside the `implementationsDeployment` object (without the object name itself) and paste it into your new `input.json` file.
-
-  <Callout type="info">
-    You don't need to specify a `--workdir`, op-deployer will automatically look for deployment artifacts from the deploy step, unless overridden.
-  </Callout>
-
-  **Example:**
-
-  ```bash
-  op-deployer verify \
-    --l1-rpc-url <https://sepolia.infura.io/v3/YOUR_INFURA_KEY> \
-    --etherscan-api-key <YOUR_ETHERSCAN_API_KEY> \
-    --input-file <file_path_to_input.json | e.g .deployer/input.json> \
-    --artifacts-locator <tag://op-contracts/v3.0.0-rc.2>
-  ``` */}
 
   ### `inspect`: generate genesis files and chain information
 
