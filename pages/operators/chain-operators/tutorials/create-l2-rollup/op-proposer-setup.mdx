@@ -97,8 +97,8 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
 
       # L2 Configuration - Should match your sequencer setup
-      L2_RPC_URL=http://sequencer-node:8545
-      ROLLUP_RPC_URL=http://sequencer-node:8547
+        L2_RPC_URL=http://op-geth:8545
+        ROLLUP_RPC_URL=http://op-node:8547
 
       # Contract addresses - Extract from your op-deployer output
       GAME_FACTORY_ADDRESS=YOUR_ACTUAL_GAME_FACTORY_ADDRESS
@@ -154,11 +154,12 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
             - "--log.level=info"
           restart: unless-stopped
           networks:
-            - op-stack
-
+            - sequencer-node_default
+      
       networks:
-        op-stack:
+        sequencer-node_default:
           external: true
+
       ```
 
       ### Start the proposer service
