@@ -135,10 +135,6 @@ Before deploying your L1 contracts, you'll need:
       *   [Ankr](https://ankr.com) (create account, get API key)
     </Callout>
 
-2.  **Deployer Account**: An Ethereum account with sufficient ETH
-    *   For Sepolia: 1.5-3.5 ETH recommended
-    *   Get test ETH from [Sepolia Faucet](https://sepoliafaucet.com)
-
 ## Generate deployment keys
 
 Your rollup needs several key pairs for different roles. Let's generate them first:
@@ -155,21 +151,14 @@ Your rollup needs several key pairs for different roles. Let's generate them fir
 
   ```bash
   # Generate 7 new Ethereum accounts
-  for role in admin system_config unsafe_block_signer batcher proposer challenger fee_recipient; do
-    cast wallet new --password "" > $role.txt
+  for role in admin system_config unsafe_block_signer batcher proposer fee_recipient; do
+      wallet_output=$(cast wallet new)
+      echo "$wallet_output" | grep "Address:" | awk '{print $2}' > ${role}_address.txt
+      echo "Created wallet for $role"
   done
   ```
+  Save addresses for your intent file
 
-  ### Save addresses for your intent file
-
-  ```bash
-  # Extract addresses to a summary file
-  echo "Generated addresses for your intent file:" > addresses.txt
-  for role in admin system_config unsafe_block_signer batcher proposer challenger fee_recipient; do
-    echo "$role: $(grep "Address:" $role.txt | cut -d' ' -f2)" >> addresses.txt
-  done
-  cat addresses.txt
-  ```
 </Steps>
 
 <Callout type="warning">
@@ -300,7 +289,7 @@ This will:
 3.  Save deployment information to `.deployer/state.json`
 
 <Callout type="info">
-  The deployment can take 10-15 minutes and requires multiple transactions.
+  The deployment can take 10-15 seconds and requires multiple transactions.
 </Callout>
 
 ## Generate chain configuration

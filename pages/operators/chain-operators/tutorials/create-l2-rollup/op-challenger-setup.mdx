@@ -124,6 +124,13 @@ For challenger deployment, we recommend using Docker as it provides a consistent
     The Docker setup provides a containerized environment for running the challenger. This method uses the official Docker image that includes embedded `op-program` server and Cannon executable.
 
     <Steps>
+      ### Create challenger directory
+      
+      ```bash
+      # Create and enter the challenger directory
+      mkdir challenger-node && cd challenger-node
+      ```
+
       ### Create environment file
 
       First, create a `.env` file with your configuration values. This file will be used by Docker Compose to set up the environment variables:
@@ -133,11 +140,11 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       cat > .env << 'EOF'
       # L1 Configuration - Replace with your actual RPC URLs
       L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
-      L1_BEACON=http://sepolia-cl-1:5051
-
+      L1_BEACON=https://ethereum-sepolia-beacon-api.publicnode.com
+      
       # L2 Configuration - Replace with your actual node endpoints  
-      L2_RPC_URL=http://localhost:8545
-      ROLLUP_RPC_URL=http://localhost:8547
+      L2_RPC_URL=http://op-geth:8545
+      ROLLUP_RPC_URL=http://op-node:8547
 
       # Wallet configuration - Choose either mnemonic + HD path OR private key
       MNEMONIC="test test test test test test test test test test test junk"
@@ -146,6 +153,9 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       # Network configuration
       NETWORK=op-sepolia
       GAME_FACTORY_ADDRESS=0xYOUR_GAME_FACTORY_ADDRESS
+
+      # Prestate configuration
+      PRESTATE_HASH=YOUR_PRESTATE_HASH
       EOF
       ```
 
@@ -165,6 +175,8 @@ For challenger deployment, we recommend using Docker as it provides a consistent
             - ./challenger-data:/data
             - ./rollup.json:/workspace/rollup.json:ro
             - ./genesis-l2.json:/workspace/genesis-l2.json:ro
+            - ./prestate-proof-mt64.json:/workspace/prestate-proof.json:ro
+            - ./${PRESTATE_HASH}.bin.gz:/workspace/${PRESTATE_HASH}.bin.gz:ro
           environment:
             - L1_RPC_URL=${L1_RPC_URL}
             - L1_BEACON=${L1_BEACON}
@@ -176,6 +188,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
             - GAME_FACTORY_ADDRESS=${GAME_FACTORY_ADDRESS}
           command:
             - "op-challenger"
+            - "--trace-type=cannon,asterisc-kona"
             - "--l1-eth-rpc=${L1_RPC_URL}"
             - "--l1-beacon=${L1_BEACON}"
             - "--l2-eth-rpc=${L2_RPC_URL}"
@@ -187,9 +200,17 @@ For challenger deployment, we recommend using Docker as it provides a consistent
             - "--game-factory-address=${GAME_FACTORY_ADDRESS}"
             - "--datadir=/data"
             - "--cannon-prestate=/workspace/prestate-proof.json"
+            - "--cannon-bin=/workspace/${PRESTATE_HASH}.bin.gz"
+            - "--asterisc-kona-prestate=/workspace/prestate-proof.json"
           restart: unless-stopped
-          ports:
-            - "8548:8548"  # If challenger exposes metrics endpoint
+          networks:
+            - sequencer-node_default
+
+      networks:
+        sequencer-node_default:
+          external: true
+
+
       ```
 
       ### Launch the challenger
@@ -498,40 +519,38 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       --mnemonic "$MNEMONIC" \
       --hd-path "$HD_PATH"
     ```
+    ### Start the challenger
+
+    ```bash
+    # Make sure you're in the challenger-node directory
+    cd challenger-node
+
+    # Make script executable
+    chmod +x scripts/start-challenger.sh
+
+    # Start challenger
+    ./scripts/start-challenger.sh
+    ```
+
+    ### Verify challenger is running
+
+    Monitor challenger logs to ensure it's operating correctly:
+
+    ```bash
+    # Check challenger logs
+    tail -f challenger-data/challenger.log
+
+    # Or if running in foreground, monitor the output
+    ```
+
+    The challenger should show logs indicating:
+
+    *   Successful connection to L1 and L2 nodes
+    *   Loading of prestates and configuration
+    *   Monitoring of dispute games
   </Tab>
-</Tabs>
+  </Tabs>
 
-## Initializing and starting the challenger
-
-### Start the challenger
-
-```bash
-# Make sure you're in the challenger-node directory
-cd challenger-node
-
-# Make script executable
-chmod +x scripts/start-challenger.sh
-
-# Start challenger
-./scripts/start-challenger.sh
-```
-
-### Verify challenger is running
-
-Monitor challenger logs to ensure it's operating correctly:
-
-```bash
-# Check challenger logs
-tail -f challenger-data/challenger.log
-
-# Or if running in foreground, monitor the output
-```
-
-The challenger should show logs indicating:
-
-*   Successful connection to L1 and L2 nodes
-*   Loading of prestates and configuration
-*   Monitoring of dispute games
 
 ### Monitoring with op-dispute-mon
 
@@ -549,7 +568,7 @@ You've successfully completed the entire L2 rollup testnet tutorial! Your rollup
 *   **Sequencer** - Processing transactions
 *   **Batcher** - Publishing data to L1
 *   **Proposer** - Submitting state roots
-*   *Challenger** - Monitoring disputes
+*   **Challenger** - Monitoring disputes
 
 ## Connect your wallet to your chain
 
