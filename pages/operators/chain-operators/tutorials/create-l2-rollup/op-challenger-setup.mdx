@@ -58,7 +58,7 @@ Before configuring your challenger, complete the following steps:
 
   *   `prestate.json` - The absolute prestate file generated in step 1
   *   `rollup.json` - Rollup configuration file from the `op-deployer` guide
-  *   `genesis-l2.json` - L2 genesis file from the `op-deployer` guide
+  *   `genesis.json` - L2 genesis file from the `op-deployer` guide
 </Steps>
 
 ### Finding the current stable releases
@@ -76,6 +76,95 @@ Always check the release notes to ensure you're using compatible versions with y
 For challenger deployment, we recommend using Docker as it provides a consistent and isolated environment. Building from source is also available for more advanced users.
 
 <Tabs items={['Using Docker (Recommended)', 'Build from source']}>
+
+    <Tab>
+    ### Docker Setup
+
+    The Docker setup provides a containerized environment for running the challenger. This method uses the official Docker image that includes embedded `op-program` server and Cannon executable.
+
+    <Steps>
+      ### Create environment file
+
+      First, create a `.env` file with your configuration values. This file will be used by Docker Compose to set up the environment variables:
+
+      ```bash
+      # Create .env file with your actual values
+      cat > .env << 'EOF'
+      # L1 Configuration - Replace with your actual RPC URLs
+      L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+      L1_BEACON=http://sepolia-cl-1:5051
+
+      # L2 Configuration - Replace with your actual node endpoints  
+      L2_RPC_URL=http://localhost:8545
+      ROLLUP_RPC_URL=http://localhost:8547
+
+      # Wallet configuration - Choose either mnemonic + HD path OR private key
+      MNEMONIC="test test test test test test test test test test test junk"
+      HD_PATH="m/44'/60'/0'/0/0"
+
+      # Network configuration
+      NETWORK=op-sepolia
+      GAME_FACTORY_ADDRESS=0xYOUR_GAME_FACTORY_ADDRESS
+      EOF
+      ```
+
+      **Important:** Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
+
+      ### Set up Docker Compose
+
+      Create a `docker-compose.yml` file that defines the challenger service:
+
+      ```yaml
+      
+      services:
+        challenger:
+          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.5.0
+          user: "1000"
+          volumes:
+            - ./challenger-data:/data
+            - ./rollup.json:/workspace/rollup.json:ro
+            - ./genesis-l2.json:/workspace/genesis-l2.json:ro
+          environment:
+            - L1_RPC_URL=${L1_RPC_URL}
+            - L1_BEACON=${L1_BEACON}
+            - L2_RPC_URL=${L2_RPC_URL}
+            - ROLLUP_RPC_URL=${ROLLUP_RPC_URL}
+            - MNEMONIC=${MNEMONIC}
+            - HD_PATH=${HD_PATH}
+            - NETWORK=${NETWORK}
+            - GAME_FACTORY_ADDRESS=${GAME_FACTORY_ADDRESS}
+          command:
+            - "op-challenger"
+            - "--l1-eth-rpc=${L1_RPC_URL}"
+            - "--l1-beacon=${L1_BEACON}"
+            - "--l2-eth-rpc=${L2_RPC_URL}"
+            - "--rollup-rpc=${ROLLUP_RPC_URL}"
+            - "--selective-claim-resolution"
+            - "--mnemonic=${MNEMONIC}"
+            - "--hd-path=${HD_PATH}"
+            - "--network=${NETWORK}"
+            - "--game-factory-address=${GAME_FACTORY_ADDRESS}"
+            - "--datadir=/data"
+            - "--cannon-prestate=/workspace/prestate-proof.json"
+          restart: unless-stopped
+          ports:
+            - "8548:8548"  # If challenger exposes metrics endpoint
+      ```
+
+      ### Launch the challenger
+
+      Start the challenger service and monitor its logs:
+
+      ```bash
+      # Start the challenger service
+      docker-compose up -d
+
+      # View logs
+      docker-compose logs -f challenger
+      ```
+    </Steps>
+  </Tab>
+
   <Tab>
     ### Build and Configure
 
@@ -368,95 +457,6 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       --mnemonic "$MNEMONIC" \
       --hd-path "$HD_PATH"
     ```
-  </Tab>
-
-  <Tab>
-    ### Docker Setup
-
-    The Docker setup provides a containerized environment for running the challenger. This method uses the official Docker image that includes embedded `op-program` server and Cannon executable.
-
-    <Steps>
-      ### Create environment file
-
-      First, create a `.env` file with your configuration values. This file will be used by Docker Compose to set up the environment variables:
-
-      ```bash
-      # Create .env file with your actual values
-      cat > .env << 'EOF'
-      # L1 Configuration - Replace with your actual RPC URLs
-      L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
-      L1_BEACON=http://sepolia-cl-1:5051
-
-      # L2 Configuration - Replace with your actual node endpoints  
-      L2_RPC_URL=http://localhost:8545
-      ROLLUP_RPC_URL=http://localhost:8547
-
-      # Wallet configuration - Choose either mnemonic + HD path OR private key
-      MNEMONIC="test test test test test test test test test test test junk"
-      HD_PATH="m/44'/60'/0'/0/0"
-
-      # Network configuration
-      NETWORK=op-sepolia
-      GAME_FACTORY_ADDRESS=0xYOUR_GAME_FACTORY_ADDRESS
-      EOF
-      ```
-
-      **Important:** Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
-
-      ### Set up Docker Compose
-
-      Create a `docker-compose.yml` file that defines the challenger service:
-
-      ```yaml
-      '
-
-      services:
-        challenger:
-          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.5.0
-          user: "1000"
-          volumes:
-            - ./challenger-data:/data
-            - ./rollup.json:/workspace/rollup.json:ro
-            - ./genesis-l2.json:/workspace/genesis-l2.json:ro
-          environment:
-            - L1_RPC_URL=${L1_RPC_URL}
-            - L1_BEACON=${L1_BEACON}
-            - L2_RPC_URL=${L2_RPC_URL}
-            - ROLLUP_RPC_URL=${ROLLUP_RPC_URL}
-            - MNEMONIC=${MNEMONIC}
-            - HD_PATH=${HD_PATH}
-            - NETWORK=${NETWORK}
-            - GAME_FACTORY_ADDRESS=${GAME_FACTORY_ADDRESS}
-          command:
-            - "op-challenger"
-            - "--l1-eth-rpc=${L1_RPC_URL}"
-            - "--l1-beacon=${L1_BEACON}"
-            - "--l2-eth-rpc=${L2_RPC_URL}"
-            - "--rollup-rpc=${ROLLUP_RPC_URL}"
-            - "--selective-claim-resolution"
-            - "--mnemonic=${MNEMONIC}"
-            - "--hd-path=${HD_PATH}"
-            - "--network=${NETWORK}"
-            - "--game-factory-address=${GAME_FACTORY_ADDRESS}"
-            - "--datadir=/data"
-            - "--cannon-prestate=/workspace/prestate-proof.json"
-          restart: unless-stopped
-          ports:
-            - "8548:8548"  # If challenger exposes metrics endpoint
-      ```
-
-      ### Launch the challenger
-
-      Start the challenger service and monitor its logs:
-
-      ```bash
-      # Start the challenger service
-      docker-compose up -d
-
-      # View logs
-      docker-compose logs -f challenger
-      ```
-    </Steps>
   </Tab>
 </Tabs>
 
