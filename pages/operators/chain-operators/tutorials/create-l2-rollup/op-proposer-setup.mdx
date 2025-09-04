@@ -54,48 +54,48 @@ Before setting up your proposer, ensure you have:
 *   L1 network details (chain ID, RPC endpoints)
 
 <details>
-<summary>Generate absolute prestate (Required)</summary>
+  <summary>Generate absolute prestate (Required)</summary>
 
-The challenger needs the absolute prestate to participate in dispute games. Here's how to generate it:
+  The challenger needs the absolute prestate to participate in dispute games. Here's how to generate it:
 
-1. **Clone and checkout the correct version**:
-   ```bash
-   git clone https://github.com/ethereum-optimism/optimism.git
-   cd optimism
-   git checkout op-program/v1.6.1  # Use the latest stable version
-   git submodule update --init --recursive
-   ```
+  1.  **Clone and checkout the correct version**:
+      ```bash
+      git clone https://github.com/ethereum-optimism/optimism.git
+      cd optimism
+      git checkout op-program/v1.6.1  # Use the latest stable version
+      git submodule update --init --recursive
+      ```
 
-2. **Copy your chain configuration**:
-   ```bash
-   # Replace 67865 with your L2 chain ID
-   cp /path/to/rollup.json op-program/chainconfig/configs/67865-rollup.json
-   cp /path/to/genesis.json op-program/chainconfig/configs/67865-genesis.json
-   ```
+  2.  **Copy your chain configuration**:
+      ```bash
+      # Replace 67865 with your L2 chain ID
+      cp /path/to/rollup.json op-program/chainconfig/configs/67865-rollup.json
+      cp /path/to/genesis.json op-program/chainconfig/configs/67865-genesis.json
+      ```
 
-3. **Generate the prestate**:
-   ```bash
-   make reproducible-prestate
-   ```
-   You'll see output like:
-   ```bash
-   -------------------- Production Prestates --------------------
-   Cannon64 Absolute prestate hash: 
-   0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
-   ```
+  3.  **Generate the prestate**:
+      ```bash
+      make reproducible-prestate
+      ```
+      You'll see output like:
+      ```bash
+      -------------------- Production Prestates --------------------
+      Cannon64 Absolute prestate hash: 
+      0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+      ```
 
-4. **Prepare the preimage file**:
-   ```bash
-   cd op-program/bin
-   mv prestate-mt64.bin.gz 0x[CANNON64_PRESTATE_HASH].bin.gz
-   ```
-   Replace `[CANNON64_PRESTATE_HASH]` with the actual hash from step 3.
+  4.  **Prepare the preimage file**:
+      ```bash
+      cd op-program/bin
+      mv prestate-mt64.bin.gz 0x[CANNON64_PRESTATE_HASH].bin.gz
+      ```
+      Replace `[CANNON64_PRESTATE_HASH]` with the actual hash from step 3.
 
-<Callout type="info">
-  - Use the `Cannon64` hash for production
-  - Keep this file accessible - you'll need it for the challenger setup
-  - For Superchain registry chains, you can find official prestates in the [registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml)
-</Callout>
+  <Callout type="info">
+    *   Use the `Cannon64` hash for production
+    *   Keep this file accessible - you'll need it for the challenger setup
+    *   For Superchain registry chains, you can find official prestates in the [registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml)
+  </Callout>
 </details>
 
 ### Finding the current stable releases
@@ -165,7 +165,7 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       ### Create docker-compose.yml
 
       <Callout type="info">
-       If you get "failed to dial address" errors, ensure your proposer is in the same Docker network as your sequencer.
+        If you get "failed to dial address" errors, ensure your proposer is in the same Docker network as your sequencer.
 
         Common fixes:
 
@@ -274,11 +274,11 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       *   Network: Connection messages to L1/L2 endpoints
 
       If you see errors about "failed to dial" or connection issues:
+
       *   For source build: Verify your localhost ports and services
     </details>
 
     Your proposer is now operational and will continuously submit state roots to L1!
-
   </Tabs.Tab>
 
   <Tabs.Tab>
@@ -484,6 +484,7 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
 
       *   For Docker: Check your network configuration and service names
     </details>
+
     Your proposer is now operational!
   </Tabs.Tab>
 </Tabs>
