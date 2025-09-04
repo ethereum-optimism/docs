@@ -120,8 +120,12 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       ### Create docker-compose.yml
 
       <Callout type="info">
-        This configuration assumes your sequencer is running in a Docker container named `sequencer-node` on the same `op-stack` network.
-        Make sure your sequencer is running before starting the proposer.
+      **Docker Networking**: If you get "failed to dial address" errors, ensure your proposer is in the same Docker network as your sequencer. 
+
+      Common fixes:
+      *   Add `networks: - sequencer-node_default` to your proposer's docker-compose.yml
+      *   Use service names like `op-geth:8545` and `op-node:8547` in your `.env` file
+      *   Verify your sequencer network name with `docker network ls`
       </Callout>
 
       ```yaml
