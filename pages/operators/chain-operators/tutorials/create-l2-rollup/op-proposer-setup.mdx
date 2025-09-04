@@ -67,8 +67,7 @@ Look for the latest `op-proposer/v*` release that's compatible with your sequenc
 For setting up the proposer, we recommend using Docker as it provides a consistent and isolated environment. Building from source is also available for more advanced users.
 
 <Tabs items={['Using Docker (Recommended)', 'Build from source']}>
-
-    <Tabs.Tab>
+  <Tabs.Tab>
     If you prefer containerized deployment, you can use the official Docker images and do the following:
 
     <Steps>
@@ -155,7 +154,7 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
           restart: unless-stopped
           networks:
             - sequencer-node_default
-      
+
       networks:
         sequencer-node_default:
           external: true
@@ -199,7 +198,7 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
 
     Your proposer is now operational and will continuously submit state roots to L1!
   </Tabs.Tab>
-  
+
   <Tabs.Tab>
     Building from source gives you full control over the binaries.
 
@@ -230,7 +229,6 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       ```
     </Steps>
   </Tabs.Tab>
-
 </Tabs>
 
 ## Configuration setup
@@ -427,6 +425,32 @@ Your final directory structure should look like:
 </Steps>
 
 Your proposer is now operational!
+
+<Callout type="info">
+  **Understanding proposer startup logs**
+
+  When you first start your proposer, you'll see several types of log messages:
+
+  1.  **Initialization messages** (normal):
+      ```
+      lvl=info msg="Initializing L2Output Submitter"
+      lvl=info msg="Connected to DisputeGameFactory"
+      lvl=info msg="Starting JSON-RPC server"
+      ```
+
+  2.  **Sync status messages** (expected during startup):
+      ```
+      msg="rollup current L1 block still behind target, retrying"
+      current_l1=...:9094035 target_l1=9132815
+      ```
+      This is normal! It means:
+      *   Your rollup is still syncing with L1 (e.g., Sepolia)
+      *   The proposer is waiting until sync is closer to L1 tip
+      *   You'll see the `current_l1` number increasing as it catches up
+      *   Once caught up, the proposer will start submitting proposals
+
+  Don't worry about the "retrying" messages - they show healthy progress as your rollup catches up to the latest L1 blocks.
+</Callout>
 
 ## What's Next?
 
