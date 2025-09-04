@@ -131,7 +131,7 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
       </Callout>
 
       ```yaml
-      version: '3.8'
+      '
 
       services:
         op-batcher:
@@ -143,6 +143,8 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
             - "8548:8548"
           env_file:
             - .env
+          networks:
+            - sequencer-node_default
           command:
             - "op-batcher"
             - "--l2-eth-rpc=${L2_RPC_URL}"
@@ -161,7 +163,12 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
             - "--batch-type=1"
             - "--data-availability-type=blobs"
             - "--log.level=info"
+            - "--max-pending-tx=0"
           restart: unless-stopped
+
+      networks:
+        sequencer-node_default:
+          external: true
       ```
 
       ### Start the batcher service
