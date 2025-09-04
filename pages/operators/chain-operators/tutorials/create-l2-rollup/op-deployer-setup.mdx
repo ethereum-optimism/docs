@@ -38,45 +38,49 @@ There are a couple of ways to install `op-deployer`:
     <Steps>
       ### Download the correct binary
 
-      1. Go to [https://github.com/ethereum-optimism/optimism/releases](https://github.com/ethereum-optimism/optimism/releases)
-      2. Find the latest release that includes `op-deployer`
-      3. Under **assets**, download the binary that matches your system:
+      1.  Go to [https://github.com/ethereum-optimism/optimism/releases](https://github.com/ethereum-optimism/optimism/releases)
+      2.  Find the latest release that includes `op-deployer`
+      3.  Under **assets**, download the binary that matches your system:
 
-      - For Linux: `op-deployer-linux-amd64`
-      - For macOS:
-        - Apple Silicon (M1/M2): `op-deployer-darwin-arm64`
-        - Intel processors: `op-deployer-darwin-amd64`
-      - For Windows: `op-deployer-windows-amd64.exe`
+      *   For Linux: `op-deployer-linux-amd64`
+      *   For macOS:
+          *   Apple Silicon (M1/M2): `op-deployer-darwin-arm64`
+          *   Intel processors: `op-deployer-darwin-amd64`
+      *   For Windows: `op-deployer-windows-amd64.exe`
 
       <Callout type="info">
         Not sure which macOS version to use?
-        - Open Terminal and run `uname -m`
-        - If it shows `arm64`, use the arm64 version
-        - If it shows `x86_64`, use the amd64 version
+
+        *   Open Terminal and run `uname -m`
+        *   If it shows `arm64`, use the arm64 version
+        *   If it shows `x86_64`, use the amd64 version
       </Callout>
 
       ### Install the binary
 
-      1. Rename the downloaded file to `op-deployer`
-      2. Make it executable:
+      1.  Rename the downloaded file to `op-deployer`
+      2.  Make it executable:
+
       ```bash
       chmod +x op-deployer
       ```
 
-      3. Move it to a directory in your system PATH:
+      3.  Move it to a directory in your system PATH:
+
       ```bash
       # Create a bin directory if it doesn't exist
       mkdir -p ~/bin
-      
+
       # Move the binary
       mv op-deployer ~/bin/
-      
+
       # Add to PATH if not already added (add this to your ~/.bashrc or ~/.zshrc)
       export PATH=$PATH:~/bin
       ```
 
       <Callout type="warning">
         **For macOS Users**: If you get a security warning about "unidentified developer":
+
         ```bash
         # Run this command to allow the binary
         xattr -d com.apple.quarantine ~/bin/op-deployer
@@ -88,6 +92,7 @@ There are a couple of ways to install `op-deployer`:
       ```bash
       op-deployer --version
       ```
+    </Steps>
   </Tabs.Tab>
 
   <Tabs.Tab>
@@ -110,161 +115,172 @@ There are a couple of ways to install `op-deployer`:
 
 Before deploying your L1 contracts, you'll need:
 
-1. **L1 RPC URL**: An Ethereum RPC endpoint for your chosen L1 network
-   ```bash
-   # Examples:
-   # Sepolia (recommended for testing)
-   L1_RPC_URL=https://sepolia.infura.io/v3/YOUR-PROJECT-ID
-   # or https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY
-   
-   # Local network
-   L1_RPC_URL=http://localhost:8545
-   ```
+1.  **L1 RPC URL**: An Ethereum RPC endpoint for your chosen L1 network
 
-   <Callout type="info">
-     For testing, we recommend using Sepolia testnet. You can get free RPC access from:
-     - [Infura](https://infura.io) (create account, get API key)
-     - [Alchemy](https://alchemy.com) (create account, get API key)
-     - [Ankr](https://ankr.com) (create account, get API key)
-   </Callout>
+    ```bash
+    # Examples:
+    # Sepolia (recommended for testing)
+    L1_RPC_URL=https://sepolia.infura.io/v3/YOUR-PROJECT-ID
+    # or https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY
 
-2. **Deployer Account**: An Ethereum account with sufficient ETH
-   - For Sepolia: 1.5-3.5 ETH recommended
-   - Get test ETH from [Sepolia Faucet](https://sepoliafaucet.com)
+    # Local network
+    L1_RPC_URL=http://localhost:8545
+    ```
+
+    <Callout type="info">
+      For testing, we recommend using Sepolia testnet. You can get free RPC access from:
+
+      *   [Infura](https://infura.io) (create account, get API key)
+      *   [Alchemy](https://alchemy.com) (create account, get API key)
+      *   [Ankr](https://ankr.com) (create account, get API key)
+    </Callout>
+
+2.  **Deployer Account**: An Ethereum account with sufficient ETH
+    *   For Sepolia: 1.5-3.5 ETH recommended
+    *   Get test ETH from [Sepolia Faucet](https://sepoliafaucet.com)
 
 ## Generate Deployment Keys
 
 Your rollup needs several key pairs for different roles. Let's generate them first:
 
 <Steps>
-### Create keys directory
-```bash
-mkdir -p keys
-cd keys
-```
+  ### Create keys directory
 
-### Generate keys for each role
-```bash
-# Generate 7 new Ethereum accounts
-for role in admin system_config unsafe_block_signer batcher proposer challenger fee_recipient; do
-  cast wallet new --password "" > $role.txt
-done
-```
+  ```bash
+  mkdir -p keys
+  cd keys
+  ```
 
-### Save addresses for your intent file
-```bash
-# Extract addresses to a summary file
-echo "Generated addresses for your intent file:" > addresses.txt
-for role in admin system_config unsafe_block_signer batcher proposer challenger fee_recipient; do
-  echo "$role: $(grep "Address:" $role.txt | cut -d' ' -f2)" >> addresses.txt
-done
-cat addresses.txt
-```
+  ### Generate keys for each role
+
+  ```bash
+  # Generate 7 new Ethereum accounts
+  for role in admin system_config unsafe_block_signer batcher proposer challenger fee_recipient; do
+    cast wallet new --password "" > $role.txt
+  done
+  ```
+
+  ### Save addresses for your intent file
+
+  ```bash
+  # Extract addresses to a summary file
+  echo "Generated addresses for your intent file:" > addresses.txt
+  for role in admin system_config unsafe_block_signer batcher proposer challenger fee_recipient; do
+    echo "$role: $(grep "Address:" $role.txt | cut -d' ' -f2)" >> addresses.txt
+  done
+  cat addresses.txt
+  ```
+</Steps>
 
 <Callout type="warning">
-  **Important**: 
-  - Save these keys securely - you'll need them to operate your chain
-  - The private keys are in the "Private Key:" field of each file
-  - For production, use proper key management solutions (HSMs, multisigs)
+  **Important**:
+
+  *   Save these keys securely - you'll need them to operate your chain
+  *   The private keys are in the "Private Key:" field of each file
+  *   For production, use proper key management solutions (HSMs, multisigs)
 </Callout>
-</Steps>
 
 ## Create and configure intent file
 
 The intent file defines your chain's configuration. Here's how to set it up:
 
 <Steps>
-### Initialize intent file
+  ### Initialize intent file
 
-```bash
-op-deployer init \
-  --l1-chain-id 11155111 \
-  --l2-chain-ids 42069 \
-  --workdir .deployer \
-  --intent-type standard-overrides
-```
+  ```bash
+  op-deployer init \
+    --l1-chain-id 11155111 \
+    --l2-chain-ids 42069 \
+    --workdir .deployer \
+    --intent-type standard-overrides
+  ```
 
-<details>
-<summary>Understanding intent types</summary>
+  <details>
+    <summary>Understanding intent types</summary>
 
-`op-deployer` supports three intent types:
-- `standard`: Uses default OP Stack configuration, minimal customization
-- `standard-overrides`: Recommended. Uses defaults but allows overriding specific values
-- `custom`: Full customization, requires manual configuration of all values
+    `op-deployer` supports three intent types:
 
-For most users, `standard-overrides` provides the best balance of simplicity and flexibility.
-</details>
+    *   `standard`: Uses default OP Stack configuration, minimal customization
+    *   `standard-overrides`: Recommended. Uses defaults but allows overriding specific values
+    *   `custom`: Full customization, requires manual configuration of all values
 
-### Update the intent file
+    For most users, `standard-overrides` provides the best balance of simplicity and flexibility.
+  </details>
 
-Edit `.deployer/intent.toml` with your generated addresses:
+  ### Update the intent file
 
-```toml
-configType = "standard-overrides"
-l1ChainID = 11155111  # Sepolia
-fundDevAccounts = false  # Set to false for production/testnet
-useInterop = false
-l1ContractsLocator = "tag://op-contracts/v2.0.0"
-l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
+  Edit `.deployer/intent.toml` with your generated addresses:
 
-[superchainRoles]
-  proxyAdminOwner = "0x..."     # admin address
-  protocolVersionsOwner = "0x..." # admin address
-  guardian = "0x..."            # admin address
+  ```toml
+  configType = "standard-overrides"
+  l1ChainID = 11155111  # Sepolia
+  fundDevAccounts = false  # Set to false for production/testnet
+  useInterop = false
+  l1ContractsLocator = "tag://op-contracts/v2.0.0"
+  l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
 
-[[chains]]
-  id = "0x000000000000000000000000000000000000000000000000000000000016de8d"
-  baseFeeVaultRecipient = "0x..."    # fee_recipient address
-  l1FeeVaultRecipient = "0x..."      # fee_recipient address
-  sequencerFeeVaultRecipient = "0x..." # fee_recipient address
-  eip1559DenominatorCanyon = 250
-  eip1559Denominator = 50
-  eip1559Elasticity = 6
-  [chains.roles]
-    l1ProxyAdminOwner = "0x..."      # admin address
-    l2ProxyAdminOwner = "0x..."      # admin address
-    systemConfigOwner = "0x..."      # system_config address
-    unsafeBlockSigner = "0x..."      # unsafe_block_signer address
-    batcher = "0x..."               # batcher address
-    proposer = "0x..."              # proposer address
-    challenger = "0x..."            # challenger address
-```
+  [superchainRoles]
+    proxyAdminOwner = "0x..."     # admin address
+    protocolVersionsOwner = "0x..." # admin address
+    guardian = "0x..."            # admin address
 
-<details>
-<summary>Understanding the configuration values</summary>
+  [[chains]]
+    id = "0x000000000000000000000000000000000000000000000000000000000016de8d"
+    baseFeeVaultRecipient = "0x..."    # fee_recipient address
+    l1FeeVaultRecipient = "0x..."      # fee_recipient address
+    sequencerFeeVaultRecipient = "0x..." # fee_recipient address
+    eip1559DenominatorCanyon = 250
+    eip1559Denominator = 50
+    eip1559Elasticity = 6
+    [chains.roles]
+      l1ProxyAdminOwner = "0x..."      # admin address
+      l2ProxyAdminOwner = "0x..."      # admin address
+      systemConfigOwner = "0x..."      # system_config address
+      unsafeBlockSigner = "0x..."      # unsafe_block_signer address
+      batcher = "0x..."               # batcher address
+      proposer = "0x..."              # proposer address
+      challenger = "0x..."            # challenger address
+  ```
 
-**Global Settings:**
-- `l1ChainID`: The L1 network ID (11155111 for Sepolia)
-- `fundDevAccounts`: Creates test accounts with ETH if true
-- `useInterop`: Enable interoperability features
-- `l1ContractsLocator`: Version of L1 contracts to deploy
-- `l2ContractsLocator`: Version of L2 contracts to deploy
+  <details>
+    <summary>Understanding the configuration values</summary>
 
-**Superchain Roles:**
-- `proxyAdminOwner`: Can upgrade Superchain-wide contracts
-- `protocolVersionsOwner`: Can update protocol versions
-- `guardian`: Can pause withdrawals and manage disputes
+    **Global Settings:**
 
-**Chain Configuration:**
-- `id`: Unique identifier for your chain
-- `*FeeVaultRecipient`: Addresses receiving various fees
-- `eip1559*`: Parameters for gas price calculation
+    *   `l1ChainID`: The L1 network ID (11155111 for Sepolia)
+    *   `fundDevAccounts`: Creates test accounts with ETH if true
+    *   `useInterop`: Enable interoperability features
+    *   `l1ContractsLocator`: Version of L1 contracts to deploy
+    *   `l2ContractsLocator`: Version of L2 contracts to deploy
 
-**Chain Roles:**
-- `l1ProxyAdminOwner`: Updates L1 contract implementations
-- `l2ProxyAdminOwner`: Updates L2 contract implementations
-- `systemConfigOwner`: Manages system configuration
-- `unsafeBlockSigner`: Signs pre-confirmation blocks
-- `batcher`: Submits L2 transactions to L1
-- `proposer`: Submits L2 state roots to L1
-- `challenger`: Monitors and challenges invalid states
-</details>
+    **Superchain Roles:**
+
+    *   `proxyAdminOwner`: Can upgrade Superchain-wide contracts
+    *   `protocolVersionsOwner`: Can update protocol versions
+    *   `guardian`: Can pause withdrawals and manage disputes
+
+    **Chain Configuration:**
+
+    *   `id`: Unique identifier for your chain
+    *   `*FeeVaultRecipient`: Addresses receiving various fees
+    *   `eip1559*`: Parameters for gas price calculation
+
+    **Chain Roles:**
+
+    *   `l1ProxyAdminOwner`: Updates L1 contract implementations
+    *   `l2ProxyAdminOwner`: Updates L2 contract implementations
+    *   `systemConfigOwner`: Manages system configuration
+    *   `unsafeBlockSigner`: Signs pre-confirmation blocks
+    *   `batcher`: Submits L2 transactions to L1
+    *   `proposer`: Submits L2 state roots to L1
+    *   `challenger`: Monitors and challenges invalid states
+  </details>
+</Steps>
 
 <Callout type="warning">
   Replace all `0x...` with actual addresses from your `addresses.txt` file.
   Never use the default test mnemonic addresses in production or public testnets!
 </Callout>
-</Steps>
 
 ## Deploy L1 Contracts
 
@@ -278,9 +294,10 @@ op-deployer apply \
 ```
 
 This will:
-1. Deploy all required L1 contracts
-2. Configure them according to your intent file
-3. Save deployment information to `.deployer/state.json`
+
+1.  Deploy all required L1 contracts
+2.  Configure them according to your intent file
+3.  Save deployment information to `.deployer/state.json`
 
 <Callout type="info">
   The deployment can take 10-15 minutes and requires multiple transactions.
@@ -302,11 +319,12 @@ op-deployer inspect l1 --workdir .deployer 42069 > .deployer/l1-contracts.json
 ## What's Next?
 
 Great! You've successfully:
-1. Installed `op-deployer`
-2. Generated necessary key pairs
-3. Created and configured your intent file
-4. Deployed L1 smart contracts
-5. Generated chain configuration files
+
+1.  Installed `op-deployer`
+2.  Generated necessary key pairs
+3.  Created and configured your intent file
+4.  Deployed L1 smart contracts
+5.  Generated chain configuration files
 
 Now you can move on to setting up your sequencer node.
 
