@@ -18,7 +18,7 @@ import { Steps, Callout } from 'nextra/components'
 
 # Upgrade 16a: Protocol upgrade
 
-This page outlines important changes related to Upgrade 16a for chain operators and users. Upgrade 16a is a **maintenance upgrade that replaces Upgrade 16**, temporarily removing interop withdrawal-proving code while introducing system-level feature toggles. These changes are designed to improve safety, partner confidence, and flexibility in future upgrades.
+Upgrade 16a is a **maintenance release that supersedes Upgrade 16**. It temporarily removes unused interop withdrawal-proving code introduced in Upgrade 16 and adds system-level feature toggles to improve flexibility and rollout safety. These changes reduce risk while maintaining momentum toward the Superchain roadmap.
 
 <Callout type="info">
   The Upgrade 16a protocol upgrade on the **Sepolia** Superchain will be executed on **Tue, Sept 16, 2025**, and the **Mainnet** Superchain will be activated on **Thu, Sept 25, 2025 at \[INSERT\_TIME] PM UTC**.\
@@ -28,24 +28,24 @@ This page outlines important changes related to Upgrade 16a for chain operators 
 
 ## What's included in Upgrade 16a
 
-Upgrade 16a contains these main changes:
+Upgrade 16a introduces the following changes:
 
-*   **Interop withdrawal-proving code removed**\
-    Interop-specific withdrawal code introduced in U16 has been removed in response to partner feedback. ETHLockbox remains supported for chains already on U16. Chains skipping directly from U15 → U16a will not adopt ETHLockbox until a future upgrade.
+* **Removal of interop withdrawal-proving code**  
+  Code paths for interop withdrawals added in Upgrade 16 have been removed following partner feedback. ETHLockbox remains supported on chains already running U16. Chains moving directly from U15 → U16a will not adopt ETHLockbox until a future upgrade.
 
-*   **System-level feature toggles introduced**\
-    Implemented via the `SystemConfig` contract. ETHLockbox is the first feature behind a system toggle. This enables customizable features (e.g. Custom Gas Token support) and more iterative rollouts.
+* **System-level feature toggles**  
+  Added via the `SystemConfig` contract. ETHLockbox is the first feature placed behind a toggle. This mechanism enables chain-specific configuration and safer iterative upgrades.
 
-*   **Development feature flags**\
-    Added to support deploying and testing interop functionality in non-production environments. These flags cannot be set on production chains.
+* **Development-only feature flags**  
+  Introduced to allow testing of interop functionality on non-production environments. These flags cannot be enabled on production chains.
 
-*   **OP Contracts Manager (OPCM) updates**\
-    Supports both upgrade paths: `U15 → U16a` and `U16 → U16a`.
+* **OP Contracts Manager (OPCM) updates**  
+  Updated to support both upgrade paths: `U15 → U16a` and `U16 → U16a`.
 
 ## Impact summary
 
-*   No expected downtime.
-*   No invalidation of existing withdrawal proofs for chains already on U16.
-*   Chains still on U15 are subject to the same impact summary as U16.
-*   Chains skipping directly from U15 → U16a will defer ETHLockbox adoption until a future upgrade.
-*   Operators benefit from new system-level feature toggling, improving rollout of subsequent upgrades.
+* No downtime is expected.  
+* Withdrawal proofs created under U16 remain valid.  
+* Chains still on U15 are affected in the same way described in the Upgrade 16 notice.  
+* Chains upgrading directly from U15 → U16a will not adopt ETHLockbox until a future release.  
+* System-level toggles improve operator control and make future upgrades easier to roll out.  
