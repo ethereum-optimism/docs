@@ -1,0 +1,51 @@
+---
+title: Upgrade 16a - Protocol upgrade
+description: Learn how to prepare for the Upgrade 16a protocol changes.
+lang: en-US
+content_type: notice
+topic: upgrade-16a-changes
+personas:
+  - chain-operator
+categories:
+  - security
+  - protocol
+  - infrastructure
+  - interoperability
+is_imported_content: 'false'
+---
+
+import { Steps, Callout } from 'nextra/components'
+
+# Upgrade 16a: Protocol upgrade
+
+This page outlines important changes related to Upgrade 16a for chain operators and users. Upgrade 16a is a **maintenance upgrade that replaces Upgrade 16**, temporarily removing interop withdrawal-proving code while introducing system-level feature toggles. These changes are designed to improve safety, partner confidence, and flexibility in future upgrades.
+
+<Callout type="info">
+  The Upgrade 16a protocol upgrade on the **Sepolia** Superchain will be executed on **Tue, Sept 16, 2025**, and the **Mainnet** Superchain will be activated on **Thu, Sept 25, 2025 at [INSERT_TIME] PM UTC**.  
+  The upgrade will be executed on the following chains: `OP`, `Soneium`, `Ink`, and `Unichain`.  
+  Execution times may vary depending on the current state of each chain.
+</Callout>
+
+## What's included in Upgrade 16a
+
+Upgrade 16a contains these main changes:
+
+* **Interop withdrawal-proving code removed**  
+  Interop-specific withdrawal code introduced in U16 has been removed in response to partner feedback. ETHLockbox remains supported for chains already on U16. Chains skipping directly from U15 → U16a will not adopt ETHLockbox until a future upgrade.
+
+* **System-level feature toggles introduced**  
+  Implemented via the `SystemConfig` contract. ETHLockbox is the first feature behind a system toggle. This enables customizable features (e.g. Custom Gas Token support) and more iterative rollouts.
+
+* **Development feature flags**  
+  Added to support deploying and testing interop functionality in non-production environments. These flags cannot be set on production chains.
+
+* **OP Contracts Manager (OPCM) updates**  
+  Supports both upgrade paths: `U15 → U16a` and `U16 → U16a`. 
+
+## Impact summary
+
+* No expected downtime.  
+* No invalidation of existing withdrawal proofs for chains already on U16.  
+* Chains still on U15 are subject to the same impact summary as U16.  
+* Chains skipping directly from U15 → U16a will defer ETHLockbox adoption until a future upgrade.  
+* Operators benefit from new system-level feature toggling, improving rollout of subsequent upgrades.    
