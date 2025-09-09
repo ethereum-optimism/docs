@@ -25,7 +25,7 @@ Welcome to the first step of creating your own L2 rollup testnet! In this sectio
 
 ## About op-deployer
 
-`op-deployer` simplifies the process of deploying the OP Stack. It works similarly to [Terraform](https://www.terraform.io/) - you define a declarative config file called an "**intent**," then run a command to apply it. `op-deployer` compares your chain's current state against the intent and makes the necessary changes to match.
+`op-deployer` simplifies the process of deploying the OP Stack. You define a declarative config file called an "**intent**," then run a command to apply it. `op-deployer` compares your chain's current state against the intent and makes the necessary changes to match.
 
 ## Installation
 
@@ -38,8 +38,8 @@ There are a couple of ways to install `op-deployer`:
     <Steps>
       ### Download the correct binary
 
-      1.  Go to [https://github.com/ethereum-optimism/optimism/releases](https://github.com/ethereum-optimism/optimism/releases)
-      2.  Find the latest release that includes `op-deployer`
+      1.  Go to the [release page](https://github.com/ethereum-optimism/optimism/releases)
+      2.  Use the search bar to find the latest release that includes `op-deployer`.
       3.  Under **assets**, download the binary that matches your system:
 
       *   For Linux: `op-deployer-linux-amd64`
@@ -56,30 +56,39 @@ There are a couple of ways to install `op-deployer`:
         *   If it shows `x86_64`, use the amd64 version
       </Callout>
 
-      ### Install the binary
+      ### Create deployer directory and install binary
 
-      1.  Rename the downloaded file to `op-deployer`
-      2.  Make it executable:
+      1. Create and enter a directory for op-deployer:
 
       ```bash
-      chmod +x op-deployer
+      # Create and enter the deployer directory
+      mkdir deployer && cd deployer
       ```
 
-      3.  Move it to a directory in your system PATH:
+      2. Move and rename the downloaded binary:
+
+      <Callout>
+        The downloaded file is likely in your Downloads folder:
+        - macOS/Linux: `/Users/YOUR_USERNAME/Downloads`
+        - Windows WSL: `/mnt/c/Users/YOUR_USERNAME/Downloads`
+      </Callout>
 
       ```bash
+      # Move the downloaded file (replace USERNAME with your username)
+      mv /Users/USERNAME/Downloads/op-deployer-0.2.6-darwin-arm64.tar.gz* op-deployer
+
       # Create a bin directory if it doesn't exist
-      mkdir -p ~/bin
-
-      # Move the binary
-      mv op-deployer ~/bin/
-
-      # Add to PATH if not already added (add this to your ~/.bashrc or ~/.zshrc)
-      export PATH=$PATH:~/bin
+        mkdir -p ~/bin
+        
+        # Move the binary
+        mv op-deployer ~/bin/
+        
+        # Add to PATH if not already added (add this to your ~/.bashrc or ~/.zshrc)
+        export PATH=$PATH:~/bin
       ```
 
       <Callout type="warning">
-        **For macOS Users**: If you get a security warning about "unidentified developer":
+        **For macOS Users**: If you get a security warning from your OS:
 
         ```bash
         # Run this command to allow the binary
@@ -151,7 +160,7 @@ Your rollup needs several key pairs for different roles. Let's generate them fir
 
   ```bash
   # Generate 7 new Ethereum accounts
-  for role in admin system_config unsafe_block_signer batcher proposer fee_recipient; do
+  for role in base_Fee_Vault_Recipient l1_Fee_Vault_Recipient sequencer_Fee_Vault_Recipient system_config unsafe_block_signer batcher proposer ; do
       wallet_output=$(cast wallet new)
       echo "$wallet_output" | grep "Address:" | awk '{print $2}' > ${role}_address.txt
       echo "Created wallet for $role"
@@ -165,21 +174,22 @@ Your rollup needs several key pairs for different roles. Let's generate them fir
   **Important**:
 
   *   Save these keys securely - you'll need them to operate your chain
-  *   The private keys are in the "Private Key:" field of each file
   *   For production, use proper key management solutions (HSMs, multisigs)
 </Callout>
 
 ## Create and configure intent file
 
-The intent file defines your chain's configuration. Here's how to set it up:
+The intent file defines your chain's configuration.
 
 <Steps>
   ### Initialize intent file
+  Inside the `deployer` folder, run this command:
 
   ```bash
+  #You can use a 2-7 digit random number for your `<YOUR_CHAIN_ID>` 
   op-deployer init \
     --l1-chain-id 11155111 \
-    --l2-chain-ids 42069 \
+    --l2-chain-ids <YOUR_CHAIN_ID> \
     --workdir .deployer \
     --intent-type standard-overrides
   ```
@@ -215,20 +225,20 @@ The intent file defines your chain's configuration. Here's how to set it up:
 
   [[chains]]
     id = "0x000000000000000000000000000000000000000000000000000000000016de8d"
-    baseFeeVaultRecipient = "0x..."    # fee_recipient address
-    l1FeeVaultRecipient = "0x..."      # fee_recipient address
-    sequencerFeeVaultRecipient = "0x..." # fee_recipient address
+    baseFeeVaultRecipient = "0x..."    # base_Fee_Vault_Recipient address
+    l1FeeVaultRecipient = "0x..."      # l1_Fee_Vault_Recipient address
+    sequencerFeeVaultRecipient = "0x..." # sequencer_Fee_Vault_Recipient address
     eip1559DenominatorCanyon = 250
     eip1559Denominator = 50
     eip1559Elasticity = 6
     [chains.roles]
-      l1ProxyAdminOwner = "0x..."      # admin address
-      l2ProxyAdminOwner = "0x..."      # admin address
+      l1ProxyAdminOwner = "0x1eb2ffc903729a0f03966b917003800b145f56e2"
+      l2ProxyAdminOwner = "0x2fc3ffc903729a0f03966b917003800b145f67f3"     
       systemConfigOwner = "0x..."      # system_config address
       unsafeBlockSigner = "0x..."      # unsafe_block_signer address
       batcher = "0x..."               # batcher address
       proposer = "0x..."              # proposer address
-      challenger = "0x..."            # challenger address
+      challenger = "0xfd1d2e729ae8eee2e146c033bf4400fe75284301"
   ```
 
   <details>
@@ -271,9 +281,37 @@ The intent file defines your chain's configuration. Here's how to set it up:
   Never use the default test mnemonic addresses in production or public testnets!
 </Callout>
 
+## Create environment file
+
+Before deploying, create a `.env` file in your `deployer` directory to store your sensitive configuration:
+
+```bash
+# Create .env file
+cat << 'EOF' > .env
+# Your L1 RPC URL (e.g., from Alchemy, Infura)
+L1_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY
+
+# Private key for deployment.
+# Get this from your self-custody wallet, like Metamask.
+PRIVATE_KEY= WALLET_PRIVATE_KEY
+EOF
+```
+
+<Callout type="warning">
+  Never commit your `.env` file to version control. Add it to your `.gitignore`:
+  ```bash
+  echo ".env" >> .gitignore
+  ```
+</Callout>
+
+Load the environment variables:
+```bash
+source .env
+```
+
 ## Deploy L1 Contracts
 
-Now that your intent file is configured, let's deploy the L1 contracts:
+Now that your intent file and environment variables are configured, let's deploy the L1 contracts:
 
 ```bash
 op-deployer apply \
@@ -298,11 +336,11 @@ After successful deployment, generate your chain configuration files:
 
 ```bash
 # Generate genesis and rollup configs
-op-deployer inspect genesis --workdir .deployer 42069 > .deployer/genesis.json
-op-deployer inspect rollup --workdir .deployer 42069 > .deployer/rollup.json
+op-deployer inspect genesis --workdir .deployer <YOUR_CHAIN_ID> > .deployer/genesis.json
+op-deployer inspect rollup --workdir .deployer <YOUR_CHAIN_ID> > .deployer/rollup.json
 
 # Get L1 contract addresses (save these!)
-op-deployer inspect l1 --workdir .deployer 42069 > .deployer/l1-contracts.json
+op-deployer inspect l1 --workdir .deployer <YOUR_CHAIN_ID> > .deployer/l1-contracts.json
 ```
 
 ## What's Next?
