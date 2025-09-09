@@ -52,13 +52,13 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
 
     ```bash
     # Create your sequencer working directory
-    mkdir ~/sequencer-node
-    cd ~/sequencer-node
+    mkdir sequencer-node
+    cd sequencer-node
 
     # Copy configuration files from op-deployer output
     # Note: Adjust the path if your .deployer directory is located elsewhere
-    cp ~/.deployer/genesis.json .
-    cp ~/.deployer/rollup.json .
+    cp .deployer/genesis.json .
+    cp .deployer/rollup.json .
 
     # Generate JWT secret
     openssl rand -hex 32 > jwt.txt
@@ -169,7 +169,7 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
 
     ```bash
     # Make sure you're in the sequencer-node directory with all files copied
-    cd ~/sequencer-node
+    cd sequencer-node
 
     # Initialize op-geth using Docker
     docker run --rm \
@@ -192,10 +192,10 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
     ### Final directory structure
 
     ```bash
-    ~/sequencer-node/
+    sequencer-node/
     ├── jwt.txt                 # Generated JWT secret
-    ├── genesis.json           # Copied from ~/.deployer/
-    ├── rollup.json            # Copied from ~/.deployer/
+    ├── genesis.json           # Copied from .deployer/
+    ├── rollup.json            # Copied from .deployer/
     ├── .env                   # Environment variables
     ├── docker-compose.yml     # Docker configuration
     └── op-geth-data/         # Created by Docker during initialization
@@ -277,7 +277,7 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       After building the binaries, you should have the following directory structure:
 
       ```
-      ~/
+      
       ├── optimism/               # Optimism monorepo
       │   └── op-node/
       │       └── bin/
@@ -295,8 +295,8 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
 
       ```bash
       # Create sequencer directory at the root level
-      mkdir ~/sequencer-node
-      cd ~/sequencer-node
+      mkdir /sequencer-node
+      cd sequencer-node
       ```
 
       <details>
@@ -305,9 +305,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
         If you prefer to keep binaries close to your configuration, you can copy them:
 
         ```bash
-        mkdir ~/sequencer-node/bin
-        cp ~/optimism/op-node/bin/op-node ~/sequencer-node/bin/
-        cp ~/op-geth/build/bin/geth ~/sequencer-node/bin/
+        mkdir sequencer-node/bin
+        cp optimism/op-node/bin/op-node sequencer-node/bin/
+        cp op-geth/build/bin/geth sequencer-node/bin/
 
         # Then update scripts to use:
         # ./bin/geth   
@@ -334,14 +334,14 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       mkdir scripts
 
       # Copy configuration files from op-deployer
-      cp ~/.deployer/genesis.json .
-      cp ~/.deployer/rollup.json .
+      cp .deployer/genesis.json .
+      cp .deployer/rollup.json .
       ```
 
       Your final directory structure should look like:
 
       ```bash
-      ~/sequencer-node/
+      sequencer-node/
       ├── jwt.txt
       ├── genesis.json
       ├── rollup.json
@@ -502,7 +502,7 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
 
       ```bash
       # Make sure you're in the sequencer-node directory
-      cd ~/sequencer-node
+      cd sequencer-node
 
       # Initialize op-geth with your genesis file
       ../op-geth/build/bin/geth init --datadir=./op-geth-data --state.scheme=hash ./genesis.json
@@ -525,7 +525,7 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
 
       ```bash
       # In a separate terminal, navigate to the sequencer directory
-      cd ~/sequencer-node
+      cd sequencer-node
 
       # Start op-node
       ./scripts/start-op-node.sh
