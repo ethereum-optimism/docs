@@ -75,24 +75,28 @@ There are a couple of ways to install `op-deployer`:
       </Callout>
 
       ```bash
-        # Change directory to the Downloads folder
-        cd ~/Downloads
+      # Step 1: Go to the Downloads folder (where your file is saved)
+      cd ~/Downloads
 
-        # Extract the compressed tar.gz archive (x = extract, v = verbose, z = gzip, f = file)
-        tar -xvzf op-deployer-0.2.6-darwin-arm64.tar.gz
+      # Step 2: Extract the tar.gz archive (x = extract, v = verbose, z = gzip, f = file)
+      tar -xvzf op-deployer-0.2.6-darwin-arm64.tar.gz
 
-        # Move the extracted file to /usr/local/bin so it can be run globally as a command
-        sudo mv op-deployer-0.2.6-darwin-arm64.tar.gz /usr/local/bin/
+      # Step 3: Move into the extracted folder (adjust if folder name differs)
+      cd op-deployer-0.2.6-darwin-arm64
+
+      # Step 4: Make the binary executable
+      chmod +x op-deployer
+
+      # Step 5: Remove macOS quarantine attribute (fixes "can't be opened" warning)
+      sudo xattr -dr com.apple.quarantine op-deployer
+
+      # Step 6: Move the binary into /usr/local/bin (Intel Macs)
+      # For Apple Silicon Macs, you may prefer /opt/homebrew/bin instead
+      sudo mv op-deployer /usr/local/bin/
+
+      # Step 7: Verify installation (should print version info)
+      op-deployer --version
       ```
-
-      <Callout type="warning">
-        **For macOS Users**: If you get a security warning from your OS:
-
-        ```bash
-        # Run this command to allow the binary
-        xattr -d com.apple.quarantine ~/bin/op-deployer
-        ```
-      </Callout>
 
       ### Verify installation
 
