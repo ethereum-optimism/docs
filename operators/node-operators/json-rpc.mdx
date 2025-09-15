@@ -10,7 +10,7 @@ There are several OP Mainnet components with an RPC API, which are reviewed in t
 
 <Info>
   Use [`eth_gasPrice`](https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_gasprice) instead of `rollup_gasPrices` for the L2 gas price.
-  For the L1 gas price, you can call the [`GasPriceOracle`'s `l1BaseFee` function](https://optimistic.etherscan.io/address/0x420000000000000000000000000000000000000F#readProxyContract#F11).
+  For the L1 gas price, you can call the [`GasPriceOracle`'s `l1BaseFee` function](https://explorer.optimism.io/address/0x420000000000000000000000000000000000000F#readProxyContract#F11).
   If you want to estimate the cost of a transaction, you can [use the SDK](/app-developers/tutorials/transactions/sdk-estimate-costs).
 </Info>
 
@@ -987,10 +987,24 @@ Sample success output:
 todo: add Sample success output
 ```
 
-## op-geth
+## Execution clients
 
+The OP Stack supports multiple execution client implementations. Each client implements the execution layer with minimal changes for a secure Ethereum-equivalent application environment.
 
-`op-geth` implements the Execution-Layer, with minimal changes for a secure Ethereum-equivalent application environment.
+<Tabs items={['op-geth', 'Nethermind']}>
+  <Tabs.Tab>
+    ### op-geth
 
-The execution engine's RPC interface is identical to [the upstream Geth RPC interface](https://geth.ethereum.org/docs/interacting-with-geth/rpc). The responses are nearly identical too, except we also include the L1 gas usage and price information.
+    `op-geth` is the original execution client for the OP Stack, based on the Go Ethereum (Geth) implementation.
+    
+    The execution engine's RPC interface is identical to [the upstream Geth RPC interface](https://geth.ethereum.org/docs/interacting-with-geth/rpc). The responses are nearly identical too, except we also include the L1 gas usage and price information.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ### Nethermind
+
+    `Nethermind` is a high-performance execution client implementation written in C#. The `Nethermind` client has been adapted to support OP Stack chains, providing an alternative execution client option for node operators.
+    
+    The execution engine's RPC interface is identical to [the upstream `Nethermind` RPC interface](https://docs.nethermind.io/interacting/json-rpc-server/). The responses are nearly identical too, except we also include the L1 gas usage and price information.
+  </Tabs.Tab>
+</Tabs>
 

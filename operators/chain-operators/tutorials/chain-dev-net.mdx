@@ -6,13 +6,14 @@ description: This tutorial walks you through spinning up an OP Stack devnet chai
 
 # Running a Local Development Environment
 
-<Info>
-  This guide is currently under active development. If you run into any issues, please open an issue on
-  [Github](https://github.com/ethereum-optimism/optimism).
-</Info>
+This tutorial is **designed for protocol developers** who want to contribute to the OP Stack
+by spinning up a local OP Stack development environment running with [Kurtosis](https://www.kurtosis.com/).
+You'll perform the full deployment process, and **you'll end up with your very own OP Stack devnet, with smart contracts and components that closely mirror what gets run in production**.
 
-This tutorial is **designed for developers** who want to learn about the OP Stack by spinning up a local OP Stack devnet.
-You'll perform the full deployment process, and **you'll end up with your very own OP Stack devnet**.
+<Info>
+  This tutorial is intended for protocol developers. If you're looking to try out the OP Stack in a more lightweight way,
+  you can use the [`op-up`](https://localchain.dev) tool to deploy a local network in less than a minute.
+</Info>
 
 It's useful to understand what each of these components does before
 you start deploying your chain. To learn about the different components please
@@ -53,14 +54,28 @@ accepts a YAML file which configures how many network participants there are, wh
 the network's topology. An example YAML file is below:
 
 ```yaml
+# Check https://github.com/ethpandaops/optimism-package for more details.
+
 optimism_package:
-  chains: # you can define multiple L2s, which will be deployed against the same L1 as a single Superchain
-    - participants: # each participant is a node in the network. here we've defined two, one running op-geth and one running op-reth
-          - el_type: op-geth # this node will be the sequencer since it's first in the list
-          - el_type: op-reth
-      network_params:
-        name: rollup-1 # can be anything as long as it is unique
-        network_id: 12345 # can be anything as long as it is unique
+  # An array of L2 networks to run.
+  chains:
+    # Chains are keyed by their network name.
+    rollup-1:
+      # Specification of the optimism-participants in the network.
+      participants:
+        # Nodes are keyed by their name.
+        node0:
+          # EL(Execution Layer) Specific flags.
+          el:
+            type: op-geth
+          # CL(Consensus Layer) Specific flags
+          cl:
+            type: op-node
+        node1:
+          el:
+            type: op-reth
+          cl:
+            type: op-node
 ```
 
 Save the above configuration to a file. For the rest of this tutorial, we'll assume you've saved it to `network-config.yaml`.

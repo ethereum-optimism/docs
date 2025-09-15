@@ -12,12 +12,16 @@ description: Learn the node base configuration and recommended flags for op-node
 
 To configure your node, you will need to do the following:
 
-1.  Configure `op-node` to point to the correct L1, `op-geth`, and L2 network.
-2.  Initialize `op-geth` with the correct network parameters.
-3.  Configure `op-geth` to properly communicate with the Rollup Node.
+1.  Configure `op-node` to point to the correct L1, execution client, and L2 network.
+2.  Initialize your execution client (`op-geth` or `nethermind`) with the correct network parameters.
+3.  Configure your execution client to properly communicate with the Rollup Node.
 4.  Optionally, configure Legacy Geth.
 
-## Configuring `op-geth`
+## Configuring Your execution client
+
+You can choose between two execution clients for your OP Stack rollup node: `op-geth` or `nethermind`. Each has its own configuration requirements and recommended settings.
+
+### Configuring `op-geth`
 
 <Info>
   Although the Docker image for the Execution Engine is called `op-geth`, the actual binary is still called `geth` in order to minimize differences between `op-geth` and `go-ethereum`. You can see the difference [here](https://op-geth.optimism.io/?utm_source=op-docs&utm_medium=docs).
@@ -132,6 +136,22 @@ geth \
 
 Consult [Geth's documentation](https://geth.ethereum.org/docs/) for more information on customizing `op-geth`'s behavior.
 
+### Configuring `nethermind`
+
+Nethermind is an alternative execution client for OP Stack rollup nodes. It provides high performance and reliability while maintaining compatibility with the OP Stack protocol.
+
+#### Working base configuration for Nethermind
+
+To run `Nethermind` on the OP Mainnet, use the following command:
+
+```bash
+nethermind \
+  -c op-mainnet \
+  --data-dir path/to/data/dir \
+  --jsonrpc-jwtsecretfile path/to/jwt.hex
+```
+Consult [`Nethermind`'s documentation](https://docs.nethermind.io/fundamentals/configuration) for more detailed configuration options.
+
 ## Configuring `op-node`
 
 `op-node` is a standalone, statically linked binary. It stores no state, and requires no initialization. It consumes configuration parameters either via the command line or environment variables. For some networks, the Rollup Node also requires a configuration file (called `rollup.json` or the "rollup config") that configures network-specific genesis parameters. For official networks like OP Sepolia and OP Mainnet, the genesis config is hardcoded in the `op-node` software and can be specified via a `--network` flag.
@@ -149,6 +169,8 @@ from a Beacon node.
 
 A minimal valid configuration that runs `op-node` looks like:
 
+<Tabs items={['op-geth', 'Nethermind']}>
+  <Tabs.Tab>
 ```bash
 op-node --l1=<ethereum mainnet RPC url> \
         --l2=<op-geth authenticated RPC url> \
@@ -160,6 +182,21 @@ op-node --l1=<ethereum mainnet RPC url> \
         --syncmode=execution-layer \
         --l2.enginekind=geth
 ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```bash
+op-node --l1=<ethereum mainnet RPC url> \
+        --l2=<nethermind authenticated RPC url> \
+        --network=op-mainnet \
+        --rpc.addr=127.0.0.1 \
+        --rpc.port=9545 \
+        --l2.jwt-secret=<path to JWT secret> \
+        --l1.beacon=<http endpoint address of L1 Beacon-node> \
+        --syncmode=execution-layer \
+        --l2.enginekind=nethermind
+```
+  </Tabs.Tab>
+</Tabs>
 
 You can manually specify a path to a rollup config with the `--rollup.config` flag. This is used for testnets or internal deployments that are not migrated from a legacy network.
 
@@ -215,6 +252,6 @@ The term *historical execution* refers to RPC methods that need to execute trans
 If you do not need these RPC methods for historical data, then you do not need to run Legacy Geth at all.
 
 ## Next steps
-*   See the [op-node configuration](/operators/node-operators/configuration/consensus-config) guide for additional configuration options for `op-node` and the Consensus-Layer.
-*   Similarly, visit the [op-geth configuration](/operators/node-operators/configuration/execution-config) guide for additional configuration options for `op-geth` and Execution-Layer.
+*   See the [`op-node` configuration](/operators/node-operators/configuration/consensus-config) guide for additional configuration options for `op-node` and the Consensus-Layer.
+*   For execution client configuration, visit [execution client configuration](/operators/node-operators/configuration/execution-config) for additional options when using `op-geth` or `nethermind`
 *   If you run into any problems, please reach out to our [developer support forum](https://github.com/ethereum-optimism/developers/discussions) for help.
