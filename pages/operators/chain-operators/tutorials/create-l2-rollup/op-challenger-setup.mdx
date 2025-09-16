@@ -168,24 +168,21 @@ For challenger deployment, we recommend using Docker as it provides a consistent
 
       ### Set up Docker Compose
 
-      Create a `docker-compose.yml` file that defines the challenger service:
+      Create a `docker-compose.yml` file that defines the challenger service. The file mounts several important files:
+      *   `prestate-proof-mt64.json` and `${PRESTATE_HASH}.bin.gz`: Prestate files required for dispute games (the PRESTATE_HASH comes from running `make reproducible-prestate`)
 
       ```yaml
-      # Define the challenger service configuration
+      
       services:
         challenger:
-          # Use the official OP Stack challenger image
           image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.5.0
-          # Run as non-root user for security
           user: "1000"
           volumes:
-            # Persistent storage for challenger data
             - ./challenger-data:/data
-            # Mount configuration files from your deployment
-            - ./rollup.json:/workspace/rollup.json:ro                              # Rollup configuration
-            - ./genesis-l2.json:/workspace/genesis-l2.json:ro                      # L2 genesis state
-            - ./prestate-proof-mt64.json:/workspace/prestate-proof.json:ro         # Cannon prestate proof
-            - ./${PRESTATE_HASH}.bin.gz:/workspace/${PRESTATE_HASH}.bin.gz:ro      # Cannon binary for the specific prestate
+            - ./rollup.json:/workspace/rollup.json:ro
+            - ./genesis-l2.json:/workspace/genesis-l2.json:ro
+            - ./prestate-proof-mt64.json:/workspace/prestate-proof.json:ro
+            - ./${PRESTATE_HASH}.bin.gz:/workspace/${PRESTATE_HASH}.bin.gz:ro
           environment:
             - L1_RPC_URL=${L1_RPC_URL}
             - L1_BEACON=${L1_BEACON}
