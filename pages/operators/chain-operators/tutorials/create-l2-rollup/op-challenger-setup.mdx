@@ -116,8 +116,10 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       ### Create challenger directory
       
       ```bash
-      # Create and enter the challenger directory
-      mkdir challenger-node && cd challenger-node
+      # Create your challenger directory inside rollup
+      cd ../    # Go back to rollup directory if you're in proposer
+      mkdir challenger
+      cd challenger
       ```
 
       ### Create environment file
@@ -143,8 +145,8 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       NETWORK=op-sepolia
       GAME_FACTORY_ADDRESS=0xYOUR_GAME_FACTORY_ADDRESS
 
-      # Prestate configuration
-      PRESTATE_HASH=YOUR_PRESTATE_HASH
+      # Prestate configuration - Replace with the hash from 'make reproducible-prestate'
+      PRESTATE_HASH=0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
       EOF
       ```
 
@@ -270,9 +272,10 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       After building the binaries, create your challenger working directory:
 
       ```bash
-      # Create challenger directory (this should be at the same level as optimism directory)
-      mkdir challenger-node
-      cd challenger-node
+      # Create challenger directory inside rollup
+      cd ../    # Go back to rollup directory
+      mkdir challenger
+      cd challenger
 
       # Create necessary subdirectories
       mkdir scripts
@@ -280,8 +283,13 @@ For challenger deployment, we recommend using Docker as it provides a consistent
 
       # Verify the optimism directory is accessible
       # Directory structure should look like:
-      # /optimism/                 (contains the built binaries)
-      # /challenger-node/          (your working directory)
+      # rollup/
+      # ├── deployer/            (from previous step)
+      # ├── optimism/            (contains the built binaries)
+      # ├── sequencer/           (from previous step)
+      # ├── batcher/            (from previous step)
+      # ├── proposer/          (from previous step)
+      # └── challenger/       (you are here)
       ```
 
       ### Copy configuration files
@@ -354,8 +362,8 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       # The Cannon binary is a specific hash file that matches your deployment
       CANNON_BIN=./0x<prestate_hash>.bin.gz
       # The op-program server binary is built when you run 'just op-challenger'
-      CANNON_SERVER=../optimism/op-program/bin/op-program
-      CANNON_PRESTATE=../optimism/op-program/bin/prestate.json
+      CANNON_SERVER=../../optimism/op-program/bin/op-program
+      CANNON_PRESTATE=../../optimism/op-program/bin/prestate.json
 
       EOF
       ```
@@ -501,7 +509,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
     source .env
 
     # Path to the challenger binary
-    ../optimism/op-challenger/bin/op-challenger \
+    ../../optimism/op-challenger/bin/op-challenger \
       --trace-type permissioned,cannon \
       --l1-eth-rpc=$L1_RPC_URL \
       --l2-eth-rpc=$L2_RPC_URL \
@@ -520,8 +528,8 @@ For challenger deployment, we recommend using Docker as it provides a consistent
     ### Start the challenger
 
     ```bash
-    # Make sure you're in the challenger-node directory
-    cd challenger-node
+    # Make sure you're in the rollup/challenger directory
+    cd rollup/challenger
 
     # Make script executable
     chmod +x scripts/start-challenger.sh

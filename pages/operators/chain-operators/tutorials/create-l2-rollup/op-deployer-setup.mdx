@@ -103,12 +103,6 @@ There are a couple of ways to install `op-deployer`:
       # Step 7: Verify installation (should print version info)
       op-deployer --version
       ```
-
-      ### Verify installation
-
-      ```bash
-      op-deployer --version
-      ```
     </Steps>
   </Tabs.Tab>
 
@@ -132,7 +126,7 @@ There are a couple of ways to install `op-deployer`:
 
 Before deploying your L1 contracts, you'll need:
 
-1.  **L1 RPC URL**: An Ethereum RPC endpoint for your chosen L1 network
+**L1 RPC URL**: An Ethereum RPC endpoint for your chosen L1 network
 
     ```bash
     # Examples:
@@ -152,31 +146,31 @@ Before deploying your L1 contracts, you'll need:
       *   [Ankr](https://ankr.com) (create account, get API key)
     </Callout>
 
-## Generate deployment keys
+## Generate deployment addresses
 
 Your rollup needs several key pairs for different roles. Let's generate them first:
 
 <Steps>
-  ### Create keys directory
+  ### Create address directory
 
   ```bash
-  # Create a keys directory inside the deployer directory
-  mkdir -p keys
-  cd keys
+  # Create a address directory inside the deployer directory
+  mkdir -p address
+  cd address
   ```
 
   Your directory structure will now look like this:
   ```bash
   rollup/
   └── deployer/
-      └── keys/    # You are here
+      └── address/    # You are here
   ```
 
-  ### Generate keys for each role
+  ### Generate address for each role
 
   ```bash
   # Generate 7 new Ethereum accounts
-  for role in base_Fee_Vault_Recipient l1_Fee_Vault_Recipient sequencer_Fee_Vault_Recipient system_config unsafe_block_signer batcher proposer ; do
+  for role in admin base_Fee_Vault_Recipient l1_Fee_Vault_Recipient sequencer_Fee_Vault_Recipient system_config unsafe_block_signer batcher proposer ; do
       wallet_output=$(cast wallet new)
       echo "$wallet_output" | grep "Address:" | awk '{print $2}' > ${role}_address.txt
       echo "Created wallet for $role"
@@ -189,8 +183,9 @@ Your rollup needs several key pairs for different roles. Let's generate them fir
 <Callout type="warning">
   **Important**:
 
-  *   Save these keys securely - you'll need them to operate your chain
-  *   For production, use proper key management solutions (HSMs, multisigs)
+  *   Save these address - you'll need them to operate your chain
+  *   You can use any address for the purpose of testing, for production, use proper key management solutions (HSMs, multisigs addresses)
+  
 </Callout>
 
 ## Create and configure intent file
@@ -383,7 +378,7 @@ rollup/
     │   ├── rollup.json      # Rollup configuration
     │   └── state.json       # Deployment state
     ├── .env                 # Environment variables
-    └── keys/               # Generated key pairs
+    └── address/             # Generated address pairs
         ├── base_Fee_Vault_Recipient_address.txt
         ├── batcher_address.txt
         ├── l1_Fee_Vault_Recipient_address.txt
@@ -391,6 +386,8 @@ rollup/
         ├── sequencer_Fee_Vault_Recipient_address.txt
         ├── system_config_address.txt
         └── unsafe_block_signer_address.txt
+        └── admin.txt
+
 ```
 
 Now you can move on to setting up your sequencer node.

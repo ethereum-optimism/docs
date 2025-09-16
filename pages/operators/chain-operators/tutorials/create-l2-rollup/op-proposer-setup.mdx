@@ -119,13 +119,13 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       ### Set up directory structure and copy configuration files
 
       ```bash
-      # Create your proposer working directory
-      mkdir proposer-node
-      cd proposer-node
+      # Create your proposer directory inside rollup
+      cd ../    # Go back to rollup directory if you're in batcher
+      mkdir proposer
+      cd proposer
 
-      # Copy configuration files from op-deployer output
-      # Note: Adjust the path if your .deployer directory is located elsewhere
-      cp .deployer/state.json .
+      # Copy configuration files from deployer
+      cp ../deployer/.deployer/state.json .
 
       # Extract the DisputeGameFactory address
       GAME_FACTORY_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].disputeGameFactoryProxyAddress')
@@ -234,10 +234,15 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       ### Final directory structure
 
       ```bash
-      proposer-node/
-      ├── state.json             # Copied from .deployer/
-      ├── .env                   # Environment variables
-      └── docker-compose.yml     # Docker configuration
+      rollup/
+      ├── deployer/            # From previous step
+      │   └── .deployer/      # Contains state.json
+      ├── sequencer/          # From previous step
+      ├── batcher/           # From previous step
+      └── proposer/         # You are here
+          ├── state.json    # Copied from deployer
+          ├── .env          # Environment variables
+          └── docker-compose.yml # Docker configuration
       ```
     </Steps>
 
@@ -324,9 +329,10 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       Create your proposer working directory at the same level as your sequencer:
 
       ```bash
-      # Create proposer directory at the same level as your sequencer
-      mkdir proposer-node
-      cd proposer-node
+      # Create proposer directory inside rollup
+      cd ../    # Go back to rollup directory
+      mkdir proposer
+      cd proposer
 
       # Create scripts directory
       mkdir scripts
@@ -337,12 +343,11 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       Extract the `DisputeGameFactory` contract address from your op-deployer output:
 
       ```bash
-      # Navigate to proposer directory
-      cd proposer-node
+      # Make sure you're in the rollup/proposer directory
+      cd rollup/proposer
 
-      # Copy the state.json from .deployer directory created while using op-deployer
-      # Update the path if your .deployer directory is located elsewhere
-      cp ../.deployer/state.json .
+      # Copy the state.json from deployer
+      cp ../deployer/.deployer/state.json .
 
       # Extract the DisputeGameFactory address
       GAME_FACTORY_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].disputeGameFactoryProxyAddress')
@@ -403,7 +408,7 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
     source .env
 
     # Path to the op-proposer binary we built
-    ../optimism/op-proposer/bin/op-proposer \
+    ../../optimism/op-proposer/bin/op-proposer \
       --poll-interval=$POLL_INTERVAL \
       --rpc.port=$PROPOSER_RPC_PORT \
       --rpc.enable-admin \
@@ -422,15 +427,16 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
     Your final directory structure should look like:
 
     ```bash
-    
-    ├── optimism/               # Contains op-proposer binary
-    ├── sequencer-node/         # Your sequencer setup
-    ├── .deployer/              # From op-deployer
-    │   └── state.json
-    └── proposer-node/          # Your proposer working directory
-        ├── state.json          # Copied from .deployer
-        ├── .env
-        └── scripts/
+    rollup/
+    ├── deployer/              # From previous step
+    │   └── .deployer/        # Contains state.json
+    ├── optimism/             # Contains op-proposer binary
+    ├── sequencer/           # From previous step
+    ├── batcher/            # From previous step
+    └── proposer/          # You are here
+        ├── state.json     # Copied from deployer
+        ├── .env          # Environment variables
+        └── scripts/      # Startup scripts
             └── start-proposer.sh
     ```
 

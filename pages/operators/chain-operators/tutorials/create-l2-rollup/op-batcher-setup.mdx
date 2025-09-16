@@ -62,13 +62,13 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
       ### Set up directory structure and copy configuration files
 
       ```bash
-      # Create your batcher working directory
-      mkdir batcher-node
-      cd batcher-node
+      # Create your batcher directory inside rollup
+      cd ../    # Go back to rollup directory if you're in sequencer
+      mkdir batcher
+      cd batcher
 
-      # Copy configuration files from op-deployer output
-      # Note: Adjust the path if your .deployer directory is located elsewhere
-      cp .deployer/state.json .
+      # Copy configuration files from deployer
+      cp ../deployer/.deployer/state.json .
 
       # Extract the BatchInbox address
       BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].systemConfigProxyAddress')
@@ -176,10 +176,14 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
       ### Final directory structure
 
       ```bash
-      batcher-node/
-      ├── state.json             # Copied from .deployer/
-      ├── .env                   # Environment variables
-      └── docker-compose.yml     # Docker configuration
+      rollup/
+      ├── deployer/            # From previous step
+      │   └── .deployer/      # Contains genesis.json and rollup.json
+      ├── sequencer/          # From previous step
+      └── batcher/           # You are here
+          ├── state.json     # Copied from deployer
+          ├── .env           # Environment variables
+          └── docker-compose.yml # Docker configuration
       ```
     </Steps>
 
@@ -243,9 +247,10 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
       Create your batcher working directory:
 
       ```bash
-      # Create batcher directory at the same level as your sequencer
-      mkdir batcher-node
-      cd batcher-node
+      # Create batcher directory inside rollup
+      cd ../    # Go back to rollup directory
+      mkdir batcher
+      cd batcher
 
       # Create scripts directory
       mkdir scripts
@@ -254,16 +259,15 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
       Your final directory structure should look like:
 
       ```bash
-      
-      ├── optimism/               # Contains op-batcher binary
-      ├── sequencer-node/         # Your sequencer setup
-      ├── proposer-node/          # Your proposer setup
-      ├── .deployer/             # From op-deployer
-      │   └── state.json
-      └── batcher-node/          # Your batcher working directory
-          ├── state.json         # Copied from .deployer
-          ├── .env
-          └── scripts/
+      rollup/
+      ├── deployer/              # From previous step
+      │   └── .deployer/        # Contains state.json
+      ├── optimism/             # Contains op-batcher binary
+      ├── sequencer/           # From previous step
+      └── batcher/            # You are here
+          ├── state.json      # Copied from deployer
+          ├── .env           # Environment variables
+          └── scripts/       # Startup scripts
               └── start-batcher.sh
       ```
 
@@ -272,12 +276,11 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
       Extract the `BatchInbox` contract address from your op-deployer output:
 
       ```bash
-      # Navigate to batcher directory
-      cd batcher-node
+      # Make sure you're in the rollup/batcher directory
+      cd rollup/batcher
 
-      # Copy the deployment state file from op-deployer
-      # Update the path if your .deployer directory is located elsewhere
-      cp ../.deployer/state.json .
+      # Copy the deployment state file from deployer
+      cp ../deployer/.deployer/state.json .
 
       # Extract the BatchInbox address
       BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].systemConfigProxyAddress')
@@ -340,7 +343,7 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
     source .env
 
     # Path to the op-batcher binary we built
-    ../optimism/op-batcher/bin/op-batcher \
+    ../../optimism/op-batcher/bin/op-batcher \
       --l2-eth-rpc=$L2_RPC_URL \
       --rollup-rpc=$ROLLUP_RPC_URL \
       --poll-interval=$POLL_INTERVAL \
