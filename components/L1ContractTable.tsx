@@ -1,67 +1,41 @@
-import React, { useState, useEffect } from 'react'
-import { CHAIN_CONSTANTS } from '../utils/constants'
+import type { ReactElement } from 'react'
+import { useEffect, useState } from 'react'
+import { AddressTable, TableAddresses } from './AddressTable'
 
-interface Contract {
-  name: string
-  address: string
-  description?: string
-}
+const ADDRESSES_URL = 'https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/main/superchain/extra/addresses/addresses.json';
 
-interface L1ContractTableProps {
-  chain: string
-  explorer: string
-  legacy?: boolean
-}
-
-export default function L1ContractTable({ chain, explorer, legacy = false }: L1ContractTableProps) {
-  const [contracts, setContracts] = useState<Contract[]>([])
+export function L1ContractTable({
+  chain,
+  explorer,
+  legacy
+}: {
+  chain: string,
+  explorer: string,
+  legacy: boolean
+}): ReactElement {
+  const [addresses, setAddresses] = useState<Record<string, any> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchContracts = async () => {
+    async function fetchAddresses() {
       try {
-        setLoading(true)
-        setError(null)
-        
-        // Fetch from superchain-registry
-        const response = await fetch(`https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/main/packages/chain-${chain}/contracts.json`)
-        
+        const response = await fetch(ADDRESSES_URL)
         if (!response.ok) {
-          throw new Error(`Failed to fetch contracts: ${response.status}`)
+          throw new Error('Failed to fetch addresses')
         }
-        
         const data = await response.json()
-        
-        // Filter contracts based on legacy flag
-        const contractList: Contract[] = Object.entries(data)
-          .filter(([name, address]) => {
-            if (legacy) {
-              // For legacy contracts, include specific legacy contract names
-              const legacyNames = ['AddressManager', 'DeployerWhitelist', 'L1MessageSender', 'LegacyERC20ETH', 'LegacyMessagePasser', 'L1BlockNumber']
-              return legacyNames.includes(name)
-            } else {
-              // For non-legacy contracts, exclude legacy contract names
-              const legacyNames = ['AddressManager', 'DeployerWhitelist', 'L1MessageSender', 'LegacyERC20ETH', 'LegacyMessagePasser', 'L1BlockNumber']
-              return !legacyNames.includes(name)
-            }
-          })
-          .map(([name, address]) => ({
-            name,
-            address: address as string,
-          }))
-        
-        setContracts(contractList)
+        setAddresses(data)
       } catch (err) {
-        console.error('Error fetching L1 contracts:', err)
-        setError(err instanceof Error ? err.message : 'Failed to fetch contracts')
+        setError(err.message)
+        console.error('Error fetching addresses:', err)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchContracts()
-  }, [chain, legacy])
+    fetchAddresses()
+  }, [])
 
   if (loading) {
     return <div>Loading...</div>
@@ -71,45 +45,17 @@ export default function L1ContractTable({ chain, explorer, legacy = false }: L1C
     return <div>Error: {error}</div>
   }
 
-  if (contracts.length === 0) {
-    return <div>No contracts found</div>
-  }
-
-  const explorerUrl = CHAIN_CONSTANTS[parseInt(explorer)]?.explorer || 'https://etherscan.io'
-
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-800">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Contract Name
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Contract Address
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-          {contracts.map((contract) => (
-            <tr key={contract.name}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                {contract.name}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                <a
-                  href={`${explorerUrl}/address/${contract.address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-                >
-                  {contract.address}
-                </a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <AddressTable
+      chain={chain}
+      explorer={explorer}
+      legacy={legacy}
+      addresses={
+        addresses && Object.entries(addresses)
+          .find(([chainid, ]) => {
+            return chainid === chain
+          })?.[1] as TableAddresses
+      }
+    />
   )
 }
