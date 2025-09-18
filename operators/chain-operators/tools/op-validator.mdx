@@ -3,6 +3,8 @@ title: op-validator
 description: Learn how to use op-validator to validate chain configurations and deployments.
 ---
 
+import { Steps, Step } from "/snippets/steps.jsx"
+
 
 
 
@@ -21,51 +23,51 @@ These checks include:
 ## How to use op-validator
 
 <Steps>
-  ### Clone the monorepo
-
+  <Step title="Clone the monorepo">
   ```bash
-  git clone https://github.com/ethereum-optimism/optimism.git
-  ```
+    git clone https://github.com/ethereum-optimism/optimism.git
+    ```
+  </Step>
 
-  ### Build the `op-validator` binary
-
+  <Step title="Build the `op-validator` binary">
   ```bash
-  cd optimism/op-validator
-  just build
-  ```
+    cd optimism/op-validator
+    just build
+    ```
+  </Step>
 
-  ### Run the `op-validator` binary
-
+  <Step title="Run the `op-validator` binary">
   ```bash
-  ./bin/op-validator validate v1.8.0 \
-    --l1-rpc-url "https://ethereum-sepolia-rpc.publicnode.com" \
-    --absolute-prestate "0x03f89406817db1ed7fd8b31e13300444652cdb0b9c509a674de43483b2f83568" \
-    --proxy-admin "0x189aBAAaa82DfC015A588A7dbaD6F13b1D3485Bc" \
-    --system-config "0x034edD2A225f7f429A63E0f1D2084B9E0A93b538" \
-    --l2-chain-id "11155420" \
-    --fail
-  ```
+    ./bin/op-validator validate v1.8.0 \
+      --l1-rpc-url "https://ethereum-sepolia-rpc.publicnode.com" \
+      --absolute-prestate "0x03f89406817db1ed7fd8b31e13300444652cdb0b9c509a674de43483b2f83568" \
+      --proxy-admin "0x189aBAAaa82DfC015A588A7dbaD6F13b1D3485Bc" \
+      --system-config "0x034edD2A225f7f429A63E0f1D2084B9E0A93b538" \
+      --l2-chain-id "11155420" \
+      --fail
+    ```
+  </Step>
 
-  ### Understanding the output
-
+  <Step title="Understanding the output">
   In the previous command, we provided a non-standard absolute prestate. The `op-validator` returned the following output to describe the discrepancies between the provided absolute prestate and the expected prestate in the L1 smart contracts:
-
-  ```
-  |      ERROR      |          DESCRIPTION           |
-  |-----------------|--------------------------------|
-  | PDDG-40         | Permissioned dispute game      |
-  |                 | absolute prestate mismatch     |
-  | PDDG-ANCHORP-40 | Permissioned dispute game      |
-  |                 | anchor state registry root     |
-  |                 | hash mismatch                  |
-  | PLDG-40         | Permissionless dispute game    |
-  |                 | absolute prestate mismatch     |
-  | PLDG-ANCHORP-40 | Permissionless dispute game    |
-  |                 | anchor state registry root     |
-  |                 | hash mismatch                  |
-
-  Validation errors found
-  ```
+  
+    ```
+    |      ERROR      |          DESCRIPTION           |
+    |-----------------|--------------------------------|
+    | PDDG-40         | Permissioned dispute game      |
+    |                 | absolute prestate mismatch     |
+    | PDDG-ANCHORP-40 | Permissioned dispute game      |
+    |                 | anchor state registry root     |
+    |                 | hash mismatch                  |
+    | PLDG-40         | Permissionless dispute game    |
+    |                 | absolute prestate mismatch     |
+    | PLDG-ANCHORP-40 | Permissionless dispute game    |
+    |                 | anchor state registry root     |
+    |                 | hash mismatch                  |
+  
+    Validation errors found
+    ```
+  </Step>
 </Steps>
 
 ## Usage

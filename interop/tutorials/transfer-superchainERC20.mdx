@@ -5,6 +5,8 @@ description: >-
   L2ToL2CrossDomainMessenger.
 ---
 
+import { Steps, Step } from "/snippets/steps.jsx"
+
 
 
 <Info>
@@ -64,137 +66,137 @@ Note that this tutorial provides step-by-step instructions for transferring `Sup
 ## Directions
 
 <Steps>
-  ### Preparation
-
+  <Step title="Preparation">
   1.  If you are using Supersim, setup the [SuperchainERC20 starter kit](/app-developers/starter-kit#setup).
-      The `pnpm dev` step also starts Supersim.
-
-  2.  Store the configuration in environment variables.
-
-      <Tabs items={['Supersim', 'Devnets']}>
-        <Tabs.Tab>
+        The `pnpm dev` step also starts Supersim.
+  
+    2.  Store the configuration in environment variables.
+  
+        <Tabs items={['Supersim', 'Devnets']}>
+          <Tabs.Tab>
+            ```sh
+            PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+            USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+            URL_CHAIN_A=http://127.0.0.1:9545
+            URL_CHAIN_B=http://127.0.0.1:9546
+            CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+            TOKEN_ADDRESS=`cat superchainerc20-starter/packages/contracts/broadcast/multi/SuperchainERC20Deployer.s.sol-latest/run.json | jq --raw-output .deployments[0].transactions[0].contractAddress`
+            ```
+          </Tabs.Tab>
+  
+          <Tabs.Tab>
+            1.  Set `PRIVATE_KEY` to the private key for an address that has ETH on the two devnets.
+  
+            2.  Run these commands to specify the rest of the environment variables.
+  
+            ```sh
+            USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
+            URL_CHAIN_A=https://interop-alpha-0.optimism.io
+            URL_CHAIN_B=https://interop-alpha-1.optimism.io
+            CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
+            TOKEN_ADDRESS=0x0FAe7deDb9CfC2d8288d432B85998e6b263F3A72
+            ```
+          </Tabs.Tab>
+        </Tabs>
+  
+    3.  Obtain tokens on chain A.
+  
+        <Tabs items={['Supersim', 'Devnets']}>
+          <Tabs.Tab>
+            ```sh
+            ONE=`echo 1 | cast to-wei`
+            cast send $TOKEN_ADDRESS "mintTo(address,uint256)" $USER_ADDRESS $ONE --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+            ```
+          </Tabs.Tab>
+  
+          <Tabs.Tab>
+            ```sh
+            cast send $TOKEN_ADDRESS "faucet()" --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+            ```
+          </Tabs.Tab>
+        </Tabs>
+  
+        <details>
+          <summary>Sanity check</summary>
+  
+          Check that you have at least one token on chain A.
+  
           ```sh
-          PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-          USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-          URL_CHAIN_A=http://127.0.0.1:9545
-          URL_CHAIN_B=http://127.0.0.1:9546
-          CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
-          TOKEN_ADDRESS=`cat superchainerc20-starter/packages/contracts/broadcast/multi/SuperchainERC20Deployer.s.sol-latest/run.json | jq --raw-output .deployments[0].transactions[0].contractAddress`
+          cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
           ```
-        </Tabs.Tab>
+        </details>
+  </Step>
 
-        <Tabs.Tab>
-          1.  Set `PRIVATE_KEY` to the private key for an address that has ETH on the two devnets.
-
-          2.  Run these commands to specify the rest of the environment variables.
-
-          ```sh
-          USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
-          URL_CHAIN_A=https://interop-alpha-0.optimism.io
-          URL_CHAIN_B=https://interop-alpha-1.optimism.io
-          CHAIN_B_ID=`cast chain-id --rpc-url $URL_CHAIN_B`            
-          TOKEN_ADDRESS=0x0FAe7deDb9CfC2d8288d432B85998e6b263F3A72
-          ```
-        </Tabs.Tab>
-      </Tabs>
-
-  3.  Obtain tokens on chain A.
-
-      <Tabs items={['Supersim', 'Devnets']}>
-        <Tabs.Tab>
-          ```sh
-          ONE=`echo 1 | cast to-wei`
-          cast send $TOKEN_ADDRESS "mintTo(address,uint256)" $USER_ADDRESS $ONE --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
-          ```
-        </Tabs.Tab>
-
-        <Tabs.Tab>
-          ```sh
-          cast send $TOKEN_ADDRESS "faucet()" --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
-          ```
-        </Tabs.Tab>
-      </Tabs>
-
-      <details>
-        <summary>Sanity check</summary>
-
-        Check that you have at least one token on chain A.
-
+  <Step title="Transfer tokens using the command line">
+  1.  Specify configuration variables.
+  
+        ```sh
+        TENTH=`echo 0.1 | cast to-wei`
+        INTEROP_BRIDGE=0x4200000000000000000000000000000000000028      
+        ```
+  
+    2.  See your balance on both blockchains.
+  
         ```sh
         cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
+        cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei      
         ```
-      </details>
+  
+    3.  Call [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) to transfer tokens.
+  
+        ```sh
+        cast send $INTEROP_BRIDGE "sendERC20(address,address,uint256,uint256)" $TOKEN_ADDRESS $USER_ADDRESS $TENTH $CHAIN_B_ID --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+        ```
+  
+    4.  See your balance on both blockchains.
+  
+        ```sh
+        cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
+        cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei      
+        ```
+  </Step>
 
-  ### Transfer tokens using the command line
-
-  1.  Specify configuration variables.
-
-      ```sh
-      TENTH=`echo 0.1 | cast to-wei`
-      INTEROP_BRIDGE=0x4200000000000000000000000000000000000028      
-      ```
-
-  2.  See your balance on both blockchains.
-
-      ```sh
-      cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
-      cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei      
-      ```
-
-  3.  Call [`SuperchainTokenBridge`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol) to transfer tokens.
-
-      ```sh
-      cast send $INTEROP_BRIDGE "sendERC20(address,address,uint256,uint256)" $TOKEN_ADDRESS $USER_ADDRESS $TENTH $CHAIN_B_ID --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
-      ```
-
-  4.  See your balance on both blockchains.
-
-      ```sh
-      cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
-      cast call $TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei      
-      ```
-
-  ### Transfer tokens using TypeScript
-
+  <Step title="Transfer tokens using TypeScript">
   We are going to use a [Node](https://nodejs.org/en) project, to be able to use [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) to send the executing message.
-  We use [TypeScript](https://www.typescriptlang.org/) to have [type safety](https://en.wikipedia.org/wiki/Type_safety) combined with JavaScript functionality.
-
-  1.  Export environment variables
-
-      ```sh
-      export PRIVATE_KEY TOKEN_ADDRESS CHAIN_B_ID
-      ```
-
-  2.  Initialize a new Node project.
-
-      ```sh
-      mkdir xfer-erc20
-      cd xfer-erc20
-      npm init -y
-      npm install --save-dev -y viem tsx @types/node @eth-optimism/viem
-      mkdir src
-      ```
-
-  3.  Create `src/xfer-erc20.mts`:
-
-      ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts hash=2964a6dcafacb8b7dc1e115a54fb3b7c
-      ```
-
-      <details>
-        <summary>Explanation of `xfer-erc20.mts`</summary>
-
-        ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts#L76-L81 hash=b144852a4fa9ae45e79ec6f124e48e79
+    We use [TypeScript](https://www.typescriptlang.org/) to have [type safety](https://en.wikipedia.org/wiki/Type_safety) combined with JavaScript functionality.
+  
+    1.  Export environment variables
+  
+        ```sh
+        export PRIVATE_KEY TOKEN_ADDRESS CHAIN_B_ID
         ```
-
-        Use `@eth-optimism/viem`'s `walletActionsL2().sendSuperchainERC20` to send the `SuperchainERC20` tokens.
-        Internally, this function calls [`SuperchainTokenBridge.sendERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol#L52-L78) to send the tokens.
-      </details>
-
-  4.  Run the TypeScript program, and see the change in your token balances.
-
-      ```sh
-      pnpm tsx src/xfer-erc20.mts
-      ```
+  
+    2.  Initialize a new Node project.
+  
+        ```sh
+        mkdir xfer-erc20
+        cd xfer-erc20
+        npm init -y
+        npm install --save-dev -y viem tsx @types/node @eth-optimism/viem
+        mkdir src
+        ```
+  
+    3.  Create `src/xfer-erc20.mts`:
+  
+        ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts hash=2964a6dcafacb8b7dc1e115a54fb3b7c
+        ```
+  
+        <details>
+          <summary>Explanation of `xfer-erc20.mts`</summary>
+  
+          ```typescript file=<rootDir>/public/tutorials/xfer-erc20.mts#L76-L81 hash=b144852a4fa9ae45e79ec6f124e48e79
+          ```
+  
+          Use `@eth-optimism/viem`'s `walletActionsL2().sendSuperchainERC20` to send the `SuperchainERC20` tokens.
+          Internally, this function calls [`SuperchainTokenBridge.sendERC20`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol#L52-L78) to send the tokens.
+        </details>
+  
+    4.  Run the TypeScript program, and see the change in your token balances.
+  
+        ```sh
+        pnpm tsx src/xfer-erc20.mts
+        ```
+  </Step>
 </Steps>
 
 ## Next steps

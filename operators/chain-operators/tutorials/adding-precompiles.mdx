@@ -3,6 +3,8 @@ title: Adding a precompile
 description: Learn how to run an EVM with a new precompile for OP Stack chain operations to speed up calculations that are not currently supported.
 ---
 
+import { Steps, Step } from "/snippets/steps.jsx"
+
 
 
 
@@ -19,57 +21,59 @@ One possible use of OP Stack is to run an EVM with a new precompile for operatio
 To create a new precompile, the file to modify is [`op-geth/core/vm/contracts.go`](https://github.com/ethereum-optimism/op-geth/blob/optimism-history/core/vm/contracts.go).
 
 <Steps>
-  ### Add to `PrecompiledContractsBerlin` on line 82 (or a later fork, if the list of precompiles changes again)
-
+  <Step title="Add to `PrecompiledContractsBerlin` on line 82 (or a later fork, if the list of precompiles changes again)">
   *   add a structure named after your new precompile, and
-  *   use an address that is unlikely to ever clash with a standard precompile and avoids the [EIP-7587](https://eips.ethereum.org/EIPS/eip-7587) reserved range (0x1337, for example):
+    *   use an address that is unlikely to ever clash with a standard precompile and avoids the [EIP-7587](https://eips.ethereum.org/EIPS/eip-7587) reserved range (0x1337, for example):
+  
+        ```go
+        common.BytesToAddress([]byte{0x13,0x37}): &retConstant{},
+        ```
+  </Step>
 
-      ```go
-      common.BytesToAddress([]byte{0x13,0x37}): &retConstant{},
-      ```
-
-  ### Add the lines for the precompile
-
+  <Step title="Add the lines for the precompile">
   ```go
-  type retConstant struct{}
+    type retConstant struct{}
+  
+    func (c *retConstant) RequiredGas(input []byte) uint64 {
+        return uint64(1024)
+    }
+  
+    var (
+        errConstInvalidInputLength = errors.New("invalid input length")
+    )
+  
+    func (c *retConstant) Run(input []byte) ([]byte, error) {
+        // Only allow input up to four bytes (function signature)
+        if len(input) > 4 {
+            return nil, errConstInvalidInputLength
+        }
+  
+        output := make([]byte, 6)
+        for i := 0; i < 6; i++ {
+            output[i] = byte(64+i)
+        }
+        return output, nil
+    }
+    ```
+  </Step>
 
-  func (c *retConstant) RequiredGas(input []byte) uint64 {
-      return uint64(1024)
-  }
-
-  var (
-      errConstInvalidInputLength = errors.New("invalid input length")
-  )
-
-  func (c *retConstant) Run(input []byte) ([]byte, error) {
-      // Only allow input up to four bytes (function signature)
-      if len(input) > 4 {
-          return nil, errConstInvalidInputLength
-      }
-
-      output := make([]byte, 6)
-      for i := 0; i < 6; i++ {
-          output[i] = byte(64+i)
-      }
-      return output, nil
-  }
-  ```
-
-  ### Stop `op-geth` and recompile:
-
+  <Step title="Stop `op-geth` and recompile:">
   ```bash
-  cd ~/op-geth
-  make geth
-  ```
+    cd ~/op-geth
+    make geth
+    ```
+  </Step>
 
-  ### Restart `op-geth`
+  <Step title="Restart `op-geth`">
+  
+  </Step>
 
-  ### Run these commands to see the result of calling the precompile successfully, and the result of an error:
-
+  <Step title="Run these commands to see the result of calling the precompile successfully, and the result of an error:">
   ```bash
-  cast call 0x0000000000000000000000000000000000001337 "whatever()"
-  cast call 0x0000000000000000000000000000000000001337 "whatever(string)" "fail"
-  ```
+    cast call 0x0000000000000000000000000000000000001337 "whatever()"
+    cast call 0x0000000000000000000000000000000000001337 "whatever(string)" "fail"
+    ```
+  </Step>
 </Steps>
 
 ## How does it work?

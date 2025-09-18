@@ -3,6 +3,8 @@ title: Making crosschain contract calls (ping pong)
 description: Learn how to make crosschain contract calls using ping pong.
 ---
 
+import { Steps, Step } from "/snippets/steps.jsx"
+
 
 
 <Info>Superchain interop is in active development. Some features may be experimental.</Info>
@@ -47,28 +49,28 @@ sequenceDiagram
 ### Flow
 
 <Steps>
-  ### Contract Deployment
-
+  <Step title="Contract Deployment">
   *   Deployed on all participating chains
-  *   Utilizes CREATE2 with the same parameter, `_serverChainId`, resulting in the same address and initial state.
+    *   Utilizes CREATE2 with the same parameter, `_serverChainId`, resulting in the same address and initial state.
+  </Step>
 
-  ### Hit the Ball (Starting Move)
-
+  <Step title="Hit the Ball (Starting Move)">
   *   Call `hitBallTo` on the chain with the ball, specifying a destination chain.
-  *   Contract uses `L2ToL2CrossDomainMessenger` to send the ball data to the specified chain.
-  *   The reference to the ball is deleted from the serving chain.
+    *   Contract uses `L2ToL2CrossDomainMessenger` to send the ball data to the specified chain.
+    *   The reference to the ball is deleted from the serving chain.
+  </Step>
 
-  ### Receive on Destination Chain
-
+  <Step title="Receive on Destination Chain">
   *   `L2ToL2CrossDomainMessenger` on destination chain calls `receiveBall`.
-  *   Contract verifies the message sender and origin.
-  *   Ball data is stored, indicating its presence on this chain.
+    *   Contract verifies the message sender and origin.
+    *   Ball data is stored, indicating its presence on this chain.
+  </Step>
 
-  ### Continue Game (Hit)
-
+  <Step title="Continue Game (Hit)">
   *   Any user on the chain currently holding the ball calls `hitBallTo` to send it to another chain.
-  *   Contract updates the `PingPongBall` data (increment rally count, update last hitter).
-  *   Process repeats from step 2.
+    *   Contract updates the `PingPongBall` data (increment rally count, update last hitter).
+    *   Process repeats from step 2.
+  </Step>
 </Steps>
 
 ## Walkthrough

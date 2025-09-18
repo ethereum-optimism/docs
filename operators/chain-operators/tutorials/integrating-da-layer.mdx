@@ -3,6 +3,8 @@ title: Integrating a new DA layer with Alt-DA
 description: Learn how to add support for a new DA Layer within the OP Stack.
 ---
 
+import { Steps, Step } from "/snippets/steps.jsx"
+
 
 
 
@@ -20,25 +22,24 @@ description: Learn how to add support for a new DA Layer within the OP Stack.
 Our suggestion is for every DA Layer to build and maintain their own DA Server, with support from the OP Labs team along the way. The DA Server will need to be run by every node operator, so we highly recommend making your DA Server open source and MIT licensed.
 
 <Steps>
-  ### Design your commitment binary encoding
-
+  <Step title="Design your commitment binary encoding">
   *   It must point to the data on your layer (like block height / hash).
-  *   It must be able to validate the data returned from the data (i.e., include a cryptographic commitment to the data like a hash, merkle proof, or polynomial commitment, this could be done against the block hash with a complex proof).
+    *   It must be able to validate the data returned from the data (i.e., include a cryptographic commitment to the data like a hash, merkle proof, or polynomial commitment, this could be done against the block hash with a complex proof).
+  
+    <Info>
+      See the [specs](https://specs.optimism.io/experimental/alt-da.html?highlight=input-commitment-submission?utm_source=op-docs&utm_medium=docs#input-commitment-submission) for more info on commitment submission.
+    </Info>
+  </Step>
 
-  <Info>
-    See the [specs](https://specs.optimism.io/experimental/alt-da.html?highlight=input-commitment-submission?utm_source=op-docs&utm_medium=docs#input-commitment-submission) for more info on commitment submission.
-  </Info>
-
-  ### Claim your da\_layer byte
-
+  <Step title="Claim your da\_layer byte">
   *   Claim your [byte](https://github.com/ethereum-optimism/specs/discussions/135)
+  </Step>
 
-  ### Implement the DA server
-
+  <Step title="Implement the DA server">
   *   Write a simple HTTP server which supports `get` and `put`
-  *   `put` is used by the batcher and can return the commitment to the batcher in the body. It should not return until the data is known to be submitted to your DA layer.
-  *   `get` should fetch the data. If the data is not available, it should return a `404` not found. If there are other errors, a different error should be returned.
-
+    *   `put` is used by the batcher and can return the commitment to the batcher in the body. It should not return until the data is known to be submitted to your DA layer.
+    *   `get` should fetch the data. If the data is not available, it should return a `404` not found. If there are other errors, a different error should be returned.
+  </Step>
 </Steps>
 
 ## Run Alt-DA

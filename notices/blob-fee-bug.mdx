@@ -3,6 +3,8 @@ title: Superchain testnets' blob fee bug
 description: Learn about the blob fee bug that effects OP Stack testnets on the Superchain and how to fix it.
 ---
 
+import { Steps, Step } from "/snippets/steps.jsx"
+
 
 
 
@@ -47,38 +49,38 @@ The node operators for these chains should use the network flags (`--network` an
 The following chains are in the Superchain Registry and are not opted into the hardfork activation inheritance behavior: `Arena-Z Sepolia`, `Cyber Sepolia`, `Funki Sepolia`, `Lisk Sepolia`, `Pivotal Sepolia`, `Race Sepolia`, `Shape Sepolia`, `TBN Sepolia`, and `Worldchain Sepolia`. These chains and any other OP Stack testnet that is not included in the lists above will need to manually set the hardfork activation time for their network to activate on. These following steps are necessary for every node operator:
 
 <Steps>
-  ### Update to the latest release
-
+  <Step title="Update to the latest release">
   <Info>
-    You must configure your op-node to utilize the activation timestamp outlined in step 2 at the same time as upgrading your node binary. This is to ensure that the hardfork is activated uniformly across the network. If the Pectra Blob Schedule flag is not set, your node will either not start or automatically apply the hardfork at startup causing the node to fork from the rest of the network.
-  </Info>
+      You must configure your op-node to utilize the activation timestamp outlined in step 2 at the same time as upgrading your node binary. This is to ensure that the hardfork is activated uniformly across the network. If the Pectra Blob Schedule flag is not set, your node will either not start or automatically apply the hardfork at startup causing the node to fork from the rest of the network.
+    </Info>
+  
+    The following `op-node/v1.12.2` adds a kill-switch to op-node to print an error at startup if the Pectra Blob Schedule Fix time is not set for a Sepolia or Holesky chain. The check only happens if the chain's genesis is before the Holesky/Sepolia Pectra activation time. The check can be disabled with a hidden flag.
+  
+    The purpose of the kill-switch is to make sure that node operators don't accidentally upgrade their nodes without scheduling the fix because most Holesky and Sepolia chains were running a sequencer that ran into the Pectra Blob Schedule bug. So it's better to not start op-node in such cases at all rather than accidentally forking the chain.
+  
+    The `op-node/v1.12.1` and `op-node/v1.12.0` binaries do not have this kill-switch and will automatically apply the hardfork at startup if there is no Pectra Blob Schedule Fix time set.
+  
+    *   `op-node` at [`v1.12.2`](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.12.2)
+    *   `op-geth` at [`v1.101503.1`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101503.1)
+  </Step>
 
-  The following `op-node/v1.12.2` adds a kill-switch to op-node to print an error at startup if the Pectra Blob Schedule Fix time is not set for a Sepolia or Holesky chain. The check only happens if the chain's genesis is before the Holesky/Sepolia Pectra activation time. The check can be disabled with a hidden flag.
-
-  The purpose of the kill-switch is to make sure that node operators don't accidentally upgrade their nodes without scheduling the fix because most Holesky and Sepolia chains were running a sequencer that ran into the Pectra Blob Schedule bug. So it's better to not start op-node in such cases at all rather than accidentally forking the chain.
-
-  The `op-node/v1.12.1` and `op-node/v1.12.0` binaries do not have this kill-switch and will automatically apply the hardfork at startup if there is no Pectra Blob Schedule Fix time set.
-
-  *   `op-node` at [`v1.12.2`](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.12.2)
-  *   `op-geth` at [`v1.101503.1`](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101503.1)
-
-  ### Update the hardfork activation time
-
+  <Step title="Update the hardfork activation time">
   <Info>
-    If you are operating a node for an OP Chain that has opted into the [hardfork activation inheritance behavior](https://github.com/ethereum-optimism/superchain-registry/blob/main/docs/hardfork-activation-inheritance.md), the Pectra Blob Schedule Fix activation date is part of the op-node node. So, no action is needed for the sequencer after upgrading to the latest release, assuming you're using the network flags.
+      If you are operating a node for an OP Chain that has opted into the [hardfork activation inheritance behavior](https://github.com/ethereum-optimism/superchain-registry/blob/main/docs/hardfork-activation-inheritance.md), the Pectra Blob Schedule Fix activation date is part of the op-node node. So, no action is needed for the sequencer after upgrading to the latest release, assuming you're using the network flags.
+  
+      That is: `OP Sepolia`, `Soneium Minato`, `Zora Sepolia`, `Unichain Sepolia`, `Base Sepolia`, `Mode Sepolia`, `Metal Sepolia`, `Creator Chain Sepolia`, `Ink Sepolia`, and `Ethernity Sepolia`.
+    </Info>
+  
+    For chains that are not opted into the hardfork activation inheritance behavior, you will need to manually set the hardfork activation time. This can be done one of two ways:
+  
+    *   **Option 1:** Set the activation time in the `rollup.json` for `op-node`. You do not need to set any configurations in `op-geth`.
+  
+    *   **Option 2:** Set the activation time via overrides (CLI) in the `op-node`. These will need to be set on `op-node` for the sequencer and all other nodes. The override flag looks like this: `--override.pectrablobschedule=1742486400`.
+  </Step>
 
-    That is: `OP Sepolia`, `Soneium Minato`, `Zora Sepolia`, `Unichain Sepolia`, `Base Sepolia`, `Mode Sepolia`, `Metal Sepolia`, `Creator Chain Sepolia`, `Ink Sepolia`, and `Ethernity Sepolia`.
-  </Info>
-
-  For chains that are not opted into the hardfork activation inheritance behavior, you will need to manually set the hardfork activation time. This can be done one of two ways:
-
-  *   **Option 1:** Set the activation time in the `rollup.json` for `op-node`. You do not need to set any configurations in `op-geth`.
-
-  *   **Option 2:** Set the activation time via overrides (CLI) in the `op-node`. These will need to be set on `op-node` for the sequencer and all other nodes. The override flag looks like this: `--override.pectrablobschedule=1742486400`.
-
-  ### Update the Superchain Registry 
-
+  <Step title="Update the Superchain Registry">
   If your Pectra Blob Schedule fix activation time is not in the Superchain Registry, decide on a hardfork activation time, and open a PR update the Superchain Registry with the activation time. See this [PR](https://github.com/ethereum-optimism/superchain-registry/pull/941) as an example.
+  </Step>
 </Steps>
 
 ## Fixing diverged nodes 
@@ -88,32 +90,32 @@ If you upgraded your node binary to `op-node/v1.12.1` or `op-node/v1.12.0` and d
 To fix this, you can either restore your node from a snapshot and configure the Pectra Blob Schedule Fix activation time. Or you can use [`op-wheel`](https://github.com/ethereum-optimism/optimism/tree/develop/op-wheel) to roll back your node to a block before you diverged from the network.
 
 <Steps>
-  ### Stop the node 
-
+  <Step title="Stop the node">
   *   Stop op-node: This component is stateless, so you can simply terminate the process.
-  Stop op-geth: It's crucial to use `Ctrl+C` to stop op-geth gracefully to avoid database corruption. An unclean shutdown can lead to various problems when restarting.
+    Stop op-geth: It's crucial to use `Ctrl+C` to stop op-geth gracefully to avoid database corruption. An unclean shutdown can lead to various problems when restarting.
+  </Step>
 
-  ### Query `op-geth` for a block to reorg to
-
+  <Step title="Query `op-geth` for a block to reorg to">
   ```
-  cast block --rpc-url=http://localhost:8545 6185373
-  #hash: 0x8b39f479198a5e658bbb28b1ce80790ca863ac39206c36152ba5c38db68989b2
-  #timestamp: 1735565082
-  # 6185373 in hex is 0x5E619D
-  ```
+    cast block --rpc-url=http://localhost:8545 6185373
+    #hash: 0x8b39f479198a5e658bbb28b1ce80790ca863ac39206c36152ba5c38db68989b2
+    #timestamp: 1735565082
+    # 6185373 in hex is 0x5E619D
+    ```
+  </Step>
 
-  ### Reorg the chain 
-
+  <Step title="Reorg the chain">
   ```
-  cast rpc --rpc-url=http://localhost:8545 debug_setHead 0x5E619D
-  ```
-  ### Explicitly set the forkchoice to the new head 
+    cast rpc --rpc-url=http://localhost:8545 debug_setHead 0x5E619D
+    ```
+  </Step>
 
+  <Step title="Explicitly set the forkchoice to the new head">
   For example: 
-
-  ```
-  go run ./op-wheel/cmd engine set-forkchoice --engine=http://localhost:8551 --engine.jwt-secret=.jwt_secret.txt --finalized=6185373 --safe=6185373 --unsafe=6185373
-  ```
-
+  
+    ```
+    go run ./op-wheel/cmd engine set-forkchoice --engine=http://localhost:8551 --engine.jwt-secret=.jwt_secret.txt --finalized=6185373 --safe=6185373 --unsafe=6185373
+    ```
+  </Step>
 </Steps>
 

@@ -3,6 +3,8 @@ title: Spinning up the batcher
 description: Learn how to set up and configure an OP Stack batcher to submit L2 transaction batches to L1.
 ---
 
+import { Steps, Step } from "/snippets/steps.jsx"
+
 
 
 
@@ -359,34 +361,34 @@ source .env
 Ensure your sequencer and rollup node are running:
 
 <Steps>
-  ### Test L1 connectivity
-
+  <Step title="Test L1 connectivity">
   ```bash
-  # Note: Make sure you have exported these environment variables to your current shell session:
-  # export L1_RPC_URL="https://sepolia.infura.io/v3/YOUR_KEY"
-  # export L2_RPC_URL="http://localhost:8545"  
-  # export ROLLUP_RPC_URL="http://localhost:8547"
+    # Note: Make sure you have exported these environment variables to your current shell session:
+    # export L1_RPC_URL="https://sepolia.infura.io/v3/YOUR_KEY"
+    # export L2_RPC_URL="http://localhost:8545"  
+    # export ROLLUP_RPC_URL="http://localhost:8547"
+  
+    curl -X POST -H "Content-Type: application/json" \
+      --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+      $L1_RPC_URL
+    ```
+  </Step>
 
-  curl -X POST -H "Content-Type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-    $L1_RPC_URL
-  ```
-
-  ### Test L2 connectivity
-
+  <Step title="Test L2 connectivity">
   ```bash
-  curl -X POST -H "Content-Type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-    $L2_RPC_URL
-  ```
+    curl -X POST -H "Content-Type: application/json" \
+      --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+      $L2_RPC_URL
+    ```
+  </Step>
 
-  ### Test rollup node connectivity
-
+  <Step title="Test rollup node connectivity">
   ```bash
-  curl -X POST -H "Content-Type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"optimism_syncStatus","params":[],"id":1}' \
-    $ROLLUP_RPC_URL
-  ```
+    curl -X POST -H "Content-Type: application/json" \
+      --data '{"jsonrpc":"2.0","method":"optimism_syncStatus","params":[],"id":1}' \
+      $ROLLUP_RPC_URL
+    ```
+  </Step>
 </Steps>
 
 ### 2. Start the batcher

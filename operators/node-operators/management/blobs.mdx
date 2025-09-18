@@ -3,6 +3,8 @@ title: Using blobs
 description: Learn how to handle blobs for your node.
 ---
 
+import { Steps, Step } from "/snippets/steps.jsx"
+
 
 
 
@@ -19,68 +21,67 @@ This means node operators will need access to a beacon node/consensus client
 These steps are necessary for EVERY node operator:
 
 <Steps>
-### Update to the latest release
+  <Step title="Update to the latest release">
+  See the [Software Releases](/operators/node-operators/releases) page for the minimum release version.
+  </Step>
 
-See the [Software Releases](/operators/node-operators/releases) page for the minimum release version.
+  <Step title="Configure the Ecotone activation date">
+  *   If you are operating a node for an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json), 
+  the Ecotone activation date is handled automatically by both execution clients:
+  
+  <Tabs items={['op-geth', 'Nethermind']}>
+    <Tabs.Tab>
+      The activation date is part of the node configuration. No action needed after upgrading to the latest release.
+    </Tabs.Tab>
+    <Tabs.Tab>
+      The activation date is included in the built-in chain configuration. No action needed after upgrading to the latest release.
+    </Tabs.Tab>
+  </Tabs>
+  
+  *   For node operators of custom chains not included in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json):
+  
+  <Tabs items={['op-geth', 'Nethermind']}>
+    <Tabs.Tab>
+      Set the activation time in `rollup.json` (`ecotone_time`) and via CLI overrides
+    </Tabs.Tab>
+    <Tabs.Tab>
+      Use the chain configuration examples in `src/Nethermind/Chains` as templates for your custom chain configuration
+    </Tabs.Tab>
+  </Tabs>
+  
+  <Info>
+    When using `op-geth`, even if the ecotone activation is configured via the `rollup.json`, it still 
+    needs to be configured separately via command line flag.
+  </Info>
+  
+  <Tabs items={['op-node', 'op-geth']}>
+    <Tabs.Tab>
+      ```shell
+      --override.ecotone value            (default: 0)                       ($OP_NODE_OVERRIDE_ECOTONE)
+                Manually specify the Ecotone fork timestamp, overriding the bundled setting
+      ```
+    </Tabs.Tab>
+  
+    <Tabs.Tab>
+      ```shell
+      --override.ecotone value            (default: 0)                       ($GETH_OVERRIDE_ECOTONE)
+                Manually specify the Optimism Ecotone fork timestamp, overriding the bundled
+                setting
+      ```
+    </Tabs.Tab>
+  </Tabs>
+  </Step>
 
-### Configure the Ecotone activation date
-
-*   If you are operating a node for an OP Chain that has an entry in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json), 
-the Ecotone activation date is handled automatically by both execution clients:
-
-<Tabs items={['op-geth', 'Nethermind']}>
-  <Tabs.Tab>
-    The activation date is part of the node configuration. No action needed after upgrading to the latest release.
-  </Tabs.Tab>
-  <Tabs.Tab>
-    The activation date is included in the built-in chain configuration. No action needed after upgrading to the latest release.
-  </Tabs.Tab>
-</Tabs>
-
-*   For node operators of custom chains not included in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json):
-
-<Tabs items={['op-geth', 'Nethermind']}>
-  <Tabs.Tab>
-    Set the activation time in `rollup.json` (`ecotone_time`) and via CLI overrides
-  </Tabs.Tab>
-  <Tabs.Tab>
-    Use the chain configuration examples in `src/Nethermind/Chains` as templates for your custom chain configuration
-  </Tabs.Tab>
-</Tabs>
-
-<Info>
-  When using `op-geth`, even if the ecotone activation is configured via the `rollup.json`, it still 
-  needs to be configured separately via command line flag.
-</Info>
-
-<Tabs items={['op-node', 'op-geth']}>
-  <Tabs.Tab>
-    ```shell
-    --override.ecotone value            (default: 0)                       ($OP_NODE_OVERRIDE_ECOTONE)
-              Manually specify the Ecotone fork timestamp, overriding the bundled setting
-    ```
-  </Tabs.Tab>
-
-  <Tabs.Tab>
-    ```shell
-    --override.ecotone value            (default: 0)                       ($GETH_OVERRIDE_ECOTONE)
-              Manually specify the Optimism Ecotone fork timestamp, overriding the bundled
-              setting
-    ```
-  </Tabs.Tab>
-</Tabs>
-
-### Prepare for activation
-
-*   All node operators must set an L1 beacon value in your `op-node` as soon as you update to the latest release.
-
-```shell
---l1.beacon value                                                      ($OP_NODE_L1_BEACON)
-          HTTP endpoint Address of L1 Beacon-node.
-```
-
-*   Either run your own L1 beacon node like [Lighthouse](https://lighthouse-book.sigmaprime.io/run_a_node.html) or use a third-party beacon node RPC service, like [Quicknode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
-
+  <Step title="Prepare for activation">
+  *   All node operators must set an L1 beacon value in your `op-node` as soon as you update to the latest release.
+  
+  ```shell
+  --l1.beacon value                                                      ($OP_NODE_L1_BEACON)
+            HTTP endpoint Address of L1 Beacon-node.
+  ```
+  
+  *   Either run your own L1 beacon node like [Lighthouse](https://lighthouse-book.sigmaprime.io/run_a_node.html) or use a third-party beacon node RPC service, like [Quicknode](https://www.quicknode.com/docs/ethereum/eth-v1-beacon-genesis).
+  </Step>
 </Steps>
 
 ## Configure a blob archiver
