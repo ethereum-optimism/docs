@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+// React hooks are available globally in Mintlify
+const { useState, useEffect } = React;
 
 export const Footer = () => {
   const footerStyle = {

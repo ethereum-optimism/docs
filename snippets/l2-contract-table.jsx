@@ -1,4 +1,4 @@
-import { AddressTable } from "./address-table.jsx"
+import { AddressTable } from "/snippets/address-table.jsx"
 
 export const L2ContractTable = ({ chain, legacy }) => {
   // L2 predeploy addresses are standard across all OP Stack chains

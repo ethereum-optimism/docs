@@ -1,3 +1,6 @@
+// React hooks are available globally in Mintlify
+const { useState, useEffect } = React;
+
 export const AskAIButton = () => {
   const [mounted, setMounted] = useState(false);
   

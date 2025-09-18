@@ -1,3 +1,6 @@
+// React hooks are available globally in Mintlify
+const { useState, useEffect } = React;
+
 export const TokenListTable = ({ l1, l2 }) => {
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(true);

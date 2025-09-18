@@ -1,3 +1,6 @@
+// React hooks are available globally in Mintlify
+const { useState } = React;
+
 export const SearchBox = ({ onSearch, placeholder = "Search..." }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);

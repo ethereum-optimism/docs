@@ -1,4 +1,7 @@
-import { AddressTable } from "./address-table.jsx"
+import { AddressTable } from "/snippets/address-table.jsx"
+
+// React hooks are available globally in Mintlify
+const { useState, useEffect } = React;
 
 export const L1ContractTable = ({ chain, explorer, legacy }) => {
   const [addresses, setAddresses] = useState({})

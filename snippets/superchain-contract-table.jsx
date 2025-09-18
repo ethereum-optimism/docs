@@ -1,4 +1,7 @@
-import { AddressTable } from "./address-table.jsx"
+import { AddressTable } from "/snippets/address-table.jsx"
+
+// React hooks are available globally in Mintlify
+const { useState, useEffect } = React;
 
 function getConfigUrl(chain) {
   const isTestnet = chain === '11155111';

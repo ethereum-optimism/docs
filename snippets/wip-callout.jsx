@@ -1,3 +1,6 @@
+// React hooks are available globally in Mintlify
+const { useState } = React;
+
 /**
  * The WipCallout function renders a custom callout component with optional context text for
  * displaying maintenance messages.

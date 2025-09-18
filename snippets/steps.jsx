@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// React hooks are available globally in Mintlify
+const { useState } = React;
 
 export const Steps = ({ children }) => {
   const stepsStyle = {

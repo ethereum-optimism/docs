@@ -1,7 +1,10 @@
-import { TextInput } from "./calculator/text-input.jsx"
-import { SelectInput } from "./calculator/select-input.jsx"
-import { Loader } from "./calculator/loader.jsx"
-import { ResultsTable } from "./calculator/results-table.jsx"
+import { TextInput } from "/snippets/calculator/text-input.jsx"
+import { SelectInput } from "/snippets/calculator/select-input.jsx"
+import { Loader } from "/snippets/calculator/loader.jsx"
+import { ResultsTable } from "/snippets/calculator/results-table.jsx"
+
+// React hooks are available globally in Mintlify
+const { useState } = React;
 
 export const ChainParametersForm = () => {
   const [transactionsPerDay, setTransactionsPerDay] = useState(500000);
