@@ -1,8 +1,5 @@
 import { AddressTable } from "/snippets/address-table.jsx"
 
-// React hooks are available globally in Mintlify
-const { useState, useEffect } = React;
-
 function getConfigUrl(chain) {
   const isTestnet = chain === '11155111';
   const network = isTestnet ? 'sepolia' : 'mainnet';
@@ -44,11 +41,11 @@ function extractAddresses(obj) {
 }
 
 export const SuperchainContractTable = ({ chain, explorer }) => {
-  const [config, setConfig] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [config, setConfig] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     async function fetchAddresses() {
       try {
         const configUrl = getConfigUrl(chain);

@@ -3,21 +3,18 @@ import { SelectInput } from "/snippets/calculator/select-input.jsx"
 import { Loader } from "/snippets/calculator/loader.jsx"
 import { ResultsTable } from "/snippets/calculator/results-table.jsx"
 
-// React hooks are available globally in Mintlify
-const { useState } = React;
-
 export const ChainParametersForm = () => {
-  const [transactionsPerDay, setTransactionsPerDay] = useState(500000);
-  const [comparableTransactionType, setComparableTransactionType] = useState("General OP Mainnet");
-  const [dataAvailabilityType, setDataAvailabilityType] = useState("Ethereum");
-  const [isFaultProofEnabled, setIsFaultProofEnabled] = useState("yes");
-  const [targetDataFeeMargin, setTargetDataFeeMargin] = useState(5);
-  const [maxBlobsPerL1Transaction, setMaxBlobsPerL1Transaction] = useState(5);
-  const [maxChannelDuration, setMaxChannelDuration] = useState(5);
-  const [outputRootPostFrequency, setOutputRootPostFrequency] = useState(1);
-  const [isIncludeOutputRootCosts, setIsIncludeOutputRootCosts] = useState("yes");
-  const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState(null);
+  const [transactionsPerDay, setTransactionsPerDay] = React.useState(500000);
+  const [comparableTransactionType, setComparableTransactionType] = React.useState("General OP Mainnet");
+  const [dataAvailabilityType, setDataAvailabilityType] = React.useState("Ethereum");
+  const [isFaultProofEnabled, setIsFaultProofEnabled] = React.useState("yes");
+  const [targetDataFeeMargin, setTargetDataFeeMargin] = React.useState(5);
+  const [maxBlobsPerL1Transaction, setMaxBlobsPerL1Transaction] = React.useState(5);
+  const [maxChannelDuration, setMaxChannelDuration] = React.useState(5);
+  const [outputRootPostFrequency, setOutputRootPostFrequency] = React.useState(1);
+  const [isIncludeOutputRootCosts, setIsIncludeOutputRootCosts] = React.useState("yes");
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [results, setResults] = React.useState(null);
 
   const comparableTransactionTypeOptions = [
     "General OP Mainnet",

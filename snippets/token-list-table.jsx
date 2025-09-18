@@ -1,10 +1,7 @@
-// React hooks are available globally in Mintlify
-const { useState, useEffect } = React;
-
 export const TokenListTable = ({ l1, l2 }) => {
-  const [tokens, setTokens] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [tokens, setTokens] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
 
   const explorers = {
     '1': 'https://etherscan.io',
@@ -15,7 +12,7 @@ export const TokenListTable = ({ l1, l2 }) => {
     '11155420': 'https://testnet-explorer.optimism.io/',
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     async function fetchTokenList() {
       try {
         // Fetch from the Optimism token list

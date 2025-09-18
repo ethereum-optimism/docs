@@ -1,5 +1,4 @@
-// React hooks are available globally in Mintlify
-const { useState, useEffect } = React;
+// Footer component for Mintlify
 
 export const Footer = () => {
   const footerStyle = {

@@ -1,14 +1,11 @@
 import { AddressTable } from "/snippets/address-table.jsx"
 
-// React hooks are available globally in Mintlify
-const { useState, useEffect } = React;
-
 export const L1ContractTable = ({ chain, explorer, legacy }) => {
-  const [addresses, setAddresses] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [addresses, setAddresses] = React.useState({})
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     async function fetchAddresses() {
       try {
         const response = await fetch('https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/main/superchain/extra/addresses/addresses.json')
