@@ -89,16 +89,16 @@ There are a couple of ways to install `op-deployer`:
       tar -xvzf /Users/USERNAME/Downloads/op-deployer-0.2.6-darwin-arm64.tar.gz
 
       # Step 2: Make the binary executable
-      chmod +x op-deployer
+      chmod +x op-deployer-0.2.6-darwin-arm64
 
       # Step 3: Remove macOS quarantine attribute (fixes "can't be opened" warning)
-      sudo xattr -dr com.apple.quarantine op-deployer
+      sudo xattr -dr com.apple.quarantine op-deployer-0.2.6-darwin-arm64
 
       # Step 4: Move the binary to your PATH
       # For Intel Macs:
-      sudo mv op-deployer /usr/local/bin/
+      sudo mv op-deployer-0.2.6-darwin-arm64 /usr/local/bin/
       # For Apple Silicon Macs:
-      # sudo mv op-deployer /opt/homebrew/bin/
+      # sudo mv op-deployer-0.2.6-darwin-arm64 /opt/homebrew/bin/
 
       # Step 7: Verify installation (should print version info)
       op-deployer --version
@@ -148,7 +148,7 @@ Before deploying your L1 contracts, you'll need:
 
 ## Generate deployment addresses
 
-Your rollup needs several key pairs for different roles. Let's generate them first:
+Your rollup needs several addresses for different roles. Let's generate them first:
 
 <Steps>
   ### Create address directory
@@ -169,7 +169,7 @@ Your rollup needs several key pairs for different roles. Let's generate them fir
   ### Generate address for each role
 
   ```bash
-  # Generate 7 new Ethereum accounts
+  # Generate 8 new wallet addresses
   for role in admin base_Fee_Vault_Recipient l1_Fee_Vault_Recipient sequencer_Fee_Vault_Recipient system_config unsafe_block_signer batcher proposer ; do
       wallet_output=$(cast wallet new)
       echo "$wallet_output" | grep "Address:" | awk '{print $2}' > ${role}_address.txt
@@ -295,7 +295,7 @@ The intent file defines your chain's configuration.
 
 ## Create environment file
 
-Before deploying, create a `.env` file in your `deployer` directory to store your sensitive configuration:
+Before deploying, create a `.env` file in your `deployer` directory to store your environment variables:
 
 ```bash
 # Create .env file
@@ -305,7 +305,7 @@ L1_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY
 
 # Private key for deployment.
 # Get this from your self-custody wallet, like Metamask.
-PRIVATE_KEY= WALLET_PRIVATE_KEY
+PRIVATE_KEY=WALLET_PRIVATE_KEY
 EOF
 ```
 
@@ -352,20 +352,16 @@ After successful deployment, generate your chain configuration files:
 # Generate genesis and rollup configs
 op-deployer inspect genesis --workdir .deployer <YOUR_CHAIN_ID> > .deployer/genesis.json
 op-deployer inspect rollup --workdir .deployer <YOUR_CHAIN_ID> > .deployer/rollup.json
-
-# Get L1 contract addresses (save these!)
-op-deployer inspect l1 --workdir .deployer <YOUR_CHAIN_ID> > .deployer/l1-contracts.json
 ```
 
 ## What's Next?
 
 Great! You've successfully:
 
-1.  Installed `op-deployer`
-2.  Generated necessary key pairs
-3.  Created and configured your intent file
-4.  Deployed L1 smart contracts
-5.  Generated chain configuration files
+1.  Installed `op-deployer` using the `init` and `apply` command.
+2.  Created and configured your intent file
+3.  Deployed L1 smart contracts
+4.  Generated chain artifacts
 
 Your final directory structure should look like this:
 ```bash
@@ -374,7 +370,6 @@ rollup/
     ├── .deployer/           # Contains deployment state and configs
     │   ├── genesis.json     # L2 genesis configuration
     │   ├── intent.toml      # Your chain configuration
-    │   ├── l1-contracts.json # Deployed contract addresses
     │   ├── rollup.json      # Rollup configuration
     │   └── state.json       # Deployment state
     ├── .env                 # Environment variables
