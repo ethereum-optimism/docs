@@ -113,7 +113,7 @@ If you prefer containerized deployment, you can use the official Docker images.
   cp ~/.deployer/state.json .
 
   # Extract the BatchInbox address
-  BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].systemConfigProxyAddress')
+  BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].SystemConfigProxy')
   echo "BatchInbox Address: $BATCH_INBOX_ADDRESS"
   ```
 
@@ -126,14 +126,14 @@ If you prefer containerized deployment, you can use the official Docker images.
   L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
 
   # L2 Configuration - Should match your sequencer setup
-  L2_RPC_URL=http://sequencer-node:8545
-  ROLLUP_RPC_URL=http://sequencer-node:8547
+  L2_RPC_URL=http://op-geth:8545
+  ROLLUP_RPC_URL=http://op-node:8547
 
   # Contract addresses - Extract from your op-deployer output
   BATCH_INBOX_ADDRESS=YOUR_ACTUAL_BATCH_INBOX_ADDRESS
 
   # Private key - Replace with your actual private key
-  BATCHER_PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
+  BATCHER_PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
 
   # Batcher configuration
   POLL_INTERVAL=1s
@@ -158,7 +158,6 @@ If you prefer containerized deployment, you can use the official Docker images.
   </Callout>
 
   ```yaml
-  version: '3.8'
 
 services:
   op-batcher:
@@ -232,212 +231,6 @@ services:
   If you chose Docker, refer to the collapsible section.
 </Callout>
 
-## Configuration setup
-
-### 1. Organize your workspace
-
-Create your batcher working directory:
-
-```bash
-# Create batcher directory at the same level as your sequencer
-mkdir batcher-node
-cd batcher-node
-
-# Create scripts directory
-mkdir scripts
-```
-
-Your final directory structure should look like:
-
-```bash
-~/
-├── optimism/               # Contains op-batcher binary
-├── sequencer-node/         # Your sequencer setup
-├── proposer-node/          # Your proposer setup
-├── .deployer/             # From op-deployer
-│   └── state.json
-└── batcher-node/          # Your batcher working directory
-    ├── state.json         # Copied from .deployer
-    ├── .env
-    └── scripts/
-        └── start-batcher.sh
-```
-
-### 2. Extract `BatchInbox` address
-
-Extract the `BatchInbox` contract address from your op-deployer output:
-
-```bash
-# Navigate to batcher directory
-cd ~/batcher-node
-
-# Copy the deployment state file from op-deployer
-# Update the path if your .deployer directory is located elsewhere
-cp ../.deployer/state.json .
-
-# Extract the BatchInbox address
-BATCH_INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].systemConfigProxyAddress')
-echo "BatchInbox Address: $BATCH_INBOX_ADDRESS"
-```
-
-<Callout type="info">
-  The batcher submits transaction batches to the `BatchInbox` contract on L1. This contract is responsible for accepting and storing L2 transaction data.
-</Callout>
-
-### 3. Set up environment variables
-
-Create your `.env` file with the actual values:
-
-```bash
-# Create .env file with your actual values
-# L1 Configuration - Replace with your actual RPC URL
-L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
-
-# L2 Configuration - Should match your sequencer setup
-L2_RPC_URL=http://localhost:8545
-ROLLUP_RPC_URL=http://localhost:8547
-
-# Contract addresses - Extract from your op-deployer output
-BATCH_INBOX_ADDRESS=YOUR_ACTUAL_BATCH_INBOX_ADDRESS
-
-# Private key - Replace with your actual private key
-BATCHER_PRIVATE_KEY=0xYOUR_ACTUAL_PRIVATE_KEY
-
-# Batcher configuration
-POLL_INTERVAL=1s
-SUB_SAFETY_MARGIN=6
-NUM_CONFIRMATIONS=1
-SAFE_ABORT_NONCE_TOO_LOW_COUNT=3
-RESUBMISSION_TIMEOUT=30s
-MAX_CHANNEL_DURATION=25
-
-# RPC configuration
-BATCHER_RPC_PORT=8548
-```
-
-**Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values!
-
-### 4. Get your private key
-
-Get a private key from your wallet that will be used for submitting batches to L1. This account needs sufficient ETH to pay for L1 gas costs.
-
-<Callout type="warning">
-  The batcher account needs to be funded with ETH on L1 to pay for batch submission transactions. Monitor this account's balance regularly as it will consume ETH for each batch submission.
-</Callout>
-
-## Batcher configuration
-
-Create `scripts/start-batcher.sh`:
-
-```bash
-#!/bin/bash
-
-source .env
-
-# Path to the op-batcher binary we built
-../optimism/op-batcher/bin/op-batcher \
-  --l2-eth-rpc=$L2_RPC_URL \
-  --rollup-rpc=$ROLLUP_RPC_URL \
-  --poll-interval=$POLL_INTERVAL \
-  --sub-safety-margin=$SUB_SAFETY_MARGIN \
-  --num-confirmations=$NUM_CONFIRMATIONS \
-  --safe-abort-nonce-too-low-count=$SAFE_ABORT_NONCE_TOO_LOW_COUNT \
-  --resubmission-timeout=$RESUBMISSION_TIMEOUT \
-  --rpc.addr=0.0.0.0 \
-  --rpc.port=$BATCHER_RPC_PORT \
-  --rpc.enable-admin \
-  --max-channel-duration=$MAX_CHANNEL_DURATION \
-  --l1-eth-rpc=$L1_RPC_URL \
-  --private-key=$BATCHER_PRIVATE_KEY \
-  --batch-type=1 \
-  --data-availability-type=blobs \
-  --compress \
-  --log.level=info
-```
-
-### Batcher parameters explained
-
-*   **`--poll-interval`**: How frequently the batcher checks for new L2 blocks to batch
-*   **`--sub-safety-margin`**: Number of confirmations to wait before considering L1 transactions safe
-*   **`--max-channel-duration`**: Maximum time (in L1 blocks) to keep a channel open
-*   **`--batch-type`**: Type of batch encoding (1 for span batches, 0 for singular batches)
-*   **`--data-availability-type`**: Whether to use blobs or calldata for data availability
-*   **`--compress`**: Enable compression to reduce L1 data costs
-
-## Starting the batcher
-
-### 1. Verify prerequisites
-
-Ensure your sequencer and rollup node are running:
-
-<Steps>
-  ### Test L1 connectivity
-
-  ```bash
-  # Note: Make sure you have exported these environment variables to your current shell session:
-  # export L1_RPC_URL="https://sepolia.infura.io/v3/YOUR_KEY"
-  # export L2_RPC_URL="http://localhost:8545"  
-  # export ROLLUP_RPC_URL="http://localhost:8547"
-
-  curl -X POST -H "Content-Type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-    $L1_RPC_URL
-  ```
-
-  ### Test L2 connectivity
-
-  ```bash
-  curl -X POST -H "Content-Type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-    $L2_RPC_URL
-  ```
-
-  ### Test rollup node connectivity
-
-  ```bash
-  curl -X POST -H "Content-Type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"optimism_syncStatus","params":[],"id":1}' \
-    $ROLLUP_RPC_URL
-  ```
-</Steps>
-
-### 2. Start the batcher
-
-```bash
-# Make the script executable
-chmod +x scripts/start-batcher.sh
-
-# Start the batcher
-./scripts/start-batcher.sh
-```
-
-## Verification
-
-Verify your batcher is working correctly:
-
-### Check batcher status
-
-```bash
-# Check batcher RPC is responding
-curl -X POST -H "Content-Type: application/json" \
-  --data '{"jsonrpc":"2.0","method":"admin_startBatcher","params":[],"id":1}' \
-  http://localhost:8548
-
-# Monitor batch submission activity (check L1 for recent transactions from your batcher address)
-# Replace with your actual batcher address
-curl -X POST -H "Content-Type: application/json" \
-  --data '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["0xYOUR_BATCHER_ADDRESS","latest"],"id":1}' \
-  $L1_RPC_URL
-
-# Check if your batcher address has enough ETH for gas
-curl -X POST -H "Content-Type: application/json" \
-  --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0xYOUR_BATCHER_ADDRESS","latest"],"id":1}' \
-  $L1_RPC_URL
-```
-
-<Callout type="info">
-  For detailed cost analysis and optimization strategies, refer to the [Fee calculation tools](/operators/chain-operators/tools/fee-calculator).
-</Callout>
 
 ## Next steps
 
