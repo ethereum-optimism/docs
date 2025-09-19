@@ -1,7 +1,7 @@
 export const AskAIButton = () => {
-  const [mounted, setMounted] = React.useState(false);
+  const [mounted, setMounted] = useState(false);
   
-  React.useEffect(() => {
+  useEffect(() => {
     setMounted(true);
   }, []);
 

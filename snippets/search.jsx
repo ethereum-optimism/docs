@@ -1,8 +1,8 @@
 export const SearchBox = ({ onSearch, placeholder = "Search..." }) => {
-  const [query, setQuery] = React.useState("");
-  const [results, setResults] = React.useState([]);
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const searchBoxStyle = {
     position: 'relative',

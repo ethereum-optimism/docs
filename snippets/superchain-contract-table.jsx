@@ -1,4 +1,4 @@
-import { AddressTable } from "/snippets/address-table.jsx"
+// Inlined AddressTable to avoid import issues
 
 function getConfigUrl(chain) {
   const isTestnet = chain === '11155111';
@@ -41,11 +41,11 @@ function extractAddresses(obj) {
 }
 
 export const SuperchainContractTable = ({ chain, explorer }) => {
-  const [config, setConfig] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+  const [config, setConfig] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchAddresses() {
       try {
         const configUrl = getConfigUrl(chain);
@@ -78,12 +78,39 @@ export const SuperchainContractTable = ({ chain, explorer }) => {
 
   const addresses = extractAddresses(config || {});
 
+  const CHAIN_CONSTANTS = {
+    1: { explorer: 'https://etherscan.io' },
+    10: { explorer: 'https://explorer.optimism.io' },
+    11155111: { explorer: 'https://sepolia.etherscan.io' },
+    11155420: { explorer: 'https://sepolia-optimism.etherscan.io' }
+  }
+
+  const explorerUrl = CHAIN_CONSTANTS[parseInt(explorer)]?.explorer || 'https://etherscan.io'
+
   return (
-    <AddressTable
-      chain={chain}
-      explorer={explorer}
-      legacy={false}
-      addresses={addresses}
-    />
+    <table>
+      <thead>
+        <tr>
+          <th>Contract Name</th>
+          <th>Contract Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Object.entries(addresses || {})
+          .filter(([name, address]) => address && address !== '')
+          .map(([contract, address]) => (
+            <tr key={`${chain}.${contract}.${address}`}>
+              <td>
+                <code>{contract}</code>
+              </td>
+              <td>
+                <a href={`${explorerUrl}/address/${address}`} target="_blank" rel="noreferrer">
+                  <code>{address}</code>
+                </a>
+              </td>
+            </tr>
+          ))}
+      </tbody>
+    </table>
   );
 }

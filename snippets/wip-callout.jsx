@@ -3,7 +3,7 @@
  * displaying maintenance messages.
  */
 export const WipCallout = ({ context }) => {
-  const [closeCallout, setCloseCallout] = React.useState(false);
+  const [closeCallout, setCloseCallout] = useState(false);
   
   if (closeCallout) return null;
   
@@ -54,7 +54,7 @@ export const WipCallout = ({ context }) => {
 };
 
 export const InteropCallout = ({ context }) => {
-  const [closeCallout, setCloseCallout] = React.useState(false);
+  const [closeCallout, setCloseCallout] = useState(false);
   
   if (closeCallout) return null;
   
