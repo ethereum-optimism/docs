@@ -53,67 +53,7 @@ Before setting up your proposer, ensure you have:
 *   Your L2 chain ID and network configuration
 *   L1 network details (chain ID, RPC endpoints)
 
-<details>
-  <summary>Generate absolute prestate (Required)</summary>
-
-  The challenger needs the absolute prestate to participate in dispute games. Here's how to generate it:
-
-  1.  **Clone and checkout the correct version**:
-      ```bash
-      # Create your proposer directory inside rollup
-      cd ../    # Go back to rollup directory if you're in batcher
-      mkdir proposer
-      cd proposer
-      git clone https://github.com/ethereum-optimism/optimism.git
-      cd optimism
-      git checkout op-program/v1.6.1  # Use the latest stable version
-      git submodule update --init --recursive
-      ```
-
-  2.  **Copy your chain configuration**:
-      ```bash
-      # Replace 67865 with your L2 chain ID
-      cp /path/to/rollup.json op-program/chainconfig/configs/67865-rollup.json
-      cp /path/to/genesis.json op-program/chainconfig/configs/67865-genesis.json
-      ```
-
-  3.  **Generate the prestate**:
-      ```bash
-      make reproducible-prestate
-      ```
-      You'll see output like:
-      ```bash
-      -------------------- Production Prestates --------------------
-      Cannon64 Absolute prestate hash: 
-      0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
-      ```
-
-  4.  **Prepare the preimage file**:
-      ```bash
-      cd op-program/bin
-      mv prestate-mt64.bin.gz 0x[CANNON64_PRESTATE_HASH].bin.gz
-      ```
-      Replace `[CANNON64_PRESTATE_HASH]` with the actual hash from step 3.
-
-  <Callout type="info">
-    *   Use the `Cannon64` hash for production
-    *   Keep this file accessible - you'll need it for the challenger setup
-    *   For Superchain registry chains, you can find official prestates in the [registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml)
-  </Callout>
-</details>
-
-### Finding the current stable releases
-
-To ensure you're using the latest compatible versions of OP Stack components, always check the official [releases page](https://github.com/ethereum-optimism/optimism/releases).
-
-Look for the latest `op-proposer/v*` release that's compatible with your sequencer setup.
-
-<Callout type="info">
-  This guide uses `op-proposer/v1.10.0` which is compatible with op-node/v1.13.3 and op-geth/v1.101511.1 from the sequencer setup.
-  Always check the [release notes](https://github.com/ethereum-optimism/optimism/releases) for compatibility information.
-</Callout>
-
-For setting up the proposer, we recommend using Docker as it provides a consistent and isolated environment. Building from source is also available for more advanced users.
+For setting up the proposer, we recommend using Docker as it provides a consistent and isolated environment. Building from source is also available as an option.
 
 <Tabs items={['Using Docker (Recommended)', 'Build from source']}>
   <Tabs.Tab>
@@ -123,6 +63,10 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       ### Set up directory structure and copy configuration files
 
       ```bash
+      # Create a proposer directory inside rollup
+      cd ../    # Go back to rollup directory if you're in batcher
+      mkdir proposer
+      cd proposer
       # inside the proposer directory, copy the state.json file from the op-deployer setup
       # Copy configuration files from deployer
       cp ../deployer/.deployer/state.json .
@@ -287,6 +231,17 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
   </Tabs.Tab>
 
   <Tabs.Tab>
+
+    ### Finding the current stable releases
+
+    To ensure you're using the latest compatible versions of OP Stack components, always check the official [releases page](https://github.com/ethereum-optimism/optimism/releases).
+
+    Look for the latest `op-proposer/v*` release that's compatible with your sequencer setup.
+
+    <Callout type="info">
+      This guide uses `op-proposer/v1.10.0` which is compatible with op-node/v1.13.3 and op-geth/v1.101511.1 from the sequencer setup.
+      Always check the [release notes](https://github.com/ethereum-optimism/optimism/releases) for compatibility information.
+    </Callout>
     Building from source gives you full control over the binaries.
 
     <Steps>

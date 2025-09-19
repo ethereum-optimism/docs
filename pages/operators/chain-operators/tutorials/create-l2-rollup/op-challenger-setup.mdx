@@ -61,7 +61,7 @@ Before configuring your challenger, complete the following steps:
 
     2.  **Copy your chain configuration**:
         ```bash
-        # Assuming you're in rollup/optimism directory
+        # Assuming you're in rollup/challenger/optimism directory
         # Replace <YOUR-CHAIN-ID> with your actual L2 chain ID
         cp ../deployer/.deployer/rollup.json op-program/chainconfig/configs/<YOUR-CHAIN-ID>-rollup.json
         cp ../deployer/.deployer/genesis.json op-program/chainconfig/configs/<YOUR-CHAIN-ID>-genesis.json
@@ -151,16 +151,15 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       L2_RPC_URL=http://op-geth:8545
       ROLLUP_RPC_URL=http://op-node:8547
 
-      # Wallet configuration - Choose either mnemonic + HD path OR private key
-      MNEMONIC="test test test test test test test test test test test junk"
-      HD_PATH="m/44'/60'/0'/0/0"
+      # Private key - Replace with your actual private key
+      PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
 
       # Network configuration
       NETWORK=op-sepolia
-      GAME_FACTORY_ADDRESS=0xYOUR_GAME_FACTORY_ADDRESS
+      GAME_FACTORY_ADDRESS=YOUR_GAME_FACTORY_ADDRESS
 
       # Prestate configuration - Replace with the hash from 'make reproducible-prestate'
-      PRESTATE_HASH=0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+      PRESTATE_HASH=YOUR_PRESTATE_HASH
       EOF
       ```
 
@@ -188,8 +187,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
             - L1_BEACON=${L1_BEACON}
             - L2_RPC_URL=${L2_RPC_URL}
             - ROLLUP_RPC_URL=${ROLLUP_RPC_URL}
-            - MNEMONIC=${MNEMONIC}
-            - HD_PATH=${HD_PATH}
+            - PRIVATE_KEY=${PRIVATE_KEY}
             - NETWORK=${NETWORK}
             - GAME_FACTORY_ADDRESS=${GAME_FACTORY_ADDRESS}
           command:
@@ -200,9 +198,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
             - "--l2-eth-rpc=${L2_RPC_URL}"
             - "--rollup-rpc=${ROLLUP_RPC_URL}"
             - "--selective-claim-resolution"
-            - "--mnemonic=${MNEMONIC}"
-            - "--hd-path=${HD_PATH}"
-            - "--network=${NETWORK}"
+            - "--private-key=${PRIVATE_KEY}"
             - "--game-factory-address=${GAME_FACTORY_ADDRESS}"
             - "--datadir=/data"
             - "--cannon-prestate=/workspace/prestate-proof.json"
@@ -352,14 +348,12 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       ROLLUP_RPC_URL=http://localhost:8547
       L1_BEACON=http://sepolia-cl-1:5051
 
-      # Wallet configuration - Choose either mnemonic + HD path OR private key
-      MNEMONIC="test test test test test test test test test test test junk"
-      HD_PATH="m/44'/60'/0'/0/0"
-      # PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY  # Alternative to mnemonic
+      # Private key - Replace with your actual private key
+      PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
 
       # Network configuration
       NETWORK=op-sepolia
-      GAME_FACTORY_ADDRESS=0xYOUR_GAME_FACTORY_ADDRESS
+      GAME_FACTORY_ADDRESS=YOUR_GAME_FACTORY_ADDRESS
 
       # Trace configuration
       TRACE_TYPE=permissioned,cannon
@@ -537,8 +531,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       --cannon-l2-genesis=$CANNON_L2_GENESIS \
       --cannon-server=$CANNON_SERVER \
       --cannon-prestate=$CANNON_PRESTATE \
-      --mnemonic "$MNEMONIC" \
-      --hd-path "$HD_PATH"
+      --private-key="$PRIVATE_KEY" 
     ```
     ### Start the challenger
 
