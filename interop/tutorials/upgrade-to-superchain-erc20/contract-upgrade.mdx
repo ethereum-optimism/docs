@@ -8,11 +8,6 @@ categories: [Tutorial, Interop]
 content_type: article
 ---
 
-
-
-
-
-
 <Note>
   The SuperchainERC20 standard is ready for production deployments.
   Please note that the OP Stack interoperability upgrade, required for cross-chain messaging, is currently still in active development.
@@ -73,7 +68,7 @@ sequenceDiagram
   User->>BeaconProxy: transfer(<address>, <amount>)
   BeaconProxy->>UpgradeableBeacon: What is the implementation address?
   UpgradeableBeacon->>BeaconProxy: It is 0x600D...60A7
-  BeaconProxy->>0x600D...60A7: transfer(<address>, <amount>)  
+  BeaconProxy->>0x600D...60A7: transfer(<address>, <amount>)
 ```
 
 To upgrade the contract, an authorized address (typically the `Owner`) calls `UpgradeableBeacon` directly to specify the new implementation contract address.
@@ -86,10 +81,10 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 <Steps>
   <Step title="Install and run Supersim">
   If you are going to use Supersim, [follow these instructions](/app-developers/tutorials/supersim/getting-started/installation) to install and run Supersim.
-  
+
     <Callout>
       Make sure to run Supersim with autorelay on.
-  
+
       ```sh
       ./supersim --interop.autorelay true
       ```
@@ -98,15 +93,15 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Setup the ERC20 token on chain A">
   Download and run the setup script.
-  
+
     ```sh
     curl https://docs.optimism.io/tutorials/setup-for-erc20-upgrade.sh > setup-for-erc20-upgrade.sh
     chmod +x setup-for-erc20-upgrade.sh
     ./setup-for-erc20-upgrade.sh
     ```
-  
+
     If you want to deploy to the [development networks](/interop/tools/devnet), provide `setup-for-erc20-upgrade.sh` with the private key of an address with ETH on both devnets.
-  
+
     ```sh
     ./setup-for-erc20-upgrade.sh <private key>
     ```
@@ -114,7 +109,7 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Store the addresses">
   Execute the bottom two lines of the setup script output to store the ERC20 address and the address of the beacon contract.
-  
+
     ```sh
     BEACON_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
     export ERC20_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
@@ -123,11 +118,11 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Specify environment variables">
   Specify these variables, which we use later:
-  
+
     <Tabs items={['Supersim', 'Devnets']}>
       <Tabs.Tab>
         Set these parameters for Supersim.
-  
+
         ```sh
         PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
         USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
@@ -136,10 +131,10 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
         INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
         ```
       </Tabs.Tab>
-  
+
       <Tabs.Tab>
         For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
-  
+
         ```sh
         USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
         URL_CHAIN_A=https://interop-alpha-0.optimism.io
@@ -152,7 +147,7 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Create a Foundry project">
   We create a [Foundry](https://book.getfoundry.sh/) project and import the [OpenZeppelin](https://www.openzeppelin.com/solidity-contracts) contracts, which were used for the original ERC20 and proxy deployment.
-  
+
     ```sh
     mkdir proxy-upgrade
     cd proxy-upgrade
@@ -165,61 +160,63 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Create and run the deployment script">
   1.  Create an `script/LabSetup.s.sol` file with this content:
-  
-        ```solidity
-cat > script/LabSetup.s.sol <<EOF
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
 
-import {Script, console} from "forge-std/Script.sol";
-import {UpgradeableBeacon} from "../lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import {BeaconProxy} from "../lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
+  ```sh
+  cat > script/LabSetup.s.sol <<EOF
+  ```
+ ```solidity
+      // SPDX-License-Identifier: UNLICENSED
+      pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+      import {Script, console} from "forge-std/Script.sol";
+      import {UpgradeableBeacon} from "../lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/beacon/UpgradeableBeacon.sol";
+      import {BeaconProxy} from "../lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
 
-contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
-    function initialize(string memory name, string memory symbol, uint256 initialSupply) public initializer {
-        __ERC20_init(name, symbol);
-        __Ownable_init(msg.sender);
-        _mint(msg.sender, initialSupply);
-    }
-}
+      import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+      import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+      import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract LabSetup is Script {
-    function setUp() public {}
+      contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
+          function initialize(string memory name, string memory symbol, uint256 initialSupply) public initializer {
+              __ERC20_init(name, symbol);
+              __Ownable_init(msg.sender);
+              _mint(msg.sender, initialSupply);
+          }
+      }
 
-    function run() public {
-        vm.startBroadcast();
+      contract LabSetup is Script {
+          function setUp() public {}
 
-        MyToken token = new MyToken();
-        console.log("Token address:", address(token));
-        console.log("msg.sender:", msg.sender);
+          function run() public {
+              vm.startBroadcast();
 
-        UpgradeableBeacon beacon = new UpgradeableBeacon(address(token), msg.sender);
-        console.log("UpgradeableBeacon:", address(beacon));
+              MyToken token = new MyToken();
+              console.log("Token address:", address(token));
+              console.log("msg.sender:", msg.sender);
 
-        BeaconProxy proxy = new BeaconProxy(address(beacon),
-            abi.encodeCall(MyToken.initialize, ("Test", "TST",
-		(block.chainid == 901) || (block.chainid == 420120000) ? 10**18 : 0))
-        );
-        console.log("Proxy:", address(proxy));
+              UpgradeableBeacon beacon = new UpgradeableBeacon(address(token), msg.sender);
+              console.log("UpgradeableBeacon:", address(beacon));
 
-        vm.stopBroadcast();
-    }
+              BeaconProxy proxy = new BeaconProxy(address(beacon),
+                  abi.encodeCall(MyToken.initialize, ("Test", "TST",
+          (block.chainid == 901) || (block.chainid == 420120000) ? 10**18 : 0))
+              );
+              console.log("Proxy:", address(proxy));
+
+              vm.stopBroadcast();
+          }
         ```
-  
+
         This is the same deployment script used for the original deployment on chain A.
-  
+
     2.  Run this command to deploy the same contracts on chain B.
-  
+
         ```sh
         forge script script/LabSetup.s.sol --rpc-url $URL_CHAIN_B --broadcast --private-key $PRIVATE_KEY --tc LabSetup
         ```
-  
+
         Scroll up and see the Logs section of the output:
-  
+
         ```
         == Logs ==
         Token address: 0x5FbDB2315678afecb367f032d93F642f64180aa3
@@ -227,47 +224,47 @@ contract LabSetup is Script {
         UpgradeableBeacon: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
         Proxy: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
         ```
-  
+
         Verify that the proxy address is the same as `$ERC20_ADDRESS`, and that the beacon address is the same as `$BEACON_ADDRESS`.
-  
+
         <details>
           <summary>What to do when the values are not the same</summary>
-  
+
           This can happen when the nonce values of `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` (or your address in the case of using devnet) on chain A and chain B are different.
-  
+
           You can see the nonce values using these commands:
-  
+
           ```sh
           cast nonce $USER_ADDRESS --rpc-url $URL_CHAIN_A
           cast nonce $USER_ADDRESS --rpc-url $URL_CHAIN_B
           ```
-  
+
           The easiest solution is to send transactions to the chain with the lower nonce until the nonces are equal, and then deploy to both chains.
-  
+
           ```sh
           forge script script/LabSetup.s.sol --rpc-url $URL_CHAIN_A --broadcast --private-key $PRIVATE_KEY --tc LabSetup
           forge script script/LabSetup.s.sol --rpc-url $URL_CHAIN_B --broadcast --private-key $PRIVATE_KEY --tc LabSetup
           ```
-  
+
           If you do this, remember to update `$ERC20_ADDRESS` and `$BEACON_ADDRESS`.
-  
+
           If the nonce on chain B is already higher than the nonce was on chain A when the original proxy contract was deployed this method is not available and you have to either create a special bridge or [use a lockbox](/interop/tutorials/upgrade-to-superchain-erc20/lockbox).
         </details>
   </Step>
 
   <Step title="Deploy ERC7802 contracts">
   We need to replace the ERC20 contracts with contracts that:
-  
+
     *   Support [ERC7802](https://eips.ethereum.org/EIPS/eip-7802) and [ERC165](https://eips.ethereum.org/EIPS/eip-165).
     *   Have the same storage layout as the ERC20 contracts they replace.
-  
+
     <Callout>
       These contracts do *not* need to be deployed to the same address.
       The address that needs to be the same is not the address of the ERC20 contract itself, but of the proxy.
     </Callout>
-  
+
     1.  Create a file, `src/InteropToken.sol`:
-  
+
         ```solidity
 pragma solidity ^0.8.28;
 
@@ -313,10 +310,10 @@ contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IE
     }
 }
         ```
-  
+
         <details>
           <summary>Detailed explanation</summary>
-  
+
           ```solidity
 pragma solidity ^0.8.28;
 
@@ -324,23 +321,23 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 ```
-  
+
           Most of the code is identical to the original `MyToken`.
-  
+
           ```solidity
 import {IERC7802, IERC165} from "lib/interop-lib/src/interfaces/IERC7802.sol";
 import {PredeployAddresses} from "lib/interop-lib/src/libraries/PredeployAddresses.sol";
 ```
-  
+
           These are the imports needed for ERC7802 support.
           We need `IERC165` for documentation purposes, and `IERC7802` for the ERC7802 events.
-  
+
           ```solidity
 contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IERC7802 {
 ```
-  
+
           We also implement [ERC165](https://eips.ethereum.org/EIPS/eip-165), but we don't need to import anything from there.
-  
+
           ```solidity
     function initialize(string memory name, string memory symbol, uint256 initialSupply) public initializer {
         __ERC20_init(name, symbol);
@@ -348,9 +345,9 @@ contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IE
         _mint(msg.sender, initialSupply);
     }
 ```
-  
+
           This function is identical to the one in `MyToken`.
-  
+
           ```solidity
     /// @notice Allows the SuperchainTokenBridge to mint tokens.
     /// @param _to     Address to mint tokens to.
@@ -374,9 +371,9 @@ contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IE
         emit CrosschainBurn(_from, _amount, msg.sender);
     }
 ```
-  
+
           Standard [ERC7802](https://eips.ethereum.org/EIPS/eip-7802) behavior.
-  
+
           ```solidity
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 _interfaceId) public view virtual returns (bool) {
@@ -384,17 +381,17 @@ contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IE
             || _interfaceId == type(IERC165).interfaceId;
     }
 ```
-  
+
           Standard [ERC165](https://eips.ethereum.org/EIPS/eip-165) behavior.
         </details>
-  
+
         <Callout>
           Copying the original ERC20 token code with minimal differences is one method to keep the storage layout identical.
           Alternatively, if you want to use a different contract, such as `SuperchainERC20`, you can modify the storage layout to match the old one using [the Solidity docs](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html).
         </Callout>
-  
+
     2.  Deploy this contract on both chains, and store the addresses (which may or may not be the same).
-  
+
         ```sh
         ERC7802_A=`forge create InteropToken --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A --broadcast | awk '/Deployed to:/ {print $3}'`
         ERC7802_B=`forge create InteropToken --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B --broadcast | awk '/Deployed to:/ {print $3}'`
@@ -403,35 +400,35 @@ contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IE
 
   <Step title="Update proxies">
   Notify the beacon contracts of the new implementation contracts.
-  
+
     ```sh
     cast send $BEACON_ADDRESS --private-key $PRIVATE_KEY "upgradeTo(address)" $ERC7802_A --rpc-url $URL_CHAIN_A
-    cast send $BEACON_ADDRESS --private-key $PRIVATE_KEY "upgradeTo(address)" $ERC7802_B --rpc-url $URL_CHAIN_B  
+    cast send $BEACON_ADDRESS --private-key $PRIVATE_KEY "upgradeTo(address)" $ERC7802_B --rpc-url $URL_CHAIN_B
     ```
   </Step>
 
   <Step title="Verification">
   1.  See your balance on chain A.
-  
+
         ```sh
         cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         ```
-  
+
     2.  See your balance on chain B.
-  
+
         ```sh
         cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
         ```
-  
+
     3.  Transfer 0.1 token.
-  
+
         ```sh
         AMOUNT=`echo 0.1 | cast to-wei`
         cast send $INTEROP_BRIDGE --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,address,uint256,uint256)" $ERC20_ADDRESS $USER_ADDRESS $AMOUNT `cast chain-id --rpc-url $URL_CHAIN_B`
         ```
-  
+
     4.  See the new balances. Chain A should have 0.9 tokens, and Chain B should have 0.1 tokens.
-  
+
         ```sh
         cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei

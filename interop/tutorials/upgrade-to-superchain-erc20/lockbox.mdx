@@ -8,11 +8,6 @@ categories: [Tutorial, Interop]
 content_type: article
 ---
 
-
-
-
-
-
 <Callout>
   The SuperchainERC20 standard is ready for production deployments.
   Please note that the OP Stack interoperability upgrade, required for crosschain messaging, is currently still in active development.
@@ -55,10 +50,10 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 <Steps>
   <Step title="Install and run Supersim">
   If you are going to use Supersim, [follow these instructions](/app-developers/tutorials/supersim/getting-started/installation) to install and run Supersim.
-  
+
     <Callout>
       Make sure to run Supersim with autorelay on.
-  
+
       ```sh
       ./supersim --interop.autorelay true
       ```
@@ -67,15 +62,15 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Setup the ERC-20 token on chain A">
   Download and run the setup script.
-  
+
     ```sh
     curl https://docs.optimism.io/tutorials/setup-for-erc20-upgrade.sh > setup-for-erc20-upgrade.sh
     chmod +x setup-for-erc20-upgrade.sh
     ./setup-for-erc20-upgrade.sh
     ```
-  
+
     If you want to deploy to the [development networks](/interop/tools/devnet), provide `setup-for-erc20-upgrade.sh` with the private key of an address with ETH on both devnets.
-  
+
     ```sh
     ./setup-for-erc20-upgrade.sh <private key>
     ```
@@ -83,7 +78,7 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Store the addresses">
   Execute the bottom two lines of the setup script output to store the ERC-20 address and the address of the beacon contract.
-  
+
     ```sh
     BEACON_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
     export ERC20_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
@@ -92,11 +87,11 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Specify environment variables">
   1.  Specify these variables, which we use later:
-  
+
         <Tabs items={['Supersim', 'Devnets']}>
           <Tabs.Tab>
             Set these parameters for Supersim.
-  
+
             ```sh
             PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
             USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
@@ -104,10 +99,10 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
             URL_CHAIN_B=http://127.0.0.1:9546
             ```
           </Tabs.Tab>
-  
+
           <Tabs.Tab>
             For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
-  
+
             ```sh
             USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
             URL_CHAIN_A=https://interop-alpha-0.optimism.io
@@ -115,9 +110,9 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
             ```
           </Tabs.Tab>
         </Tabs>
-  
+
     2.  Regardless of whether you use Supersim or Devnet, specify these variables.
-  
+
         ```sh
         INTEROP_BRIDGE=0x4200000000000000000000000000000000000028
         export ERC20_CHAINID=`cast chain-id --rpc-url $URL_CHAIN_A`
@@ -132,18 +127,18 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
   <Step title="Update the deployment utilities">
   The new `SuperchainERC20` variant is called `LockboxSuperchainERC20`, and it requires different constructor parameters.
     To be able to deploy it, we need to modify some of the deployment utilities.
-  
+
     1.  Download [the SuperchainERC20 starter kit](/interop/tutorials/deploy-superchain-erc20), and install libraries, etc.
-  
+
         ```sh
         git clone https://github.com/ethereum-optimism/superchainerc20-starter.git
         cd superchainerc20-starter
         pnpm install
         pnpm init:env
         ```
-  
+
     2.  Replace `packages/contracts/package.json` with this code:
-  
+
         ```json
         {
           "name": "@superchainerc20-starter/contracts",
@@ -160,11 +155,11 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
           "dependencies": {
             "viem": "^2.21.37"
           }
-        }      
+        }
         ```
-  
+
     3.  Create a new file, `packages/contracts/scripts/LockboxDeployer.s.sol`:
-  
+
         ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
@@ -220,7 +215,7 @@ contract LockboxDeployer is Script {
         uint256 originalChainId = vm.envUint("ERC20_CHAINID");
 
         bytes memory initCode = abi.encodePacked(
-            type(LockboxSuperchainERC20).creationCode, 
+            type(LockboxSuperchainERC20).creationCode,
                  abi.encode(name, symbol, uint8(decimals), originalTokenAddress, originalChainId)
         );
         address preComputedAddress = vm.computeCreate2Address(_implSalt(), keccak256(initCode));
@@ -252,13 +247,13 @@ contract LockboxDeployer is Script {
     }
 }
 ```
-  
+
         <details>
           <summary>Explanation of the modified functions</summary>
-  
+
           For the most part, this is the standard `SuperchainERC20Deployer.s.sol` that comes with the SuperchainERC20 starter kit.
           Some functions are modified, as explained below.
-  
+
           ```solidity
     function deployLockboxSuperchainERC20() public broadcast returns (address addr_) {
         string memory name = vm.envString("NEW_TOKEN_NAME");
@@ -268,16 +263,16 @@ contract LockboxDeployer is Script {
         address originalTokenAddress = vm.envAddress("ERC20_ADDRESS");
         uint256 originalChainId = vm.envUint("ERC20_CHAINID");
 ```
-  
+
           Get the majority of the configuration from the environment.
           Mostly of it is derived from the configuration of the original ERC-20 token.
-  
+
           Note that there is no `owner` here.
           This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
-  
+
           ```solidity
         bytes memory initCode = abi.encodePacked(
-            type(LockboxSuperchainERC20).creationCode, 
+            type(LockboxSuperchainERC20).creationCode,
                  abi.encode(name, symbol, uint8(decimals), originalTokenAddress, originalChainId)
         );
         address preComputedAddress = vm.computeCreate2Address(_implSalt(), keccak256(initCode));
@@ -293,11 +288,11 @@ contract LockboxDeployer is Script {
         }
     }
 ```
-  
+
           "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.\
           If there is already a contract there, we have a problem.
           Otherwise, deploy `LockboxSuperchainERC20`.
-  
+
           ```solidity
     /// @notice The CREATE2 salt to be used when deploying the token.
     function _implSalt() internal view returns (bytes32) {
@@ -305,12 +300,12 @@ contract LockboxDeployer is Script {
         return keccak256(abi.encodePacked(salt, timestamp));
     }
 ```
-  
+
           I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
           This is not necessary, but I consider it a developer experience improvement.
           During development you redeploy slightly modified code a lot of times.
           It is easier if you don't need to manually change the salt every time.
-  
+
           <Callout type="warning">
             Remove this before deploying to production.
             Otherwise, as new blockchains join the Interop cluster, you may not be able to deploy your contract at the same address.
@@ -320,7 +315,7 @@ contract LockboxDeployer is Script {
 
   <Step title="Create and deploy the new contract">
   1.  Create this file in `packages/contracts/src/LockboxSuperchainERC20.sol`:
-  
+
         ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
@@ -336,8 +331,8 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
     uint256 immutable _originalChainId;
 
     constructor(
-        string memory name_, 
-        string memory symbol_, 
+        string memory name_,
+        string memory symbol_,
         uint8 decimals_,
         address originalTokenAddress_,
         uint256 originalChainId_) {
@@ -389,22 +384,22 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
         _burn(msg.sender, amount_);
 
         bool success = originalToken.transfer(msg.sender, amount_);
-        require(success, "Transfer failed, this should not happen");  
+        require(success, "Transfer failed, this should not happen");
     }
 }
 ```
-  
+
         <details>
           <summary>Explanation</summary>
-  
+
           ```solidity
     address immutable _originalTokenAddress;
     uint256 immutable _originalChainId;
 ```
-  
+
           The lockbox contract needs to know the contract for which it is a lockbox.
           This requires not just the address, but also to know what chain has it.
-  
+
           ```solidity
     }
 
@@ -418,10 +413,10 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
         // However, the standard allows the ERC-20 contract to return false instead.
         require(success, "No tokens to lock, no mint either");
 ```
-  
+
           Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
           This function has several tests to make sure it can be called.
-  
+
           *   Check the chain ID.
               Locking and redeeming tokens can only be done on the original token's chain.
           *   Use [`transferFrom`](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#transferFrom) to transfer the tokens to ourselves.
@@ -430,9 +425,9 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
               There are two reasons it may fail.
               *   The user (in this case, the `LockboxSuperchainERC20` contract) does not have [the allowance](https://ethereum.org/en/developers/tutorials/erc20-annotated-code/#_approve) to spend that amount of tokens from the original owner (`msg.sender`).
               *   The original owner (`msg.sender`) does not have enough tokens to transfer.
-  
+
           If the tests are successful, mint the requested amount for `msg.sender`.
-  
+
           ```solidity
     }
 
@@ -444,10 +439,10 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
 
         bool success = originalToken.transfer(msg.sender, amount_);
 ```
-  
+
           Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
           It also has multiple tests.
-  
+
           *   Again, check chain ID.
           *   Try to `_burn` the amount of lockbox tokens.
               [The solady `_burn` function](https://github.com/Vectorized/solady/blob/main/src/tokens/ERC20.sol#L539-L542), the one we inherit from `SuperchainERC20`, reverts if the user does not have enough tokens to burn.
@@ -456,30 +451,30 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
               This should never fail, because lockbox ERC-20 tokens are supposed to always be backed by an equal number of the original tokens.
               However, if it does fail for some reason, revert.
         </details>
-  
+
     2.  Deploy the contract.
-  
+
         <Tabs items={['Supersim', 'Devnets']}>
           <Tabs.Tab>
             ```sh
             pnpm contracts:deploy:token
             ```
           </Tabs.Tab>
-  
+
           <Tabs.Tab>
             To deploy to the [development networks](/interop/tools/devnet), follow the steps [in the tutorial](/interop/tutorials/deploy-superchain-erc20#prepare-for-deployment) before you deploy the contract.
-  
+
             Then, update `packages/contracts/.env` and deploy the token.
-  
+
             ```sh
             echo DEPLOYER_PRIVATE_KEY=$PRIVATE_KEY > packages/contracts/.env
             pnpm contracts:deploy:token
             ```
           </Tabs.Tab>
         </Tabs>
-  
+
     3.  Get the new token address and store it in an environment variable.
-  
+
         ```sh
         NEW_TOKEN_ADDRESS=`cat packages/contracts/broadcast/multi/LockboxDeployer.s.sol-latest/run.json | awk '/contractAddress/ {print $2}' | head -1 | sed 's/[",]//g'`
         ```
@@ -487,44 +482,44 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
 
   <Step title="Verification">
   1.  Check that the user has a single token of the original ERC-20.
-  
+
         ```sh
         cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         ```
-  
+
     2.  Lock a quarter token in the lockbox ERC-20 contract.
         To do this we first need to give the lockbox ERC-20 contract an allowance and then call it.
-  
+
         ```sh
         QUARTER_TOKEN=`echo 0.25 | cast to-wei`
         cast send $ERC20_ADDRESS "approve(address,uint256)" $NEW_TOKEN_ADDRESS $QUARTER_TOKEN --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
         cast send $NEW_TOKEN_ADDRESS "lockAndMint(uint256)" $QUARTER_TOKEN --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
         ```
-  
+
     3.  See the balances of the user, both original and lockbox, and the balance of the lockbox contract itself.
-  
+
         ```sh
         cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         cast call $ERC20_ADDRESS "balanceOf(address)" $NEW_TOKEN_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         ```
-  
+
     4.  Transfer 0.1 token to chain B.
-  
+
         ```sh
         TENTH_TOKEN=`echo 0.1 | cast to-wei`
         cast send $INTEROP_BRIDGE --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,address,uint256,uint256)" $NEW_TOKEN_ADDRESS $USER_ADDRESS $TENTH_TOKEN `cast chain-id --rpc-url $URL_CHAIN_B`
         ```
-  
+
     5.  Check the user's balances on both chains.
-  
+
         ```sh
         cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
         ```
-  
+
     6.  Specify the configuration for another user.
-  
+
         <Tabs items={['Supersim', 'Devnets']}>
           <Tabs.Tab>
             ```sh
@@ -532,32 +527,32 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
             PRIVATE_KEY_2=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
             ```
           </Tabs.Tab>
-  
+
           <Tabs.Tab>
             Specify the private key (`PRIVATE_KEY_2`) and user address (`USER_ADDRESS_2`) of another user that has ETH on both devnets.
           </Tabs.Tab>
         </Tabs>
-  
+
     7.  Transfer new tokens to the new user (on chain B) and see that they were actually transferred.
-  
+
         ```sh
         cast send $NEW_TOKEN_ADDRESS "transfer(address,uint256)" $USER_ADDRESS_2 $TENTH_TOKEN --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
         cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
-        cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS_2 --rpc-url $URL_CHAIN_B | cast from-wei      
+        cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS_2 --rpc-url $URL_CHAIN_B | cast from-wei
         ```
-  
+
     8.  As the new user, transfer tokens back to chain A and redeem them.
-  
+
         ```sh
         cast send $INTEROP_BRIDGE --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY_2 "sendERC20(address,address,uint256,uint256)" $NEW_TOKEN_ADDRESS $USER_ADDRESS_2 $TENTH_TOKEN `cast chain-id --rpc-url $URL_CHAIN_A`
         cast send $NEW_TOKEN_ADDRESS --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY_2 "redeemAndBurn(uint256)" $TENTH_TOKEN
         ```
-  
+
     9.  Check that the second user does not have any more of the new tokens, but does have the original token.
-  
+
         ```sh
         cast call $NEW_TOKEN_ADDRESS "balanceOf(address)" $USER_ADDRESS_2 --rpc-url $URL_CHAIN_A | cast from-wei
-        cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS_2 --rpc-url $URL_CHAIN_A | cast from-wei      
+        cast call $ERC20_ADDRESS "balanceOf(address)" $USER_ADDRESS_2 --rpc-url $URL_CHAIN_A | cast from-wei
         ```
   </Step>
 </Steps>

@@ -3,11 +3,6 @@ title: Building a custom bridge
 description: Tutorial on how to create a custom interoperability bridge. The example is a bridge when the addresses of the ERC20 contracts are not the same.
 ---
 
-
-
-
-
-
 # Building a custom bridge
 
 ## Overview
@@ -63,7 +58,7 @@ sequenceDiagram
   User->>BeaconProxy: transfer(<address>, <amount>)
   BeaconProxy->>UpgradeableBeacon: What is the implementation address?
   UpgradeableBeacon->>BeaconProxy: It is 0x600D...60A7
-  BeaconProxy->>0x600D...60A7: transfer(<address>, <amount>)  
+  BeaconProxy->>0x600D...60A7: transfer(<address>, <amount>)
 ```
 
 To upgrade the contract, an authorized address (typically the `Owner`) calls `UpgradeableBeacon` directly to specify the new implementation contract address.
@@ -76,10 +71,10 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 <Steps>
   <Step title="Install and run Supersim">
   If you are going to use Supersim, [follow these instructions](/app-developers/tutorials/supersim/getting-started/installation) to install and run Supersim.
-  
+
     <Info>
       Make sure to run Supersim with autorelay on.
-  
+
       ```sh
       ./supersim --interop.autorelay true
       ```
@@ -88,15 +83,15 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Set up the ERC20 token on chain A">
   Download and run the setup script.
-  
+
     ```sh
     curl https://docs.optimism.io/tutorials/setup-for-erc20-upgrade.sh > setup-for-erc20-upgrade.sh
     chmod +x setup-for-erc20-upgrade.sh
     ./setup-for-erc20-upgrade.sh
     ```
-  
+
     If you want to deploy to the [development networks](/interop/tools/devnet), provide `setup-for-erc20-upgrade.sh` with the private key of an address with ETH on both devnets.
-  
+
     ```sh
     ./setup-for-erc20-upgrade.sh <private key>
     ```
@@ -104,7 +99,7 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Store the addresses">
   Execute the bottom two lines of the setup script output to store the ERC20 address and the address of the beacon contract.
-  
+
     ```sh
     BEACON_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
     export ERC20_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
@@ -113,11 +108,11 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Specify environment variables">
   Specify these variables, which we use later:
-  
+
     <Tabs items={['Supersim', 'Devnets']}>
       <Tabs.Tab>
         Set these parameters for Supersim.
-  
+
         ```sh
         PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
         USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
@@ -125,10 +120,10 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
         URL_CHAIN_B=http://127.0.0.1:9546
         ```
       </Tabs.Tab>
-  
+
       <Tabs.Tab>
         For Devnet, specify in `PRIVATE_KEY` the private key you used for the setup script and then these parameters.
-  
+
         ```sh
         USER_ADDRESS=`cast wallet address --private-key $PRIVATE_KEY`
         URL_CHAIN_A=https://interop-alpha-0.optimism.io
@@ -141,7 +136,7 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
   <Step title="Advance the user's nonce on chain B">
   This solution is necessary when the nonce on chain B is higher than it was on chain A when the proxy for the ERC-20 contract was installed.
     To simulate this situation, we send a few meaningless transactions on chain B and then see that the nonce on B is higher than the nonce on A.
-  
+
     ```sh
     cast send $USER_ADDRESS --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
     cast send $USER_ADDRESS --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
@@ -156,7 +151,7 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
   <Step title="Create a Foundry project">
   Create a [Foundry](https://book.getfoundry.sh/) project and import the [OpenZeppelin](https://www.openzeppelin.com/solidity-contracts) contracts used for the original ERC20 and proxy deployment.
-  
+
     ```sh
     mkdir custom-bridge
     cd custom-bridge
@@ -170,13 +165,13 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
   <Step title="Deploy proxies">
   We need two contracts on each chain: an ERC20 and a bridge, and to enable future upgrades, we want to install each of those contracts behind a proxy.
     You already have one contract—the ERC20 on chain A—but need to create the other three.
-  
+
     There's an interesting [chicken-and-egg](https://en.wikipedia.org/wiki/Chicken_or_the_egg) issue here.
     To create a proxy, we need the address of the implementation contract, the one with the actual code.
     However, the bridge and ERC20 code needs to have the proxy addresses.
     One possible solution is to choose a pre-existing contract, and use that as the implementation contract until we can upgrade.
     Every OP Stack chain has [predeploys](https://specs.optimism.io/protocol/predeploys.html) we can use for this purpose.
-  
+
     ```sh
     DUMMY_ADDRESS=0x4200000000000000000000000000000000000000
     UPGRADE_BEACON_CONTRACT=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/beacon/UpgradeableBeacon.sol:UpgradeableBeacon
@@ -188,20 +183,20 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
     ERC20_BEACON_ADDRESS_A=$BEACON_ADDRESS
     ERC20_ADDRESS_A=$ERC20_ADDRESS
     ERC20_BEACON_ADDRESS_B=`forge create $UPGRADE_BEACON_CONTRACT --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $DUMMY_ADDRESS $USER_ADDRESS | awk '/Deployed to:/ {print $3}'`
-    ERC20_ADDRESS_B=`forge create $PROXY_CONTRACT --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $ERC20_BEACON_ADDRESS_B 0x | awk '/Deployed to:/ {print $3}'`  
+    ERC20_ADDRESS_B=`forge create $PROXY_CONTRACT --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $ERC20_BEACON_ADDRESS_B 0x | awk '/Deployed to:/ {print $3}'`
     ```
   </Step>
 
   <Step title="Deploy ERC7802 contracts">
   Replace the ERC20 contracts with contracts that:
-  
+
     *   Support [ERC7802](https://eips.ethereum.org/EIPS/eip-7802) and [ERC165](https://eips.ethereum.org/EIPS/eip-165).
     *   Allow the bridge address to mint and burn tokens.
         Normally this is `PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE`, but in our case it would be the bridge proxy address, which we'll store in `bridgeAddress`.
     *   Have the same storage layout as the ERC20 contracts they replace (in the case of chain A).
-  
+
     1.  Create a file, `src/InteropToken.sol`.
-  
+
         ```solidity
 pragma solidity ^0.8.28;
 
@@ -247,35 +242,35 @@ contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IE
     }
 }
         ```
-  
+
     2.  This `src/InteropToken.sol` is used for contract upgrades when the ERC20 contracts are at the same address.
         Here we need to edit it to allow our custom bridge to mint and burn tokens instead of the predeployed superchain token bridge.
-  
+
         *   On lines 20 and 31 replace ~~`PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE`~~ with `bridgeAddress`.
-  
+
             ```solidity
             require(msg.sender == bridgeAddress, "Unauthorized");
             ```
-  
+
         *   Add these lines anywhere in the contract:
-  
+
             ```solidity
                 address public immutable bridgeAddress;
-  
+
                 constructor(address bridgeAddress_) {
                     bridgeAddress = bridgeAddress_;
                 }
             ```
-  
+
     3.  Deploy `InteropToken` on both chains, with the bridge address.
-  
+
         ```sh
         INTEROP_TOKEN_A=`forge create InteropToken --private-key $PRIVATE_KEY --broadcast --rpc-url $URL_CHAIN_A --constructor-args $BRIDGE_ADDRESS_A | awk '/Deployed to:/ {print $3}'`
         INTEROP_TOKEN_B=`forge create InteropToken --private-key $PRIVATE_KEY --broadcast --rpc-url $URL_CHAIN_B --constructor-args $BRIDGE_ADDRESS_B | awk '/Deployed to:/ {print $3}'`
         ```
-  
+
     4.  Update the proxies to the new implementations.
-  
+
         ```sh
         cast send $ERC20_BEACON_ADDRESS_A "upgradeTo(address)" $INTEROP_TOKEN_A --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
         cast send $ERC20_BEACON_ADDRESS_B "upgradeTo(address)" $INTEROP_TOKEN_B --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
@@ -285,7 +280,7 @@ contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IE
   <Step title="Deploy the actual bridge">
   1.  Create a file, `src/CustomBridge.sol`.
         This file is based on the standard `SuperchainERC20`  [`SuperchainTokenBridge.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol).
-  
+
         ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
@@ -339,7 +334,7 @@ contract CustomBridge {
         address tokenAddressHere_,
         address tokenAddressThere_,
         uint256 chainIdThere_,
-        address bridgeAddressThere_        
+        address bridgeAddressThere_
     ) {
         if (
             tokenAddressHere_ == address(0) ||
@@ -351,7 +346,7 @@ contract CustomBridge {
         tokenAddressThere = tokenAddressThere_;
         chainIdThere = chainIdThere_;
         bridgeAddressThere = bridgeAddressThere_;
-    }    
+    }
 
     /// @notice Sends tokens to a target address on another chain.
     /// @dev Tokens are burned on the source chain.
@@ -395,12 +390,12 @@ contract CustomBridge {
     }
 }
         ```
-  
+
         <details>
             <summary>Explanation</summary>
-  
+
             These are the main differences between the generic bridge and our implementation.
-  
+
             ```solidity
     // Immutable configuration
     address public immutable tokenAddressHere;
@@ -408,20 +403,20 @@ contract CustomBridge {
     uint256 public immutable chainIdThere;
     address public immutable bridgeAddressThere;
 ```
-  
+
             The configuration is [`immutable`](https://docs.soliditylang.org/en/latest/contracts.html#immutable).
             We are deploying the contract behind a proxy, so if we need to change it we can deploy a different contract.
-  
+
             These parameters assume there are only two chains in the interop cluster.
             If there are more, change the `There` variables to array.
-  
+
             ```solidity
     // Setup the configuration
     constructor(
         address tokenAddressHere_,
         address tokenAddressThere_,
         uint256 chainIdThere_,
-        address bridgeAddressThere_        
+        address bridgeAddressThere_
     ) {
         if (
             tokenAddressHere_ == address(0) ||
@@ -433,50 +428,50 @@ contract CustomBridge {
         tokenAddressThere = tokenAddressThere_;
         chainIdThere = chainIdThere_;
         bridgeAddressThere = bridgeAddressThere_;
-    }    
+    }
 ```
-  
+
             The constructor writes the configuration parameters.
-  
+
             ```solidity
     function sendERC20(
         address _to,
         uint256 _amount
     )
 ```
-  
+
             We don't need to specify the token address, or the chain ID on the other side, because they are hardwired in this bridge.
-  
+
             ```solidity
         emit SendERC20(tokenAddressHere, msg.sender, _to, _amount, chainIdThere);
 ```
-  
+
             Emit the same log entry that would be emitted by the standard bridge.
-  
+
             ```solidity
         if (crossDomainMessageSender != bridgeAddressThere) revert InvalidCrossDomainSender();
         if (source != chainIdThere) revert InvalidCrossDomainSender();
 ```
-  
+
             Make sure any relay requests come from the correct contract on the correct chain.
         </details>
-  
+
     2.  Get the chainID values.
-  
+
         ```sh
         CHAINID_A=`cast chain-id --rpc-url $URL_CHAIN_A`
         CHAINID_B=`cast chain-id --rpc-url $URL_CHAIN_B`
         ```
-  
+
     3.  Deploy the bridges with the correct configuration.
-  
+
         ```sh
         BRIDGE_IMPLEMENTATION_ADDRESS_A=`forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY --constructor-args  $ERC20_ADDRESS_A $ERC20_ADDRESS_B $CHAINID_B $BRIDGE_ADDRESS_B | awk '/Deployed to:/ {print $3}'`
-        BRIDGE_IMPLEMENTATION_ADDRESS_B=`forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args  $ERC20_ADDRESS_B $ERC20_ADDRESS_A $CHAINID_A $BRIDGE_ADDRESS_A | awk '/Deployed to:/ {print $3}'`      
+        BRIDGE_IMPLEMENTATION_ADDRESS_B=`forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args  $ERC20_ADDRESS_B $ERC20_ADDRESS_A $CHAINID_A $BRIDGE_ADDRESS_A | awk '/Deployed to:/ {print $3}'`
         ```
-  
+
     4.  Inform the proxy beacons about the new addresses of the bridge implementation contracts.
-  
+
         ```sh
         cast send $BRIDGE_BEACON_ADDRESS_A "upgradeTo(address)" $BRIDGE_IMPLEMENTATION_ADDRESS_A --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
         cast send $BRIDGE_BEACON_ADDRESS_B "upgradeTo(address)" $BRIDGE_IMPLEMENTATION_ADDRESS_B --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
@@ -485,26 +480,26 @@ contract CustomBridge {
 
   <Step title="Verification">
   1.  See your balance on chain A.
-  
+
         ```sh
         cast call $ERC20_ADDRESS_A "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         ```
-  
+
     2.  See your balance on chain B.
-  
+
         ```sh
         cast call $ERC20_ADDRESS_B "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
         ```
-  
+
     3.  Transfer 0.1 token.
-  
+
         ```sh
         AMOUNT=`echo 0.1 | cast to-wei`
         cast send $BRIDGE_ADDRESS_A --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,uint256)" $USER_ADDRESS $AMOUNT
         ```
-  
+
     4.  See the new balances. The A chain should have 0.9 tokens, and the B chain should have 0.1 tokens.
-  
+
         ```sh
         cast call $ERC20_ADDRESS_A "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
         cast call $ERC20_ADDRESS_B "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
