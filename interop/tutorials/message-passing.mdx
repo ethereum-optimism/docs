@@ -172,8 +172,28 @@ The implementation consists of three main components:
     2.  In `src/Greeter.sol` put this file.
         This is a variation on [Hardhat's Greeter contract](https://github.com/matter-labs/hardhat-zksync/blob/main/examples/upgradable-example/contracts/Greeter.sol).
   
-        ```solidity file=<rootDir>/public/tutorials/Greeter.sol#L1-L20 hash=b3c5550bcc2cc4272125388ef23a67e7
-        ```
+        ```solidity
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+ 
+contract Greeter {
+    string greeting;
+ 
+    event SetGreeting(
+        address indexed sender,     // msg.sender
+        string greeting
+    ); 
+ 
+    function greet() public view returns (string memory) {
+        return greeting;
+    }
+ 
+    function setGreeting(string memory _greeting) public {
+        greeting = _greeting;
+        emit SetGreeting(msg.sender, _greeting);
+    }
+}
+``````
   
     3.  Deploy the `Greeter` contract to Chain B and store the resulting contract address in the `GREETER_B_ADDRESS` environment variable.
   
@@ -236,14 +256,49 @@ The implementation consists of three main components:
   
     5.  Create `src/GreetingSender.sol`.
   
-        ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol hash=bc4d79b54b5d6a007264f9972818f56a
-        ```
+        ```solidity
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+ 
+import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
+import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/src/L2/IL2ToL2CrossDomainMessenger.sol";
+
+import { Greeter } from "src/Greeter.sol";
+ 
+contract GreetingSender {
+    IL2ToL2CrossDomainMessenger public immutable messenger =
+        IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
+ 
+    address immutable greeterAddress;
+    uint256 immutable greeterChainId;
+ 
+    constructor(address _greeterAddress, uint256 _greeterChainId) {
+        greeterAddress = _greeterAddress;
+        greeterChainId = _greeterChainId;
+    }
+ 
+    function setGreeting(string calldata greeting) public {
+        bytes memory message = abi.encodeCall(
+            Greeter.setGreeting,
+            (greeting)
+        );
+        messenger.sendMessage(greeterChainId, greeterAddress, message);
+    }
+}
+``````
   
         <details>
            <summary>Explanation</summary>
   
-           ```solidity file=<rootDir>/public/tutorials/GreetingSender.sol#L21-L27 hash=6c27ebcf4916e5aa2325d30f99c65436
-           ```
+           ```solidity
+    function setGreeting(string calldata greeting) public {
+        bytes memory message = abi.encodeCall(
+            Greeter.setGreeting,
+            (greeting)
+        );
+        messenger.sendMessage(greeterChainId, greeterAddress, message);
+    }
+``````
   
            This function encodes a call to `setGreeting` and sends it to a contract on another chain.
            `abi.encodeCall(Greeter.setGreeting, (greeting))` constructs the [calldata](https://docs.soliditylang.org/en/latest/internals/layout_in_calldata.html) by encoding the function selector and parameters.

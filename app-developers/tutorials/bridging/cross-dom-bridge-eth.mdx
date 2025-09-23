@@ -96,34 +96,58 @@ You need to import some dependencies into your Node REPL session.
 <Steps>
 {<h3>Import Viem and other packages</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L3-L6 hash=88319dda3322e76accb9e50222d30abc
+```js
+const { createPublicClient, http, createWalletClient, parseEther, formatEther } = require('viem');
+const { sepolia, optimismSepolia } = require('viem/chains');
+const { privateKeyToAccount } = require('viem/accounts');
+const { getL2TransactionHashes, publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 ```
 
 {<h3>Load private key and set account</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L9-L10 hash=251ec91fdff9dbc613b459ca3b9fb8bd
+```js
+const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
+const account = privateKeyToAccount(PRIVATE_KEY);
 ```
 
 {<h3>Create L1 public client for reading from the Sepolia network</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L13-L16 hash=6f2335d67920c219b5fd3590f8450cac
+```js
+const publicClientL1 = createPublicClient({
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+}).extend(publicActionsL1()) 
 ```
 
 
 {<h3>Create L1 wallet client for sending transactions on Sepolia</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L19-L23 hash=a9b217aef7c065eaf3f2a7222494a3e1
+```js
+const walletClientL1 = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+}).extend(walletActionsL1());
 ```
 
 
 {<h3>Create L2 public client for interacting with OP Sepolia</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L26-L29 hash=dd7868fc9ab8f8a34768c8a83232409b
+```js
+const publicClientL2 = createPublicClient({
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(publicActionsL2());
 ```
 
 {<h3>Create L2 wallet client on OP Sepolia</h3>}
 
-```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L32-L36 hash=6f91578c5b155d7abfeecf2297ee9f70
+```js
+const walletClientL2 = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(walletActionsL2());
 ```
 
 </Steps>
@@ -144,8 +168,10 @@ Now that you have some ETH on L1 you can deposit that ETH into the `OptimismPort
 
       See how much ETH you have on L1 so you can confirm that the deposit worked later on.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L38-L39 hash=a77304eb0a056ba30aaa21eee60bcafa
-      ```
+      ```js
+const l1Balance = await publicClientL1.getBalance({ address: account.address });
+console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`); 
+``````
 
       <Info>
         We used `formatEther` method from `viem` to format the balance to ether.
@@ -155,43 +181,119 @@ Now that you have some ETH on L1 you can deposit that ETH into the `OptimismPort
 
       Use `buildDepositTransaction` to build the deposit transaction parameters on the L2.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L44-L47 hash=01a8dadb00216636f18b72758236d4b0
-      ```
+      ```js
+const depositArgs = await publicClientL2.buildDepositTransaction({
+    mint: parseEther("0.0001"),
+    to: account.address,
+});
+``````
 
       {<h3>Send the deposit transaction</h3>}
 
       Send the deposit transaction on L1 and log the L1 transaction hash.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L49-L50 hash=6c47f29f428cc4c7f6d4ad322e4feaec
-      ```
+      ```js
+const depositHash = await walletClientL1.depositTransaction(depositArgs);
+console.log(`Deposit transaction hash on L1: ${depositHash}`);
+``````
 
       {<h3>Wait for L1 transaction</h3>}
 
       Wait for the L1 transaction to be processed and log the receipt.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L52-L53 hash=bccea143ce3571de154531c40e9a0d04
-      ```
+      ```js
+const depositReceipt = await publicClientL1.waitForTransactionReceipt({ hash: depositHash });
+console.log('L1 transaction confirmed:', depositReceipt);
+``````
 
       {<h3>Extract the L2 transaction hash</h3>}
 
       Extracts the corresponding L2 transaction hash from the L1 receipt, and logs it.
       This hash represents the deposit transaction on L2.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L55-L56 hash=07a053f25193bcfcb9dae397091d755a
-      ```
+      ```js
+const [l2Hash] = getL2TransactionHashes(depositReceipt);
+console.log(`Corresponding L2 transaction hash: ${l2Hash}`);
+``````
 
       {<h3>Wait for the L2 transaction to be processed</h3>}
 
       Wait for the L2 transaction to be processed and confirmed and logs the L2 receipt to verify completion.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L58-L62 hash=4ab7fdff1700699951ced567db6d4710
-      ```
+      ```js
+const l2Receipt = await publicClientL2.waitForTransactionReceipt({
+    hash: l2Hash,
+}); 
+console.log('L2 transaction confirmed:', l2Receipt);
+console.log('Deposit completed successfully!');
+``````
     </Steps>
   </Tabs.Tab>
 
   <Tabs.Tab>
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L3-L63 hash=1198e2379e95a0e6c72c03692f10e9ee
-      ```
+      ```js
+const { createPublicClient, http, createWalletClient, parseEther, formatEther } = require('viem');
+const { sepolia, optimismSepolia } = require('viem/chains');
+const { privateKeyToAccount } = require('viem/accounts');
+const { getL2TransactionHashes, publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
+
+
+const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
+const account = privateKeyToAccount(PRIVATE_KEY);
+
+
+const publicClientL1 = createPublicClient({
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+}).extend(publicActionsL1()) 
+
+
+const walletClientL1 = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http("https://rpc.ankr.com/eth_sepolia"),
+}).extend(walletActionsL1());
+
+
+const publicClientL2 = createPublicClient({
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(publicActionsL2());
+
+
+const walletClientL2 = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http("https://sepolia.optimism.io"),
+}).extend(walletActionsL2());
+
+const l1Balance = await publicClientL1.getBalance({ address: account.address });
+console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`); 
+
+async function depositETH() {
+
+
+const depositArgs = await publicClientL2.buildDepositTransaction({
+    mint: parseEther("0.0001"),
+    to: account.address,
+});
+
+const depositHash = await walletClientL1.depositTransaction(depositArgs);
+console.log(`Deposit transaction hash on L1: ${depositHash}`);
+
+const depositReceipt = await publicClientL1.waitForTransactionReceipt({ hash: depositHash });
+console.log('L1 transaction confirmed:', depositReceipt);
+
+const [l2Hash] = getL2TransactionHashes(depositReceipt);
+console.log(`Corresponding L2 transaction hash: ${l2Hash}`);
+
+const l2Receipt = await publicClientL2.waitForTransactionReceipt({
+    hash: l2Hash,
+}); 
+console.log('L2 transaction confirmed:', l2Receipt);
+console.log('Deposit completed successfully!');
+} 
+``````
   </Tabs.Tab>
 </Tabs>
 
@@ -215,49 +317,73 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
       Uses `buildWithdrawalTransaction` to create the withdrawal parameters.
       Converts the withdrawal amount to `wei` and specifies the recipient on L1.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L68-L72 hash=cd22b075bb05dc05ac92c5502aa0568f
-      ```
+      ```js
+//Add the same imports used in DepositETH function
+const withdrawalArgs = await publicClientL2.buildWithdrawalTransaction({
+value: parseEther('0.0001'),
+to: account.address,
+});
+``````
 
       {<h3>Executing the withdrawal</h3>}
 
       This sends the withdrawal transaction on L2, which initiates the withdrawal process on L2 and logs a transaction hash for tracking the withdrawal.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L74-L75 hash=e5f3d46ba9f417fddfa4b861f3f6f208
-      ```
+      ```js
+const withdrawalHash = await walletClientL2.initiateWithdrawal(withdrawalArgs);
+console.log(`Withdrawal transaction hash on L2: ${withdrawalHash}`);
+``````
 
       {<h3>Confirming L2 transaction</h3>}
 
       Wait one hour (max) for the L2 Output containing the transaction to be proposed, and log the receipt, which contains important details like the block number etc.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L77-L78 hash=37f83c57e384910a0e5bf7040c52aa7a
-      ```
+      ```js
+const withdrawalReceipt = await publicClientL2.waitForTransactionReceipt({ hash: withdrawalHash });
+console.log('L2 transaction confirmed:', withdrawalReceipt);
+``````
 
       {<h3>Wait for withdrawal prove</h3>}
 
       Next, is to prove to the bridge on L1 that the withdrawal happened on L2. To achieve that, you first need to wait until the withdrawal is ready to prove.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L80-L83 hash=c1c63ecb4c7f47bc2779fedabb5f70ab
-      ```
+      ```js
+const { output, withdrawal } = await publicClientL1.waitToProve({
+withdrawalReceipt,
+targetChain: walletClientL2.chain
+});
+``````
 
       Build parameters to prove the withdrawal on the L2.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L85-L88 hash=2bc88cda19bd39bfa89451906e4e1ae7
-      ```
+      ```js
+const proveArgs = await publicClientL2.buildProveWithdrawal({
+output,
+withdrawal,
+});
+``````
 
       {<h3>Prove the withdrawal on the L1</h3>}
 
       Once the withdrawal is ready to be proven, you'll send an L1 transaction to prove that the withdrawal happened on L2.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L90-L92 hash=312b1d49267d75ec0475bc507ae9a742
-      ```
+      ```js
+const proveHash = await walletClientL1.proveWithdrawal(proveArgs);
+
+const proveReceipt = await publicClientL1.waitForTransactionReceipt({ hash: proveHash });
+``````
 
       {<h3>Wait for withdrawal finalization</h3>}
 
       Before a withdrawal transaction can be finalized, you will need to wait for the finalization period.
       This can only happen after the fault proof period has elapsed. On OP Mainnet, this takes 7 days.
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L94-L97 hash=15e6f754d2e9f11a03f400813efef383
-      ```
+      ```js
+const awaitWithdrawal = await publicClientL1.waitToFinalize({
+targetChain: walletClientL2.chain,
+withdrawalHash: withdrawal.withdrawalHash,
+});
+``````
 
       <Info>
         We're currently testing fault proofs on OP Sepolia, so withdrawal times
@@ -266,25 +392,81 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
 
       {<h3>Finalize the withdrawal</h3>}
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L99-L102 hash=02f0f111055d889d627785754e6935ae
-      ```
+      ```js
+const finalizeHash = await walletClientL1.finalizeWithdrawal({
+targetChain: walletClientL2.chain,
+withdrawal,
+});
+``````
 
       {<h3>Wait until the withdrawal is finalized</h3>}
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L104-L106 hash=b3e63b66595ba34594c366e69a451abe
-      ```
+      ```js
+const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
+hash: finalizeHash
+});
+``````
 
       {<h3>Check the withdrawal status</h3>}
 
-      ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L108-L112 hash=3bd3e14a6c32270cc75d6b691e7b0c91
-      ```
+      ```js
+const status = await publicClientL1.getWithdrawalStatus({
+receipt,
+targetChain: walletClientL2.chain
+})
+console.log('Withdrawal completed successfully!');
+``````
     </Steps>
   </Tabs.Tab>
 
   <Tabs.Tab>
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-eth.js#L68-L111 hash=4a8d4d442b95aaf0853147420eb131af
-  ```
+  ```js
+//Add the same imports used in DepositETH function
+const withdrawalArgs = await publicClientL2.buildWithdrawalTransaction({
+value: parseEther('0.0001'),
+to: account.address,
+});
+
+const withdrawalHash = await walletClientL2.initiateWithdrawal(withdrawalArgs);
+console.log(`Withdrawal transaction hash on L2: ${withdrawalHash}`);
+
+const withdrawalReceipt = await publicClientL2.waitForTransactionReceipt({ hash: withdrawalHash });
+console.log('L2 transaction confirmed:', withdrawalReceipt);
+
+const { output, withdrawal } = await publicClientL1.waitToProve({
+withdrawalReceipt,
+targetChain: walletClientL2.chain
+});
+
+const proveArgs = await publicClientL2.buildProveWithdrawal({
+output,
+withdrawal,
+});
+
+const proveHash = await walletClientL1.proveWithdrawal(proveArgs);
+
+const proveReceipt = await publicClientL1.waitForTransactionReceipt({ hash: proveHash });
+
+const awaitWithdrawal = await publicClientL1.waitToFinalize({
+targetChain: walletClientL2.chain,
+withdrawalHash: withdrawal.withdrawalHash,
+});
+
+const finalizeHash = await walletClientL1.finalizeWithdrawal({
+targetChain: walletClientL2.chain,
+withdrawal,
+});
+
+const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
+hash: finalizeHash
+});
+
+const status = await publicClientL1.getWithdrawalStatus({
+receipt,
+targetChain: walletClientL2.chain
+})
+``````
 
   </Tabs.Tab>
 </Tabs>

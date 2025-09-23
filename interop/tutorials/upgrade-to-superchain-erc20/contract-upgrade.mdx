@@ -174,7 +174,49 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
   <Step title="Create and run the deployment script">
   1.  Create an `script/LabSetup.s.sol` file with this content:
   
-        ```solidity file=<rootDir>/public/tutorials/setup-for-erc20-upgrade.sh#L26-L66 hash=dd6605814c00636310d93706ab06f664 filename="script/LabSetup.s.sol"
+        ```solidity
+cat > script/LabSetup.s.sol <<EOF
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.20;
+
+import {Script, console} from "forge-std/Script.sol";
+import {UpgradeableBeacon} from "../lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {BeaconProxy} from "../lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
+
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
+    function initialize(string memory name, string memory symbol, uint256 initialSupply) public initializer {
+        __ERC20_init(name, symbol);
+        __Ownable_init(msg.sender);
+        _mint(msg.sender, initialSupply);
+    }
+}
+
+contract LabSetup is Script {
+    function setUp() public {}
+
+    function run() public {
+        vm.startBroadcast();
+
+        MyToken token = new MyToken();
+        console.log("Token address:", address(token));
+        console.log("msg.sender:", msg.sender);
+
+        UpgradeableBeacon beacon = new UpgradeableBeacon(address(token), msg.sender);
+        console.log("UpgradeableBeacon:", address(beacon));
+
+        BeaconProxy proxy = new BeaconProxy(address(beacon),
+            abi.encodeCall(MyToken.initialize, ("Test", "TST",
+		(block.chainid == 901) || (block.chainid == 420120000) ? 10**18 : 0))
+        );
+        console.log("Proxy:", address(proxy));
+
+        vm.stopBroadcast();
+    }
+```filename="script/LabSetup.s.sol"
         ```
   
         This is the same deployment script used for the original deployment on chain A.
@@ -235,40 +277,123 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
   
     1.  Create a file, `src/InteropToken.sol`:
   
-        ```solidity file=<rootDir>/public/tutorials/InteropToken.sol hash=007791836635608fdeb9c70c1b368f25 filename="src/InteropToken.sol"
+        ```solidity
+pragma solidity ^0.8.28;
+
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {IERC7802, IERC165} from "lib/interop-lib/src/interfaces/IERC7802.sol";
+import {PredeployAddresses} from "lib/interop-lib/src/libraries/PredeployAddresses.sol";
+
+contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IERC7802 {
+    function initialize(string memory name, string memory symbol, uint256 initialSupply) public initializer {
+        __ERC20_init(name, symbol);
+        __Ownable_init(msg.sender);
+        _mint(msg.sender, initialSupply);
+    }
+
+    /// @notice Allows the SuperchainTokenBridge to mint tokens.
+    /// @param _to     Address to mint tokens to.
+    /// @param _amount Amount of tokens to mint.
+    function crosschainMint(address _to, uint256 _amount) external {
+        require(msg.sender == PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE, "Unauthorized");
+
+        _mint(_to, _amount);
+
+        emit CrosschainMint(_to, _amount, msg.sender);
+    }
+
+    /// @notice Allows the SuperchainTokenBridge to burn tokens.
+    /// @param _from   Address to burn tokens from.
+    /// @param _amount Amount of tokens to burn.
+    function crosschainBurn(address _from, uint256 _amount) external {
+        require(msg.sender == PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE, "Unauthorized");
+
+        _burn(_from, _amount);
+
+        emit CrosschainBurn(_from, _amount, msg.sender);
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 _interfaceId) public view virtual returns (bool) {
+        return _interfaceId == type(IERC7802).interfaceId || _interfaceId == type(IERC20).interfaceId
+            || _interfaceId == type(IERC165).interfaceId;
+    }
+}
+```filename="src/InteropToken.sol"
         ```
   
         <details>
           <summary>Detailed explanation</summary>
   
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L1-L5 hash=36b9b9d0fb1ff680dc0eaa1c48b7c56b
-          ```
+          ```solidity
+pragma solidity ^0.8.28;
+
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+``````
   
           Most of the code is identical to the original `MyToken`.
   
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L6-L7 hash=f06f3bd72be73dbd754008da7dd00d48        
-          ```
+          ```solidity
+import {IERC7802, IERC165} from "lib/interop-lib/src/interfaces/IERC7802.sol";
+import {PredeployAddresses} from "lib/interop-lib/src/libraries/PredeployAddresses.sol";
+``````
   
           These are the imports needed for ERC7802 support.
           We need `IERC165` for documentation purposes, and `IERC7802` for the ERC7802 events.
   
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L9 hash=ca402292e7551621669ef1a59b85d7ce     
-          ```
+          ```solidity
+contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IERC7802 {
+``````
   
           We also implement [ERC165](https://eips.ethereum.org/EIPS/eip-165), but we don't need to import anything from there.
   
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L10-L14 hash=37e9b49f50a8b70971ce5d0112bd934e     
-          ```
+          ```solidity
+    function initialize(string memory name, string memory symbol, uint256 initialSupply) public initializer {
+        __ERC20_init(name, symbol);
+        __Ownable_init(msg.sender);
+        _mint(msg.sender, initialSupply);
+    }
+``````
   
           This function is identical to the one in `MyToken`.
   
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L16-L36 hash=448a7e21e094b3fd961f2b8ee15bc6c7     
-          ```
+          ```solidity
+    /// @notice Allows the SuperchainTokenBridge to mint tokens.
+    /// @param _to     Address to mint tokens to.
+    /// @param _amount Amount of tokens to mint.
+    function crosschainMint(address _to, uint256 _amount) external {
+        require(msg.sender == PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE, "Unauthorized");
+
+        _mint(_to, _amount);
+
+        emit CrosschainMint(_to, _amount, msg.sender);
+    }
+
+    /// @notice Allows the SuperchainTokenBridge to burn tokens.
+    /// @param _from   Address to burn tokens from.
+    /// @param _amount Amount of tokens to burn.
+    function crosschainBurn(address _from, uint256 _amount) external {
+        require(msg.sender == PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE, "Unauthorized");
+
+        _burn(_from, _amount);
+
+        emit CrosschainBurn(_from, _amount, msg.sender);
+    }
+``````
   
           Standard [ERC7802](https://eips.ethereum.org/EIPS/eip-7802) behavior.
   
-          ```solidity file=<rootDir>/public/tutorials/InteropToken.sol#L38-L42 hash=abb2093e9681984f25afa6f9d8b237a3     
-          ```
+          ```solidity
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 _interfaceId) public view virtual returns (bool) {
+        return _interfaceId == type(IERC7802).interfaceId || _interfaceId == type(IERC20).interfaceId
+            || _interfaceId == type(IERC165).interfaceId;
+    }
+``````
   
           Standard [ERC165](https://eips.ethereum.org/EIPS/eip-165) behavior.
         </details>

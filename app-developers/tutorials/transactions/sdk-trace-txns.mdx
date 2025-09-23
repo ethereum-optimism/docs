@@ -71,7 +71,9 @@ You need to import some dependencies into your Node REPL session.
 
 {<h3>Import viem</h3>}
 
-```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L3-L4 hash=57a929d665f2e5e4a7ecd085ad3d0b01
+```js
+const { createPublicClient, http } = require('viem');
+const { optimismSepolia, sepolia } = require('viem/chains');
 ```
   
 ## Set session variables
@@ -81,26 +83,39 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 <Steps>
   {<h3>Import RPC URLs</h3>}
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L13-L14 hash=0badc18f525e56b36406e7be8ad1104e
+  ```js
+  const l1RpcUrl = process.env.L1_RPC_URL;
+  const l2RpcUrl = process.env.L2_RPC_URL;
   ```
 
   {<h3>Set the deposit to trace</h3>}
 
   You'll be tracing a specific deposit in this tutorial. Deposit tracing is generally based on the transaction hash of the transaction that triggered the deposit. You can replace this transaction hash with your own if you'd like.
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L17 hash=367c797c3e9746addedf43857f789eeb
+  ```js
+  const depositHash = '0x5896d6e4a47b465e0d925723bab838c62ef53468139a5e9ba501efd70f90cccb'
   ```
 
   {<h3>Set the withdrawal to trace</h3>}
 
   You'll also be tracing a specific withdrawal in this tutorial. Like with deposits, withdrawal tracing is generally based on the transaction hash of the transaction that triggered the withdrawal. You can replace this transaction hash with your own if you'd like.
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L18 hash=545d1eed00ad0a235e2c79c8a87efd30
+  ```js
+  const withdrawalHash = '0x18b8b4022b8d9e380fd89417a2e897adadf31e4f41ca17442870bf89ad024f42'
   ```
 
   {<h3>Create the RPC providers</h3>}
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L20-L28 hash=6286672ca3163543e9d8ddeb5b1b6477
+  ```js
+  const l1Client = createPublicClient({
+    chain: sepolia,
+    transport: http(l1RpcUrl),
+  });
+
+  const l2Client = createPublicClient({
+    chain: optimismSepolia,
+    transport: http(l2RpcUrl),
+  });
   ```
 </Steps>
 
@@ -113,22 +128,31 @@ You can use viem to trace a deposit.
 
   You can query for the deposit status using the transaction hash of the deposit.
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L30-L32 hash=b3693011e87b605cdd29baeffb080b9a
+  ```js
+  console.log('Grabbing deposit status...')
+  const depositStatus = await l2Client.getTransactionReceipt({ hash: depositHash });
+  console.log(depositStatus);
   ```
 
   {<h3>Get the deposit transaction receipt</h3>}
 
   Retrieve the transaction receipt for the deposit using the viem client.
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L34-L36 hash=077581a56fc7b26f62589f0a6ae99e0d
-  ```
+  ```js
+console.log('Grabbing deposit receipt...')
+const depositReceipt = await l2Client.getTransaction({ hash: depositHash });
+console.log(depositReceipt);
+``````
 
   {<h3>Get the deposit transaction</h3>}
 
   You can directly query for the L2 transaction that executed the deposit.
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L38-L40 hash=c67f0abeef0f2f817b7fb04be8f157a6
-  ```
+  ```js
+console.log('Grabbing deposit txn...')
+const depositTransaction = await l2Client.getTransaction({ hash: depositHash });
+console.log(depositTransaction);
+``````
 </Steps>
 
 ## Trace a withdrawal
@@ -140,22 +164,31 @@ You can use viem's functions to trace a withdrawal.
 
   Like deposits, withdrawals can have multiple statuses depending on where they are in the process.
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L42-L44 hash=55ceda3d9d2f9abf037f8b259de14f26
-  ```
+  ```js
+console.log('Grabbing withdrawal status...')
+const withdrawalStatus = await l1Client.getTransactionReceipt({ hash: withdrawalHash });
+console.log(withdrawalStatus);
+``````
 
   {<h3>Get the withdrawal transaction receipt</h3>}
 
   Retrieve the L1 transaction receipt for the withdrawal.
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L46-L48 hash=d784970abbfd37215d33274d60173ab2
-  ```
+  ```js
+console.log('Grabbing withdrawal receipt...')
+const withdrawalReceipt = await l1Client.getTransaction({ hash: withdrawalHash });
+console.log(withdrawalReceipt);
+``````
 
   {<h3>Get the withdrawal transaction</h3>}
 
   Directly query for the L1 transaction that executed the withdrawal.
 
-  ```js file=<rootDir>/public/tutorials/sdk-trace-txns.js#L50-L52 hash=48358bc45243db4e69de6ed3d49a67f9
-  ```
+  ```js
+console.log('Grabbing withdrawal txn...')
+const withdrawalTransaction = await l1Client.getTransaction({ hash: withdrawalHash });
+console.log(withdrawalTransaction);
+``````
 </Steps>
 
 ## Next steps

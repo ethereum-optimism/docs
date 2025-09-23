@@ -115,8 +115,17 @@ Here's how to do it:
 <Steps>
   {<h3>Import the @eth-optimism/viem package</h3>}
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L2-L10 hash=5e88e02086fb2f4cf2e1e99a4cd30b04
-  ```
+  ```js
+
+  const viem = await import('viem');
+  const { createPublicClient, createWalletClient, http, formatEther } = viem;
+  const accounts = await import('viem/accounts');
+  const { privateKeyToAccount } = accounts;
+  const viemChains = await import('viem/chains');
+  const { optimismSepolia, sepolia } = viemChains;
+  const opActions = await import('@eth-optimism/viem/actions');
+  const { depositERC20, withdrawOptimismERC20 } = opActions;
+``````
 </Steps>
 
 ## Set session variables
@@ -132,8 +141,10 @@ Let's set those up now.
   The private key is essential for authorizing transactions on both L1 and L2 networks.
   For security reasons, we access it from an environment variable rather than hardcoding it.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L16-L17 hash=6a160f7ff083969091e72c90e1138563
-  ```
+  ```js
+  const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY || '';
+  const account = privateKeyToAccount(PRIVATE_KEY);
+``````
 
   {<h3>Create the RPC providers and wallets</h3>}
 
@@ -148,8 +159,32 @@ Let's set those up now.
   This dual-network setup allows us to seamlessly interact with both layers using the same account.
   Replace `<YOUR_API_KEY>` with your API key from a RPC provider.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L19-L42 hash=7f6a923f34ed2b0babdf44f57f88f8c1
-  ```
+  ```js
+  const L1_RPC_URL = 'https://rpc.ankr.com/eth_sepolia/<YOU_API_KEY>';
+  const L2_RPC_URL = 'https://sepolia.optimism.io';
+  
+  const publicClientL1 = createPublicClient({
+    chain: sepolia,
+    transport: http(L1_RPC_URL),
+  });
+  
+  const walletClientL1 = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http(L1_RPC_URL),
+  });
+  
+  const publicClientL2 = createPublicClient({
+    chain: optimismSepolia,
+    transport: http(L2_RPC_URL),
+  });
+  
+  const walletClientL2 = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http(L2_RPC_URL),
+  });
+``````
 
   {<h3>Set the L1 and L2 ERC-20 addresses</h3>}
 
@@ -159,8 +194,10 @@ Let's set those up now.
   The L2 token is configured to recognize deposits from its L1 counterpart.
   We also define a constant `oneToken` representing the full unit (10^18 wei) to simplify our deposit and withdrawal operations.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L12-L13 hash=d4da7ec838773c9f0e4ca38f4ba70242
-  ```
+  ```js
+  const l1Token = "0x5589BB8228C07c4e15558875fAf2B859f678d129";
+  const l2Token = "0xD08a2917653d4E460893203471f0000826fb4034";
+``````
 
   <Info>
     If you're coming from the [Bridging Your Standard ERC-20 Token to OP Mainnet
@@ -189,8 +226,60 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
 
   This comprehensive ABI gives us everything we need to manage our tokens across both L1 and L2.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L44-L95 hash=7967d72de2b91fb16ba2b4723995e307
-  ```
+  ```js
+  const erc20ABI = [
+    {
+      inputs: [
+        {
+          internalType: "address",
+          name: "account",
+          type: "address",
+        },
+      ],
+      name: "balanceOf",
+      outputs: [
+        {
+          internalType: "uint256",
+          name: "",
+          type: "uint256",
+        },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "faucet",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        {
+          internalType: "address",
+          name: "spender",
+          type: "address"
+        },
+        {
+          internalType: "uint256",
+          name: "value",
+          type: "uint256"
+        }
+      ],
+      name: "approve",
+      outputs: [
+        {
+          internalType: "bool",
+          name: "",
+          type: "bool"
+        }
+      ],
+      stateMutability: "nonpayable",
+      type: "function"
+    },
+  ];
+``````
 
   {<h3>Request some tokens</h3>}
 
@@ -200,8 +289,16 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
   The function doesn't require any parameters - it simply credits a predetermined amount to whoever calls it.
   We store the transaction hash for later reference and wait for the transaction to be confirmed.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L97-L104 hash=90511372fb9f975abfa8ec68659eb4a0
-  ```
+  ```js
+  console.log('Getting tokens from faucet...');
+  const tx = await walletClientL1.writeContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'faucet',
+    account,
+  });
+  console.log('Faucet transaction:', tx);
+``````
 
   {<h3>Check your token balance</h3>}
 
@@ -210,8 +307,15 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
   This step confirms that we've successfully received tokens before proceeding with the bridging process.
   The balance is returned in the smallest unit (wei), but we format it into a more readable form using the `formatEther` utility function from `viem`, since this token uses 18 decimal places.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L109-L115 hash=63fcd2ca7e6fe0466340d615950e9658
-  ```
+  ```js
+  const l1Balance = await publicClientL1.readContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L1 Balance after receiving faucet: ${formatEther(l1Balance)}`);
+``````
 </Steps>
 
 ## Deposit tokens
@@ -228,8 +332,9 @@ You'll then receive the same number of tokens on L2 in return.
   This constant helps us work with precise token amounts in our transactions, avoiding rounding errors and ensuring exact value transfers.
   We'll use this value for both deposits and withdrawals
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L14 hash=1940b943a802d51e41572bc7d6bc4515
-  ```
+  ```js
+  const oneToken = 1000000000000000000n
+``````
 
   {<h3>Allow the Standard Bridge to access your tokens</h3>}
 
@@ -239,8 +344,16 @@ You'll then receive the same number of tokens on L2 in return.
   We specify the bridge address from the chain configuration and the exact amount we want to bridge.
   This approval transaction must be confirmed before the bridge can move our tokens.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L118-L125 hash=58cf2e8e55c1466e3ddaa1c030a5266b
-  ```
+  ```js
+  const bridgeAddress = optimismSepolia.contracts.l1StandardBridge[sepolia.id].address;
+  const approveTx = await walletClientL1.writeContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'approve',
+    args: [bridgeAddress, oneToken],
+  });
+  console.log('Approval transaction:', approveTx);
+``````
 
   {<h3>Wait for approval</h3>}
 
@@ -250,8 +363,9 @@ You'll then receive the same number of tokens on L2 in return.
   The receipt provides confirmation details, including which block includes our transaction.
   This step ensures our approval is finalized before attempting to bridge tokens.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L128 hash=cfbada5a799bb17450ce56580bc31e11
-  ```
+  ```js
+  await publicClientL1.waitForTransactionReceipt({ hash: approveTx });
+``````
 
   {<h3>Deposit your tokens</h3>}
 
@@ -268,8 +382,18 @@ You'll then receive the same number of tokens on L2 in return.
 
   This streamlined process ensures our tokens are safely transferred to L2.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L130-L139 hash=5084d848deaf4b798706446a24e54a18
-  ```
+  ```js
+  console.log('Depositing tokens to L2...');
+  const depositTx = await depositERC20(walletClientL1, {
+    tokenAddress: l1Token,
+    remoteTokenAddress: l2Token,
+    amount: oneToken,
+    targetChain: optimismSepolia,
+    to: account.address,
+    minGasLimit: 200000,
+  });
+  console.log(`Deposit transaction hash: ${depositTx}`);
+``````
 
   <Info>
     Using a smart contract wallet? As a safety measure, `depositERC20` will fail
@@ -287,8 +411,10 @@ You'll then receive the same number of tokens on L2 in return.
   
   Note that while this confirms the deposit was accepted on L1, there will still be a short delay (typically a few minutes) before the tokens appear on L2, as the transaction needs to be processed by the Optimism sequencer.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L141-L142 hash=886c0a2fe4aa92dc67288d02bb654c3e
-  ```
+  ```js
+  const depositReceipt = await publicClientL1.waitForTransactionReceipt({ hash: depositTx });
+  console.log(`Deposit confirmed in block ${depositReceipt.blockNumber}`);
+``````
 
   {<h3>Check your token balance on L1</h3>}
 
@@ -297,8 +423,15 @@ You'll then receive the same number of tokens on L2 in return.
   This balance should be lower by the amount we bridged, as those tokens are now escrowed in the `L1StandardBridge` contract.
   This step helps confirm that the first part of the bridging process completed successfully:
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L148-L154 hash=9985ca726c10c42d96ea508c247a878c
-  ```
+  ```js
+  const l1BalanceAfterDeposit = await publicClientL1.readContract({
+    address: l1Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L1 Balance after deposit: ${formatEther(l1BalanceAfterDeposit)}`);
+``````
 
   {<h3>Check your token balance on L2</h3>}
 
@@ -307,8 +440,15 @@ You'll then receive the same number of tokens on L2 in return.
   The newly minted L2 tokens should appear in our wallet at the same address we used on L1.
   This step confirms the complete success of the bridge operation from L1 to L2.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L177-L183 hash=bf12c15e0ea43846a09176d351bf4f33
-  ```
+  ```js
+  const l2Balance = await publicClientL2.readContract({
+    address: l2Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L2 Balance after withdrawal: ${formatEther(l2Balance)}`);
+``````
 </Steps>
 
 ## Withdraw tokens
@@ -331,8 +471,16 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
 
   Unlike deposits, withdrawals from L2 to L1 are not immediate and require a multi-step process including a 7-day challenge period for security reasons.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L164-L171 hash=9ee233eaa1711443ff15e0d28d2da190
-  ```
+  ```js
+  console.log('Withdrawing tokens back to L1...');
+  const withdrawTx = await withdrawOptimismERC20(walletClientL2, {
+    tokenAddress: l2Token,
+    amount: oneToken / 2n, 
+    to: account.address,
+    minGasLimit: 200000,
+  });
+  console.log(`Withdrawal transaction hash: ${withdrawTx}`);
+``````
 
   {<h3>Wait for the transaction receipt</h3>}
 
@@ -342,8 +490,10 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   The transaction logs contain critical information that will be used later in the withdrawal verification process.
   This is only the first step in the withdrawal - the tokens are now locked on L2, but not yet available on L1.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L173-L174 hash=f1359ec27815a9fcf4964a877280da59
-  ```
+  ```js
+  const withdrawReceipt = await publicClientL2.waitForTransactionReceipt({ hash: withdrawTx });
+  console.log(`Withdrawal initiated in L2 block ${withdrawReceipt.blockNumber}`);
+``````
 
   <Info>
     This step can take a few minutes. Feel free to take a quick break while you
@@ -357,8 +507,15 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   
   At this point, the withdrawal process has begun, but the tokens are not yet available on L1 - they will become accessible after the 7-day challenge period and after completing the "prove" and "finalize" withdrawal steps.
 
-  ```js file=<rootDir>/public/tutorials/cross-dom-bridge-erc20.js#L177-L183 hash=bf12c15e0ea43846a09176d351bf4f33
-  ```
+  ```js
+  const l2Balance = await publicClientL2.readContract({
+    address: l2Token,
+    abi: erc20ABI,
+    functionName: 'balanceOf',
+    args: [account.address]
+  });
+  console.log(`L2 Balance after withdrawal: ${formatEther(l2Balance)}`);
+``````
 </Steps>
 
 ## Next steps

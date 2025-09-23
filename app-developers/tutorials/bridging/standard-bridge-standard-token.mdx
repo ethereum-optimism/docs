@@ -67,16 +67,19 @@ All tokens created by the factory implement the `IOptimismMintableERC20` interfa
   You'll need an RPC URL in order to connect to OP Sepolia.
   Set your RPC URL as an environment variable with the `export` command.
 
-  ```bash file=<rootDir>/public/tutorials/standard-bridge-standard-token.sh#L1 hash=a1c505198f7753f7d2114f4a018d7889
-  ```
+  ```bash
+export TUTORIAL_RPC_URL=https://sepolia.optimism.io
+``````
 
   {<h3>Add your L1 ERC-20 token address to your environment</h3>}
 
   You'll need to know the address of your L1 ERC-20 token in order to create a bridged representation of it on OP Sepolia.
   Set your L1 ERC-20 token address as an environment variable with the `export` command.
 
-  ```bash file=<rootDir>/public/tutorials/standard-bridge-standard-token.sh#L3-L4 hash=c505f3eb6ddd80d8fbdddf4d7b17852a
-  ```
+  ```bash
+# Replace this with your L1 ERC-20 token if not using the testing token!
+export TUTORIAL_L1_ERC20_ADDRESS=0x5589BB8228C07c4e15558875fAf2B859f678d129
+``````
 
   {<h3>Deploy your L2 ERC-20 token</h3>}
 
@@ -85,8 +88,9 @@ All tokens created by the factory implement the `IOptimismMintableERC20` interfa
   This example command creates a token with the name "My Standard Demo Token" and the symbol "L2TKN".
   The resulting L2 ERC-20 token address is printed to the console.
 
-  ```bash file=<rootDir>/public/tutorials/standard-bridge-standard-token.sh#L6 hash=1ecfdc6106e0c5179b182d66b5171c2c
-  ```
+  ```bash
+cast send 0x4200000000000000000000000000000000000012 "createOptimismMintableERC20(address,string,string)" $TUTORIAL_L1_ERC20_ADDRESS "My Standard Demo Token" "L2TKN" --private-key $TUTORIAL_PRIVATE_KEY --rpc-url $TUTORIAL_RPC_URL --json | jq -r '.logs[0].topics[2]' | cast parse-bytes32-address
+``````
 </Steps>
 
 ## Bridge some tokens

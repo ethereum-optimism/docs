@@ -133,14 +133,56 @@ Here we will use the [SuperchainERC20 Starter Kit](/app-developers/starter-kit).
   The easiest way to do this is to copy and modify the `L2NativeSuperchainERC20.sol` contract.
     Use this code, for example, as `packages/contracts/src/CustomSuperchainToken.sol`.
   
-    ```solidity file=<rootDir>/public/tutorials/CustomSuperchainToken.sol hash=4ad95b9203ce523351eba0501f8b972d 
-    ```
+    ```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.25;
+
+import {SuperchainERC20} from "./SuperchainERC20.sol";
+import {Ownable} from "@solady/auth/Ownable.sol";
+
+contract CustomSuperchainToken is SuperchainERC20, Ownable {
+    string private _name;
+    string private _symbol;
+    uint8 private immutable _decimals;
+
+    constructor(address owner_, string memory name_, string memory symbol_, uint8 decimals_) {
+        _name = name_;
+        _symbol = symbol_;
+        _decimals = decimals_;
+
+        _initializeOwner(owner_);
+    }
+
+    function name() public view virtual override returns (string memory) {
+        return _name;
+    }
+
+    function symbol() public view virtual override returns (string memory) {
+        return _symbol;
+    }
+
+    function decimals() public view override returns (uint8) {
+        return _decimals;
+    }
+
+    function mintTo(address to_, uint256 amount_) external onlyOwner {
+        _mint(to_, amount_);
+    }
+
+    function faucet() external {
+        _mint(msg.sender, 10**_decimals);
+    }
+}
+``````
   
     <details>
       <summary>Explanation</summary>
   
-      ```solidity file=<rootDir>/public/tutorials/CustomSuperchainToken.sol#L36-L38 hash=4e402ea88c9cd796500425172a6de16d 
-      ```
+      ```solidity
+    function faucet() external {
+        _mint(msg.sender, 10**_decimals);
+    }
+``````
   
       This function lets users get tokens for themselves.
       This token is for testing purposes, so it is useful for users to get their own tokens to run tests.
