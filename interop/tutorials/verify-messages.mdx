@@ -204,7 +204,7 @@ const serializedTransaction = await wallet0.signTransaction(request)
 const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
  
 console.log(`export ATTEST_TXN=${attestHash}`)
-``````
+```
   
       <details>
         <summary>Explanation</summary>
@@ -227,7 +227,7 @@ const walletClientToSigner = walletClient => {
   
   return signer
 }
-``````
+```
   
         The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) used for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
         This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer).
@@ -245,7 +245,7 @@ try {
     if (err.info.error.data == "0x23369fa6")
         schemaUID = "0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58"
 }
-``````
+```
   
         Register the [EAS Schema](https://docs.attest.org/docs/tutorials/create-a-schema) if necessary.
         This schema ties Ethereum addresses to names.
@@ -265,7 +265,7 @@ const attestTxn = await eas.attest({
     data: attestedData,
   },
 })
-``````
+```
   
         [Attest](https://docs.attest.org/docs/tutorials/make-an-attestation) that the name for Ethereum address `0x0123456789012345678901234567890123456789` is `Bill Hamm`.
   
@@ -273,7 +273,7 @@ const attestTxn = await eas.attest({
 // To get the attestation ID we'd use
 // const attestationID = await transaction2.wait()
 // However, here we need the attestation transaction's hash.
-``````
+```
   
         This is the recommended way to execute the attestation transaction, which provides you with the attestation's UID.
         However, for our purpose we need the transaction receipt, which you do not get.
@@ -284,7 +284,7 @@ const attestTxn = await eas.attest({
 const request = await wallet0.prepareTransactionRequest(attestTxn.data)
 const serializedTransaction = await wallet0.signTransaction(request)
 const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
-``````
+```
   
         Send the attestation transaction created by the EAS SDK manually (using viem's [`sendRawTransaction`](https://viem.sh/docs/actions/wallet/sendRawTransaction)) to obtain the transaction hash.
       </details>
@@ -403,7 +403,7 @@ if (verified) {
 } else {
   console.log("Verification failed")
 }
-``````
+```
   
         <details>
           <summary>Explanation</summary>
@@ -419,7 +419,7 @@ try {
 const attestLogEntry = receipt.logs.filter(x => 
     (x.address == EASContractAddress) &&
     (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
-``````
+```
   
           To create the [executing message](/interop/message-passing#executing-message), we need several fields that appear in the log entry we are verifying.
           This is how we obtain the relevant log entry.
@@ -430,7 +430,7 @@ const attestLogEntry = receipt.logs.filter(x =>
   
           ```js
 // attestLogEntry.topics[1] = "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b34"
-``````
+```
   
           Part of testing a system is ensuring that it does not accept invalid input.
           You can uncomment this line to see that the verification fails with an incorrect log entry.
@@ -439,7 +439,7 @@ const attestLogEntry = receipt.logs.filter(x =>
 const relayMessageParams = await wallet0.interop.buildExecutingMessage({
   log: attestLogEntry,
 })
-``````
+```
   
           [Build the executing message](https://github.com/ethereum-optimism/ecosystem/blob/main/packages/viem/docs/actions/interop/functions/buildExecutingMessage.md).
   
@@ -458,7 +458,7 @@ try {
   console.log("Verification failed (revert)")
   process.exit(0)
 }
-``````
+```
   
           Call [`CrossL2Inbox.validateMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L68-L82).
           For some invalid inputs, this function reverts.
@@ -474,7 +474,7 @@ try {
   console.log("Verification failed (timeout)")
   process.exit(0)
 }
-``````
+```
   
           Wait for the transaction receipt for the executing message.
           The timeout is necessary because if the executing message is valid, but the log entry has not been seen yet, the sequencer does not put the transaction with the message into a block.
@@ -487,7 +487,7 @@ const verified =
          x.topics[0] == "0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7" &&
          x.topics[1] == keccak256(toBytes(relayMessageParams.payload))
   ).length > 0
-``````
+```
   
           Look for the log entry from `CrossL2Inbox`.
           To ensure this is the correct log entry, we look at the [message type](https://www.4byte.directory/event-signatures/?bytes_signature=0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7) and check that the ID is the correct one.
@@ -642,7 +642,7 @@ contract Verifier {
     }
     
 }
-``````
+```
   
         <details>
           <summary>Explanation</summary>
@@ -661,7 +661,7 @@ struct Identifier {
 interface ICrossL2Inbox {
     function validateMessage(Identifier calldata _id, bytes32 _msgHash) external;
 }
-``````
+```
   
           At writing these definitions from [`ICrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol) are not yet part of the [npm package](https://www.npmjs.com/package/@eth-optimism/contracts), so we include them here for now.
   
@@ -686,7 +686,7 @@ interface ICrossL2Inbox {
                 )
             );
     }
-``````
+```
   
           This function is part of the [EAS contract code](https://github.com/ethereum-attestation-service/eas-contracts/blob/master/contracts/EAS.sol#L692-L711) that calculates the attestation ID.
   
@@ -706,7 +706,7 @@ interface ICrossL2Inbox {
             )
         );
     }
-``````
+```
   
           Calculate the payload hash.
   
@@ -740,13 +740,13 @@ interface ICrossL2Inbox {
 
         // Signal that this is a cross chain call that needs to have the identifier validated
         ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(logEntryIdentifier, payloadHash);
-``````
+```
   
           This is the function that gets the attestation information, builds the call, and calls `CrossL2Inbox`.
   
           ```solidity
         // Code that uses the attestation goes here        
-``````
+```
   
           This section is reserved for actions that depend on a successful attestation verification.
           In real-world applications, implement your core logic here.
@@ -844,7 +844,7 @@ const verificationTransaction = await verifier.write.verifyAttestation({
 })
 
 console.log(`VERIFICATION_TRANSACTION_HASH=${verificationTransaction}`)
-``````
+```
   
         <details>
           <summary>Explanation</summary>
@@ -860,7 +860,7 @@ async function loadVerifierAbi() {
 }
 
 const verifierAbi = (await loadVerifierAbi()).abi
-``````
+```
   
           Read the ABI for `Verifier` we created onchain.
   
@@ -883,13 +883,13 @@ const verificationTransaction = await verifier.write.verifyAttestation({
   ],
   accessList: relayMessageParams.accessList
 })
-``````
+```
   
           Call `Verifier` with the information needed to verify the attestation.
   
           ```javascript
 console.log(`VERIFICATION_TRANSACTION_HASH=${verificationTransaction}`)
-``````
+```
   
           Report the transaction hash.
         </details>

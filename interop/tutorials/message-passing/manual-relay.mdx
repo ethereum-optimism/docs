@@ -203,7 +203,7 @@ echo Set these environment variables
 echo GREETER_A_ADDRESS=$GREETER_A_ADDRESS
 echo GREETER_B_ADDRESS=$GREETER_B_ADDRESS
 echo PRIVATE_KEY=$PRIVATE_KEY
-``````
+```
   
     This script installs `Greeter.sol` on chain B and `GreetingSender.sol` on chain A.
     These smart contracts let us send a message from chain A that needs to be relayed to chain B.
@@ -325,7 +325,7 @@ const receiptRelay = await walletB.waitForTransactionReceipt({
  
 const greeting3 = await greeter.read.greet()
 console.log(`Greeting after the relay transaction: ${greeting3}`)
-``````
+```
   
         <details>
           <summary>Explanation</summary>
@@ -333,7 +333,7 @@ console.log(`Greeting after the relay transaction: ${greeting3}`)
           ```javascript
 import { supersimL2A, supersimL2B } from '@eth-optimism/viem/chains' 
 import { walletActionsL2, publicActionsL2 } from '@eth-optimism/viem'
-``````
+```
   
           Import from the [`@eth-optimism/viem`](https://www.npmjs.com/package/@eth-optimism/viem) package.
   
@@ -353,7 +353,7 @@ const walletB = createWalletClient({
 }).extend(publicActions)
 //    .extend(publicActionsL2())
     .extend(walletActionsL2())
-``````
+```
   
           In addition to extending the wallets with [Viem public actions](https://viem.sh/docs/accounts/local#5-optional-extend-with-public-actions), extend with the OP-Stack actions.
           On wallet A we need the public actions, those that only read information.
@@ -361,7 +361,7 @@ const walletB = createWalletClient({
   
           ```javascript
 const receiptA = await walletA.waitForTransactionReceipt({hash: txnAHash})
-``````
+```
   
           To relay a message we need the information in the receipt.
           Also, we need to wait until the transaction with the relayed message is actually part of a block.
@@ -369,7 +369,7 @@ const receiptA = await walletA.waitForTransactionReceipt({hash: txnAHash})
           ```javascript
 const greeting2 = await greeter.read.greet()
 console.log(`Greeting before the relay transaction: ${greeting2}`)
-``````        
+```        
   
           Show the user that until the relay transaction happens on chain B, the greeting is unchanged.
   
@@ -378,7 +378,7 @@ const sentMessages = await walletA.interop.getCrossDomainMessages({
   logs: receiptA.logs,
 })
 const sentMessage = sentMessages[0] // We only sent 1 message
-``````
+```
   
           A single transaction can send multiple messages.
           But here we know we sent just one, so we look for the first one in the list.
@@ -392,7 +392,7 @@ const relayMsgTxnHash = await walletB.interop.relayCrossDomainMessage(relayMessa
 const receiptRelay = await walletB.waitForTransactionReceipt({
   hash: relayMsgTxnHash,
 })
-``````
+```
   
           Here we first send the relay message on chain B, and then wait for the receipt for it.
         </details>

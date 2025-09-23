@@ -125,7 +125,7 @@ Here's how to do it:
   const { optimismSepolia, sepolia } = viemChains;
   const opActions = await import('@eth-optimism/viem/actions');
   const { depositERC20, withdrawOptimismERC20 } = opActions;
-``````
+```
 </Steps>
 
 ## Set session variables
@@ -144,7 +144,7 @@ Let's set those up now.
   ```js
   const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY || '';
   const account = privateKeyToAccount(PRIVATE_KEY);
-``````
+```
 
   {<h3>Create the RPC providers and wallets</h3>}
 
@@ -184,7 +184,7 @@ Let's set those up now.
     chain: optimismSepolia,
     transport: http(L2_RPC_URL),
   });
-``````
+```
 
   {<h3>Set the L1 and L2 ERC-20 addresses</h3>}
 
@@ -197,7 +197,7 @@ Let's set those up now.
   ```js
   const l1Token = "0x5589BB8228C07c4e15558875fAf2B859f678d129";
   const l2Token = "0xD08a2917653d4E460893203471f0000826fb4034";
-``````
+```
 
   <Info>
     If you're coming from the [Bridging Your Standard ERC-20 Token to OP Mainnet
@@ -279,7 +279,7 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
       type: "function"
     },
   ];
-``````
+```
 
   {<h3>Request some tokens</h3>}
 
@@ -298,7 +298,7 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
     account,
   });
   console.log('Faucet transaction:', tx);
-``````
+```
 
   {<h3>Check your token balance</h3>}
 
@@ -315,7 +315,7 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
     args: [account.address]
   });
   console.log(`L1 Balance after receiving faucet: ${formatEther(l1Balance)}`);
-``````
+```
 </Steps>
 
 ## Deposit tokens
@@ -334,7 +334,7 @@ You'll then receive the same number of tokens on L2 in return.
 
   ```js
   const oneToken = 1000000000000000000n
-``````
+```
 
   {<h3>Allow the Standard Bridge to access your tokens</h3>}
 
@@ -353,7 +353,7 @@ You'll then receive the same number of tokens on L2 in return.
     args: [bridgeAddress, oneToken],
   });
   console.log('Approval transaction:', approveTx);
-``````
+```
 
   {<h3>Wait for approval</h3>}
 
@@ -365,7 +365,7 @@ You'll then receive the same number of tokens on L2 in return.
 
   ```js
   await publicClientL1.waitForTransactionReceipt({ hash: approveTx });
-``````
+```
 
   {<h3>Deposit your tokens</h3>}
 
@@ -393,7 +393,7 @@ You'll then receive the same number of tokens on L2 in return.
     minGasLimit: 200000,
   });
   console.log(`Deposit transaction hash: ${depositTx}`);
-``````
+```
 
   <Info>
     Using a smart contract wallet? As a safety measure, `depositERC20` will fail
@@ -414,7 +414,7 @@ You'll then receive the same number of tokens on L2 in return.
   ```js
   const depositReceipt = await publicClientL1.waitForTransactionReceipt({ hash: depositTx });
   console.log(`Deposit confirmed in block ${depositReceipt.blockNumber}`);
-``````
+```
 
   {<h3>Check your token balance on L1</h3>}
 
@@ -431,7 +431,7 @@ You'll then receive the same number of tokens on L2 in return.
     args: [account.address]
   });
   console.log(`L1 Balance after deposit: ${formatEther(l1BalanceAfterDeposit)}`);
-``````
+```
 
   {<h3>Check your token balance on L2</h3>}
 
@@ -448,7 +448,7 @@ You'll then receive the same number of tokens on L2 in return.
     args: [account.address]
   });
   console.log(`L2 Balance after withdrawal: ${formatEther(l2Balance)}`);
-``````
+```
 </Steps>
 
 ## Withdraw tokens
@@ -480,7 +480,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
     minGasLimit: 200000,
   });
   console.log(`Withdrawal transaction hash: ${withdrawTx}`);
-``````
+```
 
   {<h3>Wait for the transaction receipt</h3>}
 
@@ -493,7 +493,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   ```js
   const withdrawReceipt = await publicClientL2.waitForTransactionReceipt({ hash: withdrawTx });
   console.log(`Withdrawal initiated in L2 block ${withdrawReceipt.blockNumber}`);
-``````
+```
 
   <Info>
     This step can take a few minutes. Feel free to take a quick break while you
@@ -515,7 +515,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
     args: [account.address]
   });
   console.log(`L2 Balance after withdrawal: ${formatEther(l2Balance)}`);
-``````
+```
 </Steps>
 
 ## Next steps

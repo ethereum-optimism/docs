@@ -416,7 +416,7 @@ contract CustomBridge {
     address public immutable tokenAddressThere;
     uint256 public immutable chainIdThere;
     address public immutable bridgeAddressThere;
-``````
+```
   
             The configuration is [`immutable`](https://docs.soliditylang.org/en/latest/contracts.html#immutable).
             We are deploying the contract behind a proxy, so if we need to change it we can deploy a different contract.
@@ -443,7 +443,7 @@ contract CustomBridge {
         chainIdThere = chainIdThere_;
         bridgeAddressThere = bridgeAddressThere_;
     }    
-``````
+```
   
             The constructor writes the configuration parameters.
   
@@ -452,20 +452,20 @@ contract CustomBridge {
         address _to,
         uint256 _amount
     )
-``````
+```
   
             We don't need to specify the token address, or the chain ID on the other side, because they are hardwired in this bridge.
   
             ```solidity
         emit SendERC20(tokenAddressHere, msg.sender, _to, _amount, chainIdThere);
-``````
+```
   
             Emit the same log entry that would be emitted by the standard bridge.
   
             ```solidity
         if (crossDomainMessageSender != bridgeAddressThere) revert InvalidCrossDomainSender();
         if (source != chainIdThere) revert InvalidCrossDomainSender();
-``````
+```
   
             Make sure any relay requests come from the correct contract on the correct chain.
         </details>

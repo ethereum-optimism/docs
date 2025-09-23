@@ -44,14 +44,6 @@ Users can unwrap their Superchain interop token at any time by returning it to t
   You're welcome to use it, but if you need it for production purposes you should get it audited first.
 </Callout>
 
-{/* 
-
-I put this warning here, when we don't have it on most pages, because this tutorial
-has code that is a lot more likely to be used in production. It doesn't just
-show what is possible, it does the exact job needed.
-
-*/}
-
 ### What you'll do
 
 Create a lockbox `SuperchainERC20` contract to enable interoperability for an ERC20 contract without permission from the original ERC20 deployer.
@@ -259,7 +251,7 @@ contract LockboxDeployer is Script {
         return keccak256(abi.encodePacked(salt, timestamp));
     }
 }
-``````
+```
   
         <details>
           <summary>Explanation of the modified functions</summary>
@@ -275,7 +267,7 @@ contract LockboxDeployer is Script {
         require(decimals <= type(uint8).max, "decimals exceeds uint8 range");
         address originalTokenAddress = vm.envAddress("ERC20_ADDRESS");
         uint256 originalChainId = vm.envUint("ERC20_CHAINID");
-``````
+```
   
           Get the majority of the configuration from the environment.
           Mostly of it is derived from the configuration of the original ERC-20 token.
@@ -300,7 +292,7 @@ contract LockboxDeployer is Script {
             console.log("Deployed LockboxSuperchainERC20 at address: ", addr_, "on chain id: ", block.chainid);
         }
     }
-``````
+```
   
           "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.\
           If there is already a contract there, we have a problem.
@@ -312,7 +304,7 @@ contract LockboxDeployer is Script {
         string memory salt = vm.parseTomlString(deployConfig, ".deploy_config.salt");
         return keccak256(abi.encodePacked(salt, timestamp));
     }
-``````
+```
   
           I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
           This is not necessary, but I consider it a developer experience improvement.
@@ -400,7 +392,7 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
         require(success, "Transfer failed, this should not happen");  
     }
 }
-``````
+```
   
         <details>
           <summary>Explanation</summary>
@@ -408,7 +400,7 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
           ```solidity
     address immutable _originalTokenAddress;
     uint256 immutable _originalChainId;
-``````
+```
   
           The lockbox contract needs to know the contract for which it is a lockbox.
           This requires not just the address, but also to know what chain has it.
@@ -425,7 +417,7 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
         // Not necessariy if the ERC-20 contract reverts rather than reverting.
         // However, the standard allows the ERC-20 contract to return false instead.
         require(success, "No tokens to lock, no mint either");
-``````
+```
   
           Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
           This function has several tests to make sure it can be called.
@@ -451,7 +443,7 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
         _burn(msg.sender, amount_);
 
         bool success = originalToken.transfer(msg.sender, amount_);
-``````
+```
   
           Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
           It also has multiple tests.

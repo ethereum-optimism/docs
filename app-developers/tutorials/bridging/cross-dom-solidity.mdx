@@ -184,7 +184,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   const { optimismSepolia, sepolia } = require("viem/chains");
   const { publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2, getWithdrawals } = require("viem/op-stack");
   const { privateKeyToAccount } = require("viem/accounts");
-``````
+```
   
   {<h3>Create the RPC providers and wallets</h3>}
   
@@ -202,7 +202,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
     chain: optimismSepolia,
     transport:  http("https://opt-sepolia.g.alchemy.com/v2/***")
   }).extend(walletActionsL2())
-``````
+```
   
   {<h3>Wait until the message is ready to prove</h3>}
   
@@ -219,7 +219,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
     receipt, 
     targetChain: l2Provider.chain, 
   })
-``````
+```
   
   <Info>
   This step can take a few minutes.
@@ -236,7 +236,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
     receipt, 
     targetChain: l2Provider.chain, 
   })
-``````
+```
   
   {<h3>Build parameters to prove the withdrawal on the L2</h3>}
   
@@ -248,7 +248,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   })
   
   const hash = await l1Wallet.proveWithdrawal(args)
-``````
+```
   
   {<h3>Wait until the message is ready for relay</h3>}
   
@@ -266,7 +266,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
     receipt, 
     targetChain: l2Provider.chain, 
   }) 
-``````
+```
   
   {<h3>Relay the message on L1</h3>}
   
@@ -276,7 +276,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   console.log('Relaying message...')
   const [message] = getWithdrawals(receipt)
   await l1Provider.waitToFinalize({ withdrawalHash: message.withdrawalHash, targetChain: l2Provider.chain }) 
-``````
+```
   
   {<h3>Wait until the message is relayed</h3>}
   
@@ -290,7 +290,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
 
   console.log('Waiting for message to be relayed...')
   await l1Provider.getWithdrawalStatus({ receipt, targetChain: l2Provider.chain }) 
-``````
+```
   
   {<h3>Check the L1 Greeter</h3>}
   

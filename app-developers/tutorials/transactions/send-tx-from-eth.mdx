@@ -93,7 +93,7 @@ You need to import some dependencies into your Node REPL session.
   const { optimismSepolia, sepolia } = require('viem/chains');
   const { privateKeyToAccount } = require('viem/accounts');
   const { publicActionsL2, publicActionsL1, walletActionsL2, walletActionsL1, getL2TransactionHashes } = require ('viem/op-stack')
-``````
+```
 </Steps>
 
 ## Set session variables
@@ -106,7 +106,7 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
   ```js
   const privateKey = process.env.TUTORIAL_PRIVATE_KEY;
   const account = privateKeyToAccount(privateKey);
-``````
+```
 
   {<h3>Create the RPC providers and wallets</h3>}
 
@@ -114,7 +114,7 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
   const l1PublicClient = createPublicClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") }).extend(publicActionsL1())
   const l2PublicClient = createPublicClient({ chain: optimismSepolia, transport: http("https://sepolia.optimism.io") }).extend(publicActionsL2());
   const l1WalletClient = createWalletClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") }).extend(walletActionsL1());
-``````
+```
 </Steps>
 
 ## Check your initial balance
@@ -146,7 +146,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
       type: 'function',
       },
   ];
-``````
+```
 
   {<h3>Estimate the required gas</h3>}
 
@@ -166,7 +166,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
       value,
       account: account.address,
   });
-``````
+```
 
   {<h3>Send the transaction</h3>}
 
@@ -185,7 +185,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 
   const l1TxHash = await l1WalletClient.writeContract(request)
   console.log(`L1 transaction hash: ${l1TxHash}`)
-``````
+```
 
   {<h3>Wait for the L1 transaction</h3>}
 
@@ -193,7 +193,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 
   ```js
   const l1TxHash = await l1WalletClient.writeContract(request)
-``````
+```
 
   {<h3>Wait for the L2 transaction</h3>}
 
@@ -207,7 +207,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
       hash: l2Hash,
   }); 
   console.log('L2 transaction confirmed:', l2Receipt);
-``````
+```
 </Steps>
 
 ## Check your updated balance
