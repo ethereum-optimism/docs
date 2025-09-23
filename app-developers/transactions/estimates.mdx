@@ -34,13 +34,13 @@ Your transaction fee will then be the product of these two values.
 Refer to the guide on [Setting Transaction Gas Parameters on OP Mainnet](./parameters) to learn how to select an appropriate gas limit and max fee per gas for your transaction.
 
 <Steps>
-  {<h3>Estimate the gas limit</h3>}
+  <h3>Estimate the gas limit</h3>
   
   Using the same tooling that you'd use to estimate the gas limit for a transaction on Ethereum, estimate the gas limit for your transaction on OP Mainnet.
   OP Mainnet is designed to be [EVM equivalent](https://web.archive.org/web/20231127160757/https://medium.com/ethereum-optimism/introducing-evm-equivalence-5c2021deb306) so transactions will use the same amount of gas on OP Mainnet as they would on Ethereum.
   This means you can feed your transaction to the [`eth_estimateGas`](https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_estimategas) JSON-RPC method just like you would on Ethereum. Alternatively, use Tenderly's [`tenderly_estimateGas`](https://docs.tenderly.co/node/rpc-reference/optimism-mainnet/tenderly_estimateGas) for 100% accurate gas estimations.
   
-  {<h3>Estimate the max fee per gas</h3>}
+  <h3>Estimate the max fee per gas</h3>
   
   Like Ethereum, OP Mainnet uses an `EIP-1559` style fee market to determine the current base fee per gas.
   You can then additionally specify a priority fee (also known as a tip) to incentivize the Sequencer to include your transaction more quickly.
@@ -71,13 +71,13 @@ This means that the L1 data fee for your transaction may differ from your estima
 </Info>
 
 <Steps>
-  {<h3>Serialize your transaction</h3>}
+  <h3>Serialize your transaction</h3>
   
   The L1 data fee is calculated based on the size of your serialized transaction in bytes.
   Most Ethereum tooling will provide a method for serializing a transaction.
   For instance, Ethers.js provides the [`ethers.utils.serializeTransaction`](https://docs.ethers.org/v5/api/utils/transactions/#utils-serializeTransaction) method.
   
-  {<h3>Estimate the L1 data fee</h3>}
+  <h3>Estimate the L1 data fee</h3>
   
   Once you have serialized your transaction, you can estimate the L1 data fee by calling the [`getL1Fee`](https://github.com/ethereum-optimism/optimism/blob/233ede59d16cb01bdd8e7ff662a153a4c3178bdd/packages/contracts/contracts/L2/predeploys/OVM_GasPriceOracle.sol#L109-L124) method on the [`GasPriceOracle`](https://github.com/ethereum-optimism/optimism/blob/233ede59d16cb01bdd8e7ff662a153a4c3178bdd/packages/contracts/contracts/L2/predeploys/OVM_GasPriceOracle.sol) smart contract available on OP Mainnet and all OP Stack chains.
   This method takes the serialized transaction as input and returns the L1 data fee in wei using the formula described in the [Transaction Fees on OP Mainnet](./fees#l1-data-fee) guide.

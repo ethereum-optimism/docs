@@ -34,20 +34,20 @@ You're going to use Viem for this tutorial.
 Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
-  {<h3>Make a project folder</h3>}
+  <h3>Make a project folder</h3>
 
   ```bash
   mkdir bridge-eth
   cd bridge-eth
   ```
 
-  {<h3>Initialize the project</h3>}
+  <h3>Initialize the project</h3>
 
   ```bash
   pnpm init
   ```
 
-  {<h3>Install the Viem library</h3>}
+  <h3>Install the Viem library</h3>
 
   ```bash
   pnpm add viem
@@ -94,7 +94,7 @@ This will bring up a Node REPL prompt that allows you to run JavaScript code.
 You need to import some dependencies into your Node REPL session.
 
 <Steps>
-{<h3>Import Viem and other packages</h3>}
+<h3>Import Viem and other packages</h3>
 
 ```js
 const { createPublicClient, http, createWalletClient, parseEther, formatEther } = require('viem');
@@ -103,14 +103,14 @@ const { privateKeyToAccount } = require('viem/accounts');
 const { getL2TransactionHashes, publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 ```
 
-{<h3>Load private key and set account</h3>}
+<h3>Load private key and set account</h3>
 
 ```js
 const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
 const account = privateKeyToAccount(PRIVATE_KEY);
 ```
 
-{<h3>Create L1 public client for reading from the Sepolia network</h3>}
+<h3>Create L1 public client for reading from the Sepolia network</h3>
 
 ```js
 const publicClientL1 = createPublicClient({
@@ -120,7 +120,7 @@ const publicClientL1 = createPublicClient({
 ```
 
 
-{<h3>Create L1 wallet client for sending transactions on Sepolia</h3>}
+<h3>Create L1 wallet client for sending transactions on Sepolia</h3>
 
 ```js
 const walletClientL1 = createWalletClient({
@@ -131,7 +131,7 @@ const walletClientL1 = createWalletClient({
 ```
 
 
-{<h3>Create L2 public client for interacting with OP Sepolia</h3>}
+<h3>Create L2 public client for interacting with OP Sepolia</h3>
 
 ```js
 const publicClientL2 = createPublicClient({
@@ -140,7 +140,7 @@ const publicClientL2 = createPublicClient({
 }).extend(publicActionsL2());
 ```
 
-{<h3>Create L2 wallet client on OP Sepolia</h3>}
+<h3>Create L2 wallet client on OP Sepolia</h3>
 
 ```js
 const walletClientL2 = createWalletClient({
@@ -164,7 +164,7 @@ Now that you have some ETH on L1 you can deposit that ETH into the `OptimismPort
 <Tabs items={['depositETH', 'Full Code']}>
   <Tabs.Tab>
     <Steps>
-      {<h3>Check your wallet balance on L1</h3>}
+      <h3>Check your wallet balance on L1</h3>
 
       See how much ETH you have on L1 so you can confirm that the deposit worked later on.
 
@@ -177,7 +177,7 @@ console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`);
         We used `formatEther` method from `viem` to format the balance to ether.
       </Info>
 
-      {<h3>Create the deposit transaction</h3>}
+      <h3>Create the deposit transaction</h3>
 
       Use `buildDepositTransaction` to build the deposit transaction parameters on the L2.
 
@@ -188,7 +188,7 @@ const depositArgs = await publicClientL2.buildDepositTransaction({
 });
 ```
 
-      {<h3>Send the deposit transaction</h3>}
+      <h3>Send the deposit transaction</h3>
 
       Send the deposit transaction on L1 and log the L1 transaction hash.
 
@@ -197,7 +197,7 @@ const depositHash = await walletClientL1.depositTransaction(depositArgs);
 console.log(`Deposit transaction hash on L1: ${depositHash}`);
 ```
 
-      {<h3>Wait for L1 transaction</h3>}
+      <h3>Wait for L1 transaction</h3>
 
       Wait for the L1 transaction to be processed and log the receipt.
 
@@ -206,7 +206,7 @@ const depositReceipt = await publicClientL1.waitForTransactionReceipt({ hash: de
 console.log('L1 transaction confirmed:', depositReceipt);
 ```
 
-      {<h3>Extract the L2 transaction hash</h3>}
+      <h3>Extract the L2 transaction hash</h3>
 
       Extracts the corresponding L2 transaction hash from the L1 receipt, and logs it.
       This hash represents the deposit transaction on L2.
@@ -216,7 +216,7 @@ const [l2Hash] = getL2TransactionHashes(depositReceipt);
 console.log(`Corresponding L2 transaction hash: ${l2Hash}`);
 ```
 
-      {<h3>Wait for the L2 transaction to be processed</h3>}
+      <h3>Wait for the L2 transaction to be processed</h3>
 
       Wait for the L2 transaction to be processed and confirmed and logs the L2 receipt to verify completion.
 
@@ -312,7 +312,7 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
 <Tabs items={['withdrawETH', 'Full code']}>
   <Tabs.Tab>
     <Steps>
-      {<h3>Create the withdrawal transaction</h3>}
+      <h3>Create the withdrawal transaction</h3>
 
       Uses `buildWithdrawalTransaction` to create the withdrawal parameters.
       Converts the withdrawal amount to `wei` and specifies the recipient on L1.
@@ -325,7 +325,7 @@ to: account.address,
 });
 ```
 
-      {<h3>Executing the withdrawal</h3>}
+      <h3>Executing the withdrawal</h3>
 
       This sends the withdrawal transaction on L2, which initiates the withdrawal process on L2 and logs a transaction hash for tracking the withdrawal.
 
@@ -334,7 +334,7 @@ const withdrawalHash = await walletClientL2.initiateWithdrawal(withdrawalArgs);
 console.log(`Withdrawal transaction hash on L2: ${withdrawalHash}`);
 ```
 
-      {<h3>Confirming L2 transaction</h3>}
+      <h3>Confirming L2 transaction</h3>
 
       Wait one hour (max) for the L2 Output containing the transaction to be proposed, and log the receipt, which contains important details like the block number etc.
 
@@ -343,7 +343,7 @@ const withdrawalReceipt = await publicClientL2.waitForTransactionReceipt({ hash:
 console.log('L2 transaction confirmed:', withdrawalReceipt);
 ```
 
-      {<h3>Wait for withdrawal prove</h3>}
+      <h3>Wait for withdrawal prove</h3>
 
       Next, is to prove to the bridge on L1 that the withdrawal happened on L2. To achieve that, you first need to wait until the withdrawal is ready to prove.
 
@@ -363,7 +363,7 @@ withdrawal,
 });
 ```
 
-      {<h3>Prove the withdrawal on the L1</h3>}
+      <h3>Prove the withdrawal on the L1</h3>
 
       Once the withdrawal is ready to be proven, you'll send an L1 transaction to prove that the withdrawal happened on L2.
 
@@ -373,7 +373,7 @@ const proveHash = await walletClientL1.proveWithdrawal(proveArgs);
 const proveReceipt = await publicClientL1.waitForTransactionReceipt({ hash: proveHash });
 ```
 
-      {<h3>Wait for withdrawal finalization</h3>}
+      <h3>Wait for withdrawal finalization</h3>
 
       Before a withdrawal transaction can be finalized, you will need to wait for the finalization period.
       This can only happen after the fault proof period has elapsed. On OP Mainnet, this takes 7 days.
@@ -390,7 +390,7 @@ withdrawalHash: withdrawal.withdrawalHash,
         reflect Mainnet times.
       </Info>
 
-      {<h3>Finalize the withdrawal</h3>}
+      <h3>Finalize the withdrawal</h3>
 
       ```js
 const finalizeHash = await walletClientL1.finalizeWithdrawal({
@@ -399,7 +399,7 @@ withdrawal,
 });
 ```
 
-      {<h3>Wait until the withdrawal is finalized</h3>}
+      <h3>Wait until the withdrawal is finalized</h3>
 
       ```js
 const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
@@ -407,7 +407,7 @@ hash: finalizeHash
 });
 ```
 
-      {<h3>Check the withdrawal status</h3>}
+      <h3>Check the withdrawal status</h3>
 
       ```js
 const status = await publicClientL1.getWithdrawalStatus({

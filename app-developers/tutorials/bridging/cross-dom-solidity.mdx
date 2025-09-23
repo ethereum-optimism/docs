@@ -64,18 +64,18 @@ You'll send a transaction directly to the L1 `Greeter` contract which will ask t
 After just a few minutes, you'll see the corresponding greeting set on the L2 `Greeter` contract.
 
 <Steps>
-  {<h3>Connect to Etherscan</h3>}
+  <h3>Connect to Etherscan</h3>
   
   Sending a message to the L2 `Greeter` contract via the L1 `Greeter` contract requires that you call the `sendGreeting` function.
   For simplicity, you'll interact with the contract directly on Etherscan.
   Open up the [L1 `Greeter` contract on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#writeContract) and click the "Connect to Web3" button.
   
-  {<h3>Send your greeting</h3>}
+  <h3>Send your greeting</h3>
   
   Put a greeting into the field next to the "sendGreeting" function and click the "Write" button.
   You can use any greeting you'd like.
   
-  {<h3>Wait a few minutes</h3>}
+  <h3>Wait a few minutes</h3>
   
   It will take a few minutes for your message to reach L2.
   Feel free to take a quick break while you wait.
@@ -86,7 +86,7 @@ After just a few minutes, you'll see the corresponding greeting set on the L2 `G
   This same function can be used to wait for a message to be relayed from L1 to L2.
   </Info>
   
-  {<h3>Check the L2 Greeter</h3>}
+  <h3>Check the L2 Greeter</h3>
   
   After a few minutes, you should see the greeting on the L2 `Greeter` contract change to the greeting you set.
   Open up the [L2 `Greeter` contract on OP Sepolia Etherscan](https://testnet-explorer.optimism.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#readContract) and click the "Read Contract" button.
@@ -108,12 +108,12 @@ Unlike the previous step, you'll need to relay the message from L2 to L1 yoursel
 You'll do this by sending two transactions on Sepolia, one proving transaction and one relaying transaction.
 
 <Steps>
-  {<h3>Connect to Etherscan</h3>}
+  <h3>Connect to Etherscan</h3>
   
   Just like before, sending a message to the L1 `Greeter` contract via the L2 `Greeter` contract requires that you call the `sendGreeting` function.
   Open up the [L2 `Greeter` contract on OP Sepolia Etherscan](https://testnet-explorer.optimism.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#writeContract) and click the "Connect to Web3" button.
   
-  {<h3>Send your greeting</h3>}
+  <h3>Send your greeting</h3>
   
   Put a greeting into the field next to the "sendGreeting" function and click the "Write" button.
   You can use any greeting you'd like.
@@ -124,7 +124,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   Feel free to keep this tab open so you can easily copy the transaction hash later.
   </Info>
   
-  {<h3>Create a demo project folder</h3>}
+  <h3>Create a demo project folder</h3>
   
   You're going to use the viem to prove and relay your message to L1.
   
@@ -133,7 +133,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   cd cross-dom
   ```
   
-  {<h3>Initialize the project</h3>}
+  <h3>Initialize the project</h3>
   
   Set up the project as a basic Node.js project with `pnpm` or your favorite package manager.
   
@@ -141,7 +141,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   pnpm init
   ```
   
-  {<h3>Install viem</h3>}
+  <h3>Install viem</h3>
   
   Install Viem with `pnpm` or your favorite package manager.
   
@@ -149,7 +149,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   pnpm add viem
   ```
   
-  {<h3>Add your private key to your environment</h3>}
+  <h3>Add your private key to your environment</h3>
   
   You need a private key in order to sign transactions.
   Set your private key as an environment variable with the `export` command.
@@ -159,7 +159,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   export TUTORIAL_PRIVATE_KEY=0x...
   ```
   
-  {<h3>Add your transaction hash to your environment</h3>}
+  <h3>Add your transaction hash to your environment</h3>
   
   You'll also need the hash of the transaction you sent to the L2 `Greeter` contract.
   Set this as an environment variable with the `export` command.
@@ -168,7 +168,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   export TUTORIAL_TRANSACTION_HASH=0x...
   ```
   
-  {<h3>Start a Node REPL</h3>}
+  <h3>Start a Node REPL</h3>
   
   Now you'll use the Node.js REPL to run a few commands.
   Start the Node.js REPL with the `node` command.
@@ -177,7 +177,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   node
   ```
   
-  {<h3>Import viem</h3>}
+  <h3>Import viem</h3>
   
   ```js
   const { createPublicClient, http, createWalletClient } = require("viem");
@@ -186,7 +186,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   const { privateKeyToAccount } = require("viem/accounts");
 ```
   
-  {<h3>Create the RPC providers and wallets</h3>}
+  <h3>Create the RPC providers and wallets</h3>
   
   ```js
   const l1Provider = createPublicClient({ chain: sepolia, transport: http("https://eth-sepolia.g.alchemy.com/v2/***") }).extend(publicActionsL1())
@@ -204,7 +204,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   }).extend(walletActionsL2())
 ```
   
-  {<h3>Wait until the message is ready to prove</h3>}
+  <h3>Wait until the message is ready to prove</h3>
   
   Next, you will send messages from L2 to L1 is to prove that the message was sent on L2.
   You first need to wait until the message is ready to prove.
@@ -226,7 +226,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   Feel free to take a quick break while you wait.
   </Info>
   
-  {<h3>Prove the message on L1</h3>}
+  <h3>Prove the message on L1</h3>
   
   Once the message is ready to be proven, you'll send an L1 transaction to prove that the message was sent on L2.
   
@@ -238,7 +238,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   })
 ```
   
-  {<h3>Build parameters to prove the withdrawal on the L2</h3>}
+  <h3>Build parameters to prove the withdrawal on the L2</h3>
   
   ```js
   const args = await l2Provider.buildProveWithdrawal({
@@ -250,7 +250,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   const hash = await l1Wallet.proveWithdrawal(args)
 ```
   
-  {<h3>Wait until the message is ready for relay</h3>}
+  <h3>Wait until the message is ready for relay</h3>
   
   The final step to sending messages from L2 to L1 is to relay the messages on L1.
   This can only happen after the fault proof period has elapsed.
@@ -268,7 +268,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   }) 
 ```
   
-  {<h3>Relay the message on L1</h3>}
+  <h3>Relay the message on L1</h3>
   
   Once the withdrawal is ready to be relayed you can finally complete the message sending process.
   
@@ -278,7 +278,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   await l1Provider.waitToFinalize({ withdrawalHash: message.withdrawalHash, targetChain: l2Provider.chain }) 
 ```
   
-  {<h3>Wait until the message is relayed</h3>}
+  <h3>Wait until the message is relayed</h3>
   
   Now you simply wait until the message is relayed.
   
@@ -292,7 +292,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   await l1Provider.getWithdrawalStatus({ receipt, targetChain: l2Provider.chain }) 
 ```
   
-  {<h3>Check the L1 Greeter</h3>}
+  <h3>Check the L1 Greeter</h3>
   
   Now that you've relayed the message, you should see the greeting on the L1 `Greeter` contract change to the greeting you set.
   Open up the [L1 `Greeter` contract on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#readContract) and click the "Read Contract" button.
