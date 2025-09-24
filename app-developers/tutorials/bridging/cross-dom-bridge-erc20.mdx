@@ -115,7 +115,7 @@ Here's how to do it:
 <Steps>
   <h3>Import the @eth-optimism/viem package</h3>
 
-  ```js
+  ```ts
 
   const viem = await import('viem');
   const { createPublicClient, createWalletClient, http, formatEther } = viem;
@@ -141,7 +141,7 @@ Let's set those up now.
   The private key is essential for authorizing transactions on both L1 and L2 networks.
   For security reasons, we access it from an environment variable rather than hardcoding it.
 
-  ```js
+  ```ts
   const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY || '';
   const account = privateKeyToAccount(PRIVATE_KEY);
 ```
@@ -159,7 +159,7 @@ Let's set those up now.
   This dual-network setup allows us to seamlessly interact with both layers using the same account.
   Replace `<YOUR_API_KEY>` with your API key from a RPC provider.
 
-  ```js
+  ```ts
   const L1_RPC_URL = 'https://rpc.ankr.com/eth_sepolia/<YOU_API_KEY>';
   const L2_RPC_URL = 'https://sepolia.optimism.io';
   
@@ -194,7 +194,7 @@ Let's set those up now.
   The L2 token is configured to recognize deposits from its L1 counterpart.
   We also define a constant `oneToken` representing the full unit (10^18 wei) to simplify our deposit and withdrawal operations.
 
-  ```js
+  ```ts
   const l1Token = "0x5589BB8228C07c4e15558875fAf2B859f678d129";
   const l2Token = "0xD08a2917653d4E460893203471f0000826fb4034";
 ```
@@ -226,7 +226,7 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
 
   This comprehensive ABI gives us everything we need to manage our tokens across both L1 and L2.
 
-  ```js
+  ```ts
   const erc20ABI = [
     {
       inputs: [
@@ -289,7 +289,7 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
   The function doesn't require any parameters - it simply credits a predetermined amount to whoever calls it.
   We store the transaction hash for later reference and wait for the transaction to be confirmed.
 
-  ```js
+  ```ts
   console.log('Getting tokens from faucet...');
   const tx = await walletClientL1.writeContract({
     address: l1Token,
@@ -307,7 +307,7 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
   This step confirms that we've successfully received tokens before proceeding with the bridging process.
   The balance is returned in the smallest unit (wei), but we format it into a more readable form using the `formatEther` utility function from `viem`, since this token uses 18 decimal places.
 
-  ```js
+  ```ts
   const l1Balance = await publicClientL1.readContract({
     address: l1Token,
     abi: erc20ABI,
@@ -332,7 +332,7 @@ You'll then receive the same number of tokens on L2 in return.
   This constant helps us work with precise token amounts in our transactions, avoiding rounding errors and ensuring exact value transfers.
   We'll use this value for both deposits and withdrawals
 
-  ```js
+  ```ts
   const oneToken = 1000000000000000000n
 ```
 
@@ -344,7 +344,7 @@ You'll then receive the same number of tokens on L2 in return.
   We specify the bridge address from the chain configuration and the exact amount we want to bridge.
   This approval transaction must be confirmed before the bridge can move our tokens.
 
-  ```js
+  ```ts
   const bridgeAddress = optimismSepolia.contracts.l1StandardBridge[sepolia.id].address;
   const approveTx = await walletClientL1.writeContract({
     address: l1Token,
@@ -363,7 +363,7 @@ You'll then receive the same number of tokens on L2 in return.
   The receipt provides confirmation details, including which block includes our transaction.
   This step ensures our approval is finalized before attempting to bridge tokens.
 
-  ```js
+  ```ts
   await publicClientL1.waitForTransactionReceipt({ hash: approveTx });
 ```
 
@@ -382,7 +382,7 @@ You'll then receive the same number of tokens on L2 in return.
 
   This streamlined process ensures our tokens are safely transferred to L2.
 
-  ```js
+  ```ts
   console.log('Depositing tokens to L2...');
   const depositTx = await depositERC20(walletClientL1, {
     tokenAddress: l1Token,
@@ -411,7 +411,7 @@ You'll then receive the same number of tokens on L2 in return.
   
   Note that while this confirms the deposit was accepted on L1, there will still be a short delay (typically a few minutes) before the tokens appear on L2, as the transaction needs to be processed by the Optimism sequencer.
 
-  ```js
+  ```ts
   const depositReceipt = await publicClientL1.waitForTransactionReceipt({ hash: depositTx });
   console.log(`Deposit confirmed in block ${depositReceipt.blockNumber}`);
 ```
@@ -423,7 +423,7 @@ You'll then receive the same number of tokens on L2 in return.
   This balance should be lower by the amount we bridged, as those tokens are now escrowed in the `L1StandardBridge` contract.
   This step helps confirm that the first part of the bridging process completed successfully:
 
-  ```js
+  ```ts
   const l1BalanceAfterDeposit = await publicClientL1.readContract({
     address: l1Token,
     abi: erc20ABI,
@@ -440,7 +440,7 @@ You'll then receive the same number of tokens on L2 in return.
   The newly minted L2 tokens should appear in our wallet at the same address we used on L1.
   This step confirms the complete success of the bridge operation from L1 to L2.
 
-  ```js
+  ```ts
   const l2Balance = await publicClientL2.readContract({
     address: l2Token,
     abi: erc20ABI,
@@ -471,7 +471,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
 
   Unlike deposits, withdrawals from L2 to L1 are not immediate and require a multi-step process including a 7-day challenge period for security reasons.
 
-  ```js
+  ```ts
   console.log('Withdrawing tokens back to L1...');
   const withdrawTx = await withdrawOptimismERC20(walletClientL2, {
     tokenAddress: l2Token,
@@ -490,7 +490,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   The transaction logs contain critical information that will be used later in the withdrawal verification process.
   This is only the first step in the withdrawal - the tokens are now locked on L2, but not yet available on L1.
 
-  ```js
+  ```ts
   const withdrawReceipt = await publicClientL2.waitForTransactionReceipt({ hash: withdrawTx });
   console.log(`Withdrawal initiated in L2 block ${withdrawReceipt.blockNumber}`);
 ```
@@ -507,7 +507,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   
   At this point, the withdrawal process has begun, but the tokens are not yet available on L1 - they will become accessible after the 7-day challenge period and after completing the "prove" and "finalize" withdrawal steps.
 
-  ```js
+  ```ts
   const l2Balance = await publicClientL2.readContract({
     address: l2Token,
     abi: erc20ABI,

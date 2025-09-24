@@ -107,7 +107,7 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
   
     2.  Create a file, `attest.mjs`.
   
-        ```js
+        ```ts
 import {
   EAS,
   NO_EXPIRATION,
@@ -209,7 +209,7 @@ console.log(`export ATTEST_TXN=${attestHash}`)
       <details>
         <summary>Explanation</summary>
   
-        ```js
+        ```ts
 // Turn a viem wallet into an ethers provider
 const walletClientToSigner = walletClient => {
   const chain = walletClient.chain
@@ -232,7 +232,7 @@ const walletClientToSigner = walletClient => {
         The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) used for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
         This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer).
   
-        ```js
+        ```ts
 const schema = "string name";
 let schemaTxn, schemaUID
  
@@ -250,7 +250,7 @@ try {
         Register the [EAS Schema](https://docs.attest.org/docs/tutorials/create-a-schema) if necessary.
         This schema ties Ethereum addresses to names.
   
-        ```js
+        ```ts
 const schemaEncoder = new SchemaEncoder(schema)
 const attestedData = schemaEncoder.encodeData([
   { name: "name", value: "Bill Hamm", type: "string" }
@@ -269,7 +269,7 @@ const attestTxn = await eas.attest({
   
         [Attest](https://docs.attest.org/docs/tutorials/make-an-attestation) that the name for Ethereum address `0x0123456789012345678901234567890123456789` is `Bill Hamm`.
   
-        ```js
+        ```ts
 // To get the attestation ID we'd use
 // const attestationID = await transaction2.wait()
 // However, here we need the attestation transaction's hash.
@@ -280,7 +280,7 @@ const attestTxn = await eas.attest({
         Either search the transaction receipt for the log entry, or use the EAS SDK to create the transaction but then send it manually.
         The code here uses the second solution.
   
-        ```js
+        ```ts
 const request = await wallet0.prepareTransactionRequest(attestTxn.data)
 const serializedTransaction = await wallet0.signTransaction(request)
 const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
@@ -305,7 +305,7 @@ const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
   
     1.  Create a file, `verify-attestation.mjs`.
   
-        ```js
+        ```ts
 import {
     createWalletClient,
     http,
@@ -408,7 +408,7 @@ if (verified) {
         <details>
           <summary>Explanation</summary>
   
-          ```js
+          ```ts
 try {
   receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
 } catch(err) {
@@ -428,14 +428,14 @@ const attestLogEntry = receipt.logs.filter(x =>
           [This event type](https://www.4byte.directory/event-signatures/?bytes_signature=0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35) is emitted when an attestation is created.
           Of course, we only care about attestations created in the official attestations contract.
   
-          ```js
+          ```ts
 // attestLogEntry.topics[1] = "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b34"
 ```
   
           Part of testing a system is ensuring that it does not accept invalid input.
           You can uncomment this line to see that the verification fails with an incorrect log entry.
   
-          ```js
+          ```ts
 const relayMessageParams = await wallet0.interop.buildExecutingMessage({
   log: attestLogEntry,
 })
@@ -443,7 +443,7 @@ const relayMessageParams = await wallet0.interop.buildExecutingMessage({
   
           [Build the executing message](https://github.com/ethereum-optimism/ecosystem/blob/main/packages/viem/docs/actions/interop/functions/buildExecutingMessage.md).
   
-          ```js
+          ```ts
 try {
   executingTransaction = await crossL2Inbox.write.validateMessage(
     {
@@ -464,7 +464,7 @@ try {
           For some invalid inputs, this function reverts.
           If it reverts, it means that the log entry requested is not valid.
   
-          ```js
+          ```ts
 try {
   executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
     hash: executingTransaction,
@@ -480,7 +480,7 @@ try {
           The timeout is necessary because if the executing message is valid, but the log entry has not been seen yet, the sequencer does not put the transaction with the message into a block.
           The timeout distinguishes between a valid executing message pending inclusion and a non-existent log entry.
   
-          ```js
+          ```ts
 const verified = 
   executingTransactionReceipt.logs.filter(
     x => x.address=="0x4200000000000000000000000000000000000022" &&

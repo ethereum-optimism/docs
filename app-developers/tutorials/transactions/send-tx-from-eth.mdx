@@ -88,7 +88,7 @@ You need to import some dependencies into your Node REPL session.
 <Steps>
   <h3>Import Viem</h3>
 
-  ```js
+  ```ts
   const { createPublicClient, createWalletClient, http, parseEther, formatEther } = require('viem');
   const { optimismSepolia, sepolia } = require('viem/chains');
   const { privateKeyToAccount } = require('viem/accounts');
@@ -103,14 +103,14 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 <Steps>
   <h3>Load your private key</h3>
 
-  ```js
+  ```ts
   const privateKey = process.env.TUTORIAL_PRIVATE_KEY;
   const account = privateKeyToAccount(privateKey);
 ```
 
   <h3>Create the RPC providers and wallets</h3>
 
-  ```js
+  ```ts
   const l1PublicClient = createPublicClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") }).extend(publicActionsL1())
   const l2PublicClient = createPublicClient({ chain: optimismSepolia, transport: http("https://sepolia.optimism.io") }).extend(publicActionsL2());
   const l1WalletClient = createWalletClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") }).extend(walletActionsL1());
@@ -121,7 +121,7 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 
 You'll be sending a small amount of ETH as part of this tutorial. Quickly check your balance on OP Sepolia so that you know how much you had at the start of the tutorial.
 
-```js
+```ts
   const initialBalance = await l2PublicClient.getBalance({ address });
   console.log(`Initial balance: ${formatEther(initialBalance)} ETH`);
 ```
@@ -133,7 +133,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 <Steps>
   <h3>Create the OptimismPortal object</h3>
 
-  ```js
+  ```ts
   const optimismPortalAbi = [
       {
       inputs: [
@@ -152,7 +152,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 
   When sending transactions via the `OptimismPortal` contract it's important to always include a gas buffer. This is because the `OptimismPortal` charges a variable amount of gas depending on the current demand for L2 transactions triggered via L1. If you do not include a gas buffer, your transactions may fail.
 
-  ```js
+  ```ts
   const optimismPortalAddress = '0x5b47E1A08Ea6d985D6649300584e6722Ec4B1383';
   const gasLimit = 100000n;
   const data = '0x';
@@ -172,7 +172,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 
   Now you'll send the transaction. Note that you are including a buffer of 20% on top of the gas estimate.
 
-  ```js
+  ```ts
   const { request } = await l1PublicClient.simulateContract({
       account,
       address: optimismPortalAddress,
@@ -191,7 +191,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 
   First you'll need to wait for the L1 transaction to be mined.
 
-  ```js
+  ```ts
   const l1TxHash = await l1WalletClient.writeContract(request)
 ```
 
@@ -199,7 +199,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 
   Now you'll need to wait for the corresponding L2 transaction to be included in a block. This transaction is automatically created as a result of your L1 transaction. Here you'll determine the hash of the L2 transaction and then wait for that transaction to be included in the L2 blockchain.
 
-  ```js
+  ```ts
   const [l2Hash] = getL2TransactionHashes(l1TxHash) 
   console.log(`Corresponding L2 transaction hash: ${l2Hash}`);
 
@@ -214,14 +214,14 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
 
 You should have a little less ETH on OP Sepolia now. Check your balance to confirm.
 
-```js
+```ts
   const finalBalance = await l2Wallet.getBalance()
   console.log(`Final balance: ${formatEther(finalBalance)} ETH`);
 ```
 
 Make sure that the difference is equal to the amount you were expecting to send.
 
-```js
+```ts
   const difference = initialBalance - finalBalance
   console.log(`Difference in balance: ${formatEther(difference)} ETH`);
 ```
