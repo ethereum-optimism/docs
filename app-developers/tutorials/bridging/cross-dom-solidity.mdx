@@ -191,7 +191,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   </Step>
   <Step title="Import viem">
   
-  ```ts
+  ```js
   const { createPublicClient, http, createWalletClient } = require("viem");
   const { optimismSepolia, sepolia } = require("viem/chains");
   const { publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2, getWithdrawals } = require("viem/op-stack");
@@ -201,7 +201,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   </Step>
   <Step title="Create the RPC providers and wallets">
   
-  ```ts
+  ```js
   const l1Provider = createPublicClient({ chain: sepolia, transport: http("https://eth-sepolia.g.alchemy.com/v2/***") }).extend(publicActionsL1())
   const l2Provider = createPublicClient({ chain: optimismSepolia, transport: http("https://opt-sepolia.g.alchemy.com/v2/***") }).extend(publicActionsL2())
   const account = privateKeyToAccount(process.env.TUTORIAL_PRIVATE_KEY)
@@ -223,7 +223,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   Next, you will send messages from L2 to L1 is to prove that the message was sent on L2.
   You first need to wait until the message is ready to prove.
   
-  ```ts
+  ```js
   const receipt = await l2Provider.getTransactionReceipt({
     hash: process.env.TUTORIAL_TRANSACTION_HASH
   })
@@ -245,7 +245,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   
   Once the message is ready to be proven, you'll send an L1 transaction to prove that the message was sent on L2.
   
-  ```ts
+  ```js
   console.log('Proving message...')
   const { output, withdrawal } = await l1Provider.waitToProve({ 
     receipt, 
@@ -256,7 +256,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   </Step>
   <Step title="Build parameters to prove the withdrawal on the L2">
   
-  ```ts
+  ```js
   const args = await l2Provider.buildProveWithdrawal({
     account,
     output,
@@ -277,7 +277,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   We're currently testing fault proofs on OP Sepolia, so withdrawal times reflect Mainnet times.
   </Info>
   
-  ```ts
+  ```js
   console.log('Waiting for message to be relayable...')
   await l1Provider.getWithdrawalStatus({ 
     receipt, 
@@ -290,7 +290,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   
   Once the withdrawal is ready to be relayed you can finally complete the message sending process.
   
-  ```ts
+  ```js
   console.log('Relaying message...')
   const [message] = getWithdrawals(receipt)
   await l1Provider.waitToFinalize({ withdrawalHash: message.withdrawalHash, targetChain: l2Provider.chain }) 
@@ -301,7 +301,7 @@ You'll do this by sending two transactions on Sepolia, one proving transaction a
   
   Now you simply wait until the message is relayed.
   
-  ```ts
+  ```js
   const finalizeHash = await l1Wallet.finalizeWithdrawal({
     targetChain: l2Wallet.chain,
     withdrawal,

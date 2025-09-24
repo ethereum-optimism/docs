@@ -109,7 +109,7 @@ Let's set those up now.
 
   <Step title="Import viem and other necessary modules">
 
-```ts
+```js
 const { createPublicClient, createWalletClient, http, parseEther, parseGwei, formatEther } = require('viem');
 const { privateKeyToAccount } = require('viem/accounts');
 const { optimismSepolia } = require('viem/chains');
@@ -119,7 +119,7 @@ const { publicActionsL2, walletActionsL2 } = require('viem/op-stack');
   </Step>
   <Step title="Set up the account">
 
-```ts
+```js
 const privateKey = process.env.TUTORIAL_PRIVATE_KEY
 const account = privateKeyToAccount(privateKey)
 ```
@@ -127,7 +127,7 @@ const account = privateKeyToAccount(privateKey)
   </Step>
   <Step title="Create the public client">
 
-```ts
+```js
 const publicClient = createPublicClient({
   chain: optimismSepolia,
   transport: http("https://sepolia.optimism.io"),
@@ -137,7 +137,7 @@ const publicClient = createPublicClient({
   </Step>
   <Step title="Create the wallet client">
 
-```ts
+```js
 const walletClientL2 = createWalletClient({
   chain: optimismSepolia,
   transport: http("https://sepolia.optimism.io"),
@@ -157,7 +157,7 @@ Here you'll estimate the cost of a simple transaction that sends a small amount 
   Viem makes it easy to create unsigned transactions so you can estimate the cost of a transaction before you a user to sign it. 
   Here you'll create an unsigned transaction that sends a small amount of ETH from your address to the address `0x1000000000000000000000000000000000000000`. 
 
-```ts
+```js
   const transaction = {
   account,
   to: '0x1000000000000000000000000000000000000000',
@@ -171,7 +171,7 @@ Here you'll estimate the cost of a simple transaction that sends a small amount 
 
   With Viem you can estimate the total cost of a transaction using the [estimateTotalFee](https://viem.sh/op-stack/actions/estimateTotalFee) method.
 
-```ts
+```js
   const totalEstimate = await publicClient.estimateTotalFee(transaction)
   console.log(`Estimated Total Cost: ${formatEther(totalEstimate)} ETH`)
 ```
@@ -182,7 +182,7 @@ Here you'll estimate the cost of a simple transaction that sends a small amount 
   Now that you've estimated the total cost of the transaction, go ahead and send it to the network.
   This will make it possible to see the actual cost of the transaction to compare to your estimate.
 
-```ts
+```js
   const txHash = await walletClientL2.sendTransaction(transaction)
   console.log(`Transaction Hash: ${txHash}`)
 
@@ -197,7 +197,7 @@ Here you'll estimate the cost of a simple transaction that sends a small amount 
   You can do so by accessing the `gasUsed` and `effectiveGasPrice` from the transaction receipt.
   You can then multiply these values to get the actual L2 cost of the transaction
 
-```ts
+```js
   const l2CostActual = receipt.gasUsed * receipt.effectiveGasPrice
   console.log(`Actual Execution Gas Fee: ${formatEther(l2CostActual)} ETH`)
 ```
@@ -207,7 +207,7 @@ Here you'll estimate the cost of a simple transaction that sends a small amount 
 
   You can also check the actual L1 data fee.
 
-```ts
+```js
   const l1CostActual = receipt.l1Fee
   console.log(`Actual L1 Data Fee: ${formatEther(l1CostActual)} ETH`)
 ```
@@ -217,7 +217,7 @@ Here you'll estimate the cost of a simple transaction that sends a small amount 
 
   Sum these two together to get the actual total cost of the transaction.
 
-```ts
+```js
   const totalActual = l2CostActual + l1CostActual
   console.log(`Actual Total Cost: ${formatEther(totalActual)} ETH`)
 ```
@@ -229,7 +229,7 @@ Here you'll estimate the cost of a simple transaction that sends a small amount 
   This will give you a sense of how accurate your estimate was.
   Estimates will never be entirely accurate, but they should be close!
 
-```ts
+```js
   const difference = totalEstimate >= totalActual ? totalEstimate - totalActual : totalActual - totalEstimate
   console.log(`Estimation Difference: ${formatEther(difference)} ETH`)
 ```

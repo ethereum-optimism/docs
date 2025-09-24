@@ -74,7 +74,7 @@ You need to import some dependencies into your Node REPL session.
 
 <h3>Import viem</h3>
 
-```ts
+```js
 const { createPublicClient, http } = require('viem');
 const { optimismSepolia, sepolia } = require('viem/chains');
 ```
@@ -86,7 +86,7 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 <Steps>
   <Step title="Import RPC URLs">
 
-  ```ts
+  ```js
   const l1RpcUrl = process.env.L1_RPC_URL;
   const l2RpcUrl = process.env.L2_RPC_URL;
   ```
@@ -96,7 +96,7 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 
   You'll be tracing a specific deposit in this tutorial. Deposit tracing is generally based on the transaction hash of the transaction that triggered the deposit. You can replace this transaction hash with your own if you'd like.
 
-  ```ts
+  ```js
   const depositHash = '0x5896d6e4a47b465e0d925723bab838c62ef53468139a5e9ba501efd70f90cccb'
   ```
 
@@ -105,14 +105,14 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 
   You'll also be tracing a specific withdrawal in this tutorial. Like with deposits, withdrawal tracing is generally based on the transaction hash of the transaction that triggered the withdrawal. You can replace this transaction hash with your own if you'd like.
 
-  ```ts
+  ```js
   const withdrawalHash = '0x18b8b4022b8d9e380fd89417a2e897adadf31e4f41ca17442870bf89ad024f42'
   ```
 
   </Step>
   <Step title="Create the RPC providers">
 
-  ```ts
+  ```js
   const l1Client = createPublicClient({
     chain: sepolia,
     transport: http(l1RpcUrl),
@@ -135,7 +135,7 @@ You can use viem to trace a deposit.
 
   You can query for the deposit status using the transaction hash of the deposit.
 
-  ```ts
+  ```js
   console.log('Grabbing deposit status...')
   const depositStatus = await l2Client.getTransactionReceipt({ hash: depositHash });
   console.log(depositStatus);
@@ -146,7 +146,7 @@ You can use viem to trace a deposit.
 
   Retrieve the transaction receipt for the deposit using the viem client.
 
-  ```ts
+  ```js
 console.log('Grabbing deposit receipt...')
 const depositReceipt = await l2Client.getTransaction({ hash: depositHash });
 console.log(depositReceipt);
@@ -157,7 +157,7 @@ console.log(depositReceipt);
 
   You can directly query for the L2 transaction that executed the deposit.
 
-  ```ts
+  ```js
 console.log('Grabbing deposit txn...')
 const depositTransaction = await l2Client.getTransaction({ hash: depositHash });
 console.log(depositTransaction);
@@ -174,7 +174,7 @@ You can use viem's functions to trace a withdrawal.
 
   Like deposits, withdrawals can have multiple statuses depending on where they are in the process.
 
-  ```ts
+  ```js
 console.log('Grabbing withdrawal status...')
 const withdrawalStatus = await l1Client.getTransactionReceipt({ hash: withdrawalHash });
 console.log(withdrawalStatus);
@@ -185,7 +185,7 @@ console.log(withdrawalStatus);
 
   Retrieve the L1 transaction receipt for the withdrawal.
 
-  ```ts
+  ```js
 console.log('Grabbing withdrawal receipt...')
 const withdrawalReceipt = await l1Client.getTransaction({ hash: withdrawalHash });
 console.log(withdrawalReceipt);
@@ -196,7 +196,7 @@ console.log(withdrawalReceipt);
 
   Directly query for the L1 transaction that executed the withdrawal.
 
-  ```ts
+  ```js
 console.log('Grabbing withdrawal txn...')
 const withdrawalTransaction = await l1Client.getTransaction({ hash: withdrawalHash });
 console.log(withdrawalTransaction);
