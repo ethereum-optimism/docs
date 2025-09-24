@@ -104,183 +104,184 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
     2.  Create a file, `attest.mjs`.
   
         ```js
-import {
-  EAS,
-  NO_EXPIRATION,
-  SchemaEncoder,
-  SchemaRegistry,
-} from "@ethereum-attestation-service/eas-sdk"
- 
-import {
-    createWalletClient,
-    http,
-    publicActions,
-} from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
- 
-import { JsonRpcProvider, Wallet } from "ethers"
- 
-import { interopAlpha0, supersimL2A } from '@eth-optimism/viem/chains'
- 
-// Contract addresses in all OP Stack blockchains
-const EASContractAddress = "0x4200000000000000000000000000000000000021" 
-const schemaRegistryContractAddress = "0x4200000000000000000000000000000000000020"
- 
-// Turn a viem wallet into an ethers provider
-const walletClientToSigner = walletClient => {
-  const chain = walletClient.chain
- 
-  // Get the RPC URL from the chain config (or supply your own)
-  const rpcUrl = chain.rpcUrls?.default?.http?.[0]
-  if (!rpcUrl) {
-    throw new Error('RPC URL not found in chain configuration')
-  }
- 
-  // Create a provider for the given chain
-  const provider = new JsonRpcProvider(rpcUrl, chain.id)
- 
-  const signer = new Wallet(process.env.PRIVATE_KEY, provider)
-  
-  return signer
-}
- 
-// Initialize the sdk with the address of the EAS Schema contract address
-const eas = new EAS(EASContractAddress)
- 
-const schemaRegistry = new SchemaRegistry(schemaRegistryContractAddress)
- 
-const account = privateKeyToAccount(process.env.PRIVATE_KEY)
-const useSupersim = process.env.CHAIN_B_ID == 902
- 
-const wallet0 = createWalletClient({
-    chain: useSupersim ? supersimL2A : interopAlpha0,
-    transport: http(),
-    account
-}).extend(publicActions)
- 
-// Turn a viem wallet into an ethers provider
-const signer0 = await walletClientToSigner(wallet0)
-schemaRegistry.connect(signer0)
-eas.connect(signer0)
- 
-const schema = "string name";
-let schemaTxn, schemaUID
- 
-// Register the schema if needed, and get the schemaUID.
-try {
-    schemaTxn = await schemaRegistry.register({schema})    
-    schemaUID = await schemaTxn.wait()
-} catch (err) {
-    // Schema is already registered
-    if (err.info.error.data == "0x23369fa6")
-        schemaUID = "0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58"
-}
- 
-const schemaEncoder = new SchemaEncoder(schema)
-const attestedData = schemaEncoder.encodeData([
-  { name: "name", value: "Bill Hamm", type: "string" }
-]);
- 
-const attestTxn = await eas.attest({
-  schema: schemaUID,
-  data: {
-    recipient: "0x0123456789012345678901234567890123456789",
-    expirationTime: NO_EXPIRATION,
-    revocable: true, // Be aware that if your schema is not revocable, this MUST be false
-    data: attestedData,
-  },
-})
- 
-// To get the attestation ID we'd use
-// const attestationID = await transaction2.wait()
-// However, here we need the attestation transaction's hash.
- 
-const request = await wallet0.prepareTransactionRequest(attestTxn.data)
-const serializedTransaction = await wallet0.signTransaction(request)
-const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
- 
-console.log(`export ATTEST_TXN=${attestHash}`)
-```
+          import {
+            EAS,
+            NO_EXPIRATION,
+            SchemaEncoder,
+            SchemaRegistry,
+          } from "@ethereum-attestation-service/eas-sdk"
+          
+          import {
+              createWalletClient,
+              http,
+              publicActions,
+          } from 'viem'
+          import { privateKeyToAccount } from 'viem/accounts'
+          
+          import { JsonRpcProvider, Wallet } from "ethers"
+          
+          import { interopAlpha0, supersimL2A } from '@eth-optimism/viem/chains'
+          
+          // Contract addresses in all OP Stack blockchains
+          const EASContractAddress = "0x4200000000000000000000000000000000000021" 
+          const schemaRegistryContractAddress = "0x4200000000000000000000000000000000000020"
+          
+          // Turn a viem wallet into an ethers provider
+          const walletClientToSigner = walletClient => {
+            const chain = walletClient.chain
+          
+            // Get the RPC URL from the chain config (or supply your own)
+            const rpcUrl = chain.rpcUrls?.default?.http?.[0]
+            if (!rpcUrl) {
+              throw new Error('RPC URL not found in chain configuration')
+            }
+          
+            // Create a provider for the given chain
+            const provider = new JsonRpcProvider(rpcUrl, chain.id)
+          
+            const signer = new Wallet(process.env.PRIVATE_KEY, provider)
+            
+            return signer
+          }
+          
+          // Initialize the sdk with the address of the EAS Schema contract address
+          const eas = new EAS(EASContractAddress)
+          
+          const schemaRegistry = new SchemaRegistry(schemaRegistryContractAddress)
+          
+          const account = privateKeyToAccount(process.env.PRIVATE_KEY)
+          const useSupersim = process.env.CHAIN_B_ID == 902
+          
+          const wallet0 = createWalletClient({
+              chain: useSupersim ? supersimL2A : interopAlpha0,
+              transport: http(),
+              account
+          }).extend(publicActions)
+          
+          // Turn a viem wallet into an ethers provider
+          const signer0 = await walletClientToSigner(wallet0)
+          schemaRegistry.connect(signer0)
+          eas.connect(signer0)
+          
+          const schema = "string name";
+          let schemaTxn, schemaUID
+          
+          // Register the schema if needed, and get the schemaUID.
+          try {
+              schemaTxn = await schemaRegistry.register({schema})    
+              schemaUID = await schemaTxn.wait()
+          } catch (err) {
+              // Schema is already registered
+              if (err.info.error.data == "0x23369fa6")
+                  schemaUID = "0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58"
+          }
+          
+          const schemaEncoder = new SchemaEncoder(schema)
+          const attestedData = schemaEncoder.encodeData([
+            { name: "name", value: "Bill Hamm", type: "string" }
+          ]);
+          
+          const attestTxn = await eas.attest({
+            schema: schemaUID,
+            data: {
+              recipient: "0x0123456789012345678901234567890123456789",
+              expirationTime: NO_EXPIRATION,
+              revocable: true, // Be aware that if your schema is not revocable, this MUST be false
+              data: attestedData,
+            },
+          })
+          
+          // To get the attestation ID we'd use
+          // const attestationID = await transaction2.wait()
+          // However, here we need the attestation transaction's hash.
+          
+          const request = await wallet0.prepareTransactionRequest(attestTxn.data)
+          const serializedTransaction = await wallet0.signTransaction(request)
+          const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
+          
+          console.log(`export ATTEST_TXN=${attestHash}`)
+
+        ```
   
       <details>
         <summary>Explanation</summary>
   
         ```js
-// Turn a viem wallet into an ethers provider
-const walletClientToSigner = walletClient => {
-  const chain = walletClient.chain
- 
-  // Get the RPC URL from the chain config (or supply your own)
-  const rpcUrl = chain.rpcUrls?.default?.http?.[0]
-  if (!rpcUrl) {
-    throw new Error('RPC URL not found in chain configuration')
-  }
- 
-  // Create a provider for the given chain
-  const provider = new JsonRpcProvider(rpcUrl, chain.id)
- 
-  const signer = new Wallet(process.env.PRIVATE_KEY, provider)
-  
-  return signer
-}
-```
+      // Turn a viem wallet into an ethers provider
+      const walletClientToSigner = walletClient => {
+        const chain = walletClient.chain
+      
+        // Get the RPC URL from the chain config (or supply your own)
+        const rpcUrl = chain.rpcUrls?.default?.http?.[0]
+        if (!rpcUrl) {
+          throw new Error('RPC URL not found in chain configuration')
+        }
+      
+        // Create a provider for the given chain
+        const provider = new JsonRpcProvider(rpcUrl, chain.id)
+      
+        const signer = new Wallet(process.env.PRIVATE_KEY, provider)
+        
+        return signer
+      }
+      ```
   
         The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) used for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
         This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer).
   
         ```js
-const schema = "string name";
-let schemaTxn, schemaUID
- 
-// Register the schema if needed, and get the schemaUID.
-try {
-    schemaTxn = await schemaRegistry.register({schema})    
-    schemaUID = await schemaTxn.wait()
-} catch (err) {
-    // Schema is already registered
-    if (err.info.error.data == "0x23369fa6")
-        schemaUID = "0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58"
-}
-```
+            const schema = "string name";
+            let schemaTxn, schemaUID
+            
+            // Register the schema if needed, and get the schemaUID.
+            try {
+                schemaTxn = await schemaRegistry.register({schema})    
+                schemaUID = await schemaTxn.wait()
+            } catch (err) {
+                // Schema is already registered
+                if (err.info.error.data == "0x23369fa6")
+                    schemaUID = "0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58"
+            }
+        ```
   
         Register the [EAS Schema](https://docs.attest.org/docs/tutorials/create-a-schema) if necessary.
         This schema ties Ethereum addresses to names.
   
         ```js
-const schemaEncoder = new SchemaEncoder(schema)
-const attestedData = schemaEncoder.encodeData([
-  { name: "name", value: "Bill Hamm", type: "string" }
-]);
- 
-const attestTxn = await eas.attest({
-  schema: schemaUID,
-  data: {
-    recipient: "0x0123456789012345678901234567890123456789",
-    expirationTime: NO_EXPIRATION,
-    revocable: true, // Be aware that if your schema is not revocable, this MUST be false
-    data: attestedData,
-  },
-})
-```
+            const schemaEncoder = new SchemaEncoder(schema)
+            const attestedData = schemaEncoder.encodeData([
+              { name: "name", value: "Bill Hamm", type: "string" }
+            ]);
+            
+            const attestTxn = await eas.attest({
+              schema: schemaUID,
+              data: {
+                recipient: "0x0123456789012345678901234567890123456789",
+                expirationTime: NO_EXPIRATION,
+                revocable: true, // Be aware that if your schema is not revocable, this MUST be false
+                data: attestedData,
+              },
+            })
+        ```
   
         [Attest](https://docs.attest.org/docs/tutorials/make-an-attestation) that the name for Ethereum address `0x0123456789012345678901234567890123456789` is `Bill Hamm`.
   
         ```js
-// To get the attestation ID we'd use
-// const attestationID = await transaction2.wait()
-// However, here we need the attestation transaction's hash.
-```
-  
+      // To get the attestation ID we'd use
+      // const attestationID = await transaction2.wait()
+      // However, here we need the attestation transaction's hash.
+      ```
+        
         This is the recommended way to execute the attestation transaction, which provides you with the attestation's UID.
         However, for our purpose we need the transaction receipt, which you do not get.
         Either search the transaction receipt for the log entry, or use the EAS SDK to create the transaction but then send it manually.
         The code here uses the second solution.
   
         ```js
-const request = await wallet0.prepareTransactionRequest(attestTxn.data)
-const serializedTransaction = await wallet0.signTransaction(request)
-const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
-```
+        const request = await wallet0.prepareTransactionRequest(attestTxn.data)
+        const serializedTransaction = await wallet0.signTransaction(request)
+        const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
+        ```
   
         Send the attestation transaction created by the EAS SDK manually (using viem's [`sendRawTransaction`](https://viem.sh/docs/actions/wallet/sendRawTransaction)) to obtain the transaction hash.
       </details>
@@ -302,120 +303,122 @@ const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
     1.  Create a file, `verify-attestation.mjs`.
   
         ```js
-import {
-    createWalletClient,
-    http,
-    publicActions,
-    getContract,
-    keccak256, 
-    toBytes,
-} from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
+          import {
+              createWalletClient,
+              http,
+              publicActions,
+              getContract,
+              keccak256, 
+              toBytes,
+          } from 'viem'
+          import { privateKeyToAccount } from 'viem/accounts'
+          
+          import { interopAlpha0, interopAlpha1, supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
+          import { walletActionsL2, publicActionsL2, crossL2InboxAbi } from '@eth-optimism/viem'
+          
+          // Contract addresses in all OP Stack blockchains
+          const EASContractAddress = "0x4200000000000000000000000000000000000021" 
+          
+          const account = privateKeyToAccount(process.env.PRIVATE_KEY)
+          const useSupersim = process.env.CHAIN_B_ID == 902
+          
+          const wallet0 = createWalletClient({
+              chain: useSupersim ? supersimL2A : interopAlpha0,
+              transport: http(),
+              account
+          }).extend(publicActions)
+              .extend(publicActionsL2())
+          
+          const wallet1 = createWalletClient({
+              chain: useSupersim ? supersimL2B : interopAlpha1,
+              transport: http(),
+              account
+          }).extend(publicActions)
+              .extend(walletActionsL2())
+          
+          let receipt
+          
+          try {
+            receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
+          } catch(err) {
+            console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
+            process.exit(0)
+          }
+          
+          const attestLogEntry = receipt.logs.filter(x => 
+              (x.address == EASContractAddress) &&
+              (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
+          
+          // attestLogEntry.topics[1] = "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b34"
+          
+          const relayMessageParams = await wallet0.interop.buildExecutingMessage({
+            log: attestLogEntry,
+          })
+          
+          const crossL2Inbox = getContract({
+            address: '0x4200000000000000000000000000000000000022',
+            abi: crossL2InboxAbi,
+            client: wallet1,
+          })
+          
+          let executingTransaction, executingTransactionReceipt
+          
+          try {
+            executingTransaction = await crossL2Inbox.write.validateMessage(
+              {
+                args: [
+                  relayMessageParams.id, 
+                  keccak256(toBytes(relayMessageParams.payload))
+                ],  
+                accessList: relayMessageParams.accessList,
+              }
+            )
+          } catch (err) {
+            console.log("Verification failed (revert)")
+            process.exit(0)
+          }
+          
+          try {
+            executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
+              hash: executingTransaction,
+              timeout: 10_000 
+            })    
+          } catch (err) {
+            console.log("Verification failed (timeout)")
+            process.exit(0)
+          }
+          
+          const verified = 
+            executingTransactionReceipt.logs.filter(
+              x => x.address=="0x4200000000000000000000000000000000000022" &&
+                  x.topics[0] == "0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7" &&
+                  x.topics[1] == keccak256(toBytes(relayMessageParams.payload))
+            ).length > 0
+          
+          if (verified) {
+            console.log("Verification successful")
+          } else {
+            console.log("Verification failed")
+          }
+ 
 
-import { interopAlpha0, interopAlpha1, supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
-import { walletActionsL2, publicActionsL2, crossL2InboxAbi } from '@eth-optimism/viem'
-
-// Contract addresses in all OP Stack blockchains
-const EASContractAddress = "0x4200000000000000000000000000000000000021" 
-
-const account = privateKeyToAccount(process.env.PRIVATE_KEY)
-const useSupersim = process.env.CHAIN_B_ID == 902
-
-const wallet0 = createWalletClient({
-    chain: useSupersim ? supersimL2A : interopAlpha0,
-    transport: http(),
-    account
-}).extend(publicActions)
-    .extend(publicActionsL2())
-
-const wallet1 = createWalletClient({
-    chain: useSupersim ? supersimL2B : interopAlpha1,
-    transport: http(),
-    account
-}).extend(publicActions)
-    .extend(walletActionsL2())
-
-let receipt
-
-try {
-  receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
-} catch(err) {
-  console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
-  process.exit(0)
-}
-
-const attestLogEntry = receipt.logs.filter(x => 
-    (x.address == EASContractAddress) &&
-    (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
-
-// attestLogEntry.topics[1] = "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b34"
-
-const relayMessageParams = await wallet0.interop.buildExecutingMessage({
-  log: attestLogEntry,
-})
-
-const crossL2Inbox = getContract({
-  address: '0x4200000000000000000000000000000000000022',
-  abi: crossL2InboxAbi,
-  client: wallet1,
-})
-
-let executingTransaction, executingTransactionReceipt
-
-try {
-  executingTransaction = await crossL2Inbox.write.validateMessage(
-    {
-      args: [
-        relayMessageParams.id, 
-        keccak256(toBytes(relayMessageParams.payload))
-      ],  
-      accessList: relayMessageParams.accessList,
-    }
-  )
-} catch (err) {
-  console.log("Verification failed (revert)")
-  process.exit(0)
-}
-
-try {
-  executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
-    hash: executingTransaction,
-    timeout: 10_000 
-  })    
-} catch (err) {
-  console.log("Verification failed (timeout)")
-  process.exit(0)
-}
-
-const verified = 
-  executingTransactionReceipt.logs.filter(
-    x => x.address=="0x4200000000000000000000000000000000000022" &&
-         x.topics[0] == "0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7" &&
-         x.topics[1] == keccak256(toBytes(relayMessageParams.payload))
-  ).length > 0
-
-if (verified) {
-  console.log("Verification successful")
-} else {
-  console.log("Verification failed")
-}
-```
+        ```
   
         <details>
           <summary>Explanation</summary>
   
           ```js
-try {
-  receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
-} catch(err) {
-  console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
-  process.exit(0)
-}
+          try {
+            receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
+          } catch(err) {
+            console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
+            process.exit(0)
+          }
 
-const attestLogEntry = receipt.logs.filter(x => 
-    (x.address == EASContractAddress) &&
-    (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
-```
+          const attestLogEntry = receipt.logs.filter(x => 
+              (x.address == EASContractAddress) &&
+              (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
+          ```
   
           To create the [executing message](/interop/message-passing#executing-message), we need several fields that appear in the log entry we are verifying.
           This is how we obtain the relevant log entry.
@@ -425,65 +428,65 @@ const attestLogEntry = receipt.logs.filter(x =>
           Of course, we only care about attestations created in the official attestations contract.
   
           ```js
-// attestLogEntry.topics[1] = "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b34"
-```
+          // attestLogEntry.topics[1] = "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b34"
+          ```
   
           Part of testing a system is ensuring that it does not accept invalid input.
           You can uncomment this line to see that the verification fails with an incorrect log entry.
   
           ```js
-const relayMessageParams = await wallet0.interop.buildExecutingMessage({
-  log: attestLogEntry,
-})
-```
+          const relayMessageParams = await wallet0.interop.buildExecutingMessage({
+            log: attestLogEntry,
+          })
+          ```
   
           [Build the executing message](https://github.com/ethereum-optimism/ecosystem/blob/main/packages/viem/docs/actions/interop/functions/buildExecutingMessage.md).
   
           ```js
-try {
-  executingTransaction = await crossL2Inbox.write.validateMessage(
-    {
-      args: [
-        relayMessageParams.id, 
-        keccak256(toBytes(relayMessageParams.payload))
-      ],  
-      accessList: relayMessageParams.accessList,
-    }
-  )
-} catch (err) {
-  console.log("Verification failed (revert)")
-  process.exit(0)
-}
-```
+            try {
+              executingTransaction = await crossL2Inbox.write.validateMessage(
+                {
+                  args: [
+                    relayMessageParams.id, 
+                    keccak256(toBytes(relayMessageParams.payload))
+                  ],  
+                  accessList: relayMessageParams.accessList,
+                }
+              )
+            } catch (err) {
+              console.log("Verification failed (revert)")
+              process.exit(0)
+            }
+          ```
   
           Call [`CrossL2Inbox.validateMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L68-L82).
           For some invalid inputs, this function reverts.
           If it reverts, it means that the log entry requested is not valid.
   
           ```js
-try {
-  executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
-    hash: executingTransaction,
-    timeout: 10_000 
-  })    
-} catch (err) {
-  console.log("Verification failed (timeout)")
-  process.exit(0)
-}
-```
+            try {
+              executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
+                hash: executingTransaction,
+                timeout: 10_000 
+              })    
+            } catch (err) {
+              console.log("Verification failed (timeout)")
+              process.exit(0)
+            }
+          ```
   
           Wait for the transaction receipt for the executing message.
           The timeout is necessary because if the executing message is valid, but the log entry has not been seen yet, the sequencer does not put the transaction with the message into a block.
           The timeout distinguishes between a valid executing message pending inclusion and a non-existent log entry.
   
           ```js
-const verified = 
-  executingTransactionReceipt.logs.filter(
-    x => x.address=="0x4200000000000000000000000000000000000022" &&
-         x.topics[0] == "0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7" &&
-         x.topics[1] == keccak256(toBytes(relayMessageParams.payload))
-  ).length > 0
-```
+            const verified = 
+              executingTransactionReceipt.logs.filter(
+                x => x.address=="0x4200000000000000000000000000000000000022" &&
+                    x.topics[0] == "0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7" &&
+                    x.topics[1] == keccak256(toBytes(relayMessageParams.payload))
+              ).length > 0
+          ```
   
           Look for the log entry from `CrossL2Inbox`.
           To ensure this is the correct log entry, we look at the [message type](https://www.4byte.directory/event-signatures/?bytes_signature=0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7) and check that the ID is the correct one.
@@ -541,202 +544,202 @@ const verified =
     3.  Create `src/Verifier.sol`.
   
         ```solidity
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+      // SPDX-License-Identifier: UNLICENSED
+      pragma solidity ^0.8.13;
 
-import {Attestation} from "@ethereum-attestation-service/eas-contracts/contracts/Common.sol";
+      import {Attestation} from "@ethereum-attestation-service/eas-contracts/contracts/Common.sol";
 
-// Code from https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol,
-// which is not in the npm package yet so we copy it.
-struct Identifier {
-    address origin;
-    uint256 blockNumber;
-    uint256 logIndex;
-    uint256 timestamp;
-    uint256 chainId;
-}
+      // Code from https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol,
+      // which is not in the npm package yet so we copy it.
+      struct Identifier {
+          address origin;
+          uint256 blockNumber;
+          uint256 logIndex;
+          uint256 timestamp;
+          uint256 chainId;
+      }
 
-interface ICrossL2Inbox {
-    function validateMessage(Identifier calldata _id, bytes32 _msgHash) external;
-}
+      interface ICrossL2Inbox {
+          function validateMessage(Identifier calldata _id, bytes32 _msgHash) external;
+      }
 
-contract Verifier {
+      contract Verifier {
 
-    bytes32 private constant SCHEMA_UID = 0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58;
-    uint256 private constant EVENT_SIG = 0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35;
-    address private constant EAS_CONTRACT = 0x4200000000000000000000000000000000000021;
-    address private constant CROSS_L2_INBOX = 0x4200000000000000000000000000000000000022;
+          bytes32 private constant SCHEMA_UID = 0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58;
+          uint256 private constant EVENT_SIG = 0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35;
+          address private constant EAS_CONTRACT = 0x4200000000000000000000000000000000000021;
+          address private constant CROSS_L2_INBOX = 0x4200000000000000000000000000000000000022;
 
-    /// @dev Calculates a UID for a given attestation.
-    /// @param attestation The input attestation.
-    /// @param bump A bump value to use in case of a UID conflict.
-    /// @return Attestation UID.
-    function _getUID(Attestation memory attestation, uint32 bump) private pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    attestation.schema,
-                    attestation.recipient,
-                    attestation.attester,
-                    attestation.time,
-                    attestation.expirationTime,
-                    attestation.revocable,
-                    attestation.refUID,
-                    attestation.data,
-                    bump
-                )
-            );
-    }
+          /// @dev Calculates a UID for a given attestation.
+          /// @param attestation The input attestation.
+          /// @param bump A bump value to use in case of a UID conflict.
+          /// @return Attestation UID.
+          function _getUID(Attestation memory attestation, uint32 bump) private pure returns (bytes32) {
+              return
+                  keccak256(
+                      abi.encodePacked(
+                          attestation.schema,
+                          attestation.recipient,
+                          attestation.attester,
+                          attestation.time,
+                          attestation.expirationTime,
+                          attestation.revocable,
+                          attestation.refUID,
+                          attestation.data,
+                          bump
+                      )
+                  );
+          }
 
-    function makePayloadHash(
-        address recipient,
-        address attester,
-        bytes32 attestationID
-    ) pure private returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                EVENT_SIG,
-                recipient,
-                attester,
-                SCHEMA_UID,
-                attestationID
-            )
-        );
-    }
-   
-    function verifyAttestation(
-        address recipient,
-        address attester,
-        uint256 logIndex,
-        uint256 blockNumber,
-        uint64 timestamp,
-        uint256 chainId,
-        string memory name
-    ) public {
-        Attestation memory attestation;
-        attestation.schema = SCHEMA_UID;
-        attestation.recipient = recipient;
-        attestation.attester = attester;
-        attestation.revocable = true;
-        attestation.time = timestamp;
-        attestation.data = abi.encode(name);
-        bytes32 attestationUID = _getUID(attestation, 0);
-    
-        bytes32 payloadHash = makePayloadHash(recipient, attester, attestationUID);
+          function makePayloadHash(
+              address recipient,
+              address attester,
+              bytes32 attestationID
+          ) pure private returns (bytes32) {
+              return keccak256(
+                  abi.encode(
+                      EVENT_SIG,
+                      recipient,
+                      attester,
+                      SCHEMA_UID,
+                      attestationID
+                  )
+              );
+          }
+        
+          function verifyAttestation(
+              address recipient,
+              address attester,
+              uint256 logIndex,
+              uint256 blockNumber,
+              uint64 timestamp,
+              uint256 chainId,
+              string memory name
+          ) public {
+              Attestation memory attestation;
+              attestation.schema = SCHEMA_UID;
+              attestation.recipient = recipient;
+              attestation.attester = attester;
+              attestation.revocable = true;
+              attestation.time = timestamp;
+              attestation.data = abi.encode(name);
+              bytes32 attestationUID = _getUID(attestation, 0);
+          
+              bytes32 payloadHash = makePayloadHash(recipient, attester, attestationUID);
 
-        Identifier memory logEntryIdentifier;
-        logEntryIdentifier.origin = EAS_CONTRACT;
-        logEntryIdentifier.blockNumber = blockNumber;
-        logEntryIdentifier.logIndex = logIndex;
-        logEntryIdentifier.timestamp = timestamp;
-        logEntryIdentifier.chainId = chainId;
+              Identifier memory logEntryIdentifier;
+              logEntryIdentifier.origin = EAS_CONTRACT;
+              logEntryIdentifier.blockNumber = blockNumber;
+              logEntryIdentifier.logIndex = logIndex;
+              logEntryIdentifier.timestamp = timestamp;
+              logEntryIdentifier.chainId = chainId;
 
-        // Signal that this is a cross chain call that needs to have the identifier validated
-        ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(logEntryIdentifier, payloadHash);
+              // Signal that this is a cross chain call that needs to have the identifier validated
+              ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(logEntryIdentifier, payloadHash);
 
-        // Code that uses the attestation goes here        
-    }
-    
-}
-```
+              // Code that uses the attestation goes here        
+          }
+          
+      }
+      ```
   
         <details>
           <summary>Explanation</summary>
   
           ```solidity
-// Code from https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol,
-// which is not in the npm package yet so we copy it.
-struct Identifier {
-    address origin;
-    uint256 blockNumber;
-    uint256 logIndex;
-    uint256 timestamp;
-    uint256 chainId;
-}
+            // Code from https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol,
+            // which is not in the npm package yet so we copy it.
+            struct Identifier {
+                address origin;
+                uint256 blockNumber;
+                uint256 logIndex;
+                uint256 timestamp;
+                uint256 chainId;
+            }
 
-interface ICrossL2Inbox {
-    function validateMessage(Identifier calldata _id, bytes32 _msgHash) external;
-}
-```
+            interface ICrossL2Inbox {
+                function validateMessage(Identifier calldata _id, bytes32 _msgHash) external;
+            }
+          ```
   
           At writing these definitions from [`ICrossL2Inbox`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol) are not yet part of the [npm package](https://www.npmjs.com/package/@eth-optimism/contracts), so we include them here for now.
   
-          ```solidity
-    /// @dev Calculates a UID for a given attestation.
-    /// @param attestation The input attestation.
-    /// @param bump A bump value to use in case of a UID conflict.
-    /// @return Attestation UID.
-    function _getUID(Attestation memory attestation, uint32 bump) private pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    attestation.schema,
-                    attestation.recipient,
-                    attestation.attester,
-                    attestation.time,
-                    attestation.expirationTime,
-                    attestation.revocable,
-                    attestation.refUID,
-                    attestation.data,
-                    bump
-                )
-            );
-    }
-```
+        ```solidity
+          /// @dev Calculates a UID for a given attestation.
+          /// @param attestation The input attestation.
+          /// @param bump A bump value to use in case of a UID conflict.
+          /// @return Attestation UID.
+          function _getUID(Attestation memory attestation, uint32 bump) private pure returns (bytes32) {
+              return
+                  keccak256(
+                      abi.encodePacked(
+                          attestation.schema,
+                          attestation.recipient,
+                          attestation.attester,
+                          attestation.time,
+                          attestation.expirationTime,
+                          attestation.revocable,
+                          attestation.refUID,
+                          attestation.data,
+                          bump
+                      )
+                  );
+          }
+        ```
   
           This function is part of the [EAS contract code](https://github.com/ethereum-attestation-service/eas-contracts/blob/master/contracts/EAS.sol#L692-L711) that calculates the attestation ID.
   
           ```solidity
-    function makePayloadHash(
-        address recipient,
-        address attester,
-        bytes32 attestationID
-    ) pure private returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                EVENT_SIG,
-                recipient,
-                attester,
-                SCHEMA_UID,
-                attestationID
-            )
-        );
-    }
-```
+              function makePayloadHash(
+                  address recipient,
+                  address attester,
+                  bytes32 attestationID
+              ) pure private returns (bytes32) {
+                  return keccak256(
+                      abi.encode(
+                          EVENT_SIG,
+                          recipient,
+                          attester,
+                          SCHEMA_UID,
+                          attestationID
+                      )
+                  );
+              }
+          ```
   
           Calculate the payload hash.
   
           ```solidity
-    function verifyAttestation(
-        address recipient,
-        address attester,
-        uint256 logIndex,
-        uint256 blockNumber,
-        uint64 timestamp,
-        uint256 chainId,
-        string memory name
-    ) public {
-        Attestation memory attestation;
-        attestation.schema = SCHEMA_UID;
-        attestation.recipient = recipient;
-        attestation.attester = attester;
-        attestation.revocable = true;
-        attestation.time = timestamp;
-        attestation.data = abi.encode(name);
-        bytes32 attestationUID = _getUID(attestation, 0);
-    
-        bytes32 payloadHash = makePayloadHash(recipient, attester, attestationUID);
+              function verifyAttestation(
+                  address recipient,
+                  address attester,
+                  uint256 logIndex,
+                  uint256 blockNumber,
+                  uint64 timestamp,
+                  uint256 chainId,
+                  string memory name
+              ) public {
+                  Attestation memory attestation;
+                  attestation.schema = SCHEMA_UID;
+                  attestation.recipient = recipient;
+                  attestation.attester = attester;
+                  attestation.revocable = true;
+                  attestation.time = timestamp;
+                  attestation.data = abi.encode(name);
+                  bytes32 attestationUID = _getUID(attestation, 0);
+              
+                  bytes32 payloadHash = makePayloadHash(recipient, attester, attestationUID);
 
-        Identifier memory logEntryIdentifier;
-        logEntryIdentifier.origin = EAS_CONTRACT;
-        logEntryIdentifier.blockNumber = blockNumber;
-        logEntryIdentifier.logIndex = logIndex;
-        logEntryIdentifier.timestamp = timestamp;
-        logEntryIdentifier.chainId = chainId;
+                  Identifier memory logEntryIdentifier;
+                  logEntryIdentifier.origin = EAS_CONTRACT;
+                  logEntryIdentifier.blockNumber = blockNumber;
+                  logEntryIdentifier.logIndex = logIndex;
+                  logEntryIdentifier.timestamp = timestamp;
+                  logEntryIdentifier.chainId = chainId;
 
-        // Signal that this is a cross chain call that needs to have the identifier validated
-        ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(logEntryIdentifier, payloadHash);
-```
+                  // Signal that this is a cross chain call that needs to have the identifier validated
+                  ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(logEntryIdentifier, payloadHash);
+          ```
   
           This is the function that gets the attestation information, builds the call, and calls `CrossL2Inbox`.
   
@@ -764,83 +767,83 @@ interface ICrossL2Inbox {
     6.  Create a file, `onchain-verification.mjs`.
   
         ```javascript
-import {
-    createWalletClient,
-    http,
-    publicActions,
-    getContract,
-} from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
- 
-import { interopAlpha0, interopAlpha1, supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
-import { walletActionsL2, publicActionsL2 } from '@eth-optimism/viem'
-import { readFile } from 'fs/promises';
+          import {
+              createWalletClient,
+              http,
+              publicActions,
+              getContract,
+          } from 'viem'
+          import { privateKeyToAccount } from 'viem/accounts'
+          
+          import { interopAlpha0, interopAlpha1, supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
+          import { walletActionsL2, publicActionsL2 } from '@eth-optimism/viem'
+          import { readFile } from 'fs/promises';
 
-async function loadVerifierAbi() {
-    const data = await readFile('../onchain/out/Verifier.sol/Verifier.json')
-    return JSON.parse(data);
-}
+          async function loadVerifierAbi() {
+              const data = await readFile('../onchain/out/Verifier.sol/Verifier.json')
+              return JSON.parse(data);
+          }
 
-const verifierAbi = (await loadVerifierAbi()).abi
+          const verifierAbi = (await loadVerifierAbi()).abi
 
-// Contract addresses in all OP Stack blockchains
-const EASContractAddress = "0x4200000000000000000000000000000000000021" 
- 
-const account = privateKeyToAccount(process.env.PRIVATE_KEY)
-const useSupersim = process.env.CHAIN_B_ID == 902
- 
-const wallet0 = createWalletClient({
-    chain: useSupersim ? supersimL2A : interopAlpha0,
-    transport: http(),
-    account
-}).extend(publicActions)
-    .extend(publicActionsL2())
- 
-const wallet1 = createWalletClient({
-    chain: useSupersim ? supersimL2B : interopAlpha1,
-    transport: http(),
-    account
-}).extend(publicActions)
-    .extend(walletActionsL2())
+          // Contract addresses in all OP Stack blockchains
+          const EASContractAddress = "0x4200000000000000000000000000000000000021" 
+          
+          const account = privateKeyToAccount(process.env.PRIVATE_KEY)
+          const useSupersim = process.env.CHAIN_B_ID == 902
+          
+          const wallet0 = createWalletClient({
+              chain: useSupersim ? supersimL2A : interopAlpha0,
+              transport: http(),
+              account
+          }).extend(publicActions)
+              .extend(publicActionsL2())
+          
+          const wallet1 = createWalletClient({
+              chain: useSupersim ? supersimL2B : interopAlpha1,
+              transport: http(),
+              account
+          }).extend(publicActions)
+              .extend(walletActionsL2())
 
-let receipt
- 
-try {
-  receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
-} catch(err) {
-  console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
-  process.exit(0)
-}
- 
-const attestLogEntry = receipt.logs.filter(x => 
-    (x.address == EASContractAddress) &&
-    (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
+          let receipt
+          
+          try {
+            receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
+          } catch(err) {
+            console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
+            process.exit(0)
+          }
+          
+          const attestLogEntry = receipt.logs.filter(x => 
+              (x.address == EASContractAddress) &&
+              (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
 
-const relayMessageParams = await wallet0.interop.buildExecutingMessage({
-  log: attestLogEntry,
-})
- 
-const verifier = getContract({
-  address: process.env.VERIFIER_ADDRESS,
-  abi: verifierAbi,
-  client: wallet1,
-})
+          const relayMessageParams = await wallet0.interop.buildExecutingMessage({
+            log: attestLogEntry,
+          })
+          
+          const verifier = getContract({
+            address: process.env.VERIFIER_ADDRESS,
+            abi: verifierAbi,
+            client: wallet1,
+          })
 
-const verificationTransaction = await verifier.write.verifyAttestation({
-  args: [
-    "0x" + relayMessageParams.payload.slice(90,130),
-    "0x" + relayMessageParams.payload.slice(154,194),
-    relayMessageParams.id.logIndex,
-    relayMessageParams.id.blockNumber,
-    relayMessageParams.id.timestamp,
-    relayMessageParams.id.chainId,
-    "Bill Hamm"
-  ],
-  accessList: relayMessageParams.accessList
-})
+          const verificationTransaction = await verifier.write.verifyAttestation({
+            args: [
+              "0x" + relayMessageParams.payload.slice(90,130),
+              "0x" + relayMessageParams.payload.slice(154,194),
+              relayMessageParams.id.logIndex,
+              relayMessageParams.id.blockNumber,
+              relayMessageParams.id.timestamp,
+              relayMessageParams.id.chainId,
+              "Bill Hamm"
+            ],
+            accessList: relayMessageParams.accessList
+          })
 
-console.log(`VERIFICATION_TRANSACTION_HASH=${verificationTransaction}`)
-```
+          console.log(`VERIFICATION_TRANSACTION_HASH=${verificationTransaction}`)
+        ```
   
         <details>
           <summary>Explanation</summary>
@@ -848,44 +851,44 @@ console.log(`VERIFICATION_TRANSACTION_HASH=${verificationTransaction}`)
           This is a modified version of the `verify-attestation.mjs` we used earlier, so we only go over the new parts.
   
           ```javascript
-import { readFile } from 'fs/promises';
+            import { readFile } from 'fs/promises';
 
-async function loadVerifierAbi() {
-    const data = await readFile('../onchain/out/Verifier.sol/Verifier.json')
-    return JSON.parse(data);
-}
+            async function loadVerifierAbi() {
+                const data = await readFile('../onchain/out/Verifier.sol/Verifier.json')
+                return JSON.parse(data);
+            }
 
-const verifierAbi = (await loadVerifierAbi()).abi
-```
+            const verifierAbi = (await loadVerifierAbi()).abi
+          ```
   
           Read the ABI for `Verifier` we created onchain.
   
           ```javascript
-const verifier = getContract({
-  address: process.env.VERIFIER_ADDRESS,
-  abi: verifierAbi,
-  client: wallet1,
-})
+            const verifier = getContract({
+              address: process.env.VERIFIER_ADDRESS,
+              abi: verifierAbi,
+              client: wallet1,
+            })
 
-const verificationTransaction = await verifier.write.verifyAttestation({
-  args: [
-    "0x" + relayMessageParams.payload.slice(90,130),
-    "0x" + relayMessageParams.payload.slice(154,194),
-    relayMessageParams.id.logIndex,
-    relayMessageParams.id.blockNumber,
-    relayMessageParams.id.timestamp,
-    relayMessageParams.id.chainId,
-    "Bill Hamm"
-  ],
-  accessList: relayMessageParams.accessList
-})
-```
+            const verificationTransaction = await verifier.write.verifyAttestation({
+              args: [
+                "0x" + relayMessageParams.payload.slice(90,130),
+                "0x" + relayMessageParams.payload.slice(154,194),
+                relayMessageParams.id.logIndex,
+                relayMessageParams.id.blockNumber,
+                relayMessageParams.id.timestamp,
+                relayMessageParams.id.chainId,
+                "Bill Hamm"
+              ],
+              accessList: relayMessageParams.accessList
+            })
+          ```
   
           Call `Verifier` with the information needed to verify the attestation.
   
           ```javascript
-console.log(`VERIFICATION_TRANSACTION_HASH=${verificationTransaction}`)
-```
+            console.log(`VERIFICATION_TRANSACTION_HASH=${verificationTransaction}`)
+          ```
   
           Report the transaction hash.
         </details>
