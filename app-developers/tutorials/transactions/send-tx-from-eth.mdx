@@ -26,24 +26,27 @@ In this tutorial you'll learn how to trigger a transaction on OP Stack from Ethe
 You're going to use the `viem` package for this tutorial. Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
-  <h3>Make a Project Folder</h3>
+  <Step title="Make a Project Folder">
 
   ```bash
   mkdir trigger-transaction
   cd trigger-transaction
   ```
 
-  <h3>Initialize the Project</h3>
+  </Step>
+  <Step title="Initialize the Project">
 
   ```bash
   pnpm init
   ```
 
-  <h3>Install Viem</h3>
+  </Step>
+  <Step title="Install Viem">
 
   ```bash
   pnpm add viem
   ```
+  </Step>
 </Steps>
 
 <Info>
@@ -86,7 +89,7 @@ This will bring up a Node REPL prompt that allows you to run javascript code.
 You need to import some dependencies into your Node REPL session.
 
 <Steps>
-  <h3>Import Viem</h3>
+  <Step title="Import Viem">
 
   ```ts
   const { createPublicClient, createWalletClient, http, parseEther, formatEther } = require('viem');
@@ -94,6 +97,7 @@ You need to import some dependencies into your Node REPL session.
   const { privateKeyToAccount } = require('viem/accounts');
   const { publicActionsL2, publicActionsL1, walletActionsL2, walletActionsL1, getL2TransactionHashes } = require ('viem/op-stack')
 ```
+  </Step>
 </Steps>
 
 ## Set session variables
@@ -101,20 +105,22 @@ You need to import some dependencies into your Node REPL session.
 You'll need a few variables throughout this tutorial. Let's set those up now.
 
 <Steps>
-  <h3>Load your private key</h3>
+  <Step title="Load your private key">
 
   ```ts
   const privateKey = process.env.TUTORIAL_PRIVATE_KEY;
   const account = privateKeyToAccount(privateKey);
 ```
 
-  <h3>Create the RPC providers and wallets</h3>
+  </Step>
+  <Step title="Create the RPC providers and wallets">
 
   ```ts
   const l1PublicClient = createPublicClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") }).extend(publicActionsL1())
   const l2PublicClient = createPublicClient({ chain: optimismSepolia, transport: http("https://sepolia.optimism.io") }).extend(publicActionsL2());
   const l1WalletClient = createWalletClient({ chain: sepolia, transport: http("https://rpc.ankr.com/eth_sepolia") }).extend(walletActionsL1());
 ```
+  </Step>
 </Steps>
 
 ## Check your initial balance
@@ -131,7 +137,7 @@ You'll be sending a small amount of ETH as part of this tutorial. Quickly check 
 Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepolia by sending a transaction on Sepolia.
 
 <Steps>
-  <h3>Create the OptimismPortal object</h3>
+  <Step title="Create the OptimismPortal object">
 
   ```ts
   const optimismPortalAbi = [
@@ -148,7 +154,8 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
   ];
 ```
 
-  <h3>Estimate the required gas</h3>
+  </Step>
+  <Step title="Estimate the required gas">
 
   When sending transactions via the `OptimismPortal` contract it's important to always include a gas buffer. This is because the `OptimismPortal` charges a variable amount of gas depending on the current demand for L2 transactions triggered via L1. If you do not include a gas buffer, your transactions may fail.
 
@@ -168,7 +175,8 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
   });
 ```
 
-  <h3>Send the transaction</h3>
+  </Step>
+  <Step title="Send the transaction">
 
   Now you'll send the transaction. Note that you are including a buffer of 20% on top of the gas estimate.
 
@@ -187,7 +195,8 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
   console.log(`L1 transaction hash: ${l1TxHash}`)
 ```
 
-  <h3>Wait for the L1 transaction</h3>
+  </Step>
+  <Step title="Wait for the L1 transaction">
 
   First you'll need to wait for the L1 transaction to be mined.
 
@@ -195,7 +204,8 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
   const l1TxHash = await l1WalletClient.writeContract(request)
 ```
 
-  <h3>Wait for the L2 transaction</h3>
+  </Step>
+  <Step title="Wait for the L2 transaction">
 
   Now you'll need to wait for the corresponding L2 transaction to be included in a block. This transaction is automatically created as a result of your L1 transaction. Here you'll determine the hash of the L2 transaction and then wait for that transaction to be included in the L2 blockchain.
 
@@ -208,6 +218,7 @@ Now you'll use the `OptimismPortal` contract to trigger a transaction on OP Sepo
   }); 
   console.log('L2 transaction confirmed:', l2Receipt);
 ```
+  </Step>
 </Steps>
 
 ## Check your updated balance

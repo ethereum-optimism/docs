@@ -24,24 +24,27 @@ You're going to use the viem library for this tutorial.
 Since viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
-  <h3>Make a Project Folder</h3>
+  <Step title="Make a Project Folder">
 
   ```bash
   mkdir trace-trx
   cd trace-trx
   ```
 
-  <h3>Initialize the project</h3>
+  </Step>
+  <Step title="Initialize the project">
 
   ```bash
   pnpm init
   ```
 
-  <h3>Install viem</h3>
+  </Step>
+  <Step title="Install viem">
 
   ```bash
   pnpm add viem 
   ```
+  </Step>
 </Steps>
 
 ## Add RPC URLs to your environment
@@ -81,14 +84,15 @@ const { optimismSepolia, sepolia } = require('viem/chains');
 You'll need a few variables throughout this tutorial. Let's set those up now.
 
 <Steps>
-  <h3>Import RPC URLs</h3>
+  <Step title="Import RPC URLs">
 
   ```ts
   const l1RpcUrl = process.env.L1_RPC_URL;
   const l2RpcUrl = process.env.L2_RPC_URL;
   ```
 
-  <h3>Set the deposit to trace</h3>
+  </Step>
+  <Step title="Set the deposit to trace">
 
   You'll be tracing a specific deposit in this tutorial. Deposit tracing is generally based on the transaction hash of the transaction that triggered the deposit. You can replace this transaction hash with your own if you'd like.
 
@@ -96,7 +100,8 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
   const depositHash = '0x5896d6e4a47b465e0d925723bab838c62ef53468139a5e9ba501efd70f90cccb'
   ```
 
-  <h3>Set the withdrawal to trace</h3>
+  </Step>
+  <Step title="Set the withdrawal to trace">
 
   You'll also be tracing a specific withdrawal in this tutorial. Like with deposits, withdrawal tracing is generally based on the transaction hash of the transaction that triggered the withdrawal. You can replace this transaction hash with your own if you'd like.
 
@@ -104,7 +109,8 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
   const withdrawalHash = '0x18b8b4022b8d9e380fd89417a2e897adadf31e4f41ca17442870bf89ad024f42'
   ```
 
-  <h3>Create the RPC providers</h3>
+  </Step>
+  <Step title="Create the RPC providers">
 
   ```ts
   const l1Client = createPublicClient({
@@ -117,6 +123,7 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
     transport: http(l2RpcUrl),
   });
   ```
+  </Step>
 </Steps>
 
 ## Trace a Deposit
@@ -124,7 +131,7 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 You can use viem to trace a deposit.
 
 <Steps>
-  <h3>Get the deposit status</h3>
+  <Step title="Get the deposit status">
 
   You can query for the deposit status using the transaction hash of the deposit.
 
@@ -134,7 +141,8 @@ You can use viem to trace a deposit.
   console.log(depositStatus);
   ```
 
-  <h3>Get the deposit transaction receipt</h3>
+  </Step>
+  <Step title="Get the deposit transaction receipt">
 
   Retrieve the transaction receipt for the deposit using the viem client.
 
@@ -144,7 +152,8 @@ const depositReceipt = await l2Client.getTransaction({ hash: depositHash });
 console.log(depositReceipt);
 ```
 
-  <h3>Get the deposit transaction</h3>
+  </Step>
+  <Step title="Get the deposit transaction">
 
   You can directly query for the L2 transaction that executed the deposit.
 
@@ -153,6 +162,7 @@ console.log('Grabbing deposit txn...')
 const depositTransaction = await l2Client.getTransaction({ hash: depositHash });
 console.log(depositTransaction);
 ```
+  </Step>
 </Steps>
 
 ## Trace a withdrawal
@@ -160,7 +170,7 @@ console.log(depositTransaction);
 You can use viem's functions to trace a withdrawal.
 
 <Steps>
-  <h3>Get the withdrawal status</h3>
+  <Step title="Get the withdrawal status">
 
   Like deposits, withdrawals can have multiple statuses depending on where they are in the process.
 
@@ -170,7 +180,8 @@ const withdrawalStatus = await l1Client.getTransactionReceipt({ hash: withdrawal
 console.log(withdrawalStatus);
 ```
 
-  <h3>Get the withdrawal transaction receipt</h3>
+  </Step>
+  <Step title="Get the withdrawal transaction receipt">
 
   Retrieve the L1 transaction receipt for the withdrawal.
 
@@ -180,7 +191,8 @@ const withdrawalReceipt = await l1Client.getTransaction({ hash: withdrawalHash }
 console.log(withdrawalReceipt);
 ```
 
-  <h3>Get the withdrawal transaction</h3>
+  </Step>
+  <Step title="Get the withdrawal transaction">
 
   Directly query for the L1 transaction that executed the withdrawal.
 
@@ -189,6 +201,7 @@ console.log('Grabbing withdrawal txn...')
 const withdrawalTransaction = await l1Client.getTransaction({ hash: withdrawalHash });
 console.log(withdrawalTransaction);
 ```
+  </Step>
 </Steps>
 
 ## Next steps

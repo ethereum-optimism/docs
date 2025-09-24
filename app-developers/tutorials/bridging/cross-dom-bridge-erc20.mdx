@@ -40,30 +40,34 @@ You're going to use the `@eth-optimism/viem` package for this tutorial.
 Since the `@eth-optimism/viem` package is a [Node.js](https://nodejs.org/en/) library, you'll need to create a Node.js project to use it.
 
 <Steps>
-  <h3>Make a Project Folder</h3>
+  <Step title="Make a Project Folder">
 
   ```bash
   mkdir bridging-erc20-tokens
   cd bridging-erc20-tokens
   ```
 
-  <h3>Initialize the Project</h3>
+  </Step>
+  <Step title="Initialize the Project">
 
   ```bash
   pnpm init
   ```
 
-  <h3>Install the `@eth-optimism/viem`</h3>
+  </Step>
+  <Step title="Install the `@eth-optimism/viem`">
 
   ```bash
   pnpm add @eth-optimism/viem
   ```
 
-  <h3>Install viem</h3>
+  </Step>
+  <Step title="Install viem">
 
   ```bash
   pnpm add viem
   ```
+  </Step>
 </Steps>
 
 <Info>
@@ -113,7 +117,7 @@ The `@eth-optimism/viem` package uses ESM modules, and to use in the Node.js REP
 Here's how to do it:
 
 <Steps>
-  <h3>Import the @eth-optimism/viem package</h3>
+  <Step title="Import the @eth-optimism/viem package">
 
   ```ts
 
@@ -126,6 +130,7 @@ Here's how to do it:
   const opActions = await import('@eth-optimism/viem/actions');
   const { depositERC20, withdrawOptimismERC20 } = opActions;
 ```
+  </Step>
 </Steps>
 
 ## Set session variables
@@ -134,7 +139,7 @@ You'll need a few variables throughout this tutorial.
 Let's set those up now.
 
 <Steps>
-  <h3>Load your private key</h3>
+  <Step title="Load your private key">
 
   This step retrieves your private key from the environment variable you set earlier and converts it into an account object that Viem can use for transaction signing.
   
@@ -146,7 +151,8 @@ Let's set those up now.
   const account = privateKeyToAccount(PRIVATE_KEY);
 ```
 
-  <h3>Create the RPC providers and wallets</h3>
+  </Step>
+  <Step title="Create the RPC providers and wallets">
 
   Here we establish the connections to both networks by creating four different clients:
 
@@ -186,7 +192,8 @@ Let's set those up now.
   });
 ```
 
-  <h3>Set the L1 and L2 ERC-20 addresses</h3>
+  </Step>
+  <Step title="Set the L1 and L2 ERC-20 addresses">
 
   We define the addresses of the ERC-20 tokens on both networks.
   These are specially deployed test tokens with corresponding implementations on both L1 (Sepolia) and L2 (OP Sepolia).
@@ -206,6 +213,7 @@ Let's set those up now.
     Bridge](./standard-bridge-custom-token) tutorials, you can use the addresses
     of your own ERC-20 tokens here instead.
   </Info>
+  </Step>
 </Steps>
 
 ## Get L1 tokens
@@ -214,7 +222,7 @@ You're going to need some tokens on L1 that you can bridge to L2.
 The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](https://sepolia.etherscan.io/address/0x5589BB8228C07c4e15558875fAf2B859f678d129) has a `faucet` function that makes it easy to get tokens.
 
 <Steps>
-  <h3>Set the ERC20 ABI</h3>
+  <Step title="Set the ERC20 ABI">
 
   The Application Binary Interface (ABI) defines how to interact with the smart contract functions. This ERC-20 ABI includes several critical functions:
 
@@ -281,7 +289,8 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
   ];
 ```
 
-  <h3>Request some tokens</h3>
+  </Step>
+  <Step title="Request some tokens">
 
   Now we'll call the `faucet` function on the L1 test token contract to receive free tokens for testing.
   This transaction will mint new tokens directly to our wallet address. 
@@ -300,7 +309,8 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
   console.log('Faucet transaction:', tx);
 ```
 
-  <h3>Check your token balance</h3>
+  </Step>
+  <Step title="Check your token balance">
 
   After using the faucet, we verify our token balance by calling the `balanceOf` function on the L1 token contract.
   
@@ -316,6 +326,7 @@ The L1 testing token located at [`0x5589BB8228C07c4e15558875fAf2B859f678d129`](h
   });
   console.log(`L1 Balance after receiving faucet: ${formatEther(l1Balance)}`);
 ```
+  </Step>
 </Steps>
 
 ## Deposit tokens
@@ -324,7 +335,7 @@ Now that you have some tokens on L1, you can deposit those tokens into the `L1St
 You'll then receive the same number of tokens on L2 in return.
 
 <Steps>
-  <h3>Define the amount to deposit</h3>
+  <Step title="Define the amount to deposit">
 
   We define a variable `oneToken` that represents 1 full token in its base units (wei). 
   ERC-20 tokens typically use 18 decimal places, so 1 token equals 10^18 wei. 
@@ -336,7 +347,8 @@ You'll then receive the same number of tokens on L2 in return.
   const oneToken = 1000000000000000000n
 ```
 
-  <h3>Allow the Standard Bridge to access your tokens</h3>
+  </Step>
+  <Step title="Allow the Standard Bridge to access your tokens">
 
   ERC-20 tokens require a two-step process for transferring tokens on behalf of a user.
   First, we must grant permission to the bridge contract to spend our tokens by calling the `approve` function on the token contract.
@@ -355,7 +367,8 @@ You'll then receive the same number of tokens on L2 in return.
   console.log('Approval transaction:', approveTx);
 ```
 
-  <h3>Wait for approval</h3>
+  </Step>
+  <Step title="Wait for approval">
 
   After submitting the approval transaction, we need to wait for it to be confirmed on L1.
   We use the `waitForTransactionReceipt` function to monitor the transaction until it's included in a block. 
@@ -367,7 +380,8 @@ You'll then receive the same number of tokens on L2 in return.
   await publicClientL1.waitForTransactionReceipt({ hash: approveTx });
 ```
 
-  <h3>Deposit your tokens</h3>
+  </Step>
+  <Step title="Deposit your tokens">
 
   Now we can execute the actual bridging operation using the `depositERC20` function from the `@eth-optimism/viem` package. 
   
@@ -404,7 +418,8 @@ You'll then receive the same number of tokens on L2 in return.
     more info on the options you can pass to `depositERC20`.
   </Info>
 
-  <h3>Wait for the deposit to be relayed</h3>
+  </Step>
+  <Step title="Wait for the deposit to be relayed">
 
   After initiating the deposit, we need to wait for the L1 transaction to be confirmed.
   This function tracks the transaction until it's included in an L1 block.
@@ -416,7 +431,8 @@ You'll then receive the same number of tokens on L2 in return.
   console.log(`Deposit confirmed in block ${depositReceipt.blockNumber}`);
 ```
 
-  <h3>Check your token balance on L1</h3>
+  </Step>
+  <Step title="Check your token balance on L1">
 
   After the deposit transaction is confirmed, we check our token balance on L1 again to verify that the tokens have been deducted.
   
@@ -433,7 +449,8 @@ You'll then receive the same number of tokens on L2 in return.
   console.log(`L1 Balance after deposit: ${formatEther(l1BalanceAfterDeposit)}`);
 ```
 
-  <h3>Check your token balance on L2</h3>
+  </Step>
+  <Step title="Check your token balance on L2">
 
   After allowing some time for the L2 transaction to be processed, we check our token balance on L2 to verify that we've received the bridged tokens.
   
@@ -449,6 +466,7 @@ You'll then receive the same number of tokens on L2 in return.
   });
   console.log(`L2 Balance after withdrawal: ${formatEther(l2Balance)}`);
 ```
+  </Step>
 </Steps>
 
 ## Withdraw tokens
@@ -458,7 +476,7 @@ Nice!
 Now you're going to repeat the process in reverse to bridge some tokens from L2 to L1.
 
 <Steps>
-  <h3>Initiate the withdrawal</h3>
+  <Step title="Initiate the withdrawal">
 
   To move tokens back to L1, we use the `withdrawOptimismERC20` function from the `@eth-optimism/viem` package.
   This function interacts with the `L2StandardBridge` contract to initialize the withdrawal process.
@@ -482,7 +500,8 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   console.log(`Withdrawal transaction hash: ${withdrawTx}`);
 ```
 
-  <h3>Wait for the transaction receipt</h3>
+  </Step>
+  <Step title="Wait for the transaction receipt">
 
   Similar to deposits, we wait for the withdrawal transaction to be confirmed on L2.
   This receipt provides confirmation that the withdrawal has been initiated.
@@ -500,7 +519,8 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
     wait.
   </Info>
 
-  <h3>Check your token balance on L2</h3>
+  </Step>
+  <Step title="Check your token balance on L2">
 
   After the withdrawal transaction is confirmed, we check our token balance on L2 again to verify that the tokens have been deducted.
   Our L2 balance should now be lower by the amount we initiated for withdrawal.
@@ -516,6 +536,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   });
   console.log(`L2 Balance after withdrawal: ${formatEther(l2Balance)}`);
 ```
+  </Step>
 </Steps>
 
 ## Next steps
