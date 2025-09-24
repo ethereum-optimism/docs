@@ -22,19 +22,19 @@ is_imported_content: 'false'
 
 # Message expiration
 
-[Messages](/app-developers/guides/interoperability/message-passing) referenced between OP Stack chains have a limited validity period called the expiry window. Once this window elapses, the referenced message becomes invalid and can no longer be referenced.
+[Messages](/interop/message-passing) referenced between OP Stack chains have a limited validity period called the expiry window. Once this window elapses, the referenced message becomes invalid and can no longer be referenced.
 
-For messages using [`L2ToL2CrossDomainMessenger`](/app-developers/guides/interoperability/message-passing), if a message expires before being referenced, developers can reemit the message on the source chain. This triggers a fresh `SentMessage` event, enabling the message to be relayed.
+For messages using [`L2ToL2CrossDomainMessenger`](/interop/message-passing), if a message expires before being referenced, developers can reemit the message on the source chain. This triggers a fresh `SentMessage` event, enabling the message to be relayed.
 
 ## The expiry window
 
-The expiry window is an offchain constant, defined by [OP-Supervisor](/chain-operators/reference/components/op-supervisor), that defines how long a cross-chain message or event emitted remains valid. For any chain in the [Superchain interop cluster](/interop/explainer#superchain-interop-cluster), messages must be referenced within 7 days (604,800 seconds) of the log being created.
+The expiry window is an offchain constant, defined by [OP-Supervisor](/interop/op-supervisor), that defines how long a cross-chain message or event emitted remains valid. For any chain in the [Superchain interop cluster](/interop/explainer#superchain-interop-cluster), messages must be referenced within 7 days (604,800 seconds) of the log being created.
 
 After this period, a message can no longer be referenced unless the event is remitted.
 
 ## Reemitting an expired message
 
-The `resendMessage` function on the [`L2ToL2CrossDomainMessenger`](/app-developers/guides/interoperability/message-passing) contract allows developers to reemit a message that was sent but not yet relayed.
+The `resendMessage` function on the [`L2ToL2CrossDomainMessenger`](/interop/message-passing) contract allows developers to reemit a message that was sent but not yet relayed.
 
 This emits a new `SentMessage` log with the same content as the original message, enabling offchain relayers to pick it up again.
 
@@ -48,6 +48,6 @@ Note: Re-emitting an already relayed message will have no effect on the destinat
 
 ## Next steps
 
-*   [Build a revolutionary app](/app-developers/quickstarts/first-app) that uses multiple blockchains within the Superchain
-*   Learn how to [pass messages between blockchains](/app-developers/tutorials/interoperability/message-passing)
-*   Deploy a [SuperchainERC20](/app-developers/tutorials/tokens/deploy-superchain-erc20) to the Superchain
+*   [Build a revolutionary app](/app-developers/get-started) that uses multiple blockchains within the Superchain
+*   Learn how to [pass messages between blockchains](/interop/tutorials/message-passing)
+*   Deploy a [SuperchainERC20](/interop/tutorials/deploy-superchain-erc20) to the Superchain
