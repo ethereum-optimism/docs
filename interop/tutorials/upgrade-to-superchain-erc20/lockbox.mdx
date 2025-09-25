@@ -140,115 +140,113 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
     2.  Replace `packages/contracts/package.json` with this code:
 
         ```json
-          {
-            "name": "@superchainerc20-starter/contracts",
-            "main": "index.js",
-            "scripts": {
-              "deploy:dev": "env-cmd -f .env cross-env-shell 'wait-port http://:8420/ready && forge script scripts/SuperchainERC20Deployer.s.sol --broadcast --private-key $DEPLOYER_PRIVATE_KEY'",
-              "deploy:token": "env-cmd -f .env cross-env-shell 'forge script scripts/LockboxDeployer.s.sol --broadcast --private-key $DEPLOYER_PRIVATE_KEY'",
-              "update:rpcs": "cd ../.. && ./scripts/fetch-superchain-rpc-urls.sh",
-              "install": "forge install",
-              "build": "forge build",
-              "test": "forge test",
-              "init:env": "cp .env.example .env"
-            },
-            "dependencies": {
-              "viem": "^2.21.37"
-            }
-          }      
+        {
+          "name": "@superchainerc20-starter/contracts",
+          "main": "index.js",
+          "scripts": {
+            "deploy:dev": "env-cmd -f .env cross-env-shell 'wait-port http://:8420/ready && forge script scripts/SuperchainERC20Deployer.s.sol --broadcast --private-key $DEPLOYER_PRIVATE_KEY'",
+            "deploy:token": "env-cmd -f .env cross-env-shell 'forge script scripts/LockboxDeployer.s.sol --broadcast --private-key $DEPLOYER_PRIVATE_KEY'",
+            "update:rpcs": "cd ../.. && ./scripts/fetch-superchain-rpc-urls.sh",
+            "install": "forge install",
+            "build": "forge build",
+            "test": "forge test",
+            "init:env": "cp .env.example .env"
+          },
+          "dependencies": {
+            "viem": "^2.21.37"
+          }
+        }
         ```
 
     3.  Create a new file, `packages/contracts/scripts/LockboxDeployer.s.sol`:
 
         ```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.25;
 
-          // SPDX-License-Identifier: MIT
-          pragma solidity ^0.8.25;
-          
-          import {Script, console} from "forge-std/Script.sol";
-          import {Vm} from "forge-std/Vm.sol";
-          import {LockboxSuperchainERC20} from "../src/LockboxSuperchainERC20.sol";
-          
-          contract LockboxDeployer is Script {
-              string deployConfig;
-              uint256 timestamp;
-          
-              constructor() {
-                  string memory deployConfigPath = vm.envOr("DEPLOY_CONFIG_PATH", string("/configs/deploy-config.toml"));
-                  string memory filePath = string.concat(vm.projectRoot(), deployConfigPath);
-                  deployConfig = vm.readFile(filePath);
-                  timestamp = vm.unixTime();
-              }
-          
-              /// @notice Modifier that wraps a function in broadcasting.
-              modifier broadcast() {
-                  vm.startBroadcast(msg.sender);
-                  _;
-                  vm.stopBroadcast();
-              }
-          
-              function setUp() public {}
-          
-              function run() public {
-                  string[] memory chainsToDeployTo = vm.parseTomlStringArray(deployConfig, ".deploy_config.chains");
-          
-                  address deployedAddress;
-          
-                  for (uint256 i = 0; i < chainsToDeployTo.length; i++) {
-                      string memory chainToDeployTo = chainsToDeployTo[i];
-          
-                      console.log("Deploying to chain: ", chainToDeployTo);
-          
-                      vm.createSelectFork(chainToDeployTo);
-                      address _deployedAddress = deployLockboxSuperchainERC20();
-                      deployedAddress = _deployedAddress;
-                  }
-          
-                  outputDeploymentResult(deployedAddress);
-              }
-          
-              function deployLockboxSuperchainERC20() public broadcast returns (address addr_) {
-                  string memory name = vm.envString("NEW_TOKEN_NAME");
-                  string memory symbol = vm.envString("NEW_TOKEN_SYMBOL");
-                  uint256 decimals = vm.envUint("TOKEN_DECIMALS");
-                  require(decimals <= type(uint8).max, "decimals exceeds uint8 range");
-                  address originalTokenAddress = vm.envAddress("ERC20_ADDRESS");
-                  uint256 originalChainId = vm.envUint("ERC20_CHAINID");
-          
-                  bytes memory initCode = abi.encodePacked(
-                      type(LockboxSuperchainERC20).creationCode, 
-                          abi.encode(name, symbol, uint8(decimals), originalTokenAddress, originalChainId)
-                  );
-                  address preComputedAddress = vm.computeCreate2Address(_implSalt(), keccak256(initCode));
-                  if (preComputedAddress.code.length > 0) {
-                      console.log(
-                          "There is already a contract at %s", preComputedAddress, "on chain id: ", block.chainid
-                      );
-                      addr_ = preComputedAddress;
-                  } else {
-                      addr_ = address(new LockboxSuperchainERC20{salt: _implSalt()}(
-                          name, symbol, uint8(decimals), originalTokenAddress, originalChainId));
-                      console.log("Deployed LockboxSuperchainERC20 at address: ", addr_, "on chain id: ", block.chainid);
-                  }
-              }
-          
-              function outputDeploymentResult(address deployedAddress) public {
-                  console.log("Outputting deployment result");
-          
-                  string memory obj = "result";
-                  string memory jsonOutput = vm.serializeAddress(obj, "deployedAddress", deployedAddress);
-          
-                  vm.writeJson(jsonOutput, "deployment.json");
-              }
-          
-              /// @notice The CREATE2 salt to be used when deploying the token.
-              function _implSalt() internal view returns (bytes32) {
-                  string memory salt = vm.parseTomlString(deployConfig, ".deploy_config.salt");
-                  return keccak256(abi.encodePacked(salt, timestamp));
-              }
-          }
+import {Script, console} from "forge-std/Script.sol";
+import {Vm} from "forge-std/Vm.sol";
+import {LockboxSuperchainERC20} from "../src/LockboxSuperchainERC20.sol";
 
-        ```
+contract LockboxDeployer is Script {
+    string deployConfig;
+    uint256 timestamp;
+
+    constructor() {
+        string memory deployConfigPath = vm.envOr("DEPLOY_CONFIG_PATH", string("/configs/deploy-config.toml"));
+        string memory filePath = string.concat(vm.projectRoot(), deployConfigPath);
+        deployConfig = vm.readFile(filePath);
+        timestamp = vm.unixTime();
+    }
+
+    /// @notice Modifier that wraps a function in broadcasting.
+    modifier broadcast() {
+        vm.startBroadcast(msg.sender);
+        _;
+        vm.stopBroadcast();
+    }
+
+    function setUp() public {}
+
+    function run() public {
+        string[] memory chainsToDeployTo = vm.parseTomlStringArray(deployConfig, ".deploy_config.chains");
+
+        address deployedAddress;
+
+        for (uint256 i = 0; i < chainsToDeployTo.length; i++) {
+            string memory chainToDeployTo = chainsToDeployTo[i];
+
+            console.log("Deploying to chain: ", chainToDeployTo);
+
+            vm.createSelectFork(chainToDeployTo);
+            address _deployedAddress = deployLockboxSuperchainERC20();
+            deployedAddress = _deployedAddress;
+        }
+
+        outputDeploymentResult(deployedAddress);
+    }
+
+    function deployLockboxSuperchainERC20() public broadcast returns (address addr_) {
+        string memory name = vm.envString("NEW_TOKEN_NAME");
+        string memory symbol = vm.envString("NEW_TOKEN_SYMBOL");
+        uint256 decimals = vm.envUint("TOKEN_DECIMALS");
+        require(decimals <= type(uint8).max, "decimals exceeds uint8 range");
+        address originalTokenAddress = vm.envAddress("ERC20_ADDRESS");
+        uint256 originalChainId = vm.envUint("ERC20_CHAINID");
+
+        bytes memory initCode = abi.encodePacked(
+            type(LockboxSuperchainERC20).creationCode,
+                 abi.encode(name, symbol, uint8(decimals), originalTokenAddress, originalChainId)
+        );
+        address preComputedAddress = vm.computeCreate2Address(_implSalt(), keccak256(initCode));
+        if (preComputedAddress.code.length > 0) {
+            console.log(
+                "There is already a contract at %s", preComputedAddress, "on chain id: ", block.chainid
+            );
+            addr_ = preComputedAddress;
+        } else {
+            addr_ = address(new LockboxSuperchainERC20{salt: _implSalt()}(
+                name, symbol, uint8(decimals), originalTokenAddress, originalChainId));
+            console.log("Deployed LockboxSuperchainERC20 at address: ", addr_, "on chain id: ", block.chainid);
+        }
+    }
+
+    function outputDeploymentResult(address deployedAddress) public {
+        console.log("Outputting deployment result");
+
+        string memory obj = "result";
+        string memory jsonOutput = vm.serializeAddress(obj, "deployedAddress", deployedAddress);
+
+        vm.writeJson(jsonOutput, "deployment.json");
+    }
+
+    /// @notice The CREATE2 salt to be used when deploying the token.
+    function _implSalt() internal view returns (bytes32) {
+        string memory salt = vm.parseTomlString(deployConfig, ".deploy_config.salt");
+        return keccak256(abi.encodePacked(salt, timestamp));
+    }
+}
+```
 
         <details>
           <summary>Explanation of the modified functions</summary>
@@ -257,14 +255,14 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
           Some functions are modified, as explained below.
 
           ```solidity
-              function deployLockboxSuperchainERC20() public broadcast returns (address addr_) {
-                string memory name = vm.envString("NEW_TOKEN_NAME");
-                string memory symbol = vm.envString("NEW_TOKEN_SYMBOL");
-                uint256 decimals = vm.envUint("TOKEN_DECIMALS");
-                require(decimals <= type(uint8).max, "decimals exceeds uint8 range");
-                address originalTokenAddress = vm.envAddress("ERC20_ADDRESS");
-                uint256 originalChainId = vm.envUint("ERC20_CHAINID");
-          ```
+    function deployLockboxSuperchainERC20() public broadcast returns (address addr_) {
+        string memory name = vm.envString("NEW_TOKEN_NAME");
+        string memory symbol = vm.envString("NEW_TOKEN_SYMBOL");
+        uint256 decimals = vm.envUint("TOKEN_DECIMALS");
+        require(decimals <= type(uint8).max, "decimals exceeds uint8 range");
+        address originalTokenAddress = vm.envAddress("ERC20_ADDRESS");
+        uint256 originalChainId = vm.envUint("ERC20_CHAINID");
+```
 
           Get the majority of the configuration from the environment.
           Mostly of it is derived from the configuration of the original ERC-20 token.
@@ -273,39 +271,35 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
           This `SuperchainERC20` contract does not need an owner, because minting and burning are handled by the users themselves (by locking and unlocking the original tokens).
 
           ```solidity
-
-              bytes memory initCode = abi.encodePacked(
-              type(LockboxSuperchainERC20).creationCode, 
-                  abi.encode(name, symbol, uint8(decimals), originalTokenAddress, originalChainId)
-              );
-              address preComputedAddress = vm.computeCreate2Address(_implSalt(), keccak256(initCode));
-              if (preComputedAddress.code.length > 0) {
-                  console.log(
-                      "There is already a contract at %s", preComputedAddress, "on chain id: ", block.chainid
-                  );
-                  addr_ = preComputedAddress;
-              } else {
-                  addr_ = address(new LockboxSuperchainERC20{salt: _implSalt()}(
-                      name, symbol, uint8(decimals), originalTokenAddress, originalChainId));
-                  console.log("Deployed LockboxSuperchainERC20 at address: ", addr_, "on chain id: ", block.chainid);
-              }
-          }
-        
-          ```
+        bytes memory initCode = abi.encodePacked(
+            type(LockboxSuperchainERC20).creationCode,
+                 abi.encode(name, symbol, uint8(decimals), originalTokenAddress, originalChainId)
+        );
+        address preComputedAddress = vm.computeCreate2Address(_implSalt(), keccak256(initCode));
+        if (preComputedAddress.code.length > 0) {
+            console.log(
+                "There is already a contract at %s", preComputedAddress, "on chain id: ", block.chainid
+            );
+            addr_ = preComputedAddress;
+        } else {
+            addr_ = address(new LockboxSuperchainERC20{salt: _implSalt()}(
+                name, symbol, uint8(decimals), originalTokenAddress, originalChainId));
+            console.log("Deployed LockboxSuperchainERC20 at address: ", addr_, "on chain id: ", block.chainid);
+        }
+    }
+```
 
           "Manually" calculate the address that [`CREATE2`](https://www.evm.codes/?fork=cancun#f5) will give us.\
           If there is already a contract there, we have a problem.
           Otherwise, deploy `LockboxSuperchainERC20`.
 
           ```solidity
-
-            /// @notice The CREATE2 salt to be used when deploying the token.
-            function _implSalt() internal view returns (bytes32) {
-                string memory salt = vm.parseTomlString(deployConfig, ".deploy_config.salt");
-                return keccak256(abi.encodePacked(salt, timestamp));
-            }
-
-          ```
+    /// @notice The CREATE2 salt to be used when deploying the token.
+    function _implSalt() internal view returns (bytes32) {
+        string memory salt = vm.parseTomlString(deployConfig, ".deploy_config.salt");
+        return keccak256(abi.encodePacked(salt, timestamp));
+    }
+```
 
           I modified this salt function to include a timestamp (obtained using `vm.unixTime()` in the constructor).
           This is not necessary, but I consider it a developer experience improvement.
@@ -323,102 +317,102 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
   1.  Create this file in `packages/contracts/src/LockboxSuperchainERC20.sol`:
 
         ```solidity
-          // SPDX-License-Identifier: MIT
-          pragma solidity ^0.8.25;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.25;
 
-          import {SuperchainERC20} from "./SuperchainERC20.sol";
-          import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {SuperchainERC20} from "./SuperchainERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-          contract LockboxSuperchainERC20 is SuperchainERC20 {
-              string private _name;
-              string private _symbol;
-              uint8 private immutable _decimals;
-              address immutable _originalTokenAddress;
-              uint256 immutable _originalChainId;
+contract LockboxSuperchainERC20 is SuperchainERC20 {
+    string private _name;
+    string private _symbol;
+    uint8 private immutable _decimals;
+    address immutable _originalTokenAddress;
+    uint256 immutable _originalChainId;
 
-              constructor(
-                  string memory name_,
-                  string memory symbol_,
-                  uint8 decimals_,
-                  address originalTokenAddress_,
-                  uint256 originalChainId_) {
-                  require(originalTokenAddress_ != address(0), "Invalid token address");
-                  require(originalChainId_ != 0, "Invalid chain ID");
-                  _name = name_;
-                  _symbol = symbol_;
-                  _decimals = decimals_;
-                  _originalTokenAddress = originalTokenAddress_;
-                  _originalChainId = originalChainId_;
-              }
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_,
+        address originalTokenAddress_,
+        uint256 originalChainId_) {
+        require(originalTokenAddress_ != address(0), "Invalid token address");
+        require(originalChainId_ != 0, "Invalid chain ID");
+        _name = name_;
+        _symbol = symbol_;
+        _decimals = decimals_;
+        _originalTokenAddress = originalTokenAddress_;
+        _originalChainId = originalChainId_;
+    }
 
-              function name() public view virtual override returns (string memory) {
-                  return _name;
-              }
+    function name() public view virtual override returns (string memory) {
+        return _name;
+    }
 
-              function symbol() public view virtual override returns (string memory) {
-                  return _symbol;
-              }
+    function symbol() public view virtual override returns (string memory) {
+        return _symbol;
+    }
 
-              function decimals() public view override returns (uint8) {
-                  return _decimals;
-              }
+    function decimals() public view override returns (uint8) {
+        return _decimals;
+    }
 
-              function originalTokenAddress() public view returns (address) {
-                  return _originalTokenAddress;
-              }
+    function originalTokenAddress() public view returns (address) {
+        return _originalTokenAddress;
+    }
 
-              function originalChainId() public view returns (uint256) {
-                  return _originalChainId;
-              }
+    function originalChainId() public view returns (uint256) {
+        return _originalChainId;
+    }
 
-              function lockAndMint(uint256 amount_) external {
-                  IERC20 originalToken = IERC20(_originalTokenAddress);
+    function lockAndMint(uint256 amount_) external {
+        IERC20 originalToken = IERC20(_originalTokenAddress);
 
-                  require(block.chainid == _originalChainId, "Wrong chain");
-                  bool success = originalToken.transferFrom(msg.sender, address(this), amount_);
+        require(block.chainid == _originalChainId, "Wrong chain");
+        bool success = originalToken.transferFrom(msg.sender, address(this), amount_);
 
-                  // Not necessariy if the ERC-20 contract reverts rather than reverting.
-                  // However, the standard allows the ERC-20 contract to return false instead.
-                  require(success, "No tokens to lock, no mint either");
-                  _mint(msg.sender, amount_);
-              }
+        // Not necessariy if the ERC-20 contract reverts rather than reverting.
+        // However, the standard allows the ERC-20 contract to return false instead.
+        require(success, "No tokens to lock, no mint either");
+        _mint(msg.sender, amount_);
+    }
 
-              function redeemAndBurn(uint256 amount_) external {
-                  IERC20 originalToken = IERC20(_originalTokenAddress);
+    function redeemAndBurn(uint256 amount_) external {
+        IERC20 originalToken = IERC20(_originalTokenAddress);
 
-                  require(block.chainid == _originalChainId, "Wrong chain");
-                  _burn(msg.sender, amount_);
+        require(block.chainid == _originalChainId, "Wrong chain");
+        _burn(msg.sender, amount_);
 
-                  bool success = originalToken.transfer(msg.sender, amount_);
-                  require(success, "Transfer failed, this should not happen");
-              }
-          }
-        ```
+        bool success = originalToken.transfer(msg.sender, amount_);
+        require(success, "Transfer failed, this should not happen");
+    }
+}
+```
 
         <details>
           <summary>Explanation</summary>
 
           ```solidity
-              address immutable _originalTokenAddress;
-              uint256 immutable _originalChainId;
-          ```
+    address immutable _originalTokenAddress;
+    uint256 immutable _originalChainId;
+```
 
           The lockbox contract needs to know the contract for which it is a lockbox.
           This requires not just the address, but also to know what chain has it.
 
           ```solidity
-              }
+    }
 
-              function lockAndMint(uint256 amount_) external {
-                  IERC20 originalToken = IERC20(_originalTokenAddress);
+    function lockAndMint(uint256 amount_) external {
+        IERC20 originalToken = IERC20(_originalTokenAddress);
 
-                  require(block.chainid == _originalChainId, "Wrong chain");
-                  bool success = originalToken.transferFrom(msg.sender, address(this), amount_);
+        require(block.chainid == _originalChainId, "Wrong chain");
+        bool success = originalToken.transferFrom(msg.sender, address(this), amount_);
 
-                  // Not necessariy if the ERC-20 contract reverts rather than reverting.
-                  // However, the standard allows the ERC-20 contract to return false instead.
-                  require(success, "No tokens to lock, no mint either");
-            ```
+        // Not necessariy if the ERC-20 contract reverts rather than reverting.
+        // However, the standard allows the ERC-20 contract to return false instead.
+        require(success, "No tokens to lock, no mint either");
+```
 
           Users call this function to transfer original tokens to the contract and mint themselves an equivalent number of lockbox tokens.
           This function has several tests to make sure it can be called.
@@ -435,16 +429,16 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
           If the tests are successful, mint the requested amount for `msg.sender`.
 
           ```solidity
-              }
+    }
 
-              function redeemAndBurn(uint256 amount_) external {
-                  IERC20 originalToken = IERC20(_originalTokenAddress);
+    function redeemAndBurn(uint256 amount_) external {
+        IERC20 originalToken = IERC20(_originalTokenAddress);
 
-                  require(block.chainid == _originalChainId, "Wrong chain");
-                  _burn(msg.sender, amount_);
+        require(block.chainid == _originalChainId, "Wrong chain");
+        _burn(msg.sender, amount_);
 
-                  bool success = originalToken.transfer(msg.sender, amount_);
-          ```
+        bool success = originalToken.transfer(msg.sender, amount_);
+```
 
           Users call this function to redeem their existing lockbox tokens and replace them with the original tokens.
           It also has multiple tests.

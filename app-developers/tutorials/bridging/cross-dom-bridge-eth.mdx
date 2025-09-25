@@ -52,7 +52,6 @@ Since Viem is a [Node.js](https://nodejs.org/en/) library, you'll need to create
   pnpm add viem
   ```
   </Step>
-</Steps>
 
 <Info>
   Want to create a new wallet for this tutorial?
@@ -93,7 +92,6 @@ This will bring up a Node REPL prompt that allows you to run JavaScript code.
 
 You need to import some dependencies into your Node REPL session.
 
-<Steps>
   <Step title="Import Viem and other packages">
 
 ```js
@@ -121,7 +119,6 @@ const publicClientL1 = createPublicClient({
 }).extend(publicActionsL1()) 
 ```
 
-
   </Step>
   <Step title="Create L1 wallet client for sending transactions on Sepolia">
 
@@ -132,7 +129,6 @@ const walletClientL1 = createWalletClient({
     transport: http("https://rpc.ankr.com/eth_sepolia"),
 }).extend(walletActionsL1());
 ```
-
 
   </Step>
   <Step title="Create L2 public client for interacting with OP Sepolia">
@@ -156,7 +152,6 @@ const walletClientL2 = createWalletClient({
 ```
 
   </Step>
-</Steps>
 
 ## Get ETH on Sepolia
 
@@ -169,7 +164,7 @@ Now that you have some ETH on L1 you can deposit that ETH into the `OptimismPort
 
 <Tabs items={['depositETH', 'Full Code']}>
   <Tabs.Tab>
-    <Steps>
+    
   <Step title="Check your wallet balance on L1">
 
       See how much ETH you have on L1 so you can confirm that the deposit worked later on.
@@ -239,7 +234,7 @@ console.log('L2 transaction confirmed:', l2Receipt);
 console.log('Deposit completed successfully!');
 ```
   </Step>
-    </Steps>
+    
   </Tabs.Tab>
 
   <Tabs.Tab>
@@ -249,16 +244,13 @@ const { sepolia, optimismSepolia } = require('viem/chains');
 const { privateKeyToAccount } = require('viem/accounts');
 const { getL2TransactionHashes, publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2 } = require('viem/op-stack');
 
-
 const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
 const account = privateKeyToAccount(PRIVATE_KEY);
-
 
 const publicClientL1 = createPublicClient({
     chain: sepolia,
     transport: http("https://rpc.ankr.com/eth_sepolia"),
 }).extend(publicActionsL1()) 
-
 
 const walletClientL1 = createWalletClient({
     account,
@@ -266,12 +258,10 @@ const walletClientL1 = createWalletClient({
     transport: http("https://rpc.ankr.com/eth_sepolia"),
 }).extend(walletActionsL1());
 
-
 const publicClientL2 = createPublicClient({
     chain: optimismSepolia,
     transport: http("https://sepolia.optimism.io"),
 }).extend(publicActionsL2());
-
 
 const walletClientL2 = createWalletClient({
     account,
@@ -283,7 +273,6 @@ const l1Balance = await publicClientL1.getBalance({ address: account.address });
 console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`); 
 
 async function depositETH() {
-
 
 const depositArgs = await publicClientL2.buildDepositTransaction({
     mint: parseEther("0.0001"),
@@ -323,7 +312,7 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
 
 <Tabs items={['withdrawETH', 'Full code']}>
   <Tabs.Tab>
-    <Steps>
+    
   <Step title="Create the withdrawal transaction">
 
       Uses `buildWithdrawalTransaction` to create the withdrawal parameters.
