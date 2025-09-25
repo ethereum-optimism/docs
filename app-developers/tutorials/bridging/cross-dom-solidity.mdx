@@ -5,9 +5,7 @@ description: >-
   to each other.
 ---
 
-
-
-
+import { Steps } from "/snippets/steps.jsx"
 
 
 # Communicating between OP Stack and Ethereum in Solidity
@@ -64,44 +62,42 @@ You'll send a transaction directly to the L1 `Greeter` contract which will ask t
 After just a few minutes, you'll see the corresponding greeting set on the L2 `Greeter` contract.
 
 <Steps>
-  <Step title="Connect to Etherscan">
-  
-  Sending a message to the L2 `Greeter` contract via the L1 `Greeter` contract requires that you call the `sendGreeting` function.
-  For simplicity, you'll interact with the contract directly on Etherscan.
-  Open up the [L1 `Greeter` contract on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#writeContract) and click the "Connect to Web3" button.
-  
-  </Step>
-  <Step title="Send your greeting">
-  
-  Put a greeting into the field next to the "sendGreeting" function and click the "Write" button.
-  You can use any greeting you'd like.
-  
-  </Step>
-  <Step title="Wait a few minutes">
-  
-  It will take a few minutes for your message to reach L2.
-  Feel free to take a quick break while you wait.
-  
-  <Info>
-  You can use Viem to programmatically check the status of any message between L1 and L2.
-  Later on in this tutorial you'll learn how to use Viem and the `waitToProve` function to wait for various message statuses.
-  This same function can be used to wait for a message to be relayed from L1 to L2.
-  </Info>
-  
-  </Step>
-  <Step title="Check the L2 Greeter">
-  
-  After a few minutes, you should see the greeting on the L2 `Greeter` contract change to the greeting you set.
-  Open up the [L2 `Greeter` contract on OP Sepolia Etherscan](https://testnet-explorer.optimism.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#readContract) and click the "Read Contract" button.
-  Paste your address into the field next to the "greeting" function and click the "Query" button.
-  You should see the message you sent from L1.
-  
-  <Info>
-  Haven't seen your message yet?
-  You might need to wait a little longer.
-  L2 transactions triggered on L1 are typically processed within one minute but can occasionally be slightly delayed.
-  </Info>
-  </Step>
+
+{<h3>Connect to Etherscan</h3>}
+
+Sending a message to the L2 `Greeter` contract via the L1 `Greeter` contract requires that you call the `sendGreeting` function.
+For simplicity, you'll interact with the contract directly on Etherscan.
+Open up the [L1 `Greeter` contract on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#writeContract) and click the "Connect to Web3" button.
+
+{<h3>Send your greeting</h3>}
+
+Put a greeting into the field next to the "sendGreeting" function and click the "Write" button.
+You can use any greeting you'd like.
+
+{<h3>Wait a few minutes</h3>}
+
+It will take a few minutes for your message to reach L2.
+Feel free to take a quick break while you wait.
+
+<Info>
+You can use Viem to programmatically check the status of any message between L1 and L2.
+Later on in this tutorial you'll learn how to use Viem and the `waitToProve` function to wait for various message statuses.
+This same function can be used to wait for a message to be relayed from L1 to L2.
+</Info>
+
+{<h3>Check the L2 Greeter</h3>}
+
+After a few minutes, you should see the greeting on the L2 `Greeter` contract change to the greeting you set.
+Open up the [L2 `Greeter` contract on OP Sepolia Etherscan](https://testnet-explorer.optimism.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#readContract) and click the "Read Contract" button.
+Paste your address into the field next to the "greeting" function and click the "Query" button.
+You should see the message you sent from L1.
+
+<Info>
+Haven't seen your message yet?
+You might need to wait a little longer.
+L2 transactions triggered on L1 are typically processed within one minute but can occasionally be slightly delayed.
+</Info>
+
 </Steps>
 
 ## Interact with the L2 Greeter
@@ -112,213 +108,145 @@ Unlike the previous step, you'll need to relay the message from L2 to L1 yoursel
 You'll do this by sending two transactions on Sepolia, one proving transaction and one relaying transaction.
 
 <Steps>
-  <Step title="Connect to Etherscan">
-  
-  Just like before, sending a message to the L1 `Greeter` contract via the L2 `Greeter` contract requires that you call the `sendGreeting` function.
-  Open up the [L2 `Greeter` contract on OP Sepolia Etherscan](https://testnet-explorer.optimism.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#writeContract) and click the "Connect to Web3" button.
-  
-  </Step>
-  <Step title="Send your greeting">
-  
-  Put a greeting into the field next to the "sendGreeting" function and click the "Write" button.
-  You can use any greeting you'd like.
-  
-  <Info>
-  Copy the transaction hash from the transaction you just sent.
-  You'll need this for the next few steps.
-  Feel free to keep this tab open so you can easily copy the transaction hash later.
-  </Info>
-  
-  </Step>
-  <Step title="Create a demo project folder">
-  
-  You're going to use the viem to prove and relay your message to L1.
-  
-  ```bash
-  mkdir cross-dom
-  cd cross-dom
-  ```
-  
-  </Step>
-  <Step title="Initialize the project">
-  
-  Set up the project as a basic Node.js project with `pnpm` or your favorite package manager.
-  
-  ```bash
-  pnpm init
-  ```
-  
-  </Step>
-  <Step title="Install viem">
-  
-  Install Viem with `pnpm` or your favorite package manager.
-  
-  ```bash
-  pnpm add viem
-  ```
-  
-  </Step>
-  <Step title="Add your private key to your environment">
-  
-  You need a private key in order to sign transactions.
-  Set your private key as an environment variable with the `export` command.
-  Make sure this is the private key for the address you used to send the transaction to the L2 `Greeter` contract.
-  
-  ```bash
-  export TUTORIAL_PRIVATE_KEY=0x...
-  ```
-  
-  </Step>
-  <Step title="Add your transaction hash to your environment">
-  
-  You'll also need the hash of the transaction you sent to the L2 `Greeter` contract.
-  Set this as an environment variable with the `export` command.
-  
-  ```bash
-  export TUTORIAL_TRANSACTION_HASH=0x...
-  ```
-  
-  </Step>
-  <Step title="Start a Node REPL">
-  
-  Now you'll use the Node.js REPL to run a few commands.
-  Start the Node.js REPL with the `node` command.
-  
-  ```bash
-  node
-  ```
-  
-  </Step>
-  <Step title="Import viem">
-  
-  ```js
-  const { createPublicClient, http, createWalletClient } = require("viem");
-  const { optimismSepolia, sepolia } = require("viem/chains");
-  const { publicActionsL1, publicActionsL2, walletActionsL1, walletActionsL2, getWithdrawals } = require("viem/op-stack");
-  const { privateKeyToAccount } = require("viem/accounts");
-```
-  
-  </Step>
-  <Step title="Create the RPC providers and wallets">
-  
-  ```js
-  const l1Provider = createPublicClient({ chain: sepolia, transport: http("https://eth-sepolia.g.alchemy.com/v2/***") }).extend(publicActionsL1())
-  const l2Provider = createPublicClient({ chain: optimismSepolia, transport: http("https://opt-sepolia.g.alchemy.com/v2/***") }).extend(publicActionsL2())
-  const account = privateKeyToAccount(process.env.TUTORIAL_PRIVATE_KEY)
-  
-  const l1Wallet = createWalletClient({
-    chain: sepolia,
-    transport:  http("https://eth-sepolia.g.alchemy.com/v2/***")
-  }).extend(walletActionsL1())
 
-  const l2Wallet = createWalletClient({
-    chain: optimismSepolia,
-    transport:  http("https://opt-sepolia.g.alchemy.com/v2/***")
-  }).extend(walletActionsL2())
-```
-  
-  </Step>
-  <Step title="Wait until the message is ready to prove">
-  
-  Next, you will send messages from L2 to L1 is to prove that the message was sent on L2.
-  You first need to wait until the message is ready to prove.
-  
-  ```js
-  const receipt = await l2Provider.getTransactionReceipt({
-    hash: process.env.TUTORIAL_TRANSACTION_HASH
-  })
-  
-  console.log('Waiting for message to be provable...')
-  await l1Provider.getWithdrawalStatus({ 
-    receipt, 
-    targetChain: l2Provider.chain, 
-  })
-```
-  
-  <Info>
-  This step can take a few minutes.
-  Feel free to take a quick break while you wait.
-  </Info>
-  
-  </Step>
-  <Step title="Prove the message on L1">
-  
-  Once the message is ready to be proven, you'll send an L1 transaction to prove that the message was sent on L2.
-  
-  ```js
-  console.log('Proving message...')
-  const { output, withdrawal } = await l1Provider.waitToProve({ 
-    receipt, 
-    targetChain: l2Provider.chain, 
-  })
-```
-  
-  </Step>
-  <Step title="Build parameters to prove the withdrawal on the L2">
-  
-  ```js
-  const args = await l2Provider.buildProveWithdrawal({
-    account,
-    output,
-    withdrawal,
-  })
-  
-  const hash = await l1Wallet.proveWithdrawal(args)
-```
-  
-  </Step>
-  <Step title="Wait until the message is ready for relay">
-  
-  The final step to sending messages from L2 to L1 is to relay the messages on L1.
-  This can only happen after the fault proof period has elapsed.
-  On OP Stack, this takes 7 days.
-  
-  <Info>
-  We're currently testing fault proofs on OP Sepolia, so withdrawal times reflect Mainnet times.
-  </Info>
-  
-  ```js
-  console.log('Waiting for message to be relayable...')
-  await l1Provider.getWithdrawalStatus({ 
-    receipt, 
-    targetChain: l2Provider.chain, 
-  }) 
-```
-  
-  </Step>
-  <Step title="Relay the message on L1">
-  
-  Once the withdrawal is ready to be relayed you can finally complete the message sending process.
-  
-  ```js
-  console.log('Relaying message...')
-  const [message] = getWithdrawals(receipt)
-  await l1Provider.waitToFinalize({ withdrawalHash: message.withdrawalHash, targetChain: l2Provider.chain }) 
-```
-  
-  </Step>
-  <Step title="Wait until the message is relayed">
-  
-  Now you simply wait until the message is relayed.
-  
-  ```js
-  const finalizeHash = await l1Wallet.finalizeWithdrawal({
-    targetChain: l2Wallet.chain,
-    withdrawal,
-  })
+{<h3>Connect to Etherscan</h3>}
 
-  console.log('Waiting for message to be relayed...')
-  await l1Provider.getWithdrawalStatus({ receipt, targetChain: l2Provider.chain }) 
+Just like before, sending a message to the L1 `Greeter` contract via the L2 `Greeter` contract requires that you call the `sendGreeting` function.
+Open up the [L2 `Greeter` contract on OP Sepolia Etherscan](https://testnet-explorer.optimism.io/address/0x5DE8a2957eddb140567fF90ba5d57bc9769f3055#writeContract) and click the "Connect to Web3" button.
+
+{<h3>Send your greeting</h3>}
+
+Put a greeting into the field next to the "sendGreeting" function and click the "Write" button.
+You can use any greeting you'd like.
+
+<Info>
+Copy the transaction hash from the transaction you just sent.
+You'll need this for the next few steps.
+Feel free to keep this tab open so you can easily copy the transaction hash later.
+</Info>
+
+{<h3>Create a demo project folder</h3>}
+
+You're going to use the viem to prove and relay your message to L1.
+
+```bash
+mkdir cross-dom
+cd cross-dom
 ```
-  
-  </Step>
-  <Step title="Check the L1 Greeter">
-  
-  Now that you've relayed the message, you should see the greeting on the L1 `Greeter` contract change to the greeting you set.
-  Open up the [L1 `Greeter` contract on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#readContract) and click the "Read Contract" button.
-  Paste your address into the field next to the "greeting" function and click the "Query" button.
-  You should see the message you sent from L2.
-  </Step>
+
+{<h3>Initialize the project</h3>}
+
+Set up the project as a basic Node.js project with `pnpm` or your favorite package manager.
+
+```bash
+pnpm init
+```
+
+{<h3>Install viem</h3>}
+
+Install Viem with `pnpm` or your favorite package manager.
+
+```bash
+pnpm add viem
+```
+
+{<h3>Add your private key to your environment</h3>}
+
+You need a private key in order to sign transactions.
+Set your private key as an environment variable with the `export` command.
+Make sure this is the private key for the address you used to send the transaction to the L2 `Greeter` contract.
+
+```bash
+export TUTORIAL_PRIVATE_KEY=0x...
+```
+
+{<h3>Add your transaction hash to your environment</h3>}
+
+You'll also need the hash of the transaction you sent to the L2 `Greeter` contract.
+Set this as an environment variable with the `export` command.
+
+```bash
+export TUTORIAL_TRANSACTION_HASH=0x...
+```
+
+{<h3>Start a Node REPL</h3>}
+
+Now you'll use the Node.js REPL to run a few commands.
+Start the Node.js REPL with the `node` command.
+
+```bash
+node
+```
+
+{<h3>Import viem</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L3-L6 hash=ab7ce5835f34a359602c8fe03080c3ed
+```
+
+{<h3>Create the RPC providers and wallets</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L8-L20 hash=9500ca6be35774522cce2260cd8e9cb6
+```
+
+{<h3>Wait until the message is ready to prove</h3>}
+
+Next, you will send messages from L2 to L1 is to prove that the message was sent on L2.
+You first need to wait until the message is ready to prove.
+
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L22-L30 hash=0e460f24fc394acdcdb7f06df0188e31
+```
+
+<Info>
+This step can take a few minutes.
+Feel free to take a quick break while you wait.
+</Info>
+
+{<h3>Prove the message on L1</h3>}
+
+Once the message is ready to be proven, you'll send an L1 transaction to prove that the message was sent on L2.
+
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L32-L36 hash=6b44abbea96103df0513d098ae6e6659
+```
+
+{<h3>Build parameters to prove the withdrawal on the L2</h3>}
+
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L38-L44 hash=a31f720f43df1680f5488ea233cc9506
+```
+
+{<h3>Wait until the message is ready for relay</h3>}
+
+The final step to sending messages from L2 to L1 is to relay the messages on L1.
+This can only happen after the fault proof period has elapsed.
+On OP Stack, this takes 7 days.
+
+<Info>
+We're currently testing fault proofs on OP Sepolia, so withdrawal times reflect Mainnet times.
+</Info>
+
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L46-L50 hash=8c08d1f4c6a7f5d1754a411b3590530d
+```
+
+{<h3>Relay the message on L1</h3>}
+
+Once the withdrawal is ready to be relayed you can finally complete the message sending process.
+
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L52-L54 hash=d64917e14a9004ef0b81e3f08003d5cd
+```
+
+{<h3>Wait until the message is relayed</h3>}
+
+Now you simply wait until the message is relayed.
+
+```js file=<rootDir>/public/tutorials/cross-dom-solidity.js#L56-L62 hash=5a0d3a97f8d71f11c1e46c5e4a734ffb
+```
+
+{<h3>Check the L1 Greeter</h3>}
+
+Now that you've relayed the message, you should see the greeting on the L1 `Greeter` contract change to the greeting you set.
+Open up the [L1 `Greeter` contract on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x31A6Dd971306bb72f2ffF771bF30b1B98dB8B2c5#readContract) and click the "Read Contract" button.
+Paste your address into the field next to the "greeting" function and click the "Query" button.
+You should see the message you sent from L2.
+
 </Steps>
 
 ## How it works
@@ -333,8 +261,7 @@ Luckily, both `Greeter` contracts are exactly the same so it's easy to see how e
 The `Greeter` contract has a `MESSENGER` variable that keeps track of the `CrossDomainMessenger` contract on the current chain.
 Check out the [Contract Addresses page](/superchain/addresses) to see the addresses of the `CrossDomainMessenger` contracts on whichever network you'll be using.
 
-```solidity
-    ICrossDomainMessenger public immutable MESSENGER;
+```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L14 hash=ce8be857d4b4e1992cd3c16b8f2864b9
 ```
 
 ### The other Greeter variable
@@ -342,8 +269,7 @@ Check out the [Contract Addresses page](/superchain/addresses) to see the addres
 The `Greeter` contract also has an `OTHER_GREETER` variable that keeps track of the `Greeter` contract on the other chain.
 On L1, this variable is set to the address of the L2 `Greeter` contract, and vice-versa.
 
-```solidity
-    Greeter public immutable OTHER_GREETER;
+```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L15 hash=eedd8c3050a83e56f37f367c6faa6f5d
 ```
 
 ### The Greetings mapping
@@ -351,22 +277,14 @@ On L1, this variable is set to the address of the L2 `Greeter` contract, and vic
 The `Greeter` contract keeps track of the different greetings that users have sent inside a `greetings` mapping.
 By using a mapping, this contract can keep track of greetings from different users at the same time.
 
-```solidity
-    mapping (address => string) public greetings;
+```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L16 hash=832732d9d5aface44c16c1ae9ecde7b2
 ```
 
 ### The Constructor
 
 The `Greeter` has a simple constructor that sets the `MESSENGER` and `OTHER_GREETER` variables.
 
-```solidity
-    constructor(
-        ICrossDomainMessenger _messenger,
-        Greeter _otherGreeter
-    ) {
-        MESSENGER = _messenger;
-        OTHER_GREETER = _otherGreeter;
-    }
+```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L18-L24 hash=718f3dc498975548eec30da99e47adf2
 ```
 
 ### The sendGreeting function
@@ -379,20 +297,7 @@ Here, the first parameter is the address of the recipient of the message (the `G
 The second parameter is the ABI-encoded function call to the `setMessage` function.
 The final parameter is the gas limit that gets used when the message is relayed on the other side.
 
-```solidity
-    function sendGreeting(string memory _greeting) public {
-        MESSENGER.sendMessage(
-            address(OTHER_GREETER),
-            abi.encodeCall(
-                this.setGreeting,
-                (
-                    msg.sender,
-                    _greeting
-                )
-            ),
-            200000
-        );
-    }
+```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L26-L38 hash=3104a6775fe3a505cf2f84b71b078aee
 ```
 
 ### The setGreeting function
@@ -403,20 +308,7 @@ It checks explicitly that the function can only be called by the `CrossDomainMes
 It also checks that the `CrossChainMessenger` is saying that the message came from the `Greeter` contract on the other chain.
 Finally, it sets the greeting in the `greetings` mapping.
 
-```solidity
-    function setGreeting(address _sender, string memory _greeting) public {
-        require(
-            msg.sender == address(MESSENGER),
-            "Greeter: Direct sender must be the CrossDomainMessenger"
-        );
-
-        require(
-            MESSENGER.xDomainMessageSender() == address(OTHER_GREETER),
-            "Greeter: Remote sender must be the other Greeter contract"
-        );
-
-        greetings[_sender] = _greeting;
-    }
+```solidity file=<rootDir>/public/tutorials/cross-dom-solidity.sol#L40-L52 hash=f50a94e77ecb2f76b9fe278b058a79e4
 ```
 
 <Info>
