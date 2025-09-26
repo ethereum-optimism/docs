@@ -3,9 +3,6 @@ title: Verifying log entries
 description: >-
   Learn how to verify log entries on a different chain using CrossL2Inbox.
 ---
-
-# Verifying log entries
-
 This guide shows how to verify log entries from a specific chain on a different chain in an interop cluster.
 This lets developers use interoperability with applications on a different chain, even if those applications were not written with interoperability in mind.
 
@@ -206,24 +203,24 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
         <summary>Explanation</summary>
   
         ```js
-      // Turn a viem wallet into an ethers provider
-      const walletClientToSigner = walletClient => {
-        const chain = walletClient.chain
-      
-        // Get the RPC URL from the chain config (or supply your own)
-        const rpcUrl = chain.rpcUrls?.default?.http?.[0]
-        if (!rpcUrl) {
-          throw new Error('RPC URL not found in chain configuration')
-        }
-      
-        // Create a provider for the given chain
-        const provider = new JsonRpcProvider(rpcUrl, chain.id)
-      
-        const signer = new Wallet(process.env.PRIVATE_KEY, provider)
-        
-        return signer
-      }
-      ```
+            // Turn a viem wallet into an ethers provider
+            const walletClientToSigner = walletClient => {
+              const chain = walletClient.chain
+            
+              // Get the RPC URL from the chain config (or supply your own)
+              const rpcUrl = chain.rpcUrls?.default?.http?.[0]
+              if (!rpcUrl) {
+                throw new Error('RPC URL not found in chain configuration')
+              }
+            
+              // Create a provider for the given chain
+              const provider = new JsonRpcProvider(rpcUrl, chain.id)
+            
+              const signer = new Wallet(process.env.PRIVATE_KEY, provider)
+              
+              return signer
+            }
+        ```
   
         The [EAS SDK](https://docs.attest.org/docs/developer-tools/eas-sdk) used for attestations uses [Ethers](https://docs.ethers.org/v6/) rather than [Viem](https://viem.sh/).
         This function lets us use [a Viem wallet](https://viem.sh/docs/clients/wallet) as [an Ethers signer](https://docs.ethers.org/v6/api/providers/#Signer).
@@ -266,10 +263,10 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
         [Attest](https://docs.attest.org/docs/tutorials/make-an-attestation) that the name for Ethereum address `0x0123456789012345678901234567890123456789` is `Bill Hamm`.
   
         ```js
-      // To get the attestation ID we'd use
-      // const attestationID = await transaction2.wait()
-      // However, here we need the attestation transaction's hash.
-      ```
+          // To get the attestation ID we'd use
+          // const attestationID = await transaction2.wait()
+          // However, here we need the attestation transaction's hash.
+        ```
         
         This is the recommended way to execute the attestation transaction, which provides you with the attestation's UID.
         However, for our purpose we need the transaction receipt, which you do not get.
@@ -277,9 +274,9 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
         The code here uses the second solution.
   
         ```js
-        const request = await wallet0.prepareTransactionRequest(attestTxn.data)
-        const serializedTransaction = await wallet0.signTransaction(request)
-        const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
+            const request = await wallet0.prepareTransactionRequest(attestTxn.data)
+            const serializedTransaction = await wallet0.signTransaction(request)
+            const attestHash = await wallet0.sendRawTransaction({ serializedTransaction })
         ```
   
         Send the attestation transaction created by the EAS SDK manually (using viem's [`sendRawTransaction`](https://viem.sh/docs/actions/wallet/sendRawTransaction)) to obtain the transaction hash.
@@ -302,104 +299,103 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
     1.  Create a file, `verify-attestation.mjs`.
   
         ```js
-          import {
-              createWalletClient,
-              http,
-              publicActions,
-              getContract,
-              keccak256, 
-              toBytes,
-          } from 'viem'
-          import { privateKeyToAccount } from 'viem/accounts'
-          
-          import { interopAlpha0, interopAlpha1, supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
-          import { walletActionsL2, publicActionsL2, crossL2InboxAbi } from '@eth-optimism/viem'
-          
-          // Contract addresses in all OP Stack blockchains
-          const EASContractAddress = "0x4200000000000000000000000000000000000021" 
-          
-          const account = privateKeyToAccount(process.env.PRIVATE_KEY)
-          const useSupersim = process.env.CHAIN_B_ID == 902
-          
-          const wallet0 = createWalletClient({
-              chain: useSupersim ? supersimL2A : interopAlpha0,
-              transport: http(),
-              account
-          }).extend(publicActions)
-              .extend(publicActionsL2())
-          
-          const wallet1 = createWalletClient({
-              chain: useSupersim ? supersimL2B : interopAlpha1,
-              transport: http(),
-              account
-          }).extend(publicActions)
-              .extend(walletActionsL2())
-          
-          let receipt
-          
-          try {
-            receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
-          } catch(err) {
-            console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
-            process.exit(0)
-          }
-          
-          const attestLogEntry = receipt.logs.filter(x => 
-              (x.address == EASContractAddress) &&
-              (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
-          
-          // attestLogEntry.topics[1] = "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b34"
-          
-          const relayMessageParams = await wallet0.interop.buildExecutingMessage({
-            log: attestLogEntry,
-          })
-          
-          const crossL2Inbox = getContract({
-            address: '0x4200000000000000000000000000000000000022',
-            abi: crossL2InboxAbi,
-            client: wallet1,
-          })
-          
-          let executingTransaction, executingTransactionReceipt
-          
-          try {
-            executingTransaction = await crossL2Inbox.write.validateMessage(
-              {
-                args: [
-                  relayMessageParams.id, 
-                  keccak256(toBytes(relayMessageParams.payload))
-                ],  
-                accessList: relayMessageParams.accessList,
-              }
-            )
-          } catch (err) {
-            console.log("Verification failed (revert)")
-            process.exit(0)
-          }
-          
-          try {
-            executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
-              hash: executingTransaction,
-              timeout: 10_000 
-            })    
-          } catch (err) {
-            console.log("Verification failed (timeout)")
-            process.exit(0)
-          }
-          
-          const verified = 
-            executingTransactionReceipt.logs.filter(
-              x => x.address=="0x4200000000000000000000000000000000000022" &&
-                  x.topics[0] == "0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7" &&
-                  x.topics[1] == keccak256(toBytes(relayMessageParams.payload))
-            ).length > 0
-          
-          if (verified) {
-            console.log("Verification successful")
-          } else {
-            console.log("Verification failed")
-          }
- 
+            import {
+                createWalletClient,
+                http,
+                publicActions,
+                getContract,
+                keccak256, 
+                toBytes,
+            } from 'viem'
+            import { privateKeyToAccount } from 'viem/accounts'
+            
+            import { interopAlpha0, interopAlpha1, supersimL2A, supersimL2B } from '@eth-optimism/viem/chains'
+            import { walletActionsL2, publicActionsL2, crossL2InboxAbi } from '@eth-optimism/viem'
+            
+            // Contract addresses in all OP Stack blockchains
+            const EASContractAddress = "0x4200000000000000000000000000000000000021" 
+            
+            const account = privateKeyToAccount(process.env.PRIVATE_KEY)
+            const useSupersim = process.env.CHAIN_B_ID == 902
+            
+            const wallet0 = createWalletClient({
+                chain: useSupersim ? supersimL2A : interopAlpha0,
+                transport: http(),
+                account
+            }).extend(publicActions)
+                .extend(publicActionsL2())
+            
+            const wallet1 = createWalletClient({
+                chain: useSupersim ? supersimL2B : interopAlpha1,
+                transport: http(),
+                account
+            }).extend(publicActions)
+                .extend(walletActionsL2())
+            
+            let receipt
+            
+            try {
+              receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
+            } catch(err) {
+              console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
+              process.exit(0)
+            }
+            
+            const attestLogEntry = receipt.logs.filter(x => 
+                (x.address == EASContractAddress) &&
+                (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
+            
+            // attestLogEntry.topics[1] = "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b34"
+            
+            const relayMessageParams = await wallet0.interop.buildExecutingMessage({
+              log: attestLogEntry,
+            })
+            
+            const crossL2Inbox = getContract({
+              address: '0x4200000000000000000000000000000000000022',
+              abi: crossL2InboxAbi,
+              client: wallet1,
+            })
+            
+            let executingTransaction, executingTransactionReceipt
+            
+            try {
+              executingTransaction = await crossL2Inbox.write.validateMessage(
+                {
+                  args: [
+                    relayMessageParams.id, 
+                    keccak256(toBytes(relayMessageParams.payload))
+                  ],  
+                  accessList: relayMessageParams.accessList,
+                }
+              )
+            } catch (err) {
+              console.log("Verification failed (revert)")
+              process.exit(0)
+            }
+            
+            try {
+              executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
+                hash: executingTransaction,
+                timeout: 10_000 
+              })    
+            } catch (err) {
+              console.log("Verification failed (timeout)")
+              process.exit(0)
+            }
+            
+            const verified = 
+              executingTransactionReceipt.logs.filter(
+                x => x.address=="0x4200000000000000000000000000000000000022" &&
+                    x.topics[0] == "0x5c37832d2e8d10e346e55ad62071a6a2f9fa5130614ef2ec6617555c6f467ba7" &&
+                    x.topics[1] == keccak256(toBytes(relayMessageParams.payload))
+              ).length > 0
+            
+            if (verified) {
+              console.log("Verification successful")
+            } else {
+              console.log("Verification failed")
+            }
 
         ```
   
@@ -407,16 +403,16 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
           <summary>Explanation</summary>
   
           ```js
-          try {
-            receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
-          } catch(err) {
-            console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
-            process.exit(0)
-          }
+            try {
+              receipt = await wallet0.getTransactionReceipt({ hash: process.env.ATTEST_TXN })
+            } catch(err) {
+              console.log(`Verification failed, there is no ${process.env.ATTEST_TXN} transaction on the source chain`)
+              process.exit(0)
+            }
 
-          const attestLogEntry = receipt.logs.filter(x => 
-              (x.address == EASContractAddress) &&
-              (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
+            const attestLogEntry = receipt.logs.filter(x => 
+                (x.address == EASContractAddress) &&
+                (x.topics[0] == "0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35"))[0]
           ```
   
           To create the [executing message](/interop/message-passing#executing-message), we need several fields that appear in the log entry we are verifying.
@@ -442,20 +438,20 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
           [Build the executing message](https://github.com/ethereum-optimism/ecosystem/blob/main/packages/viem/docs/actions/interop/functions/buildExecutingMessage.md).
   
           ```js
-            try {
-              executingTransaction = await crossL2Inbox.write.validateMessage(
-                {
-                  args: [
-                    relayMessageParams.id, 
-                    keccak256(toBytes(relayMessageParams.payload))
-                  ],  
-                  accessList: relayMessageParams.accessList,
-                }
-              )
-            } catch (err) {
-              console.log("Verification failed (revert)")
-              process.exit(0)
-            }
+              try {
+                executingTransaction = await crossL2Inbox.write.validateMessage(
+                  {
+                    args: [
+                      relayMessageParams.id, 
+                      keccak256(toBytes(relayMessageParams.payload))
+                    ],  
+                    accessList: relayMessageParams.accessList,
+                  }
+                )
+              } catch (err) {
+                console.log("Verification failed (revert)")
+                process.exit(0)
+              }
           ```
   
           Call [`CrossL2Inbox.validateMessage`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/CrossL2Inbox.sol#L68-L82).
@@ -463,15 +459,15 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
           If it reverts, it means that the log entry requested is not valid.
   
           ```js
-            try {
-              executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
-                hash: executingTransaction,
-                timeout: 10_000 
-              })    
-            } catch (err) {
-              console.log("Verification failed (timeout)")
-              process.exit(0)
-            }
+              try {
+                executingTransactionReceipt = await wallet1.waitForTransactionReceipt({
+                  hash: executingTransaction,
+                  timeout: 10_000 
+                })    
+              } catch (err) {
+                console.log("Verification failed (timeout)")
+                process.exit(0)
+              }
           ```
   
           Wait for the transaction receipt for the executing message.
@@ -543,104 +539,103 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
     3.  Create `src/Verifier.sol`.
   
         ```solidity
-      // SPDX-License-Identifier: UNLICENSED
-      pragma solidity ^0.8.13;
+            // SPDX-License-Identifier: UNLICENSED
+            pragma solidity ^0.8.13;
 
-      import {Attestation} from "@ethereum-attestation-service/eas-contracts/contracts/Common.sol";
+            import {Attestation} from "@ethereum-attestation-service/eas-contracts/contracts/Common.sol";
 
-      // Code from https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol,
-      // which is not in the npm package yet so we copy it.
-      struct Identifier {
-          address origin;
-          uint256 blockNumber;
-          uint256 logIndex;
-          uint256 timestamp;
-          uint256 chainId;
-      }
+            // Code from https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/interfaces/L2/ICrossL2Inbox.sol,
+            // which is not in the npm package yet so we copy it.
+            struct Identifier {
+                address origin;
+                uint256 blockNumber;
+                uint256 logIndex;
+                uint256 timestamp;
+                uint256 chainId;
+            }
 
-      interface ICrossL2Inbox {
-          function validateMessage(Identifier calldata _id, bytes32 _msgHash) external;
-      }
+            interface ICrossL2Inbox {
+                function validateMessage(Identifier calldata _id, bytes32 _msgHash) external;
+            }
 
-      contract Verifier {
+            contract Verifier {
+                bytes32 private constant SCHEMA_UID = 0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58;
+                uint256 private constant EVENT_SIG = 0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35;
+                address private constant EAS_CONTRACT = 0x4200000000000000000000000000000000000021;
+                address private constant CROSS_L2_INBOX = 0x4200000000000000000000000000000000000022;
 
-          bytes32 private constant SCHEMA_UID = 0x234dee4d3e6a625b4121e2042d6267058755e53a2ecc55555da51a1e6f06cc58;
-          uint256 private constant EVENT_SIG = 0x8bf46bf4cfd674fa735a3d63ec1c9ad4153f033c290341f3a588b75685141b35;
-          address private constant EAS_CONTRACT = 0x4200000000000000000000000000000000000021;
-          address private constant CROSS_L2_INBOX = 0x4200000000000000000000000000000000000022;
+                /// @dev Calculates a UID for a given attestation.
+                /// @param attestation The input attestation.
+                /// @param bump A bump value to use in case of a UID conflict.
+                /// @return Attestation UID.
+                function _getUID(Attestation memory attestation, uint32 bump) private pure returns (bytes32) {
+                    return
+                        keccak256(
+                            abi.encodePacked(
+                                attestation.schema,
+                                attestation.recipient,
+                                attestation.attester,
+                                attestation.time,
+                                attestation.expirationTime,
+                                attestation.revocable,
+                                attestation.refUID,
+                                attestation.data,
+                                bump
+                            )
+                        );
+                }
 
-          /// @dev Calculates a UID for a given attestation.
-          /// @param attestation The input attestation.
-          /// @param bump A bump value to use in case of a UID conflict.
-          /// @return Attestation UID.
-          function _getUID(Attestation memory attestation, uint32 bump) private pure returns (bytes32) {
-              return
-                  keccak256(
-                      abi.encodePacked(
-                          attestation.schema,
-                          attestation.recipient,
-                          attestation.attester,
-                          attestation.time,
-                          attestation.expirationTime,
-                          attestation.revocable,
-                          attestation.refUID,
-                          attestation.data,
-                          bump
-                      )
-                  );
-          }
+                function makePayloadHash(
+                    address recipient,
+                    address attester,
+                    bytes32 attestationID
+                ) pure private returns (bytes32) {
+                    return keccak256(
+                        abi.encode(
+                            EVENT_SIG,
+                            recipient,
+                            attester,
+                            SCHEMA_UID,
+                            attestationID
+                        )
+                    );
+                }
+              
+                function verifyAttestation(
+                    address recipient,
+                    address attester,
+                    uint256 logIndex,
+                    uint256 blockNumber,
+                    uint64 timestamp,
+                    uint256 chainId,
+                    string memory name
+                ) public {
+                    Attestation memory attestation;
+                    attestation.schema = SCHEMA_UID;
+                    attestation.recipient = recipient;
+                    attestation.attester = attester;
+                    attestation.revocable = true;
+                    attestation.time = timestamp;
+                    attestation.data = abi.encode(name);
+                    bytes32 attestationUID = _getUID(attestation, 0);
+                
+                    bytes32 payloadHash = makePayloadHash(recipient, attester, attestationUID);
 
-          function makePayloadHash(
-              address recipient,
-              address attester,
-              bytes32 attestationID
-          ) pure private returns (bytes32) {
-              return keccak256(
-                  abi.encode(
-                      EVENT_SIG,
-                      recipient,
-                      attester,
-                      SCHEMA_UID,
-                      attestationID
-                  )
-              );
-          }
-        
-          function verifyAttestation(
-              address recipient,
-              address attester,
-              uint256 logIndex,
-              uint256 blockNumber,
-              uint64 timestamp,
-              uint256 chainId,
-              string memory name
-          ) public {
-              Attestation memory attestation;
-              attestation.schema = SCHEMA_UID;
-              attestation.recipient = recipient;
-              attestation.attester = attester;
-              attestation.revocable = true;
-              attestation.time = timestamp;
-              attestation.data = abi.encode(name);
-              bytes32 attestationUID = _getUID(attestation, 0);
-          
-              bytes32 payloadHash = makePayloadHash(recipient, attester, attestationUID);
+                    Identifier memory logEntryIdentifier;
+                    logEntryIdentifier.origin = EAS_CONTRACT;
+                    logEntryIdentifier.blockNumber = blockNumber;
+                    logEntryIdentifier.logIndex = logIndex;
+                    logEntryIdentifier.timestamp = timestamp;
+                    logEntryIdentifier.chainId = chainId;
 
-              Identifier memory logEntryIdentifier;
-              logEntryIdentifier.origin = EAS_CONTRACT;
-              logEntryIdentifier.blockNumber = blockNumber;
-              logEntryIdentifier.logIndex = logIndex;
-              logEntryIdentifier.timestamp = timestamp;
-              logEntryIdentifier.chainId = chainId;
+                    // Signal that this is a cross chain call that needs to have the identifier validated
+                    ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(logEntryIdentifier, payloadHash);
 
-              // Signal that this is a cross chain call that needs to have the identifier validated
-              ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(logEntryIdentifier, payloadHash);
-
-              // Code that uses the attestation goes here        
-          }
-          
-      }
-      ```
+                    // Code that uses the attestation goes here        
+                }
+                
+            }
+        ```
   
         <details>
           <summary>Explanation</summary>
@@ -738,13 +733,14 @@ To demonstrate this functionality, this guide uses an [attestation](https://atte
 
                   // Signal that this is a cross chain call that needs to have the identifier validated
                   ICrossL2Inbox(CROSS_L2_INBOX).validateMessage(logEntryIdentifier, payloadHash);
+                }
           ```
   
           This is the function that gets the attestation information, builds the call, and calls `CrossL2Inbox`.
   
           ```solidity
-        // Code that uses the attestation goes here        
-```
+                  // Code that uses the attestation goes here        
+          ```
   
           This section is reserved for actions that depend on a successful attestation verification.
           In real-world applications, implement your core logic here.

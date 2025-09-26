@@ -2,9 +2,6 @@
 title: Building a custom bridge
 description: Tutorial on how to create a custom interoperability bridge. The example is a bridge when the addresses of the ERC20 contracts are not the same.
 ---
-
-# Building a custom bridge
-
 ## Overview
 
 Sometimes the address of an ERC20 contract is not available on a different chain.
@@ -69,6 +66,25 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
 
 
 <Steps>
+  <Step title="Clone the starter kit">
+
+```sh
+npx degit ethereum-optimism/starter-kit-superchain-erc20 custom-bridge
+cd custom-bridge
+```
+
+  </Step>
+  <Step title="Install dependencies">
+
+```sh
+pnpm install
+```
+
+  </Step>
+  <Step title="Open the project">
+    Open the folder in your preferred editor and review the starter project structure.
+  </Step>
+
   <Step title="Install and run Supersim">
     If you are going to use Supersim, [follow these instructions](/app-developers/tutorials/supersim/getting-started/installation) to install and run Supersim.
 
@@ -186,18 +202,24 @@ Some steps depend on whether you want to deploy on [Supersim](/interop/tools/sup
     ERC20_ADDRESS_B=`forge create $PROXY_CONTRACT --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $ERC20_BEACON_ADDRESS_B 0x | awk '/Deployed to:/ {print $3}'`
     ```
   </Step>
+</Steps>
 
-  <Step title="Deploy ERC7802 contracts">
-  Replace the ERC20 contracts with contracts that:
+<Steps>
+  <Step title="Deploy upgradeable proxies">
+    ```sh
+    BRIDGE_BEACON_ADDRESS_B=$(forge create $UPGRADE_BEACON_CONTRACT --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $DUMMY_ADDRESS $USER_ADDRESS | awk '/Deployed to:/ {print $3}')
+    BRIDGE_ADDRESS_B=$(forge create $PROXY_CONTRACT --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $BRIDGE_BEACON_ADDRESS_B 0x | awk '/Deployed to:/ {print $3}')
+    ERC20_BEACON_ADDRESS_A=$BEACON_ADDRESS
+    ERC20_ADDRESS_A=$ERC20_ADDRESS
+    ERC20_BEACON_ADDRESS_B=$(forge create $UPGRADE_BEACON_CONTRACT --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $DUMMY_ADDRESS $USER_ADDRESS | awk '/Deployed to:/ {print $3}')
+    ERC20_ADDRESS_B=$(forge create $PROXY_CONTRACT --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $ERC20_BEACON_ADDRESS_B 0x | awk '/Deployed to:/ {print $3}')
+    ```
+  </Step>
 
-    *   Support [ERC7802](https://eips.ethereum.org/EIPS/eip-7802) and [ERC165](https://eips.ethereum.org/EIPS/eip-165).
-    *   Allow the bridge address to mint and burn tokens.
-        Normally this is `PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE`, but in our case it would be the bridge proxy address, which we'll store in `bridgeAddress`.
-    *   Have the same storage layout as the ERC20 contracts they replace (in the case of chain A).
+  <Step title="Create InteropToken contract">
+    Create a file, `src/InteropToken.sol`.
 
-    1.  Create a file, `src/InteropToken.sol`.
-
-        ```solidity
+    ```solidity
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -207,303 +229,87 @@ import {IERC7802, IERC165} from "lib/interop-lib/src/interfaces/IERC7802.sol";
 import {PredeployAddresses} from "lib/interop-lib/src/libraries/PredeployAddresses.sol";
 
 contract InteropToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, IERC7802 {
+    address public immutable bridgeAddress;
+
+    constructor(address bridgeAddress_) {
+        bridgeAddress = bridgeAddress_;
+    }
+
     function initialize(string memory name, string memory symbol, uint256 initialSupply) public initializer {
         __ERC20_init(name, symbol);
         __Ownable_init(msg.sender);
         _mint(msg.sender, initialSupply);
     }
 
-    /// @notice Allows the SuperchainTokenBridge to mint tokens.
-    /// @param _to     Address to mint tokens to.
-    /// @param _amount Amount of tokens to mint.
     function crosschainMint(address _to, uint256 _amount) external {
-        require(msg.sender == PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE, "Unauthorized");
-
+        require(msg.sender == bridgeAddress, "Unauthorized");
         _mint(_to, _amount);
-
         emit CrosschainMint(_to, _amount, msg.sender);
     }
 
-    /// @notice Allows the SuperchainTokenBridge to burn tokens.
-    /// @param _from   Address to burn tokens from.
-    /// @param _amount Amount of tokens to burn.
     function crosschainBurn(address _from, uint256 _amount) external {
-        require(msg.sender == PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE, "Unauthorized");
-
+        require(msg.sender == bridgeAddress, "Unauthorized");
         _burn(_from, _amount);
-
         emit CrosschainBurn(_from, _amount, msg.sender);
     }
 
-    /// @inheritdoc IERC165
     function supportsInterface(bytes4 _interfaceId) public view virtual returns (bool) {
         return _interfaceId == type(IERC7802).interfaceId || _interfaceId == type(IERC20).interfaceId
             || _interfaceId == type(IERC165).interfaceId;
     }
 }
-        ```
-
-    2.  This `src/InteropToken.sol` is used for contract upgrades when the ERC20 contracts are at the same address.
-        Here we need to edit it to allow our custom bridge to mint and burn tokens instead of the predeployed superchain token bridge.
-
-        *   On lines 20 and 31 replace ~~`PredeployAddresses.SUPERCHAIN_TOKEN_BRIDGE`~~ with `bridgeAddress`.
-
-            ```solidity
-            require(msg.sender == bridgeAddress, "Unauthorized");
-            ```
-
-        *   Add these lines anywhere in the contract:
-
-            ```solidity
-                address public immutable bridgeAddress;
-
-                constructor(address bridgeAddress_) {
-                    bridgeAddress = bridgeAddress_;
-                }
-            ```
-
-    3.  Deploy `InteropToken` on both chains, with the bridge address.
-
-        ```sh
-        INTEROP_TOKEN_A=`forge create InteropToken --private-key $PRIVATE_KEY --broadcast --rpc-url $URL_CHAIN_A --constructor-args $BRIDGE_ADDRESS_A | awk '/Deployed to:/ {print $3}'`
-        INTEROP_TOKEN_B=`forge create InteropToken --private-key $PRIVATE_KEY --broadcast --rpc-url $URL_CHAIN_B --constructor-args $BRIDGE_ADDRESS_B | awk '/Deployed to:/ {print $3}'`
-        ```
-
-    4.  Update the proxies to the new implementations.
-
-        ```sh
-        cast send $ERC20_BEACON_ADDRESS_A "upgradeTo(address)" $INTEROP_TOKEN_A --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
-        cast send $ERC20_BEACON_ADDRESS_B "upgradeTo(address)" $INTEROP_TOKEN_B --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
-        ```
+    ```
   </Step>
 
-  <Step title="Deploy the actual bridge">
-  1.  Create a file, `src/CustomBridge.sol`.
-        This file is based on the standard `SuperchainERC20`  [`SuperchainTokenBridge.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/SuperchainTokenBridge.sol).
+  <Step title="Deploy the custom bridge">
+    Get the chainID values.
 
-        ```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+    ```sh
+    CHAINID_A=$(cast chain-id --rpc-url $URL_CHAIN_A)
+    CHAINID_B=$(cast chain-id --rpc-url $URL_CHAIN_B)
+    ```
 
-// Libraries
-import { PredeployAddresses } from "interop-lib/src/libraries/PredeployAddresses.sol";
+    Deploy the bridges with the correct configuration.
 
-// Interfaces
-import { IERC7802, IERC165 } from "interop-lib/src/interfaces/IERC7802.sol";
-import { IL2ToL2CrossDomainMessenger } from "interop-lib/src/interfaces/IL2ToL2CrossDomainMessenger.sol";
+    ```sh
+    BRIDGE_IMPLEMENTATION_ADDRESS_A=$(forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY --constructor-args $ERC20_ADDRESS_A $ERC20_ADDRESS_B $CHAINID_B $BRIDGE_ADDRESS_B | awk '/Deployed to:/ {print $3}')
+    BRIDGE_IMPLEMENTATION_ADDRESS_B=$(forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args $ERC20_ADDRESS_B $ERC20_ADDRESS_A $CHAINID_A $BRIDGE_ADDRESS_A | awk '/Deployed to:/ {print $3}')
+    ```
 
-/// @custom:proxied true
-/// @title CustomBridge
-contract CustomBridge {
-    // Immutable configuration
-    address public immutable tokenAddressHere;
-    address public immutable tokenAddressThere;
-    uint256 public immutable chainIdThere;
-    address public immutable bridgeAddressThere;
+    Inform the proxy beacons about the new addresses of the bridge implementation contracts.
 
-    error ZeroAddress();
-    error Unauthorized();
-
-    /// @notice Thrown when attempting to relay a message and the cross domain message sender is not the
-    /// SuperchainTokenBridge.
-    error InvalidCrossDomainSender();
-
-    /// @notice Emitted when tokens are sent from one chain to another.
-    /// @param token         Address of the token sent.
-    /// @param from          Address of the sender.
-    /// @param to            Address of the recipient.
-    /// @param amount        Number of tokens sent.
-    /// @param destination   Chain ID of the destination chain.
-    event SendERC20(
-        address indexed token, address indexed from, address indexed to, uint256 amount, uint256 destination
-    );
-
-    /// @notice Emitted whenever tokens are successfully relayed on this chain.
-    /// @param token         Address of the token relayed.
-    /// @param from          Address of the msg.sender of sendERC20 on the source chain.
-    /// @param to            Address of the recipient.
-    /// @param amount        Amount of tokens relayed.
-    /// @param source        Chain ID of the source chain.
-    event RelayERC20(address indexed token, address indexed from, address indexed to, uint256 amount, uint256 source);
-
-    /// @notice Address of the L2ToL2CrossDomainMessenger Predeploy.
-    address internal constant MESSENGER = PredeployAddresses.L2_TO_L2_CROSS_DOMAIN_MESSENGER;
-
-    // Setup the configuration
-    constructor(
-        address tokenAddressHere_,
-        address tokenAddressThere_,
-        uint256 chainIdThere_,
-        address bridgeAddressThere_
-    ) {
-        if (
-            tokenAddressHere_ == address(0) ||
-            tokenAddressThere_ == address(0) ||
-            bridgeAddressThere_ == address(0)
-        ) revert ZeroAddress();
-
-        tokenAddressHere = tokenAddressHere_;
-        tokenAddressThere = tokenAddressThere_;
-        chainIdThere = chainIdThere_;
-        bridgeAddressThere = bridgeAddressThere_;
-    }
-
-    /// @notice Sends tokens to a target address on another chain.
-    /// @dev Tokens are burned on the source chain.
-    /// @param _to       Address to send tokens to.
-    /// @param _amount   Amount of tokens to send.
-    /// @return msgHash_ Hash of the message sent.
-    function sendERC20(
-        address _to,
-        uint256 _amount
-    )
-        external
-        returns (bytes32 msgHash_)
-    {
-        if (_to == address(0)) revert ZeroAddress();
-
-        IERC7802(tokenAddressHere).crosschainBurn(msg.sender, _amount);
-
-        bytes memory message = abi.encodeCall(this.relayERC20, (msg.sender, _to, _amount));
-        msgHash_ = IL2ToL2CrossDomainMessenger(MESSENGER).sendMessage(chainIdThere, bridgeAddressThere, message);
-
-        emit SendERC20(tokenAddressHere, msg.sender, _to, _amount, chainIdThere);
-    }
-
-    /// @notice Relays tokens received from another chain.
-    /// @dev Tokens are minted on the destination chain.
-    /// @param _from    Address of the msg.sender of sendERC20 on the source chain.
-    /// @param _to      Address to relay tokens to.
-    /// @param _amount  Amount of tokens to relay.
-    function relayERC20(address _from, address _to, uint256 _amount) external {
-        if (msg.sender != MESSENGER) revert Unauthorized();
-
-        (address crossDomainMessageSender, uint256 source) =
-            IL2ToL2CrossDomainMessenger(MESSENGER).crossDomainMessageContext();
-
-        if (crossDomainMessageSender != bridgeAddressThere) revert InvalidCrossDomainSender();
-        if (source != chainIdThere) revert InvalidCrossDomainSender();
-
-        IERC7802(tokenAddressHere).crosschainMint(_to, _amount);
-
-        emit RelayERC20(tokenAddressHere, _from, _to, _amount, chainIdThere);
-    }
-}
-        ```
-
-        <details>
-            <summary>Explanation</summary>
-
-            These are the main differences between the generic bridge and our implementation.
-
-            ```solidity
-    // Immutable configuration
-    address public immutable tokenAddressHere;
-    address public immutable tokenAddressThere;
-    uint256 public immutable chainIdThere;
-    address public immutable bridgeAddressThere;
-```
-
-            The configuration is [`immutable`](https://docs.soliditylang.org/en/latest/contracts.html#immutable).
-            We are deploying the contract behind a proxy, so if we need to change it we can deploy a different contract.
-
-            These parameters assume there are only two chains in the interop cluster.
-            If there are more, change the `There` variables to array.
-
-            ```solidity
-    // Setup the configuration
-    constructor(
-        address tokenAddressHere_,
-        address tokenAddressThere_,
-        uint256 chainIdThere_,
-        address bridgeAddressThere_
-    ) {
-        if (
-            tokenAddressHere_ == address(0) ||
-            tokenAddressThere_ == address(0) ||
-            bridgeAddressThere_ == address(0)
-        ) revert ZeroAddress();
-
-        tokenAddressHere = tokenAddressHere_;
-        tokenAddressThere = tokenAddressThere_;
-        chainIdThere = chainIdThere_;
-        bridgeAddressThere = bridgeAddressThere_;
-    }
-```
-
-            The constructor writes the configuration parameters.
-
-            ```solidity
-    function sendERC20(
-        address _to,
-        uint256 _amount
-    )
-```
-
-            We don't need to specify the token address, or the chain ID on the other side, because they are hardwired in this bridge.
-
-            ```solidity
-        emit SendERC20(tokenAddressHere, msg.sender, _to, _amount, chainIdThere);
-```
-
-            Emit the same log entry that would be emitted by the standard bridge.
-
-            ```solidity
-        if (crossDomainMessageSender != bridgeAddressThere) revert InvalidCrossDomainSender();
-        if (source != chainIdThere) revert InvalidCrossDomainSender();
-```
-
-            Make sure any relay requests come from the correct contract on the correct chain.
-        </details>
-
-    2.  Get the chainID values.
-
-        ```sh
-        CHAINID_A=`cast chain-id --rpc-url $URL_CHAIN_A`
-        CHAINID_B=`cast chain-id --rpc-url $URL_CHAIN_B`
-        ```
-
-    3.  Deploy the bridges with the correct configuration.
-
-        ```sh
-        BRIDGE_IMPLEMENTATION_ADDRESS_A=`forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY --constructor-args  $ERC20_ADDRESS_A $ERC20_ADDRESS_B $CHAINID_B $BRIDGE_ADDRESS_B | awk '/Deployed to:/ {print $3}'`
-        BRIDGE_IMPLEMENTATION_ADDRESS_B=`forge create CustomBridge --broadcast --rpc-url $URL_CHAIN_B --private-key $PRIVATE_KEY --constructor-args  $ERC20_ADDRESS_B $ERC20_ADDRESS_A $CHAINID_A $BRIDGE_ADDRESS_A | awk '/Deployed to:/ {print $3}'`
-        ```
-
-    4.  Inform the proxy beacons about the new addresses of the bridge implementation contracts.
-
-        ```sh
-        cast send $BRIDGE_BEACON_ADDRESS_A "upgradeTo(address)" $BRIDGE_IMPLEMENTATION_ADDRESS_A --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
-        cast send $BRIDGE_BEACON_ADDRESS_B "upgradeTo(address)" $BRIDGE_IMPLEMENTATION_ADDRESS_B --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
-        ```
+    ```sh
+    cast send $BRIDGE_BEACON_ADDRESS_A "upgradeTo(address)" $BRIDGE_IMPLEMENTATION_ADDRESS_A --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
+    cast send $BRIDGE_BEACON_ADDRESS_B "upgradeTo(address)" $BRIDGE_IMPLEMENTATION_ADDRESS_B --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_B
+    ```
   </Step>
 
   <Step title="Verification">
-  1.  See your balance on chain A.
+    See your balance on chain A.
 
-        ```sh
-        cast call $ERC20_ADDRESS_A "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
-        ```
+    ```sh
+    cast call $ERC20_ADDRESS_A "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
+    ```
 
-    2.  See your balance on chain B.
+    See your balance on chain B.
 
-        ```sh
-        cast call $ERC20_ADDRESS_B "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
-        ```
+    ```sh
+    cast call $ERC20_ADDRESS_B "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
+    ```
 
-    3.  Transfer 0.1 token.
+    Transfer 0.1 token.
 
-        ```sh
-        AMOUNT=`echo 0.1 | cast to-wei`
-        cast send $BRIDGE_ADDRESS_A --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,uint256)" $USER_ADDRESS $AMOUNT
-        ```
+    ```sh
+    AMOUNT=$(echo 0.1 | cast to-wei)
+    cast send $BRIDGE_ADDRESS_A --rpc-url $URL_CHAIN_A --private-key $PRIVATE_KEY "sendERC20(address,uint256)" $USER_ADDRESS $AMOUNT
+    ```
 
-    4.  See the new balances. The A chain should have 0.9 tokens, and the B chain should have 0.1 tokens.
+    See the new balances. The A chain should have 0.9 tokens, and the B chain should have 0.1 tokens.
 
-        ```sh
-        cast call $ERC20_ADDRESS_A "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
-        cast call $ERC20_ADDRESS_B "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
-        ```
+    ```sh
+    cast call $ERC20_ADDRESS_A "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_A | cast from-wei
+    cast call $ERC20_ADDRESS_B "balanceOf(address)" $USER_ADDRESS --rpc-url $URL_CHAIN_B | cast from-wei
+    ```
   </Step>
 </Steps>
 

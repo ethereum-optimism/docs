@@ -2,9 +2,6 @@
 title: Interop message passing tutorial
 description: Learn to implement cross-chain communication in the Superchain by building a message passing system using the L2ToL2CrossDomainMessenger contract.
 ---
-
-# Interop message passing tutorial
-
 <Info>
   Superchain interop is in active development. Some features may be experimental.
 </Info>
@@ -167,27 +164,27 @@ The implementation consists of three main components:
         This is a variation on [Hardhat's Greeter contract](https://github.com/matter-labs/hardhat-zksync/blob/main/examples/upgradable-example/contracts/Greeter.sol).
 
         ```solidity
-//SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+            //SPDX-License-Identifier: MIT
+            pragma solidity ^0.8.0;
 
-contract Greeter {
-    string greeting;
+            contract Greeter {
+                string greeting;
 
-    event SetGreeting(
-        address indexed sender,     // msg.sender
-        string greeting
-    );
+                event SetGreeting(
+                    address indexed sender,     // msg.sender
+                    string greeting
+                );
 
-    function greet() public view returns (string memory) {
-        return greeting;
-    }
+                function greet() public view returns (string memory) {
+                    return greeting;
+                }
 
-    function setGreeting(string memory _greeting) public {
-        greeting = _greeting;
-        emit SetGreeting(msg.sender, _greeting);
-    }
-}
-```
+                function setGreeting(string memory _greeting) public {
+                    greeting = _greeting;
+                    emit SetGreeting(msg.sender, _greeting);
+                }
+            }
+        ```
 
     3.  Deploy the `Greeter` contract to Chain B and store the resulting contract address in the `GREETER_B_ADDRESS` environment variable.
 
@@ -218,7 +215,7 @@ contract Greeter {
             awk '/Deployed to:/ {print $3}'
             ```
 
-            Finally, in UNIX (including Linux and macOS) the when the command line includes backticks (`` ` ``), the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
+            Finally, in UNIX (including Linux and macOS) when the command line includes backticks, the shell executes the code between the backticks and puts the output, in this case the contract address, in the command.
             So we get.
 
             ```sh
@@ -251,47 +248,47 @@ contract Greeter {
     5.  Create `src/GreetingSender.sol`.
 
         ```solidity
-//SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+            //SPDX-License-Identifier: MIT
+            pragma solidity ^0.8.0;
 
-import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
-import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/src/L2/IL2ToL2CrossDomainMessenger.sol";
+            import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
+            import { IL2ToL2CrossDomainMessenger } from "@eth-optimism/contracts-bedrock/src/L2/IL2ToL2CrossDomainMessenger.sol";
 
-import { Greeter } from "src/Greeter.sol";
+            import { Greeter } from "src/Greeter.sol";
 
-contract GreetingSender {
-    IL2ToL2CrossDomainMessenger public immutable messenger =
-        IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
+            contract GreetingSender {
+                IL2ToL2CrossDomainMessenger public immutable messenger =
+                    IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
 
-    address immutable greeterAddress;
-    uint256 immutable greeterChainId;
+                address immutable greeterAddress;
+                uint256 immutable greeterChainId;
 
-    constructor(address _greeterAddress, uint256 _greeterChainId) {
-        greeterAddress = _greeterAddress;
-        greeterChainId = _greeterChainId;
-    }
+                constructor(address _greeterAddress, uint256 _greeterChainId) {
+                    greeterAddress = _greeterAddress;
+                    greeterChainId = _greeterChainId;
+                }
 
-    function setGreeting(string calldata greeting) public {
-        bytes memory message = abi.encodeCall(
-            Greeter.setGreeting,
-            (greeting)
-        );
-        messenger.sendMessage(greeterChainId, greeterAddress, message);
-    }
-}
-```
+                function setGreeting(string calldata greeting) public {
+                    bytes memory message = abi.encodeCall(
+                        Greeter.setGreeting,
+                        (greeting)
+                    );
+                    messenger.sendMessage(greeterChainId, greeterAddress, message);
+                }
+            }
+        ```
 
         <details>
            <summary>Explanation</summary>
 
            ```solidity
-            function setGreeting(string calldata greeting) public {
-                bytes memory message = abi.encodeCall(
-                    Greeter.setGreeting,
-                    (greeting)
-                );
-                messenger.sendMessage(greeterChainId, greeterAddress, message);
-            }
+                function setGreeting(string calldata greeting) public {
+                    bytes memory message = abi.encodeCall(
+                        Greeter.setGreeting,
+                        (greeting)
+                    );
+                    messenger.sendMessage(greeterChainId, greeterAddress, message);
+                }
             ```
 
            This function encodes a call to `setGreeting` and sends it to a contract on another chain.
@@ -341,48 +338,48 @@ In this section we change `Greeter.sol` to emit a separate event in it receives 
   1.  Modify `src/Greeter.sol` to this code.
 
         ```solidity
-        //SPDX-License-Identifier: MIT
-        pragma solidity ^0.8.0;
+            //SPDX-License-Identifier: MIT
+            pragma solidity ^0.8.0;
 
-        import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
+            import { Predeploys } from "@eth-optimism/contracts-bedrock/src/libraries/Predeploys.sol";
 
-        interface IL2ToL2CrossDomainMessenger {
-            function crossDomainMessageContext() external view returns (address sender_, uint256 source_);
-        }
-
-        contract Greeter {
-
-            IL2ToL2CrossDomainMessenger public immutable messenger =
-                IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
-
-            string greeting;
-
-            event SetGreeting(
-                address indexed sender,     // msg.sender
-                string greeting
-            );
-
-            event CrossDomainSetGreeting(
-                address indexed sender,   // Sender on the other side
-                uint256 indexed chainId,  // ChainID of the other side
-                string greeting
-            );
-
-            function greet() public view returns (string memory) {
-                return greeting;
+            interface IL2ToL2CrossDomainMessenger {
+                function crossDomainMessageContext() external view returns (address sender_, uint256 source_);
             }
 
-            function setGreeting(string memory _greeting) public {
-                greeting = _greeting;
-                emit SetGreeting(msg.sender, _greeting);
+            contract Greeter {
 
-                if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
-                    (address sender, uint256 chainId) =
-                        messenger.crossDomainMessageContext();
-                    emit CrossDomainSetGreeting(sender, chainId, _greeting);
+                IL2ToL2CrossDomainMessenger public immutable messenger =
+                    IL2ToL2CrossDomainMessenger(Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER);
+
+                string greeting;
+
+                event SetGreeting(
+                    address indexed sender,     // msg.sender
+                    string greeting
+                );
+
+                event CrossDomainSetGreeting(
+                    address indexed sender,   // Sender on the other side
+                    uint256 indexed chainId,  // ChainID of the other side
+                    string greeting
+                );
+
+                function greet() public view returns (string memory) {
+                    return greeting;
+                }
+
+                function setGreeting(string memory _greeting) public {
+                    greeting = _greeting;
+                    emit SetGreeting(msg.sender, _greeting);
+
+                    if (msg.sender == Predeploys.L2_TO_L2_CROSS_DOMAIN_MESSENGER) {
+                        (address sender, uint256 chainId) =
+                            messenger.crossDomainMessageContext();
+                        emit CrossDomainSetGreeting(sender, chainId, _greeting);
+                    }
                 }
             }
-        }
         ```
 
         <details>
