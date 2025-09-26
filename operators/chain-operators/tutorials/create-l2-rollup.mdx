@@ -96,22 +96,24 @@ If you choose to use a different directory, make sure you're using the correct d
 ### Build the Optimism monorepo
 
 <Steps>
-  <h3>Clone the Optimism Monorepo</h3>
-  
-  ```bash
+  <Step title="Clone the Optimism Monorepo">
+```bash
   cd ~
   git clone https://github.com/ethereum-optimism/optimism.git
   ```
+
+  </Step>
   
-  <h3>Enter the Optimism Monorepo</h3>
-  
-  ```bash
+  <Step title="Enter the Optimism Monorepo">
+```bash
   cd optimism
   ```
+
   
-  <h3>Check out the correct branch</h3>
+  </Step>
   
-  <Info>
+  <Step title="Check out the correct branch">
+<Info>
   You will be using the `tutorials/chain` branch of the Optimism Monorepo to deploy an OP Stack testnet chain during this tutorial.
   This is a non-production branch that lags behind the `develop` branch.
   You should **NEVER** use the `develop` or `tutorials/chain` branches in production.
@@ -120,10 +122,12 @@ If you choose to use a different directory, make sure you're using the correct d
   ```bash
   git checkout tutorials/chain
   ```
+
   
-  <h3>Check your dependencies</h3>
+  </Step>
   
-  <Info>
+  <Step title="Check your dependencies">
+<Info>
   Don't skip this step! Make sure you have all of the required dependencies installed before continuing.
   </Info>
   
@@ -133,70 +137,84 @@ If you choose to use a different directory, make sure you're using the correct d
   ```bash
   ./packages/contracts-bedrock/scripts/getting-started/versions.sh
   ```
+
   
-  <h3>Install dependencies</h3>
+  </Step>
   
-  ```bash
+  <Step title="Install dependencies">
+```bash
   pnpm install
   ```
+
   
-  <h3>Build the various packages inside of the Optimism Monorepo</h3>
+  </Step>
   
-  ```bash
+  <Step title="Build the various packages inside of the Optimism Monorepo">
+```bash
   make op-node op-batcher op-proposer
   pnpm build
   ```
-</Steps>
+
+  
+  </Step></Steps>
 
 ### Build `op-geth`
 
 <Steps>
-  <h3>Clone op-geth</h3>
-  
-  ```bash
+  <Step title="Clone op-geth">
+```bash
   cd ~
   git clone https://github.com/ethereum-optimism/op-geth.git
   ```
+
+  </Step>
   
-  <h3>Enter op-geth</h3>
-  
-  ```bash
+  <Step title="Enter op-geth">
+```bash
   cd op-geth
   ```
+
   
-  <h3>Build op-geth</h3>
+  </Step>
   
-  ```bash
+  <Step title="Build op-geth">
+```bash
   make geth
   ```
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Fill out environment variables
 
 You'll need to fill out a few environment variables before you can start deploying your chain.
 
 <Steps>
-  <h3>Enter the Optimism Monorepo</h3>
-  
-  ```bash
+  <Step title="Enter the Optimism Monorepo">
+```bash
   cd ~/optimism
   ```
+
+  </Step>
   
-  <h3>Duplicate the sample environment variable file</h3>
-  
-  ```bash
+  <Step title="Duplicate the sample environment variable file">
+```bash
   cp .envrc.example .envrc
   ```
+
   
-  <h3>Fill out the environment variable file</h3>
+  </Step>
   
-  Open up the environment variable file and fill out the following variables:
+  <Step title="Fill out the environment variable file">
+Open up the environment variable file and fill out the following variables:
   
   | Variable Name | Description                                                                                                                                                                                                  |
   | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
   | `L1_RPC_URL`  | URL for your L1 node (a Sepolia node in this case).                                                                                                                                                          |
   | `L1_RPC_KIND` | Kind of L1 RPC you're connecting to, used to inform optimal transactions receipts fetching. Valid options: `alchemy`, `quicknode`, `infura`, `parity`, `nethermind`, `debug_geth`, `erigon`, `basic`, `any`. |
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Generate addresses
 
@@ -208,15 +226,15 @@ You'll need four addresses and their private keys when setting up the chain:
 *   The `Sequencer` address signs blocks on the p2p network.
 
 <Steps>
-  <h3>Enter the Optimism Monorepo</h3>
-  
-  ```bash
+  <Step title="Enter the Optimism Monorepo">
+```bash
   cd ~/optimism
   ```
+
+  </Step>
   
-  <h3>Generate new addresses</h3>
-  
-  <Info>
+  <Step title="Generate new addresses">
+<Info>
   You should **not** use the `wallets.sh` tool for production deployments.
   If you are deploying an OP Stack based chain into production, you should likely be using a combination of hardware security modules and hardware wallets.
   </Info>
@@ -224,10 +242,12 @@ You'll need four addresses and their private keys when setting up the chain:
   ```bash
   ./packages/contracts-bedrock/scripts/getting-started/wallets.sh
   ```
+
   
-  <h3>Check the output</h3>
+  </Step>
   
-  Make sure that you see output that looks something like the following:
+  <Step title="Check the output">
+Make sure that you see output that looks something like the following:
   
   ```text
   Copy the following into your .envrc file:
@@ -248,14 +268,18 @@ You'll need four addresses and their private keys when setting up the chain:
   export GS_SEQUENCER_ADDRESS=0xC06566E8Ec6cF81B4B26376880dB620d83d50Dfb
   export GS_SEQUENCER_PRIVATE_KEY=0x2a0290473f3838dbd083a5e17783e3cc33c905539c0121f9c76614dda8a38dca
   ```
+
   
-  <h3>Save the addresses</h3>
+  </Step>
   
-  Copy the output from the previous step and paste it into your `.envrc` file as directed.
+  <Step title="Save the addresses">
+Copy the output from the previous step and paste it into your `.envrc` file as directed.
+
   
-  <h3>Fund the addresses</h3>
+  </Step>
   
-  **You will need to send ETH to the `Admin`, `Proposer`, and `Batcher` addresses.**
+  <Step title="Fund the addresses">
+**You will need to send ETH to the `Admin`, `Proposer`, and `Batcher` addresses.**
   The exact amount of ETH required depends on the L1 network being used.
   **You do not need to send any ETH to the `Sequencer` address as it does not send transactions.**
   
@@ -266,22 +290,24 @@ You'll need four addresses and their private keys when setting up the chain:
   *   `Proposer` — 0.2 Sepolia ETH
   
   **To get the required Sepolia ETH to fund the addresses, we recommend using the [Superchain Faucet](https://console.optimism.io/faucet?utm_source=op-docs&utm_medium=docs)** together with [Coinbase verification](https://help.coinbase.com/en/coinbase/getting-started/getting-started-with-coinbase/id-doc-verification).
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Load environment variables
 
 Now that you've filled out the environment variable file, you need to load those variables into your terminal.
 
 <Steps>
-  <h3>Enter the Optimism Monorepo</h3>
-  
-  ```bash
+  <Step title="Enter the Optimism Monorepo">
+```bash
   cd ~/optimism
   ```
+
+  </Step>
   
-  <h3>Load the variables with direnv</h3>
-  
-  <Info>
+  <Step title="Load the variables with direnv">
+<Info>
   You're about to use `direnv` to load environment variables from the `.envrc` file into your terminal.
   Make sure that you've [installed `direnv`](https://direnv.net/docs/installation.html) and that you've properly [hooked `direnv` into your shell](#configuring-direnv).
   </Info>
@@ -296,10 +322,12 @@ Now that you've filled out the environment variable file, you need to load those
   WARNING: `direnv` will unload itself whenever your `.envrc` file changes.
   **You *must* rerun the following command every time you change the `.envrc` file.**
   </Info>
+
   
-  <h3>Confirm that the variables were loaded</h3>
+  </Step>
   
-  After running `direnv allow` you should see output that looks something like the following (the exact output will vary depending on the variables you've set, don't worry if it doesn't look exactly like this):
+  <Step title="Confirm that the variables were loaded">
+After running `direnv allow` you should see output that looks something like the following (the exact output will vary depending on the variables you've set, don't worry if it doesn't look exactly like this):
   
   ```bash
   direnv: loading ~/optimism/.envrc                                                            
@@ -308,7 +336,9 @@ Now that you've filled out the environment variable file, you need to load those
   
   **If you don't see this output, you likely haven't [properly configured `direnv`](#configuring-direnv).**
   Make sure you've configured `direnv` properly and run `direnv allow` again so that you see the desired output.
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Configure your network
 
@@ -316,37 +346,45 @@ Once you've built both repositories, you'll need to head back to the Optimism Mo
 Currently, chain configuration lives inside of the [`contracts-bedrock`](https://github.com/ethereum-optimism/optimism/tree/v1.1.4/packages/contracts-bedrock) package in the form of a JSON file.
 
 <Steps>
-  <h3>Enter the Optimism Monorepo</h3>
-  
-  ```bash
+  <Step title="Enter the Optimism Monorepo">
+```bash
   cd ~/optimism
   ```
+
+  </Step>
   
-  <h3>Move into the contracts-bedrock package</h3>
-  
-  ```bash
+  <Step title="Move into the contracts-bedrock package">
+```bash
   cd packages/contracts-bedrock
   ```
+
   
-  <h3>Install Foundry dependencies</h3>
+  </Step>
   
-  ```bash
+  <Step title="Install Foundry dependencies">
+```bash
   forge install
   ```
+
   
-  <h3>Generate the configuration file</h3>
+  </Step>
   
-  Run the following script to generate the `getting-started.json` configuration file inside of the `deploy-config` directory.
+  <Step title="Generate the configuration file">
+Run the following script to generate the `getting-started.json` configuration file inside of the `deploy-config` directory.
   
   ```bash
   ./scripts/getting-started/config.sh
   ```
+
   
-  <h3>Review the configuration file (Optional)</h3>
+  </Step>
   
-  If you'd like, you can review the configuration file that was just generated by opening up `deploy-config/getting-started.json` in your favorite text editor.
+  <Step title="Review the configuration file (Optional)">
+If you'd like, you can review the configuration file that was just generated by opening up `deploy-config/getting-started.json` in your favorite text editor.
   It's recommended to keep this file as-is for now so you don't run into any unexpected errors.
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Deploy the Create2 factory (optional)
 
@@ -359,9 +397,8 @@ If you are deploying your OP Stack chain to Sepolia, you can safely skip this st
 </Info>
 
 <Steps>
-  <h3>Check if the factory exists</h3>
-  
-  The Create2 factory contract will be deployed at the address `0x4e59b44847b379578588920cA78FbF26c0B4956C`.
+  <Step title="Check if the factory exists">
+The Create2 factory contract will be deployed at the address `0x4e59b44847b379578588920cA78FbF26c0B4956C`.
   You can check if this contract has already been deployed to your L1 network with a block explorer or by running the following command:
   
   ```bash
@@ -370,33 +407,42 @@ If you are deploying your OP Stack chain to Sepolia, you can safely skip this st
   
   If the command returns `0` then the contract has not been deployed yet.
   If the command returns `69` then the contract has been deployed and you can safely skip this section.
+
+  </Step>
   
-  <h3>Fund the factory deployer</h3>
-  
-  You will need to send some ETH to the address that will be used to deploy the factory contract, `0x3fAB184622Dc19b6109349B94811493BF2a45362`.
+  <Step title="Fund the factory deployer">
+You will need to send some ETH to the address that will be used to deploy the factory contract, `0x3fAB184622Dc19b6109349B94811493BF2a45362`.
   This address can only be used to deploy the factory contract and will not be used for anything else.
   Send at least 1 ETH to this address on your L1 chain.
+
   
-  <h3>Deploy the factory</h3>
+  </Step>
   
-  Using `cast`, deploy the factory contract to your L1 chain:
+  <Step title="Deploy the factory">
+Using `cast`, deploy the factory contract to your L1 chain:
   
   ```bash
   cast publish --rpc-url $L1_RPC_URL 0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222 
   ```
+
   
-  <h3>Wait for the transaction to be mined</h3>
+  </Step>
   
-  Make sure that the transaction is included in a block on your L1 chain before continuing.
+  <Step title="Wait for the transaction to be mined">
+Make sure that the transaction is included in a block on your L1 chain before continuing.
+
   
-  <h3>Verify that the factory was deployed</h3>
+  </Step>
   
-  Run the code size check again to make sure that the factory was properly deployed:
+  <Step title="Verify that the factory was deployed">
+Run the code size check again to make sure that the factory was properly deployed:
   
   ```bash
   cast codesize 0x4e59b44847b379578588920cA78FbF26c0B4956C --rpc-url $L1_RPC_URL
   ```
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Deploy the L1 contracts
 
@@ -481,30 +527,36 @@ You're going to be running a Sequencer node, so you'll need to import the `Seque
 This private key is what your Sequencer will use to sign new blocks.
 
 <Steps>
-  <h3>Navigate to the op-geth directory</h3>
-  
-  ```bash
+  <Step title="Navigate to the op-geth directory">
+```bash
   cd ~/op-geth
   ```
+
+  </Step>
   
-  <h3>Create a data directory folder</h3>
-  
-  ```bash
+  <Step title="Create a data directory folder">
+```bash
   mkdir datadir
   ```
+
   
-  <h3>Build the op-geth binary</h3>
+  </Step>
   
-  ```bash
+  <Step title="Build the op-geth binary">
+```bash
   make geth
   ```
+
   
-  <h3>Initialize op-geth</h3>
+  </Step>
   
-  ```bash
+  <Step title="Initialize op-geth">
+```bash
   build/bin/geth init --state.scheme=hash --datadir=datadir genesis.json
   ```
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Start `op-geth`
 
@@ -512,19 +564,21 @@ Now you'll start `op-geth`, your Execution Client.
 Note that you won't start seeing any transactions until you start the Consensus Client in the next step.
 
 <Steps>
-  <h3>Open up a new terminal</h3>
+  <Step title="Open up a new terminal">
+You'll need a terminal window to run `op-geth` in.
+
+  </Step>
   
-  You'll need a terminal window to run `op-geth` in.
-  
-  <h3>Navigate to the op-geth directory</h3>
-  
-  ```bash
+  <Step title="Navigate to the op-geth directory">
+```bash
   cd ~/op-geth
   ```
+
   
-  <h3>Run op-geth</h3>
+  </Step>
   
-  <Info>
+  <Step title="Run op-geth">
+<Info>
   You're using `--gcmode=archive` to run `op-geth` here because this node will act as your Sequencer.
   It's useful to run the Sequencer in archive mode because the `op-proposer` requires access to the full state.
   Feel free to run other (non-Sequencer) nodes in full mode if you'd like to save disk space. Just make sure at least one other archive node exists and the `op-proposer` points to it.
@@ -558,7 +612,9 @@ Note that you won't start seeing any transactions until you start the Consensus 
     --authrpc.jwtsecret=./jwt.txt \
     --rollup.disabletxpoolgossip=true
   ```
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Start `op-node`
 
@@ -567,19 +623,21 @@ Like Ethereum, the OP Stack has a Consensus Client (`op-node`) and an Execution 
 The Consensus Client "drives" the Execution Client over the Engine API.
 
 <Steps>
-  <h3>Open up a new terminal</h3>
+  <Step title="Open up a new terminal">
+You'll need a terminal window to run the `op-node` in.
+
+  </Step>
   
-  You'll need a terminal window to run the `op-node` in.
-  
-  <h3>Navigate to the op-node directory</h3>
-  
-  ```bash
+  <Step title="Navigate to the op-node directory">
+```bash
   cd ~/optimism/op-node
   ```
+
   
-  <h3>Run op-node</h3>
+  </Step>
   
-  ```bash
+  <Step title="Run op-node">
+```bash
   ./bin/op-node \
     --l2=http://localhost:8551 \
     --l2.jwt-secret=./jwt.txt \
@@ -617,7 +675,9 @@ The Consensus Client "drives" the Execution Client over the Engine API.
   
   You can alternatively also remove the [--p2p.static](/operators/node-operators/configuration/consensus-config#p2pstatic) option, but you may see failed requests from other chains using the same chain ID.
   </Info>
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Start `op-batcher`
 
@@ -629,19 +689,21 @@ It's best to give the `Batcher` address at least 1 Sepolia ETH to ensure that it
 Keep an eye on the balance of the `Batcher` address because it can expend ETH quickly if there are a lot of transactions to publish.
 
 <Steps>
-  <h3>Open up a new terminal</h3>
+  <Step title="Open up a new terminal">
+You'll need a terminal window to run the `op-batcher` in.
+
+  </Step>
   
-  You'll need a terminal window to run the `op-batcher` in.
-  
-  <h3>Navigate to the op-batcher directory</h3>
-  
-  ```bash
+  <Step title="Navigate to the op-batcher directory">
+```bash
   cd ~/optimism/op-batcher
   ```
+
   
-  <h3>Run op-batcher</h3>
+  </Step>
   
-  ```bash
+  <Step title="Run op-batcher">
+```bash
   ./bin/op-batcher \
     --l2-eth-rpc=http://localhost:8545 \
     --rollup-rpc=http://localhost:9545 \
@@ -664,26 +726,30 @@ Keep an eye on the balance of the `Batcher` address because it can expend ETH qu
   When it is high, transactions are written to L1 less frequently and the batcher spends less ETH.
   If you want to reduce costs, either set this value to 0 to disable it or increase it to a higher value.
   </Info>
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Start `op-proposer`
 
 Now start `op-proposer`, which proposes new state roots.
 
 <Steps>
-  <h3>Open up a new terminal</h3>
+  <Step title="Open up a new terminal">
+You'll need a terminal window to run the `op-proposer` in.
+
+  </Step>
   
-  You'll need a terminal window to run the `op-proposer` in.
-  
-  <h3>Navigate to the op-proposer directory</h3>
-  
-  ```bash
+  <Step title="Navigate to the op-proposer directory">
+```bash
   cd ~/optimism/op-proposer
   ```
+
   
-  <h3>Run op-proposer</h3>
+  </Step>
   
-  ```bash
+  <Step title="Run op-proposer">
+```bash
   ./bin/op-proposer \
     --poll-interval=12s \
     --rpc.port=8560 \
@@ -692,7 +758,9 @@ Now start `op-proposer`, which proposes new state roots.
     --private-key=$GS_PROPOSER_PRIVATE_KEY \
     --l1-eth-rpc=$L1_RPC_URL
   ```
-</Steps>
+
+  
+  </Step></Steps>
 
 ## Connect your wallet to your chain
 
@@ -706,24 +774,28 @@ Once you've connected your wallet, you'll probably notice that you don't have an
 The easiest way to deposit Sepolia ETH into your chain is to send ETH directly to the `L1StandardBridge` contract.
 
 <Steps>
-  <h3>Navigate to the contracts-bedrock directory</h3>
-  
-  ```bash
+  <Step title="Navigate to the contracts-bedrock directory">
+```bash
   cd ~/optimism/packages/contracts-bedrock
   ```
+
+  </Step>
   
-  <h3>Get the address of the L1StandardBridgeProxy contract</h3>
-  
-  ```bash
+  <Step title="Get the address of the L1StandardBridgeProxy contract">
+```bash
   cat deployments/getting-started/.deploy | jq -r .L1StandardBridgeProxy
   ```
+
   
-  <h3>Send some Sepolia ETH to the L1StandardBridgeProxy contract</h3>
+  </Step>
   
-  Grab the L1 bridge proxy contract address and, using the wallet that you want to have ETH on your Rollup, send that address a small amount of ETH on Sepolia (0.1 or less is fine).
+  <Step title="Send some Sepolia ETH to the L1StandardBridgeProxy contract">
+Grab the L1 bridge proxy contract address and, using the wallet that you want to have ETH on your Rollup, send that address a small amount of ETH on Sepolia (0.1 or less is fine).
   This will trigger a deposit that will mint ETH into your wallet on L2.
   It may take up to 5 minutes for that ETH to appear in your wallet on L2.
-</Steps>
+
+  
+  </Step></Steps>
 
 ## See your rollup in action
 

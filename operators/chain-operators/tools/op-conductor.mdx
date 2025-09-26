@@ -96,9 +96,8 @@ This setup guide has the following assumptions:
 ### Spin up op-conductor
 
 <Steps>
-  <h3>Deploy conductor</h3>
-  
-    Deploy a conductor instance per sequencer with sequencer-1 as the raft cluster
+  <Step title="Deploy conductor">
+Deploy a conductor instance per sequencer with sequencer-1 as the raft cluster
     bootstrap node:
   
     *   suggested conductor configs:
@@ -132,15 +131,18 @@ This setup guide has the following assumptions:
         OP_CONDUCTOR_PAUSED: "true"
         OP_CONDUCTOR_RAFT_BOOTSTRAP: "true"
         ```
+
+  </Step>
   
-    <h3>Pause two conductors</h3>
-  
-    Pause `sequencer-0` &` sequencer-2` conductors with [conductor_pause](#conductor_pause)
+    <Step title="Pause two conductors">
+Pause `sequencer-0` &` sequencer-2` conductors with [conductor_pause](#conductor_pause)
     RPC request.
+
   
-    <h3>Update op-node configuration and switch the active sequencer</h3>
+    </Step>
   
-    Deploy an `op-node` config update to all sequencers that enables conductor. Use
+    <Step title="Update op-node configuration and switch the active sequencer">
+Deploy an `op-node` config update to all sequencers that enables conductor. Use
     a blue/green style deployment workflow that switches the active sequencer to
     `sequencer-1`:
   
@@ -150,21 +152,27 @@ This setup guide has the following assumptions:
         OP_NODE_CONDUCTOR_ENABLED: "true" # this is what commits unsafe blocks to the raft logs
         OP_NODE_RPC_ADMIN_STATE: "" # this flag can't be used with conductor
         ```
+
   
-    <h3>Confirm sequencer switch was successful</h3>
+    </Step>
   
-    Confirm `sequencer-1` is active and successfully producing unsafe blocks.
+    <Step title="Confirm sequencer switch was successful">
+Confirm `sequencer-1` is active and successfully producing unsafe blocks.
     Because `sequencer-1` was the raft cluster bootstrap node, it is now committing
     unsafe payloads to the raft log.
+
   
-    <h3>Add voting nodes</h3>
+    </Step>
   
-    Add voting nodes to cluster using [conductor_AddServerAsVoter](#conductor_addserverasvoter)
+    <Step title="Add voting nodes">
+Add voting nodes to cluster using [conductor_AddServerAsVoter](#conductor_addserverasvoter)
     RPC request to the leader conductor (`sequencer-1`)
+
   
-    <h3>Confirm state</h3>
+    </Step>
   
-    Confirm cluster membership and sequencer state:
+    <Step title="Confirm state">
+Confirm cluster membership and sequencer state:
   
     *   `sequencer-0` and `sequencer-2`:
         1.  raft cluster follower
@@ -177,23 +185,31 @@ This setup guide has the following assumptions:
         2.  sequencer is active
         3.  conductor is paused
         4.  conductor enabled in op-node config
+
   
-    <h3>Resume conductors</h3>
+    </Step>
   
-    Resume all conductors with [conductor\_resume](#conductor_resume) RPC request to
+    <Step title="Resume conductors">
+Resume all conductors with [conductor\_resume](#conductor_resume) RPC request to
     each conductor instance.
+
   
-    <h3>Confirm state</h3>
+    </Step>
   
-    Confirm all conductors successfully resumed with [conductor_paused](#conductor_paused)
+    <Step title="Confirm state">
+Confirm all conductors successfully resumed with [conductor_paused](#conductor_paused)
+
   
-    <h3>Transfer leadership</h3>
+    </Step>
   
-    Trigger leadership transfer to `sequencer-0` using [conductor_transferLeaderToServer](#conductor_transferleadertoserver)
+    <Step title="Transfer leadership">
+Trigger leadership transfer to `sequencer-0` using [conductor_transferLeaderToServer](#conductor_transferleadertoserver)
+
   
-    <h3>Confirm state</h3>
+    </Step>
   
-    *   `sequencer-1` and `sequencer-2`:
+    <Step title="Confirm state">
+*   `sequencer-1` and `sequencer-2`:
         1.  raft cluster follower
         2.  sequencer is stopped
         3.  conductor is active
@@ -204,12 +220,16 @@ This setup guide has the following assumptions:
         2.  sequencer is active
         3.  conductor is active
         4.  conductor enabled in op-node config
+
   
-    <h3>Update configuration</h3>
+    </Step>
   
-    Deploy a config change to `sequencer-1` conductor to remove the
+    <Step title="Update configuration">
+Deploy a config change to `sequencer-1` conductor to remove the
     `OP_CONDUCTOR_PAUSED: true` flag and `OP_CONDUCTOR_RAFT_BOOTSTRAP` flag.
-</Steps>
+
+  
+    </Step></Steps>
 
 #### Blue/green deployment
 
