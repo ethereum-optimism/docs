@@ -81,7 +81,7 @@ async function getContentFiles(folderPath: string): Promise<FileInfo[]> {
 async function getBreadcrumbCards(breadcrumbPath: string): Promise<Set<string>> {
   try {
     const content = await fs.promises.readFile(breadcrumbPath, 'utf-8');
-    const cardMatches = content.match(/<Card[^>]*href="([^"]+)"[^>]*>/g) || [];
+    const cardMatches = content.match(/<Card[^>]*href=['"]([^'"]+)['"][^>]*>/g) || [];
     return new Set(
       cardMatches.map(match => {
         const hrefMatch = match.match(/href="([^"]+)"/);
