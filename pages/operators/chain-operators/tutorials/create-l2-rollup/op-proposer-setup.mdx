@@ -26,6 +26,12 @@ After you have spun up your sequencer and batcher, you need to attach a proposer
   **Step 4 of 5**: This tutorial is designed to be followed step-by-step. Each step builds on the previous one.
 </Callout>
 
+<Callout type="tip">
+  **Automated Setup Available**
+
+  For a complete working setup with all components, check out the [automated approach](https://github.com/ethereum-optimism/docs/tree/main/docs/create-l2-rollup-example/) in the code directory.
+</Callout>
+
 This guide assumes you already have a functioning sequencer, batcher, and the necessary L1 contracts deployed using [`op-deployer`](./op-deployer-setup). If you haven't set up your sequencer and batcher yet, please refer to the [sequencer guide](./op-geth-setup) and [batcher guide](./op-batcher-setup) first.
 
 To see configuration info for the proposer, check out the [configuration page](/operators/chain-operators/configuration/proposer).
@@ -78,29 +84,33 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
 
       ### Create environment variables file
 
+      <Callout type="info">
+        **OP Stack Standard Variables**
+
+        The proposer uses OP Stack standard environment variables following the OP Stack conventions. These are prefixed with `OP_PROPOSER_` for proposer-specific settings.
+      </Callout>
+
       ```bash
       # Create .env file with your actual values
       cat > .env << 'EOF'
-      # L1 Configuration - Replace with your actual RPC URLs
-      L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+      #  L1 Configuration - Replace with your actual RPC URLs
+      OP_PROPOSER_L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
 
       # L2 Configuration - Should match your sequencer setup
-        L2_RPC_URL=http://op-geth:8545
-        ROLLUP_RPC_URL=http://op-node:8547
+      OP_PROPOSER_ROLLUP_RPC=http://op-node:8547
 
       # Contract addresses - Extract from your op-deployer output
-      GAME_FACTORY_ADDRESS=YOUR_ACTUAL_GAME_FACTORY_ADDRESS
+      OP_PROPOSER_GAME_FACTORY_ADDRESS=YOUR_ACTUAL_GAME_FACTORY_ADDRESS
 
       # Private key - Replace with your actual private key
-      PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
+      OP_PROPOSER_PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
 
-      # Proposer configuration
-      PROPOSAL_INTERVAL=3600s
-      GAME_TYPE=0
-      POLL_INTERVAL=20s
-
-      # RPC configuration
-      PROPOSER_RPC_PORT=8560
+      # OP Stack proposer configuration (optional - defaults provided)
+      OP_PROPOSER_PROPOSAL_INTERVAL=3600s
+      OP_PROPOSER_GAME_TYPE=0
+      OP_PROPOSER_POLL_INTERVAL=20s
+      OP_PROPOSER_ALLOW_NON_FINALIZED=true
+      OP_PROPOSER_WAIT_NODE_SYNC=true
       EOF
       ```
 
@@ -130,21 +140,11 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
             - "8560:8560"
           env_file:
             - .env
-          command:
-            - "op-proposer"
-            - "--poll-interval=${POLL_INTERVAL}"
-            - "--rpc.port=${PROPOSER_RPC_PORT}"
-            - "--rpc.enable-admin"
-            - "--rollup-rpc=${ROLLUP_RPC_URL}"
-            - "--l1-eth-rpc=${L1_RPC_URL}"
-            - "--private-key=${PRIVATE_KEY}"
-            - "--game-factory-address=${GAME_FACTORY_ADDRESS}"
-            - "--game-type=${GAME_TYPE}"
-            - "--proposal-interval=${PROPOSAL_INTERVAL}"
-            - "--num-confirmations=1"
-            - "--resubmission-timeout=30s"
-            - "--wait-node-sync=true"
-            - "--log.level=info"
+          command: >
+            op-proposer
+            --rpc.port=8560
+            --log.level=info
+            --log.format=json
           restart: unless-stopped
           networks:
             - sequencer-node_default
