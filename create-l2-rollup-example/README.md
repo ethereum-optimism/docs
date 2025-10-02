@@ -33,7 +33,7 @@ For the best experience with correct tool versions, we recommend installing [mis
 curl https://mise.jdx.dev/install.sh | bash
 
 # Install all required tools with correct versions
-cd docs/pages/operators/chain-operators/tutorials/create-l2-rollup/code
+cd docs/create-l2-rollup-example
 mise install
 ```
 
