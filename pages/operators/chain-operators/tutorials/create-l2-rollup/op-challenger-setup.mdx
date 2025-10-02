@@ -26,6 +26,12 @@ After you have spun up your sequencer, batcher, and proposer, the final step is 
   Each step builds on the previous one, and this is the last part of the tutorial.
 </Callout>
 
+<Callout type="tip">
+  **Automated Setup Available**
+
+  For a complete working setup with all components including automated prestate generation, check out the [automated approach](https://github.com/ethereum-optimism/docs/tree/main/create-l2-rollup-example/) in the code directory.
+</Callout>
+
 This guide provides step-by-step instructions for setting up the configuration and monitoring options for `op-challenger`. The challenger is a critical fault proofs component that monitors dispute games and challenges invalid claims to protect your OP Stack chain.
 
 See the [OP-Challenger explainer](/stack/fault-proofs/challenger) for a general overview of this fault proofs feature.
@@ -138,28 +144,32 @@ For challenger deployment, we recommend using Docker as it provides a consistent
 
       ### Create environment file
 
-      First, create a `.env` file with your configuration values. This file will be used by Docker Compose to set up the environment variables:
+      <Callout type="info">
+        **OP Stack Standard Variables**
+
+        The challenger uses OP Stack standard environment variables following the OP Stack conventions. These are prefixed with `OP_CHALLENGER_` for challenger-specific settings.
+      </Callout>
 
       ```bash
       # Create .env file with your actual values
       cat > .env << 'EOF'
-      # L1 Configuration - Replace with your actual RPC URLs
-      L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
-      L1_BEACON=https://ethereum-sepolia-beacon-api.publicnode.com
-      
+      # Core configuration (required)
+      OP_CHALLENGER_L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+      OP_CHALLENGER_L1_BEACON_URL=https://ethereum-sepolia-beacon-api.publicnode.com
+      OP_CHALLENGER_PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
+
       # L2 Configuration - Replace with your actual node endpoints  
-      L2_RPC_URL=http://op-geth:8545
-      ROLLUP_RPC_URL=http://op-node:8547
+      OP_CHALLENGER_L2_ETH_RPC=http://op-geth:8545
+      OP_CHALLENGER_ROLLUP_RPC=http://op-node:8547
 
-      # Private key - Replace with your actual private key
-      PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
+      # OP Stack challenger configuration (optional - defaults provided)
+      OP_CHALLENGER_GAME_FACTORY_ADDRESS=YOUR_GAME_FACTORY_ADDRESS
+      OP_CHALLENGER_CANNON_L2_GENESIS=/workspace/genesis.json
+      OP_CHALLENGER_CANNON_ROLLUP_CONFIG=/workspace/rollup.json
 
-      # Network configuration
-      NETWORK=op-sepolia
-      GAME_FACTORY_ADDRESS=YOUR_GAME_FACTORY_ADDRESS
 
-      # Prestate configuration - Replace with the hash from 'make reproducible-prestate'
-      PRESTATE_HASH=YOUR_PRESTATE_HASH
+      # Prestate configuration - Replace with the file from 'make reproducible-prestate'
+      OP_CHALLENGER_CANNON_PRESTATE=/workspace/${PRESTATE_HASH}.bin.gz
       EOF
       ```
 
@@ -174,7 +184,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       
       services:
         challenger:
-          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.5.0
+          image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.5.1
           user: "1000"
           volumes:
             - ./challenger-data:/data
@@ -182,28 +192,12 @@ For challenger deployment, we recommend using Docker as it provides a consistent
             - ./genesis-l2.json:/workspace/genesis-l2.json:ro
             - ./prestate-proof-mt64.json:/workspace/prestate-proof.json:ro
             - ./${PRESTATE_HASH}.bin.gz:/workspace/${PRESTATE_HASH}.bin.gz:ro
-          environment:
-            - L1_RPC_URL=${L1_RPC_URL}
-            - L1_BEACON=${L1_BEACON}
-            - L2_RPC_URL=${L2_RPC_URL}
-            - ROLLUP_RPC_URL=${ROLLUP_RPC_URL}
-            - PRIVATE_KEY=${PRIVATE_KEY}
-            - NETWORK=${NETWORK}
-            - GAME_FACTORY_ADDRESS=${GAME_FACTORY_ADDRESS}
-          command:
-            - "op-challenger"
-            - "--trace-type=cannon,asterisc-kona"
-            - "--l1-eth-rpc=${L1_RPC_URL}"
-            - "--l1-beacon=${L1_BEACON}"
-            - "--l2-eth-rpc=${L2_RPC_URL}"
-            - "--rollup-rpc=${ROLLUP_RPC_URL}"
-            - "--selective-claim-resolution"
-            - "--private-key=${PRIVATE_KEY}"
-            - "--game-factory-address=${GAME_FACTORY_ADDRESS}"
-            - "--datadir=/data"
-            - "--cannon-prestate=/workspace/prestate-proof.json"
-            - "--cannon-bin=/workspace/${PRESTATE_HASH}.bin.gz"
-            - "--asterisc-kona-prestate=/workspace/prestate-proof.json"
+          command: >
+            op-challenger run-trace
+            --trace-type=cannon
+            --datadir=/data
+            --log.level=info
+            --log.format=json
           restart: unless-stopped
           networks:
             - sequencer-node_default

@@ -23,6 +23,12 @@ Welcome to the first step of creating your own L2 rollup testnet! In this sectio
   **Step 1 of 5**: This tutorial is designed to be followed step-by-step. Each step builds on the previous one.
 </Callout>
 
+<Callout type="tip">
+  **Quick Setup Available**
+
+  For a complete automated setup that includes op-deployer deployment, check out the [`code/`](https://github.com/ethereum-optimism/docs/tree/main/create-l2-rollup-example/) directory. The automated setup handles all contract deployment and configuration automatically.
+</Callout>
+
 ## About op-deployer
 
 `op-deployer` simplifies the process of deploying the OP Stack. You define a declarative config file called an "**intent**," then run a command to apply it. `op-deployer` compares your chain's current state against the intent and makes the necessary changes to match.
@@ -35,11 +41,17 @@ There are a couple of ways to install `op-deployer`:
   <Tabs.Tab>
     The recommended way to install `op-deployer` is to download the latest release from the monorepo's [release page](https://github.com/ethereum-optimism/optimism/releases).
 
+    <Callout type="info">
+      **Quick Setup Available**
+
+      For automated installation, you can use the download script from the [code directory](https://github.com/ethereum-optimism/docs/tree/main/create-l2-rollup-example/). This script automatically downloads the latest version for your system.
+    </Callout>
+
     <Steps>
       ### Download the correct binary
 
       1.  Go to the [release page](https://github.com/ethereum-optimism/optimism/releases)
-      2.  Use the search bar to find the latest release that includes `op-deployer`.
+      2.  Find the **latest** release that includes `op-deployer` (look for releases tagged with `op-deployer/v*`)
       3.  Under **assets**, download the binary that matches your system:
 
       *   For Linux: `op-deployer-linux-amd64`
@@ -47,6 +59,10 @@ There are a couple of ways to install `op-deployer`:
           *   Apple Silicon (M1/M2): `op-deployer-darwin-arm64`
           *   Intel processors: `op-deployer-darwin-amd64`
       *   For Windows: `op-deployer-windows-amd64.exe`
+
+      <Callout type="warning">
+        **Always download the latest version** to ensure you have the most recent features and bug fixes.
+      </Callout>
 
       <Callout type="info">
         Not sure which macOS version to use?
@@ -84,25 +100,30 @@ There are a couple of ways to install `op-deployer`:
       </Callout>
 
       ```bash
-      # Step 1: Extract the tar.gz archive in the deployer directory
-      # Replace USERNAME with your username and adjust the version/arch if needed
-      tar -xvzf /Users/USERNAME/Downloads/op-deployer-0.2.6-darwin-arm64.tar.gz
+      # Step 1: Extract the downloaded archive in the deployer directory
+      # Replace FILENAME with the actual downloaded file name (includes version and arch)
+      tar -xvzf /Users/USERNAME/Downloads/FILENAME.tar.gz
 
       # Step 2: Make the binary executable
-      chmod +x op-deployer-0.2.6-darwin-arm64
+      # Replace FILENAME with the extracted binary name
+      chmod +x FILENAME
 
       # Step 3: Remove macOS quarantine attribute (fixes "can't be opened" warning)
-      sudo xattr -dr com.apple.quarantine op-deployer-0.2.6-darwin-arm64
+      sudo xattr -dr com.apple.quarantine FILENAME
 
       # Step 4: Move the binary to your PATH
       # For Intel Macs:
-      sudo mv op-deployer-0.2.6-darwin-arm64 /usr/local/bin/
+      sudo mv FILENAME /usr/local/bin/op-deployer
       # For Apple Silicon Macs:
-      sudo mv op-deployer-0.2.6-darwin-arm64 /opt/homebrew/bin/
+      sudo mv FILENAME /opt/homebrew/bin/op-deployer
 
-      # Step 7: Verify installation (should print version info)
+      # Step 5: Verify installation (should print version info)
       op-deployer --version
       ```
+
+      <Callout type="tip">
+        **Pro Tip**: Use the automated download script from the [code directory](https://github.com/ethereum-optimism/docs/tree/main/create-l2-rollup-example/) to avoid manual version management. It automatically detects your platform and downloads the latest version.
+      </Callout>
     </Steps>
   </Tabs.Tab>
 
@@ -206,6 +227,12 @@ The intent file defines your chain's configuration.
     --intent-type standard-overrides
   ```
 
+  <Callout type="info">
+    **Version Compatibility**
+
+    Each `op-deployer` version is bound to specific `op-contracts` versions. The `l1ContractsLocator` and `l2ContractsLocator` values in your intent file must be compatible with your `op-deployer` version. Check the [op-deployer release notes](https://github.com/ethereum-optimism/optimism/releases) for version compatibility information.
+  </Callout>
+
   <details>
     <summary>Understanding intent types</summary>
 
@@ -220,20 +247,25 @@ The intent file defines your chain's configuration.
 
   ### Update the intent file
 
-  Edit `.deployer/intent.toml` with your generated addresses:
+  Edit `.deployer/intent.toml` with your generated addresses. The example below shows the typical configuration for a standard OP Stack deployment, with advanced options commented out:
 
   ```toml
   configType = "standard-overrides"
   l1ChainID = 11155111  # Sepolia
   fundDevAccounts = false  # Set to false for production/testnet
   useInterop = false
-  l1ContractsLocator = "tag://op-contracts/v2.0.0"
-  l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
 
-  [superchainRoles]
-    proxyAdminOwner = "0x..."     # admin address
-    protocolVersionsOwner = "0x..." # admin address
-    guardian = "0x..."            # admin address
+  # Contract locators are automatically determined by your op-deployer version
+  # Only uncomment and modify if you need specific contract versions (advanced users only)
+  # l1ContractsLocator = "tag://op-contracts/v2.0.0"
+  # l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
+
+  # Superchain roles - only define if creating a standalone chain not part of OP Stack superchain
+  # For standard OP Stack deployments, these are predefined and should not be set
+  # [superchainRoles]
+  #   proxyAdminOwner = "0x..."     # admin address
+  #   protocolVersionsOwner = "0x..." # admin address
+  #   guardian = "0x..."            # admin address
 
   [[chains]]
     id = "0x000000000000000000000000000000000000000000000000000000000016de8d"
@@ -245,7 +277,7 @@ The intent file defines your chain's configuration.
     eip1559Elasticity = 6
     [chains.roles]
       l1ProxyAdminOwner = "0x1eb2ffc903729a0f03966b917003800b145f56e2"
-      l2ProxyAdminOwner = "0x2fc3ffc903729a0f03966b917003800b145f67f3"     
+      l2ProxyAdminOwner = "0x2fc3ffc903729a0f03966b917003800b145f67f3"
       systemConfigOwner = "0x..."      # system_config address
       unsafeBlockSigner = "0x..."      # unsafe_block_signer address
       batcher = "0x..."               # batcher address
@@ -259,32 +291,32 @@ The intent file defines your chain's configuration.
     **Global Settings:**
 
     *   `l1ChainID`: The L1 network ID (11155111 for Sepolia)
-    *   `fundDevAccounts`: Creates test accounts with ETH if true
-    *   `useInterop`: Enable interoperability features
-    *   `l1ContractsLocator`: Version of L1 contracts to deploy
-    *   `l2ContractsLocator`: Version of L2 contracts to deploy
+    *   `fundDevAccounts`: Creates test accounts with ETH if true (set to false for production)
+    *   `useInterop`: Enable interoperability features (false for standard deployments)
 
-    **Superchain Roles:**
+    **Contract Locators (Advanced):**
 
-    *   `proxyAdminOwner`: Can upgrade Superchain-wide contracts
-    *   `protocolVersionsOwner`: Can update protocol versions
-    *   `guardian`: Can pause withdrawals and manage disputes
+    These are commented out because `op-deployer` automatically determines compatible contract versions. Only uncomment and modify if you need to pin to specific contract versions for advanced use cases.
+
+    **Superchain Roles (Advanced):**
+
+    These are commented out because for standard OP Stack deployments, superchain roles are predefined by the protocol. Only uncomment and define custom roles if you're creating a standalone chain not part of the OP Stack superchain.
 
     **Chain Configuration:**
 
     *   `id`: Unique identifier for your chain
-    *   `*FeeVaultRecipient`: Addresses receiving various fees
-    *   `eip1559*`: Parameters for gas price calculation
+    *   `*FeeVaultRecipient`: Addresses receiving various protocol fees
+    *   `eip1559*`: Parameters for dynamic gas price calculation
 
     **Chain Roles:**
 
-    *   `l1ProxyAdminOwner`: Updates L1 contract implementations
-    *   `l2ProxyAdminOwner`: Updates L2 contract implementations
-    *   `systemConfigOwner`: Manages system configuration
-    *   `unsafeBlockSigner`: Signs pre-confirmation blocks
-    *   `batcher`: Submits L2 transactions to L1
-    *   `proposer`: Submits L2 state roots to L1
-    *   `challenger`: Monitors and challenges invalid states
+    *   `l1ProxyAdminOwner`: Can upgrade L1 contract implementations (usually same as superchain proxyAdminOwner)
+    *   `l2ProxyAdminOwner`: Can upgrade L2 contract implementations
+    *   `systemConfigOwner`: Manages system configuration parameters
+    *   `unsafeBlockSigner`: Signs pre-confirmation blocks (can be same as batcher)
+    *   `batcher`: Submits L2 transaction batches to L1
+    *   `proposer`: Submits L2 state roots to L1 for verification
+    *   `challenger`: Monitors dispute games and defends valid states
   </details>
 </Steps>
 

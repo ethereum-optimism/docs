@@ -25,8 +25,8 @@ import { Callout, Card, Steps } from 'nextra/components'
 Welcome to the complete guide for deploying your own OP Stack L2 rollup testnet. This multi-part tutorial will walk you through each component step-by-step, from initial setup to a fully functioning rollup.
 
 <Callout type="info">
-  This tutorial requires **intermediate-level experience working with EVM chains**. 
-  You should be comfortable with concepts like smart contracts, private keys, RPC endpoints, gas fees, and command-line operations. 
+  This tutorial requires **intermediate-level experience working with EVM chains**.
+  You should be comfortable with concepts like smart contracts, private keys, RPC endpoints, gas fees, and command-line operations.
   Basic familiarity with Docker is also recommended.
 </Callout>
 
@@ -40,6 +40,51 @@ By the end of this tutorial, you'll have a complete OP Stack testnet with:
 *   **Batcher** (op-batcher) publishing transaction data to L1
 *   **Proposer** (op-proposer) submitting state root proposals
 *   **Challenger** (op-challenger) monitoring for disputes
+
+## Quick setup (Recommended)
+
+If you want to get started quickly, you can use the complete working implementation provided in this repository. This automated setup handles all the configuration and deployment steps for you.
+
+<Callout type="info">
+  **Complete working example**
+
+  A complete, working implementation is available in the [`create-l2-rollup-example/`](https://github.com/ethereum-optimism/docs/tree/main/create-l2-rollup-example/) directory. This includes all necessary scripts, Docker Compose configuration, and example environment files.
+</Callout>
+
+### Automated setup steps
+
+1.  **Clone and navigate to the code directory:**
+    ```bash
+    git clone https://github.com/ethereum-optimism/docs.git
+    cd docs/create-l2-rollup-example/
+    ```
+
+2.  **Configure your environment:**
+    ```bash
+    cp .example.env .env
+    # Edit .env with your L1_RPC_URL, PRIVATE_KEY, and other settings
+    ```
+
+3.  **Run the automated setup:**
+    ```bash
+    make init    # Download op-deployer
+    make setup   # Deploy contracts and generate configs
+    make up      # Start all services
+    make test-l1 # Verify L1 connectivity
+    make test-l2 # Verify L2 functionality
+    ```
+
+4.  **Monitor your rollup:**
+    ```bash
+    make logs     # View all service logs
+    make status   # Check service health
+    ```
+
+The automated setup uses the standard OP Stack environment variable conventions (prefixed with `OP_*`) and handles all the complex configuration automatically.
+
+## Manual setup (Step-by-Step)
+
+If you prefer to understand each component in detail or need custom configurations, follow the step-by-step guide below.
 
 ## Before you start
 
@@ -153,9 +198,9 @@ Each component's documentation will show you how the directory structure evolves
   Throughout this tutorial, all file paths will be relative to this `rollup` directory structure. Make sure to adjust any commands if you use different directory names.
 </Callout>
 
-## Tutorial overview
+## Manual Tutorial Overview
 
-This tutorial is organized into sequential steps that build upon each other:
+If you're following the manual setup path, this tutorial is organized into sequential steps that build upon each other:
 
 <Steps>
   ### **[Spin up op-deployer](/operators/chain-operators/tutorials/create-l2-rollup/op-deployer-setup)**

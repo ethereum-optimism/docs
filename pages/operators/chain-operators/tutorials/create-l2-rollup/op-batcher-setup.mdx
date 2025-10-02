@@ -26,6 +26,12 @@ After you have spun up your sequencer, you need to configure a batcher to submit
   **Step 3 of 5**: This tutorial is designed to be followed step-by-step. Each step builds on the [previous one](/operators/chain-operators/tutorials/create-l2-rollup/op-geth-setup).
 </Callout>
 
+<Callout type="tip">
+  **Automated Setup Available**
+
+  For a complete working setup with all components, check out the [automated approach](https://github.com/ethereum-optimism/docs/tree/main/create-l2-rollup-example/) in the code directory.
+</Callout>
+
 ## Understanding the batcher's role
 
 The batcher (`op-batcher`) serves as a crucial component that bridges your L2 chain data to L1. Its primary responsibilities include:
@@ -77,32 +83,37 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
 
       ### Create environment variables file
 
+      <Callout type="info">
+        **OP Stack Standard Variables**
+
+        The batcher uses OP Stack standard environment variables following the OP Stack conventions. These are prefixed with `OP_BATCHER_` for batcher-specific settings.
+      </Callout>
+
       ```bash
       # Create .env file with your actual values
       cat > .env << 'EOF'
       # L1 Configuration - Replace with your actual RPC URLs
-      L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+      OP_BATCHER_L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_ACTUAL_INFURA_KEY
+      # Private key - Replace with your actual private key
+      OP_BATCHER_PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
 
       # L2 Configuration - Should match your sequencer setup
-        L2_RPC_URL=http://op-geth:8545
-        ROLLUP_RPC_URL=http://op-node:8547
+      OP_BATCHER_L2_ETH_RPC=http://op-geth:8545
+      OP_BATCHER_ROLLUP_RPC=http://op-node:8547
 
       # Contract addresses - Extract from your op-deployer output
-      BATCH_INBOX_ADDRESS=YOUR_ACTUAL_BATCH_INBOX_ADDRESS
-
-      # Private key - Replace with your actual private key
-      BATCHER_PRIVATE_KEY=YOUR_ACTUAL_PRIVATE_KEY
+      OP_BATCHER_BATCH_INBOX_ADDR=YOUR_ACTUAL_BATCH_INBOX_ADDRESS
 
       # Batcher configuration
-      POLL_INTERVAL=1s
-      SUB_SAFETY_MARGIN=6
-      NUM_CONFIRMATIONS=1
-      SAFE_ABORT_NONCE_TOO_LOW_COUNT=3
-      RESUBMISSION_TIMEOUT=30s
-      MAX_CHANNEL_DURATION=25
+      OP_BATCHER_POLL_INTERVAL=1s
+      OP_BATCHER_SUB_SAFETY_MARGIN=6
+      OP_BATCHER_NUM_CONFIRMATIONS=1
+      OP_BATCHER_SAFE_ABORT_NONCE_TOO_LOW_COUNT=3
+      OP_BATCHER_MAX_CHANNEL_DURATION=1
+      OP_BATCHER_DATA_AVAILABILITY_TYPE=calldata
 
       # RPC configuration
-      BATCHER_RPC_PORT=8548
+      OP_BATCHER_RPC_PORT=8548
       EOF
       ```
 
@@ -129,25 +140,13 @@ For setting up the batcher, we recommend using Docker as it provides a consisten
             - .env
           networks:
             - sequencer-node_default
-          command:
-            - "op-batcher"
-            - "--l2-eth-rpc=${L2_RPC_URL}"
-            - "--rollup-rpc=${ROLLUP_RPC_URL}"
-            - "--poll-interval=${POLL_INTERVAL}"
-            - "--sub-safety-margin=${SUB_SAFETY_MARGIN}"
-            - "--num-confirmations=${NUM_CONFIRMATIONS}"
-            - "--safe-abort-nonce-too-low-count=${SAFE_ABORT_NONCE_TOO_LOW_COUNT}"
-            - "--resubmission-timeout=${RESUBMISSION_TIMEOUT}"
-            - "--rpc.addr=0.0.0.0"
-            - "--rpc.port=${BATCHER_RPC_PORT}"
-            - "--rpc.enable-admin"
-            - "--max-channel-duration=${MAX_CHANNEL_DURATION}"
-            - "--l1-eth-rpc=${L1_RPC_URL}"
-            - "--private-key=${BATCHER_PRIVATE_KEY}"
-            - "--batch-type=1"
-            - "--data-availability-type=blobs"
-            - "--log.level=info"
-            - "--max-pending-tx=0"
+          command: >
+            op-batcher
+            --rpc.addr=0.0.0.0
+            --rpc.enable-admin
+            --resubmission-timeout=30s
+            --log.level=info
+            --log.format=json
           restart: unless-stopped
 
       networks:
