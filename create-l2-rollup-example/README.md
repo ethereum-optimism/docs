@@ -60,12 +60,11 @@ mise install
 
 3. **Download op-deployer**:
    ```bash
-   ./scripts/download-op-deployer.sh
+   make init    # Download op-deployer
    ```
 
 4. **Deploy and start everything**:
    ```bash
-   make init    # Download op-deployer (if not already done)
    make setup   # Deploy contracts and configure all services
    make up      # Start all services
    ```
@@ -190,19 +189,6 @@ make clean
 # Re-run setup
 make setup
 make up
-```
-
-Or manually:
-
-```bash
-# Stop all services
-docker-compose down -v
-
-# Remove generated directories
-rm -rf deployer batcher proposer challenger
-
-# Re-run setup
-./scripts/setup-rollup.sh
 ```
 
 ## Security Notes
