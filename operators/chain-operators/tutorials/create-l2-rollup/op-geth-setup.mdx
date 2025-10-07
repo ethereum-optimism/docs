@@ -31,6 +31,7 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
   <Tab title="Using Docker (Recommended)">
 
   <Steps>
+
     <Step title="Set up directory structure and copy configuration files">
     If you prefer containerized deployment, you can use the official Docker images, and do the following:
 
@@ -70,8 +71,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
     ```
 
     **Important**: Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
+    </Step>
 
-    ### Make sure your docker application is running
+    <Step title="Make sure your docker application is running">
     Create a `docker-compose.yml` file in the same directory
 
     ```yaml
@@ -149,7 +151,7 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
             - "--log.format=json"
     ```
 
-    ### Initialize op-geth with Docker
+      <Step title="Initialize op-geth with Docker">
 
     ```bash
     # Make sure you're in the rollup/sequencer directory with all files copied
@@ -163,7 +165,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       init --datadir=./op-geth-data --state.scheme=hash ./genesis.json
     ```
 
-    ### Start the services
+      </Step>
+
+      <Step title="Start the services">
 
     ```bash
     # Start both services
@@ -173,7 +177,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
     docker-compose logs -f
     ```
 
-    ### Final directory structure
+      </Step>
+
+      <Step title="Final directory structure">
 
     ```bash
     rollup/
@@ -193,7 +199,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
     ```
 
     Your sequencer node is now operational and ready to process transactions.
-  </Steps>
+  
+      </Step>
+    </Steps>
   </Tab>
 
   
@@ -214,7 +222,8 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
     Building from source gives you full control over the binaries.
 
     <Steps>
-      ### Clone and build op-node
+
+      <Step title="Clone and build op-node">
 
       ```bash
       # Clone the optimism monorepo
@@ -231,7 +240,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       # Binary will be available at ./bin/op-node
       ```
 
-      ### Clone and build op-geth
+      </Step>
+
+      <Step title="Clone and build op-geth">
 
       ```bash
       # Clone op-geth repository (in a separate directory)
@@ -247,7 +258,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       # Binary will be available at ./build/bin/geth
       ```
 
-      ### Verify installation
+      </Step>
+
+      <Step title="Verify installation">
 
       Check that you have properly installed the needed components.
 
@@ -256,12 +269,15 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       ./bin/op-node --version
       ./build/bin/geth version
       ```
+    
+      </Step>
     </Steps>
 
     ## Configuration setup
 
     <Steps>
-      ### Organize your workspace
+
+      <Step title="Organize your workspace">
 
       After building the binaries, you should have the following directory structure:
 
@@ -304,7 +320,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
         ```
       </details>
 
-      ### Generate JWT secret
+      </Step>
+
+      <Step title="Generate JWT secret">
 
       ```bash
       # Generate JWT secret in the sequencer directory
@@ -314,7 +332,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       chmod 600 jwt.txt
       ```
 
-      ### Set up directory structure and copy files
+      </Step>
+
+      <Step title="Set up directory structure and copy files">
 
       In this guide, we're going to be using the binaries from their original build locations, we only need to create directories for configuration files and scripts.
 
@@ -344,12 +364,16 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
               └── start-op-node.sh
       ```
 
-      ### Environment variables
+      </Step>
+
+      <Step title="Environment variables">
 
       You'll need to gather several pieces of information before creating your configuration. Here's where to get each value:
 
       <Steps>
-        ### Get L1 network access
+      </Step>
+
+      <Step title="Get L1 network access">
 
         You need access to the L1 network (Ethereum mainnet or Sepolia testnet) and its beacon node:
 
@@ -363,11 +387,15 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
         *   **Public beacon APIs**: `https://ethereum-sepolia-beacon-api.publicnode.com` (Sepolia) or `https://ethereum-beacon-api.publicnode.com` (Mainnet)
         *   **Infura beacon**: `https://sepolia.infura.io/v3/YOUR_KEY` (if your Infura plan includes beacon access)
 
-        ### Get private key from your wallet
+      </Step>
+
+      <Step title="Get private key from your wallet">
 
         For this basic sequencer setup, you only need a private key during op-node initialization.
 
-        ### Get your public IP address
+      </Step>
+
+      <Step title="Get your public IP address">
 
         ```bash
         # Find your public IP address, once you get it, update the P2P_ADVERTISE_IP in your .env
@@ -376,7 +404,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
         curl ipinfo.io/ip
         ```
 
-        ### Choose your ports
+      </Step>
+
+      <Step title="Choose your ports">
 
         The default ports are standard but can be changed if needed:
 
@@ -385,7 +415,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
         *   `8551`: op-geth Auth RPC (for op-node communication)
         *   `8547`: op-node RPC
         *   `9222`: P2P networking (must be open on firewall)
-      </Steps>
+      
+      </Step>
+    </Steps>
 
       Now create your `.env` file and copy the values below:
 
@@ -493,7 +525,8 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
     ## Initializing and starting the sequencer
 
     <Steps>
-      ### Initialize op-geth with your genesis file
+
+      <Step title="Initialize op-geth with your genesis file">
 
       ```bash
       # Make sure you're in the rollup/sequencer directory
@@ -503,7 +536,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       ../../op-geth/build/bin/geth init --datadir=./op-geth-data --state.scheme=hash ./genesis.json
       ```
 
-      ### Start op-geth
+      </Step>
+
+      <Step title="Start op-geth">
 
       ```bash
       # Make scripts executable
@@ -516,7 +551,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
 
       **Note**: You should see output indicating that op-geth is starting and listening on the configured ports.
 
-      ### Start op-node
+      </Step>
+
+      <Step title="Start op-node">
 
       ```bash
       # In a separate terminal, navigate to the sequencer directory
@@ -526,7 +563,9 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       ./scripts/start-op-node.sh
       ```
 
-      ### Verify sequencer is running
+      </Step>
+
+      <Step title="Verify sequencer is running">
 
       Once both services are running, verify they're working correctly:
 
@@ -541,6 +580,8 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
         --data '{"jsonrpc":"2.0","method":"admin_sequencerActive","params":[],"id":1}' \
         http://localhost:8547
       ```
+    
+      </Step>
     </Steps>
 
     Your sequencer node is now operational and ready to process transactions.
