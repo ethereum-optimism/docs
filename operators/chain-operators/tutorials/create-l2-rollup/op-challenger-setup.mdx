@@ -34,8 +34,7 @@ The challenger is responsible for:
 Before configuring your challenger, complete the following steps:
 
 <Steps>
-
-      <Step title="Deploy OP Stack chain with fault proofs enabled">
+  ### Deploy OP Stack chain with fault proofs enabled
 
   <details>
     <summary>Generate absolute prestate (Required)</summary>
@@ -95,22 +94,16 @@ Before configuring your challenger, complete the following steps:
       *   For Superchain registry chains, you can find official prestates in the [registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml)
     </Info>
   </details>
-      </Step>
-
-      <Step title="Set up required infrastructure access">
+  ### Set up required infrastructure access
 
   *   L1 RPC endpoint (Ethereum, Sepolia, etc.)
   *   L1 Beacon node endpoint (for blob access)
 
-      </Step>
-
-      <Step title="Prepare configuration files">
+  ### Prepare configuration files
 
   *   `prestate.json` - The absolute prestate file generated in step 1
   *   `rollup.json` - Rollup configuration file from the `op-deployer` guide
-
-      </Step>
-    </Steps>
+</Steps>
 
 ## Software installation
 
@@ -118,14 +111,13 @@ For challenger deployment, we recommend using Docker as it provides a consistent
 
 <Tabs>
 
-    <Tab>
+    <Tab title="Using Docker (Recommended)">
     ### Docker Setup
 
     The Docker setup provides a containerized environment for running the challenger. This method uses the official Docker image that includes embedded `op-program` server and Cannon executable.
 
     <Steps>
-
-      <Step title="Create challenger directory">
+      ### Create challenger directory
       
       ```bash
       # Create your challenger directory inside rollup
@@ -134,9 +126,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       cd challenger
       ```
 
-      </Step>
-
-      <Step title="Create environment file">
+      ### Create environment file
 
       <Info>
         **OP Stack Standard Variables**
@@ -169,9 +159,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
 
       **Important:** Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
 
-      </Step>
-
-      <Step title="Set up Docker Compose">
+      ### Set up Docker Compose
 
       Create a `docker-compose.yml` file that defines the challenger service. The file mounts several important files:
       *   `prestate-proof-mt64.json` and `${PRESTATE_HASH}.bin.gz`: Prestate files required for dispute games (the PRESTATE_HASH comes from running `make reproducible-prestate`), replace `PRESTATE_HASH` with the actual hash
@@ -205,9 +193,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
 
       ```
 
-      </Step>
-
-      <Step title="Launch the challenger">
+      ### Launch the challenger
 
       Start the challenger service and monitor its logs:
 
@@ -218,12 +204,10 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       # View logs
       docker-compose logs -f challenger
       ```
-    
-      </Step>
     </Steps>
   </Tab>
 
-  <Tab>
+  <Tab title="Build from source">
 
     To ensure you're using the latest compatible versions of OP Stack components, always check the official releases page:
 
@@ -272,8 +256,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
         </Info>
 
     <Steps>
-
-      <Step title="Organize your workspace">
+      ### Organize your workspace
 
       After building the binaries, create your challenger working directory:
 
@@ -298,9 +281,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       # └── challenger/       (you are here)
       ```
 
-      </Step>
-
-      <Step title="Copy configuration files">
+      ### Copy configuration files
 
       ```bash
       # Copy configuration files to your challenger directory
@@ -309,9 +290,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
       cp /path/to/your/genesis-l2.json .
       ```
 
-      </Step>
-
-      <Step title="Set up environment variables">
+      ### Set up environment variables
 
       You'll need to gather several pieces of information before creating your configuration. Here's where to get each value:
 
@@ -378,9 +357,7 @@ For challenger deployment, we recommend using Docker as it provides a consistent
 
       **Important:** Replace ALL placeholder values (`YOUR_ACTUAL_*`) with your real configuration values.
 
-      </Step>
-
-      <Step title="Understanding key configuration flags">
+      ### Understanding key configuration flags
 
       <details>
         <summary><code>--l1-eth-rpc</code></summary>
@@ -508,8 +485,6 @@ For challenger deployment, we recommend using Docker as it provides a consistent
           Check this [guide](/operators/chain-operators/tutorials/absolute-prestate#generating-the-absolute-prestate) on how to generate an absolute prestate.
         </Info>
       </details>
-    
-      </Step>
     </Steps>
 
     ### Create challenger startup script
