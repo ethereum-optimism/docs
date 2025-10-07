@@ -16,9 +16,9 @@ is_imported_content: 'false'
 
 import { Steps, Callout } from 'nextra/components'
 
-# Upgrade 16: Preparing for Interop protocol upgrade
+# Upgrade 16: Preparing for Fusaka upgrade
 
-This page provides external-facing information about the Fusaka readiness upgrade for OP Stack chains. It summarizes scope, timelines, required actions, and resources for chain operators and partners.
+This page provides external-facing information about the Fusaka readiness upgrade for OP Stack chains. It summarizes scope, timelines, required actions, and resources for chain operators and partners. This upgrade applies to all OP Stack chains implementing the Fusaka defense changes.
 
 This is NOT Fusaka adoption on L2. It's a readiness upgrade to make the Optimism protocol compatible with L1 that activates the Fusaka fork. L2 adoption will happen in a future upgrade.
 
@@ -28,9 +28,13 @@ This is NOT Fusaka adoption on L2. It's a readiness upgrade to make the Optimism
 
 ## For chain operators
 
-*   Update `proxyd` to v4.19.0 or greater
+*   Update `proxyd` to [v4.19.0](https://github.com/ethereum-optimism/infra/releases/tag/proxyd%2Fv4.19.0) or greater
 *   Update `op-batcher` to v1.16.0-rc.1
-*   Update node software
+*   Update `op-node` to v1.14.0-rc.3. If deploying to a custom l1, must supply OP_NODE_L1_GENESIS_PATH. Not necessary for chains deriving from Ethereum Mainnet, Sepolia or Hoodi.
+*   Update `op-geth` to [v1.101603.1-rc.1](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.1-rc.1)
+*   Update `op-challenger`/`op-porgram` to [v1.6.0-rc.3](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.6.0-rc.3)
+*   Update `op-batcher` to [v1.16.0-rc.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-batcher%2Fv1.16.0-rc.1). 	`OP_BATCHER_TXMGR_ENABLE_CELL_PROOFS`: `true` or equivalent CLI flag needs to be set and the batcher restarted just after Fusaka activates on L1. 
+
 
 ### For permissionless fault proof enabled chains
 
@@ -38,3 +42,30 @@ Chains running permissionless fault proofs will need to:
 
 *   Update `op-challenger` to use the new prestates. The new prestate can be found in [the Superchain Registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml)
 *   Deploy new dispute game contracts with the new prestate
+
+## For node operators
+
+Update your node software as soon as possible after release: 
+*   Update `op-node` to v1.14.0-rc.3. If deploying to a custom l1, must supply OP_NODE_L1_GENESIS_PATH. Not necessary for chains deriving from Ethereum Mainnet, Sepolia or Hoodi.
+*   Update `op-geth` to [v1.101603.1-rc.1](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.1-rc.1)
+
+### Ensure your l1 beacon node endpoint can serve all blobs
+
+Important dates:
+
+Ethereum Sepolia Fusaka hard fork: Expected October 14th, 2025 (affects chains posting data to Sepolia)
+Ethereum Mainnet Fusaka hard fork: Expected early December 2025 (affects chains posting data to Mainnet)
+
+Before the Ethereum Fusaka hard fork, ensure your external L1 Beacon Chain RPC provider has configured their node to subscribe to all subnets.
+If your external L1 Beacon Chain RPC provider doesn't subscribe to all subnets, migrate to one that does prior to these deadlines.
+
+For operators running their own L1 Ethereum Beacon Chain Node:
+Configure your Beacon Node with the new flag (detailed below) before the relevant Fusaka hard fork date.
+
+L1 Beacon Chain Node flags:
+
+* Lighthouse:	`--supernode`
+* Teku:	`--p2p-subscribe-all-custody-subnets-enabled`
+* Grandine:	`--subscribe-all-data-column-subnets`
+* Lodestar:	`--supernode`
+* Nimbus:	`--debug-peerdas-supernode`
