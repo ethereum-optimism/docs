@@ -18,14 +18,13 @@ import { Steps, Callout } from 'nextra/components'
 
 # Upgrade 16: Preparing for L1 Fusaka upgrade
 
-This page provides external-facing information about the Fusaka readiness upgrade for OP Stack chains. It summarizes scope, timelines, required actions, and resources for chain operators and partners. This upgrade is necessary for all OP Stack chains deriving from an L1 chain which is due to activate Fusaka (including Ethereum Mainnet and Sepolia). 
+This page provides external-facing information about the Fusaka readiness upgrade for OP Stack chains. It summarizes scope, timelines, required actions, and resources for chain operators and partners. This upgrade is necessary for all OP Stack chains deriving from an L1 chain which is due to activate Fusaka (including Ethereum Mainnet and Sepolia).
 
 This is NOT Fusaka adoption on L2. It's a readiness upgrade to make the Optimism protocol compatible with L1 that activates the Fusaka fork. L2 adoption will happen in a future upgrade.
 
 <Callout type="info">
   All of the tasks below must be done when the OP Stack Fusaka readiness release is available and before Fusaka activates on L1 (October 14th for Sepolia chains).
 </Callout>
-
 
 ## What's included in Fusaka
 
@@ -35,14 +34,14 @@ Fusaka contains various breaking changes. See [EIP-7607: Hardfork Meta - Fusaka]
 
 Update the following:
 
-| Component                                                                                                                                         | Version                                                                                               | Notes                                                                                                                                          |
-| ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `proxyd`                                                                                                                                          | [v4.19.0](https://github.com/ethereum-optimism/infra/releases/tag/proxyd%2Fv4.19.0) or greater        | You need to whitelist `eth_blobBaseFee` rpc if using proxyd for l1 load balancing                                                              |
-| `op-batcher`                                                                                                                                      | v1.16.0-rc.1                                                                                          |                                                                                                                                                | `OP_BATCHER_TXMGR_ENABLE_CELL_PROOFS`: `true` or equivalent CLI flag needs to be set and the batcher restarted just after Fusaka activates on L1. See [the release notes](https://github.com/ethereum-optimism/optimism/releases)For the `op-challenger` l1 flag.
-| `op-node`                                                                                                                                         | v1.14.0-rc.3                                                                                          | l1 chain config must be supplied via a new flag. Not necessary for chains deriving from Ethereum Mainnet, Sepolia or Hoodi. |
-| `op-geth`                                                                                                                                         | [v1.101603.1-rc.1](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.1-rc.1)        |                                                                                                                                                |
-| `op-challenger`                                                                                                                      | [v1.6.0-rc.3](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.6.0-rc.3) | If deploying to a custom l1, must supply OP_CHALLENGER_L1_GENESIS. Not necessary for chains deriving from Ethereum Mainnet, Sepolia or Hoodi.                                                                                                                                               |
-| |                                                                                                       |                                                                                                                                                |
+| Component       | Version                                                                                               | Notes                                                                                                                                            |                                                                                                                                                                                                                                                                   |
+| --------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `proxyd`        | [v4.19.0](https://github.com/ethereum-optimism/infra/releases/tag/proxyd%2Fv4.19.0) or greater        | You need to whitelist `eth_blobBaseFee` rpc if using proxyd for l1 load balancing                                                                |                                                                                                                                                                                                                                                                   |
+| `op-batcher`    | v1.16.0-rc.1                                                                                          |                                                                                                                                                  | `OP_BATCHER_TXMGR_ENABLE_CELL_PROOFS`: `true` or equivalent CLI flag needs to be set and the batcher restarted just after Fusaka activates on L1. See [the release notes](https://github.com/ethereum-optimism/optimism/releases)For the `op-challenger` l1 flag. |
+| `op-node`       | v1.14.0-rc.3                                                                                          | l1 chain config must be supplied via a new flag. Not necessary for chains deriving from Ethereum Mainnet, Sepolia or Hoodi.                      |                                                                                                                                                                                                                                                                   |
+| `op-geth`       | [v1.101603.1-rc.1](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.1-rc.1)        |                                                                                                                                                  |                                                                                                                                                                                                                                                                   |
+| `op-challenger` | [v1.6.0-rc.3](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.6.0-rc.3) | If deploying to a custom l1, must supply OP\_CHALLENGER\_L1\_GENESIS. Not necessary for chains deriving from Ethereum Mainnet, Sepolia or Hoodi. |                                                                                                                                                                                                                                                                   |
+|                 |                                                                                                       |                                                                                                                                                  |                                                                                                                                                                                                                                                                   |
 
 ### For permissionless fault proof enabled chains
 
@@ -75,17 +74,16 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
 
   ### Deploy new dispute game contracts
 
-  You will then take the absolute prestate and deploy new `FaultDisputeGame` and `PermissionedDisputeGame` contracts with that value. 
+  You will then take the absolute prestate and deploy new `FaultDisputeGame` and `PermissionedDisputeGame` contracts with that value.
 
   ### Update the DisputeGameFactory
 
-  You will then need to update the `DisputeGameFactory` to point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`. 
+  You will then need to update the `DisputeGameFactory` to point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`.
 
   ### Execute the upgrade
 
   Once your `op-challenger` is ready with the new preimage, you can execute the "Set Dispute Game Implementation" transaction. Please simulate and validate that the expected output prior to executing the transaction.
 </Steps>
-
 
 ## For node operators
 
