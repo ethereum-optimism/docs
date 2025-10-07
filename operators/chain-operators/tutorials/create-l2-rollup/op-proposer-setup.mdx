@@ -1,36 +1,17 @@
 ---
 title: Spin up proposer
-lang: en-US
 description: Learn how to set up and configure an OP Stack proposer to post L2 state roots.
-content_type: tutorial
-topic: proposer-setup
-personas:
-  - chain-operator
-categories:
-  - testnet
-  - mainnet
-  - op-proposer
-  - state-commitment
-  - l2-output-submission
-  - withdrawal-verification
-is_imported_content: 'false'
----
-
-import { Callout, Steps, Card, Tabs } from 'nextra/components'
-
-# Spin up proposer
-
 After you have spun up your sequencer and batcher, you need to attach a proposer to post your L2 state roots data back onto L1 so we can prove withdrawal validity. The proposer is a critical component that enables trustless L2-to-L1 messaging and creates the authoritative view of L2 state from L1's perspective.
 
-<Callout type="info">
+<Info>
   **Step 4 of 5**: This tutorial is designed to be followed step-by-step. Each step builds on the previous one.
-</Callout>
+</Info>
 
-<Callout type="tip">
+<Info>
   **Automated Setup Available**
 
   For a complete working setup with all components, check out the [automated approach](https://github.com/ethereum-optimism/docs/tree/main/create-l2-rollup-example/) in the code directory.
-</Callout>
+</Info>
 
 This guide assumes you already have a functioning sequencer, batcher, and the necessary L1 contracts deployed using [`op-deployer`](./op-deployer-setup). If you haven't set up your sequencer and batcher yet, please refer to the [sequencer guide](./op-geth-setup) and [batcher guide](./op-batcher-setup) first.
 
@@ -84,11 +65,11 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
 
       ### Create environment variables file
 
-      <Callout type="info">
+      <Info>
         **OP Stack Standard Variables**
 
         The proposer uses OP Stack standard environment variables following the OP Stack conventions. These are prefixed with `OP_PROPOSER_` for proposer-specific settings.
-      </Callout>
+      </Info>
 
       ```bash
       # Create .env file with your actual values
@@ -118,7 +99,7 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
 
       ### Create docker-compose.yml
 
-      <Callout type="info">
+      <Info>
         If you get "failed to dial address" errors, ensure your proposer is in the same Docker network as your sequencer.
 
         Common fixes:
@@ -126,7 +107,7 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
         *   Add `networks: - sequencer-node_default` to your proposer's docker-compose.yml
         *   Use service names like `op-geth:8545` and `op-node:8547` in your `.env` file
         *   Verify your sequencer network name with `docker network ls`
-      </Callout>
+      </Info>
 
       ```yaml
 
@@ -238,10 +219,10 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
 
     Look for the latest `op-proposer/v*` release that's compatible with your sequencer setup.
 
-    <Callout type="info">
+    <Info>
       This guide uses `op-proposer/v1.10.0` which is compatible with op-node/v1.13.3 and op-geth/v1.101511.1 from the sequencer setup.
       Always check the [release notes](https://github.com/ethereum-optimism/optimism/releases) for compatibility information.
-    </Callout>
+    </Info>
     Building from source gives you full control over the binaries.
 
     <Steps>
@@ -273,10 +254,10 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
 
     ## Configuration setup
 
-    <Callout type="warning">
+    <Info>
       The rest of this guide assumes you're using the **build-from-source** approach.
       If you chose Docker, all the necessary configuration was covered in the Docker tab above.
-    </Callout>
+    </Info>
 
     <Steps>
       ### Organize your workspace
@@ -309,10 +290,10 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
       echo "DisputeGameFactory Address: $GAME_FACTORY_ADDRESS"
       ```
 
-      <Callout type="info">
+      <Info>
         The proposer only needs the `DisputeGameFactory` address to submit proposals.
         The `GAME_TYPE=0` represents the standard fault proof game type.
-      </Callout>
+      </Info>
 
       ### Set up environment variables
 
@@ -348,9 +329,9 @@ For setting up the proposer, we recommend using Docker as it provides a consiste
 
       Get a private key from your wallet that will be used for submitting proposals to L1. This account needs sufficient ETH to pay for L1 gas costs.
 
-      <Callout type="warning">
+      <Info>
         The proposer account needs to be funded with ETH on L1 to pay for proposal submission transactions. Monitor this account's balance regularly as it will consume ETH for each proposal submission.
-      </Callout>
+      </Info>
     </Steps>
 
     ## Proposer configuration
