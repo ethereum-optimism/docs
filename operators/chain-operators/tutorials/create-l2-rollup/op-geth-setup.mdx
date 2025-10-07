@@ -82,73 +82,73 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
         op-geth:
           image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.1
           volumes:
-            # Mount entire directory to avoid file mounting issues
-            - .:/workspace
+      # Mount entire directory to avoid file mounting issues
+      - .:/workspace
           working_dir: /workspace
           ports:
-            - "8545:8545"
-            - "8546:8546"
-            - "8551:8551"
+      - "8545:8545"
+      - "8546:8546"
+      - "8551:8551"
           command:
-            - "--datadir=/workspace/op-geth-data"
-            - "--http"
-            - "--http.addr=0.0.0.0"
-            - "--http.port=8545"
-            - "--ws"
-            - "--ws.addr=0.0.0.0"
-            - "--ws.port=8546"
-            - "--authrpc.addr=0.0.0.0"
-            - "--authrpc.port=8551"
-            - "--authrpc.jwtsecret=/workspace/jwt.txt"
-            - "--syncmode=full"
-            - "--gcmode=archive"
-            - "--rollup.disabletxpoolgossip=true"
-            - "--rollup.sequencerhttp=http://op-node:8547"
-            - "--http.vhosts=*"
-            - "--http.corsdomain=*"
-            - "--http.api=eth,net,web3,debug,txpool,admin"
-            - "--ws.origins=*"
-            - "--ws.api=eth,net,web3,debug,txpool,admin"
-            - "--authrpc.vhosts=*"
+      - "--datadir=/workspace/op-geth-data"
+      - "--http"
+      - "--http.addr=0.0.0.0"
+      - "--http.port=8545"
+      - "--ws"
+      - "--ws.addr=0.0.0.0"
+      - "--ws.port=8546"
+      - "--authrpc.addr=0.0.0.0"
+      - "--authrpc.port=8551"
+      - "--authrpc.jwtsecret=/workspace/jwt.txt"
+      - "--syncmode=full"
+      - "--gcmode=archive"
+      - "--rollup.disabletxpoolgossip=true"
+      - "--rollup.sequencerhttp=http://op-node:8547"
+      - "--http.vhosts=*"
+      - "--http.corsdomain=*"
+      - "--http.api=eth,net,web3,debug,txpool,admin"
+      - "--ws.origins=*"
+      - "--ws.api=eth,net,web3,debug,txpool,admin"
+      - "--authrpc.vhosts=*"
 
         op-node:
           image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.5
           depends_on:
-            - op-geth
+      - op-geth
           volumes:
-            - .:/workspace
+      - .:/workspace
           working_dir: /workspace
           ports:
-            - "8547:8547"
-            - "9222:9222"
+      - "8547:8547"
+      - "9222:9222"
           environment:
-            - L1_RPC_URL=${L1_RPC_URL}
-            - L1_BEACON_URL=${L1_BEACON_URL}
-            - PRIVATE_KEY=${PRIVATE_KEY}
-            - P2P_ADVERTISE_IP=${P2P_ADVERTISE_IP}
+      - L1_RPC_URL=${L1_RPC_URL}
+      - L1_BEACON_URL=${L1_BEACON_URL}
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - P2P_ADVERTISE_IP=${P2P_ADVERTISE_IP}
           command:
-            - "op-node"
-            - "--l1=${L1_RPC_URL}"
-            - "--l1.beacon=${L1_BEACON_URL}"
-            - "--l2=http://op-geth:8551"
-            - "--l2.jwt-secret=/workspace/jwt.txt"
-            - "--rollup.config=/workspace/rollup.json"
-            - "--sequencer.enabled=true"
-            - "--sequencer.stopped=false"
-            - "--sequencer.max-safe-lag=3600"
-            - "--verifier.l1-confs=4"
-            - "--p2p.listen.ip=0.0.0.0"
-            - "--p2p.listen.tcp=9222"
-            - "--p2p.listen.udp=9222"
-            - "--p2p.advertise.ip=${P2P_ADVERTISE_IP}"
-            - "--p2p.advertise.tcp=9222"
-            - "--p2p.advertise.udp=9222"
-            - "--p2p.sequencer.key=${PRIVATE_KEY}"
-            - "--rpc.addr=0.0.0.0"
-            - "--rpc.port=8547"
-            - "--rpc.enable-admin"
-            - "--log.level=info"
-            - "--log.format=json"
+      - "op-node"
+      - "--l1=${L1_RPC_URL}"
+      - "--l1.beacon=${L1_BEACON_URL}"
+      - "--l2=http://op-geth:8551"
+      - "--l2.jwt-secret=/workspace/jwt.txt"
+      - "--rollup.config=/workspace/rollup.json"
+      - "--sequencer.enabled=true"
+      - "--sequencer.stopped=false"
+      - "--sequencer.max-safe-lag=3600"
+      - "--verifier.l1-confs=4"
+      - "--p2p.listen.ip=0.0.0.0"
+      - "--p2p.listen.tcp=9222"
+      - "--p2p.listen.udp=9222"
+      - "--p2p.advertise.ip=${P2P_ADVERTISE_IP}"
+      - "--p2p.advertise.tcp=9222"
+      - "--p2p.advertise.udp=9222"
+      - "--p2p.sequencer.key=${PRIVATE_KEY}"
+      - "--rpc.addr=0.0.0.0"
+      - "--rpc.port=8547"
+      - "--rpc.enable-admin"
+      - "--log.level=info"
+      - "--log.format=json"
     ```
 
       <Step title="Initialize op-geth with Docker">
@@ -291,8 +291,8 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
       │           └── op-node   # Built binary
       └── op-geth/             # OP-Geth repository  
           └── build/
-              └── bin/
-                  └── geth     # Built binary
+        └── bin/
+        └── geth     # Built binary
       ```
 
       Now create your sequencer working directory. We recommend creating it at the same level for easy path references:
@@ -360,33 +360,28 @@ For spinning up a sequencer, we recommend using Docker, as it provides a simpler
           ├── genesis.json     # Copied from deployer
           ├── rollup.json      # Copied from deployer
           └── scripts/         # Startup scripts
-              ├── start-op-geth.sh
-              └── start-op-node.sh
+        ├── start-op-geth.sh
+        └── start-op-node.sh
       ```
 
       </Step>
 
       <Step title="Environment variables">
-
       You'll need to gather several pieces of information before creating your configuration. Here's where to get each value:
-
-      <Steps>
       </Step>
 
       <Step title="Get L1 network access">
+      You need access to the L1 network (Ethereum mainnet or Sepolia testnet) and its beacon node:
 
-        You need access to the L1 network (Ethereum mainnet or Sepolia testnet) and its beacon node:
+      **L1 RPC URL options:**
 
-        **L1 RPC URL options:**
+      *   **Infura**: [infura.io](https://infura.io) - Requires an API key from a project
+      *   **Alchemy**: [alchemy.com](https://alchemy.com) - Requires an API key from an app
 
-        *   **Infura**: [infura.io](https://infura.io) - Requires an API key from a project
-        *   **Alchemy**: [alchemy.com](https://alchemy.com) - Requires an API key from an app
+      **L1 Beacon URL options:**
 
-        **L1 Beacon URL options:**
-
-        *   **Public beacon APIs**: `https://ethereum-sepolia-beacon-api.publicnode.com` (Sepolia) or `https://ethereum-beacon-api.publicnode.com` (Mainnet)
-        *   **Infura beacon**: `https://sepolia.infura.io/v3/YOUR_KEY` (if your Infura plan includes beacon access)
-
+      *   **Public beacon APIs**: `https://ethereum-sepolia-beacon-api.publicnode.com` (Sepolia) or `https://ethereum-beacon-api.publicnode.com` (Mainnet)
+      *   **Infura beacon**: `https://sepolia.infura.io/v3/YOUR_KEY` (if your Infura plan includes beacon access)
       </Step>
 
       <Step title="Get private key from your wallet">
