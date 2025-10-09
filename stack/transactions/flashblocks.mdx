@@ -49,8 +49,8 @@ Developers can access Flashblocks using the same familiar Ethereum JSON-RPC call
 The difference is using the "pending" tag to query the pre-confirmed state instead of the last finalized block.
 
 *   **`eth_getBlockByNumber`**: Use the `pending` tag to retrieve the latest flashblock snapshot.
-    <details>
-      <summary>Sample response</summary>
+    <Expandable>
+      title="Sample response"
 
       ```json
           {
@@ -63,12 +63,12 @@ The difference is using the "pending" tag to query the pre-confirmed state inste
             }
           }
       ```
-    </details>
+    </Expandable>
 
 *   **`eth_call`**: Use the `pending` tag to execute calls against the most recent pre-confirmed state.
 
-    <details>
-      <summary>Sample request</summary>
+    <Expandable>
+      title="Sample request"
 
       ```json
       {
@@ -78,12 +78,12 @@ The difference is using the "pending" tag to query the pre-confirmed state inste
         "id": 1
       }
       ```
-    </details>
+    </Expandable>
 
 *   `eth_getBalance` / `eth_getTransactionCount`: Use the `pending` tag to fetch balances or transaction counts as they evolve within the block window.
 
-    <details>
-      <summary>Sample response for `eth_getBalance`</summary>
+    <Expandable>
+      title="Sample response for `eth_getBalance`"
 
       ```json
       {
@@ -92,10 +92,10 @@ The difference is using the "pending" tag to query the pre-confirmed state inste
         "result": "0x0234"
       }
       ```
-    </details>
+    </Expandable>
 
-    <details>
-      <summary>Sample response for `eth_getTransactionCount`</summary>
+    <Expandable>
+      title="Sample response for `eth_getTransactionCount`"
 
       ```json
       {
@@ -104,7 +104,7 @@ The difference is using the "pending" tag to query the pre-confirmed state inste
         "result": "0x1b" // 27 transactions
       }
       ```
-    </details>
+    </Expandable>
 
     Other methods, like `eth_getTransactionReceipt` and `eth_getTransactionByHash`, return data from pre-confirmed transactions without requiring the `pending` tag.
     Consult the specs (insert link) for more details on each of these methods.
@@ -177,64 +177,64 @@ console.log('Transaction receipt:', receipt);
 
 ### Block building and availability
 
-<details>
-  <summary>How often are Flashblocks produced?</summary>
+<Expandable>
+  title="How often are Flashblocks produced?"
   The flashblocks target interval is variable.
   OP Mainnet runs flashblocks at 250ms while Base and Unichain run them at 200ms.
   A 2-second block at 250 ms produces 9 flashblocks, indexed 0 to 8.
   The index-0 block contains deposit-only transactions, followed by 8 normal Flashblocks.
-</details>
+</Expandable>
 
-<details>
-  <summary>Will the number of Flashblocks per block always be the maximum?</summary>
+<Expandable>
+  title="Will the number of Flashblocks per block always be the maximum?"
   Not always. Heavy execution in one interval may reduce time available for subsequent intervals. The FLASHBLOCKS\_TIME setting is a target, not a strict guarantee.
-</details>
+</Expandable>
 
-<details>
-  <summary>Do large gas transactions get delayed?</summary>
+<Expandable>
+  title="Do large gas transactions get delayed?"
   High gas transactions can be included in any flashblock with sufficient gas capacity. Placement is optimized by heuristics, but available gas decreases as transactions fill earlier flashblocks.
-</details>
+</Expandable>
 
 ### High availability and safety
 
-<details>
-  <summary>What happens if the flashblocks builder fails?</summary>
+<Expandable>
+  title="What happens if the flashblocks builder fails?"
   In a default/non-HA setup, the system falls back to regular block building while preserving pre-confirmations. In an HA setup, `op-conductor` seamlessly transfers leadership to a healthy sequencer without interruption.
   When leadership changes, streaming continues seamlessly from the new leader so downstream consumers always receive a continuous stream from a single stable endpoint.
-</details>
+</Expandable>
 
-<details>
-  <summary>How is continuity handled in high availability setups with multiple sequencers?</summary>
+<Expandable>
+  title="How is continuity handled in high availability setups with multiple sequencers?"
   Only the current leader streams Flashblocks. On leader change, streaming continues from the new leader so downstream consumers see a continuous stream from a single stable endpoint. For details on high-availability sequencer setups, see the [op-conductor documentation](https://docs.optimism.io/operators/chain-operators/tools/op-conductor).
-</details>
+</Expandable>
 
-<details>
-  <summary>Do flashblocks change the safety model of the chain?</summary>
+<Expandable>
+  title="Do flashblocks change the safety model of the chain?"
   No. Each flashblock is validated by the same execution engine as normal blocks.
-</details>
+</Expandable>
 
 ### Pre-confirmations and reorgs
 
-<details>
-  <summary>Can pre-confirmations be revoked?</summary>
+<Expandable>
+  title="Can pre-confirmations be revoked?"
   Rarely. If the sequencer reorgs, pre-confirmed state may change - but this carries no more risk than the reorg of normal blocks.
-</details>
+</Expandable>
 
-<details>
-  <summary>Why can a pre-confirmed transaction later disappear?</summary>
+<Expandable>
+  title="Why can a pre-confirmed transaction later disappear?"
   If the sequencer reorgs, pre-confirmed state can be replaced. This does not add risk beyond the pending state reorg risk that already exists.
-</details>
+</Expandable>
 
-<details>
-  <summary>Does Flashblocks change liveness or withdrawals?</summary>
+<Expandable>
+  title="Does Flashblocks change liveness or withdrawals?"
   No. Protocol guarantees remain the same; Flashblocks only speed up transaction confirmation.
-</details>
+</Expandable>
 
-<details>
-  <summary>What is the structure of a pre-confirmation response?</summary>
+<Expandable>
+  title="What is the structure of a pre-confirmation response?"
   In pre-confirmation responses, `blockHash`, `stateRoot`, and `receiptsRoot` are the values that represent the cumulative state of all transactions included up to that point in the block. The blockNumber reflects the current pending block number.
   Each flashblock's view shows the complete state incorporating all transactions processed so far.
-</details>
+</Expandable>
 
 ## Next steps
 

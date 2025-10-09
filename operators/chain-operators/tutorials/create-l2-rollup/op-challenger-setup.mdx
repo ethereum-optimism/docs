@@ -36,64 +36,63 @@ Before configuring your challenger, complete the following steps:
 <Steps>
 <Step title="Deploy OP Stack chain with fault proofs enabled">
 
-<details>
-  <summary>Generate absolute prestate (Required)</summary>
+<Expandable title="Generate absolute prestate (Required)">
 
-  The challenger needs the absolute prestate to participate in dispute games. Here's how to generate it:
+The challenger needs the absolute prestate to participate in dispute games. Here's how to generate it:
 
-  1.  **Clone and checkout the correct version**:
-      ```bash
-      git clone https://github.com/ethereum-optimism/optimism.git
-      cd optimism
-      git checkout op-program/v1.6.1  # Use the latest stable version
-      git submodule update --init --recursive
-      ```
+1.  **Clone and checkout the correct version**:
+    ```bash
+    git clone https://github.com/ethereum-optimism/optimism.git
+    cd optimism
+    git checkout op-program/v1.6.1  # Use the latest stable version
+    git submodule update --init --recursive
+    ```
 
-  2.  **Copy your chain configuration**:
-      ```bash
-      # Assuming you're in rollup/challenger/optimism directory
-      # Replace <YOUR-CHAIN-ID> with your actual L2 chain ID
-      cp ../deployer/.deployer/rollup.json op-program/chainconfig/configs/<YOUR-CHAIN-ID>-rollup.json
-      cp ../deployer/.deployer/genesis.json op-program/chainconfig/configs/<YOUR-CHAIN-ID>-genesis.json
+2.  **Copy your chain configuration**:
+    ```bash
+    # Assuming you're in rollup/challenger/optimism directory
+    # Replace <YOUR-CHAIN-ID> with your actual L2 chain ID
+    cp ../deployer/.deployer/rollup.json op-program/chainconfig/configs/<YOUR-CHAIN-ID>-rollup.json
+    cp ../deployer/.deployer/genesis.json op-program/chainconfig/configs/<YOUR-CHAIN-ID>-genesis.json
 
-      # Your directory structure should look like:
-      # rollup/
-      # ├── deployer/
-      # │   └── .deployer/
-      # │       ├── rollup.json    # Source file
-      # │       └── genesis.json   # Source file
-      # └── optimism/             # You are here
-      #     └── op-program/
-      #         └── chainconfig/
-      #             └── configs/
-      #                 ├── <YOUR-CHAIN-ID>-rollup.json   # Destination
-      #                 └── <YOUR-CHAIN-ID>-genesis.json  # Destination
-      ```
+    # Your directory structure should look like:
+    # rollup/
+    # ├── deployer/
+    # │   └── .deployer/
+    # │       ├── rollup.json    # Source file
+    # │       └── genesis.json   # Source file
+    # └── optimism/             # You are here
+    #     └── op-program/
+    #         └── chainconfig/
+    #             └── configs/
+    #                 ├── <YOUR-CHAIN-ID>-rollup.json   # Destination
+    #                 └── <YOUR-CHAIN-ID>-genesis.json  # Destination
+    ```
 
-  3.  **Generate the prestate**:
-      ```bash
-      make reproducible-prestate
-      ```
-      You'll see output like:
-      ```bash
-      -------------------- Production Prestates --------------------
-      Cannon64 Absolute prestate hash: 
-      0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
-      ```
+3.  **Generate the prestate**:
+    ```bash
+    make reproducible-prestate
+    ```
+    You'll see output like:
+    ```bash
+    -------------------- Production Prestates --------------------
+    Cannon64 Absolute prestate hash: 
+    0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+    ```
 
-  4.  **Prepare the preimage file**:
-      ```bash
-      cd op-program/bin
-      mv prestate-mt64.bin.gz 0x[CANNON64_PRESTATE_HASH].bin.gz
-      ```
-      Replace `[CANNON64_PRESTATE_HASH]` with the actual hash from step 3.
+4.  **Prepare the preimage file**:
+    ```bash
+    cd op-program/bin
+    mv prestate-mt64.bin.gz 0x[CANNON64_PRESTATE_HASH].bin.gz
+    ```
+    Replace `[CANNON64_PRESTATE_HASH]` with the actual hash from step 3.
 
-  <Info>
-    *   Use the `Cannon64` hash for production
-    *   Keep this file accessible - you'll need it for the challenger setup
-    *   For Superchain registry chains, you can find official prestates in the [registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml)
-  </Info>
-</details>
+<Info>
+  *   Use the `Cannon64` hash for production
+  *   Keep this file accessible - you'll need it for the challenger setup
+  *   For Superchain registry chains, you can find official prestates in the [registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml)
+</Info>
+</Expandable>
 </Step>
 
 <Step title="Set up required infrastructure access">
@@ -370,132 +369,116 @@ For challenger deployment, we recommend using Docker as it provides a consistent
 
     <Step title="Understanding key configuration flags">
 
-    <details>
-      <summary><code>--l1-eth-rpc</code></summary>
+    <Expandable title="--l1-eth-rpc">
+    *   This is the HTTP provider URL for a standard L1 node, can be a full node. `op-challenger` will be sending many requests, so chain operators need a node that is trusted and can easily handle many transactions.
+    *   Note: Challenger has a lot of money, and it will spend it if it needs to interact with games. That might risk not defending games or challenging games correctly, so chain operators should really trust the nodes being pointed at Challenger.
+    </Expandable>
 
-      *   This is the HTTP provider URL for a standard L1 node, can be a full node. `op-challenger` will be sending many requests, so chain operators need a node that is trusted and can easily handle many transactions.
-      *   Note: Challenger has a lot of money, and it will spend it if it needs to interact with games. That might risk not defending games or challenging games correctly, so chain operators should really trust the nodes being pointed at Challenger.
-    </details>
+    <Expandable title="--l1-beacon">
+    *   This is needed just to get blobs from.
+    *   In some instances, chain operators might need a blob archiver or L1 consensus node configured not to prune blobs:
+        *   If the chain is proposing regularly, a blob archiver isn't needed. There's only a small window in the blob retention period that games can be played.
+        *   If the chain doesn't post a valid output root in 18 days, then a blob archiver running a challenge game is needed. If the actor gets pushed to the bottom of the game, it could lose if it's the only one protecting the chain.
+    </Expandable>
 
-    <details>
-      <summary><code>--l1-beacon</code></summary>
+    <Expandable title="--l2-eth-rpc">
+    *   This needs to be `op-geth` archive node, with `debug` enabled.
+    *   Technically doesn't need to go to bedrock, but needs to have access to the start of any game that is still in progress.
+    </Expandable>
 
-      *   This is needed just to get blobs from.
-      *   In some instances, chain operators might need a blob archiver or L1 consensus node configured not to prune blobs:
-          *   If the chain is proposing regularly, a blob archiver isn't needed. There's only a small window in the blob retention period that games can be played.
-          *   If the chain doesn't post a valid output root in 18 days, then a blob archiver running a challenge game is needed. If the actor gets pushed to the bottom of the game, it could lose if it's the only one protecting the chain.
-    </details>
+    <Expandable title="--rollup-rpc">
+    *   This needs to be an `op-node` archive node because challenger needs access to output roots from back when the games start. See below for important configuration details:
 
-    <details>
-      <summary><code>--l2-eth-rpc</code></summary>
+    1.  Safe Head Database (SafeDB) Configuration for op-node:
 
-      *   This needs to be `op-geth` archive node, with `debug` enabled.
-      *   Technically doesn't need to go to bedrock, but needs to have access to the start of any game that is still in progress.
-    </details>
+        *   The `op-node` behind the `op-conductor` must have the SafeDB enabled to ensure it is not stateless.
+        *   To enable SafeDB, set the `--safedb.path` value in your configuration. This specifies the file path used to persist safe head update data.
+        *   Example Configuration:
 
-    <details>
-      <summary><code>--rollup-rpc</code></summary>
+        ```
+        --safedb.path <path-to-safe-head-db>   # Replace <path-to-safe-head-db> with your actual path
+        ```
 
-      *   This needs to be an `op-node` archive node because challenger needs access to output roots from back when the games start. See below for important configuration details:
+        <Info>
+          If this path is not set, the SafeDB feature will be disabled.
+        </Info>
 
-      1.  Safe Head Database (SafeDB) Configuration for op-node:
+    2.  Ensuring Historical Data Availability:
 
-          *   The `op-node` behind the `op-conductor` must have the SafeDB enabled to ensure it is not stateless.
-          *   To enable SafeDB, set the `--safedb.path` value in your configuration. This specifies the file path used to persist safe head update data.
-          *   Example Configuration:
+        *   Both `op-node` and `op-geth` must have data from the start of the games to maintain network consistency and allow nodes to reference historical state and transactions.
+        *   For `op-node`: Configure it to maintain a sufficient history of blockchain data locally or use an archive node.
+        *   For `op-geth`: Similarly, configure to store or access historical data.
+        *   Example Configuration:
 
-          ```
-          --safedb.path <path-to-safe-head-db>   # Replace <path-to-safe-head-db> with your actual path
-          ```
+        ```
+        op-node \
+        --rollup-rpc <op-node-archive-node-url> \
+        --safedb.path <path-to-safe-head-db>
+        ```
 
-          <Info>
-            If this path is not set, the SafeDB feature will be disabled.
-          </Info>
+        <Info>
+          Replace `<op-node-archive-node-url>` with the URL of your archive node and `<path-to-safe-head-db>` with the desired path for storing SafeDB data.
+        </Info>
+    </Expandable>
 
-      2.  Ensuring Historical Data Availability:
+    <Expandable title="--private-key">
+    *   Chain operators must specify a private key or use something else (like `op-signer`).
+    *   This uses the same transaction manager arguments as `op-node` , batcher, and proposer, so chain operators can choose one of the following options:
+        *   a mnemonic
+        *   a private key
+        *   `op-signer` endpoints
+    </Expandable>
 
-          *   Both `op-node` and `op-geth` must have data from the start of the games to maintain network consistency and allow nodes to reference historical state and transactions.
-          *   For `op-node`: Configure it to maintain a sufficient history of blockchain data locally or use an archive node.
-          *   For `op-geth`: Similarly, configure to store or access historical data.
-          *   Example Configuration:
+    <Expandable title="--network">
+    *   This identifies the L2 network `op-challenger` is running for, e.g., `op-sepolia` or `op-mainnet`.
+    *   When using the `--network` flag, the `--game-factory-address` will be automatically pulled from the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json).
+    *   When cannon is executed, challenger needs the roll-up config and the L2 Genesis, which is op-geth's Genesis file. Both files are automatically loaded when Cannon Network is used, but custom networks will need to specify both Cannon L2 Genesis and Cannon rollup config.
+    *   For custom networks not in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json), the `--game-factory-address` and rollup must be specified, as follows:
 
-          ```
-          op-node \
-          --rollup-rpc <op-node-archive-node-url> \
-          --safedb.path <path-to-safe-head-db>
-          ```
+        ```
+        --cannon-rollup-config rollup.json  \
+        --cannon-l2-genesis genesis-l2.json \
+        # use this if running challenger outside of the docker image
+        --cannon-server ./op-program/bin/op-program \
+        # json or url, version of op-program deployed on chain
+        # if you use the wrong one, you will lose the game
+        # if you deploy your own contracts, you specify the hash, the root of the json file
+        # op mainnet are tagged versions of op-program
+        # make reproducible prestate
+        # challenger verifies that onchain
+        --cannon-prestate ./op-program/bin/prestate.json \
+        # load the game factory address from system config or superchain registry
+        # point the game factory address at the dispute game factory proxy
+        --game-factory-address
+        ```
 
-          <Info>
-            Replace `<op-node-archive-node-url>` with the URL of your archive node and `<path-to-safe-head-db>` with the desired path for storing SafeDB data.
-          </Info>
-    </details>
+    <Info>
+      These options vary based on which `--network` is specified. Chain operators always need to specify a way to load prestates and must also specify the cannon-server whenever the docker image isn't being used.
+    </Info>
+    </Expandable>
 
-    <details>
-      <summary><code>--private-key</code></summary>
+    <Expandable title="--datadir">
+    *   This is a directory that `op-challenger` can write to and store whatever data it needs. It will manage this directory to add or remove data as needed under that directory.
+    *   If running in docker, it should point to a docker volume or mount point, so the data isn't lost on every restart. The data can be recreated if needed but particularly if challenger has executed cannon as part of responding to a game it may mean a lot of extra processing.
+    </Expandable>
 
-      *   Chain operators must specify a private key or use something else (like `op-signer`).
-      *   This uses the same transaction manager arguments as `op-node` , batcher, and proposer, so chain operators can choose one of the following options:
-          *   a mnemonic
-          *   a private key
-          *   `op-signer` endpoints
-    </details>
+    <Expandable title="--cannon-prestates-url">
+    The pre-state is effectively the version of `op-program` that is deployed on chain. And chain operators must use the right version. `op-challenger` will refuse to interact with games that have a different absolute prestate hash to avoid making invalid claims. If deploying your own contracts, chain operators must specify an absolute prestate hash taken from the `make reproducible-prestate` command during contract deployment, which will also build the required prestate json file.
 
-    <details>
-      <summary><code>--network</code></summary>
+    All governance approved releases use a tagged version of `op-program`. These can be rebuilt by checking out the version tag and running `make reproducible-prestate`.
 
-      *   This identifies the L2 network `op-challenger` is running for, e.g., `op-sepolia` or `op-mainnet`.
-      *   When using the `--network` flag, the `--game-factory-address` will be automatically pulled from the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json).
-      *   When cannon is executed, challenger needs the roll-up config and the L2 Genesis, which is op-geth's Genesis file. Both files are automatically loaded when Cannon Network is used, but custom networks will need to specify both Cannon L2 Genesis and Cannon rollup config.
-      *   For custom networks not in the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json), the `--game-factory-address` and rollup must be specified, as follows:
+    *   There are two ways to specify the prestate to use:
+        *   `--cannon-prestate`: specifies a path to a single Cannon pre-state Json file
+        *   `--cannon-prestates-url`: specifies a URL to load pre-states from. This enables participating in games that use different prestates, for example due to a network upgrade. The prestates are stored in this directory named by their hash.
+    *   Example final URL for a prestate:
+        *   [https://example.com/prestates/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json](https://example.com/prestates/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json)
+        *   This file contains the cannon memory state.
 
-          ```
-          --cannon-rollup-config rollup.json  \
-          --cannon-l2-genesis genesis-l2.json \
-          # use this if running challenger outside of the docker image
-          --cannon-server ./op-program/bin/op-program \
-          # json or url, version of op-program deployed on chain
-          # if you use the wrong one, you will lose the game
-          # if you deploy your own contracts, you specify the hash, the root of the json file
-          # op mainnet are tagged versions of op-program
-          # make reproducible prestate
-          # challenger verifies that onchain
-          --cannon-prestate ./op-program/bin/prestate.json \
-          # load the game factory address from system config or superchain registry
-          # point the game factory address at the dispute game factory proxy
-          --game-factory-address
-          ```
-
-      <Info>
-        These options vary based on which `--network` is specified. Chain operators always need to specify a way to load prestates and must also specify the cannon-server whenever the docker image isn't being used.
-      </Info>
-    </details>
-
-    <details>
-      <summary><code>--datadir</code></summary>
-
-      *   This is a directory that `op-challenger` can write to and store whatever data it needs. It will manage this directory to add or remove data as needed under that directory.
-      *   If running in docker, it should point to a docker volume or mount point, so the data isn't lost on every restart. The data can be recreated if needed but particularly if challenger has executed cannon as part of responding to a game it may mean a lot of extra processing.
-    </details>
-
-    <details>
-      <summary><code>--cannon-prestates-url</code></summary>
-
-      The pre-state is effectively the version of `op-program` that is deployed on chain. And chain operators must use the right version. `op-challenger` will refuse to interact with games that have a different absolute prestate hash to avoid making invalid claims. If deploying your own contracts, chain operators must specify an absolute prestate hash taken from the `make reproducible-prestate` command during contract deployment, which will also build the required prestate json file.
-
-      All governance approved releases use a tagged version of `op-program`. These can be rebuilt by checking out the version tag and running `make reproducible-prestate`.
-
-      *   There are two ways to specify the prestate to use:
-          *   `--cannon-prestate`: specifies a path to a single Cannon pre-state Json file
-          *   `--cannon-prestates-url`: specifies a URL to load pre-states from. This enables participating in games that use different prestates, for example due to a network upgrade. The prestates are stored in this directory named by their hash.
-      *   Example final URL for a prestate:
-          *   [https://example.com/prestates/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json](https://example.com/prestates/0x031e3b504740d0b1264e8cf72b6dde0d497184cfb3f98e451c6be8b33bd3f808.json)
-          *   This file contains the cannon memory state.
-
-      <Info>
-        Challenger will refuse to interact with any games if it doesn't have the matching prestate.
-        Check this [guide](/operators/chain-operators/tutorials/absolute-prestate#generating-the-absolute-prestate) on how to generate an absolute prestate.
-      </Info>
-    </details>
+    <Info>
+      Challenger will refuse to interact with any games if it doesn't have the matching prestate.
+      Check this [guide](/operators/chain-operators/tutorials/absolute-prestate#generating-the-absolute-prestate) on how to generate an absolute prestate.
+    </Info>
+    </Expandable>
     </Step>
     </Steps>
 
