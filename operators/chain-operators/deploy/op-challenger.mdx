@@ -194,15 +194,13 @@ Check that you have properly installed the challenger component:
   </Step>
 
   <Step title="Understanding key configuration flags">
-  <Expandable>
-  title="--l1-eth-rpc"
+  <Expandable title="--l1-eth-rpc">
   
   *   This is the HTTP provider URL for a standard L1 node, can be a full node. `op-challenger` will be sending many requests, so chain operators need a node that is trusted and can easily handle many transactions.
   *   Note: Challenger has a lot of money, and it will spend it if it needs to interact with games. That might risk not defending games or challenging games correctly, so chain operators should really trust the nodes being pointed at Challenger.
   </Expandable>
   
-  <Expandable>
-  title="--l1-beacon"
+  <Expandable title="--l1-beacon">
   
   *   This is needed just to get blobs from.
   *   In some instances, chain operators might need a blob archiver or L1 consensus node configured not to prune blobs:
@@ -210,15 +208,13 @@ Check that you have properly installed the challenger component:
       *   If the chain doesn't post a valid output root in 18 days, then a blob archiver running a challenge game is needed. If the actor gets pushed to the bottom of the game, it could lose if it's the only one protecting the chain.
   </Expandable>
   
-  <Expandable>
-  title="--l2-eth-rpc"
+  <Expandable title="--l2-eth-rpc">
   
   *   This needs to be `op-geth` archive node, with `debug` enabled.
   *   Technically doesn't need to go to bedrock, but needs to have access to the start of any game that is still in progress.
   </Expandable>
   
-  <Expandable>
-  title="--rollup-rpc"
+  <Expandable title="--rollup-rpc">
   
   *   This needs to be an `op-node` archive node because challenger needs access to output roots from back when the games start. See below for important configuration details:
   
@@ -256,8 +252,7 @@ Check that you have properly installed the challenger component:
       </Info>
   </Expandable>
   
-  <Expandable>
-  title="--private-key"
+  <Expandable title="--private-key">
   
   *   Chain operators must specify a private key or use something else (like `op-signer`).
   *   This uses the same transaction manager arguments as `op-node` , batcher, and proposer, so chain operators can choose one of the following options:
@@ -266,8 +261,7 @@ Check that you have properly installed the challenger component:
       *   `op-signer` endpoints
   </Expandable>
   
-  <Expandable>
-  title="--network"
+  <Expandable title="--network">
   
   *   This identifies the L2 network `op-challenger` is running for, e.g., `op-sepolia` or `op-mainnet`.
   *   When using the `--network` flag, the `--game-factory-address` will be automatically pulled from the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json).
@@ -296,15 +290,13 @@ Check that you have properly installed the challenger component:
   </Info>
   </Expandable>
   
-  <Expandable>
-  title="--datadir"
+  <Expandable title="--datadir">
   
   *   This is a directory that `op-challenger` can write to and store whatever data it needs.  It will manage this directory to add or remove data as needed under that directory.
   *   If running in docker, it should point to a docker volume or mount point, so the data isn't lost on every restart. The data can be recreated if needed but particularly if challenger has executed cannon as part of responding to a game it may mean a lot of extra processing.
   </Expandable>
   
-  <Expandable>
-  title="--cannon-prestates-url"
+  <Expandable title="--cannon-prestates-url">
   
   The pre-state is effectively the version of `op-program` that is deployed on chain. And chain operators must use the right version. `op-challenger` will refuse to interact with games that have a different absolute prestate hash to avoid making invalid claims. If deploying your own contracts, chain operators must specify an absolute prestate hash taken from the `make reproducible-prestate` command during contract deployment, which will also build the required prestate json file.
   
@@ -419,15 +411,13 @@ The Docker setup provides a containerized environment for running the challenger
   <Step title="Understanding configuration flags">
   Each environment variable maps to a specific challenger configuration flag. Here's what each one does:
   
-  <Expandable>
-  title="--l1-eth-rpc"
+  <Expandable title="--l1-eth-rpc">
   
   *   This is the HTTP provider URL for a standard L1 node, can be a full node. `op-challenger` will be sending many requests, so chain operators need a node that is trusted and can easily handle many transactions.
   *   Note: Challenger has a lot of money, and it will spend it if it needs to interact with games. That might risk not defending games or challenging games correctly, so chain operators should really trust the nodes being pointed at Challenger.
   </Expandable>
   
-  <Expandable>
-  title="--l1-beacon"
+  <Expandable title="--l1-beacon">
   
   *   This is needed just to get blobs from.
   *   In some instances, chain operators might need a blob archiver or L1 consensus node configured not to prune blobs:
@@ -435,15 +425,13 @@ The Docker setup provides a containerized environment for running the challenger
       *   If the chain doesn't post a valid output root in 18 days, then a blob archiver running a challenge game is needed. If the actor gets pushed to the bottom of the game, it could lose if it's the only one protecting the chain.
   </Expandable>
   
-  <Expandable>
-  title="--l2-eth-rpc"
+  <Expandable title="--l2-eth-rpc">
   
   *   This needs to be `op-geth` archive node, with `debug` enabled.
   *   Technically doesn't need to go to bedrock, but needs to have access to the start of any game that is still in progress.
   </Expandable>
   
-  <Expandable>
-  title="--rollup-rpc"
+  <Expandable title="--rollup-rpc">
   
   *   This needs to be an `op-node` archive node because challenger needs access to output roots from back when the games start. See below for important configuration details:
   
@@ -481,8 +469,7 @@ The Docker setup provides a containerized environment for running the challenger
       </Info>
   </Expandable>
   
-  <Expandable>
-  title="--private-key"
+  <Expandable title="--private-key">
   
   *   Chain operators must specify a private key or use something else (like `op-signer`).
   *   This uses the same transaction manager arguments as `op-node` , batcher, and proposer, so chain operators can choose one of the following options:
@@ -491,8 +478,7 @@ The Docker setup provides a containerized environment for running the challenger
       *   `op-signer` endpoints
   </Expandable>
   
-  <Expandable>
-  title="--network"
+  <Expandable title="--network">
   
   *   This identifies the L2 network `op-challenger` is running for, e.g., `op-sepolia` or `op-mainnet`.
   *   When using the `--network` flag, the `--game-factory-address` will be automatically pulled from the [`superchain-registry`](https://github.com/ethereum-optimism/superchain-registry/blob/main/chainList.json).
@@ -521,15 +507,13 @@ The Docker setup provides a containerized environment for running the challenger
   </Info>
   </Expandable>
   
-  <Expandable>
-  title="--datadir"
+  <Expandable title="--datadir">
   
   *   This is a directory that `op-challenger` can write to and store whatever data it needs.  It will manage this directory to add or remove data as needed under that directory.
   *   If running in docker, it should point to a docker volume or mount point, so the data isn't lost on every restart. The data can be recreated if needed but particularly if challenger has executed cannon as part of responding to a game it may mean a lot of extra processing.
   </Expandable>
   
-  <Expandable>
-  title="--cannon-prestates-url"
+  <Expandable title="--cannon-prestates-url">
   
   The pre-state is effectively the version of `op-program` that is deployed on chain. And chain operators must use the right version. `op-challenger` will refuse to interact with games that have a different absolute prestate hash to avoid making invalid claims. If deploying your own contracts, chain operators must specify an absolute prestate hash taken from the `make reproducible-prestate` command during contract deployment, which will also build the required prestate json file.
   
