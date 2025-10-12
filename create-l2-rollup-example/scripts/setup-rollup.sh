@@ -394,7 +394,7 @@ generate_challenger_prestate() {
     log_info "Copying chain configuration files..."
     mkdir -p op-program/chainconfig/configs
     cp "$DEPLOYER_DIR/.deployer/rollup.json" "op-program/chainconfig/configs/${CHAIN_ID}-rollup.json"
-    cp "$DEPLOYER_DIR/.deployer/genesis.json" "op-program/chainconfig/configs/${CHAIN_ID}-genesis.json"
+    cp "$DEPLOYER_DIR/.deployer/genesis.json" "op-program/chainconfig/configs/${CHAIN_ID}-genesis-l2.json"
 
     # Generate prestate
     log_info "Generating reproducible prestate..."
