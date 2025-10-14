@@ -28,7 +28,7 @@ This is NOT Fusaka adoption on L2. It's a readiness upgrade to make the Optimism
 
 Fusaka contains various breaking changes. See [EIP-7607: Hardfork Meta - Fusaka](https://eips.ethereum.org/EIPS/eip-7607) for more info.
 
-Important dates:
+**Important dates:**
 
 Ethereum Sepolia Fusaka hard fork: Tuesday, October 14th, 2025 07:36:00 UTC (affects chains posting data to Sepolia)
 
@@ -49,6 +49,10 @@ Before the Ethereum Fusaka hard fork, ensure your external L1 Beacon Chain RPC p
 If your external L1 Beacon Chain RPC provider doesn't subscribe to all subnets, migrate to one that does prior to these deadlines.
 
 **For operators running their own L1 Ethereum Beacon Chain Node:**
+
+**If you operate your own L1 nodes, ensure also both the L1 execution and beacon nodes are upgraded** and configured for the Fusaka fork (see [Fusaka specs here](https://blog.ethereum.org/2025/09/26/fusaka-testnet-announcement)).
+
+Outdated L1 nodes can cause derivation failures, blob unavailability, or chain divergence after the fork.
 
 Configure your Beacon Node with the new flag (detailed below) before the relevant Fusaka hard fork date.
 
@@ -74,7 +78,7 @@ Update the following:
 
 | Component       | Version                                                                                               | Notes                                                                                                                                                                                          |
 | --------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `proxyd`        | [v4.19.0](https://github.com/ethereum-optimism/infra/releases/tag/proxyd%2Fv4.19.0) or greater        | You need to whitelist `eth_blobBaseFee` rpc if using proxyd for L1 load balancing                                                                                                              |
+| `proxyd`        | [v4.19.0](https://github.com/ethereum-optimism/infra/releases/tag/proxyd%2Fv4.19.0) or greater        | You need to whitelist `eth_blobBaseFee` rpc if using proxyd for L1 load balancing. If you use `dugtrio` ensure this is also updated to the latest release.                                                                                                              |
 | `op-batcher`    | [v1.16.0](https://github.com/ethereum-optimism/optimism/releases/tag/op-batcher%2Fv1.16.0)            | `OP_BATCHER_TXMGR_ENABLE_CELL_PROOFS`: `true` or equivalent CLI flag needs to be set and the batcher restarted just after Fusaka activates on L1.                                              |
 | `op-node`       | [v1.14.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.14.1)               | L1 chain config must be supplied via a new flag (see the release notes). Not necessary for chains deriving from Ethereum Mainnet, Sepolia, Holesky or Hoodi.                                            |
 | `op-geth`       | [v1.101603.1](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.1)                  |                                                                                                                                                                                                |
@@ -83,6 +87,11 @@ Update the following:
 | `kona-host`     | [v1.1.3](https://github.com/op-rs/kona/releases/tag/kona-host%2Fv1.1.3)                     |                                                                                                                                                                                                |
 | `kona-client`   | [v1.1.3](https://github.com/op-rs/kona/releases/tag/kona-client%2Fv1.1.3)                   |                                                                                                                                                                                                |
 | `op-reth`       | [v1.8.2](https://github.com/paradigmxyz/reth/releases/tag/v1.8.2)                                     |                                                                                                                                                                                                |
+
+
+**Note:** `op-node` v1.14.1 uses the new `/eth/v1/beacon/blobs/` API for fetching blob data from L1 beacon nodes. If you run a reverse proxy/load balancer in front of your beacon API, ensure it correctly forwards all query parameters. 
+
+Misconfigured proxies may cause blob fetch failures or derivation stalls after the Fusaka fork.
 
 ### For Permissionless Fault Proof enabled chains
 
