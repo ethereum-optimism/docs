@@ -219,11 +219,6 @@ The intent file defines your chain's configuration.
     --intent-type standard-overrides
   ```
 
-  <Info>
-    **Version Compatibility**
-
-    Each `op-deployer` version is bound to specific `op-contracts` versions. The `l1ContractsLocator` and `l2ContractsLocator` values in your intent file must be compatible with your `op-deployer` version. Check the [op-deployer release notes](https://github.com/ethereum-optimism/optimism/releases) for version compatibility information.
-  </Info>
 
   <Expandable title="Understanding intent types">
 
@@ -240,18 +235,19 @@ The intent file defines your chain's configuration.
 
       <Step title="Update the intent file">
 
-  Edit `.deployer/intent.toml` with your generated addresses. The example below shows the typical configuration for a standard OP Stack deployment, with advanced options commented out:
+  Edit `.deployer/intent.toml` with your generated addresses. The `op-deployer init` command automatically populates this file with sensible defaults. Update the addresses while keeping the auto-generated contract locator values:
 
   ```toml
   configType = "standard-overrides"
   l1ChainID = 11155111  # Sepolia
   fundDevAccounts = false  # Set to false for production/testnet
   useInterop = false
+  opcmAddress = "0x3bb6437aba031afbf9cb3538fa064161e2bf2d78"  # OPCM contract address on Sepolia
 
-  # Contract locators are automatically determined by your op-deployer version
-  # Only uncomment and modify if you need specific contract versions (advanced users only)
-  # l1ContractsLocator = "tag://op-contracts/v2.0.0"
-  # l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
+  # Contract locators - REQUIRED fields, automatically populated by op-deployer init
+  # Keep these default values unless you need specific contract versions (advanced use case)
+  l1ContractsLocator = "tag://op-contracts/v2.0.0"
+  l2ContractsLocator = "tag://op-contracts/v1.7.0-beta.1+l2-contracts"
 
   # Superchain roles - only define if creating a standalone chain not part of OP Stack superchain
   # For standard OP Stack deployments, these are predefined and should not be set
@@ -285,10 +281,15 @@ The intent file defines your chain's configuration.
     *   `l1ChainID`: The L1 network ID (11155111 for Sepolia)
     *   `fundDevAccounts`: Creates test accounts with ETH if true (set to false for production)
     *   `useInterop`: Enable interoperability features (false for standard deployments)
+    *   `opcmAddress`: OP Contracts Manager (OPCM) contract address on the L1 network (automatically populated for supported networks)
 
-    **Contract Locators (Advanced):**
+    **Contract Locators (Required):**
 
-    These are commented out because `op-deployer` automatically determines compatible contract versions. Only uncomment and modify if you need to pin to specific contract versions for advanced use cases.
+    These fields are **required** and automatically populated by `op-deployer init` with default values compatible with your `op-deployer` version.
+    Removing them will cause the error: "Application failed: L1ContractsLocator undefined". 
+    Keep the auto-generated values unless you specifically need different contract versions.
+    For version compatibility details, see the [op-deployer release notes](https://github.com/ethereum-optimism/optimism/releases).
+    
 
     **Superchain Roles (Advanced):**
 
@@ -400,6 +401,7 @@ rollup/
     │   └── state.json       # Deployment state
     ├── .env                 # Environment variables
     └── address/             # Generated address pairs
+        ├── admin_address.txt
         ├── base_Fee_Vault_Recipient_address.txt
         ├── batcher_address.txt
         ├── l1_Fee_Vault_Recipient_address.txt
@@ -407,7 +409,6 @@ rollup/
         ├── sequencer_Fee_Vault_Recipient_address.txt
         ├── system_config_address.txt
         └── unsafe_block_signer_address.txt
-        └── admin.txt
 
 ```
 
