@@ -52,7 +52,7 @@ contract LockboxSuperchainERC20 is SuperchainERC20 {
         require(block.chainid == _originalChainId, "Wrong chain");
         bool success = originalToken.transferFrom(msg.sender, address(this), amount_);
 
-        // Not necessariy if the ERC-20 contract reverts rather than reverting.
+        // Not necessarily if the ERC-20 contract reverts rather than reverting.
         // However, the standard allows the ERC-20 contract to return false instead.
         require(success, "No tokens to lock, no mint either");
         _mint(msg.sender, amount_);

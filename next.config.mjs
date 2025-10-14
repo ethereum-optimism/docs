@@ -1,49 +1,28 @@
 import nextra from 'nextra'
-import remarkCodeImport from 'remark-code-import'
 
 const withNextra = nextra({
   theme: 'nextra-theme-docs',
   themeConfig: './theme.config.tsx',
   defaultShowCopyCode: true,
-  mdxOptions: {
-    remarkPlugins: [
-      remarkCodeImport,
-    ]
+  flexsearch: {
+    codeblocks: false
   },
+  staticImage: true,
+  contentDump: true,
 })
 
-export default {
-  ...withNextra(),
-  eslint: {
-    ignoreDuringBuilds: true,
+export default withNextra({
+  reactStrictMode: true,
+  transpilePackages: ['viem'],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      }
+    }
+    return config
   },
-  
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains; preload'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY'
-          }
-        ],
-      },
-    ]
-  },
-
-  // Don't put redirects here
-  // they go in public/_redirects
-}
+})
