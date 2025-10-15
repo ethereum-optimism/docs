@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 // Inlined AddressTable to avoid import issues
 
 function getConfigUrl(chain) {
