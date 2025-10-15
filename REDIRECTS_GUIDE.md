@@ -4,7 +4,7 @@ A comprehensive guide for managing redirects in Mintlify documentation (migrated
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [How to add redirects](#how-to-add-redirects)
