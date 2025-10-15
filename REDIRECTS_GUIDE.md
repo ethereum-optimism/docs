@@ -10,8 +10,6 @@ A comprehensive guide for managing redirects in Mintlify documentation (migrated
 - [How to add redirects](#how-to-add-redirects)
 - [Examples](#examples)
 - [Limitations](#limitations)
-- [Migration Status](#migration-status)
-- [Best Practices](#best-practices)
 
 ---
 
