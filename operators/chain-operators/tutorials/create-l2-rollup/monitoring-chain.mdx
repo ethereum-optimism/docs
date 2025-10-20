@@ -1,0 +1,496 @@
+---
+title: Monitor your chain with Dispute Monitor
+description: Learn how to set up op-dispute-mon to monitor dispute games and fault proof activity on your L2 rollup.
+---
+
+Now that you have a running OP Stack rollup with fault proofs enabled, it's critical to monitor your dispute games to ensure your chain operates securely. This tutorial will guide you through setting up `op-dispute-mon` to track all dispute game activity on your rollup.
+
+<Info>
+  This tutorial continues from the previous steps in [Creating Your Own L2 Rollup](/operators/chain-operators/tutorials/create-l2-rollup). Make sure you have completed the op-challenger setup and have dispute games running before proceeding.
+</Info>
+
+## What you'll set up
+
+By the end of this tutorial, you'll have:
+
+*   **op-dispute-mon** monitoring all dispute games on your chain
+*   **Real-time tracking** of game status, agreements, and honest actor participation
+*   Understanding of key metrics for dispute game health
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+*   Completed all previous steps in the [Creating Your Own L2 Rollup tutorial](/operators/chain-operators/tutorials/create-l2-rollup)
+*   op-challenger running and participating in dispute games
+*   op-proposer running and creating proposals
+*   L1 RPC endpoint with sufficient rate limits
+*   Rollup RPC endpoint (op-node)
+*   Docker installed (for Docker setup) OR Go 1.21+ (for build from source)
+
+## What is op-dispute-mon?
+
+`op-dispute-mon` is a specialized monitoring tool that tracks dispute games in the fault proof system. It provides visibility into:
+
+*   **Game status**: Track games from creation to resolution
+*   **Honest actor participation**: Monitor your proposer and challenger activity
+*   **Agreement tracking**: See which games agree/disagree with your honest actors
+*   **Game completion**: Monitor in-progress vs completed games
+*   **Ignored games**: Track games that don't meet monitoring criteria
+
+The monitor exposes Prometheus metrics that can be used to build dashboards and alerts.
+
+<Steps>
+<Step title="Deploy op-dispute-mon">
+
+Choose your preferred deployment method: Docker (recommended) or build from source.
+
+<Tabs>
+<Tab title="Use Docker (Recommended)">
+
+### Docker Setup
+
+The Docker setup provides a containerized environment for running op-dispute-mon with minimal configuration.
+
+#### Create dispute-mon directory
+
+```bash
+# From your project root
+cd rollup
+mkdir dispute-mon
+cd dispute-mon
+```
+
+#### Get required addresses
+
+You need three key addresses for op-dispute-mon:
+
+1. **DisputeGameFactory address** (from your deployment)
+2. **Proposer address** (your honest actor who creates proposals)
+3. **Challenger address** (your honest actor who defends proposals)
+
+```bash
+# Get DisputeGameFactory address from deployment
+export GAME_FACTORY_ADDRESS=$(jq -r '.disputeGameFactoryProxyAddress' ../deployer/.deployer/state.json)
+echo "Game Factory Address: $GAME_FACTORY_ADDRESS"
+
+# Get Proposer address (from your proposer setup)
+source ../proposer/.env
+export PROPOSER_ADDRESS=$(cast wallet address --private-key $PRIVATE_KEY)
+echo "Proposer Address: $PROPOSER_ADDRESS"
+
+# Get Challenger address (from your challenger setup)
+source ../challenger/.env
+export CHALLENGER_ADDRESS=$(cast wallet address --private-key $PRIVATE_KEY)
+echo "Challenger Address: $CHALLENGER_ADDRESS"
+```
+
+#### Create Docker Compose file
+
+Create `docker-compose.yml` with the following configuration:
+
+```yaml
+version: "3.8"
+
+services:
+  op-dispute-mon:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-dispute-mon:v1.4.2-rc.1
+    container_name: dispute-mon
+    ports:
+      - "7300:7300" # Metrics port
+    environment:
+      # L1 RPC Configuration
+      - OP_DISPUTE_MON_L1_ETH_RPC=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
+      
+      # Rollup RPC Configuration (your op-node)
+      - OP_DISPUTE_MON_ROLLUP_RPC=http://op-node:8547
+      
+      # Honest Actors (your proposer and challenger addresses)
+      - OP_DISPUTE_MON_HONEST_ACTORS=${PROPOSER_ADDRESS},${CHALLENGER_ADDRESS}
+      
+      # DisputeGameFactory Contract Address
+      - OP_DISPUTE_MON_GAME_FACTORY_ADDRESS=${GAME_FACTORY_ADDRESS}
+      
+      # Monitoring Configuration
+      - OP_DISPUTE_MON_MONITOR_INTERVAL=10s
+      
+      # Logging Configuration
+      - OP_DISPUTE_MON_LOG_FORMAT=logfmt
+      - OP_DISPUTE_MON_LOG_LEVEL=info
+      
+      # Metrics Configuration
+      - OP_DISPUTE_MON_METRICS_ADDR=0.0.0.0
+      - OP_DISPUTE_MON_METRICS_ENABLED=true
+      - OP_DISPUTE_MON_METRICS_PORT=7300
+    restart: unless-stopped
+    networks:
+      - dispute-mon-network
+
+networks:
+  dispute-mon-network:
+    driver: bridge
+```
+
+<Warning>
+  Replace `YOUR_INFURA_KEY` with your actual Infura API key or use another L1 RPC provider. Make sure your L1 RPC has sufficient rate limits for production use.
+</Warning>
+
+#### Start op-dispute-mon
+
+```bash
+# Export variables
+export PROPOSER_ADDRESS=0xYourProposerAddress
+export CHALLENGER_ADDRESS=0xYourChallengerAddress
+export GAME_FACTORY_ADDRESS=0xYourGameFactoryAddress
+
+# Start the container
+docker-compose up -d
+
+# View logs
+docker-compose logs -f op-dispute-mon
+```
+
+#### Verify it's running
+
+Check that the metrics endpoint is accessible:
+
+```bash
+# Query metrics endpoint
+curl http://localhost:7300/metrics
+
+# You should see Prometheus metrics including:
+# - op_dispute_mon_games_agreement
+# - op_dispute_mon_ignored_games
+# - and many more...
+```
+
+Check logs for any errors:
+
+```bash
+# View recent logs
+docker-compose logs --tail=50 op-dispute-mon
+
+# Follow logs in real-time
+docker-compose logs -f op-dispute-mon
+```
+
+You should see logs indicating the monitor is tracking games:
+
+```
+level=info msg="Monitoring dispute games" factory=0x... honest_actors=[0x..., 0x...]
+level=info msg="Found games" count=5
+level=info msg="Updated game status" game=0x... status=IN_PROGRESS
+```
+
+</Tab>
+
+<Tab title="Build from Source">
+
+### Build from Source
+
+Building from source gives you more control and is useful for development or custom deployments.
+
+#### Clone and build op-dispute-mon
+
+```bash
+# From your project root
+cd optimism
+
+# Pull latest changes
+git pull
+
+# Build op-dispute-mon
+cd op-dispute-mon
+make op-dispute-mon
+
+# Verify the build
+./bin/op-dispute-mon --version
+```
+
+#### Create directory structure
+
+```bash
+# From your project root
+cd rollup
+mkdir -p dispute-mon/scripts
+cd dispute-mon
+```
+
+#### Get required addresses
+
+```bash
+# Get DisputeGameFactory address
+export GAME_FACTORY_ADDRESS=$(jq -r '.disputeGameFactoryProxyAddress' ../deployer/.deployer/state.json)
+echo "Game Factory Address: $GAME_FACTORY_ADDRESS"
+
+# Get Proposer address
+source ../proposer/.env
+export PROPOSER_ADDRESS=$(cast wallet address --private-key $PRIVATE_KEY)
+echo "Proposer Address: $PROPOSER_ADDRESS"
+
+# Get Challenger address
+source ../challenger/.env
+export CHALLENGER_ADDRESS=$(cast wallet address --private-key $PRIVATE_KEY)
+echo "Challenger Address: $CHALLENGER_ADDRESS"
+
+# Get L1 RPC URL
+source ../.env
+echo "L1 RPC: $L1_RPC_URL"
+```
+
+#### Create environment file
+
+```bash
+cat > .env << EOF
+# L1 Configuration
+L1_RPC_URL=$L1_RPC_URL
+
+# Rollup Configuration  
+ROLLUP_RPC=http://localhost:8547
+
+# Contract Addresses
+GAME_FACTORY_ADDRESS=$GAME_FACTORY_ADDRESS
+
+# Honest Actors
+PROPOSER_ADDRESS=$PROPOSER_ADDRESS
+CHALLENGER_ADDRESS=$CHALLENGER_ADDRESS
+
+# Monitoring Configuration
+MONITOR_INTERVAL=10s
+LOG_LEVEL=info
+
+# Metrics Configuration
+METRICS_PORT=7300
+EOF
+```
+
+#### Create startup script
+
+Create `scripts/start-dispute-mon.sh`:
+
+```bash
+#!/bin/bash
+set -e
+
+# Load environment variables
+source .env
+
+# Path to op-dispute-mon binary
+DISPUTE_MON_BIN=../../optimism/op-dispute-mon/bin/op-dispute-mon
+
+echo "Starting op-dispute-mon..."
+echo "Game Factory: $GAME_FACTORY_ADDRESS"
+echo "Proposer: $PROPOSER_ADDRESS"
+echo "Challenger: $CHALLENGER_ADDRESS"
+
+$DISPUTE_MON_BIN \
+  --l1-eth-rpc=$L1_RPC_URL \
+  --rollup-rpc=$ROLLUP_RPC \
+  --game-factory-address=$GAME_FACTORY_ADDRESS \
+  --honest-actors=$PROPOSER_ADDRESS,$CHALLENGER_ADDRESS \
+  --monitor-interval=$MONITOR_INTERVAL \
+  --log.level=$LOG_LEVEL \
+  --log.format=logfmt \
+  --metrics.enabled=true \
+  --metrics.addr=0.0.0.0 \
+  --metrics.port=$METRICS_PORT
+```
+
+Make it executable:
+
+```bash
+chmod +x scripts/start-dispute-mon.sh
+```
+
+#### Start op-dispute-mon
+
+```bash
+# Start in foreground (for testing)
+./scripts/start-dispute-mon.sh
+
+# Or start in background
+./scripts/start-dispute-mon.sh > logs/dispute-mon.log 2>&1 &
+
+# Save the process ID
+echo $! > dispute-mon.pid
+```
+
+#### Verify it's running
+
+```bash
+# Check if process is running
+ps aux | grep op-dispute-mon
+
+# Query metrics endpoint
+curl http://localhost:7300/metrics
+
+# Check logs
+tail -f logs/dispute-mon.log
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Understand key metrics">
+
+Once op-dispute-mon is running, it exposes several important metrics that help you monitor dispute game health.
+
+### Core metrics
+
+Access the metrics endpoint:
+
+```bash
+curl http://localhost:7300/metrics | grep op_dispute_mon
+```
+
+#### Game agreement metrics
+
+```
+# Total number of games tracked
+op_dispute_mon_games_agreement 25
+
+# Games currently in progress
+op_dispute_mon_games_agreement{completion="in_progress"} 3
+
+# Completed games
+op_dispute_mon_games_agreement{completion="complete"} 22
+
+# Games where monitor agrees with honest actors
+op_dispute_mon_games_agreement{agreement="agree"} 24
+
+# Games where monitor disagrees
+op_dispute_mon_games_agreement{agreement="disagree"} 1
+```
+
+**What to monitor:**
+- If `agreement="disagree"` is non-zero, investigate immediately - this indicates a potential issue with your honest actors
+- High number of `completion="in_progress"` games is normal during active periods
+- All completed games should show `agreement="agree"`
+
+#### Ignored games
+
+```
+# Games that don't meet monitoring criteria
+op_dispute_mon_ignored_games 5
+```
+
+Games may be ignored if:
+- They don't involve your honest actors
+- They use an unsupported game type
+- They're outside the monitoring window
+
+#### Game status by type
+
+```
+# Games by status
+op_dispute_mon_games_status{status="challenger_wins"} 20
+op_dispute_mon_games_status{status="defender_wins"} 3
+op_dispute_mon_games_status{status="in_progress"} 2
+```
+
+**What to monitor:**
+- `defender_wins` should be rare (indicates your proposal was successfully defended)
+- `challenger_wins` is normal (other proposers' incorrect proposals were challenged)
+- `in_progress` shows active games
+
+#### Honest actor metrics
+
+```
+# Games involving your honest actors
+op_dispute_mon_honest_actor_games{actor="0xYourProposer",role="proposer"} 15
+op_dispute_mon_honest_actor_games{actor="0xYourChallenger",role="challenger"} 10
+```
+
+**What to monitor:**
+- Your proposer should create games regularly
+- Your challenger should participate when needed
+- If either metric stops increasing, investigate your honest actors
+
+### Metric query examples
+
+Here are some useful queries you can run:
+
+```bash
+# Count total games
+curl -s http://localhost:7300/metrics | grep "op_dispute_mon_games_agreement{" | grep -v "#" | awk '{sum+=$2} END {print sum}'
+
+# Count in-progress games
+curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{completion="in_progress"}' | awk '{print $2}'
+
+# Count disagreements (should be 0!)
+curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{agreement="disagree"}' | awk '{print $2}'
+```
+
+</Step>
+
+<Step title="Monitor dispute game health">
+
+Use these practices to ensure your dispute games are healthy:
+
+### Daily monitoring checklist
+
+1. **Check for disagreements:**
+   ```bash
+   curl -s http://localhost:7300/metrics | grep 'agreement="disagree"'
+   ```
+   Result should be `0` or metric should not exist.
+
+2. **Verify honest actors are active:**
+   ```bash
+   curl -s http://localhost:7300/metrics | grep "honest_actor_games"
+   ```
+   Both proposer and challenger metrics should be present and increasing.
+
+3. **Check game completion rate:**
+   ```bash
+   # Compare in-progress vs complete
+   curl -s http://localhost:7300/metrics | grep "completion="
+   ```
+   Most games should complete within the challenge period (7 days).
+
+4. **Review logs for errors:**
+   ```bash
+   # Docker
+   docker-compose logs --tail=100 op-dispute-mon | grep -i error
+   
+   # Source
+   tail -100 logs/dispute-mon.log | grep -i error
+   ```
+
+### Warning signs
+
+**Immediate attention required:**
+- Any `agreement="disagree"` metrics
+- Honest actor metrics stop increasing
+- High number of ignored games involving your actors
+- Errors in logs about RPC connectivity
+- Errors about invalid game states
+
+**Investigate soon:**
+- Games stuck in `in_progress` for >7 days
+- Sudden drop in game creation rate
+- Increase in `defender_wins` status
+
+**Normal operation:**
+- Regular game creation
+- All agreements showing `agree`
+- Games completing within challenge period
+- Occasional `challenger_wins` (other proposals being challenged)
+
+</Step>
+</Steps>
+
+## Next steps
+
+Now that you have dispute game monitoring set up, you can:
+
+*   Set up additional monitoring for other components (optional)
+*   Create alerting for critical metrics like disagreements
+*   Explore the [Dispute Monitor Tool Reference](/operators/chain-operators/tools/chain-monitoring)
+*   Learn more about the [Fault Proof System](/stack/fault-proofs/explainer)
+*   Set up [Prometheus](https://prometheus.io/docs/) and [Grafana](https://grafana.com/docs/) for advanced metrics visualization (optional)
+
+Congratulations! You now have a fully operational OP Stack L2 rollup with comprehensive monitoring.
+

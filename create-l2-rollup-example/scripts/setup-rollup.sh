@@ -30,6 +30,7 @@ SEQUENCER_DIR="$ROLLUP_DIR/sequencer"
 BATCHER_DIR="$ROLLUP_DIR/batcher"
 PROPOSER_DIR="$ROLLUP_DIR/proposer"
 CHALLENGER_DIR="$ROLLUP_DIR/challenger"
+DISPUTE_MON_DIR="$ROLLUP_DIR/dispute-mon"
 
 # Logging functions
 log_info() {
@@ -427,6 +428,42 @@ generate_challenger_prestate() {
     log_success "Challenger prestate generation complete: $ROLLUP_DIR/challenger/${PRESTATE_HASH}.bin.gz"
 }
 
+# Setup dispute monitor
+setup_dispute_monitor() {
+    log_info "Setting up dispute monitor..."
+
+    mkdir -p "$DISPUTE_MON_DIR"
+    cd "$DISPUTE_MON_DIR"
+
+    # Get required addresses
+    GAME_FACTORY_ADDRESS=$(jq -r '.disputeGameFactoryProxyAddress' "$DEPLOYER_DIR/.deployer/state.json")
+    PROPOSER_ADDRESS=$(cast wallet address --private-key "$PROPOSER_PRIVATE_KEY")
+    CHALLENGER_ADDRESS=$(cast wallet address --private-key "$CHALLENGER_PRIVATE_KEY")
+
+    log_info "Game Factory: $GAME_FACTORY_ADDRESS"
+    log_info "Proposer: $PROPOSER_ADDRESS"
+    log_info "Challenger: $CHALLENGER_ADDRESS"
+
+    # Create environment file for dispute monitor
+    cat > .env << EOF
+# Contract Addresses
+OP_DISPUTE_MON_GAME_FACTORY_ADDRESS=$GAME_FACTORY_ADDRESS
+
+# Honest Actors
+OP_DISPUTE_MON_HONEST_ACTORS=$PROPOSER_ADDRESS,$CHALLENGER_ADDRESS
+
+# Monitoring Configuration
+OP_DISPUTE_MON_MONITOR_INTERVAL=10s
+EOF
+
+    # Create logs directory
+    mkdir -p logs
+
+    log_success "Dispute monitor configuration created"
+    log_info "Dispute monitor will start with 'docker-compose up -d' from project root"
+    log_info "Metrics will be available at: http://localhost:7300/metrics"
+}
+
 # Add op-deployer to PATH if it exists in the workspace
 if [ -f "$(dirname "$0")/../op-deployer" ]; then
     OP_DEPLOYER_PATH="$(cd "$(dirname "$0")/.." && pwd)/op-deployer"
@@ -457,9 +494,11 @@ main() {
     setup_proposer
     generate_challenger_prestate
     setup_challenger
+    setup_dispute_monitor
 
     log_success "OP Stack L2 Rollup deployment complete!"
-    log_info "Run 'docker-compose up -d' to start all services"
+    log_info "Run 'docker-compose up -d' to start all services (including dispute monitor)"
+    log_info "Dispute monitor metrics: http://localhost:7300/metrics"
 }
 
 # Handle command line arguments for standalone function calls
