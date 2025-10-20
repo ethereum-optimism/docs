@@ -33,38 +33,15 @@ Before you begin, ensure you have:
 
 `op-dispute-mon` is a specialized monitoring tool that tracks dispute games in the fault proof system. It provides visibility into:
 
-*   **Game Status**: Track games from creation to resolution
-*   **Honest Actor Participation**: Monitor your proposer and challenger activity
-*   **Agreement Tracking**: See which games agree/disagree with your honest actors
-*   **Game Completion**: Monitor in-progress vs completed games
-*   **Ignored Games**: Track games that don't meet monitoring criteria
+*   **Game status**: Track games from creation to resolution
+*   **Honest actor Participation**: Monitor your proposer and challenger activity
+*   **Agreement tracking**: See which games agree/disagree with your honest actors
+*   **Game completion**: Monitor in-progress vs completed games
+*   **Ignored games**: Track games that don't meet monitoring criteria
 
 The monitor exposes Prometheus metrics that can be used to build dashboards and alerts.
 
 ## Monitoring architecture
-
-```mermaid
-graph TB
-    subgraph "L1 Network"
-        A[DisputeGameFactory<br/>Contract]
-    end
-    
-    subgraph "Your Rollup"
-        B[op-proposer<br/>Creates proposals]
-        C[op-challenger<br/>Defends proposals]
-        D[op-node<br/>Rollup RPC]
-    end
-    
-    subgraph "Monitoring"
-        E[op-dispute-mon<br/>:7300]
-    end
-    
-    A -->|Reads games| E
-    D -->|Rollup state| E
-    E -->|Tracks| B
-    E -->|Tracks| C
-    E -->|Exposes metrics| F[/metrics endpoint]
-```
 
 <Steps>
 <Step title="Deploy op-dispute-mon">
@@ -536,43 +513,10 @@ Use these practices to ensure your dispute games are healthy:
    
    # Source
    tail -100 logs/dispute-mon.log | grep -i error
-   ```
+```
 
 </Step>
-
-
-## Production considerations
-
-When running op-dispute-mon in production:
-
-### High availability
-
-1. **Run multiple instances** for redundancy (metrics will be identical)
-2. **Use load-balanced L1 RPC endpoints** for reliability
-3. **Set up health checks:**
-   ```bash
-   # Check metrics endpoint health
-   curl -f http://localhost:7300/metrics || alert
-   ```
-
-### Resource requirements
-
-- **CPU:** Minimal (< 5% of 1 core)
-- **Memory:** ~100-200 MB
-- **Network:** Depends on L1 RPC usage
-- **Disk:** Minimal (logs only)
-
-### Backup RPC endpoints
-
-Configure multiple RPC endpoints for failover:
-
-```yaml
-# In docker-compose.yml
-environment:
-  # Comma-separated list of RPCs
-  - OP_DISPUTE_MON_L1_ETH_RPC=https://eth-sepolia-1.example.com,https://eth-sepolia-2.example.com
-  - OP_DISPUTE_MON_ROLLUP_RPC=http://op-node-1:8547,http://op-node-2:8547
-```
+</Steps>
 
 
 ## Next steps
@@ -580,6 +524,5 @@ environment:
 *   [Dispute Monitor Tool Reference](/operators/chain-operators/tools/chain-monitoring)
 *   [Fault Proof System Overview](/stack/fault-proofs/explainer)
 *   [OP Challenger Setup](/operators/chain-operators/tutorials/create-l2-rollup/op-challenger-setup)
-*   [Optimism Monorepo](https://github.com/ethereum-optimism/optimism)
 *   [Prometheus Documentation](https://prometheus.io/docs/) (for optional metrics visualization)
 *   [Grafana Documentation](https://grafana.com/docs/) (for optional dashboarding)
