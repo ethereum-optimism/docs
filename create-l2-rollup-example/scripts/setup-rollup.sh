@@ -210,7 +210,7 @@ setup_batcher() {
     # Copy state file
     cp "$DEPLOYER_DIR/.deployer/state.json" .
     INBOX_ADDRESS=$(cat state.json | jq -r '.opChainDeployments[0].SystemConfigProxy')
-    
+
     # Create .env file with OP_BATCHER prefixed variables
     cat > .env << EOF
 OP_BATCHER_L2_ETH_RPC=http://op-geth:8545
@@ -394,7 +394,7 @@ generate_challenger_prestate() {
     log_info "Copying chain configuration files..."
     mkdir -p op-program/chainconfig/configs
     cp "$DEPLOYER_DIR/.deployer/rollup.json" "op-program/chainconfig/configs/${CHAIN_ID}-rollup.json"
-    cp "$DEPLOYER_DIR/.deployer/genesis.json" "op-program/chainconfig/configs/${CHAIN_ID}-genesis.json"
+    cp "$DEPLOYER_DIR/.deployer/genesis.json" "op-program/chainconfig/configs/${CHAIN_ID}-genesis-l2.json"
 
     # Generate prestate
     log_info "Generating reproducible prestate..."
