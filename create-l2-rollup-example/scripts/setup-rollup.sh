@@ -435,10 +435,10 @@ setup_dispute_monitor() {
     mkdir -p "$DISPUTE_MON_DIR"
     cd "$DISPUTE_MON_DIR"
 
-    # Get required addresses
-    GAME_FACTORY_ADDRESS=$(jq -r '.disputeGameFactoryProxyAddress' "$DEPLOYER_DIR/.deployer/state.json")
-    PROPOSER_ADDRESS=$(cast wallet address --private-key "$PROPOSER_PRIVATE_KEY")
-    CHALLENGER_ADDRESS=$(cast wallet address --private-key "$CHALLENGER_PRIVATE_KEY")
+    # Get required addresses from state.json
+    GAME_FACTORY_ADDRESS=$(jq -r '.opChainDeployments[0].DisputeGameFactoryProxy' "$DEPLOYER_DIR/.deployer/state.json")
+    PROPOSER_ADDRESS=$(jq -r '.appliedIntent.chains[0].roles.proposer' "$DEPLOYER_DIR/.deployer/state.json")
+    CHALLENGER_ADDRESS=$(jq -r '.appliedIntent.chains[0].roles.challenger' "$DEPLOYER_DIR/.deployer/state.json")
 
     log_info "Game Factory: $GAME_FACTORY_ADDRESS"
     log_info "Proposer: $PROPOSER_ADDRESS"
@@ -446,11 +446,18 @@ setup_dispute_monitor() {
 
     # Create environment file for dispute monitor
     cat > .env << EOF
+# Rollup RPC Configuration
+ROLLUP_RPC=http://op-node:8547
+
 # Contract Addresses
 OP_DISPUTE_MON_GAME_FACTORY_ADDRESS=$GAME_FACTORY_ADDRESS
 
 # Honest Actors
-OP_DISPUTE_MON_HONEST_ACTORS=$PROPOSER_ADDRESS,$CHALLENGER_ADDRESS
+PROPOSER_ADDRESS=$PROPOSER_ADDRESS
+CHALLENGER_ADDRESS=$CHALLENGER_ADDRESS
+
+# Network Configuration
+OP_DISPUTE_MON_NETWORK=op-sepolia
 
 # Monitoring Configuration
 OP_DISPUTE_MON_MONITOR_INTERVAL=10s
@@ -461,7 +468,7 @@ EOF
 
     log_success "Dispute monitor configuration created"
     log_info "Dispute monitor will start with 'docker-compose up -d' from project root"
-    log_info "Metrics will be available at: http://localhost:7300/metrics"
+    log_info "To verify it's working, run: curl -s http://localhost:7300/metrics | grep -E \"op_dispute_mon_(games|ignored)\" | head -10"
 }
 
 # Add op-deployer to PATH if it exists in the workspace

@@ -156,19 +156,20 @@ services:
     volumes:
       - ./dispute-mon:/workspace
     working_dir: /workspace
+    ports:
+      - "7300:7300"
     env_file:
       - ./dispute-mon/.env
       - .env
-    ports:
-      - "7300:7300"
     environment:
       - OP_DISPUTE_MON_L1_ETH_RPC=${L1_RPC_URL}
       - OP_DISPUTE_MON_ROLLUP_RPC=${ROLLUP_RPC}
       - OP_DISPUTE_MON_HONEST_ACTORS=${PROPOSER_ADDRESS},${CHALLENGER_ADDRESS}
       - OP_DISPUTE_MON_GAME_FACTORY_ADDRESS=${GAME_FACTORY_ADDRESS}
       - OP_DISPUTE_MON_MONITOR_INTERVAL=10s
+      - OP_DISPUTE_MON_NETWORK=op-sepolia
+      - OP_DISPUTE_MON_LOG_LEVEL=debug
       - OP_DISPUTE_MON_LOG_FORMAT=logfmt
-      - OP_DISPUTE_MON_LOG_LEVEL=info
       - OP_DISPUTE_MON_METRICS_ADDR=0.0.0.0
       - OP_DISPUTE_MON_METRICS_ENABLED=true
       - OP_DISPUTE_MON_METRICS_PORT=7300
