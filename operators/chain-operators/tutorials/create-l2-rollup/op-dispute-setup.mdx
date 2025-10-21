@@ -443,35 +443,38 @@ op_dispute_mon_honest_actor_claims{honest_actor_address="0xYourProposer",state="
 op_dispute_mon_honest_actor_claims{honest_actor_address="0xYourProposer",state="invalid"} 0
 ```
 
+Tracks validity of claims made by your proposer and challenger. `state="invalid"` should always be `0`.
 
+**Bond collateral tracking:**
 
-# Bond collateral tracking
+```
+# Bond collateral available vs required
 op_dispute_mon_bond_collateral_available{balance="sufficient",delayedWETH="0x..."} 0
 op_dispute_mon_bond_collateral_required{balance="sufficient",delayedWETH="0x..."} 0
 ```
 
+Monitors whether your honest actors have sufficient collateral for bonds.
+
+### Quick health check
+
+To verify your dispute monitor is working correctly:
 
 ```bash
-# Check monitor is up
+# Check monitor is running
 curl -s http://localhost:7300/metrics | grep "op_dispute_mon_up"
+# Expected: op_dispute_mon_up 1
 
-# Count all monitored games
-curl -s http://localhost:7300/metrics | grep "^op_dispute_mon_games_agreement{" | awk '{sum+=$2} END {print sum}'
+# Check for any games (will be 0 for new testnet)
+curl -s http://localhost:7300/metrics | grep "op_dispute_mon_games_agreement" | head -5
 
-# Count in-progress games
-curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{.*completion="in_progress".*}' | awk '{sum+=$2} END {print sum}'
-
-# Check for games with incorrect results (should investigate if > 0)
-curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{.*result_correctness="incorrect".*}' | awk '{sum+=$2} END {print sum}'
-
-# Check ignored games
-curl -s http://localhost:7300/metrics | grep "^op_dispute_mon_ignored_games " | awk '{print $2}'
-
-# Check honest actor bonds lost (should be 0)
-curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_honest_actor_bonds{.*state="lost".*}' | awk '{sum+=$2} END {print sum}'
+# Check for any issues (should all be 0)
+curl -s http://localhost:7300/metrics | grep 'state="lost"'
+curl -s http://localhost:7300/metrics | grep 'state="invalid"'
 ```
 
-
+<Info>
+For a new testnet, it's normal for all game metrics to show `0` values. Games will only appear after your proposer creates proposals (typically every ~1 hour).
+</Info>
 
 ## Next steps
 
