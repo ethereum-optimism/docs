@@ -1,5 +1,5 @@
 ---
-title: Monitor your chain with Dispute Monitor
+title: Monitor your chain with dispute monitor
 description: Learn how to set up op-dispute-mon to monitor dispute games and fault proof activity on your L2 rollup.
 ---
 
@@ -374,111 +374,73 @@ tail -f logs/dispute-mon.log
 
 Once op-dispute-mon is running, it exposes several important metrics that help you monitor dispute game health.
 
+<Info>
+The metrics shown below are from the [official OP Stack Grafana dashboard](https://github.com/ethereum-optimism/optimism/blob/develop/op-dispute-mon/README.md) and represent actual production metrics used by Optimism.
+</Info>
+
 ### Core metrics
 
-Access the metrics endpoint:
+**Monitor health:**
 
-```bash
-curl http://localhost:7300/metrics | grep op_dispute_mon
+```
+# Monitor is running (1 = up, 0 = down)
+op_dispute_mon_up 1
 ```
 
 **Game agreement metrics:**
 
+The primary metric for tracking dispute games, with labels for completion status, result correctness, root agreement, and game status:
+
 ```
-# Total number of games tracked
-op_dispute_mon_games_agreement 25
-
-# Games currently in progress
-op_dispute_mon_games_agreement{completion="in_progress"} 3
-
-# Completed games
-op_dispute_mon_games_agreement{completion="complete"} 22
-
-# Games where monitor agrees with honest actors
-op_dispute_mon_games_agreement{agreement="agree"} 24
-
-# Games where monitor disagrees
-op_dispute_mon_games_agreement{agreement="disagree"} 1
+# Games by completion and status
+op_dispute_mon_games_agreement{completion="complete",result_correctness="correct",root_agreement="agree",status="agree_defender_wins"} 0
+op_dispute_mon_games_agreement{completion="in_progress",result_correctness="correct",root_agreement="agree",status="agree_defender_ahead"} 0
+op_dispute_mon_games_agreement{completion="complete",result_correctness="incorrect",status="challenger_wins"} 0
 ```
+
+**Label meanings:**
+- `completion`: `"complete"` or `"in_progress"`
+- `result_correctness`: `"correct"` or `"incorrect"` (based on your honest actors)
+- `root_agreement`: `"agree"` or `"disagree"` (whether game agrees with honest actors)
+- `status`: Game outcome like `"agree_defender_wins"`, `"challenger_wins"`, etc.
 
 **What to monitor:**
-- If `agreement="disagree"` is non-zero, investigate immediately - this indicates a potential issue with your honest actors
-- High number of `completion="in_progress"` games is normal during active periods
-- All completed games should show `agreement="agree"`
+- Any non-zero `root_agreement="disagree"` requires immediate investigation
+- `result_correctness="incorrect"` games should resolve to `"challenger_wins"`
+- For new testnets, all values being `0` is normal until games are created
 
 **Ignored games:**
 
 ```
-# Games that don't meet monitoring criteria
-op_dispute_mon_ignored_games 5
+# Games not meeting monitoring criteria
+op_dispute_mon_ignored_games 0
 ```
 
-Games may be ignored if:
-- They don't involve your honest actors
-- They use an unsupported game type
-- They're outside the monitoring window
+Games may be ignored if they don't involve your honest actors or fall outside the monitoring window.
 
-**Game status by type:**
+**Honest actor bonds:**
 
 ```
-# Games by status
-op_dispute_mon_games_status{status="challenger_wins"} 20
-op_dispute_mon_games_status{status="defender_wins"} 3
-op_dispute_mon_games_status{status="in_progress"} 2
+# Bond status for your proposer and challenger
+op_dispute_mon_honest_actor_bonds{honest_actor_address="0xYourProposer",state="won"} 0
+op_dispute_mon_honest_actor_bonds{honest_actor_address="0xYourProposer",state="lost"} 0
+op_dispute_mon_honest_actor_bonds{honest_actor_address="0xYourProposer",state="pending"} 0
 ```
 
-**What to monitor:**
-- `defender_wins` should be rare (indicates your proposal was successfully defended)
-- `challenger_wins` is normal (other proposers' incorrect proposals were challenged)
-- `in_progress` shows active games
+Tracks bonds posted by your honest actors and their outcomes (`won`, `lost`, or `pending`).
 
-#### Honest actor metrics
+**Honest actor claims:**
 
 ```
-# Games involving your honest actors
-op_dispute_mon_honest_actor_games{actor="0xYourProposer",role="proposer"} 15
-op_dispute_mon_honest_actor_games{actor="0xYourChallenger",role="challenger"} 10
+# Claims made by your honest actors
+op_dispute_mon_honest_actor_claims{honest_actor_address="0xYourProposer",state="valid"} 0
+op_dispute_mon_honest_actor_claims{honest_actor_address="0xYourProposer",state="invalid"} 0
 ```
 
-**What to monitor:**
-- Your proposer should create games regularly
-- Your challenger should participate when needed
-- If either metric stops increasing, investigate your honest actors
-
-### Metric query examples
-
-Here are some useful queries you can run:
-
-```bash
-# Count total games
-curl -s http://localhost:7300/metrics | grep "op_dispute_mon_games_agreement{" | grep -v "#" | awk '{sum+=$2} END {print sum}'
-
-# Count in-progress games
-curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{completion="in_progress"}' | awk '{print $2}'
-
-# Count disagreements (should be 0!)
-curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{agreement="disagree"}' | awk '{print $2}'
+# Bond collateral tracking
+op_dispute_mon_bond_collateral_available{balance="sufficient",delayedWETH="0x..."} 0
+op_dispute_mon_bond_collateral_required{balance="sufficient",delayedWETH="0x..."} 0
 ```
-
-### Warning signs
-
-**Immediate attention required:**
-- Any `agreement="disagree"` metrics
-- Honest actor metrics stop increasing
-- High number of ignored games involving your actors
-- Errors in logs about RPC connectivity
-- Errors about invalid game states
-
-**Investigate soon:**
-- Games stuck in `in_progress` for >7 days
-- Sudden drop in game creation rate
-- Increase in `defender_wins` status
-
-**Normal operation:**
-- Regular game creation
-- All agreements showing `agree`
-- Games completing within challenge period
-- Occasional `challenger_wins` (other proposals being challenged)
 
 ## Next steps
 
