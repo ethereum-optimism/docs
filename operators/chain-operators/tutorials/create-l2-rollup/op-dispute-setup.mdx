@@ -71,18 +71,19 @@ You need three key addresses for op-dispute-mon:
 
 ```bash
 # Get DisputeGameFactory address from deployment
-export GAME_FACTORY_ADDRESS=$(jq -r '.disputeGameFactoryProxyAddress' ../deployer/.deployer/state.json)
+export GAME_FACTORY_ADDRESS=$(jq -r '.opChainDeployments[0].DisputeGameFactoryProxy' ../deployer/.deployer/state.json)
 echo "Game Factory Address: $GAME_FACTORY_ADDRESS"
 
 # Get Proposer address (from your proposer setup)
 source ../proposer/.env
-export PROPOSER_ADDRESS=$(cast wallet address --private-key $PRIVATE_KEY)
+export PROPOSER_ADDRESS=$(jq -r '.appliedIntent.chains[0].roles.proposer' ../deployer/.deployer/state.json)
 echo "Proposer Address: $PROPOSER_ADDRESS"
 
 # Get Challenger address (from your challenger setup)
 source ../challenger/.env
-export CHALLENGER_ADDRESS=$(cast wallet address --private-key $PRIVATE_KEY)
+export CHALLENGER_ADDRESS=$(jq -r '.appliedIntent.chains[0].roles.challenger' ../deployer/.deployer/state.json)
 echo "Challenger Address: $CHALLENGER_ADDRESS"
+
 ```
 
 #### Create Docker Compose file
@@ -113,10 +114,11 @@ services:
       
       # Monitoring Configuration
       - OP_DISPUTE_MON_MONITOR_INTERVAL=10s
+      - OP_DISPUTE_MON_NETWORK=op-sepolia
       
       # Logging Configuration
       - OP_DISPUTE_MON_LOG_FORMAT=logfmt
-      - OP_DISPUTE_MON_LOG_LEVEL=info
+      - OP_DISPUTE_MON_LOG_LEVEL=debug
       
       # Metrics Configuration
       - OP_DISPUTE_MON_METRICS_ADDR=0.0.0.0
@@ -169,17 +171,22 @@ Check logs for any errors:
 ```bash
 # View recent logs
 docker-compose logs --tail=50 op-dispute-mon
-
-# Follow logs in real-time
-docker-compose logs -f op-dispute-mon
 ```
 
 You should see logs indicating the monitor is tracking games:
 
-```
-level=info msg="Monitoring dispute games" factory=0x... honest_actors=[0x..., 0x...]
-level=info msg="Found games" count=5
-level=info msg="Updated game status" game=0x... status=IN_PROGRESS
+```bash
+t=2025-10-21T05:58:52+0100 lvl=info msg="Starting op-dispute-mon" version=untagged-48e52dc5-1759893117
+t=2025-10-21T05:58:52+0100 lvl=info msg="started metrics server" addr=[::]:7300
+t=2025-10-21T05:58:52+0100 lvl=info msg="Starting scheduler"
+t=2025-10-21T05:58:52+0100 lvl=info msg="Starting monitoring"
+t=2025-10-21T05:58:52+0100 lvl=info msg="Starting game monitor"
+t=2025-10-21T05:58:52+0100 lvl=info msg="Dispute monitor game service start completed"
+t=2025-10-21T05:59:03+0100 lvl=info msg="Completed monitoring update" blockNumber=9456908 blockHash=0xcc85c7eaa6c5dc96bf26d1b9097fcdc94d744e545758bcfe9c109a6e443f3024 duration=599.887083ms games=0 ignored=0 failed=0
+t=2025-10-21T05:59:12+0100 lvl=info msg="Completed monitoring update" blockNumber=9456908 blockHash=0xcc85c7eaa6c5dc96bf26d1b9097fcdc94d744e545758bcfe9c109a6e443f3024 duration=134.839417ms games=0 ignored=0 failed=0
+t=2025-10-21T05:59:22+0100 lvl=info msg="Completed monitoring update" blockNumber=9456908 blockHash=0xcc85c7eaa6c5dc96bf26d1b9097fcdc94d744e545758bcfe9c109a6e443f3024 duration=104.085292ms games=0 ignored=0 failed=0
+t=2025-10-21T05:59:32+0100 lvl=info msg="Completed monitoring update" blockNumber=9456909 blockHash=0x18b6a5ef128058c4dd6c92ee2a2e4484a58c24adf64c9ce2763812c581814ab3 duration=111.325667ms games=0 ignored=0 failed=0
+t=2025-10-21T05:59:42+0100 lvl=info msg="Completed monitoring update" blockNumber=9456910 blockHash=0xb38f14c19116bbef056c2194ca966940985a7c6a73b4eb7e765c401a84f5f269 duration=97.361917ms games=0 ignored=0 failed=0
 ```
 
 </Tab>
@@ -205,6 +212,9 @@ make op-dispute-mon
 
 # Verify the build
 ./bin/op-dispute-mon --version
+
+# Return to project root
+cd ../..
 ```
 
 #### Create directory structure
@@ -219,23 +229,24 @@ cd dispute-mon
 #### Get required addresses
 
 ```bash
-# Get DisputeGameFactory address
-export GAME_FACTORY_ADDRESS=$(jq -r '.disputeGameFactoryProxyAddress' ../deployer/.deployer/state.json)
+# Get DisputeGameFactory address from deployment
+export GAME_FACTORY_ADDRESS=$(jq -r '.opChainDeployments[0].DisputeGameFactoryProxy' ../deployer/.deployer/state.json)
 echo "Game Factory Address: $GAME_FACTORY_ADDRESS"
 
-# Get Proposer address
+# Get Proposer address (from your proposer setup)
 source ../proposer/.env
-export PROPOSER_ADDRESS=$(cast wallet address --private-key $PRIVATE_KEY)
+export PROPOSER_ADDRESS=$(jq -r '.appliedIntent.chains[0].roles.proposer' ../deployer/.deployer/state.json)
 echo "Proposer Address: $PROPOSER_ADDRESS"
 
-# Get Challenger address
+# Get Challenger address (from your challenger setup)
 source ../challenger/.env
-export CHALLENGER_ADDRESS=$(cast wallet address --private-key $PRIVATE_KEY)
+export CHALLENGER_ADDRESS=$(jq -r '.appliedIntent.chains[0].roles.challenger' ../deployer/.deployer/state.json)
 echo "Challenger Address: $CHALLENGER_ADDRESS"
 
 # Get L1 RPC URL
 source ../.env
 echo "L1 RPC: $L1_RPC_URL"
+
 ```
 
 #### Create environment file
@@ -255,11 +266,19 @@ GAME_FACTORY_ADDRESS=$GAME_FACTORY_ADDRESS
 PROPOSER_ADDRESS=$PROPOSER_ADDRESS
 CHALLENGER_ADDRESS=$CHALLENGER_ADDRESS
 
+# Network Configuration
+NETWORK=op-sepolia
+
 # Monitoring Configuration
 MONITOR_INTERVAL=10s
+
+# Logging Configuration
 LOG_LEVEL=info
+LOG_FORMAT=logfmt
 
 # Metrics Configuration
+METRICS_ADDR=0.0.0.0
+METRICS_ENABLED=true
 METRICS_PORT=7300
 EOF
 ```
@@ -272,11 +291,27 @@ Create `scripts/start-dispute-mon.sh`:
 #!/bin/bash
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Change to dispute-mon directory
+cd "$SCRIPT_DIR/.."
+
 # Load environment variables
 source .env
 
 # Path to op-dispute-mon binary
-DISPUTE_MON_BIN=../../optimism/op-dispute-mon/bin/op-dispute-mon
+DISPUTE_MON_BIN="$PROJECT_ROOT/optimism/op-dispute-mon/bin/op-dispute-mon"
+
+# Check if binary exists
+if [ ! -f "$DISPUTE_MON_BIN" ]; then
+    echo "Error: op-dispute-mon binary not found at $DISPUTE_MON_BIN"
+    echo "Please build op-dispute-mon first:"
+    echo "  cd $PROJECT_ROOT/optimism/op-dispute-mon"
+    echo "  make op-dispute-mon"
+    exit 1
+fi
 
 echo "Starting op-dispute-mon..."
 echo "Game Factory: $GAME_FACTORY_ADDRESS"
@@ -288,11 +323,12 @@ $DISPUTE_MON_BIN \
   --rollup-rpc=$ROLLUP_RPC \
   --game-factory-address=$GAME_FACTORY_ADDRESS \
   --honest-actors=$PROPOSER_ADDRESS,$CHALLENGER_ADDRESS \
+  --network=$NETWORK \
   --monitor-interval=$MONITOR_INTERVAL \
   --log.level=$LOG_LEVEL \
-  --log.format=logfmt \
-  --metrics.enabled=true \
-  --metrics.addr=0.0.0.0 \
+  --log.format=$LOG_FORMAT \
+  --metrics.enabled=$METRICS_ENABLED \
+  --metrics.addr=$METRICS_ADDR \
   --metrics.port=$METRICS_PORT
 ```
 
@@ -425,39 +461,6 @@ curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{agr
 
 </Step>
 
-<Step title="Monitor dispute game health">
-
-Use these practices to ensure your dispute games are healthy:
-
-### Daily monitoring checklist
-
-1. **Check for disagreements:**
-   ```bash
-   curl -s http://localhost:7300/metrics | grep 'agreement="disagree"'
-   ```
-   Result should be `0` or metric should not exist.
-
-2. **Verify honest actors are active:**
-   ```bash
-   curl -s http://localhost:7300/metrics | grep "honest_actor_games"
-   ```
-   Both proposer and challenger metrics should be present and increasing.
-
-3. **Check game completion rate:**
-   ```bash
-   # Compare in-progress vs complete
-   curl -s http://localhost:7300/metrics | grep "completion="
-   ```
-   Most games should complete within the challenge period (7 days).
-
-4. **Review logs for errors:**
-   ```bash
-   # Docker
-   docker-compose logs --tail=100 op-dispute-mon | grep -i error
-   
-   # Source
-   tail -100 logs/dispute-mon.log | grep -i error
-   ```
 
 ### Warning signs
 
@@ -493,4 +496,3 @@ Now that you have dispute game monitoring set up, you can:
 *   Set up [Prometheus](https://prometheus.io/docs/) and [Grafana](https://grafana.com/docs/) for advanced metrics visualization (optional)
 
 Congratulations! You now have a fully operational OP Stack L2 rollup with comprehensive monitoring.
-
