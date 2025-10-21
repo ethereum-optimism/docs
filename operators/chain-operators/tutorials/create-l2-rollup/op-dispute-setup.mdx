@@ -380,12 +380,6 @@ The metrics shown below are from the [official OP Stack Grafana dashboard](https
 
 ### Core metrics
 
-Access the metrics endpoint:
-
-```bash
-curl http://localhost:7300/metrics | grep op_dispute_mon
-```
-
 **Monitor health:**
 
 ```
@@ -443,34 +437,7 @@ op_dispute_mon_honest_actor_claims{honest_actor_address="0xYourProposer",state="
 op_dispute_mon_honest_actor_claims{honest_actor_address="0xYourProposer",state="invalid"} 0
 ```
 
-Tracks validity of claims made by your proposer and challenger. `state="invalid"` should always be `0`.
-
-**Bond collateral tracking:**
-
-```
-# Bond collateral available vs required
-op_dispute_mon_bond_collateral_available{balance="sufficient",delayedWETH="0x..."} 0
-op_dispute_mon_bond_collateral_required{balance="sufficient",delayedWETH="0x..."} 0
-```
-
 Monitors whether your honest actors have sufficient collateral for bonds.
-
-### Quick health check
-
-To verify your dispute monitor is working correctly:
-
-```bash
-# Check monitor is running
-curl -s http://localhost:7300/metrics | grep "op_dispute_mon_up"
-# Expected: op_dispute_mon_up 1
-
-# Check for any games (will be 0 for new testnet)
-curl -s http://localhost:7300/metrics | grep "op_dispute_mon_games_agreement" | head -5
-
-# Check for any issues (should all be 0)
-curl -s http://localhost:7300/metrics | grep 'state="lost"'
-curl -s http://localhost:7300/metrics | grep 'state="invalid"'
-```
 
 <Info>
 For a new testnet, it's normal for all game metrics to show `0` values. Games will only appear after your proposer creates proposals (typically every ~1 hour).
