@@ -1,5 +1,5 @@
 ---
-title: Monitor your chain with dispute monitor
+title: Monitor your chain with Dispute Monitor
 description: Learn how to set up op-dispute-mon to monitor dispute games and fault proof activity on your L2 rollup.
 ---
 
@@ -370,7 +370,7 @@ tail -f logs/dispute-mon.log
 
 </Tabs>
 
-## Understanding key metrics
+### Understanding key metrics
 
 Once op-dispute-mon is running, it exposes several important metrics that help you monitor dispute game health.
 
@@ -379,6 +379,12 @@ The metrics shown below are from the [official OP Stack Grafana dashboard](https
 </Info>
 
 ### Core metrics
+
+Access the metrics endpoint:
+
+```bash
+curl http://localhost:7300/metrics | grep op_dispute_mon
+```
 
 **Monitor health:**
 
@@ -437,10 +443,35 @@ op_dispute_mon_honest_actor_claims{honest_actor_address="0xYourProposer",state="
 op_dispute_mon_honest_actor_claims{honest_actor_address="0xYourProposer",state="invalid"} 0
 ```
 
+
+
 # Bond collateral tracking
 op_dispute_mon_bond_collateral_available{balance="sufficient",delayedWETH="0x..."} 0
 op_dispute_mon_bond_collateral_required{balance="sufficient",delayedWETH="0x..."} 0
 ```
+
+
+```bash
+# Check monitor is up
+curl -s http://localhost:7300/metrics | grep "op_dispute_mon_up"
+
+# Count all monitored games
+curl -s http://localhost:7300/metrics | grep "^op_dispute_mon_games_agreement{" | awk '{sum+=$2} END {print sum}'
+
+# Count in-progress games
+curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{.*completion="in_progress".*}' | awk '{sum+=$2} END {print sum}'
+
+# Check for games with incorrect results (should investigate if > 0)
+curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_games_agreement{.*result_correctness="incorrect".*}' | awk '{sum+=$2} END {print sum}'
+
+# Check ignored games
+curl -s http://localhost:7300/metrics | grep "^op_dispute_mon_ignored_games " | awk '{print $2}'
+
+# Check honest actor bonds lost (should be 0)
+curl -s http://localhost:7300/metrics | grep 'op_dispute_mon_honest_actor_bonds{.*state="lost".*}' | awk '{sum+=$2} END {print sum}'
+```
+
+
 
 ## Next steps
 
