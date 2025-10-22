@@ -143,6 +143,7 @@ update_intent() {
     sed -i.bak "s|batcher = .*|batcher = \"$BATCHER_ADDR\"|" .deployer/intent.toml
     sed -i.bak "s|proposer = .*|proposer = \"$PROPOSER_ADDR\"|" .deployer/intent.toml
     sed -i.bak "s|challenger = .*|challenger = \"$CHALLENGER_ADDR\"|" .deployer/intent.toml
+    sed -i.bak "s|fundDevAccounts = .*|fundDevAccounts = true|" .deployer/intent.toml
 
     log_success "Intent configuration updated"
 }
