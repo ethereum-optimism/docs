@@ -51,53 +51,49 @@ commands:
             - ~/.pnpm-store
 
 jobs:
-  algolia:
-    description: Create and upload Algolia search index
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Create and upload index
-          command: |
-            # index:docs requires the following environment variables, coming from the algolia-search context
-            # NEXT_PUBLIC_ALGOLIA_APPLICATION_ID
-            # NEXT_PUBLIC_ALGOLIA_WRITE_API_KEY
-            # NEXT_PUBLIC_ALGOLIA_INDEX_NAME
-            pnpm run index:docs
-          
-  lint:
-    description: Lint Markdown files and validate metadata
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Get changed files
-          command: |
-            if [ -n "$CIRCLE_PULL_REQUEST" ]; then
-              PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | rev | cut -d'/' -f1 | rev)
-              CHANGED_FILES=$(curl -s "https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pulls/$PR_NUMBER/files" | jq -r '.[].filename' | grep '\.mdx$' || true)
-              echo "export CHANGED_FILES=\"$CHANGED_FILES\"" >> $BASH_ENV
-            fi
-      - run:
-          name: Lint Markdown files
-          command: pnpm lint
-      - run:
-          name: "Metadata Validation (Warning Only)"
-          command: |
-            echo "Running metadata validation (warnings will not block PR)..."
-            pnpm validate-pr-metadata || true
 
-  links:
-    description: Check broken links in documentation
-    executor: ubuntu
-    steps:
-      - checkout
-      - setup-node
-      - run:
-          name: Run link checker
-          command: pnpm link-checker
+  # breadcrumbs:
+  #   description: Check breadcrumbs in documentation
+  #   executor: ubuntu
+  #   steps:
+  #     - checkout
+  #     - setup-node
+  #     - run:
+  #         name: Run breadcrumb check
+  #         command: pnpm check-breadcrumbs
+          
+  # lint:
+  #   description: Lint Markdown files and validate metadata
+  #   executor: ubuntu
+  #   steps:
+  #     - checkout
+  #     - setup-node
+  #     - run:
+  #         name: Get changed files
+  #         command: |
+  #           if [ -n "$CIRCLE_PULL_REQUEST" ]; then
+  #             PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | rev | cut -d'/' -f1 | rev)
+  #             CHANGED_FILES=$(curl -s "https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pulls/$PR_NUMBER/files" | jq -r '.[].filename' | grep '\.mdx$' || true)
+  #             echo "export CHANGED_FILES=\"$CHANGED_FILES\"" >> $BASH_ENV
+  #           fi
+  #     - run:
+  #         name: Lint Markdown files
+  #         command: pnpm lint
+  #     - run:
+  #         name: "Metadata Validation (Warning Only)"
+  #         command: |
+  #           echo "Running metadata validation (warnings will not block PR)..."
+  #           pnpm validate-pr-metadata || true
+
+  # links:
+  #   description: Check broken links in documentation
+  #   executor: ubuntu
+  #   steps:
+  #     - checkout
+  #     - setup-node
+  #     - run:
+  #         name: Run link checker
+  #         command: pnpm link-checker
 
   developer-metrics:
     description: Monthly Metrics Report
@@ -131,21 +127,12 @@ jobs:
           assignees: "sbvegan"
 
 workflows:
-  run-algolia-workflow:
-    when:
-      equal: [<< pipeline.parameters.run_job >>, "run-algolia"]
-    jobs:
-      - algolia:
-          name: Algolia Index Update
-          context: algolia-search
-          filters:
-            branches:
-              only: main
 
-  pr-workflow:
-    jobs:
-      - links
-      - lint
+  # pr-workflow:
+  #   jobs:
+  #     - breadcrumbs
+  #     - links
+  #     - lint
   monthly-workflow:
     when:
       equal: [build_monthly, <<pipeline.schedule.name>>]

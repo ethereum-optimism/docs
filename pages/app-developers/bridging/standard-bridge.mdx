@@ -1,72 +1,22 @@
 ---
 title: Using the Standard Bridge
-description: >-
-  Learn the basics of using the Standard Bridge to move tokens between Layer 1
-  and Layer 2.
-lang: en-US
-content_type: guide
-topic: using-the-standard-bridge
-personas:
-  - app-developer
-categories:
-  - cross-chain-messaging
-  - standard-bridge
-  - mainnet
-  - testnet
-is_imported_content: 'false'
+description: Learn the basics of using the Standard Bridge to move tokens between Layer 1 and Layer 2.
 ---
 
-import { Callout, Steps } from 'nextra/components'
-
-# Using the Standard Bridge
-
-The Standard Bridge is a basic token bridging system available on OP Mainnet and all other standard OP Stack chains.
-The Standard Bridge allows you to easily move ETH and most ERC-20 tokens between Ethereum and OP Mainnet.
-Transfers from Ethereum to OP Mainnet via the Standard Bridge are usually completed within 1-3 minutes.
-Transfers from OP Mainnet to Ethereum are completed in 7 days as a result of the [withdrawal challenge period](./messaging#understanding-the-challenge-period).
-
-The Standard Bridge is fully permissionless and supports standard ERC-20 tokens.
-Other bridging systems also exist that provide different features and security properties.
-You may wish to explore some of these options to find the bridge that works best for you and your application.
-
-<Callout type="error">
+<Warning>
   The Standard Bridge **does not** support [**fee on transfer tokens**](https://github.com/d-xo/weird-erc20#fee-on-transfer) or [**rebasing tokens**](https://github.com/d-xo/weird-erc20#balance-modifications-outside-of-transfers-rebasingairdrops) because these types of tokens may cause bridge accounting errors.
-</Callout>
+</Warning>
 
 ## Design
 
-The Standard Bridge allows users to convert tokens that are native to one chain (like Ethereum) into a representation of those tokens on the other chain (like OP Mainnet).
-Users can then convert these bridged representations back into their original native tokens at any time.
-
-This bridging mechanism functions identically in both directions — tokens native to OP Mainnet can be bridged to Ethereum, just like tokens native to Ethereum can be bridged to OP Mainnet.
-Here you'll get to understand how the Standard Bridge works when moving tokens from Ethereum to OP Mainnet.
-Since the bridging mechanism is mirrored on both sides, this will also explain how the bridge works in the opposite direction.
-
 ### Architecture
 
-The Standard Bridge is composed of two contracts, the [`L1StandardBridge`](https://github.com/ethereum-optimism/optimism/blob/65ec61dde94ffa93342728d324fecf474d228e1f/packages/contracts-bedrock/contracts/L1/L1StandardBridge.sol) (on `Ethereum`) and the [`L2StandardBridge`](https://github.com/ethereum-optimism/optimism/blob/65ec61dde94ffa93342728d324fecf474d228e1f/packages/contracts-bedrock/contracts/L2/L2StandardBridge.sol) (on `OP Mainnet`).
-These two contracts interact with one another via the `CrossDomainMessenger` system for sending messages between Ethereum and OP Mainnet.
-You can read more about the `CrossDomainMessenger` in the guide on [Sending Data Between L1 and L2](./messaging).
 
 ### Bridged tokens
 
-The Standard Bridge utilizes bridged representations of tokens that are native to another blockchain.
-Before a token native to one chain can be bridged to the other chain, a bridged representation of that token must be created on the receiving side.
-
-A bridged representation of a token is an ERC-20 token that implements the [`IOptimismMintableERC20`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/IOptimismMintableERC20.sol#L6-L18) interface.
-This interface includes a few functions that the `StandardBridge` contracts use to manage the bridging process.
-All bridged versions of tokens **must** implement this interface to be used with the `StandardBridge`.
-Native tokens do not need to implement this interface.
-
-A native token may have more than one bridged representation at the same time.
-Users must always specify which bridged token they wish to use when using the bridge.
-Different bridged representations of the same native token are considered entirely independent tokens.
 
 ### Bridging native tokens
 
-The Standard Bridge uses a "lock-and-mint" mechanism to convert native tokens into their bridged representations.
-This means that **native tokens are locked** into the Standard Bridge on one side, after which **bridged tokens are minted** on the other side.
-The process for bridging a native token involves a few steps.
 
 <Steps>
   {<h3>User gives the Standard Bridge an allowance</h3>}
@@ -87,14 +37,14 @@ The process for bridging a native token involves a few steps.
   *   `uint32 _minGasLimit`: Gas to use to complete the transfer on the receiving side.
   *   `bytes calldata _extraData`: Optional identify extra data.
 
-  <Callout>
+  <Info>
     Users can also trigger the [`bridgeERC20`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L168-L191) function instead of `bridgeERC20To` to avoid needing to specify the `address _to` parameter.
     Doing so will automatically set the `address _to` parameter to the `msg.sender`.
 
     **The `bridgeERC20` function can be potentially dangerous for users with [smart contract wallets](https://web.archive.org/web/20231012141406/https://blockworks.co/news/what-are-smart-contract-wallets) as some smart contract wallets cannot be deployed at the same address on every blockchain.**
     To help users avoid potentially losing access to tokens by accident, the `bridgeERC20` function will always revert when triggered from a smart contract.
     Smart contract wallet users and other smart contracts should therefore use the `bridgeERC20To` function instead.
-  </Callout>
+  </Info>
 
   {<h3>The Standard Bridge locks the transferred tokens</h3>}
 
@@ -143,9 +93,6 @@ The process for bridging a native token involves a few steps.
 
 ### Bridging non-native tokens
 
-The Standard Bridge uses a "burn-and-unlock" mechanism to convert bridged representations of tokens back into their native tokens.
-This means that **bridged tokens are burned** on the Standard Bridge on one side, after which **native tokens are unlocked** on the other side.
-The process for bridging a non-native, bridged representation of a token involves a few steps.
 
 <Steps>
   {<h3>User calls the bridging function</h3>}
@@ -199,15 +146,12 @@ The process for bridging a non-native, bridged representation of a token involve
 
 ### Bridging ETH
 
-The Standard Bridge contracts can also be used to bridge ETH from Ethereum to OP Mainnet and vice versa.
-The ETH bridging process is generally less complex than the ERC-20 bridging process.
-Users simply need to trigger and send ETH to the [`bridgeETH`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L143-L150) or [`bridgeETHTo`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L152-L166) functions on either blockchain.
 
-<Callout>
+<Info>
   Users can also deposit ETH from Ethereum to OP Mainnet by sending a basic ETH transfer from an EOA to the `L1StandardBridgeProxy`.
   This works because the `L1StandardBridgeProxy` contains a [`receive`](https://github.com/ethereum-optimism/optimism/blob/2e647210882d961f04055e656590d90ad98c9934/packages/contracts-bedrock/src/universal/StandardBridge.sol#L119-L121) function.
   You can find the mainnet and testnet addresses on the [Contract Addresses](/superchain/addresses) page.
-</Callout>
+</Info>
 
 ## Tutorials
 
@@ -218,19 +162,11 @@ Users simply need to trigger and send ETH to the [`bridgeETH`](https://github.co
 
 ## Superchain Token List
 
-The [Superchain Token List](/superchain/tokenlist) exists to help users discover the right bridged token addresses for any given native token.
-Consider checking this list to make sure that you're not using the wrong bridged representation of a token when bridging a native token.
 
-Developers who are creating their own bridged tokens should consider [adding their token](https://github.com/ethereum-optimism/ethereum-optimism.github.io#adding-a-token-to-the-list) to the Superchain Token List.
-Tokens on the Superchain Token List will automatically appear on certain tools like the [Superchain Bridges UI](https://app.optimism.io/bridge?utm_source=op-docs&utm_medium=docs).
 
 ### Searching the Token List
 
-You should strongly consider using the Superchain Token List to verify that you're using the correct bridged representation of a token when bridging a native token.
-Doing so can help you avoid accidentally bridging to the wrong token and locking up your native token permanently.
 
-You can easily find the bridged representation of a token for OP Mainnet on the [Bridged Token Addresses](/superchain/tokenlist#op-mainnet) page.
-If you want to find the bridged representation of a token for another chain, use the following steps.
 
 <Steps>
   {<h3>Find the token you want to bridge</h3>}

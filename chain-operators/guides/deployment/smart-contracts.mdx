@@ -1,0 +1,97 @@
+---
+title: Smart contract deployment
+description: Learn how to deploy the OP Stack L1 smart contracts.
+---
+
+
+
+
+
+
+
+# Overview
+
+This guide outlines the process for deploying the OP Stack L1 smart contracts using `op-deployer`.
+
+Deploying OP Stack L1 contracts is a critical step in setting up your rollup.
+
+<Info>
+  Always deploy from official contract releases. You can find official release versions in the
+  [smart contract overview](/stack/smart-contracts#official-releases). Contract changes are
+  generally not considered backwards compatible.
+</Info>
+
+<Steps>
+  <Step title="Install op-deployer">
+  First, install the `op-deployer` tool following the [installation instructions](/operators/chain-operators/tools/op-deployer#installation).
+  </Step>
+
+  <Step title="Create an intent file">
+  Generate an intent file that defines your chain configuration:
+  
+    ```bash
+    op-deployer init \
+      --l1-chain-id <chain ID of your L1> \
+      --l2-chain-ids <comma-separated list of chain IDs for your L2s> \
+      --workdir .deployer \
+      --intent-type <standard|custom|standard-overrides>
+    ```
+  
+    Customize the generated intent file according to your requirements. See the [op-deployer configuration guide](/operators/chain-operators/tools/op-deployer#understanding-the-intenttoml-fields) for details.
+  </Step>
+
+  <Step title="Deploy the contracts">
+  Execute the deployment:
+  
+    ```bash
+    op-deployer apply --workdir .deployer --l1-rpc-url <rpc-url> --private-key <private key hex>
+    ```
+  </Step>
+
+  <Step title="Verify contract source code (Optional)">
+  Verify your deployed contracts on block explorers:
+  
+    ```bash
+    op-deployer verify \
+      --l1-rpc-url <l1 rpc url> \
+      --etherscan-api-key <your free etherscan api key>
+    ```
+  </Step>
+
+  <Step title="Generate chain configuration files">
+  Generate the necessary configuration files for your L2 node:
+  
+    ```bash
+    op-deployer inspect genesis --workdir .deployer <l2-chain-id> > .deployer/genesis.json
+    op-deployer inspect rollup --workdir .deployer <l2-chain-id> > .deployer/rollup.json
+    ```
+  </Step>
+</Steps>
+
+## Contract versioning
+
+The OP Stack follows semantic versioning (X.Y.Z) for contract releases:
+
+*   **Major (X):** Breaking changes that require coordination, such as Ecotone or the Fault Proof System
+*   **Minor (Y):** New features or improvements that maintain backwards compatibility
+*   **Patch (Z):** Bug fixes and minor improvements
+
+Contract releases are tagged in the repository as `op-contracts/vX.Y.Z`.
+
+<Info>
+  For standard chains intended to join the Superchain, always use the latest Optimism Governance approved
+  release. You can find these in the [Superchain Registry](https://github.com/ethereum-optimism/superchain-registry).
+</Info>
+
+## Version compatibility
+
+When selecting a contract version, consider:
+
+*   L2 Client compatibility: Ensure your chosen contract version is compatible with the op-geth and op-node versions you plan to use
+*   Feature requirements: Different versions support different features (e.g., only v2.0.0+ supports permissionless fault proofs)
+*   Security updates: Always prefer the latest patch version within your chosen major.minor version
+
+## Next Steps
+
+*   Learn how to [create your genesis file](/operators/chain-operators/deploy/genesis).
+*   See all [configuration options](/operators/chain-operators/configuration/rollup) and example configurations.

@@ -1,0 +1,133 @@
+---
+title: Node Troubleshooting
+description: Learn solutions to common problems to troubleshoot your node.
+---
+
+This page lists common troubleshooting scenarios and solutions for node operators.
+
+## 401 Unauthorized: Signature Invalid
+
+If you see a log that looks like this in `op-node`:
+
+```
+WARN [12-13|15:53:20.263] Derivation process temporary error       attempts=80 err="stage 0 failed resetting: temp: failed to find the L2 Heads to start from: failed to fetch current L2 forkchoice state: failed to find the finalized L2 block: failed to determine L2BlockRef of finalized, could not get payload: 401 Unauthorized: signature is invalid
+```
+
+It means that the `op-node` is unable to authenticate with `execution client`'s authenticated RPC using the JWT secret.
+
+### Solution
+
+1.  Check that the JWT secret is correct in both services.
+2.  Check that `execution client`'s authenticated RPC is enabled, and that the URL is correct.
+
+## 403 Forbidden: Invalid Host Specified
+
+If you see a log that looks like this in `op-node`:
+
+```
+{"err":"403 Forbidden: invalid host specified\n","lvl":"error","msg":"error getting latest header","t":"2022-12-13T22:29:18.932833159Z"}
+```
+
+It means that you have not whitelisted `op-node`'s host with `execution client`.
+
+### Solution
+
+1.  Make sure that the `--authrpc.vhosts` parameter in `execution client` is either set to the correct host, or `*`.
+2.  Check that `execution client`'s authenticated RPC is enabled, and that the URL is correct.
+
+## Failed to Load P2P Config
+
+If you see a log that looks like this in `op-node`:
+
+```
+CRIT [12-13|13:46:21.386] Application failed                       message="failed to load p2p config: failed to load p2p discovery options: failed to open discovery db: mkdir /p2p: permission denied"
+```
+
+It means that the `op-node` lacks write access to the P2P discovery or peerstore directories.
+
+### Solution
+
+1.  Make sure that the `op-node` has write access to the P2P directory. By default, this is `/p2p`.
+2.  Set the P2P directory to somewhere the `op-node` can access via the `--p2p.discovery.path` and `--p2p.peerstore.path` parameters.
+3.  Set the discovery path to `memory` to disable persistence via the `--p2p.discovery.path` and `--p2p.peerstore.path` parameters.
+
+## Wrong Chain
+
+If you see a log that looks like this in `op-node`:
+
+```
+{"attempts":183,"err":"stage 0 failed resetting: temp: failed to find the L2 Heads to start from: wrong chain L1: genesis: 0x4104895a540d87127ff11eef0d51d8f63ce00a6fc211db751a45a4b3a61a9c83:8106656, got 0x12e2c18a3ac50f74d3dd3c0ed7cb751cc924c2985de3dfed44080e683954f1dd:8106656","lvl":"warn","msg":"Derivation process temporary error","t":"2022-12-13T23:31:37.855253213Z"}
+```
+
+It means that the `op-node` is pointing to the wrong chain.
+
+### Solution
+
+1.  Verify that the `op-node`'s L1 URL is pointing to the correct L1 for the given network.
+2.  Verify that the `op-node`'s rollup config/`--network` parameter is set to the correct network.
+3.  Verify that the `op-node`'s L2 URL is pointing to the correct instance of `execution client`, and that `execution client` is properly initialized for the given network.
+
+## Unclean Shutdowns
+
+If you see a log that looks like this in `execution client`:
+
+```
+WARN [03-05|16:18:11.238] Unclean shutdown detected                booted=2023-03-05T11:09:26+0000 age=5h8m45s
+```
+
+It means `execution client` has experienced an unclean shutdown. The [geth docs](https://geth.ethereum.org/docs/fundamentals/databases#unclean-shutdowns)
+say if Geth stops unexpectedly, the database can be corrupted. This is known as an
+"unclean shutdown" and it can lead to a variety of problems for the node when
+it is restarted.
+
+<Tabs items={['op-geth', 'Nethermind']}>
+  <Tabs.Tab>
+    It is always best to shut down Geth gracefully, i.e. using a
+    shutdown command such as `ctrl-c`, `docker stop -t 300 <container ID>` or
+    `systemctl stop` (although please note that `systemctl stop` has a default timeout
+    of 90s - if Geth takes longer than this to gracefully shut down it will quit
+    forcefully. Update the `TimeoutSecs` variable in `systemd.service` to override this
+    value to something larger, at least 300s).
+
+    This way, Geth knows to write all relevant information into the database to
+    allow the node to restart properly later. This can involve >1GB of information
+    being written to the LevelDB database which can take several minutes.
+
+    ### Solution
+
+    If an unexpected shutdown does occur, the `removedb` subcommand can be used to
+    delete the state database and resync it from the ancient database. This should
+    get the database back up and running.
+  </Tabs.Tab>
+
+  <Tabs.Tab>
+    Unclean shutdowns in `Nethermind` can lead to database corruption. This typically happens when:
+
+    *   The node experiences hardware failures (disk failures, memory errors, overheating)
+    *   Power cuts cause abrupt shutdowns
+    *   The process is terminated without proper cleanup
+
+    ### Solutions
+
+    1.  **Lock File Issues**
+        If `Nethermind` complains about lock files after an unclean shutdown, run:
+        ```bash
+        find /path/to/nethermind_db -type f -name 'LOCK' -delete
+        ```
+
+    2.  **Block Checksum Mismatch**
+        If you encounter block checksum mismatch errors, you can enable direct I/O:
+        ```bash
+        --Db.UseDirectIoForFlushAndCompactions true
+        ```
+        Note: This may impact performance.
+
+    3.  **Complete Resync**
+        In cases of severe corruption, a full resync is recommended:
+        ```bash
+        sudo systemctl stop nethermind
+        sudo rm -rf /path/to/nethermind_db/mainnet
+        sudo systemctl start nethermind
+        ```
+  </Tabs.Tab>
+</Tabs>
