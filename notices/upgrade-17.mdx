@@ -6,11 +6,13 @@ description: Learn how to prepare for the Jovian hard fork
 The Jovian hardfork is a proposed network upgrade for OP Stack chains, which brings several improvements to the way rollup fees are calculated as well as performing a maintenance update to the fault proof virtual machine.
 
 <Info>
-  Jovian activation times are: **Tuesday, Nov 4, 2025** on **Sepolia** Superchain, and **Tuesday, Nov 18, 2025** on **Mainnet** Superchain.
+  The Jovian hard fork for the Sepolia Superchain will be activated at Wed 12 Nov 2025 16:00:01 UTC (`1762963201`) and the Mainnet Superchain will be activated at Tue 25 Nov 2025 16:00:01 UTC (`1764086401`).
 
-  The upgrade will be executed by OP Labs on the following chains: `OP`, `Base`, `Soneium`, `Ink`, `Unichain`, `Metal`, `Mode`, `Zora`, `Arena-Z`, `Swell` (mainnet only).
+  The upgrade will be executed by OP Labs on the following chains: `OP`, `Base`, `Soneium`, `Ink`, `Unichain`, `Metal`, `Mode`, `Zora`, `Arena-Z`, `Swell` (Swell Mainnet only).
 
-Chains that inherit activations from the Superchain Registry and are NOT listed above must perform the upgrade themselves before the activation time. To check if you are inheriting the activation time automatically, see if your chain's [Superchain Registry toml file](https://github.com/ethereum-optimism/superchain-registry/tree/main/superchain/configs) includes the Jovian activation and the superchain_time.
+  Chains that inherit activations from the Superchain Registry and are NOT listed above must perform the upgrade themselves before the activation time. To check if you are inheriting the activation time automatically, see if your chain's [Superchain Registry toml file](https://github.com/ethereum-optimism/superchain-registry/tree/main/superchain/configs) includes the Jovian activation and the `superchain_time` field.
+
+  Additionally, Swell Mainnet will activate the Isthmus hard fork at Tue 25 Nov 2025 04:00:01 UTC (`1764043201`).
 </Info>
 
 ## What's included in Upgrade 17
@@ -29,71 +31,75 @@ For more information on the Jovian implementation details, please review the [Jo
 * `extraData` field is extended (for the [minBaseFee](https://specs.optimism.io/protocol/jovian/exec-engine.html#minimum-base-fee-in-block-header))
 * `blobGasUsed` may become nonzero when the DA footprint feature is enabled
 
-The `blobGasUsed` property of each block header is set to that block's `daFootprint`. Note that since Ecotone it was set to `0`, as OP Stack chains don't support blobs. It is now repurposed to store the DA footprint. If you want to disable it, set a scalar of 1. Setting 0 (or never setting the scalar value) implies the default value of the scalar, which can be updated in future forks. Please ensure your nodes and tooling can handle these updated header semantics.
+The `blobGasUsed` property of each block header is set to that block's `daFootprint`. Note that since Ecotone it was set to `0`, as OP Stack chains don't support blobs. It is now repurposed to store the DA footprint. If you want to disable it, set a scalar of 1. Setting 0 (or never setting the scalar value) implies the default value of the scalar, which can be updated in future forks. Please ensure your nodes and tooling can handle these updated header semantics.
 
 For more information, see the [specs](https://specs.optimism.io/protocol/jovian/exec-engine.html#da-footprint-block-limit).
 
 ## For node operators
 
 Update your node software as soon as possible after release:
+
 * Update `op-node` to [NEED VERSION]
 * Update `op-geth` to [NEED VERSION]
 
 ## For chain operators
+
+Chain operators must complete the following tasks:
+
+* Update `op-challenger` to [NEED VERSION]
 
 ### For permissionless fault proof enabled chains
 
 Chains running permissionless fault proofs will need to deploy new dispute game contracts with new absolute prestates.
 
 <Steps>
-  ### Verify the new absolute prestate
+  <Step title="Verify the new absolute prestate">
 
-  <Info>
-    As of upgrade 14, the 64 bit multi-threaded version of cannon is utilized.
-  </Info>
+  The absolute prestate is generated with the [op-program/v1.8.0-rc.3](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.8.0-rc.3). You can use this new absolute prestate `0x03799051d2bfe459127d4597f469f535ff1bd2a6e1e2134443167620871c11f3` for the following chains:
 
-  The absolute prestate is generated with the [op-program/v1.6.1-rc.1](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.6.1-rc.1). You can use this new absolute prestate `0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8` for the following chains:
+  *   Mainnet and Sepolia: `OP`, `Base`, `Soneium`, `Ink`, `Unichain`, `Metal`, `Mode`, `Zora`, `Arena-Z`, and `Swell` (Swell Mainnet only).
 
-  *   Mainnet and Sepolia: `OP`, `Base`, `Soneium`, `Ink`and `Unichain`
-
-  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/d6fb90dd489e39efa206b55200766ccc075c1d9b/Makefile#L130-L132) in the root of the monorepo on the `op-program/v1.6.1-rc.1` tag:
+  You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/3ebc32348de4bb064990d117d2dcfa1e115e187b/Makefile#L134-L136) in the root of the monorepo on the `op-program/v1.8.0-rc.3` tag:
 
   ```shell
   make reproducible-prestate
   ```
 
-  This will output the calculated prestates, which will look something like:
+  This will output the calculated prestates, the tail end of the output should look like this:
 
   ```shell
   -------------------- Production Prestates --------------------
 
-
   Cannon64 Absolute prestate hash: 
-  0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+  0x03799051d2bfe459127d4597f469f535ff1bd2a6e1e2134443167620871c11f3
 
   -------------------- Experimental Prestates --------------------
 
-  CannonInterop Absolute prestate hash: 
-  0x03fc3b4d091527d53f1ff369ea8ed65e5e17cc7fc98ebf75380238151cdc949c
-
   Cannon64Next Absolute prestate hash: 
-  0x03eb07101fbdeaf3f04d9fb76526362c1eea2824e4c6e970bdb19675b72e4fc8
+  0x03799051d2bfe459127d4597f469f535ff1bd2a6e1e2134443167620871c11f3
+
+  CannonInterop Absolute prestate hash: 
+  0x0375052a8100e452f648435703f524245fadce6122fa99046921bdd84683a982
+
+  CannonInteropNext Absolute prestate hash: 
+  0x0375052a8100e452f648435703f524245fadce6122fa99046921bdd84683a982
   ```
 
   *   The "Cannon64" hash is the 64-bit prestate.
 
   Verify that your target prestate was calculated as expected and matches the corresponding entry in
   [standard-prestates.toml](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml).
+  </Step>
 
-  ### Upload your new preimage file
+  <Step title="Upload your new preimage file">
+    During the previous step, you also generated the preimage of the absolute prestate, which is the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate-mt64.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `PRESTATEHASH.bin.gz`.
 
-  During the previous step, you also generated the preimage of the absolute prestate, which is the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate-mt64.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `PRESTATEHASH.bin.gz`.
+    Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
+  </Step>
 
-  Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
+  <Step title="Execute the upgrade">
+    Once your `op-challenger` is ready with the new preimage, you can execute the upgrade transaction. This should be done by making a delegatecall to the `upgrade()` function of the OP Contract Manager (at the address listed in [the registry](https://github.com/ethereum-optimism/superchain-registry/blob/6621a0f13ce523fe1bb8deea739fe37abe20f90d/validation/standard/standard-versions-mainnet.toml#L22).
 
-  ### Execute the upgrade
-
-  Once your `op-challenger` is ready with the new preimage, you can execute the upgrade transaction. This should be done by making a delegatecall to the `upgrade()` function of the OP Contract Manager (at the address listed in [the registry](https://github.com/ethereum-optimism/superchain-registry/blob/6621a0f13ce523fe1bb8deea739fe37abe20f90d/validation/standard/standard-versions-mainnet.toml#L22).
-
-  Please simulate and validate the expected output prior to executing the transaction.
+    Please simulate and validate the expected output prior to executing the transaction.
+  </Step>
 </Steps>
