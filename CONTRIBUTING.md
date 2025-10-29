@@ -3,28 +3,30 @@
 Thanks for taking the time to contribute! ❤️
 
 ## Table of Contents
-- [Overview](#overview)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Development Setup](#development-setup)
-- [Contributing Process](#contributing-process)
-  - [File Architecture](#file-architecture)
-  - [Content Guidelines](#content-guidelines)
-  - [Local Testing](#local-testing)
-- [Pull Request Process](#pull-request-process)
-  - [Before Submitting](#before-submitting)
-  - [Submission Guidelines](#submission-guidelines)
-  - [Review Process](#review-process)
-- [Code of Conduct](#code-of-conduct)
-- [Additional Ways to Contribute](#additional-ways-to-contribute) 
+- [Contributing to Optimism Docs](#contributing-to-optimism-docs)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Development Setup](#development-setup)
+  - [Contributing Process](#contributing-process)
+    - [File Architecture](#file-architecture)
+    - [Content Guidelines](#content-guidelines)
+    - [Local Testing](#local-testing)
+  - [Pull Request Process](#pull-request-process)
+    - [Before Submitting](#before-submitting)
+    - [Submission Guidelines](#submission-guidelines)
+    - [Review Process](#review-process)
+  - [Code of Conduct](#code-of-conduct)
+  - [Additional Ways to Contribute](#additional-ways-to-contribute)
 
 ## Overview
 
 Optimism's documentation is open-source and hosted on GitHub in the `ethereum-optimism/docs` repository. The documentation is rendered at [docs.optimism.io](https://docs.optimism.io). You can contribute either by:
 - Forking the `docs` repository and working locally
-- Using the "Edit this page" button on any documentation page for smaller updates
+- Using the "Suggest edits" button on any documentation page for smaller updates
 
-All contributions, pull requests, and issues should be in English at this time. We will be running a dedicated project in the future to add language support to the technical docs, so please reach out via our [developer support channel](https://github.com/ethereum-optimism/developers/) if you are interested in helping with that project.
+All contributions, pull requests, and issues should be in English at this time. 
 
 ## Getting Started
 
@@ -45,56 +47,33 @@ You can now start changing content and see the website updated live each time yo
 ## Contributing Process
 
 ### File Architecture
-Our documentation is organized into two main sections:
 
-| Section | Purpose | Location |
-|---------|----------|----------|
-| Pages | Technical documentation content | `/docs/pages/` |
-| Public | Images, icons, and illustrations | `/docs/public/` |
+See the [mintlify docs](https://www.mintlify.com/docs/organize/navigation).
 
 **Warning**: The `public` folder contains `robots.txt` and `sitemap.xml` for SEO purposes. These files are maintained by the Documentation team only.
 
 ### Content Guidelines
-We use [Nextra](https://nextra.site/docs), a React and MDX-based framework with the docs theme (as opposed to the blog theme). The content you write is [Markdown](https://daringfireball.net/projects/markdown/syntax) that accepts [React](https://reactjs.org/) components.
+We use [mintlify](https://www.mintlify.com/docs) to power our docs.
 
-Please refer to our comprehensive [Style Guide](/pages/connect/contribute/style-guide.mdx) for detailed formatting instructions.
+Please refer to our comprehensive [Style Guide](/reference/contribute/style-guide) for detailed formatting instructions.
 
 ### Local Testing
-Before submitting your changes:
-1. Stop or delete the terminal server if it's running
-2. Run `pnpm dev` to test builds
-3. Execute `pnpm fix` for automatic linting
-4. Run `pnpm spellcheck:lint` for spell checking
-   - Add new words to the dictionary by appending them to `words.txt`
-5. Use `pnpm spellcheck:fix` to update dictionary
-6. Try another `pnpm dev` and repeat until no issues are reported ("client" and "server compiled successfully")
 
-If you encounter build issues:
-- Check terminal output for error messages
-- Verify all links are working
-- Ensure proper formatting according to the style guide
-- Test locally before pushing changes
+Follow these [docs](https://www.mintlify.com/docs/installation) for local changes.
 
 ## Pull Request Process
 
 ### Before Submitting
-- Ensure all local tests pass
 - Fix any reported issues
 - Verify content accuracy
 - Test all links and references
-- Target the `main` branch (unless otherwise specified)
+- Target the `mintlify` branch (`main` needs to be cleaned up)
 
 ### Submission Guidelines
 1. Create a [new pull request](https://github.com/ethereum-optimism/docs/issues/new/choose)
 2. Choose appropriate PR type or use blank template
 3. Provide clear title and accurate description
-4. Add required labels:
-   - `documentation` (required for all PRs)
-   - Content-specific: `tutorial`, `faq`, `troubleshooting`
-   - Feature-specific: `oracle`, `rpc-provider`, `faucet`, `attestation`
-   - Issue-specific: `user feedback`, `bug`
-   
-> **Note**: If label type is not set, the Documentation team will set or update it for you.
+4. Add labels
 
 > **Important**: Add `flag:merge-pending-release` label if the PR content should only be released publicly in sync with a product release.
 

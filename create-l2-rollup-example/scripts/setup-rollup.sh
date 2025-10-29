@@ -30,6 +30,7 @@ SEQUENCER_DIR="$ROLLUP_DIR/sequencer"
 BATCHER_DIR="$ROLLUP_DIR/batcher"
 PROPOSER_DIR="$ROLLUP_DIR/proposer"
 CHALLENGER_DIR="$ROLLUP_DIR/challenger"
+DISPUTE_MON_DIR="$ROLLUP_DIR/dispute-mon"
 
 # Logging functions
 log_info() {
@@ -143,6 +144,7 @@ update_intent() {
     sed -i.bak "s|batcher = .*|batcher = \"$BATCHER_ADDR\"|" .deployer/intent.toml
     sed -i.bak "s|proposer = .*|proposer = \"$PROPOSER_ADDR\"|" .deployer/intent.toml
     sed -i.bak "s|challenger = .*|challenger = \"$CHALLENGER_ADDR\"|" .deployer/intent.toml
+    sed -i.bak "s|fundDevAccounts = .*|fundDevAccounts = true|" .deployer/intent.toml
 
     log_success "Intent configuration updated"
 }
@@ -427,6 +429,49 @@ generate_challenger_prestate() {
     log_success "Challenger prestate generation complete: $ROLLUP_DIR/challenger/${PRESTATE_HASH}.bin.gz"
 }
 
+# Setup dispute monitor
+setup_dispute_monitor() {
+    log_info "Setting up dispute monitor..."
+
+    mkdir -p "$DISPUTE_MON_DIR"
+    cd "$DISPUTE_MON_DIR"
+
+    # Get required addresses from state.json
+    GAME_FACTORY_ADDRESS=$(jq -r '.opChainDeployments[0].DisputeGameFactoryProxy' "$DEPLOYER_DIR/.deployer/state.json")
+    PROPOSER_ADDRESS=$(jq -r '.appliedIntent.chains[0].roles.proposer' "$DEPLOYER_DIR/.deployer/state.json")
+    CHALLENGER_ADDRESS=$(jq -r '.appliedIntent.chains[0].roles.challenger' "$DEPLOYER_DIR/.deployer/state.json")
+
+    log_info "Game Factory: $GAME_FACTORY_ADDRESS"
+    log_info "Proposer: $PROPOSER_ADDRESS"
+    log_info "Challenger: $CHALLENGER_ADDRESS"
+
+    # Create environment file for dispute monitor
+    cat > .env << EOF
+# Rollup RPC Configuration
+ROLLUP_RPC=http://op-node:8547
+
+# Contract Addresses
+OP_DISPUTE_MON_GAME_FACTORY_ADDRESS=$GAME_FACTORY_ADDRESS
+
+# Honest Actors
+PROPOSER_ADDRESS=$PROPOSER_ADDRESS
+CHALLENGER_ADDRESS=$CHALLENGER_ADDRESS
+
+# Network Configuration
+OP_DISPUTE_MON_NETWORK=op-sepolia
+
+# Monitoring Configuration
+OP_DISPUTE_MON_MONITOR_INTERVAL=10s
+EOF
+
+    # Create logs directory
+    mkdir -p logs
+
+    log_success "Dispute monitor configuration created"
+    log_info "Dispute monitor will start with 'docker-compose up -d' from project root"
+    log_info "To verify it's working, run: curl -s http://localhost:7300/metrics | grep -E \"op_dispute_mon_(games|ignored)\" | head -10"
+}
+
 # Add op-deployer to PATH if it exists in the workspace
 if [ -f "$(dirname "$0")/../op-deployer" ]; then
     OP_DEPLOYER_PATH="$(cd "$(dirname "$0")/.." && pwd)/op-deployer"
@@ -457,9 +502,11 @@ main() {
     setup_proposer
     generate_challenger_prestate
     setup_challenger
+    setup_dispute_monitor
 
     log_success "OP Stack L2 Rollup deployment complete!"
-    log_info "Run 'docker-compose up -d' to start all services"
+    log_info "Run 'docker-compose up -d' to start all services (including dispute monitor)"
+    log_info "Dispute monitor metrics: http://localhost:7300/metrics"
 }
 
 # Handle command line arguments for standalone function calls
