@@ -49,7 +49,7 @@ mise install
 
 1. **Navigate to this code directory**:
    ```bash
-   cd docs/pages/operators/chain-operators/tutorials/create-l2-rollup/code
+   cd docs/create-l2-rollup-example
    ```
 
 2. **Configure environment variables**:
