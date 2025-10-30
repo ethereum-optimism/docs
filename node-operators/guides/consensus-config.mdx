@@ -13,7 +13,7 @@ description: Learn additional configuration and command line options for op-node
 </Info>
 
 This page lists all configuration options for `op-node`. `op-node` implements most rollup-specific functionality as the Consensus-Layer, similar to an L1 beacon-node.
-The following options are from the `--help` in [v1.7.5](https://github.com/ethereum-optimism/optimism/releases/tag/op-node/v1.7.5).
+The following options are from the `--help` in [v1.10.2](https://github.com/ethereum-optimism/optimism/releases/tag/op-node/v1.10.2).
 
 ## Recommended configuration
 
@@ -150,6 +150,26 @@ Address of L1 Beacon-node HTTP endpoint to use.
   <Tabs.Tab>`OP_NODE_L1_BEACON="http://127.0.0.1:3500"`</Tabs.Tab>
 </Tabs>
 
+#### l1.beacon-fallbacks
+
+Addresses of L1 Beacon-API compatible HTTP fallback endpoints. Used to fetch blob sidecars not available at the l1.beacon (e.g. expired blobs).
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l1.beacon-fallbacks=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l1.beacon-fallbacks="http://fallback1.example.com,http://fallback2.example.com"`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L1_BEACON_FALLBACKS="http://fallback1.example.com,http://fallback2.example.com"`</Tabs.Tab>
+</Tabs>
+
+#### l1.beacon-header
+
+Optional HTTP header to add to all requests to the L1 Beacon endpoint. Format: 'X-Key: Value'
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l1.beacon-header=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l1.beacon-header="Authorization: Bearer token"`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L1_BEACON_HEADER="Authorization: Bearer token"`</Tabs.Tab>
+</Tabs>
+
 #### l1.beacon.fetch-all-sidecars
 
 If true, all sidecars are fetched and filtered locally. Workaround for buggy Beacon nodes. The default value is `false`.
@@ -168,6 +188,16 @@ When false, halts `op-node` startup if the healthcheck to the Beacon-node endpoi
   <Tabs.Tab>`--l1.beacon.ignore=<boolean>`</Tabs.Tab>
   <Tabs.Tab>`--l1.beacon.ignore=false`</Tabs.Tab>
   <Tabs.Tab>`OP_NODE_L1_BEACON_IGNORE=false`</Tabs.Tab>
+</Tabs>
+
+#### l1.cache-size
+
+Cache size for blocks, receipts and transactions. If this flag is set to 0, 3/2 of the sequencing window size is used (usually 2400). The default value of 900 (~3h of L1 blocks) is good for (high-throughput) networks that see frequent safe head increments. On (low-throughput) networks with infrequent safe head increments, it is recommended to set this value to 0, or a value that well covers the typical span between safe head increments. Note that higher values will cause significantly increased memory usage. The default value is `900`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l1.cache-size=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l1.cache-size=900`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L1_CACHE_SIZE=900`</Tabs.Tab>
 </Tabs>
 
 #### l1.epoch-poll-interval
@@ -270,6 +300,16 @@ Address of L2 Engine JSON-RPC endpoints to use (engine and eth namespace require
   <Tabs.Tab>`OP_NODE_L2_ENGINE_RPC=http://127.0.0.1:8751`</Tabs.Tab>
 </Tabs>
 
+#### l2.engine-rpc-timeout
+
+L2 engine client rpc timeout. The default value is `10s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--l2.engine-rpc-timeout=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--l2.engine-rpc-timeout=10s`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_L2_ENGINE_RPC_TIMEOUT=10s`</Tabs.Tab>
+</Tabs>
+
 #### l2.jwt-secret
 
 Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will be generated if left empty.
@@ -296,12 +336,19 @@ Configure which OP Stack network to connect to and manage rollup-specific settin
 
 #### network
 
-Predefined network selection. Available networks: oplabs-devnet-0-sepolia-dev-0,
-op-labs-chaosnet-0-goerli-dev-0, zora-mainnet, base-sepolia, pgn-sepolia,
-zora-sepolia, base-devnet-0-sepolia-dev-0, base-goerli,
-base-devnet-0-goerli-dev-0, conduit-devnet-0-goerli-dev-0, base-mainnet,
-pgn-mainnet, op-sepolia, lyra-mainnet, mode-mainnet, op-mainnet, op-goerli,
-op-labs-devnet-0-goerli-dev-0, orderly-mainnet.
+Predefined network selection. Available networks: arena-z-mainnet, arena-z-sepolia,
+automata-mainnet, base-devnet-0-sepolia-dev-0, base-mainnet, base-sepolia, bob-mainnet,
+camp-sepolia, creator-chain-testnet-sepolia, cyber-mainnet, cyber-sepolia,
+ethernity-mainnet, ethernity-sepolia, fraxtal-mainnet, funki-mainnet, funki-sepolia,
+hashkeychain-mainnet, ink-mainnet, ink-sepolia, lisk-mainnet, lisk-sepolia, lyra-mainnet,
+metal-mainnet, metal-sepolia, mint-mainnet, mode-mainnet, mode-sepolia, op-mainnet,
+op-sepolia, oplabs-devnet-0-sepolia-dev-0, orderly-mainnet, ozean-sepolia, pivotal-sepolia,
+polynomial-mainnet, race-mainnet, race-sepolia, radius_testnet-sepolia, redstone-mainnet,
+rehearsal-0-bn-0-rehearsal-0-bn, rehearsal-0-bn-1-rehearsal-0-bn, settlus-mainnet-mainnet,
+settlus-sepolia-sepolia, shape-mainnet, shape-sepolia, silent-data-mainnet-mainnet,
+snax-mainnet, soneium-mainnet, soneium-minato-sepolia, sseed-mainnet, swan-mainnet,
+swell-mainnet, tbn-mainnet, tbn-sepolia, unichain-mainnet, unichain-sepolia,
+worldchain-mainnet, worldchain-sepolia, xterio-eth-mainnet, zora-mainnet, zora-sepolia.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--network=<value>`</Tabs.Tab>
@@ -329,6 +376,16 @@ Opt-in option to halt on incompatible protocol version requirements of the given
   <Tabs.Tab>`OP_NODE_ROLLUP_HALT=[HaltOptionHere]`</Tabs.Tab>
 </Tabs>
 
+#### rollup.l1-chain-config
+
+Path to .json file with the chain configuration for the L1, either in the direct format or genesis.json format (i.e. embedded under the .config property). Not necessary / will be ignored if using Ethereum mainnet or Sepolia as an L1.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rollup.l1-chain-config=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--rollup.l1-chain-config=/path/to/l1-config.json`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_ROLLUP_L1_CHAIN_CONFIG=/path/to/l1-config.json`</Tabs.Tab>
+</Tabs>
+
 #### rollup.load-protocol-versions
 
 Load protocol versions from the superchain L1 ProtocolVersions contract (if available), and report in logs and metrics. Default is `false`.
@@ -337,6 +394,16 @@ Load protocol versions from the superchain L1 ProtocolVersions contract (if avai
   <Tabs.Tab>`--rollup.load-protocol-versions=[true|false]`</Tabs.Tab>
   <Tabs.Tab>`--rollup.load-protocol-versions=false`</Tabs.Tab>
   <Tabs.Tab>`OP_NODE_ROLLUP_LOAD_PROTOCOL_VERSIONS=false`</Tabs.Tab>
+</Tabs>
+
+#### syncmode
+
+Blockchain sync mode. Options are "consensus-layer" or "execution-layer". The default value is `consensus-layer`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--syncmode=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--syncmode=consensus-layer`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SYNCMODE=consensus-layer`</Tabs.Tab>
 </Tabs>
 
 ### Fork overrides
@@ -413,6 +480,36 @@ Manually specify the isthmus fork timestamp, overriding the bundled setting. The
   <Tabs.Tab>`OP_NODE_OVERRIDE_ISTHMUS=0`</Tabs.Tab>
 </Tabs>
 
+#### override.interop
+
+Manually specify the Interop fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.interop=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.interop=0`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_OVERRIDE_INTEROP=0`</Tabs.Tab>
+</Tabs>
+
+#### override.jovian
+
+Manually specify the Jovian fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.jovian=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.jovian=0`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_OVERRIDE_JOVIAN=0`</Tabs.Tab>
+</Tabs>
+
+#### override.pectrablobschedule
+
+Manually specify the PectraBlobSchedule fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.pectrablobschedule=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.pectrablobschedule=0`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_OVERRIDE_PECTRABLOBSCHEDULE=0`</Tabs.Tab>
+</Tabs>
+
 ### Logging configuration
 
 Control log output format, level, and color.
@@ -447,18 +544,28 @@ The lowest log level that will be output. The default value is `info`.
   <Tabs.Tab>`OP_NODE_LOG_LEVEL=info`</Tabs.Tab>
 </Tabs>
 
+#### log.pid
+
+Show pid in the log. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--log.pid=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--log.pid=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_LOG_PID=false`</Tabs.Tab>
+</Tabs>
+
 ### Logging and RPC
 
 Configure RPC API endpoints and admin functionality.
 
 #### rpc.addr
 
-RPC listening address. Default is `"127.0.0.1"`.
+RPC listening address. Default is `"0.0.0.0"`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--rpc.addr=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--rpc.addr=127.0.0.1`</Tabs.Tab>
-  <Tabs.Tab>`OP_NODE_RPC_ADDR=127.0.0.1`</Tabs.Tab>
+  <Tabs.Tab>`--rpc.addr=0.0.0.0`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_RPC_ADDR=0.0.0.0`</Tabs.Tab>
 </Tabs>
 
 #### rpc.admin-state
@@ -669,6 +776,16 @@ Enables persistent storage of discovered ENRs in a database to recover from a re
   <Tabs.Tab>`OP_NODE_P2P_DISCOVERY_PATH=opnode_discovery_db`</Tabs.Tab>
 </Tabs>
 
+#### p2p.gossip.timestamp.threshold
+
+Threshold for rejecting gossip messages with payload timestamps older than this duration. The default value is `1m0s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--p2p.gossip.timestamp.threshold=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--p2p.gossip.timestamp.threshold=1m0s`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_P2P_GOSSIP_TIMESTAMP_THRESHOLD=1m0s`</Tabs.Tab>
+</Tabs>
+
 #### p2p.listen.ip
 
 Specifies the IP to bind LibP2P and Discv5 to. The default value is `0.0.0.0`.
@@ -870,6 +987,16 @@ Maximum number of L2 blocks for restricting the distance between L2 safe and uns
   <Tabs.Tab>`OP_NODE_SEQUENCER_MAX_SAFE_LAG=0`</Tabs.Tab>
 </Tabs>
 
+#### sequencer.recover
+
+Forces the sequencer to strictly prepare the next L1 origin and create empty L2 blocks. Default is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--sequencer.recover=[true|false]`</Tabs.Tab>
+  <Tabs.Tab>`--sequencer.recover=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SEQUENCER_RECOVER=false`</Tabs.Tab>
+</Tabs>
+
 #### sequencer.stopped
 
 Initialize the sequencer in a stopped state. The sequencer can be started using the admin\_startSequencer RPC. Default is `false`.
@@ -954,6 +1081,230 @@ Path to the snapshot log file.
   <Tabs.Tab>`--snapshotlog.file=<value>`</Tabs.Tab>
   <Tabs.Tab>`--snapshotlog.file=[FilePathHere]`</Tabs.Tab>
   <Tabs.Tab>`OP_NODE_SNAPSHOT_LOG=[FilePathHere]`</Tabs.Tab>
+</Tabs>
+
+### Signer configuration
+
+Options for configuring an external signer for P2P messages.
+
+#### signer.address
+
+Address the signer is signing requests for.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.address=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.address=0x1234...`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SIGNER_ADDRESS=0x1234...`</Tabs.Tab>
+</Tabs>
+
+#### signer.endpoint
+
+Signer endpoint the client will connect to.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.endpoint=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.endpoint=https://signer.example.com`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SIGNER_ENDPOINT=https://signer.example.com`</Tabs.Tab>
+</Tabs>
+
+#### signer.header
+
+Headers to pass to the remote signer. Format `key=value`. Value can contain any character allowed in a HTTP header. When using env vars, split with commas. When using flags one key value pair per flag.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.header=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.header="Authorization: Bearer token"`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SIGNER_HEADER="Authorization: Bearer token"`</Tabs.Tab>
+</Tabs>
+
+#### signer.tls.ca
+
+TLS ca cert path. The default value is `"tls/ca.crt"`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.tls.ca=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.tls.ca="tls/ca.crt"`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SIGNER_TLS_CA="tls/ca.crt"`</Tabs.Tab>
+</Tabs>
+
+#### signer.tls.cert
+
+TLS cert path. The default value is `"tls/tls.crt"`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.tls.cert=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.tls.cert="tls/tls.crt"`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SIGNER_TLS_CERT="tls/tls.crt"`</Tabs.Tab>
+</Tabs>
+
+#### signer.tls.enabled
+
+Enable or disable TLS client authentication for the signer. The default value is `true`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.tls.enabled=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.tls.enabled=true`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SIGNER_TLS_ENABLED=true`</Tabs.Tab>
+</Tabs>
+
+#### signer.tls.key
+
+TLS key path. The default value is `"tls/tls.key"`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--signer.tls.key=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--signer.tls.key="tls/tls.key"`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_SIGNER_TLS_KEY="tls/tls.key"`</Tabs.Tab>
+</Tabs>
+
+### Alt-DA (Experimental)
+
+<Warning>
+Alt-DA Mode is a Beta feature of the MIT licensed OP Stack. While it has received initial review from core contributors, it is still undergoing testing, and may have bugs or other issues.
+</Warning>
+
+Configuration options for Alternative Data Availability mode.
+
+#### altda.enabled
+
+Enable Alt-DA mode. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--altda.enabled=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--altda.enabled=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_ALTDA_ENABLED=false`</Tabs.Tab>
+</Tabs>
+
+#### altda.da-server
+
+HTTP address of a DA Server.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--altda.da-server=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--altda.da-server=http://da-server.example.com`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_ALTDA_DA_SERVER=http://da-server.example.com`</Tabs.Tab>
+</Tabs>
+
+#### altda.da-service
+
+Use DA service type where commitments are generated by Alt-DA server. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--altda.da-service=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--altda.da-service=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_ALTDA_DA_SERVICE=false`</Tabs.Tab>
+</Tabs>
+
+#### altda.get-timeout
+
+Timeout for get requests. 0 means no timeout. The default value is `0s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--altda.get-timeout=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--altda.get-timeout=0s`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_ALTDA_GET_TIMEOUT=0s`</Tabs.Tab>
+</Tabs>
+
+#### altda.max-concurrent-da-requests
+
+Maximum number of concurrent requests to the DA server. The default value is `1`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--altda.max-concurrent-da-requests=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--altda.max-concurrent-da-requests=1`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_ALTDA_MAX_CONCURRENT_DA_REQUESTS=1`</Tabs.Tab>
+</Tabs>
+
+#### altda.put-timeout
+
+Timeout for put requests. 0 means no timeout. The default value is `0s`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--altda.put-timeout=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--altda.put-timeout=0s`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_ALTDA_PUT_TIMEOUT=0s`</Tabs.Tab>
+</Tabs>
+
+#### altda.verify-on-read
+
+Verify input data matches the commitments from the DA storage service. The default value is `true`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--altda.verify-on-read=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--altda.verify-on-read=true`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_ALTDA_VERIFY_ON_READ=true`</Tabs.Tab>
+</Tabs>
+
+### Interop (Super Experimental)
+
+<Warning>
+Interop is a highly experimental feature. Use with caution in production environments.
+</Warning>
+
+Configuration options for OP Stack interop networks.
+
+#### interop.dependency-set
+
+Dependency-set configuration, point at JSON file.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--interop.dependency-set=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--interop.dependency-set=/path/to/dependency-set.json`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_INTEROP_DEPENDENCY_SET=/path/to/dependency-set.json`</Tabs.Tab>
+</Tabs>
+
+#### interop.jwt-secret
+
+Interop RPC server authentication. Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will be generated if the file is empty. Applies only to Interop-enabled networks.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--interop.jwt-secret=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--interop.jwt-secret=/path/to/interop-jwt-secret.txt`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_INTEROP_JWT_SECRET=/path/to/interop-jwt-secret.txt`</Tabs.Tab>
+</Tabs>
+
+#### interop.rpc.addr
+
+Interop Websocket-only RPC listening address, for supervisor service to manage syncing of the op-node. Applies only to Interop-enabled networks. Optional, disabled if left empty. Do not enable if you do not run a supervisor service.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--interop.rpc.addr=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--interop.rpc.addr=0.0.0.0`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_INTEROP_RPC_ADDR=0.0.0.0`</Tabs.Tab>
+</Tabs>
+
+#### interop.rpc.port
+
+Interop RPC listening port, to serve supervisor syncing. Applies only to Interop-enabled networks. The default value is `9645`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--interop.rpc.port=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--interop.rpc.port=9645`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_INTEROP_RPC_PORT=9645`</Tabs.Tab>
+</Tabs>
+
+### Experimental and miscellaneous
+
+Additional experimental features and utility flags.
+
+#### experimental.sequencer-api
+
+Enables experimental test sequencer RPC functionality. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--experimental.sequencer-api=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--experimental.sequencer-api=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_EXPERIMENTAL_SEQUENCER_API=false`</Tabs.Tab>
+</Tabs>
+
+#### fetch-withdrawal-root-from-state
+
+Read withdrawal_storage_root (aka message passer storage root) from state trie (via execution layer) instead of the block header. Restores pre-Isthmus behavior, requires an archive EL client. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--fetch-withdrawal-root-from-state=<boolean>`</Tabs.Tab>
+  <Tabs.Tab>`--fetch-withdrawal-root-from-state=false`</Tabs.Tab>
+  <Tabs.Tab>`OP_NODE_FETCH_WITHDRAWAL_ROOT_FROM_STATE=false`</Tabs.Tab>
 </Tabs>
 
 ## General options
