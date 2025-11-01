@@ -3,29 +3,120 @@ title: Execution layer configuration options (op-geth)
 description: Learn additional configuration and command line options for op-geth and the Execution-Layer.
 ---
 
+# Execution layer configuration options (op-geth)
+
 <Info>
-You can configure your node using the command line options below (also called flags). 
+You can configure your node using the command line options below (also called flags).
 There are also sub-commands, which can be used to invoke functionality such as the console or blockchain import/export.
 </Info>
 
-This page list all configuration options for `op-geth`. `op-geth` implements the Execution-Layer, with minimal changes for a secure Ethereum-equivalent application environment. 
-The following are options from [v1.101308.0](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101308.0)
+This page lists all configuration options for `op-geth`. `op-geth` implements the Execution-Layer, with minimal changes for a secure Ethereum-equivalent application environment.
+The following are options from [v1.101603.3-rc.3](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.3-rc.3)
 
 Please note that the executable is still named `geth` to maintain a [minimal diff](https://op-geth.optimism.io/?utm_source=op-docs&utm_medium=docs).
 
-## Global options
+## Recommended configuration
 
-### Account
+For most node operators, the following configuration provides a good starting point. This configuration assumes you're running a full node (not a sequencer).
 
-#### allow-insecure-unlock
+### Essential flags
 
-Allows insecure account unlocking when account-related RPCs are exposed by HTTP. The default value is `false`.
+These are the minimum required flags to run op-geth:
 
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--allow-insecure-unlock`</Tabs.Tab>
-  <Tabs.Tab>`--allow-insecure-unlock=false`</Tabs.Tab>
-  <Tabs.Tab>`GETH_ALLOW_INSECURE_UNLOCK=false`</Tabs.Tab>
-</Tabs>
+```bash
+geth \
+  --datadir=/data/optimism \
+  --http \
+  --http.addr=0.0.0.0 \
+  --http.port=8545 \
+  --http.api=eth,net,web3 \
+  --authrpc.addr=localhost \
+  --authrpc.port=8551 \
+  --authrpc.jwtsecret=/path/to/jwt-secret.txt \
+  --op-network=op-mainnet \
+  --syncmode=full \
+  --maxpeers=50 \
+  --rollup.disabletxpoolgossip
+```
+
+### Recommended flags for production
+
+For production deployments, add these flags to improve performance and reliability:
+
+```bash
+geth \
+  --datadir=/data/optimism \
+  --http \
+  --http.addr=0.0.0.0 \
+  --http.port=8545 \
+  --http.api=eth,net,web3 \
+  --http.vhosts=* \
+  --http.corsdomain=* \
+  --ws \
+  --ws.addr=0.0.0.0 \
+  --ws.port=8546 \
+  --ws.api=eth,net,web3 \
+  --authrpc.addr=localhost \
+  --authrpc.port=8551 \
+  --authrpc.jwtsecret=/path/to/jwt-secret.txt \
+  --op-network=op-mainnet \
+  --syncmode=full \
+  --gcmode=full \
+  --maxpeers=50 \
+  --cache=4096 \
+  --rollup.disabletxpoolgossip \
+  --metrics \
+  --metrics.addr=0.0.0.0 \
+  --metrics.port=6060
+```
+
+<Warning>
+The `--http.vhosts` and `--http.corsdomain` flags shown above with `*` values are for example purposes.
+In production, you should restrict these to specific domains for security.
+</Warning>
+
+## Important configuration files
+
+When running op-geth, you'll work with several important files and directories:
+
+### Data directory (`--datadir`)
+
+The data directory contains all blockchain data, including:
+- `chaindata/` - The blockchain database
+- `keystore/` - Account keystores (if using local accounts)
+- `geth.ipc` - IPC endpoint for local RPC connections
+
+Default location: `~/.ethereum` (should be changed in production)
+
+### JWT secret (`--authrpc.jwtsecret`)
+
+A hex-encoded 32-byte secret used for authenticated communication between op-geth (execution layer) and op-node (consensus layer).
+This file must be identical for both op-geth and op-node.
+
+Example of generating a JWT secret:
+```bash
+openssl rand -hex 32 > jwt-secret.txt
+```
+
+### TOML configuration file (`--config`)
+
+Instead of using command-line flags, you can use a TOML configuration file. Generate a template with:
+```bash
+geth dumpconfig > config.toml
+```
+
+Edit the file and run with:
+```bash
+geth --config config.toml
+```
+
+## Configuration options reference
+
+The following sections provide detailed documentation for all available op-geth configuration options, organized by functionality.
+
+### Account management
+
+Options for managing accounts, keystores, and external signers.
 
 #### keystore
 
@@ -77,16 +168,6 @@ External signer (url or path to ipc file).
   <Tabs.Tab>`GETH_SIGNER=/path/to/ipcfile`</Tabs.Tab>
 </Tabs>
 
-#### unlock
-
-Comma separated list of accounts to unlock.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--unlock <account address>`</Tabs.Tab>
-  <Tabs.Tab>`--unlock=0x1234,0x5678`</Tabs.Tab>
-  <Tabs.Tab>`GETH_UNLOCK=0x1234,0x5678`</Tabs.Tab>
-</Tabs>
-
 #### usb
 
 Enable monitoring and management of USB hardware wallets. The default value is `false`.
@@ -97,7 +178,9 @@ Enable monitoring and management of USB hardware wallets. The default value is `
   <Tabs.Tab>`GETH_USB=false`</Tabs.Tab>
 </Tabs>
 
-### API and Console
+### RPC and API configuration
+
+Configure HTTP, WebSocket, authenticated RPC endpoints, and console access.
 
 #### authrpc.addr
 
@@ -331,16 +414,6 @@ Maximum number of bytes returned from a batched call. The default value is `2500
   <Tabs.Tab>`GETH_RPC_BATCH_RESPONSE_MAX_SIZE=25000000`</Tabs.Tab>
 </Tabs>
 
-#### rpc.enabledeprecatedpersonal
-
-Enables the (deprecated) personal namespace. The default value is `false`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--rpc.enabledeprecatedpersonal`</Tabs.Tab>
-  <Tabs.Tab>`--rpc.enabledeprecatedpersonal=false`</Tabs.Tab>
-  <Tabs.Tab>`GETH_RPC_ENABLEDEPRECATEDPERSONAL=false`</Tabs.Tab>
-</Tabs>
-
 #### rpc.evmtimeout
 
 Sets a timeout used for eth\_call (0=infinite). The default value is `5s`.
@@ -431,7 +504,9 @@ HTTP path prefix on which JSON-RPC is served over WS. Use '/' to serve on all pa
   <Tabs.Tab>`GETH_WS_RPCPREFIX="/"`</Tabs.Tab>
 </Tabs>
 
-### Developer Chain
+### Development Chain
+
+Options for running a local development chain with pre-funded accounts.
 
 #### dev
 
@@ -464,7 +539,9 @@ Block period to use in developer mode (0 = mine only if transaction pending). Th
   <Tabs.Tab>`GETH_DEV_PERIOD=0`</Tabs.Tab>
 </Tabs>
 
-### Ethereum
+### Chain and network selection
+
+Configure which network to connect to and manage blockchain data storage.
 
 #### bloomfilter.size
 
@@ -504,6 +581,16 @@ Root directory for ancient data (default = inside chaindata).
   <Tabs.Tab>`--datadir.ancient=<value>`</Tabs.Tab>
   <Tabs.Tab>Default value inside=chaindata</Tabs.Tab>
   <Tabs.Tab>`GETH_DATADIR_ANCIENT=<value>`</Tabs.Tab>
+</Tabs>
+
+#### datadir.era
+
+Root directory for era1 history (default = inside ancient/chain).
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--datadir.era=<value>`</Tabs.Tab>
+  <Tabs.Tab>Default value inside ancient/chain</Tabs.Tab>
+  <Tabs.Tab>`GETH_DATADIR_ERA=<value>`</Tabs.Tab>
 </Tabs>
 
 #### datadir.minfreedisk
@@ -546,16 +633,6 @@ Exits after block synchronization completes. The default value is `false`.
   <Tabs.Tab>`GETH_EXITWHENSYNCED=false`</Tabs.Tab>
 </Tabs>
 
-#### goerli
-
-Görli network: pre-configured proof-of-authority test network. The default value is `false`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--goerli`</Tabs.Tab>
-  <Tabs.Tab>`--goerli=false`</Tabs.Tab>
-  <Tabs.Tab>`GETH_GOERLI=false`</Tabs.Tab>
-</Tabs>
-
 #### holesky
 
 Holesky network: pre-configured proof-of-stake test network. The default value is `false`.
@@ -564,6 +641,16 @@ Holesky network: pre-configured proof-of-stake test network. The default value i
   <Tabs.Tab>`--holesky`</Tabs.Tab>
   <Tabs.Tab>`--holesky=false`</Tabs.Tab>
   <Tabs.Tab>`GETH_HOLESKY=false`</Tabs.Tab>
+</Tabs>
+
+#### hoodi
+
+Hoodi network: pre-configured proof-of-stake test network. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--hoodi`</Tabs.Tab>
+  <Tabs.Tab>`--hoodi=false`</Tabs.Tab>
+  <Tabs.Tab>`GETH_HOODI=false`</Tabs.Tab>
 </Tabs>
 
 #### mainnet
@@ -578,7 +665,7 @@ Ethereum mainnet. The default value is `false`.
 
 #### networkid
 
-Explicitly set network id (integer). The default value is `1`. For testnets: use --goerli, --sepolia, --holesky instead.
+Explicitly set network id (integer). The default value is `0`. For testnets: use --sepolia, --holesky, --hoodi instead.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--networkid <value>`</Tabs.Tab>
@@ -590,12 +677,19 @@ Explicitly set network id (integer). The default value is `1`. For testnets: use
 
 Select a pre-configured OP-Stack network (warning: op-mainnet and op-goerli
 require special sync, datadir is recommended), options:
-base-devnet-0-goerli-dev-0, base-devnet-0-sepolia-dev-0, base-goerli,
-base-mainnet, base-sepolia, conduit-devnet-0-goerli-dev-0, lyra-mainnet,
-mode-mainnet, op-goerli, op-labs-chaosnet-0-goerli-dev-0,
-op-labs-devnet-0-goerli-dev-0, op-mainnet, op-sepolia,
-oplabs-devnet-0-sepolia-dev-0, orderly-mainnet, pgn-mainnet, pgn-sepolia,
-zora-mainnet, zora-sepolia
+arena-z-mainnet, arena-z-sepolia, automata-mainnet, base-devnet-0-sepolia-dev-0,
+base-mainnet, base-sepolia, bob-mainnet, camp-sepolia, creator-chain-testnet-sepolia,
+cyber-mainnet, cyber-sepolia, ethernity-mainnet, ethernity-sepolia, fraxtal-mainnet,
+funki-mainnet, funki-sepolia, hashkeychain-mainnet, ink-mainnet, ink-sepolia,
+lisk-mainnet, lisk-sepolia, lyra-mainnet, metal-mainnet, metal-sepolia, mint-mainnet,
+mode-mainnet, mode-sepolia, op-mainnet, op-sepolia, oplabs-devnet-0-sepolia-dev-0,
+orderly-mainnet, ozean-sepolia, pivotal-sepolia, polynomial-mainnet, race-mainnet,
+race-sepolia, radius_testnet-sepolia, redstone-mainnet, rehearsal-0-bn-0-rehearsal-0-bn,
+rehearsal-0-bn-1-rehearsal-0-bn, settlus-mainnet-mainnet, settlus-sepolia-sepolia,
+shape-mainnet, shape-sepolia, silent-data-mainnet-mainnet, snax-mainnet,
+soneium-mainnet, soneium-minato-sepolia, sseed-mainnet, swan-mainnet, swell-mainnet,
+tbn-mainnet, tbn-sepolia, unichain-mainnet, unichain-sepolia, worldchain-mainnet,
+worldchain-sepolia, xterio-eth-mainnet, zora-mainnet, zora-sepolia
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--op-network=<value>`</Tabs.Tab>
@@ -643,6 +737,26 @@ Manually specify the Optimism Fjord fork timestamp, overriding the bundled setti
   <Tabs.Tab>`GETH_OVERRIDE_FJORD=0`</Tabs.Tab>
 </Tabs>
 
+#### override.granite
+
+Manually specify the Optimism Granite fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.granite=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.granite=0`</Tabs.Tab>
+  <Tabs.Tab>`GETH_OVERRIDE_GRANITE=0`</Tabs.Tab>
+</Tabs>
+
+#### override.holocene
+
+Manually specify the Optimism Holocene fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.holocene=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.holocene=0`</Tabs.Tab>
+  <Tabs.Tab>`GETH_OVERRIDE_HOLOCENE=0`</Tabs.Tab>
+</Tabs>
+
 #### `override.interop`
 
 Manually specify the Optimism Interop feature-set fork timestamp, overriding the bundled setting.
@@ -652,6 +766,36 @@ The default value is `0`.
   <Tabs.Tab>`--override.interop=<value>`</Tabs.Tab>
   <Tabs.Tab>`--override.interop=0`</Tabs.Tab>
   <Tabs.Tab>`GETH_OVERRIDE_INTEROP=0`</Tabs.Tab>
+</Tabs>
+
+#### override.isthmus
+
+Manually specify the Optimism Isthmus fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.isthmus=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.isthmus=0`</Tabs.Tab>
+  <Tabs.Tab>`GETH_OVERRIDE_ISTHMUS=0`</Tabs.Tab>
+</Tabs>
+
+#### override.jovian
+
+Manually specify the Optimism Jovian fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.jovian=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.jovian=0`</Tabs.Tab>
+  <Tabs.Tab>`GETH_OVERRIDE_JOVIAN=0`</Tabs.Tab>
+</Tabs>
+
+#### override.osaka
+
+Manually specify the Osaka fork timestamp, overriding the bundled setting. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--override.osaka=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--override.osaka=0`</Tabs.Tab>
+  <Tabs.Tab>`GETH_OVERRIDE_OSAKA=0`</Tabs.Tab>
 </Tabs>
 
 #### override.verkle
@@ -684,7 +828,9 @@ Enables snapshot-database mode. The default value is `true`.
   <Tabs.Tab>`GETH_SNAPSHOT=true`</Tabs.Tab>
 </Tabs>
 
-### Gas Price Oracle
+### Gas price oracle
+
+Configure how gas prices are estimated and suggested to users.
 
 #### gpo.blocks
 
@@ -738,71 +884,19 @@ Suggested gas price is the given percentile of a set of recent transaction gas p
   <Tabs.Tab>`GETH_GPO_PERCENTILE=60`</Tabs.Tab>
 </Tabs>
 
-### Light Client
+### Logging and debugging
 
-#### light.egress
+Control log output, profiling, and debugging tools.
 
-Outgoing bandwidth limit for serving light clients (deprecated). The default value is `0`.
+#### go-execution-trace
 
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--light.egress=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--light.egress=0`</Tabs.Tab>
-  <Tabs.Tab>`GETH_LIGHT_EGRESS=0`</Tabs.Tab>
-</Tabs>
-
-#### light.ingress
-
-Incoming bandwidth limit for serving light clients (deprecated). The default value is `0`.
+Write Go execution trace to the given file.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--light.ingress=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--light.ingress=0`</Tabs.Tab>
-  <Tabs.Tab>`GETH_LIGHT_INGRESS=0`</Tabs.Tab>
+  <Tabs.Tab>`--go-execution-trace <value>`</Tabs.Tab>
+  <Tabs.Tab>`--go-execution-trace=/path/to/trace.out`</Tabs.Tab>
+  <Tabs.Tab>`GETH_GO_EXECUTION_TRACE=/path/to/trace.out`</Tabs.Tab>
 </Tabs>
-
-#### light.maxpeers
-
-Maximum number of light clients to serve, or light servers to attach to (deprecated). 
-The default value is `100`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--light.maxpeers=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--light.maxpeers=100`</Tabs.Tab>
-  <Tabs.Tab>`GETH_LIGHT_MAXPEERS=100`</Tabs.Tab>
-</Tabs>
-
-#### light.nopruning
-
-Disable ancient light chain data pruning (deprecated). The default value is `false`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--light.nopruning`</Tabs.Tab>
-  <Tabs.Tab>`--light.nopruning=false`</Tabs.Tab>
-  <Tabs.Tab>`GETH_LIGHT_NOPRUNING=false`</Tabs.Tab>
-</Tabs>
-
-#### light.nosyncserve
-
-Enables serving light clients before syncing (deprecated) The default value is `false`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--light.nosyncserve`</Tabs.Tab>
-  <Tabs.Tab>`--light.nosyncserve=false`</Tabs.Tab>
-  <Tabs.Tab>`GETH_LIGHT_NOSYNCSERVE=false`</Tabs.Tab>
-</Tabs>
-
-#### light.serve
-
-Maximum percentage of time allowed for serving LES requests (deprecated). 
-The default value is `0`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--light.serv=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--light.serve=0`</Tabs.Tab>
-  <Tabs.Tab>`GETH_LIGHT_SERVE=0`</Tabs.Tab>
-</Tabs>
-
-### Logging and Debugging
 
 #### log.compress
 
@@ -963,16 +1057,6 @@ URL for remote database.
   <Tabs.Tab>`GETH_REMOTEDB=http://example.com/db`</Tabs.Tab>
 </Tabs>
 
-#### trace
-
-Write execution trace to the given file.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--trace=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--trace=/path/to/trace.file`</Tabs.Tab>
-  <Tabs.Tab>`GETH_TRACE=/path/to/trace.file`</Tabs.Tab>
-</Tabs>
-
 #### verbosity
 
 Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail. The default value is `3`.
@@ -983,7 +1067,9 @@ Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail. The def
   <Tabs.Tab>`GETH_VERBOSITY=3`</Tabs.Tab>
 </Tabs>
 
-### Metrics and Stats
+### Metrics and monitoring
+
+Enable metrics collection and export to monitoring systems.
 
 #### ethstats
 
@@ -1136,79 +1222,9 @@ Please note that `--metrics.addr` must be set to start the server.
   <Tabs.Tab>`GETH_METRICS_PORT=6060`</Tabs.Tab>
 </Tabs>
 
-### Miner
+### General options
 
-#### mine
-
-Enable mining. The default value is `false`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--mine`</Tabs.Tab>
-  <Tabs.Tab>`--mine=false`</Tabs.Tab>
-  <Tabs.Tab>`GETH_MINE=false`</Tabs.Tab>
-</Tabs>
-
-#### miner.etherbase
-
-0x prefixed public address for block mining rewards.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--miner.etherbase=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--miner.etherbase=0x123...`</Tabs.Tab>
-  <Tabs.Tab>`GETH_MINER_ETHERBASE=0x123...`</Tabs.Tab>
-</Tabs>
-
-#### miner.extradata
-
-Block extra data set by the miner (default = client version).
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--miner.extradata=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--miner.extradata="Some extra data"`</Tabs.Tab>
-  <Tabs.Tab>`GETH_MINER_EXTRADATA="Some extra data"`</Tabs.Tab>
-</Tabs>
-
-#### miner.gaslimit
-
-Target gas ceiling for mined blocks. The default value is `30000000`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--miner.gaslimit=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--miner.gaslimit=30000000`</Tabs.Tab>
-  <Tabs.Tab>`GETH_MINER_GASLIMIT=30000000`</Tabs.Tab>
-</Tabs>
-
-#### miner.gasprice
-
-Minimum gas price for mining a transaction. The default value is `0`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--miner.gasprice=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--miner.gasprice=0`</Tabs.Tab>
-  <Tabs.Tab>`GETH_MINER_GASPRICE=0`</Tabs.Tab>
-</Tabs>
-
-#### miner.newpayload-timeout
-
-Specify the maximum time allowance for creating a new payload. The default value is `2s`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--miner.newpayload-timeout=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--miner.newpayload-timeout=2s`</Tabs.Tab>
-  <Tabs.Tab>`GETH_MINER_NEWPAYLOAD_TIMEOUT=2s`</Tabs.Tab>
-</Tabs>
-
-#### miner.recommit
-
-Time interval to recreate the block being mined. The default value is `2s`.
-
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--miner.recommit=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--miner.recommit=2s`</Tabs.Tab>
-  <Tabs.Tab>`GETH_MINER_RECOMMIT=2s`</Tabs.Tab>
-</Tabs>
-
-### Miscellaneous
+Help, version, and other general-purpose flags.
 
 #### help
 
@@ -1243,7 +1259,9 @@ Print the version. This option is typically used to display the version of the s
   <Tabs.Tab>`--version`</Tabs.Tab>
 </Tabs>
 
-### Networking
+### Peer-to-peer networking
+
+Configure P2P connections, peer discovery, and network settings.
 
 #### bootnodes
 
@@ -1327,7 +1345,7 @@ Maximum number of pending connection attempts (defaults used if set to 0). The d
 
 #### nat
 
-NAT port mapping mechanism (any|none|upnp|pmp|pmp:`<IP>|extip:<IP>`). The default value is `"any"`.
+NAT port mapping mechanism (any|none|upnp|pmp|pmp:`<IP>`|extip:`<IP>`|stun:`<IP:PORT>`). The default value is `"any"`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--nat=<value>`</Tabs.Tab>
@@ -1385,7 +1403,9 @@ Network listening port. The default value is `30303`.
   <Tabs.Tab>`GETH_PORT=30303`</Tabs.Tab>
 </Tabs>
 
-### Performance Tuning
+### Performance and resource management
+
+Tune memory usage, caching, and other performance-related settings.
 
 #### `cache`
 
@@ -1493,7 +1513,9 @@ Raise the open file descriptor resource limit. The default is the system fd limi
   <Tabs.Tab>`GETH_FDLIMIT=0`</Tabs.Tab>
 </Tabs>
 
-### Rollup Node
+### OP Stack specific options
+
+Configuration options specific to OP Stack rollup functionality.
 
 #### rollup.computependingblock
 
@@ -1515,6 +1537,17 @@ Disable transaction pool gossip. The default value is `false`.
   <Tabs.Tab>`--rollup.disabletxpoolgossip`</Tabs.Tab>
   <Tabs.Tab>`--rollup.disabletxpoolgossip=false`</Tabs.Tab>
   <Tabs.Tab>`GETH_ROLLUP_DISABLETXPOOLGOSSIP=false`</Tabs.Tab>
+</Tabs>
+
+#### rollup.enabletxpooladmission
+
+Add RPC-submitted transactions to the txpool (on by default if --rollup.sequencerhttp is not set).
+The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rollup.enabletxpooladmission`</Tabs.Tab>
+  <Tabs.Tab>`--rollup.enabletxpooladmission=false`</Tabs.Tab>
+  <Tabs.Tab>`GETH_ROLLUP_ENABLETXPOOLADMISSION=false`</Tabs.Tab>
 </Tabs>
 
 #### rollup.halt
@@ -1549,6 +1582,27 @@ Timeout for historical RPC requests. The default value is `5s`.
   <Tabs.Tab>`GETH_ROLLUP_HISTORICALRPCTIMEOUT=5s`</Tabs.Tab>
 </Tabs>
 
+#### rollup.interopmempoolfiltering
+
+If using interop, transactions are checked for interop validity before being added to the mempool (experimental).
+The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rollup.interopmempoolfiltering`</Tabs.Tab>
+  <Tabs.Tab>`--rollup.interopmempoolfiltering=false`</Tabs.Tab>
+  <Tabs.Tab>`GETH_ROLLUP_INTEROPMEMPOOLFILTERING=false`</Tabs.Tab>
+</Tabs>
+
+#### rollup.interoprpc
+
+RPC endpoint for interop message verification (experimental).
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rollup.interoprpc <value>`</Tabs.Tab>
+  <Tabs.Tab>`--rollup.interoprpc="http://example.com"`</Tabs.Tab>
+  <Tabs.Tab>`GETH_ROLLUP_INTEROPRPC="http://example.com"`</Tabs.Tab>
+</Tabs>
+
 #### rollup.sequencerhttp
 
 HTTP endpoint for the sequencer mempool.
@@ -1557,6 +1611,28 @@ HTTP endpoint for the sequencer mempool.
   <Tabs.Tab>`--rollup.sequencerhttp=<value>`</Tabs.Tab>
   <Tabs.Tab>`--rollup.sequencerhttp="http://example.com"`</Tabs.Tab>
   <Tabs.Tab>`GETH_ROLLUP_SEQUENCERHTTP="http://example.com"`</Tabs.Tab>
+</Tabs>
+
+#### rollup.sequencertxconditionalcostratelimit
+
+Maximum cost -- storage lookups -- allowed for conditional transactions in a given second.
+The default value is `5000`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rollup.sequencertxconditionalcostratelimit <value>`</Tabs.Tab>
+  <Tabs.Tab>`--rollup.sequencertxconditionalcostratelimit=5000`</Tabs.Tab>
+  <Tabs.Tab>`GETH_ROLLUP_SEQUENCERTXCONDITIONALCOSTRATELIMIT=5000`</Tabs.Tab>
+</Tabs>
+
+#### rollup.sequencertxconditionalenabled
+
+Serve the eth_sendRawTransactionConditional endpoint and apply the conditional constraints on mempool inclusion & block building.
+The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--rollup.sequencertxconditionalenabled`</Tabs.Tab>
+  <Tabs.Tab>`--rollup.sequencertxconditionalenabled=false`</Tabs.Tab>
+  <Tabs.Tab>`GETH_ROLLUP_SEQUENCERTXCONDITIONALENABLED=false`</Tabs.Tab>
 </Tabs>
 
 #### rollup.superchain-upgrades
@@ -1570,11 +1646,13 @@ The default value is `true`.
   <Tabs.Tab>`GETH_ROLLUP_SUPERCHAIN_UPGRADES=true`</Tabs.Tab>
 </Tabs>
 
-### State History Management
+### State and history management
+
+Control how much historical state and transaction data to retain.
 
 #### gcmode
 
-Blockchain garbage collection mode, only relevant in `state.scheme=hash`. 
+Blockchain garbage collection mode, only relevant in `state.scheme=hash`.
 Options are "full" and "archive". The default value is `"full"`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
@@ -1583,10 +1661,50 @@ Options are "full" and "archive". The default value is `"full"`.
   <Tabs.Tab>`GETH_GCMODE="full"`</Tabs.Tab>
 </Tabs>
 
+#### history.chain
+
+Blockchain history retention ("all" or "postmerge"). The default value is `"all"`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--history.chain=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--history.chain="all"`</Tabs.Tab>
+  <Tabs.Tab>`GETH_HISTORY_CHAIN="all"`</Tabs.Tab>
+</Tabs>
+
+#### history.logs
+
+Number of recent blocks to maintain log search index for. The default is about one year (`2350000` blocks), with `0` representing the entire chain.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--history.logs=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--history.logs=2350000`</Tabs.Tab>
+  <Tabs.Tab>`GETH_HISTORY_LOGS=2350000`</Tabs.Tab>
+</Tabs>
+
+#### history.logs.disable
+
+Do not maintain log search index. The default value is `false`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--history.logs.disable`</Tabs.Tab>
+  <Tabs.Tab>`--history.logs.disable=false`</Tabs.Tab>
+  <Tabs.Tab>`GETH_HISTORY_LOGS_DISABLE=false`</Tabs.Tab>
+</Tabs>
+
+#### history.logs.export
+
+Export checkpoints to file in go source file format.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--history.logs.export <value>`</Tabs.Tab>
+  <Tabs.Tab>`--history.logs.export="/path/to/export.go"`</Tabs.Tab>
+  <Tabs.Tab>`GETH_HISTORY_LOGS_EXPORT="/path/to/export.go"`</Tabs.Tab>
+</Tabs>
+
 #### history.state
 
-Number of recent blocks to retain state history for. The default is `90000`
-blocks, with `0` representing the entire chain.
+Number of recent blocks to retain state history for, only relevant in state.scheme=path.
+The default is `90000` blocks, with `0` representing the entire chain.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--history.state=<value>`</Tabs.Tab>
@@ -1596,8 +1714,8 @@ blocks, with `0` representing the entire chain.
 
 #### history.transactions
 
-Number of recent blocks to maintain transactions index for. 
-The default is about two months (`2350000` blocks), with `0` representing the entire chain.
+Number of recent blocks to maintain transactions index for.
+The default is about one year (`2350000` blocks), with `0` representing the entire chain.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--history.transactions=<value>`</Tabs.Tab>
@@ -1625,17 +1743,29 @@ Blockchain sync mode. Options are "snap", or "full". The default value is `"snap
   <Tabs.Tab>`GETH_SYNCMODE="full"`</Tabs.Tab>
 </Tabs>
 
-### Transaction Pool (Blob)
+### Transaction pool - Blob transactions
+
+Configure the blob transaction pool (EIP-4844).
 
 #### blobpool.datacap
 
-Disk space to allocate for pending blob transactions (soft limit). 
-The default value is `10737418240`.
+Disk space to allocate for pending blob transactions (soft limit).
+The default value is `2684354560`.
 
 <Tabs items={['Syntax', 'Example', 'Environment Variable']}>
   <Tabs.Tab>`--blobpool.datacap=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--blobpool.datacap=10737418240`</Tabs.Tab>
-  <Tabs.Tab>`GETH_BLOBPOOL_DATACAP=10737418240`</Tabs.Tab>
+  <Tabs.Tab>`--blobpool.datacap=2684354560`</Tabs.Tab>
+  <Tabs.Tab>`GETH_BLOBPOOL_DATACAP=2684354560`</Tabs.Tab>
+</Tabs>
+
+#### blobpool.datadir
+
+Data directory to store blob transactions in. The default value is `"blobpool"`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--blobpool.datadir=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--blobpool.datadir="blobpool"`</Tabs.Tab>
+  <Tabs.Tab>`GETH_BLOBPOOL_DATADIR="blobpool"`</Tabs.Tab>
 </Tabs>
 
 #### blobpool.pricebump
@@ -1649,7 +1779,9 @@ The default value is `100`.
   <Tabs.Tab>`GETH_BLOBPOOL_PRICEBUMP=100`</Tabs.Tab>
 </Tabs>
 
-### Transaction Pool (EVM)
+### Transaction pool - Standard transactions
+
+Configure the standard EVM transaction pool.
 
 #### txpool.accountqueue
 
@@ -1737,6 +1869,16 @@ Comma-separated accounts to treat as locals (no flush, priority inclusion).
   <Tabs.Tab>`GETH_TXPOOL_LOCALS="0x123...,0x456..."`</Tabs.Tab>
 </Tabs>
 
+#### txpool.maxtxgas
+
+Maximum gas limit for individual transactions (0 = no limit). Transactions exceeding this limit will be rejected by the transaction pool. The default value is `0`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--txpool.maxtxgas=<value>`</Tabs.Tab>
+  <Tabs.Tab>`--txpool.maxtxgas=0`</Tabs.Tab>
+  <Tabs.Tab>`GETH_TXPOOL_MAXTXGAS=0`</Tabs.Tab>
+</Tabs>
+
 #### txpool.nolocals
 
 Disables price exemptions for locally submitted transactions. The default value is `false`.
@@ -1777,7 +1919,9 @@ Time interval to regenerate the local transaction journal. The default value is 
   <Tabs.Tab>`GETH_TXPOOL_REJOURNAL=1h0m0s`</Tabs.Tab>
 </Tabs>
 
-### Virtual machine
+### EVM configuration
+
+Options for EVM debugging and instrumentation.
 
 #### vmdebug
 
@@ -1787,4 +1931,24 @@ Record information useful for VM and contract debugging. The default value is `f
   <Tabs.Tab>`--vmdebug`</Tabs.Tab>
   <Tabs.Tab>`--vmdebug=false`</Tabs.Tab>
   <Tabs.Tab>`GETH_VMDEBUG=false`</Tabs.Tab>
+</Tabs>
+
+#### vmtrace
+
+Name of tracer which should record internal VM operations (costly).
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--vmtrace <value>`</Tabs.Tab>
+  <Tabs.Tab>`--vmtrace="callTracer"`</Tabs.Tab>
+  <Tabs.Tab>`GETH_VMTRACE="callTracer"`</Tabs.Tab>
+</Tabs>
+
+#### vmtrace.jsonconfig
+
+Tracer configuration (JSON). The default value is `"{}"`.
+
+<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
+  <Tabs.Tab>`--vmtrace.jsonconfig <value>`</Tabs.Tab>
+  <Tabs.Tab>`--vmtrace.jsonconfig="{}"`</Tabs.Tab>
+  <Tabs.Tab>`GETH_VMTRACE_JSONCONFIG="{}"`</Tabs.Tab>
 </Tabs>
