@@ -49,7 +49,7 @@ mise install
 
 1. **Navigate to this code directory**:
    ```bash
-   cd docs/pages/operators/chain-operators/tutorials/create-l2-rollup/code
+   cd docs/create-l2-rollup-example
    ```
 
 2. **Configure environment variables**:
@@ -114,10 +114,10 @@ For detailed manual setup instructions, see the [Create L2 Rollup tutorial](/ope
 ## Directory Structure
 
 ```
-code/
+create-l2-rollup-example/
 ├── .example.env           # Environment variables template
 ├── docker-compose.yml     # Service orchestration
-├── Makefile              # Automation commands
+├── Makefile               # Automation commands
 ├── scripts/
 │   ├── setup-rollup.sh   # Automated deployment script
 │   └── download-op-deployer.sh # op-deployer downloader
@@ -125,18 +125,25 @@ code/
 ```
 
 **Generated directories** (created during deployment):
+
 ```
-deployer/                 # op-deployer configuration and outputs
+deployer/                # op-deployer configuration and outputs
 ├── .deployer/           # Deployment artifacts (genesis.json, rollup.json, etc.)
 ├── addresses/           # Generated wallet addresses
 └── .env                 # Environment variables
 batcher/                 # op-batcher configuration
-├── .env                 # Batcher-specific environment variables
+└── .env                 # Environment variables
 proposer/                # op-proposer configuration
-├── .env                 # Proposer-specific environment variables
+└── .env                 # Environment variables
 challenger/              # op-challenger configuration
 ├── .env                 # Challenger-specific environment variables
 └── data/                # Challenger data directory
+sequencer/               # op-sequencer configuration
+├── .env                 # op-sequencer environment variables
+├── genesis.json         # op-geth genesis file
+├── jwt.txt              # JWT secret for auth RPC
+├── rollup.json          # op-node rollup configuration
+└── op-geth-data/        # op-geth data directory
 ```
 
 ## Service Ports
