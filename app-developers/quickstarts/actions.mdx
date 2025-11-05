@@ -65,25 +65,18 @@ Actions works with both frontend and backend wallets depending on your needs:
         Give your embedded wallets the ability to take Action:
 
         ```typescript
+        import { actions } from './config'
         import { useWallets } from '@privy-io/react-auth'
-        import { actions, USDC, ExampleMarket } from './config'
 
-        // Fetch Privy embedded wallet
+        // PRIVY: Fetch wallet
         const { wallets } = useWallets()
         const embeddedWallet = wallets.find(
           (wallet) => wallet.walletClientType === 'privy',
         )
 
-        // Convert to Actions wallet
+        // ACTIONS: Let wallet make onchain Actions
         const wallet = await actions.wallet.toActionsWallet({
           connectedWallet: embeddedWallet,
-        })
-
-        // Wallet can now take action
-        const receipt = await wallet.lend.openPosition({
-          amount: 100,
-          asset: USDC,
-          ...ExampleMarket
         })
         ```
 
@@ -95,18 +88,18 @@ Actions works with both frontend and backend wallets depending on your needs:
         import { actions } from './config'
         import { useWallets } from '@privy-io/react-auth'
 
-        // Fetch Privy embedded wallet
+        // PRIVY: Fetch wallet
         const { wallets } = useWallets()
         const embeddedWallet = wallets.find(
           (wallet) => wallet.walletClientType === 'privy',
         )
 
-        // Create signer from hosted wallet
+        // ACTIONS: Create signer from hosted wallet
         const signer = await actions.wallet.createSigner({
           connectedWallet: embeddedWallet,
         })
 
-        // Create smart wallet
+        // ACTIONS: Create smart wallet
         const { wallet } = await actions.wallet.createSmartWallet({
           signer: signer
         })
@@ -240,31 +233,21 @@ Actions works with both frontend and backend wallets depending on your needs:
         Give your embedded wallets the ability to take Action:
 
         ```typescript
+        import { actions } from './config'
         import { PrivyClient } from '@privy-io/node'
-        import { actions, USDC, ExampleMarket } from './config'
 
-        const privyClient = new PrivyClient(
-          process.env.PRIVY_APP_ID,
-          process.env.PRIVY_APP_SECRET
-        )
+        // PRIVY: Create wallet
+        const privyClient = new PrivyClient(env.PRIVY_APP_ID, env.PRIVY_APP_SECRET)
 
-        // Create Privy wallet
         const privyWallet = await privyClient.wallets().create({
           chain_type: 'ethereum',
           owner: { user_id: 'privy:did:xxxxx' },
         })
 
-        // Convert to Actions wallet
+        // ACTIONS: Let wallet make onchain Actions
         const wallet = await actions.wallet.toActionsWallet({
           walletId: privyWallet.id,
           address: privyWallet.address,
-        })
-
-        // Wallet can now take action
-        const receipt = await wallet.lend.openPosition({
-          amount: 100,
-          asset: USDC,
-          ...ExampleMarket
         })
         ```
 
@@ -273,23 +256,25 @@ Actions works with both frontend and backend wallets depending on your needs:
         Optionally, create signers for smart wallets you control:
 
         ```typescript
+        import { actions } from './config'
         import { PrivyClient } from '@privy-io/node'
         import { getAddress } from 'viem'
-        import { actions } from './config'
 
-        // Create Privy wallet
+        const privyClient = new PrivyClient(env.PRIVY_APP_ID, env.PRIVY_APP_SECRET)
+
+        // PRIVY: Create wallet
         const privyWallet = await privyClient.wallets().create({
           chain_type: 'ethereum',
           owner: { user_id: 'privy:did:xxxxx' },
         })
 
-        // Create signer
+        // ACTIONS: Create signer
         const signer = await actions.wallet.createSigner({
           walletId: privyWallet.id,
           address: getAddress(privyWallet.address),
         })
 
-        // Create smart wallet
+        // ACTIONS: Create smart wallet
         const { wallet } = await actions.wallet.createSmartWallet({
           signer: signer
         })
