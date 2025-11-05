@@ -60,410 +60,200 @@ Actions works with both frontend and backend wallets depending on your needs:
       <Tab title="Privy">
         Install and setup [Privy](https://docs.privy.io/basics/react/installation).
 
-        <Steps>
-          <Step title="Configure Wallet Provider">
-            Give your embedded wallet the ability to take Action:
+        **Configure Wallet Provider**
 
-            ```typescript
-            import { actions } from './config'
-            import { useWallets } from '@privy-io/react-auth'
+        Give your embedded wallet the ability to take Action:
 
-            // Fetch Privy embedded wallet
-            const { wallets } = useWallets()
-            const embeddedWallet = wallets.find(
-              (wallet) => wallet.walletClientType === 'privy',
-            )
+        ```typescript
+        import { actions } from './config'
+        import { useWallets } from '@privy-io/react-auth'
 
-            // Convert to Actions wallet
-            const wallet = await actions.wallet.toActionsWallet({
-              connectedWallet: embeddedWallet,
-            })
-            ```
-          </Step>
+        // Fetch Privy embedded wallet
+        const { wallets } = useWallets()
+        const embeddedWallet = wallets.find(
+          (wallet) => wallet.walletClientType === 'privy',
+        )
 
-          <Step title="Configure Smart Wallets">
-            Create signers and smart wallets to enable gasless DeFi transactions:
+        // Convert to Actions wallet
+        const wallet = await actions.wallet.toActionsWallet({
+          connectedWallet: embeddedWallet,
+        })
+        ```
 
-            ```typescript
-            import { actions } from './config'
-            import { useWallets } from '@privy-io/react-auth'
+        **Configure Smart Wallets**
 
-            const { wallets } = useWallets()
-            const embeddedWallet = wallets.find(
-              (wallet) => wallet.walletClientType === 'privy',
-            )
+        Create signers and smart wallets to enable gasless DeFi transactions:
 
-            // Create signer from hosted wallet
-            const signer = await actions.wallet.createSigner({
-              connectedWallet: embeddedWallet,
-            })
+        ```typescript
+        import { actions } from './config'
+        import { useWallets } from '@privy-io/react-auth'
 
-            // Create smart wallet
-            const { wallet } = await actions.wallet.createSmartWallet({
-              signer: signer
-            })
-            ```
-          </Step>
+        const { wallets } = useWallets()
+        const embeddedWallet = wallets.find(
+          (wallet) => wallet.walletClientType === 'privy',
+        )
 
-          <Step title="Configure Actions SDK">
-            Create your Actions configuration to define which protocols, chains, and assets to support.
+        // Create signer from hosted wallet
+        const signer = await actions.wallet.createSigner({
+          connectedWallet: embeddedWallet,
+        })
 
-            First, configure your wallet provider:
+        // Create smart wallet
+        const { wallet } = await actions.wallet.createSmartWallet({
+          signer: signer
+        })
+        ```
 
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/react'
+        Configure your wallet provider in your Actions config:
 
-            const wallet = {
-              hostedWalletConfig: {
-                provider: {
-                  type: 'privy',
-                },
-              },
-              smartWalletConfig: {
-                provider: {
-                  type: 'default',
-                  attributionSuffix: 'actions',
-                },
-              },
-            }
-            ```
-
-            Next, configure a lending provider with `LendConfig`:
-
-            ```typescript
-            import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
-
-            const lend = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a borrowing provider with `BorrowConfig`:
-
-            ```typescript
-            const borrow = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a swap provider with `SwapConfig`:
-
-            ```typescript
-            const swap = {
-              type: 'uniswap',
-              defaultSlippage: 100, // 100 bips or 1%
-              assetAllowList: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-            }
-            ```
-
-            Configure supported chains:
-
-            ```typescript
-            import { optimism, unichain } from '@eth-optimism/actions-sdk/chains'
-
-            const chains = [
-              optimism,
-              unichain,
-            ]
-            ```
-
-            Finally, bring it all together and initialize Actions:
-
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/react'
-
-            export const actions = createActions({
-              wallet,
-              lend,
-              borrow,
-              swap,
-              chains,
-            })
-            ```
-          </Step>
-        </Steps>
+        ```typescript
+        const wallet = {
+          hostedWalletConfig: {
+            provider: {
+              type: 'privy',
+            },
+          },
+          smartWalletConfig: {
+            provider: {
+              type: 'default',
+              attributionSuffix: 'actions',
+            },
+          },
+        }
+        ```
       </Tab>
 
       <Tab title="Turnkey">
         Install and setup [Turnkey](https://docs.turnkey.com/sdks/react/getting-started).
 
-        <Steps>
-          <Step title="Configure Wallet Provider">
-            Give your embedded wallet the ability to take Action:
+        **Configure Wallet Provider**
 
-            ```typescript
-            import { actions } from './config'
-            import { useTurnkey } from "@turnkey/react-wallet-kit"
+        Give your embedded wallet the ability to take Action:
 
-            // Create Turnkey wallet
-            const { createWallet, httpClient, session } = useTurnkey()
-            const embeddedWallet = await createWallet({
-              walletName: `Wallet ${Math.random()}`,
-              accounts: ["ADDRESS_FORMAT_ETHEREUM"],
-            })
+        ```typescript
+        import { actions } from './config'
+        import { useTurnkey } from "@turnkey/react-wallet-kit"
 
-            const walletAddress = embeddedWallet.accounts[0].address
+        // Create Turnkey wallet
+        const { createWallet, httpClient, session } = useTurnkey()
+        const embeddedWallet = await createWallet({
+          walletName: `Wallet ${Math.random()}`,
+          accounts: ["ADDRESS_FORMAT_ETHEREUM"],
+        })
 
-            // Convert to Actions wallet
-            const wallet = await actions.wallet.toActionsWallet({
-              client: httpClient,
-              organizationId: session.organizationId,
-              signWith: walletAddress,
-              ethereumAddress: walletAddress,
-            })
-            ```
-          </Step>
+        const walletAddress = embeddedWallet.accounts[0].address
 
-          <Step title="Configure Smart Wallets">
-            Create signers and smart wallets to enable gasless DeFi transactions:
+        // Convert to Actions wallet
+        const wallet = await actions.wallet.toActionsWallet({
+          client: httpClient,
+          organizationId: session.organizationId,
+          signWith: walletAddress,
+          ethereumAddress: walletAddress,
+        })
+        ```
 
-            ```typescript
-            import { actions } from './config'
-            import { useTurnkey } from "@turnkey/react-wallet-kit"
+        **Configure Smart Wallets**
 
-            const { wallets, httpClient, session } = useTurnkey()
-            const embeddedWallet = wallets[0]
-            const walletAddress = embeddedWallet.accounts[0].address
+        Create signers and smart wallets to enable gasless DeFi transactions:
 
-            // Create signer
-            const signer = await actions.wallet.createSigner({
-              client: httpClient,
-              organizationId: session.organizationId,
-              signWith: walletAddress,
-            })
+        ```typescript
+        import { actions } from './config'
+        import { useTurnkey } from "@turnkey/react-wallet-kit"
 
-            // Create smart wallet
-            const { wallet } = await actions.wallet.createSmartWallet({
-              signer: signer
-            })
-            ```
-          </Step>
+        const { wallets, httpClient, session } = useTurnkey()
+        const embeddedWallet = wallets[0]
+        const walletAddress = embeddedWallet.accounts[0].address
 
-          <Step title="Configure Actions SDK">
-            Create your Actions configuration to define which protocols, chains, and assets to support.
+        // Create signer
+        const signer = await actions.wallet.createSigner({
+          client: httpClient,
+          organizationId: session.organizationId,
+          signWith: walletAddress,
+        })
 
-            First, configure your wallet provider:
+        // Create smart wallet
+        const { wallet } = await actions.wallet.createSmartWallet({
+          signer: signer
+        })
+        ```
 
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/react'
+        Configure your wallet provider in your Actions config:
 
-            const wallet = {
-              hostedWalletConfig: {
-                provider: {
-                  type: 'turnkey',
-                },
-              },
-              smartWalletConfig: {
-                provider: {
-                  type: 'default',
-                  attributionSuffix: 'actions',
-                },
-              },
-            }
-            ```
-
-            Next, configure a lending provider with `LendConfig`:
-
-            ```typescript
-            import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
-
-            const lend = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a borrowing provider with `BorrowConfig`:
-
-            ```typescript
-            const borrow = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a swap provider with `SwapConfig`:
-
-            ```typescript
-            const swap = {
-              type: 'uniswap',
-              defaultSlippage: 100, // 100 bips or 1%
-              assetAllowList: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-            }
-            ```
-
-            Configure supported chains:
-
-            ```typescript
-            import { optimism, unichain } from '@eth-optimism/actions-sdk/chains'
-
-            const chains = [
-              optimism,
-              unichain,
-            ]
-            ```
-
-            Finally, bring it all together and initialize Actions:
-
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/react'
-
-            export const actions = createActions({
-              wallet,
-              lend,
-              borrow,
-              swap,
-              chains,
-            })
-            ```
-          </Step>
-        </Steps>
+        ```typescript
+        const wallet = {
+          hostedWalletConfig: {
+            provider: {
+              type: 'turnkey',
+            },
+          },
+          smartWalletConfig: {
+            provider: {
+              type: 'default',
+              attributionSuffix: 'actions',
+            },
+          },
+        }
+        ```
       </Tab>
 
       <Tab title="Dynamic">
         Install and setup [Dynamic](https://www.dynamic.xyz/docs/wallets/embedded-wallets/mpc/setup).
 
-        <Steps>
-          <Step title="Configure Wallet Provider">
-            Give your embedded wallet the ability to take Action:
+        **Configure Wallet Provider**
 
-            ```typescript
-            import { actions } from './config'
-            import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
+        Give your embedded wallet the ability to take Action:
 
-            // Fetch Dynamic wallet
-            const { primaryWallet } = useDynamicContext()
+        ```typescript
+        import { actions } from './config'
+        import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
 
-            // Convert to Actions wallet
-            const wallet = await actions.wallet.toActionsWallet({
-              wallet: primaryWallet,
-            })
-            ```
-          </Step>
+        // Fetch Dynamic wallet
+        const { primaryWallet } = useDynamicContext()
 
-          <Step title="Configure Smart Wallets">
-            Create signers and smart wallets to enable gasless DeFi transactions:
+        // Convert to Actions wallet
+        const wallet = await actions.wallet.toActionsWallet({
+          wallet: primaryWallet,
+        })
+        ```
 
-            ```typescript
-            import { actions } from './config'
-            import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
+        **Configure Smart Wallets**
 
-            const { primaryWallet } = useDynamicContext()
+        Create signers and smart wallets to enable gasless DeFi transactions:
 
-            // Create signer
-            const signer = await actions.wallet.createSigner({
-              wallet: primaryWallet
-            })
+        ```typescript
+        import { actions } from './config'
+        import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
 
-            // Create smart wallet
-            const { wallet } = await actions.wallet.createSmartWallet({
-              signer: signer
-            })
-            ```
-          </Step>
+        const { primaryWallet } = useDynamicContext()
 
-          <Step title="Configure Actions SDK">
-            Create your Actions configuration to define which protocols, chains, and assets to support.
+        // Create signer
+        const signer = await actions.wallet.createSigner({
+          wallet: primaryWallet
+        })
 
-            First, configure your wallet provider:
+        // Create smart wallet
+        const { wallet } = await actions.wallet.createSmartWallet({
+          signer: signer
+        })
+        ```
 
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/react'
+        Configure your wallet provider in your Actions config:
 
-            const wallet = {
-              hostedWalletConfig: {
-                provider: {
-                  type: 'dynamic',
-                },
-              },
-              smartWalletConfig: {
-                provider: {
-                  type: 'default',
-                  attributionSuffix: 'actions',
-                },
-              },
-            }
-            ```
-
-            Next, configure a lending provider with `LendConfig`:
-
-            ```typescript
-            import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
-
-            const lend = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a borrowing provider with `BorrowConfig`:
-
-            ```typescript
-            const borrow = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a swap provider with `SwapConfig`:
-
-            ```typescript
-            const swap = {
-              type: 'uniswap',
-              defaultSlippage: 100, // 100 bips or 1%
-              assetAllowList: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-            }
-            ```
-
-            Configure supported chains:
-
-            ```typescript
-            import { optimism, unichain } from '@eth-optimism/actions-sdk/chains'
-
-            const chains = [
-              optimism,
-              unichain,
-            ]
-            ```
-
-            Finally, bring it all together and initialize Actions:
-
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/react'
-
-            export const actions = createActions({
-              wallet,
-              lend,
-              borrow,
-              swap,
-              chains,
-            })
-            ```
-          </Step>
-        </Steps>
+        ```typescript
+        const wallet = {
+          hostedWalletConfig: {
+            provider: {
+              type: 'dynamic',
+            },
+          },
+          smartWalletConfig: {
+            provider: {
+              type: 'default',
+              attributionSuffix: 'actions',
+            },
+          },
+        }
+        ```
       </Tab>
     </Tabs>
   </Tab>
@@ -475,328 +265,254 @@ Actions works with both frontend and backend wallets depending on your needs:
       <Tab title="Privy">
         Install and setup [Privy](https://docs.privy.io/basics/react/installation).
 
-        <Steps>
-          <Step title="Configure Wallet Provider">
-            Give your embedded wallet the ability to take Action:
+        **Configure Wallet Provider**
 
-            ```typescript
-            import { actions } from './config'
-            import { PrivyClient } from '@privy-io/node'
+        Give your embedded wallet the ability to take Action:
 
-            const privyClient = new PrivyClient(
-              process.env.PRIVY_APP_ID,
-              process.env.PRIVY_APP_SECRET
-            )
+        ```typescript
+        import { actions } from './config'
+        import { PrivyClient } from '@privy-io/node'
 
-            // Create Privy wallet
-            const privyWallet = await privyClient.walletApi.createWallet({
-              chainType: 'ethereum',
-            })
+        const privyClient = new PrivyClient(
+          process.env.PRIVY_APP_ID,
+          process.env.PRIVY_APP_SECRET
+        )
 
-            // Convert to Actions wallet
-            const wallet = await actions.wallet.toActionsWallet({
-              walletId: privyWallet.id,
-              address: privyWallet.address,
-            })
-            ```
-          </Step>
+        // Create Privy wallet
+        const privyWallet = await privyClient.walletApi.createWallet({
+          chainType: 'ethereum',
+        })
 
-          <Step title="Configure Smart Wallets">
-            Create signers and smart wallets to enable gasless DeFi transactions:
+        // Convert to Actions wallet
+        const wallet = await actions.wallet.toActionsWallet({
+          walletId: privyWallet.id,
+          address: privyWallet.address,
+        })
+        ```
 
-            ```typescript
-            import { actions } from './config'
-            import { PrivyClient } from '@privy-io/node'
-            import { getAddress } from 'viem'
+        **Configure Smart Wallets**
 
-            const privyWallet = await privyClient.walletApi.createWallet({
-              chainType: 'ethereum',
-            })
+        Create signers and smart wallets to enable gasless DeFi transactions:
 
-            // Create signer
-            const signer = await actions.wallet.createSigner({
-              walletId: privyWallet.id,
-              address: getAddress(privyWallet.address),
-            })
+        ```typescript
+        import { actions } from './config'
+        import { PrivyClient } from '@privy-io/node'
+        import { getAddress } from 'viem'
 
-            // Create smart wallet
-            const { wallet } = await actions.wallet.createSmartWallet({
-              signer: signer
-            })
-            ```
-          </Step>
+        const privyWallet = await privyClient.walletApi.createWallet({
+          chainType: 'ethereum',
+        })
 
-          <Step title="Configure Actions SDK">
-            Create your Actions configuration to define which protocols, chains, and assets to support.
+        // Create signer
+        const signer = await actions.wallet.createSigner({
+          walletId: privyWallet.id,
+          address: getAddress(privyWallet.address),
+        })
 
-            First, configure your wallet provider:
+        // Create smart wallet
+        const { wallet } = await actions.wallet.createSmartWallet({
+          signer: signer
+        })
+        ```
 
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/node'
-            import { PrivyClient } from '@privy-io/server-auth'
+        Configure your wallet provider in your Actions config:
 
-            const wallet = {
-              hostedWalletConfig: {
-                provider: {
-                  type: 'privy',
-                  config: {
-                    privyClient: new PrivyClient(
-                      process.env.PRIVY_APP_ID,
-                      process.env.PRIVY_APP_SECRET
-                    ),
-                  },
-                },
+        ```typescript
+        import { PrivyClient } from '@privy-io/server-auth'
+
+        const wallet = {
+          hostedWalletConfig: {
+            provider: {
+              type: 'privy',
+              config: {
+                privyClient: new PrivyClient(
+                  process.env.PRIVY_APP_ID,
+                  process.env.PRIVY_APP_SECRET
+                ),
               },
-              smartWalletConfig: {
-                provider: {
-                  type: 'default',
-                  attributionSuffix: 'actions',
-                },
-              },
-            }
-            ```
-
-            Next, configure a lending provider with `LendConfig`:
-
-            ```typescript
-            import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
-
-            const lend = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a borrowing provider with `BorrowConfig`:
-
-            ```typescript
-            const borrow = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a swap provider with `SwapConfig`:
-
-            ```typescript
-            const swap = {
-              type: 'uniswap',
-              defaultSlippage: 100, // 100 bips or 1%
-              assetAllowList: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-            }
-            ```
-
-            Configure supported chains:
-
-            ```typescript
-            import { optimism, unichain } from '@eth-optimism/actions-sdk/chains'
-
-            const chains = [
-              optimism,
-              unichain,
-            ]
-            ```
-
-            Finally, bring it all together and initialize Actions:
-
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/node'
-
-            export const actions = createActions({
-              wallet,
-              lend,
-              borrow,
-              swap,
-              chains,
-            })
-            ```
-          </Step>
-        </Steps>
+            },
+          },
+          smartWalletConfig: {
+            provider: {
+              type: 'default',
+              attributionSuffix: 'actions',
+            },
+          },
+        }
+        ```
       </Tab>
 
       <Tab title="Turnkey">
         Install and setup [Turnkey](https://docs.turnkey.com/sdks/react/getting-started).
 
-        <Steps>
-          <Step title="Configure Wallet Provider">
-            Give your embedded wallet the ability to take Action:
+        **Configure Wallet Provider**
 
-            ```typescript
-            import { actions } from './config'
-            import { Turnkey } from '@turnkey/sdk-server'
+        Give your embedded wallet the ability to take Action:
 
-            const turnkeyClient = new Turnkey({
-              apiBaseUrl: 'https://api.turnkey.com',
-              apiPublicKey: process.env.TURNKEY_API_KEY,
-              apiPrivateKey: process.env.TURNKEY_API_SECRET,
-              defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID,
-            })
+        ```typescript
+        import { actions } from './config'
+        import { Turnkey } from '@turnkey/sdk-server'
 
-            // Create Turnkey wallet
-            const turnkeyWallet = await turnkeyClient.apiClient().createWallet({
-              walletName: 'ETH Wallet',
-              accounts: [{
-                curve: 'CURVE_SECP256K1',
-                pathFormat: 'PATH_FORMAT_BIP32',
-                path: "m/44'/60'/0'/0/0",
-                addressFormat: 'ADDRESS_FORMAT_ETHEREUM',
-              }],
-            })
+        const turnkeyClient = new Turnkey({
+          apiBaseUrl: 'https://api.turnkey.com',
+          apiPublicKey: process.env.TURNKEY_API_KEY,
+          apiPrivateKey: process.env.TURNKEY_API_SECRET,
+          defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID,
+        })
 
-            // Convert to Actions wallet
-            const wallet = await actions.wallet.toActionsWallet({
-              organizationId: turnkeyWallet.activity.organizationId,
-              signWith: turnkeyWallet.addresses[0],
-            })
-            ```
-          </Step>
+        // Create Turnkey wallet
+        const turnkeyWallet = await turnkeyClient.apiClient().createWallet({
+          walletName: 'ETH Wallet',
+          accounts: [{
+            curve: 'CURVE_SECP256K1',
+            pathFormat: 'PATH_FORMAT_BIP32',
+            path: "m/44'/60'/0'/0/0",
+            addressFormat: 'ADDRESS_FORMAT_ETHEREUM',
+          }],
+        })
 
-          <Step title="Configure Smart Wallets">
-            Create signers and smart wallets to enable gasless DeFi transactions:
+        // Convert to Actions wallet
+        const wallet = await actions.wallet.toActionsWallet({
+          organizationId: turnkeyWallet.activity.organizationId,
+          signWith: turnkeyWallet.addresses[0],
+        })
+        ```
 
-            ```typescript
-            import { actions } from './config'
-            import { Turnkey } from '@turnkey/sdk-server'
+        **Configure Smart Wallets**
 
-            const turnkeyClient = new Turnkey({
-              apiBaseUrl: 'https://api.turnkey.com',
-              apiPublicKey: process.env.TURNKEY_API_KEY,
-              apiPrivateKey: process.env.TURNKEY_API_SECRET,
-              defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID,
-            })
+        Create signers and smart wallets to enable gasless DeFi transactions:
 
-            // Create Turnkey wallet
-            const turnkeyWallet = await turnkeyClient.apiClient().createWallet({
-              walletName: 'ETH Wallet',
-              accounts: [{
-                curve: 'CURVE_SECP256K1',
-                pathFormat: 'PATH_FORMAT_BIP32',
-                path: "m/44'/60'/0'/0/0",
-                addressFormat: 'ADDRESS_FORMAT_ETHEREUM',
-              }],
-            })
+        ```typescript
+        import { actions } from './config'
+        import { Turnkey } from '@turnkey/sdk-server'
 
-            // Create signer
-            const signer = await actions.wallet.createSigner({
-              organizationId: turnkeyWallet.activity.organizationId,
-              signWith: turnkeyWallet.addresses[0],
-            })
+        const turnkeyClient = new Turnkey({
+          apiBaseUrl: 'https://api.turnkey.com',
+          apiPublicKey: process.env.TURNKEY_API_KEY,
+          apiPrivateKey: process.env.TURNKEY_API_SECRET,
+          defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID,
+        })
 
-            // Create smart wallet
-            const { wallet } = await actions.wallet.createSmartWallet({
-              signer: signer
-            })
-            ```
-          </Step>
+        // Create Turnkey wallet
+        const turnkeyWallet = await turnkeyClient.apiClient().createWallet({
+          walletName: 'ETH Wallet',
+          accounts: [{
+            curve: 'CURVE_SECP256K1',
+            pathFormat: 'PATH_FORMAT_BIP32',
+            path: "m/44'/60'/0'/0/0",
+            addressFormat: 'ADDRESS_FORMAT_ETHEREUM',
+          }],
+        })
 
-          <Step title="Configure Actions SDK">
-            Create your Actions configuration to define which protocols, chains, and assets to support.
+        // Create signer
+        const signer = await actions.wallet.createSigner({
+          organizationId: turnkeyWallet.activity.organizationId,
+          signWith: turnkeyWallet.addresses[0],
+        })
 
-            First, configure your wallet provider:
+        // Create smart wallet
+        const { wallet } = await actions.wallet.createSmartWallet({
+          signer: signer
+        })
+        ```
 
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/node'
-            import { Turnkey } from '@turnkey/sdk-server'
+        Configure your wallet provider in your Actions config:
 
-            const turnkeyClient = new Turnkey({
-              apiBaseUrl: 'https://api.turnkey.com',
-              apiPublicKey: process.env.TURNKEY_API_KEY,
-              apiPrivateKey: process.env.TURNKEY_API_SECRET,
-              defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID,
-            })
+        ```typescript
+        import { Turnkey } from '@turnkey/sdk-server'
 
-            const wallet = {
-              hostedWalletConfig: {
-                provider: {
-                  type: 'turnkey',
-                  config: {
-                    client: turnkeyClient,
-                  },
-                },
+        const turnkeyClient = new Turnkey({
+          apiBaseUrl: 'https://api.turnkey.com',
+          apiPublicKey: process.env.TURNKEY_API_KEY,
+          apiPrivateKey: process.env.TURNKEY_API_SECRET,
+          defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID,
+        })
+
+        const wallet = {
+          hostedWalletConfig: {
+            provider: {
+              type: 'turnkey',
+              config: {
+                client: turnkeyClient,
               },
-              smartWalletConfig: {
-                provider: {
-                  type: 'default',
-                  attributionSuffix: 'actions',
-                },
-              },
-            }
-            ```
-
-            Next, configure a lending provider with `LendConfig`:
-
-            ```typescript
-            import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
-
-            const lend = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a borrowing provider with `BorrowConfig`:
-
-            ```typescript
-            const borrow = {
-              type: 'morpho',
-              assetAllowlist: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-              marketAllowlist: [USDCMorphoMarket],
-              marketBlocklist: [],
-            }
-            ```
-
-            Configure a swap provider with `SwapConfig`:
-
-            ```typescript
-            const swap = {
-              type: 'uniswap',
-              defaultSlippage: 100, // 100 bips or 1%
-              assetAllowList: [USDC, ETH, WBTC],
-              assetBlocklist: [],
-            }
-            ```
-
-            Configure supported chains:
-
-            ```typescript
-            import { optimism, unichain } from '@eth-optimism/actions-sdk/chains'
-
-            const chains = [
-              optimism,
-              unichain,
-            ]
-            ```
-
-            Finally, bring it all together and initialize Actions:
-
-            ```typescript
-            import { createActions } from '@eth-optimism/actions-sdk/node'
-
-            export const actions = createActions({
-              wallet,
-              lend,
-              borrow,
-              swap,
-              chains,
-            })
-            ```
-          </Step>
-        </Steps>
+            },
+          },
+          smartWalletConfig: {
+            provider: {
+              type: 'default',
+              attributionSuffix: 'actions',
+            },
+          },
+        }
+        ```
       </Tab>
     </Tabs>
   </Tab>
 </Tabs>
+
+## Configure Actions SDK
+
+Create your Actions configuration to define which protocols, chains, and assets to support.
+
+First, configure a lending provider with `LendConfig`:
+
+```typescript
+import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
+
+const lend = {
+  type: 'morpho',
+  assetAllowlist: [USDC, ETH, WBTC],
+  assetBlocklist: [],
+  marketAllowlist: [USDCMorphoMarket],
+  marketBlocklist: [],
+}
+```
+
+Configure a borrowing provider with `BorrowConfig`:
+
+```typescript
+const borrow = {
+  type: 'morpho',
+  assetAllowlist: [USDC, ETH, WBTC],
+  assetBlocklist: [],
+  marketAllowlist: [USDCMorphoMarket],
+  marketBlocklist: [],
+}
+```
+
+Configure a swap provider with `SwapConfig`:
+
+```typescript
+const swap = {
+  type: 'uniswap',
+  defaultSlippage: 100, // 100 bips or 1%
+  assetAllowList: [USDC, ETH, WBTC],
+  assetBlocklist: [],
+}
+```
+
+Configure supported chains:
+
+```typescript
+import { optimism, unichain } from '@eth-optimism/actions-sdk/chains'
+
+const chains = [
+  optimism,
+  unichain,
+]
+```
+
+Finally, bring it all together and initialize Actions:
+
+```typescript
+export const actions = createActions({
+  wallet,
+  lend,
+  borrow,
+  swap,
+  chains,
+})
+```
 
 ## Using Actions
 
@@ -811,9 +527,9 @@ import { USDC } from '@eth-optimism/actions-sdk/assets'
 const market = await actions.lend.getMarket(USDC)
 
 // Supply assets to a lending market
-const receipt = await wallet.lend.supply({
+const receipt = await wallet.lend.openPosition({
   marketId: market.id,
-  amount: 100000000n, // 100 USDC (6 decimals)
+  amount: 100, // 100 USDC (6 decimals)
 })
 
 // Check position
