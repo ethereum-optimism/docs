@@ -447,12 +447,28 @@ const swapConfig = {
 Configure supported chains:
 
 ```typescript
-import { optimism, unichain } from '@eth-optimism/actions-sdk/chains'
+import { optimism, base } from 'viem/chains'
 
-const chains = [
-  optimism,
-  unichain,
-]
+// Define any EVM chain
+const OPTIMISM = {
+  chainId: optimism.id,
+  rpcUrls: env.OPTIMISM_RPC_URL,
+  bundler: { // Bundle and sponsor txs with a gas paymaster
+    type: 'simple' as const,
+    url: env.OPTIMISM_BUNDLER_URL,
+  },
+}
+
+const BASE = {
+  chainId: base.id,
+  rpcUrls: env.BASE_RPC_URL,
+  bundler: { // Bundle and sponsor txs with a gas paymaster
+    type: 'simple' as const,
+    url: env.BASE_BUNDLER_URL,
+  },
+}
+
+const chains = [OPTIMISM, BASE]
 ```
 
 Finally, bring it all together and initialize Actions:
