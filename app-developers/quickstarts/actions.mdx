@@ -17,7 +17,7 @@ Here's a breakdown of what's under the hood:
 
 - **Embedded Wallets**: Actions supports popular embedded [wallet providers](https://actions.money/#wallet), allowing your users to access DeFi with email authentication flows alone.
 
-- **Configure Actions**: Extent your embedded wallet with DeFi actions like Lend, Borrow, Swap, and Pay. Set multiple providers for each Action to choose the best markets across DeFi.
+- **Configure Actions**: Extend your embedded wallet with DeFi actions like Lend, Borrow, Swap, and Pay. Set multiple providers for each Action to choose the best markets across DeFi.
 
 - **Customize assets & chains**: Allow and block assets, markets, chains, and protocols from your application from a single config.
 
@@ -379,11 +379,11 @@ Actions works with both frontend and backend wallets depending on your needs:
   </Tab>
 </Tabs>
 
-## Configure Actions SDK
+## Create your ActionsConfig
 
 Create your Actions configuration to define which protocols, chains, and assets to support.
 
-Configure your wallet provider:
+Configure a wallet provider:
 
 ```typescript
 import type { WalletConfig } from '@eth-optimism/actions-sdk'
@@ -391,7 +391,7 @@ import type { WalletConfig } from '@eth-optimism/actions-sdk'
 const walletConfig: WalletConfig = {
   hostedWalletConfig: {
     provider: {
-      type: 'privy', // or provider of choice
+      type: 'privy', // your provider chosen in previous step
     },
   },
   smartWalletConfig: {
@@ -403,7 +403,7 @@ const walletConfig: WalletConfig = {
 }
 ```
 
-Configure a lending provider with `LendConfig`:
+Configure a lend provider with `LendConfig`:
 
 ```typescript
 import type { LendConfig } from '@eth-optimism/actions-sdk'
@@ -419,7 +419,7 @@ const lendConfig: LendConfig = {
 }
 ```
 
-Configure a borrowing provider with `BorrowConfig`:
+Configure a borrow provider with `BorrowConfig`:
 
 ```typescript
 import type { BorrowConfig } from '@eth-optimism/actions-sdk'
@@ -492,63 +492,41 @@ export const actions = createActions({
 
 Once configured, you can use Actions to perform DeFi operations:
 
-### Lend
-
 ```typescript
-import { USDC } from '@eth-optimism/actions-sdk/assets'
+import { USDC, ETH, USDT } from '@eth-optimism/actions-sdk/assets'
 
-// Get available markets for an asset
-const market = await actions.lend.getMarket(USDC)
+// Fetch your preferred market for any asset
+const market = actions.lend.getMarket(USDC)
 
-// Supply assets to a lending market
-const receipt = await wallet.lend.openPosition({
-  marketId: market.id,
-  amount: 100, // 100 USDC (6 decimals)
+// Enable asset lending in DeFi
+const receipt1 = wallet.lend.openPosition({
+  amount: 1,
+  asset: USDC,
+  ...market
 })
 
-// Check position
-const position = await wallet.lend.getPosition(market.id)
-console.log(`Supplied: ${position.supplied}`)
-```
+// Manage user market positions
+const position = wallet.lend.getPosition(market)
 
-### Borrow
-
-```typescript
-import { USDT } from '@eth-optimism/actions-sdk/assets'
-
-// Borrow against collateral
-const receipt = await wallet.borrow.openPosition({
-  amount: 50000000n, // 50 USDT
+// Use lent assets as collateral
+const receipt2 = wallet.borrow.openPosition({
+  amount: 1,
   asset: USDT,
-  marketId: market.id,
+  ...market
 })
-```
 
-### Swap
-
-```typescript
-import { USDC, ETH } from '@eth-optimism/actions-sdk/assets'
-
-// Swap tokens
-const receipt = await wallet.swap.execute({
-  amountIn: 100000000n, // 100 USDC
+// Swap between tokens onchain
+const receipt3 = wallet.swap.execute({
+  amountIn: 1,
   assetIn: USDC,
   assetOut: ETH,
-  chainId: 8453, // Base
 })
-```
 
-### Pay
-
-```typescript
-import { USDC } from '@eth-optimism/actions-sdk/assets'
-
-// Send tokens to another address
-const receipt = await wallet.send({
-  amount: 10000000n, // 10 USDC
+// Easy, safe asset transfers
+const receipt4 = wallet.send({
+  amount: 1,
   asset: USDC,
-  to: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-  chainId: 8453,
+  to: 'vitalik.eth',
 })
 ```
 
