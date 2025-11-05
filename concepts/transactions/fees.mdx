@@ -25,8 +25,6 @@ totalFee = gasUsed * (baseFee + priorityFee) + l1Fee
 **After Isthmus:**
 
 ```
-operatorFee = operatorFeeConstant + operatorFeeScalar * gasUsed / 1e6
-
 totalFee = operatorFee + gasUsed * (baseFee + priorityFee) + l1Fee
 ```
 
@@ -219,12 +217,12 @@ The new cost function takes into account the compression ratio, so chain operato
 
 ## Operator fee
 
-<Info>
-  The Operator fee is introduced with the [Isthmus upgrade](/notices/upgrade-14#operator-fee) and provides OP Stack chains with more flexible pricing models.
+  The Operator fee was introduced with the [Isthmus upgrade](/notices/upgrade-14#operator-fee) and modified with the [Jovian upgrade](/notices/upgrade-17#breaking-changes).
+  It provides OP Stack chains with more flexible pricing models.
   Refer to the [Network upgrade overview](/operators/node-operators/network-upgrades) for network upgrade activation timestamps.
 </Info>
 
-The Operator fee is a new fee component introduced with the Isthmus upgrade that enables more customizable fee structures for OP Stack chains. This fee is integrated directly into the EVM alongside the standard gas fee and L1 data fee, allowing chain operators to implement additional revenue models or cover specific operational costs.
+The Operator fee is a new fee component which enables more customizable fee structures for OP Stack chains. This fee is integrated directly into the EVM alongside the standard gas fee and L1 data fee, allowing chain operators to implement additional revenue models or cover specific operational costs.
 
 ### Mechanism
 
@@ -235,16 +233,24 @@ The Operator fee is automatically charged for any transaction that is included i
 </Info>
 
 ### Formula
+The Operator fee is calculated using the following formula, depending on the active fork:
 
-The Operator fee is calculated using the following formula:
+**After Isthmus:**
 
 ```
-operatorFee = (gas × operatorFeeScalar ÷ 10^6) + operatorFeeConstant
+operatorFee = operatorFeeConstant + (gasUsed × operatorFeeScalar ÷ 10^6)
 ```
+
+**After Jovian:**
+
+```
+operatorFee = operatorFeeConstant + (gasUsed × operatorFeeScalar × 100)
+```
+
 
 Where:
 
-*   `gas` is the amount of gas that the transaction used
+*   `gasUsed` is the amount of gas that the transaction used
 *   `operatorFeeScalar` is a `uint32` scalar set by the chain operator, scaled by 1e6
 *   `operatorFeeConstant` is a `uint64` scalar set by the chain operator
 
