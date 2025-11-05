@@ -23,18 +23,24 @@ Upgrade 17 introduces the following changes:
 * **Configurable Minimum Base Fee:** allows chain operators to specify a minimum base fee to shorten the length of priority fee auctions (disabled by default).
 * **Data Availability Footprint Block Limit:** adds an in-protocol limit to estimated DA usage of transactions to prevent DA spam and priority fee auctions. (enabled by default; can be disabled via zero scalar on-chain).
 
-<Info>
-**Operator Fee Fix:** enables more flexible fee configurations for rollup operators and lays groundwork for future custom gas token support. If you are running operator fee with nonzero scalars, make sure to adjust them before activating the fork to avoid overcharging users.
-</Info>
-
 For more information on the Jovian implementation details, please review the [Jovian specifications](https://specs.optimism.io/protocol/jovian/overview.html).
 
-## Breaking Changes - Block header changes
+## Breaking Changes -
+
+### Block header changes
 
 * `extraData` field is extended (for the [minBaseFee](https://specs.optimism.io/protocol/jovian/exec-engine.html#minimum-base-fee-in-block-header))
 * `blobGasUsed` may become nonzero when the DA footprint feature is enabled
 
 The `blobGasUsed` property of each block header is set to that block's `daFootprint`. Note that since Ecotone it was set to `0`, as OP Stack chains don't support blobs. It is now repurposed to store the DA footprint. If you want to disable it, set a scalar of 1. Setting 0 (or never setting the scalar value) implies the default value of the scalar, which can be updated in future forks. Please ensure your nodes and tooling can handle these updated header semantics.
+
+### Operator Fee
+The offchain formula for operator fee was changed to support more flexible fee configurations for rollup operators and lays groundwork for future custom gas token support.
+<Info>
+If you are running operator fee with nonzero scalars, make sure to adjust them before activating the fork to avoid overcharging users.
+We recommend setting the scalars to zero before the fork activates, and then reevaluating appropriate new scalars given the formula after the fork.
+This will ensure that the operator fee is calculated correctly and that users are not overcharged.
+</Info>
 
 For more information, see the [specs](https://specs.optimism.io/protocol/jovian/exec-engine.html#da-footprint-block-limit).
 
