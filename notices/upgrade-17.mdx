@@ -56,7 +56,6 @@ These following steps are necessary for every node operator:
   
     *   [op-node version will be published soon]()
     *   [op-geth version will be published soon]()
-    *   [op-batcher version will be published soon]()
     *   [op-reth version will be published next week]()
   </Step>
 
@@ -89,7 +88,13 @@ Chain operators must prepare their nodes and additionally upgrade the following 
 
 * Update [op-challenger/v1.7.0-rc.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.7.0-rc.1)
 * Update [op-conductor/v0.9.0](https://github.com/ethereum-optimism/optimism/releases/tag/op-conductor%2Fv0.9.0)
+* Update [op-batcher version will be published soon]()
 
+<Note>
+  The `op-batcher` must be restarted at least once after updating `op-node` to the latest release.
+  The batcher loads the rollup config once at startup and this will need to happen to update the activation timestamps for Jovian.
+  We've opened this [issue](https://github.com/ethereum-optimism/optimism/issues/18178) to improve this experience in the future.
+</Note>
 
 For operators running the rust stack, you will need to update to the following versions:
 
@@ -105,7 +110,7 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
 <Steps>
   <Step title="Verify the new absolute prestate">
 
-  The absolute prestate is generated with the [op-program/v1.8.0-rc.4](). You can use this new absolute prestate `todo: add prestate hash once published` for the following chains:
+  The absolute prestate is generated with the [op-program/v1.8.0-rc.4](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.8.0-rc.4). You can use this new absolute prestate `0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b` for the following chains:
 
   *   Mainnet and Sepolia: `OP`, `Base`, `Ink`, and `Unichain`
 
@@ -118,7 +123,21 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
   This will output the calculated prestates, the tail end of the output should look like this:
 
   ```shell
-  will update soon with the new prestate hash
+  -------------------- Production Prestates --------------------
+
+  Cannon64 Absolute prestate hash: 
+  0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b
+
+  -------------------- Experimental Prestates --------------------
+
+  Cannon64Next Absolute prestate hash: 
+  0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b
+
+  CannonInterop Absolute prestate hash: 
+  0x03455f7f2179327853a989648c3ac9f2d58be45137bae603271660519b4d5245
+
+  CannonInteropNext Absolute prestate hash: 
+  0x03455f7f2179327853a989648c3ac9f2d58be45137bae603271660519b4d5245
   ```
 
   *   The "Cannon64" hash is the 64-bit prestate.

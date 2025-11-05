@@ -18,7 +18,7 @@ is_imported_content: 'false'
 
 This page provides external-facing information about the Fusaka readiness upgrade for OP Stack chains. It summarizes scope, timelines, required actions, and resources for chain operators and partners. This upgrade is necessary for all OP Stack chains deriving from an L1 chain which is due to activate Fusaka (including Ethereum Mainnet and Sepolia).
 
-This is NOT Fusaka adoption on L2. It's a readiness upgrade to make the Optimism protocol compatible with L1 that activates the Fusaka fork. L2 adoption will happen in a future upgrade.
+This is NOT Fusaka adoption on L2. It's a readiness upgrade to make the OP Stack protocol compatible with L1 that activates the Fusaka fork. L2 adoption will happen in a future upgrade.
 
 <Info>
   All of the tasks below must be performed before Fusaka activates on L1.
@@ -30,16 +30,20 @@ Fusaka contains various breaking changes. See [EIP-7607: Hardfork Meta - Fusaka]
 
 **Important dates:**
 
-Ethereum Sepolia Fusaka hard fork: Tuesday, October 14th, 2025 07:36:00 UTC (affects chains posting data to Sepolia)
-
-Ethereum Mainnet Fusaka hard fork: Wednesday, December 3rd, 2025 21:49:11 UTC,	1764798551
+* Ethereum Sepolia Fusaka hard fork: Tuesday, October 14th, 2025 07:36:00 UTC (`1760427360`)
+* Sepolia BPO 1: Tuesday, October 21st, 2025 03:26:24 UTC (`1761017184`)
+* Sepolia BPO 2: Monday, October 27th, 2025 23:16:48 UTC (`1761607008`)
+* Ethereum Mainnet Fusaka hard fork: Wednesday, December 3rd, 2025 21:49:11 UTC (`1764798551`)
+* Ethereum Mainnet BPO 1: Tuesday, December 9th, 2025 14:21:11 UTC (`1765290071`)
+* Ethereum Mainnet BPO 2: Wednesday, January 7th, 2026 01:01:11 UTC (`1767747671`)
 
 ## For node operators
 
 Update your node software as soon as possible after release:
 
-*   Update `op-node` to [v1.14.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.14.1). See the release notes for new config flags and env variables (not necessary for chains deriving from Ethereum Mainnet, Sepolia, Holesky or Hoodi.)
-*   Update `op-geth` to [v1.101603.1](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.1)
+    *   [op-node version will be published soon]()
+    *   [op-geth version will be published soon]()
+    *   [op-reth version will be published next week]()
 
 ### Ensure your L1 beacon node endpoint can serve all blobs
 
@@ -50,9 +54,9 @@ If your external L1 Beacon Chain RPC provider doesn't subscribe to all subnets, 
 
 **For operators running their own L1 Ethereum Beacon Chain Node:**
 
-**If you operate your own L1 nodes, ensure also both the L1 execution and beacon nodes are upgraded** and configured for the Fusaka fork (see [Fusaka specs here](https://blog.ethereum.org/2025/09/26/fusaka-testnet-announcement)).
+**If you operate your own L1 nodes, ensure also both the L1 execution and beacon nodes are upgraded** and configured for the Fusaka fork.
 
-Outdated L1 nodes can cause derivation failures, blob unavailability, or chain divergence after the fork.
+Outdated L1 nodes will cause derivation failures, blob unavailability, or chain divergence after the fork.
 
 Configure your Beacon Node with the new flag (detailed below) before the relevant Fusaka hard fork date.
 
@@ -67,7 +71,7 @@ L1 Beacon Chain Node flags:
 ## For chain operators
 
 <Info>
-Be ready to restart your batcher with the new configuration immediately after the Fusaka fork on L1: e.g. for Sepolia this is at Unix timestamp 1760427360 (Tue Oct 14 2025 07:36:00 UTC). For Mainnet this is at Unix timestamp 1764798551 (Wed Dec 03 2025 21:49:11 UTC).
+Be ready to restart your batcher with the new configuration immediately after the Fusaka fork on L1: e.g. for Sepolia this is at Unix timestamp 1760427360 (Tue Oct 14 2025 07:36:00 UTC). For Mainnet this is at Unix timestamp `1764798551` (Wed Dec 03 2025 21:49:11 UTC).
 </Info>
 
 <Info>
@@ -79,65 +83,78 @@ Update the following:
 | Component       | Version                                                                                               | Notes                                                                                                                                                                                          |
 | --------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `proxyd`        | [v4.19.0](https://github.com/ethereum-optimism/infra/releases/tag/proxyd%2Fv4.19.0) or greater        | You need to whitelist `eth_blobBaseFee` rpc if using proxyd for L1 load balancing. If you use `dugtrio` ensure this is also updated to the latest release.                                                                                                              |
-| `op-batcher`    | [v1.16.0](https://github.com/ethereum-optimism/optimism/releases/tag/op-batcher%2Fv1.16.0)            | `OP_BATCHER_TXMGR_ENABLE_CELL_PROOFS`: `true` or equivalent CLI flag needs to be set and the batcher restarted just after Fusaka activates on L1.                                              |
-| `op-node`       | [v1.14.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.14.1)               | L1 chain config must be supplied via a new flag (see the release notes). Not necessary for chains deriving from Ethereum Mainnet, Sepolia, Holesky or Hoodi.                                            |
+| `op-batcher`    | []()            | `OP_BATCHER_TXMGR_ENABLE_CELL_PROOFS`: `true` or equivalent CLI flag needs to be set and the batcher restarted just after Fusaka activates on L1.                                              |
+| `op-node`       | []()               | L1 chain config must be supplied via a new flag (see the release notes). Not necessary for chains deriving from Ethereum Mainnet, Sepolia, Holesky or Hoodi.                                            |
 | `op-geth`       | [v1.101603.1](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.1)                  |                                                                                                                                                                                                |
 | `op-challenger` | [v1.6.0](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.6.0)           | L1 chain config must be supplied via a new flag (see the release notes). Not necessary for chains deriving from Ethereum Mainnet, Sepolia, Holesky or Hoodi.                                            |
-| `kona-node`     | [v1.1.6](https://github.com/op-rs/kona/releases/tag/kona-node%2Fv1.1.6)                               |                                                                                                                                                                                                |
-| `kona-host`     | [v1.1.6](https://github.com/op-rs/kona/releases/tag/kona-host%2Fv1.1.6)                     |                                                                                                                                                                                                |
-| `kona-client`   | [v1.1.6](https://github.com/op-rs/kona/releases/tag/kona-client%2Fv1.1.6)                   |                                                                                                                                                                                                |
-| `op-reth`       | [v1.8.2](https://github.com/paradigmxyz/reth/releases/tag/v1.8.2)                                     |                                                                                                                                                                                                |
+| `kona-node`     | []()                               |                                                                                                                                                                                                |
+| `kona-host`     | []()                     |                                                                                                                                                                                                |
+| `kona-client`   | []()                   |                                                                                                                                                                                                |
+| `op-reth`       | []()                                     |                                                                                                                                                                                                |
 
 <Info>
-**Note:** `op-node` v1.14.1 uses the new `/eth/v1/beacon/blobs/` API for fetching blob data from L1 beacon nodes. If you run a proxy/load balancer in front of your beacon API, ensure it correctly forwards all query parameters. 
+**Note:** `op-node` uses the new `/eth/v1/beacon/blobs/` API for fetching blob data from L1 beacon nodes. If you run a proxy/load balancer in front of your beacon API, ensure it correctly forwards all query parameters. 
 
 Misconfigured proxies may cause blob fetch failures or derivation stalls after the Fusaka fork.
 </Info>
-### For Permissionless Fault Proof enabled chains
 
-Chains running permissionless fault proofs will need to deploy new dispute game contracts with new absolute prestates. The new 64 bit version of cannon will be utilized moving forward. The Sepolia Superchain, will utilize [op-program/v1.7.0-rc.3](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.7.0-rc.3).
+### For permissionless fault proof enabled chains
 
-<Info>
-  Optimism will complete the on-chain prestate update (including Dispute Game deployment and implementation set) on OP Sepolia, Base Sepolia, Ink Sepolia, and Uni Sepolia. However, off-chain components (op-challenger) must still be configured by operators to use the new prestate.
+<Note>
+  The Superchain will be bundling the new absolute prestate for Fusaka support and the Mainnet [Jovian hard fork](/notices/upgrade-17).
+  This step will only need to be performed once.
+</Note>
 
-If you are a Permissionless FP–enabled chain not included in the list above, you must perform all steps below yourself.
-</Info>
+Chains running permissionless fault proofs will need to deploy new dispute game contracts with new absolute prestates.
 
 <Steps>
-<Step title="Verify the new absolute prestate">
+  <Step title="Verify the new absolute prestate">
 
-<Info>
-  As of upgrade 14, the 64 bit multi-threaded version of cannon is utilized.
-</Info>
+  The absolute prestate is generated with the [op-program/v1.8.0-rc.4](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.8.0-rc.4). You can use this new absolute prestate `0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b` for the following chains:
 
-The absolute prestate is generated with the [op-program/v1.7.0-rc.3](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.7.0-rc.3). You can use this new absolute prestate (`0x0339db503776757491b9f3038bf6f1d37b7988a2f75e823fe2656c1352ef2f91`) for chains in the superchain registry.
+  *   Mainnet and Sepolia: `OP`, `Base`, `Ink`, and `Unichain`
 
-You can verify this absolute prestate by running the following [command](https://github.com/ethereum-optimism/optimism/blob/op-program/v1.7.0-rc.3/Makefile#L130-L132) in the root of the monorepo on the `op-program/v1.7.0-rc.3` tag:
+  You can verify this absolute prestate by running the following command in the root of the monorepo on the `op-program/v1.8.0-rc.4` tag:
 
-```shell
-make reproducible-prestate
-```
-</Step>
+  ```shell
+  make reproducible-prestate
+  ```
 
-<Step title="Upload your new preimage file">
+  This will output the calculated prestates, the tail end of the output should look like this:
 
-During the previous step, you also generated the preimage of the absolute prestate, which is basically the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate-mt64.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `0x0339db503776757491b9f3038bf6f1d37b7988a2f75e823fe2656c1352ef2f91.bin.gz`.
+  ```shell
+  -------------------- Production Prestates --------------------
 
-Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
-</Step>
+  Cannon64 Absolute prestate hash: 
+  0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b
 
-<Step title="Deploy new dispute game contracts">
+  -------------------- Experimental Prestates --------------------
 
-You will then take the absolute prestate and deploy new `FaultDisputeGame` and `PermissionedDisputeGame` contracts with that value.
-</Step>
+  Cannon64Next Absolute prestate hash: 
+  0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b
 
-<Step title="Update the DisputeGameFactory">
+  CannonInterop Absolute prestate hash: 
+  0x03455f7f2179327853a989648c3ac9f2d58be45137bae603271660519b4d5245
 
-You will then need to update the `DisputeGameFactory` to point to the new `FaultDisputeGame` and `PermissionedDisputeGame` contracts by calling `DisputeGameFactory.setImplementation`.
-</Step>
+  CannonInteropNext Absolute prestate hash: 
+  0x03455f7f2179327853a989648c3ac9f2d58be45137bae603271660519b4d5245
+  ```
 
-<Step title="Execute the upgrade">
+  *   The "Cannon64" hash is the 64-bit prestate.
 
-Once your `op-challenger` is ready with the new preimage, you can execute the "Set Dispute Game Implementation" transaction. Please simulate and validate that the expected output prior to executing the transaction.
-</Step>
+  Verify that your target prestate was calculated as expected and matches the corresponding entry in
+  [standard-prestates.toml](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml).
+  </Step>
+
+  <Step title="Upload your new preimage file">
+    During the previous step, you also generated the preimage of the absolute prestate, which is the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate-mt64.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `PRESTATEHASH.bin.gz`.
+
+    Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
+  </Step>
+
+  <Step title="Execute the upgrade">
+    Once your `op-challenger` is ready with the new preimage, you can execute the upgrade transaction. This should be done by making a delegatecall to the `upgrade()` function of the OP Contract Manager (at the address listed in [the registry](https://github.com/ethereum-optimism/superchain-registry/blob/6621a0f13ce523fe1bb8deea739fe37abe20f90d/validation/standard/standard-versions-mainnet.toml#L22).
+
+    Please simulate and validate the expected output prior to executing the transaction.
+  </Step>
 </Steps>
