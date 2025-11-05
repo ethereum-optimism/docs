@@ -6,7 +6,7 @@ labels: 'community-request,documentation'
 
 ---
 
-<!-- please fill out the description and acceptance criteria to the best to your ability. While the other sections are optional, it makes resolving the issue much easier. -->
+<!-- please fill out the description and acceptance criteria to the best of your ability. While the other sections are optional, it makes resolving the issue much easier. -->
 
 ## Description 
 <!-- Write a clear and concise description of the docs request. For example, is the request related to an existing page or are you suggesting a brand-new docs page? -->
