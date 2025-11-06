@@ -1,0 +1,73 @@
+---
+title: Integrating wallets
+description: Reference guide for integrating wallet providers with Actions SDK.
+---
+
+## Which wallets are right for my use case?
+
+In order to let your users access DeFi, they will need an <Tooltip tip="Ethereum Virtual Machine" cta="Learn more" href="https://ethereum.org/wallets/">EVM</Tooltip>-compatible wallet. There are plenty of considerations when selecting a wallet schema that works for you:
+
+- Who will maintain custody of funds?
+- What permissions must exist for my use case?
+- Where in my stack should transaction signatures originate?
+- How can my users on and off ramp funds?
+
+Actions SDK supports popular [embedded wallet providers](#embedded-wallet-providers) to address all of these questions while remaining flexible to your use case.
+
+## Embedded Wallet Providers
+
+Embedded wallet providers give your users the ability to sign onchain transactions through your app's existing email authentication and authorization flows.
+
+Actions works with:
+
+<CardGroup cols={3}>
+  <Card
+    title="Privy"
+    href="https://www.privy.io/"
+    icon="/public/img/actions/Privy.png"
+  ></Card>
+  <Card
+    title="Turnkey"
+    href="https://www.turnkey.com/"
+    icon="/public/img/actions/turnkey.png"
+  ></Card>
+  <Card
+    title="Dynamic"
+    href="https://www.dynamic.xyz/"
+    icon="/public/img/actions/dynamic.png"
+  ></Card>
+</CardGroup>
+
+## Gas Sponsorship
+
+Signing and sending onchain transactions requires fees payment in the form of as "gas", which adds [additional overhead](/app-developers/guides/transactions/estimates) for you and friction for users.
+
+## Connect your wallet to Actions
+
+Regardless of where and how transactions are signed, Actions has you covered.
+
+<Steps>
+  <Step title="Choose a wallet provider">
+    Follow embedded wallet provider documentation and installation steps.
+    Actions works with Typescript clients, both frontend React and backend Node.
+  </Step>
+  <Step title="Import Actions SDK">
+    Import [Actions SDK](https://actions.money/) alongside your chosen wallet
+    provider SDK.
+  </Step>
+  <Step title="Create and fetch embedded user wallets">
+    Follow embedded wallet provider documentation for wallet creation and
+    access.
+  </Step>
+  <Step title="Pass the wallet to Actions">
+    When it's time to Lend, Borrow, Swap, or Pay, call `toActionsWallet(...)`,
+    and pass in the provider wallet.
+  </Step>
+  <Step title="Take Action">Once</Step>
+</Steps>
+
+See [Actions Quickstart Guide](/app-developers/quickstarts/actions) for sample code for all supported wallet providers.
+
+## Smart wallets & signers
+
+In addition to using embedded wallet providers natively, Actions supports the creation of custom smart contract wallets.
