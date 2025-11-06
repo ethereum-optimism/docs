@@ -54,10 +54,9 @@ These following steps are necessary for every node operator:
   <Step title="Update to the latest release">
   The releases contain both the Jovian Mainnet and Sepolia Superchain activation timestamps.
   
-    *   [op-node version will be published soon]()
-    *   [op-geth version will be published soon]()
-    *   [op-batcher version will be published soon]()
-    *   [op-reth version will be published next week]()
+    *   [op-node/v1.16.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.16.1)
+    *   [op-geth/v1.101603.4](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.4)
+    *   [op-reth/v1.9.0](https://github.com/paradigmxyz/reth/releases/tag/v1.9.0)
   </Step>
 
   <Step title="Configure the Jovian activation date">
@@ -85,27 +84,39 @@ These following steps are necessary for every node operator:
 
 ## For chain operators
 
-Chain operators must prepare their nodes and additionally upgrade the following versions:
+Update the following components:
 
-* Update [op-challenger/v1.7.0-rc.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.7.0-rc.1)
-* Update [op-conductor/v0.9.0](https://github.com/ethereum-optimism/optimism/releases/tag/op-conductor%2Fv0.9.0)
-
-
-For operators running the rust stack, you will need to update to the following versions:
-
-  *   [kona-node version will be published soon]()
-  *   [kona-client version will be published soon]()
-  *   [kona-host version will be published soon]()
-
+| Component       | Version                                                                                               | Notes                                                                                                                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `proxyd`        | [v4.19.0](https://github.com/ethereum-optimism/infra/releases/tag/proxyd%2Fv4.19.0) or greater        | You need to whitelist `eth_blobBaseFee` rpc if using proxyd for L1 load balancing. If you use `dugtrio` ensure this is also updated to the latest release.                                                                                                              |
+| `op-batcher`    | [v1.16.2](https://github.com/ethereum-optimism/optimism/releases/tag/op-batcher%2Fv1.16.2)            | The `op-batcher` must be restarted at least once after updating `op-node` to the latest release. The batcher loads the rollup config once at startup and this will need to happen to update the activation timestamps for Jovian. We've opened this [issue](https://github.com/ethereum-optimism/optimism/issues/18178) to improve this experience in the future.                       |
+| `op-node`       | [v1.16.1](https://github.com/ethereum-optimism/optimism/releases/tag/op-node%2Fv1.16.1)               | L1 chain config must be supplied via a new flag (see the release notes). Not necessary for chains deriving from Ethereum Mainnet, Sepolia, Holesky or Hoodi.                                            |
+| `op-geth`       | [v1.101603.4](https://github.com/ethereum-optimism/op-geth/releases/tag/v1.101603.4)                  |                                                                                                                                                                                                |
+| `op-challenger` | [v1.7.0](https://github.com/ethereum-optimism/optimism/releases/tag/op-challenger%2Fv1.7.0)           | If deriving from a chain other than Ethereum Mainnet, Sepolia or Hoodi then L1 chain config must be supplied via a new flag.                                            |
+| `kona-node`     | []()                               |                                                                                                                                                                                                |
+| `kona-host`     | []()                     |                                                                                                                                                                                                |
+| `kona-client`   | []()                   |                                                                                                                                                                                                |
+| `op-reth`       | [v1.9.0](https://github.com/paradigmxyz/reth/releases/tag/v1.9.0)                                     |                                                                                                                                                                                                |
 
 ### For permissionless fault proof enabled chains
 
 Chains running permissionless fault proofs will need to deploy new dispute game contracts with new absolute prestates.
+These prestates also contain support for the L1 Fusaka activation.
+
+<Note>
+  The Superchain will be bundling [Fusaka support](/notices/fusaka-notice) and the Mainnet Jovian hard fork support into a single absolute prestate.
+</Note>
+
+<Info>
+  Optimism will complete the onchain prestate update (including Dispute Game deployment and implementation set) on OP, Ink, and Unichain Mainnet and Sepolia. 
+  However, off chain components (op-challenger) must still be configured by operators to use the new prestate.
+  If you are a Permissionless FP enabled chain not included in the list above, you must perform all steps below yourself.
+</Info>
 
 <Steps>
   <Step title="Verify the new absolute prestate">
 
-  The absolute prestate is generated with the [op-program/v1.8.0-rc.4](). You can use this new absolute prestate `todo: add prestate hash once published` for the following chains:
+  The absolute prestate is generated with the [op-program/v1.8.0-rc.4](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.8.0-rc.4). You can use this new absolute prestate `0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b` for the following chains:
 
   *   Mainnet and Sepolia: `OP`, `Base`, `Ink`, and `Unichain`
 
@@ -118,7 +129,21 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
   This will output the calculated prestates, the tail end of the output should look like this:
 
   ```shell
-  will update soon with the new prestate hash
+  -------------------- Production Prestates --------------------
+
+  Cannon64 Absolute prestate hash: 
+  0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b
+
+  -------------------- Experimental Prestates --------------------
+
+  Cannon64Next Absolute prestate hash: 
+  0x03caa1871bb9fe7f9b11217c245c16e4ded33367df5b3ccb2c6d0a847a217d1b
+
+  CannonInterop Absolute prestate hash: 
+  0x03455f7f2179327853a989648c3ac9f2d58be45137bae603271660519b4d5245
+
+  CannonInteropNext Absolute prestate hash: 
+  0x03455f7f2179327853a989648c3ac9f2d58be45137bae603271660519b4d5245
   ```
 
   *   The "Cannon64" hash is the 64-bit prestate.
@@ -132,10 +157,10 @@ Chains running permissionless fault proofs will need to deploy new dispute game 
 
     Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
   </Step>
-
-  <Step title="Execute the upgrade">
-    Once your `op-challenger` is ready with the new preimage, you can execute the upgrade transaction. This should be done by making a delegatecall to the `upgrade()` function of the OP Contract Manager (at the address listed in [the registry](https://github.com/ethereum-optimism/superchain-registry/blob/6621a0f13ce523fe1bb8deea739fe37abe20f90d/validation/standard/standard-versions-mainnet.toml#L22).
-
-    Please simulate and validate the expected output prior to executing the transaction.
-  </Step>
 </Steps>
+
+## Execute the L1 Contract Upgrade 
+
+Once your `op-challenger` is ready with the new preimage, you can execute the upgrade transaction. This should be done by making a delegatecall to the `upgrade()` function of the OP Contract Manager at the address listed in [the registry](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-versions-mainnet.toml).
+
+Please simulate and validate the expected output prior to executing the transaction.
