@@ -16,6 +16,7 @@ A comprehensive guide for managing redirects in Mintlify documentation (migrated
 ## Overview
 
 Redirects are essential when restructuring documentation (IA refactor) to ensure:
+
 - Old links don't break
 - Search engine rankings are preserved
 - User bookmarks continue to work
@@ -67,7 +68,7 @@ Add a new object to the array:
 
 ```bash
 # Run the dev server
-mintlify dev
+mint dev
 
 # Test the redirect
 # Navigate to http://localhost:3000/old-page-path
@@ -150,11 +151,13 @@ mintlify dev
 ### No Wildcard support
 
 **Nextra** (supported):
+
 ```
 /docs/* /tutorials/:splat 301
 ```
 
 **Mintlify** (NOT supported):
+
 ```json
 {
   "source": "/docs/*",
@@ -167,10 +170,9 @@ mintlify dev
 ```json
 {
   "redirects": [
-    {"source": "/docs/page1", "destination": "/tutorials/page1"},
-    {"source": "/docs/page2", "destination": "/tutorials/page2"},
-    {"source": "/docs/page3", "destination": "/tutorials/page3"}
+    { "source": "/docs/page1", "destination": "/tutorials/page1" },
+    { "source": "/docs/page2", "destination": "/tutorials/page2" },
+    { "source": "/docs/page3", "destination": "/tutorials/page3" }
   ]
 }
 ```
-
