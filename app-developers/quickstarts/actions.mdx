@@ -114,15 +114,17 @@ Actions works with both frontend and backend wallets depending on your needs:
         Give your embedded wallets the ability to take Action:
 
         ```typescript
-        import { useTurnkey } from "@turnkey/react-wallet-kit"
+        import { useTurnkey, WalletSource } from "@turnkey/react-wallet-kit"
         import { actions, USDC, ExampleMarket } from './config'
 
-        // Create Turnkey wallet
-        const { createWallet, httpClient, session } = useTurnkey()
-        const embeddedWallet = await createWallet({
-          walletName: `Wallet ${Math.random()}`,
-          accounts: ["ADDRESS_FORMAT_ETHEREUM"],
-        })
+        // Fetch Turnkey wallet
+        const { wallets, httpClient, session } = useTurnkey()
+        const embeddedWallet = wallets.find(
+          (wallet) =>
+            wallet.accounts.some(
+              (account) => account.addressFormat === 'ADDRESS_FORMAT_ETHEREUM',
+            ) && wallet.source === WalletSource.Embedded,
+        )
 
         const walletAddress = embeddedWallet.accounts[0].address
 
@@ -131,7 +133,6 @@ Actions works with both frontend and backend wallets depending on your needs:
           client: httpClient,
           organizationId: session.organizationId,
           signWith: walletAddress,
-          ethereumAddress: walletAddress,
         })
 
         // Wallet can now take action
@@ -147,12 +148,17 @@ Actions works with both frontend and backend wallets depending on your needs:
         Optionally, create signers for smart wallets you control:
 
         ```typescript
-        import { useTurnkey } from "@turnkey/react-wallet-kit"
+        import { useTurnkey, WalletSource } from "@turnkey/react-wallet-kit"
         import { actions } from './config'
 
         // Fetch Turnkey wallet
         const { wallets, httpClient, session } = useTurnkey()
-        const embeddedWallet = wallets[0]
+        const embeddedWallet = wallets.find(
+          (wallet) =>
+            wallet.accounts.some(
+              (account) => account.addressFormat === 'ADDRESS_FORMAT_ETHEREUM',
+            ) && wallet.source === WalletSource.Embedded,
+        )
         const walletAddress = embeddedWallet.accounts[0].address
 
         // Create signer
@@ -481,36 +487,37 @@ Once configured, you can use Actions to perform DeFi operations:
 
 ```typescript
 import { USDC, ETH, USDT } from '@eth-optimism/actions-sdk/assets'
-
-// Fetch your preferred market for any asset
-const market = actions.lend.getMarket(USDC)
+import { ExampleMarket } from '@/actions/markets'
 
 // Enable asset lending in DeFi
-const receipt1 = wallet.lend.openPosition({
+const lendReceipt = await wallet.lend.openPosition({
   amount: 1,
   asset: USDC,
-  ...market
+  ...ExampleMarket
 })
 
 // Manage user market positions
-const position = wallet.lend.getPosition(market)
+const lendPosition = await wallet.lend.getPosition(market)
 
-// Use lent assets as collateral
-const receipt2 = wallet.borrow.openPosition({
+// Fetch wallet balance
+const balance = await wallet.getBalance()
+
+// ⚠️ COMING SOON
+const borrowReceipt = await wallet.borrow.openPosition({
   amount: 1,
   asset: USDT,
   ...market
 })
 
-// Swap between tokens onchain
-const receipt3 = wallet.swap.execute({
+// ⚠️ COMING SOON
+const swapReceipt = await wallet.swap.execute({
   amountIn: 1,
   assetIn: USDC,
   assetOut: ETH,
 })
 
-// Easy, safe asset transfers
-const receipt4 = wallet.send({
+// ⚠️ COMING SOON
+const sendReceipt = await wallet.send({
   amount: 1,
   asset: USDC,
   to: 'vitalik.eth',
