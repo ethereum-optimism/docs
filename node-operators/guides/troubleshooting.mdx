@@ -80,54 +80,55 @@ say if Geth stops unexpectedly, the database can be corrupted. This is known as 
 "unclean shutdown" and it can lead to a variety of problems for the node when
 it is restarted.
 
-<Tabs items={['op-geth', 'Nethermind']}>
-  <Tabs.Tab>
-    It is always best to shut down Geth gracefully, i.e. using a
-    shutdown command such as `ctrl-c`, `docker stop -t 300 <container ID>` or
-    `systemctl stop` (although please note that `systemctl stop` has a default timeout
-    of 90s - if Geth takes longer than this to gracefully shut down it will quit
-    forcefully. Update the `TimeoutSecs` variable in `systemd.service` to override this
-    value to something larger, at least 300s).
+### For op-geth
 
-    This way, Geth knows to write all relevant information into the database to
-    allow the node to restart properly later. This can involve >1GB of information
-    being written to the LevelDB database which can take several minutes.
+It is always best to shut down Geth gracefully, i.e. using a
+shutdown command such as `ctrl-c`, `docker stop -t 300 <container ID>` or
+`systemctl stop` (although please note that `systemctl stop` has a default timeout
+of 90s - if Geth takes longer than this to gracefully shut down it will quit
+forcefully. Update the `TimeoutSecs` variable in `systemd.service` to override this
+value to something larger, at least 300s).
 
-    ### Solution
+This way, Geth knows to write all relevant information into the database to
+allow the node to restart properly later. This can involve >1GB of information
+being written to the LevelDB database which can take several minutes.
 
-    If an unexpected shutdown does occur, the `removedb` subcommand can be used to
-    delete the state database and resync it from the ancient database. This should
-    get the database back up and running.
-  </Tabs.Tab>
+**Solution**
 
-  <Tabs.Tab>
-    Unclean shutdowns in `Nethermind` can lead to database corruption. This typically happens when:
+If an unexpected shutdown does occur, the `removedb` subcommand can be used to
+delete the state database and resync it from the ancient database. This should
+get the database back up and running.
 
-    *   The node experiences hardware failures (disk failures, memory errors, overheating)
-    *   Power cuts cause abrupt shutdowns
-    *   The process is terminated without proper cleanup
+### For Nethermind
 
-    ### Solutions
+Unclean shutdowns in `Nethermind` can lead to database corruption. This typically happens when:
 
-    1.  **Lock File Issues**
-        If `Nethermind` complains about lock files after an unclean shutdown, run:
-        ```bash
-        find /path/to/nethermind_db -type f -name 'LOCK' -delete
-        ```
+*   The node experiences hardware failures (disk failures, memory errors, overheating)
+*   Power cuts cause abrupt shutdowns
+*   The process is terminated without proper cleanup
 
-    2.  **Block Checksum Mismatch**
-        If you encounter block checksum mismatch errors, you can enable direct I/O:
-        ```bash
-        --Db.UseDirectIoForFlushAndCompactions true
-        ```
-        Note: This may impact performance.
+**Solutions**
 
-    3.  **Complete Resync**
-        In cases of severe corruption, a full resync is recommended:
-        ```bash
-        sudo systemctl stop nethermind
-        sudo rm -rf /path/to/nethermind_db/mainnet
-        sudo systemctl start nethermind
-        ```
-  </Tabs.Tab>
-</Tabs>
+1.  **Lock File Issues**
+
+    If `Nethermind` complains about lock files after an unclean shutdown, run:
+    ```bash
+    find /path/to/nethermind_db -type f -name 'LOCK' -delete
+    ```
+
+2.  **Block Checksum Mismatch**
+
+    If you encounter block checksum mismatch errors, you can enable direct I/O:
+    ```bash
+    --Db.UseDirectIoForFlushAndCompactions true
+    ```
+    Note: This may impact performance.
+
+3.  **Complete Resync**
+
+    In cases of severe corruption, a full resync is recommended:
+    ```bash
+    sudo systemctl stop nethermind
+    sudo rm -rf /path/to/nethermind_db/mainnet
+    sudo systemctl start nethermind
+    ```
