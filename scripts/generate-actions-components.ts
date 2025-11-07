@@ -6,6 +6,7 @@ import * as path from "path";
 // Key: Component Name, Value: path to source file
 const ACTIONS_COMPONENTS: Record<string, string> = {
   WalletNamespace: "src/wallet/core/namespace/WalletNamespace.ts",
+  Wallet: "src/wallet/core/wallets/abstract/Wallet.ts",
 };
 
 interface MethodDoc {
@@ -21,6 +22,10 @@ function extractMethodDocs(classDeclaration: any): MethodDoc[] {
   const methods: MethodDoc[] = [];
 
   for (const method of classDeclaration.getMethods()) {
+    // Skip protected and private methods
+    const scope = method.getScope();
+    if (scope === 'protected' || scope === 'private') continue;
+
     const jsDoc = method.getJsDocs()[0];
     if (!jsDoc) continue;
 
