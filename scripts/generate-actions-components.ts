@@ -111,7 +111,9 @@ function generateComponentMDX(classDescription: string, methods: MethodDoc[]): s
       mdx += `| Parameter | Type | Description |\n`;
       mdx += `|-----------|------|-------------|\n`;
       for (const param of method.params) {
-        mdx += `| \`${param.name}\` | \`${param.type}\` | ${param.description} |\n`;
+        // Remove leading " - " from description if present
+        const cleanDescription = param.description.replace(/^\s*-\s*/, '');
+        mdx += `| \`${param.name}\` | \`${param.type}\` | ${cleanDescription} |\n`;
       }
       mdx += `\n`;
     }
