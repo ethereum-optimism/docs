@@ -1,8 +1,6 @@
 ---
-
 title: Integrating wallets
 description: Reference guide for integrating wallet providers with Actions SDK.
-
 ---
 
 ## Which wallets are right for my use case?
@@ -44,7 +42,7 @@ Actions works with:
 
 Signing and sending onchain transactions requires gas, or fee payment, which adds [additional overhead](/app-developers/guides/transactions/estimates) for you and friction for users.
 
-Actions supports gas sponsorship
+Actions supports gas sponsorship via a combination of smart contract wallets and [paymasters](https://eips.ethereum.org/EIPS/eip-7677). First, configure a paymaster in the chain config by specifying a bundler url. Now, any transactions submitted via an actions SmartWallet on that chain will automatically use your paymaster, therefore eliminating the need for the wallet to pay gas.
 
 ## Connect your wallet to Actions
 
@@ -79,6 +77,10 @@ Regardless of where and how transactions are signed, Actions has you covered.
 
 ## Smart wallets & signers
 
-In addition to using embedded wallet providers natively, Actions supports the creation of custom smart contract wallets.
+In addition to using embedded provider wallets directly, Actions [supports the creation](/app-developers/quickstarts/actions#choose-a-wallet-provider) of custom smart contract wallets. This additional wallet type is separate from, but still controlled by the owner of the embedded wallet.
 
-To learn more about wallet classes, functions, and parameters, see [Wallet Documentation](/app-developers/reference/actions/wallet-definitions).
+If you [configure it](/app-developers/reference/actions/configuring-actions), Actions will deploy a [EIP-4337](https://eips.ethereum.org/EIPS/eip-4337) compliant [Coinbase Smart Wallets](https://github.com/coinbase/smart-wallet) on the chains you've chosen to support.
+
+Once created, an embedded wallet can be added as a signer on the smart wallet, capable of signing transactions on behalf of the Smart Wallet.
+
+See [Wallet Documentation](/app-developers/reference/actions/wallet-definitions) for additional details.
