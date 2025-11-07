@@ -30,7 +30,14 @@ function extractMethodDocs(classDeclaration: any): MethodDoc[] {
     const params = tags
       .filter((tag) => tag.getTagName() === "param")
       .map((tag) => {
-        const text = tag.getCommentText() || "";
+        // Get full comment text including multi-line descriptions
+        const commentText = tag.getComment();
+        const text = typeof commentText === 'string'
+          ? commentText
+          : Array.isArray(commentText)
+            ? commentText.map(part => typeof part === 'string' ? part : part.text).join(' ')
+            : "";
+
         const name = tag.compilerNode.name?.getText() || "";
         return {
           name,
@@ -40,7 +47,7 @@ function extractMethodDocs(classDeclaration: any): MethodDoc[] {
               .find((p) => p.getName() === name)
               ?.getType()
               .getText() || "unknown",
-          description: text,
+          description: text.trim(),
         };
       });
 
