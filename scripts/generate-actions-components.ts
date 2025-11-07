@@ -60,7 +60,7 @@ function extractMethodDocs(classDeclaration: any, sourcePath: string): MethodDoc
               .getParameters()
               .find((p) => p.getName() === name)
               ?.getType()
-              .getText() || "unknown",
+              .getText() || "",
           description: text.trim(),
         };
       });
