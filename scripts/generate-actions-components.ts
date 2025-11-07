@@ -87,6 +87,18 @@ function generateComponentMDX(classDescription: string, methods: MethodDoc[]): s
     mdx += `${classDescription}\n\n`;
   }
 
+  // Add table of functions
+  if (methods.length > 0) {
+    mdx += `## Methods\n\n`;
+    mdx += `| Function | Description |\n`;
+    mdx += `|----------|-------------|\n`;
+    for (const method of methods) {
+      const methodLink = `#${method.name.toLowerCase()}`;
+      mdx += `| [\`${method.name}()\`](${methodLink}) | ${method.description || ''} |\n`;
+    }
+    mdx += `\n---\n\n`;
+  }
+
   for (const method of methods) {
     mdx += `### \`${method.name}()\`\n\n`;
 
