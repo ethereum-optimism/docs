@@ -17,6 +17,8 @@ interface MethodDoc {
   returns: string;
   throws?: string;
   signature: string;
+  lineNumber: number;
+  sourcePath: string;
 }
 
 interface PropertyDoc {
@@ -25,7 +27,7 @@ interface PropertyDoc {
   description: string;
 }
 
-function extractMethodDocs(classDeclaration: any): MethodDoc[] {
+function extractMethodDocs(classDeclaration: any, sourcePath: string): MethodDoc[] {
   const methods: MethodDoc[] = [];
 
   for (const method of classDeclaration.getMethods()) {
@@ -73,6 +75,8 @@ function extractMethodDocs(classDeclaration: any): MethodDoc[] {
       returns: returnsTag?.getCommentText() || "",
       throws: throwsTag?.getCommentText(),
       signature: method.getText(),
+      lineNumber: method.getStartLineNumber(),
+      sourcePath,
     });
   }
 
@@ -164,6 +168,8 @@ function generateComponentMDX(className: string, classDescription: string, prope
   }
 
   for (const method of methods) {
+    const githubUrl = `https://github.com/ethereum-optimism/actions/blob/main/packages/sdk/${method.sourcePath}#L${method.lineNumber}`;
+
     mdx += `#### \`${method.name}()\`\n\n`;
 
     if (method.description) {
@@ -189,6 +195,8 @@ function generateComponentMDX(className: string, classDescription: string, prope
     if (method.throws) {
       mdx += `**Throws:** ${method.throws}\n\n`;
     }
+
+    mdx += `<sub>[<Icon icon="github" /> ↗](${githubUrl})</sub>\n\n`;
 
     mdx += `---\n\n`;
   }
@@ -254,7 +262,7 @@ async function main() {
     const classDescription = classJsDoc ? classJsDoc.getDescription().trim() : '';
 
     const properties = extractPropertyDocs(classDeclaration);
-    const methods = extractMethodDocs(classDeclaration);
+    const methods = extractMethodDocs(classDeclaration, sourcePath);
 
     console.log(`✅ Found ${properties.length} documented properties and ${methods.length} documented methods`);
 
