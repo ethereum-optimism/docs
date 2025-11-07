@@ -4,7 +4,8 @@ description: Perform DeFi actions with lightweight, composable, and type-safe mo
 ---
 
 <Warning>
-  Actions SDK is still under construction and not ready for production use! This guide is meant for early testing purposes only.
+  Actions SDK is still under construction and not ready for production use! This
+  guide is meant for early testing purposes only.
 </Warning>
 
 The [Actions SDK](https://actions.money/) is an open source Typescript development toolkit that simplifies the act of integrating DeFi into your application.
@@ -20,7 +21,6 @@ Here's a breakdown of what's under the hood:
 - **Configure Actions**: Extend your embedded wallet with DeFi actions like Lend, Borrow, Swap, and Pay. Set multiple providers for each Action to choose the best markets across DeFi.
 
 - **Customize assets & chains**: Allow and block assets, markets, chains, and protocols from your application from a single config.
-
 
 ## Installation
 
@@ -46,6 +46,7 @@ bun add @eth-optimism/actions-sdk
 ```bash deno
 deno add @eth-optimism/actions-sdk
 ```
+
 </CodeGroup>
 
 ## Choose a Wallet Provider
@@ -225,6 +226,7 @@ Actions works with both frontend and backend wallets depending on your needs:
         ```
       </Tab>
     </Tabs>
+
   </Tab>
 
   <Tab title="Backend">
@@ -369,6 +371,7 @@ Actions works with both frontend and backend wallets depending on your needs:
         ```
       </Tab>
     </Tabs>
+
   </Tab>
 </Tabs>
 
@@ -379,94 +382,96 @@ Create your Actions configuration to define which protocols, chains, and assets 
 Configure a wallet provider:
 
 ```typescript
-import type { WalletConfig } from '@eth-optimism/actions-sdk'
+import type { WalletConfig } from "@eth-optimism/actions-sdk";
 
 const walletConfig: WalletConfig = {
   hostedWalletConfig: {
     provider: {
-      type: 'privy', // your provider chosen in previous step
+      type: "privy", // your provider chosen in previous step
     },
   },
   smartWalletConfig: {
     provider: {
-      type: 'default',
-      attributionSuffix: 'actions',
+      type: "default",
+      attributionSuffix: "actions",
     },
   },
-}
+};
 ```
 
 Configure a lend provider with `LendConfig`:
 
 ```typescript
-import type { LendConfig } from '@eth-optimism/actions-sdk'
-import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
-import { USDCMorphoMarket } from './actions/markets'
+import type { LendConfig } from "@eth-optimism/actions-sdk";
+import { USDC, ETH, WBTC } from "@eth-optimism/actions-sdk/assets";
+import { USDCMorphoMarket } from "./actions/markets";
 
 const lendConfig: LendConfig = {
-  type: 'morpho',
+  type: "morpho",
   assetAllowlist: [USDC, ETH, WBTC],
   assetBlocklist: [],
   marketAllowlist: [USDCMorphoMarket],
   marketBlocklist: [],
-}
+};
 ```
 
 Configure a borrow provider with `BorrowConfig`:
 
 ```typescript
-import type { BorrowConfig } from '@eth-optimism/actions-sdk'
-import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
-import { USDCMorphoMarket } from './actions/markets'
+import type { BorrowConfig } from "@eth-optimism/actions-sdk";
+import { USDC, ETH, WBTC } from "@eth-optimism/actions-sdk/assets";
+import { USDCMorphoMarket } from "./actions/markets";
 
 const borrowConfig: BorrowConfig = {
-  type: 'morpho',
+  type: "morpho",
   assetAllowlist: [USDC, ETH, WBTC],
   assetBlocklist: [],
   marketAllowlist: [USDCMorphoMarket],
   marketBlocklist: [],
-}
+};
 ```
 
 Configure a swap provider with `SwapConfig`:
 
 ```typescript
-import type { SwapConfig } from '@eth-optimism/actions-sdk'
-import { USDC, ETH, WBTC } from '@eth-optimism/actions-sdk/assets'
+import type { SwapConfig } from "@eth-optimism/actions-sdk";
+import { USDC, ETH, WBTC } from "@eth-optimism/actions-sdk/assets";
 
 const swapConfig: SwapConfig = {
-  type: 'uniswap',
+  type: "uniswap",
   defaultSlippage: 100, // 100 bips or 1%
   assetAllowList: [USDC, ETH, WBTC],
   assetBlocklist: [],
-}
+};
 ```
 
 Configure supported chains:
 
 ```typescript
-import { optimism, base } from 'viem/chains'
+import { optimism, base } from "viem/chains";
 
 // Define any EVM chain
 const OPTIMISM = {
   chainId: optimism.id,
   rpcUrls: env.OPTIMISM_RPC_URL,
-  bundler: { // Bundle and sponsor txs with a gas paymaster
-    type: 'simple' as const,
+  bundler: {
+    // Bundle and sponsor txs with a gas paymaster
+    type: "simple" as const,
     url: env.OPTIMISM_BUNDLER_URL,
   },
-}
+};
 
 const BASE = {
   chainId: base.id,
   rpcUrls: env.BASE_RPC_URL,
-  bundler: { // Bundle and sponsor txs with a gas paymaster
-    type: 'simple' as const,
+  bundler: {
+    // Bundle and sponsor txs with a gas paymaster
+    type: "simple" as const,
     url: env.BASE_BUNDLER_URL,
   },
-}
+};
 
-const chains = [OPTIMISM, BASE]
+const chains = [OPTIMISM, BASE];
 ```
 
 Finally, bring it all together and initialize Actions:
@@ -478,50 +483,50 @@ export const actions = createActions({
   borrow: borrowConfig,
   swap: swapConfig,
   chains,
-})
+});
 ```
 
-## Using Actions
+## Take Action
 
 Once configured, you can use Actions to perform DeFi operations:
 
 ```typescript
-import { USDC, ETH, USDT } from '@eth-optimism/actions-sdk/assets'
-import { ExampleMarket } from '@/actions/markets'
+import { USDC, ETH, USDT } from "@eth-optimism/actions-sdk/assets";
+import { ExampleMarket } from "@/actions/markets";
 
 // Enable asset lending in DeFi
 const lendReceipt = await wallet.lend.openPosition({
   amount: 1,
   asset: USDC,
-  ...ExampleMarket
-})
+  ...ExampleMarket,
+});
 
 // Manage user market positions
-const lendPosition = await wallet.lend.getPosition(market)
+const lendPosition = await wallet.lend.getPosition(market);
 
 // Fetch wallet balance
-const balance = await wallet.getBalance()
+const balance = await wallet.getBalance();
 
 // ⚠️ COMING SOON
 const borrowReceipt = await wallet.borrow.openPosition({
   amount: 1,
   asset: USDT,
-  ...market
-})
+  ...market,
+});
 
 // ⚠️ COMING SOON
 const swapReceipt = await wallet.swap.execute({
   amountIn: 1,
   assetIn: USDC,
   assetOut: ETH,
-})
+});
 
 // ⚠️ COMING SOON
 const sendReceipt = await wallet.send({
   amount: 1,
   asset: USDC,
-  to: 'vitalik.eth',
-})
+  to: "vitalik.eth",
+});
 ```
 
 ## Next Steps
