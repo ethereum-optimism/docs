@@ -3,7 +3,7 @@ title: Configuring Actions
 description: Reference guide for configuring Actions SDK.
 ---
 
-Actions SDK lets you choose which assets, markets, chains, protocols, and providers you want to support, and not support in your application via a configuration file.
+Actions SDK lets you choose which assets, markets, chains, protocols, and providers you want to support, and not support in your application via configuration file.
 
 <Steps>
   <Step title="Install Actions SDK">
@@ -15,6 +15,9 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     Follow the [integrating
     wallets](/app-developers/reference/actions/integrating-wallets) guide,
     choose and install a Wallet Provider.
+  </Step>
+  <Step title="Create an config file">
+
   </Step>
   <Step title="Configure a Wallet Provider">
     Let Actions SDK know which Wallet Provider you've chosen:
@@ -119,37 +122,6 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     ```
 
   </Step>
-  <Step title="Configure supported chains">
-    Configure supported chains:
-
-    ```typescript
-    import { optimism, base } from "viem/chains";
-
-    // Define any EVM chain
-    const OPTIMISM = {
-      chainId: optimism.id,
-      rpcUrls: env.OPTIMISM_RPC_URL,
-      bundler: {
-        // Bundle and sponsor txs with a gas paymaster
-        type: "simple" as const,
-        url: env.OPTIMISM_BUNDLER_URL,
-      },
-    };
-
-    const BASE = {
-      chainId: base.id,
-      rpcUrls: env.BASE_RPC_URL,
-      bundler: {
-        // Bundle and sponsor txs with a gas paymaster
-        type: "simple" as const,
-        url: env.BASE_BUNDLER_URL,
-      },
-    };
-
-    const chains = [OPTIMISM, BASE];
-    ```
-
-  </Step>
   <Step title="Configure a Lend Provider">
     Configure which assets, markets, and Lend Provider you want to support:
 
@@ -184,6 +156,49 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
         ```
       </Tab>
     </Tabs>
+
+  </Step>
+  <Step title="Configure supported chains">
+    Configure supported chains:
+
+    ```typescript
+    import { optimism, base } from "viem/chains";
+
+    // Define any EVM chain
+    const OPTIMISM = {
+      chainId: optimism.id,
+      rpcUrls: env.OPTIMISM_RPC_URL,
+      bundler: {
+        // Bundle and sponsor txs with a gas paymaster
+        type: "simple" as const,
+        url: env.OPTIMISM_BUNDLER_URL,
+      },
+    };
+
+    const BASE = {
+      chainId: base.id,
+      rpcUrls: env.BASE_RPC_URL,
+      bundler: {
+        // Bundle and sponsor txs with a gas paymaster
+        type: "simple" as const,
+        url: env.BASE_BUNDLER_URL,
+      },
+    };
+
+    const chains = [OPTIMISM, BASE];
+    ```
+
+  </Step>
+  <Step title="Initialize Actions">
+    Finally bring it all together and initialize Actions:
+
+    ```typescript
+    export const actions = createActions({
+      wallet: walletConfig,
+      lend: lendConfig,
+      chains,
+    });
+    ```
 
   </Step>
 </Steps>
