@@ -183,7 +183,8 @@ function generateComponentMDX(className: string, classDescription: string, prope
       for (const param of method.params) {
         // Remove leading " - " from description if present
         const cleanDescription = param.description.replace(/^\s*-\s*/, '');
-        mdx += `| \`${param.name}\` | \`${param.type}\` | ${cleanDescription} |\n`;
+        const typeCell = param.type ? `\`${param.type}\`` : '';
+        mdx += `| \`${param.name}\` | ${typeCell} | ${cleanDescription} |\n`;
       }
       mdx += `\n`;
     }
