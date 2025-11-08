@@ -1,8 +1,103 @@
 ---
 title: Configuring Actions
-description: Reference guide for configuring Actions with Actions SDK.
+description: Reference guide for configuring Actions SDK.
 ---
 
-<Info>
-Coming soon.
-</Info>
+Actions SDK lets you choose which assets, markets, chains, protocols, and providers you want to support, and not support in your application via a configuration file.
+
+<Steps>
+  <Step title="Install Actions SDK">
+    Follow the
+    [quickstart](/app-developers/reference/actions/integrating-wallets) guide to
+    add Actions SDK as a dependency in your app.
+  </Step>
+  <Step title="Integrate an embedded wallet">
+    Follow the [integrating
+    wallets](/app-developers/reference/actions/integrating-wallets) guide,
+    choose and install a Wallet Provider.
+  </Step>
+  <Step title="Configure a Wallet Provider">
+    Let Actions SDK know which Wallet Provider you've chosen:
+
+    <Tabs>
+      <Tab title="Privy">
+        ```typescript
+        import type { WalletConfig } from "@eth-optimism/actions-sdk";
+
+        const walletConfig: WalletConfig = {
+          hostedWalletConfig: {
+            provider: {
+              type: "privy",
+            },
+          },
+          smartWalletConfig: {
+            provider: {
+              type: "default",
+              attributionSuffix: "actions",
+            },
+          },
+        };
+        ```
+      </Tab>
+      <Tab title="Turnkey">
+        ```typescript
+        import type { WalletConfig } from "@eth-optimism/actions-sdk";
+
+        const walletConfig: WalletConfig = {
+          hostedWalletConfig: {
+            provider: {
+              type: "turnkey",
+            },
+          },
+          smartWalletConfig: {
+            provider: {
+              type: "default",
+              attributionSuffix: "actions",
+            },
+          },
+        };
+        ```
+      </Tab>
+      <Tab title="Dynamic">
+        ```typescript
+        import type { WalletConfig } from "@eth-optimism/actions-sdk";
+
+        const walletConfig: WalletConfig = {
+          hostedWalletConfig: {
+            provider: {
+              type: "dynamic",
+            },
+          },
+          smartWalletConfig: {
+            provider: {
+              type: "default",
+              attributionSuffix: "actions",
+            },
+          },
+        };
+        ```
+      </Tab>
+    </Tabs>
+
+  </Step>
+  <Step title="Configure a Lend Provider">
+	  Configure which assets, markets, and Lend Provider you want to support:
+		```typescript
+		import type { LendConfig } from "@eth-optimism/actions-sdk";
+import { USDC, ETH, WBTC } from "@eth-optimism/actions-sdk/assets";
+import { USDCMorphoMarket } from "./actions/markets";
+
+const lendConfig: LendConfig = {
+type: "morpho",
+assetAllowlist: [USDC, ETH, WBTC],
+assetBlocklist: [],
+marketAllowlist: [USDCMorphoMarket],
+marketBlocklist: [],
+};
+
+```
+	</Step>
+  <Step title="Configure supported assets"></Step>
+  <Step title="Configure supported chains"></Step>
+</Steps>
+```
