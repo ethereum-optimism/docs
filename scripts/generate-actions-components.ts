@@ -13,7 +13,7 @@ const ACTIONS_COMPONENTS: Record<string, string> = {
 interface MethodDoc {
   name: string;
   description: string;
-  params: Array<{ name: string; type: string; description: string; typeDefinition?: string }>;
+  params: Array<{ name: string; type: string; description: string }>;
   returns: string;
   throws?: string;
   signature: string;
@@ -22,8 +22,7 @@ interface MethodDoc {
 }
 
 interface TypeInfo {
-  definition: string;
-  properties?: Array<{ name: string; type: string; typeDefinition?: string }>;
+  properties: Array<{ name: string; type: string }>;
 }
 
 interface PropertyDoc {
@@ -46,8 +45,7 @@ function getTypeInfo(type: any, project: Project): TypeInfo | null {
       if (typeAlias) {
         const typeNode = typeAlias.getTypeNode();
         if (typeNode && typeNode.getKindName() === "TypeLiteral") {
-          const definition = typeAlias.getText();
-          const properties: Array<{ name: string; type: string; typeDefinition?: string }> = [];
+          const properties: Array<{ name: string; type: string }> = [];
 
           const members = (typeNode as any).getMembers();
           for (const member of members) {
@@ -56,43 +54,34 @@ function getTypeInfo(type: any, project: Project): TypeInfo | null {
               const propType = member.getType();
               const propTypeText = propType.getText();
 
-              // Get nested type definition (one level deep)
-              const nestedTypeInfo = getTypeInfo(propType, project);
-
               properties.push({
                 name: propName,
                 type: propTypeText,
-                typeDefinition: nestedTypeInfo?.definition,
               });
             }
           }
 
-          return { definition, properties };
+          return { properties };
         }
       }
 
       // Check interfaces
       const interfaceDecl = sourceFile.getInterface(cleanTypeName);
       if (interfaceDecl) {
-        const definition = interfaceDecl.getText();
-        const properties: Array<{ name: string; type: string; typeDefinition?: string }> = [];
+        const properties: Array<{ name: string; type: string }> = [];
 
         for (const prop of interfaceDecl.getProperties()) {
           const propName = prop.getName();
           const propType = prop.getType();
           const propTypeText = propType.getText();
 
-          // Get nested type definition (one level deep)
-          const nestedTypeInfo = getTypeInfo(propType, project);
-
           properties.push({
             name: propName,
             type: propTypeText,
-            typeDefinition: nestedTypeInfo?.definition,
           });
         }
 
-        return { definition, properties };
+        return { properties };
       }
     }
 
@@ -163,7 +152,6 @@ function extractMethodDocs(classDeclaration: any, sourcePath: string, project: P
               name,
               type: prop.type,
               description: text.trim(),
-              typeDefinition: prop.typeDefinition,
             });
             continue;
           }
@@ -189,13 +177,11 @@ function extractMethodDocs(classDeclaration: any, sourcePath: string, project: P
         }
 
         const paramTypeText = paramType.getText();
-        const typeInfo = paramTypeMap.get(`${name}:typeInfo`) as TypeInfo | undefined;
 
         params.push({
           name,
           type: paramTypeText,
           description: text.trim(),
-          typeDefinition: typeInfo?.definition,
         });
       }
     }
@@ -322,16 +308,7 @@ function generateComponentMDX(className: string, classDescription: string, prope
 
         let typeCell = '';
         if (param.type) {
-          if (param.typeDefinition) {
-            // Create tooltip with type definition, escape backticks and pipes
-            const escapedDef = param.typeDefinition
-              .replace(/`/g, '\\`')
-              .replace(/\|/g, '\\|')
-              .replace(/\n/g, ' ');
-            typeCell = `<Tooltip tip={\`${escapedDef}\`}>\`${param.type}\`</Tooltip>`;
-          } else {
-            typeCell = `\`${param.type}\``;
-          }
+          typeCell = `\`${param.type}\``;
         }
 
         mdx += `| \`${param.name}\` | ${typeCell} | ${cleanDescription} |\n`;
