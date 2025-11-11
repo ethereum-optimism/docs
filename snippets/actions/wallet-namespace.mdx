@@ -33,8 +33,8 @@ Create a new smart wallet
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `params` | `CreateSmartWalletOptions` | Smart wallet creation parameters |
-| `params.owners` |  | Array of owners for the smart wallet (addresses or WebAuthn public keys) |
-| `params.signer` | `LocalAccount` | Local account used for signing transactions (must be in owners array) |
+| `params.signer` | `LocalAccount` | Primary local account used for signing transactions |
+| `params.signers` | `Signer[]` | Optional array of additional signers for the smart wallet |
 | `params.nonce` | `bigint` | Optional nonce for smart wallet address generation (defaults to 0) |
 | `params.deploymentChainIds` | `SupportedChainId[]` | Optional chain IDs to deploy the wallet to.
 If not provided, the wallet will be deployed to all supported chains. |
@@ -43,9 +43,9 @@ If not provided, the wallet will be deployed to all supported chains. |
 - `wallet`: The created SmartWallet instance
 - `deployments`: Array of deployment results with chainId, receipt, success flag, and error
 
-**Throws:** Error if signer is not included in the owners array
+**Throws:** Error if signer is not included in the signers array
 
-<sub>[<Icon icon="github" /> ↗](https://github.com/ethereum-optimism/actions/blob/@eth-optimism/actions-sdk@0.0.0-main-20251104233719/packages/sdk/src/wallet/core/namespace/WalletNamespace.ts#L72)</sub>
+<sub>[<Icon icon="github" /> ↗](https://github.com/ethereum-optimism/actions/blob/@eth-optimism/actions-sdk@0.0.3/packages/sdk/src/wallet/core/namespace/WalletNamespace.ts#L72)</sub>
 
 ---
 
@@ -61,7 +61,7 @@ Create a viem LocalAccount signer from the hosted wallet
 
 **Returns:** Promise resolving to a viem `LocalAccount` with the hosted wallet as the signer backend
 
-<sub>[<Icon icon="github" /> ↗](https://github.com/ethereum-optimism/actions/blob/@eth-optimism/actions-sdk@0.0.0-main-20251104233719/packages/sdk/src/wallet/core/namespace/WalletNamespace.ts#L87)</sub>
+<sub>[<Icon icon="github" /> ↗](https://github.com/ethereum-optimism/actions/blob/@eth-optimism/actions-sdk@0.0.3/packages/sdk/src/wallet/core/namespace/WalletNamespace.ts#L87)</sub>
 
 ---
 
@@ -79,7 +79,7 @@ Convert a hosted wallet to an Actions wallet
 
 **Returns:** Promise resolving to the Actions wallet instance
 
-<sub>[<Icon icon="github" /> ↗](https://github.com/ethereum-optimism/actions/blob/@eth-optimism/actions-sdk@0.0.0-main-20251104233719/packages/sdk/src/wallet/core/namespace/WalletNamespace.ts#L101)</sub>
+<sub>[<Icon icon="github" /> ↗](https://github.com/ethereum-optimism/actions/blob/@eth-optimism/actions-sdk@0.0.3/packages/sdk/src/wallet/core/namespace/WalletNamespace.ts#L101)</sub>
 
 ---
 
@@ -91,18 +91,18 @@ Get an existing smart wallet with a provided signer
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `signer` |  | Local account to use for signing transactions on the smart wallet |
-| `getWalletParams` |  | Wallet retrieval parameters |
-| `getWalletParams.deploymentOwners` |  | Array of original deployment owners for smart wallet address calculation. Required if walletAddress not provided. Must match the exact owners array used during wallet deployment. |
-| `getWalletParams.signerOwnerIndex` |  | Current index of the signer in the smart wallet's current owners array (used for transaction signing). Defaults to 0 if not specified. This may differ from the original deployment index if owners have been modified. |
-| `getWalletParams.walletAddress` |  | Optional explicit smart wallet address (skips address calculation) |
-| `getWalletParams.nonce` |  | Optional nonce used during smart wallet creation |
+| `params` | `GetSmartWalletOptions` | Wallet retrieval parameters |
+| `params.signer` | `LocalAccount` | Local account to use for signing transactions on the smart wallet |
+| `params.signers` | `Signer[]` | Optional array of additional signers for the smart wallet |
+| `params.deploymentSigners` | `Signer[]` | Optional array of signers used during wallet deployment |
+| `params.walletAddress` | `Address` | Optional explicit smart wallet address (skips address calculation) |
+| `params.nonce` | `bigint` | Optional nonce used during smart wallet creation |
 
 **Returns:** Promise resolving to the smart wallet instance with the provided signer
 
-**Throws:** Error if neither walletAddress nor deploymentOwners provided
+**Throws:** Error if neither walletAddress nor deploymentSigners provided
 
-<sub>[<Icon icon="github" /> ↗](https://github.com/ethereum-optimism/actions/blob/@eth-optimism/actions-sdk@0.0.0-main-20251104233719/packages/sdk/src/wallet/core/namespace/WalletNamespace.ts#L122)</sub>
+<sub>[<Icon icon="github" /> ↗](https://github.com/ethereum-optimism/actions/blob/@eth-optimism/actions-sdk@0.0.3/packages/sdk/src/wallet/core/namespace/WalletNamespace.ts#L122)</sub>
 
 ---
 
