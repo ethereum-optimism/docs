@@ -80,54 +80,69 @@ say if Geth stops unexpectedly, the database can be corrupted. This is known as 
 "unclean shutdown" and it can lead to a variety of problems for the node when
 it is restarted.
 
-<Tabs items={['op-geth', 'Nethermind']}>
-  <Tabs.Tab>
-    It is always best to shut down Geth gracefully, i.e. using a
-    shutdown command such as `ctrl-c`, `docker stop -t 300 <container ID>` or
-    `systemctl stop` (although please note that `systemctl stop` has a default timeout
-    of 90s - if Geth takes longer than this to gracefully shut down it will quit
-    forcefully. Update the `TimeoutSecs` variable in `systemd.service` to override this
-    value to something larger, at least 300s).
+### For op-geth
 
-    This way, Geth knows to write all relevant information into the database to
-    allow the node to restart properly later. This can involve >1GB of information
-    being written to the LevelDB database which can take several minutes.
+It is always best to shut down Geth gracefully, i.e. using a
+shutdown command such as `ctrl-c`, `docker stop -t 300 <container ID>` or
+`systemctl stop` (although please note that `systemctl stop` has a default timeout
+of 90s - if Geth takes longer than this to gracefully shut down it will quit
+forcefully. Update the `TimeoutSecs` variable in `systemd.service` to override this
+value to something larger, at least 300s).
 
-    ### Solution
+This way, Geth knows to write all relevant information into the database to
+allow the node to restart properly later. This can involve >1GB of information
+being written to the LevelDB database which can take several minutes.
 
-    If an unexpected shutdown does occur, the `removedb` subcommand can be used to
-    delete the state database and resync it from the ancient database. This should
-    get the database back up and running.
-  </Tabs.Tab>
+**Solution**
 
-  <Tabs.Tab>
-    Unclean shutdowns in `Nethermind` can lead to database corruption. This typically happens when:
+In most cases, `op-geth` can recover automatically from an unclean shutdown when you restart it. The warning message is informational and doesn't necessarily indicate a problem.
 
-    *   The node experiences hardware failures (disk failures, memory errors, overheating)
-    *   Power cuts cause abrupt shutdowns
-    *   The process is terminated without proper cleanup
+However, if `op-geth` fails to restart properly after an unclean shutdown, you can use the `removedb` subcommand as a last resort:
 
-    ### Solutions
+```bash
+geth removedb --datadir=<path to data directory>
+```
 
-    1.  **Lock File Issues**
-        If `Nethermind` complains about lock files after an unclean shutdown, run:
-        ```bash
-        find /path/to/nethermind_db -type f -name 'LOCK' -delete
-        ```
+<Warning>
+  This command will delete all state database data. After running `removedb`,
+  you must manually restart the node to begin the resync process from the ancient database,
+  which can take significant time. Only use this when the node actually fails to restart,
+  not for every unclean shutdown warning.
+</Warning>
 
-    2.  **Block Checksum Mismatch**
-        If you encounter block checksum mismatch errors, you can enable direct I/O:
-        ```bash
-        --Db.UseDirectIoForFlushAndCompactions true
-        ```
-        Note: This may impact performance.
+### For Nethermind
 
-    3.  **Complete Resync**
-        In cases of severe corruption, a full resync is recommended:
-        ```bash
-        sudo systemctl stop nethermind
-        sudo rm -rf /path/to/nethermind_db/mainnet
-        sudo systemctl start nethermind
-        ```
-  </Tabs.Tab>
-</Tabs>
+Unclean shutdowns in `Nethermind` can lead to database corruption. This typically happens when:
+
+*   The node experiences hardware failures (disk failures, memory errors, overheating)
+*   Power cuts cause abrupt shutdowns
+*   The process is terminated without proper cleanup
+
+**Solutions**
+
+1.  **Lock File Issues**
+
+    If `Nethermind` complains about lock files after an unclean shutdown, run:
+
+    ```bash
+    find /path/to/nethermind_db -type f -name 'LOCK' -delete
+    ```
+
+2.  **Block Checksum Mismatch**
+
+    If you encounter block checksum mismatch errors, you can enable direct I/O:
+
+    ```bash
+    --Db.UseDirectIoForFlushAndCompactions true
+    ```
+    Note: This may impact performance.
+
+3.  **Complete Resync**
+
+    In cases of severe corruption, a full resync is recommended:
+
+    ```bash
+    sudo systemctl stop nethermind
+    sudo rm -rf /path/to/nethermind_db/mainnet
+    sudo systemctl start nethermind
+    ```
