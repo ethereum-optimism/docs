@@ -1,4 +1,4 @@
-import { Project } from "ts-morph";
+import { Project, SyntaxKind } from "ts-morph";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -13,12 +13,17 @@ const ACTIONS_COMPONENTS: Record<string, string> = {
 interface MethodDoc {
   name: string;
   description: string;
-  params: Array<{ name: string; type: string; description: string }>;
+  params: Array<{ name: string; type: string; description: string; typeDefinition?: string }>;
   returns: string;
   throws?: string;
   signature: string;
   lineNumber: number;
   sourcePath: string;
+}
+
+interface TypeInfo {
+  definition: string;
+  properties?: Array<{ name: string; type: string; typeDefinition?: string }>;
 }
 
 interface PropertyDoc {
@@ -27,7 +32,77 @@ interface PropertyDoc {
   description: string;
 }
 
-function extractMethodDocs(classDeclaration: any, sourcePath: string): MethodDoc[] {
+function getTypeInfo(type: any, project: Project): TypeInfo | null {
+  try {
+    const typeText = type.getText();
+
+    // Try to find the type definition in the project by searching for type aliases or interfaces
+    const cleanTypeName = typeText.split('<')[0].trim(); // Remove generic parameters
+
+    // Search through all source files for the type definition
+    for (const sourceFile of project.getSourceFiles()) {
+      // Check type aliases
+      const typeAlias = sourceFile.getTypeAlias(cleanTypeName);
+      if (typeAlias) {
+        const typeNode = typeAlias.getTypeNode();
+        if (typeNode && typeNode.getKindName() === "TypeLiteral") {
+          const definition = typeAlias.getText();
+          const properties: Array<{ name: string; type: string; typeDefinition?: string }> = [];
+
+          const members = (typeNode as any).getMembers();
+          for (const member of members) {
+            if (member.getKindName() === "PropertySignature") {
+              const propName = member.getName();
+              const propType = member.getType();
+              const propTypeText = propType.getText();
+
+              // Get nested type definition (one level deep)
+              const nestedTypeInfo = getTypeInfo(propType, project);
+
+              properties.push({
+                name: propName,
+                type: propTypeText,
+                typeDefinition: nestedTypeInfo?.definition,
+              });
+            }
+          }
+
+          return { definition, properties };
+        }
+      }
+
+      // Check interfaces
+      const interfaceDecl = sourceFile.getInterface(cleanTypeName);
+      if (interfaceDecl) {
+        const definition = interfaceDecl.getText();
+        const properties: Array<{ name: string; type: string; typeDefinition?: string }> = [];
+
+        for (const prop of interfaceDecl.getProperties()) {
+          const propName = prop.getName();
+          const propType = prop.getType();
+          const propTypeText = propType.getText();
+
+          // Get nested type definition (one level deep)
+          const nestedTypeInfo = getTypeInfo(propType, project);
+
+          properties.push({
+            name: propName,
+            type: propTypeText,
+            typeDefinition: nestedTypeInfo?.definition,
+          });
+        }
+
+        return { definition, properties };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function extractMethodDocs(classDeclaration: any, sourcePath: string, project: Project): MethodDoc[] {
   const methods: MethodDoc[] = [];
 
   for (const method of classDeclaration.getMethods()) {
@@ -41,29 +116,89 @@ function extractMethodDocs(classDeclaration: any, sourcePath: string): MethodDoc
     const tags = jsDoc.getTags();
     const description = jsDoc.getDescription().trim();
 
-    const params = tags
-      .filter((tag) => tag.getTagName() === "param")
-      .map((tag) => {
-        // Get full comment text including multi-line descriptions
-        const commentText = tag.getComment();
-        const text = typeof commentText === 'string'
-          ? commentText
-          : Array.isArray(commentText)
-            ? commentText.map(part => typeof part === 'string' ? part : part.text).join(' ')
-            : "";
+    const params: Array<{ name: string; type: string; description: string; typeDefinition?: string }> = [];
 
-        const name = tag.compilerNode.name?.getText() || "";
-        return {
+    // Process @param tags from JSDoc
+    const paramTags = tags.filter((tag) => tag.getTagName() === "param");
+
+    // Build a map of parent parameter types for resolving nested properties
+    const paramTypeMap = new Map<string, any>();
+    for (const param of method.getParameters()) {
+      const paramType = param.getType();
+      paramTypeMap.set(param.getName(), paramType);
+
+      // Also store type info for this parameter
+      const typeInfo = getTypeInfo(paramType, project);
+      if (typeInfo) {
+        paramTypeMap.set(`${param.getName()}:typeInfo`, typeInfo);
+      }
+    }
+
+    for (const tag of paramTags) {
+      // Get full comment text including multi-line descriptions
+      const commentText = tag.getComment();
+      const text = typeof commentText === 'string'
+        ? commentText
+        : Array.isArray(commentText)
+          ? commentText.map(part => typeof part === 'string' ? part : part.text).join(' ')
+          : "";
+
+      const name = tag.compilerNode.name?.getText() || "";
+
+      // Check if this is a nested parameter (e.g., "params.signer")
+      if (name.includes('.')) {
+        const parts = name.split('.');
+        const baseName = parts[0];
+        const propName = parts.slice(1).join('.');
+
+        // Get the type info for the base parameter
+        const typeInfo = paramTypeMap.get(`${baseName}:typeInfo`) as TypeInfo | undefined;
+
+        if (typeInfo?.properties) {
+          // Find the property in the type definition
+          const prop = typeInfo.properties.find(p => p.name === propName);
+
+          if (prop) {
+            params.push({
+              name,
+              type: prop.type,
+              description: text.trim(),
+              typeDefinition: prop.typeDefinition,
+            });
+            continue;
+          }
+        }
+
+        // If we couldn't find type info, add with empty type
+        params.push({
           name,
-          type:
-            method
-              .getParameters()
-              .find((p) => p.getName() === name)
-              ?.getType()
-              .getText() || "",
+          type: "",
           description: text.trim(),
-        };
-      });
+        });
+      } else {
+        // Top-level parameter
+        const paramType = paramTypeMap.get(name);
+
+        if (!paramType) {
+          params.push({
+            name,
+            type: "",
+            description: text.trim(),
+          });
+          continue;
+        }
+
+        const paramTypeText = paramType.getText();
+        const typeInfo = paramTypeMap.get(`${name}:typeInfo`) as TypeInfo | undefined;
+
+        params.push({
+          name,
+          type: paramTypeText,
+          description: text.trim(),
+          typeDefinition: typeInfo?.definition,
+        });
+      }
+    }
 
     const returnsTag = tags.find((tag) => tag.getTagName() === "returns");
     const throwsTag = tags.find((tag) => tag.getTagName() === "throws");
@@ -112,6 +247,7 @@ function generateComponentMDX(className: string, classDescription: string, prope
   ⚠️ WARNING: DO NOT EDIT THIS FILE DIRECTLY ⚠️
 
   This file is auto-generated from the Actions SDK source code.
+  Generation script: scripts/generate-actions-components.ts
 
   To update this documentation:
   1. Bump the SDK version in package.json: pnpm add @eth-optimism/actions-sdk@latest
@@ -183,7 +319,21 @@ function generateComponentMDX(className: string, classDescription: string, prope
       for (const param of method.params) {
         // Remove leading " - " from description if present
         const cleanDescription = param.description.replace(/^\s*-\s*/, '');
-        const typeCell = param.type ? `\`${param.type}\`` : '';
+
+        let typeCell = '';
+        if (param.type) {
+          if (param.typeDefinition) {
+            // Create tooltip with type definition, escape backticks and pipes
+            const escapedDef = param.typeDefinition
+              .replace(/`/g, '\\`')
+              .replace(/\|/g, '\\|')
+              .replace(/\n/g, ' ');
+            typeCell = `<Tooltip tip={\`${escapedDef}\`}>\`${param.type}\`</Tooltip>`;
+          } else {
+            typeCell = `\`${param.type}\``;
+          }
+        }
+
         mdx += `| \`${param.name}\` | ${typeCell} | ${cleanDescription} |\n`;
       }
       mdx += `\n`;
@@ -237,6 +387,10 @@ async function main() {
     },
   });
 
+  // Add all SDK source files to the project so ts-morph can resolve imports
+  console.log("📚 Adding SDK source files to project for type resolution...");
+  project.addSourceFilesAtPaths(`${sdkPath}/src/**/*.ts`);
+
   // Create snippets directory if it doesn't exist
   const snippetsDir = path.join(process.cwd(), "snippets", "actions");
   if (!fs.existsSync(snippetsDir)) {
@@ -269,7 +423,7 @@ async function main() {
     const classDescription = classJsDoc ? classJsDoc.getDescription().trim() : '';
 
     const properties = extractPropertyDocs(classDeclaration);
-    const methods = extractMethodDocs(classDeclaration, sourcePath);
+    const methods = extractMethodDocs(classDeclaration, sourcePath, project);
 
     console.log(`✅ Found ${properties.length} documented properties and ${methods.length} documented methods`);
 
