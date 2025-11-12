@@ -48,7 +48,7 @@ export interface ProcessComponentParams extends GenerationOptions {
  */
 function cleanTypeText(typeText: string): string {
   const importPattern = /import\([^)]+\)\.(\w+)/g;
-  return typeText.replace(importPattern, '$1');
+  return typeText.replace(importPattern, "$1");
 }
 
 /**
@@ -57,7 +57,7 @@ function cleanTypeText(typeText: string): string {
 export function getTypeInfo(type: any, project: Project): TypeInfo | null {
   try {
     const typeText = type.getText();
-    const cleanTypeName = typeText.split('<')[0].trim();
+    const cleanTypeName = typeText.split("<")[0].trim();
 
     for (const sourceFile of project.getSourceFiles()) {
       const typeAlias = sourceFile.getTypeAlias(cleanTypeName);
@@ -131,11 +131,13 @@ function buildParamTypeMap(method: any, project: Project): Map<string, any> {
  * Normalize JSDoc comment text from string or structured array format.
  */
 function extractCommentText(commentText: any): string {
-  if (typeof commentText === 'string') {
+  if (typeof commentText === "string") {
     return commentText;
   }
   if (Array.isArray(commentText)) {
-    return commentText.map(part => typeof part === 'string' ? part : part.text).join(' ');
+    return commentText
+      .map((part) => (typeof part === "string" ? part : part.text))
+      .join(" ");
   }
   return "";
 }
@@ -149,14 +151,16 @@ function processNestedParameter(
   description: string,
   paramTypeMap: Map<string, any>
 ): { name: string; type: string; description: string } {
-  const parts = name.split('.');
+  const parts = name.split(".");
   const baseName = parts[0];
-  const propName = parts.slice(1).join('.');
+  const propName = parts.slice(1).join(".");
 
-  const typeInfo = paramTypeMap.get(`${baseName}:typeInfo`) as TypeInfo | undefined;
+  const typeInfo = paramTypeMap.get(`${baseName}:typeInfo`) as
+    | TypeInfo
+    | undefined;
 
   if (typeInfo?.properties) {
-    const prop = typeInfo.properties.find(p => p.name === propName);
+    const prop = typeInfo.properties.find((p) => p.name === propName);
     if (prop) {
       return {
         name,
@@ -203,11 +207,18 @@ function processTopLevelParameter(
 /**
  * Extract method documentation from a class
  */
-export function extractMethodDocs(classDeclaration: any, sourcePath: string, project: Project): MethodDoc[] {
-  return classDeclaration.getMethods()
+export function extractMethodDocs(
+  classDeclaration: any,
+  sourcePath: string,
+  project: Project
+): MethodDoc[] {
+  return classDeclaration
+    .getMethods()
     .filter((method: any) => {
       const scope = method.getScope();
-      return scope !== 'protected' && scope !== 'private' && method.getJsDocs()[0];
+      return (
+        scope !== "protected" && scope !== "private" && method.getJsDocs()[0]
+      );
     })
     .map((method: any) => {
       const jsDoc = method.getJsDocs()[0];
@@ -221,12 +232,14 @@ export function extractMethodDocs(classDeclaration: any, sourcePath: string, pro
         const text = extractCommentText(commentText);
         const name = tag.compilerNode.name?.getText() || "";
 
-        return name.includes('.')
+        return name.includes(".")
           ? processNestedParameter(name, text, paramTypeMap)
           : processTopLevelParameter(name, text, paramTypeMap);
       });
 
-      const returnsTag = tags.find((tag: any) => tag.getTagName() === "returns");
+      const returnsTag = tags.find(
+        (tag: any) => tag.getTagName() === "returns"
+      );
       const throwsTag = tags.find((tag: any) => tag.getTagName() === "throws");
 
       return {
@@ -246,10 +259,13 @@ export function extractMethodDocs(classDeclaration: any, sourcePath: string, pro
  * Extract property documentation from a class
  */
 export function extractPropertyDocs(classDeclaration: any): PropertyDoc[] {
-  return classDeclaration.getProperties()
+  return classDeclaration
+    .getProperties()
     .filter((property: any) => {
       const scope = property.getScope();
-      return scope !== 'protected' && scope !== 'private' && property.getJsDocs()[0];
+      return (
+        scope !== "protected" && scope !== "private" && property.getJsDocs()[0]
+      );
     })
     .map((property: any) => ({
       name: property.getName(),
@@ -262,11 +278,14 @@ export function extractPropertyDocs(classDeclaration: any): PropertyDoc[] {
  * Generate namespace section of MDX
  */
 function generateNamespacesSection(namespaces: PropertyDoc[]): string {
-  if (namespaces.length === 0) return '';
+  if (namespaces.length === 0) return "";
 
-  const rows = namespaces.map(property =>
-    `| \`${property.name}\` | \`${property.type}\` | ${property.description} |`
-  ).join('\n');
+  const rows = namespaces
+    .map(
+      (property) =>
+        `| \`${property.name}\` | \`${property.type}\` | ${property.description} |`
+    )
+    .join("\n");
 
   return `### Namespaces\n\n| Namespace | Type | Description |\n|-----------|------|-------------|\n${rows}\n\n`;
 }
@@ -275,11 +294,14 @@ function generateNamespacesSection(namespaces: PropertyDoc[]): string {
  * Generate properties section of MDX
  */
 function generatePropertiesSection(properties: PropertyDoc[]): string {
-  if (properties.length === 0) return '';
+  if (properties.length === 0) return "";
 
-  const rows = properties.map(property =>
-    `| \`${property.name}\` | \`${property.type}\` | ${property.description} |`
-  ).join('\n');
+  const rows = properties
+    .map(
+      (property) =>
+        `| \`${property.name}\` | \`${property.type}\` | ${property.description} |`
+    )
+    .join("\n");
 
   return `### Properties\n\n| Property | Type | Description |\n|----------|------|-------------|\n${rows}\n\n`;
 }
@@ -288,12 +310,16 @@ function generatePropertiesSection(properties: PropertyDoc[]): string {
  * Generate methods table section of MDX
  */
 function generateMethodsTableSection(methods: MethodDoc[]): string {
-  if (methods.length === 0) return '';
+  if (methods.length === 0) return "";
 
-  const rows = methods.map(method => {
-    const methodLink = `#${method.name.toLowerCase()}`;
-    return `| **[${method.name}()](${methodLink})** | ${method.description || ''} |`;
-  }).join('\n');
+  const rows = methods
+    .map((method) => {
+      const methodLink = `#${method.name.toLowerCase()}`;
+      return `| **[${method.name}()](${methodLink})** | ${
+        method.description || ""
+      } |`;
+    })
+    .join("\n");
 
   return `### Methods\n\n| Function | Description |\n|----------|-------------|\n${rows}\n\n`;
 }
@@ -301,16 +327,18 @@ function generateMethodsTableSection(methods: MethodDoc[]): string {
 /**
  * Generate parameters section for a method
  */
-function generateParametersSection(params: MethodDoc['params']): string {
-  if (params.length === 0) return '';
+function generateParametersSection(params: MethodDoc["params"]): string {
+  if (params.length === 0) return "";
 
-  const rows = params.map(param => {
-    const cleanDescription = param.description.replace(/^\s*-\s*/, '');
-    const typeCell = param.type ? `\`${param.type}\`` : '';
-    return `| \`${param.name}\` | ${typeCell} | ${cleanDescription} |`;
-  }).join('\n');
+  const rows = params
+    .map((param) => {
+      const cleanDescription = param.description.replace(/^\s*-\s*/, "");
+      const typeCell = param.type ? `\`${param.type}\`` : "";
+      return `| \`${param.name}\` | ${typeCell} | ${cleanDescription} |`;
+    })
+    .join("\n");
 
-  return `**Parameters:**\n\n| Parameter | Type | Description |\n|-----------|------|-------------|\n${rows}\n\n`;
+  return `| Parameter | Type | Description |\n|-----------|------|-------------|\n${rows}\n\n`;
 }
 
 /**
@@ -320,29 +348,31 @@ function generateMethodDetailsSection(
   methods: MethodDoc[],
   githubUrlBase: string
 ): string {
-  return methods.map(method => {
-    const githubUrl = `${githubUrlBase}/${method.sourcePath}#L${method.lineNumber}`;
-    let mdx = `#### \`${method.name}()\`\n\n`;
+  return methods
+    .map((method) => {
+      const githubUrl = `${githubUrlBase}/${method.sourcePath}#L${method.lineNumber}`;
+      let mdx = `#### \`${method.name}()\`\n\n`;
 
-    if (method.description) {
-      mdx += `${method.description}\n\n`;
-    }
+      if (method.description) {
+        mdx += `${method.description}\n\n`;
+      }
 
-    mdx += generateParametersSection(method.params);
+      mdx += generateParametersSection(method.params);
 
-    if (method.returns) {
-      mdx += `**Returns:** ${method.returns}\n\n`;
-    }
+      if (method.returns) {
+        mdx += `**Returns:** ${method.returns}\n\n`;
+      }
 
-    if (method.throws) {
-      mdx += `**Throws:** ${method.throws}\n\n`;
-    }
+      if (method.throws) {
+        mdx += `**Throws:** ${method.throws}\n\n`;
+      }
 
-    mdx += `<sub>[<Icon icon="github" /> ↗](${githubUrl})</sub>\n\n`;
-    mdx += `---\n\n`;
+      mdx += `<sub>[<Icon icon="github" /> ↗](${githubUrl})</sub>\n\n`;
+      mdx += `---\n\n`;
 
-    return mdx;
-  }).join('');
+      return mdx;
+    })
+    .join("");
 }
 
 /**
@@ -361,7 +391,6 @@ export function generateComponentMDX(
   ⚠️ WARNING: DO NOT EDIT THIS FILE DIRECTLY ⚠️
 
   This file is auto-generated from the ${sdkName} source code.
-  Generation script: scripts/generate-actions-components.ts
 
   To update this documentation:
   1. Bump the SDK version in package.json: pnpm add ${sdkPackageName}@latest
@@ -378,8 +407,10 @@ export function generateComponentMDX(
     mdx += `${classDescription}\n\n`;
   }
 
-  const namespaces = properties.filter(p => p.type.includes('Namespace'));
-  const regularProperties = properties.filter(p => !p.type.includes('Namespace'));
+  const namespaces = properties.filter((p) => p.type.includes("Namespace"));
+  const regularProperties = properties.filter(
+    (p) => !p.type.includes("Namespace")
+  );
 
   mdx += generateNamespacesSection(namespaces);
   mdx += generatePropertiesSection(regularProperties);
@@ -433,8 +464,8 @@ export function resolveSdkPath(sdkPath: string): string {
 export function getGitRef(sdkPath: string): string {
   const packageJsonPath = path.join(sdkPath, "package.json");
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-  if (!packageJson.version || typeof packageJson.version !== 'string') {
-    throw new Error('Invalid package.json: missing or invalid version field');
+  if (!packageJson.version || typeof packageJson.version !== "string") {
+    throw new Error("Invalid package.json: missing or invalid version field");
   }
   return `@eth-optimism/actions-sdk@${packageJson.version}`;
 }
@@ -452,7 +483,15 @@ export function ensureOutputDirectory(outputDir: string): void {
  * Process a single component and generate documentation
  */
 export function processComponent(params: ProcessComponentParams): void {
-  const { component, project, sdkPath, outputDir, githubUrlBase, sdkName, sdkPackageName } = params;
+  const {
+    component,
+    project,
+    sdkPath,
+    outputDir,
+    githubUrlBase,
+    sdkName,
+    sdkPackageName,
+  } = params;
   const { className, sourcePath } = component;
 
   const sourceFilePath = path.join(sdkPath, sourcePath);
@@ -471,13 +510,21 @@ export function processComponent(params: ProcessComponentParams): void {
   }
 
   const classJsDoc = classDeclaration.getJsDocs()[0];
-  const classDescription = classJsDoc ? classJsDoc.getDescription().trim() : '';
+  const classDescription = classJsDoc ? classJsDoc.getDescription().trim() : "";
 
   const properties = extractPropertyDocs(classDeclaration);
   const methods = extractMethodDocs(classDeclaration, sourcePath, project);
 
   const componentFileName = classNameToFileName(className);
-  const componentContent = generateComponentMDX(className, classDescription, properties, methods, githubUrlBase, sdkName, sdkPackageName);
+  const componentContent = generateComponentMDX(
+    className,
+    classDescription,
+    properties,
+    methods,
+    githubUrlBase,
+    sdkName,
+    sdkPackageName
+  );
 
   const outputPath = path.join(outputDir, `${componentFileName}.mdx`);
   fs.writeFileSync(outputPath, componentContent);
