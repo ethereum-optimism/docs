@@ -332,7 +332,14 @@ function generateParametersSection(params: MethodDoc["params"]): string {
 
   const rows = params
     .map((param) => {
-      const cleanDescription = param.description.replace(/^\s*-\s*/, "");
+      // Ensure multiline descriptions remain in the same table cell
+      // Before: "- Optional chain IDs.\nIf not provided..."
+      // After: "Optional chain IDs. If not provided..."
+      const cleanDescription = param.description
+        .replace(/^\s*-\s*/, "")
+        .replace(/\n/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
       const typeCell = param.type ? `\`${param.type}\`` : "";
       return `| \`${param.name}\` | ${typeCell} | ${cleanDescription} |`;
     })
