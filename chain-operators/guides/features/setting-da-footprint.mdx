@@ -13,14 +13,13 @@ description: Learn how to set a Data Availability (DA) Footprint on your OP-Stac
 The default value of 0 is the same as setting the scalar to 400. In order to effectively disable this feature, set the scalar to a very low value such as 1.
 </Warning>
 
-The <strong>Data Availability (DA) Footprint</strong> feature was introduced in the <strong>Jovian</strong> hardfork to limit the total amount of transaction data that can fit into a block based on a scaled estimate of the compressed size (or "data availability footprint") of that data.
+The <strong>Data Availability (DA) Footprint</strong> feature was introduced in the <strong>[Jovian](https://docs.optimism.io/notices/upgrade-17)</strong> hardfork to limit the total amount of transaction data that can fit into a block based on a scaled estimate of the compressed size (or "data availability footprint") of that data.
 When an OP Stack chain receives more calldata heavy transactions than can fit into the L1s available blob space, the [Batcher can throttle the chains capacity](https://docs.optimism.io/chain-operators/guides/configuration/batcher#batcher-sequencer-throttling). 
 
 However, continuous batcher throttling may cause the base fee to drop to the [minimum base fee](https://docs.optimism.io/chain-operators/guides/features/setting-min-base-fee),
 causing unnecessary losses for the chain operator and negative user experiences such as priority fee auctions. Limiting the amount of calldata taken up by transactions in an block using the DA Footprint can reduce the need for batcher throttling and the issues that come from throttling.
 
-For every transaction, other than [deposit transactions](https://docs.optimism.io/reference/glossary#deposited-transaction), 
-processed by an OP Stack chain, a resource called DA Footprint is tracked alongside the transaction's gas usage.
+For all [non-deposit transactions](https://docs.optimism.io/reference/glossary#deposited-transaction) processed by an OP Stack chain, a DA Footprint value is recorded alongside the transaction's gas usage
 The DA Footprint can be configured via the `daFootprintGasScalar` variable in the `SystemConfig` contract on the L1 chain.
 The DA Footprint is automatically calculated for every transaction first by calculating a `daUsageEstimate` for that transaction:
 
