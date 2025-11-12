@@ -367,7 +367,7 @@ function generateMethodDetailsSection(
         mdx += `**Throws:** ${method.throws}\n\n`;
       }
 
-      mdx += `<sub>[<Icon icon="github" /> ↗](${githubUrl})</sub>\n\n`;
+      mdx += `<sub>[<Icon icon="github" /> Source ↗](${githubUrl})</sub>\n\n`;
       mdx += `---\n\n`;
 
       return mdx;
