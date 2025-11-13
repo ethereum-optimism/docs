@@ -32,7 +32,7 @@ Integration is designed to be simple and low-friction. Most apps benefit with mi
 ### Supported RPC methods
 
 Developers can access Flashblocks using the same familiar Ethereum JSON-RPC calls.
-The difference is using the "pending" tag to query the pre-confirmed state instead of the last finalized block.
+The difference is using the "pending" tag in some of them to explicitly query the pre-confirmed state instead of the last finalized block.
 
 *   **`eth_getBlockByNumber`**: Use the `pending` tag to retrieve the latest flashblock snapshot.
     <Expandable title="Sample response">
@@ -64,7 +64,21 @@ The difference is using the "pending" tag to query the pre-confirmed state inste
       ```
     </Expandable>
 
-*   `eth_getBalance` / `eth_getTransactionCount`: Use the `pending` tag to fetch balances or transaction counts as they evolve within the block window.
+*   **`eth_estimateGas`**: With `pending`, estimates gas usage against the latest Flashblock
+
+    <Expandable title="Sample request">
+
+      ```json
+      {
+        "jsonrpc": "2.0",
+        "method": "eth_estimateGas",
+        "params": [{"from":"0x...","to":"0x...","value":"0x..."}, "pending"],
+        "id": 1
+      }
+      ```
+    </Expandable>
+
+*   `eth_getBalance` / `eth_getTransactionCount`: Use the `pending` tag to fetch balances or transaction counts respectively as they evolve within the block window.
 
     <Expandable title="Sample response for `eth_getBalance`">
 
@@ -88,8 +102,8 @@ The difference is using the "pending" tag to query the pre-confirmed state inste
       ```
     </Expandable>
 
-    Other methods, like `eth_getTransactionReceipt` and `eth_getTransactionByHash`, return data from pre-confirmed transactions without requiring the `pending` tag.
-    Consult the specs (insert link) for more details on each of these methods.
+    **Other methods, like `eth_getTransactionReceipt`, `eth_getTransactionByHash` or `eth_simulateV1` return data from pre-confirmed transactions without requiring the `pending` tag.**
+    Consult the [specs](https://specs.optimism.io/protocol/flashblocks.html) for more details on each of these methods.
 
 ## Libraries
 
