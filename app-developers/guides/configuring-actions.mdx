@@ -1,5 +1,6 @@
 ---
-title: Configuring Actions
+title: Configuring Actions SDK
+sidebar: Configuring Actions SDK
 description: Learn how to configure Actions SDK for your application.
 ---
 
@@ -84,17 +85,16 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
 
   </Step>
   <Step title="Configure supported assets">
-    Configure which assets you want to support:
+    Configure which assets you want to support across all lend providers:
 
     ```typescript title="actions.ts"
     // Additional config from previous steps...
 
     // Import popular assets
     import { USDC } from '@eth-optimism/actions-sdk/assets'
+    import type { Asset, AssetsConfig } from "@eth-optimism/actions-sdk";
 
     // Or define custom assets
-    import type { Asset } from "@eth-optimism/actions-sdk";
-
     export const CustomToken: Asset = {
       address: {
         [mainnet.id]: '0x123...',
@@ -107,6 +107,12 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
         symbol: 'CUSTOM',
       },
       type: 'erc20',
+    }
+
+    // Configure allowed/blocked assets (both optional)
+    const assetsConfig: AssetsConfig = {
+      allow: [USDC, CustomToken],  // Optional - defaults to all supported assets
+      block: [],  // Optional
     }
     ```
 
@@ -127,37 +133,53 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     ```
 
   </Step>
-  <Step title="Configure a Lend Provider">
-    Configure which lend protocol you want to support:
+  <Step title="Configure Lend Providers">
+    Configure which lend protocols you want to support. You can enable one or multiple providers:
 
     <Tabs>
-      <Tab title="Morpho">
+      <Tab title="Morpho Only">
         ```typescript title="actions.ts"
         // Additional config from previous steps...
 
         import type { LendConfig } from "@eth-optimism/actions-sdk";
 
         const lendConfig: LendConfig = {
-          type: "morpho",
-          assetAllowlist: [USDC, CustomToken],
-          assetBlocklist: [],
-          marketAllowlist: [GauntletUSDC],
-          marketBlocklist: [],
+          morpho: {
+            marketAllowlist: [GauntletUSDC],
+            marketBlocklist: [],  // Optional
+          },
         };
         ```
       </Tab>
-      <Tab title="Aave">
+      <Tab title="Aave Only">
         ```typescript title="actions.ts"
         // Additional config from previous steps...
 
         import type { LendConfig } from "@eth-optimism/actions-sdk";
 
         const lendConfig: LendConfig = {
-          type: "aave",
-          assetAllowlist: [USDC, CustomToken],
-          assetBlocklist: [],
-          marketAllowlist: [],
-          marketBlocklist: [],
+          aave: {
+            marketAllowlist: [AaveWETH],
+            marketBlocklist: [],  // Optional
+          },
+        };
+        ```
+      </Tab>
+      <Tab title="Both Morpho & Aave">
+        ```typescript title="actions.ts"
+        // Additional config from previous steps...
+
+        import type { LendConfig } from "@eth-optimism/actions-sdk";
+
+        const lendConfig: LendConfig = {
+          morpho: {
+            marketAllowlist: [GauntletUSDC],
+            marketBlocklist: [],
+          },
+          aave: {
+            marketAllowlist: [AaveWETH],
+            marketBlocklist: [],
+          },
         };
         ```
       </Tab>
@@ -206,6 +228,7 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     export const actions = createActions({
       wallet: walletConfig,
       lend: lendConfig,
+      assets: assetsConfig,  // Optional
       chains,
     });
     ```
