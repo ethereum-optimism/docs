@@ -9,3 +9,6 @@ Follow these [mintlify docs](https://www.mintlify.com/docs/installation) to prev
 ## License
 
 This project is licensed under the [MIT License](https://github.com/ethereum-optimism/optimism/blob/develop/LICENSE).
+> Note: On Optimism, L2 transactions are considered final for UX purposes
+> once they are included in an L2 block, but economic finality is only
+> achieved after the corresponding state root is posted and finalized on L1.
