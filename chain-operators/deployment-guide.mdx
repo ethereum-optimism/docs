@@ -1,0 +1,51 @@
+---
+title: Deployment
+description: Learn about the high level steps on how to deploy an OP Stack chain.
+---
+
+The OP Stack is an open-source, modular, Ethereum Layer 2 rollup stack. 
+This guide will walk you through the high level steps on how to deploy an OP Stack chain. 
+
+## Components 
+
+First we'll start with the components that come together to create your Layer 2 blockchain:
+
+todo: determine if we want collapseable components to make this more compact
+
+- **Smart contracts**: The OP Stack uses a set of smart contracts on Ethereum to bridge between the L1 and L2 domains and manage aspects of the rollup. 
+- **Sequencer**: The OP Stack relies on a sequencer node to build the canonical layer 2 blocks. The sequencer (and all replica) nodes consist of a consensus client and execution client. They are responsible for determining maintaining the consensus rules around, executing transactions, and maintaing the state of the blockchain. Optimism maintains the `op-node` and `op-geth`; however, there are alternative clients available from other cleint teams like `reth`, `nethermind`, and a handful of others.
+- **Batcher**: The batcher is a service that publishes transactions made directly to the sequencer onto Ethereum. Using Ethereum as a data availability layer, the OP Stack inherits Ethereum's security properties by allowing anyone to derive the state of the L2 blockchain from L1.
+- **Proposer**: The proposer is a service responsible for publishing the L2 state root to Ethereum. This enables cross-chain communication and provable withdrawals from L2 to L1.
+- **Challenger**: The challenger enforces network security by disputing invalid state roots that have been posted to Ethereum. This services protects the bridge from invalid withdrawals being made. 
+
+## Deployment 
+
+The following section will walk you through the sequence of steps a chain operator will follow to begin sequencing a chain.
+
+
+<Steps>
+  <Step title="Smart contract deployment">
+    Using a CLI tool called [op-deployer](/chain-operators/tools/op-deployer) you will configure your chain and then deploy the smart contracts on Ethereum.
+  </Step>
+  <Step title="Chain genesis creation">
+    After deploying the L1 system contracts, you will use the same tool to generate two files necessary to run nodes on the L2 network:
+
+        *   **Genesis file** (`genesis.json`): Initializes the execution client (`op-geth`)
+        *   **Rollup configuration file** (`rollup.json`): Configures the consensus client (`op-node`)
+
+    These files contain all the essential information your off chain components need to interact with Ethereum.
+
+  </Step>
+  <Step title="Validate your deployment">
+    After deploying the L1 smart contracts and generating your genesis files, it's crucial to verify that your deployment conforms to the standard configuration.
+  </Step>
+  <Step title="a">
+    a
+  </Step>
+    <Step title="a">
+    a
+  </Step>
+    <Step title="a">
+    a
+  </Step>
+</Steps>
