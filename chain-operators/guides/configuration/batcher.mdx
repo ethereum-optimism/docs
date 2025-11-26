@@ -81,8 +81,8 @@ This feature is a batcher-driven sequencer-throttling control loop. This is to a
 
 There are two throttling knobs:
 
-1.  Transaction L1 data throttling, which skips individual transactions whose estimated compressed L1 DA usage goes over a certain threshold, and
-2.  block L1 data throttling, which caps a block's estimated total L1 DA usage and leads to not including transactions during block building that would move the block's L1 DA usage past a certain threshold.
+1.  Transaction throttling, which skips individual transactions whose estimated compressed L1 DA usage goes over a certain threshold, and
+2.  Block throttling, which caps a block's estimated total L1 DA usage and leads to not including transactions during block building that would move the block's L1 DA usage past a certain threshold.
 
 **Feature requirements**
 
@@ -95,13 +95,14 @@ There are two throttling knobs:
   Note that this feature requires the batcher to correctly follow the sequencer at all times, or it would set throttling parameters on a non-sequencer EL client. That means, active sequencer follow mode has to be enabled correctly by listing all the possible sequencers in the L2 rollup and EL endpoint flags.
 </Info>
 
-The batcher can be configured with the following new flags and default parameters:
+The batcher is configured for throttling by default with the parameters described below (and corresponding flags which allow the defaults to be overriden): 
 
-*   Backlog of pending block bytes beyond which the batcher will enable throttling on the sequencer via `--throttle-threshold` (env var `OP_BATCHER_THROTTLE_THRESHOLD`): 1\_000\_000 (batcher backlog of 1MB of data to batch). Disable throttling by setting this to `0`.
-*   Individual tx size throttling via `--throttle-tx-size` (env var `OP_BATCHER_THROTTLE_TX_SIZE`): 300 (estimated compressed bytes)
-*   Block size throttling via `--throttle-block-size` (env var `OP_BATCHER_THROTTLE_BLOCK_SIZE`): 21\_000 (estimated total compressed bytes, at least 70 transactions per block of up to 300 compressed bytes each)
-*   Block size throttling that's always active via `--throttle-always-block-size` (env var `OP_BATCHER_THROTTLE_ALWAYS_BLOCK_SIZE`): 130\_000
-    *   This block size limit is enforced on the sequencer at all times, even if there isn't any backlog in the batcher. Normal network usage shouldn't be impacted by this. This is to prevent a too fast build up of data to batch.
+*   Backlog of pending block bytes beyond which the batcher will enable throttling on the sequencer via `--throttle.unsafe-da-bytes-lower/upper-threshold` (env var `OP_BATCHER_THROTTLE_UNSAFE_DA_BYTES_LOWER/UPPER_THRESHOLD`): 3\_200\_000 and 12\_800\_000 (batcher backlog of 3.2MB to 12.8MB of data to batch). Disable throttling by setting the lower threshold to `0`. The upper threshold sets the level where the maximum throttling intensity is reached.
+*   Individual tx size throttling via `--throttle.tx-size-lower/upper-limit` (env var `OP_BATCHER_THROTTLE_TX_SIZE_LOWER/UPPER-LIMIT`): 150 and 20\_000. This is the limit on the estimated compressed size of a transaction when throttling is at minimum/maximum intensity respectively.
+*   Block size throttling via `--throttle.block-size-lower/upper-limit` (env var `OP_BATCHER_THROTTLE_BLOCK_SIZE_LOWER/UPPER-LIMIT`): 2\_000 and 130\_000. This is the limit on the estimated compressed size of a block when throttling is at minimum/maximum intensity respectively.
+*  Throttler controller type via `--throttle.controller-type` (env var `OP_BATCHER_THROTTLE_CONTROLLER_TYPE`): `quadratic` by default. This determines how transaction and block size limits are interoplated when throttling is at intermediate inensity.
+
+For full details, see the [readme](https://github.com/ethereum-optimism/optimism/blob/develop/op-batcher/readme.md).
 
 If the batcher at startup has throttling enabled and the sequencer's `op-geth` instance to which it's talking doesn't have the `miner_setMaxDASize` RPC enabled, it will fail with an error message like:
 
