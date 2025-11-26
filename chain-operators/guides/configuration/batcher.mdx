@@ -321,46 +321,160 @@ admin\_startBatcher RPC. The default value is `false`.
 
 ### Throttling
 
-#### throttle-threshold
+The batcher supports throttling configuration to limit DA usage for transactions and blocks, and to control throttle intensity via several controller types (including an experimental PID controller). The following flags are available:
 
-Threshold on `pending-blocks-bytes-current` beyond which the batcher instructs the\
-block builder to start throttling transactions with larger DA demands. **Zero disables throttling**.
+#### throttle.additional-endpoints
+	Comma-separated list of endpoints to distribute throttling configuration to (in addition to the L2 endpoints specified with `--l2-eth-rpc`).
 
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--throttle-threshold=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--throttle-threshold=1500000`</Tabs.Tab>
-  <Tabs.Tab>`OP_BATCHER_THROTTLE_THRESHOLD=1500000`</Tabs.Tab>
+<Tabs>
+  <TabItem value="syntax" label="Syntax">
+		Type: string slice
+		Default: none
+		CLI: `--throttle.additional-endpoints=<endpoint1>,<endpoint2>,...`
+  </TabItem>
+
+  <TabItem value="example" label="Example">
+		CLI: `--throttle.additional-endpoints=http://builder1:8545,http://builder2:8545`
+  </TabItem>
+
+  <TabItem value="env" label="Environment variable">
+		`THROTTLE_ADDITIONAL_ENDPOINTS=http://builder1:8545,http://builder2:8545`
+  </TabItem>
 </Tabs>
 
-#### throttle-tx-size
+#### throttle.tx-size-lower-limit
+	The DA size limit for individual transactions when the throttle intensity is at its maximum. `0` disables limits; use `1` as the smallest effective limit.
 
-The DA size of transactions at which throttling begins **when we are over the throttle threshold**.
+<Tabs>
+  <TabItem value="syntax" label="Syntax">
+		Type: uint64
+		Default: `150`
+		CLI: `--throttle.tx-size-lower-limit=<bytes>`
+  </TabItem>
 
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--throttle-tx-size=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--throttle-tx-size=10000`</Tabs.Tab>
-  <Tabs.Tab>`OP_BATCHER_THROTTLE_TX_SIZE=10000`</Tabs.Tab>
+  <TabItem value="example" label="Example">
+		CLI: `--throttle.tx-size-lower-limit=150`
+  </TabItem>
+
+  <TabItem value="env" label="Environment variable">
+		`THROTTLE_TX_SIZE_LOWER_LIMIT=150`
+  </TabItem>
 </Tabs>
 
-#### throttle-block-size
+#### throttle.tx-size-upper-limit
+	The DA size limit for individual transactions as throttle intensity approaches `0` (minimal throttling). Not applied when throttling is inactive.
 
-The total DA limit to start imposing on block building **when we are over the throttle threshold**.
+<Tabs>
+  <TabItem value="syntax" label="Syntax">
+		Type: uint64
+		Default: `20000`
+		CLI: `--throttle.tx-size-upper-limit=<bytes>`
+  </TabItem>
 
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--throttle-block-size=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--throttle-block-size=50000`</Tabs.Tab>
-  <Tabs.Tab>`OP_BATCHER_THROTTLE_BLOCK_SIZE=50000`</Tabs.Tab>
+  <TabItem value="example" label="Example">
+		CLI: `--throttle.tx-size-upper-limit=20000`
+  </TabItem>
+
+  <TabItem value="env" label="Environment variable">
+		`THROTTLE_TX_SIZE_UPPER_LIMIT=20000`
+  </TabItem>
 </Tabs>
 
-#### throttle-always-block-size
+#### throttle.block-size-lower-limit
+	The DA size limit for blocks when throttle intensity is at maximum (applies for linear and quadratic controllers). `0` disables limits; use `1` as the smallest effective limit.
 
-The total DA limit to start imposing on block building **at all times**.
+<Tabs>
+  <TabItem value="syntax" label="Syntax">
+		Type: uint64
+		Default: `2000`
+		CLI: `--throttle.block-size-lower-limit=<bytes>`
+  </TabItem>
 
-<Tabs items={['Syntax', 'Example', 'Environment Variable']}>
-  <Tabs.Tab>`--throttle-always-block-size=<value>`</Tabs.Tab>
-  <Tabs.Tab>`--throttle-always-block-size=250000`</Tabs.Tab>
-  <Tabs.Tab>`OP_BATCHER_THROTTLE_ALWAYS_BLOCK_SIZE=250000`</Tabs.Tab>
+  <TabItem value="example" label="Example">
+		CLI: `--throttle.block-size-lower-limit=2000`
+  </TabItem>
+
+  <TabItem value="env" label="Environment variable">
+		`THROTTLE_BLOCK_SIZE_LOWER_LIMIT=2000`
+  </TabItem>
 </Tabs>
+
+#### throttle.block-size-upper-limit
+	The DA size limit for blocks when throttling is inactive (throttle intensity = 0).
+
+<Tabs>
+  <TabItem value="syntax" label="Syntax">
+		Type: uint64
+		Default: `130000`
+		CLI: `--throttle.block-size-upper-limit=<bytes>`
+  </TabItem>
+
+  <TabItem value="example" label="Example">
+		CLI: `--throttle.block-size-upper-limit=130000`
+  </TabItem>
+
+  <TabItem value="env" label="Environment variable">
+		`THROTTLE_BLOCK_SIZE_UPPER_LIMIT=130000`
+  </TabItem>
+</Tabs>
+
+#### throttle.controller-type
+	Type of throttle controller to use. Valid values: `step`, `linear`, `quadratic` (default), `pid` (EXPERIMENTAL - use with caution).
+
+<Tabs>
+  <TabItem value="syntax" label="Syntax">
+		Type: string
+		Default: `quadratic`
+		CLI: `--throttle.controller-type=<step|linear|quadratic|pid>`
+  </TabItem>
+
+  <TabItem value="example" label="Example">
+		CLI: `--throttle.controller-type=quadratic`
+  </TabItem>
+
+  <TabItem value="env" label="Environment variable">
+		`THROTTLE_CONTROLLER_TYPE=quadratic`
+  </TabItem>
+</Tabs>
+
+#### throttle.unsafe-da-bytes-lower-threshold
+	Threshold on `unsafe_da_bytes` beyond which the batcher will start to throttle the block builder. `0` disables throttling.
+
+<Tabs>
+  <TabItem value="syntax" label="Syntax">
+		Type: uint64
+		Default: `3200000`
+		CLI: `--throttle.unsafe-da-bytes-lower-threshold=<bytes>`
+  </TabItem>
+
+  <TabItem value="example" label="Example">
+		CLI: `--throttle.unsafe-da-bytes-lower-threshold=3200000`
+  </TabItem>
+
+  <TabItem value="env" label="Environment variable">
+		`THROTTLE_UNSAFE_DA_BYTES_LOWER_THRESHOLD=3200000`
+  </TabItem>
+</Tabs>
+
+#### throttle.unsafe-da-bytes-upper-threshold
+	Threshold on `unsafe_da_bytes` at which throttling reaches maximum intensity (applies for linear and quadratic controllers).
+
+<Tabs>
+  <TabItem value="syntax" label="Syntax">
+		Type: uint64
+		Default: `12800000`
+		CLI: `--throttle.unsafe-da-bytes-upper-threshold=<bytes>`
+  </TabItem>
+
+  <TabItem value="example" label="Example">
+		CLI: `--throttle.unsafe-da-bytes-upper-threshold=12800000`
+  </TabItem>
+
+  <TabItem value="env" label="Environment variable">
+		`THROTTLE_UNSAFE_DA_BYTES_UPPER_THRESHOLD=12800000`
+  </TabItem>
+</Tabs>
+
 
 ### Transaction manager
 
