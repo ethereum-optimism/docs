@@ -67,6 +67,51 @@ It means that the `op-node` is pointing to the wrong chain.
 2.  Verify that the `op-node`'s rollup config/`--network` parameter is set to the correct network.
 3.  Verify that the `op-node`'s L2 URL is pointing to the correct instance of `execution client`, and that `execution client` is properly initialized for the given network.
 
+## Error: `eth_sendRawTransaction` Does Not Exist
+
+If an RPC call to your execution client (`op-geth`, Nethermind, etc.) returns a response like:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32601,
+    "message": "the method eth_sendRawTransaction does not exist/is not available"
+  }
+}
+```
+
+This `-32601` JSON-RPC error means the sequencer endpoint you configured does not expose `eth_sendRawTransaction`. The request path looks like:
+
+```
+Client → eth_sendRawTransaction → op-geth:8545
+                                ↓
+                      op-geth forwards to sequencer
+                                ↓
+              eth_sendRawTransaction → op-node:8547
+                                ↓
+              ❌ ERROR: "method does not exist/is not available"
+                 (op-node has no eth namespace!)
+```
+
+Because `op-node` only exposes rollup-specific RPC methods—there is no `eth_*` namespace—it cannot accept raw transaction submissions. When `op-geth` forwards the transaction to an `op-node` URL it immediately fails with `-32601`.
+
+This situation almost always happens when:
+
+*   `--rollup.sequencerhttp` (or `ROLLUP_SEQUENCER_HTTP`) is pointed to your own `op-node` instead of the hosted public sequencer.
+*   The sequencer container was launched with that flag by mistake, so your node tries to submit transactions to itself.
+
+For canonical Optimism networks you must point `--rollup.sequencerhttp` at the public sequencer endpoint published in the network config. For user-deployed L2s that host their own sequencer, do not set this option at all so the execution client talks directly to your local sequencer and never forwards to an `op-node`.
+
+### Solution
+
+1.  Confirm your execution client exposes the `eth` namespace on its HTTP API (`--http.api eth,net,engine,...` for geth/`op-geth`). If `eth` is disabled, raw transactions will be rejected before they reach the sequencer.
+2.  Inspect the environment/CLI flags of every component that speaks to the sequencer (`op-node`, `execution client`, `op-batcher`, `op-proposer`, scripts). The `--rollup.sequencerhttp` flag must point to the public sequencer URL for the chain (for example, `https://mainnet-sequencer.optimism.io`), **not** to your own `op-node`.
+3.  For user-deployed L2s where you run the sequencer yourself, leave `--rollup.sequencerhttp` unset so the client forwards locally and never falls back to an `op-node` endpoint.
+4.  If you templated docker-compose or systemd files, make sure `ROLLUP_SEQUENCER_HTTP` is not being overwritten by another `.env` file or compose override. Remove any accidental references to your local node.
+5.  Restart the affected services after correcting the flag so they pick up the new endpoint. The error should disappear as soon as they can reach the proper sequencer RPC.
+
 ## Unclean Shutdowns
 
 If you see a log that looks like this in `execution client`:
