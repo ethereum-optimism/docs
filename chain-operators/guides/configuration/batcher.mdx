@@ -98,8 +98,8 @@ There are two throttling knobs:
 The batcher is configured for throttling by default with the parameters described below (and corresponding flags which allow the defaults to be overridden): 
 
 *   Backlog of pending block bytes beyond which the batcher will enable throttling on the sequencer via `--throttle.unsafe-da-bytes-lower/upper-threshold` (env var `OP_BATCHER_THROTTLE_UNSAFE_DA_BYTES_LOWER/UPPER_THRESHOLD`): 3\_200\_000 and 12\_800\_000 (batcher backlog of 3.2MB to 12.8MB of data to batch). Disable throttling by setting the lower threshold to `0`. The upper threshold sets the level where the maximum throttling intensity is reached.
-*   Individual tx size throttling via `--throttle.tx-size-lower/upper-limit` (env var `OP_BATCHER_THROTTLE_TX_SIZE_LOWER/UPPER-LIMIT`): 150 and 20\_000. This is the limit on the estimated compressed size of a transaction when throttling is at minimum/maximum intensity respectively.
-*   Block size throttling via `--throttle.block-size-lower/upper-limit` (env var `OP_BATCHER_THROTTLE_BLOCK_SIZE_LOWER/UPPER-LIMIT`): 2\_000 and 130\_000. This is the limit on the estimated compressed size of a block when throttling is at minimum/maximum intensity respectively.
+*   Individual tx size throttling via `--throttle.tx-size-lower/upper-limit` (env var `OP_BATCHER_THROTTLE_TX_SIZE_LOWER/UPPER-LIMIT`): 150 and 20\_000. This is the limit on the estimated compressed size of a transaction when throttling is at maximum/minimum intensity respectively.
+*   Block size throttling via `--throttle.block-size-lower/upper-limit` (env var `OP_BATCHER_THROTTLE_BLOCK_SIZE_LOWER/UPPER-LIMIT`): 2\_000 and 130\_000. This is the limit on the estimated compressed size of a block when throttling is at maximum/minimum intensity respectively.
 *  Throttler controller type via `--throttle.controller-type` (env var `OP_BATCHER_THROTTLE_CONTROLLER_TYPE`): `quadratic` by default. This determines how transaction and block size limits are interpolated when throttling is at intermediate intensity.
 
 For full details, see the [readme](https://github.com/ethereum-optimism/optimism/blob/develop/op-batcher/readme.md).
@@ -321,7 +321,7 @@ admin\_startBatcher RPC. The default value is `false`.
 
 ### Throttling
 
-The batcher supports throttling configuration to limit DA usage for transactions and blocks, and to control throttle intensity via several controller types (including an experimental PID controller). The following flags are available:
+The batcher supports throttling configuration to limit DA usage for transactions and blocks, and to control throttle intensity via several controller types. The following flags are available:
 
 #### throttle.additional-endpoints
 Comma-separated list of endpoints to distribute throttling configuration to (in addition to the L2 endpoints specified with `--l2-eth-rpc`).
