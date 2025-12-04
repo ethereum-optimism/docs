@@ -61,7 +61,7 @@ It's generally easier to start the execution client before starting `op-node`.
 You can still start the execution client without yet running `op-node`, but it will simply not receive any blocks until `op-node` is started.
 
 <Tabs items={['op-geth', 'Nethermind']}>
-  <Tabs.Tab>
+  <Tab>
     <Steps>
   <Step title="Navigate to your `op-geth` directory">
 Find the directory where you built the `op-geth` binary.
@@ -112,9 +112,9 @@ Set the following environment variables:
 
   
         </Step></Steps>
-  </Tabs.Tab>
+  </Tab>
 
-  <Tabs.Tab>
+  <Tab>
     <Steps>
   <Step title="Navigate to your `Nethermind` directory">
 Find the directory where you built the `Nethermind` binary.
@@ -156,7 +156,7 @@ Copy the JWT secret you generated in a previous step into the `Nethermind` direc
 
   
         </Step></Steps>
-  </Tabs.Tab>
+  </Tab>
 </Tabs>
 
 ### Start `op-node`
@@ -236,7 +236,7 @@ Once you've started your execution client and `op-node` you should see them begi
 #### Snap sync (default)
 
 <Tabs items={['op-geth', 'Nethermind']}>
-  <Tabs.Tab>
+  <Tab title="op-geth">
     Initial synchronization can take several hours to complete. You will see these
     `op-node` logs at the start of snap sync:
 
@@ -285,9 +285,9 @@ For the second stage, `op-geth` will log the following:
 
   
         </Step></Steps>
-  </Tabs.Tab>
+  </Tab>
 
-  <Tabs.Tab>
+  <Tab title="Nethermind">
     Initial synchronization can take several hours to complete.
 
     Snap sync in `Nethermind` works by:
@@ -297,7 +297,7 @@ For the second stage, `op-geth` will log the following:
     3.  Verifying the state root matches
 
     This approach is up to 10 times faster than traditional full sync.
-  </Tabs.Tab>
+  </Tab>
 </Tabs>
 
 #### Full sync
@@ -307,12 +307,12 @@ For OP Mainnet you will need access to the migrated database to run a full node 
 You can [migrate your own data directory](https://web.archive.org/web/20240110231645/https://blog.oplabs.co/reproduce-bedrock-migration/) or follow the options available for [archive nodes](#get-the-migrated-data-directory).
 </Info>
 
-<Tabs items={['op-geth', 'Nethermind']}>
-  <Tabs.Tab>
+<Tabs>
+  <Tab title="op-geth">
     Initial full synchronization can take several days or weeks to complete. During this time, you will initially observe `op-node` deriving blocks from Ethereum without sending these blocks to your execution client.
-  </Tabs.Tab>
+  </Tab>
 
-  <Tabs.Tab>
+  <Tab title="Nethermind">
     To use full sync with `Nethermind`, set the following configuration:
 
     ```bash
@@ -325,7 +325,7 @@ You can [migrate your own data directory](https://web.archive.org/web/2024011023
     ```
 
     Full sync will download and verify every block from genesis, which takes significantly longer than snap sync but provides the strongest security guarantees.
-  </Tabs.Tab>
+  </Tab>
 </Tabs>
 
 Both execution clients will receive blocks from `op-node` as it requests them from Ethereum one-by-one and determines the corresponding OP Mainnet blocks that were published.
@@ -346,21 +346,21 @@ INFO [06-26|14:00:59.463] inserted block                           hash=e80dc4..
 
 You should then also begin to see logs from your execution client:
 
-<Tabs items={['op-geth', 'Nethermind']}>
-  <Tabs.Tab>
+<Tabs>
+  <Tab title="op-geth">
     ```text
     INFO [06-26|14:02:12.974] Imported new potential chain segment     number=4,068,194 hash=a334a0..609a83 blocks=1         txs=1         mgas=0.000  elapsed=1.482ms     mgasps=0.000   age=5mo2w20h dirty=2.31MiB
     INFO [06-26|14:02:12.976] Chain head was updated                   number=4,068,194 hash=a334a0..609a83 root=e80f5e..dd06f9 elapsed="188.373µs" age=5mo2w20h
     INFO [06-26|14:02:12.982] Starting work on payload                 id=0x5542117d680dbd4e
     ```
-  </Tabs.Tab>
+  </Tab>
 
-  <Tabs.Tab>
+  <Tab title="Nethermind">
     *   **Received New Block**: Block received with number, hash and extra data `21288296 (0xb61f74...cbfbe7), Extra Data: Titan (titanbuilder.xyz)`
     *   **Processed**: Block or block range processed, e.g., or `x4 21288291 .. 21288295` or  `21288296`
     *   **Received ForkChoice**: Updates on the blockchain's canonical chain; with safe and finalized block, e.g., `21288296 (0xb61f74...cbfbe7), Safe: 21288252 (0x46906d...7777b8), Finalized: 21288221 (0x22a7d2...ebeae9)`
     *   **Synced Chain Head**: Latest synced block number and hash on the chain, e.g., `21288296 (0xb61f74...cbfbe7)`
-  </Tabs.Tab>
+  </Tab>
 </Tabs>
 
 ## OP Mainnet archive nodes

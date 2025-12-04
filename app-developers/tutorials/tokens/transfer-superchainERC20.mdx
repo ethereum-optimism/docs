@@ -79,8 +79,8 @@ pnpm install
   
     2.  Store the configuration in environment variables.
   
-        <Tabs items={['Supersim', 'Devnets']}>
-          <Tabs.Tab>
+        <Tabs>
+          <Tab title="Supersim">
             ```sh
             PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
             USER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
@@ -89,9 +89,9 @@ pnpm install
             CHAIN_B_ID=$(cast chain-id --rpc-url $URL_CHAIN_B)
             TOKEN_ADDRESS=$(cat superchainerc20-starter/packages/contracts/broadcast/multi/SuperchainERC20Deployer.s.sol-latest/run.json | jq --raw-output .deployments[0].transactions[0].contractAddress)
             ```
-          </Tabs.Tab>
+          </Tab>
   
-          <Tabs.Tab>
+          <Tab title="Devnets">
             1.  Set `PRIVATE_KEY` to the private key for an address that has ETH on the two devnets.
   
             2.  Run these commands to specify the rest of the environment variables.
@@ -103,24 +103,24 @@ pnpm install
             CHAIN_B_ID=$(cast chain-id --rpc-url $URL_CHAIN_B)
             TOKEN_ADDRESS=0x0FAe7deDb9CfC2d8288d432B85998e6b263F3A72
             ```
-          </Tabs.Tab>
+          </Tab>
         </Tabs>
   
     3.  Obtain tokens on chain A.
   
-        <Tabs items={['Supersim', 'Devnets']}>
-          <Tabs.Tab>
+        <Tabs>
+          <Tab title="Supersim">
             ```sh
             ONE=$(echo 1 | cast to-wei)
             cast send $TOKEN_ADDRESS "mintTo(address,uint256)" $USER_ADDRESS $ONE --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
             ```
-          </Tabs.Tab>
+          </Tab>
   
-          <Tabs.Tab>
+          <Tab title="Devnets">
             ```sh
             cast send $TOKEN_ADDRESS "faucet()" --private-key $PRIVATE_KEY --rpc-url $URL_CHAIN_A
             ```
-          </Tabs.Tab>
+          </Tab>
         </Tabs>
   
         <Expandable title="Sanity check">
