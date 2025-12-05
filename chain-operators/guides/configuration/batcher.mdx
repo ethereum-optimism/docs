@@ -60,6 +60,12 @@ The `op-batcher` has the capabilities to send multiple blobs per single blob tra
 A minimal batcher configuration (with env vars) to enable 6-blob batcher transactions is:
 
 ```
+  - OP_BATCHER_BATCH_TYPE=1 # span batches, optional
+  - OP_BATCHER_DATA_AVAILABILITY_TYPE=blobs
+  - OP_BATCHER_TARGET_NUM_FRAMES=6 # 6 blobs per tx
+  - OP_BATCHER_TXMGR_MIN_BASEFEE=2.0 # 2 gwei, might need to tweak, depending on gas market
+  - OP_BATCHER_TXMGR_MIN_TIP_CAP=2.0 # 2 gwei, might need to tweak, depending on gas market
+  - OP_BATCHER_RESUBMISSION_TIMEOUT=240s # wait 4 min before bumping fees
 ```
 
 This enables blob transactions and sets the target number of frames to 6, which translates to 6 blobs per transaction.
