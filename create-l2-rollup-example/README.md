@@ -176,6 +176,41 @@ make restart
 docker-compose restart op-batcher
 ```
 
+## P2P Block Gossip Configuration
+
+By default, this devnet disables block gossip to avoid validation warnings when running locally. The `--p2p.disable-block-gossip` flag is set in `docker-compose.yml` (line 33).
+
+<Warning>
+**For production deployments**, you should **remove** the `--p2p.disable-block-gossip` flag to enable block propagation across the network. Block gossip is essential for:
+- Distributing newly sequenced blocks to other nodes
+- Enabling peer nodes to validate and sync with your chain
+- Supporting a decentralized network of nodes
+</Warning>
+
+### When to Enable Block Gossip
+
+| Environment | Block Gossip | Reason |
+|-------------|-------------|---------|
+| **Local devnet** | Disabled (default) | Prevents "invalid block signature" warnings when testing solo |
+| **Private testnet** | Disabled | No other nodes to gossip with |
+| **Public testnet** | Enabled | Other nodes need to receive your blocks |
+| **Production mainnet** | Enabled | Required for network operation |
+
+### Enabling Block Gossip for Production
+
+1. Open `docker-compose.yml`
+2. Remove or comment out line 33: `--p2p.disable-block-gossip`
+3. Ensure your P2P networking is properly configured:
+   - Set `P2P_ADVERTISE_IP` to your public IP address
+   - Ensure port 9222 is accessible from the internet
+   - Configure proper firewall rules
+
+```bash
+# Example: Enable block gossip
+sed -i '' '/--p2p.disable-block-gossip/d' docker-compose.yml
+docker-compose restart op-node
+```
+
 ## Troubleshooting
 
 ### Common Issues
