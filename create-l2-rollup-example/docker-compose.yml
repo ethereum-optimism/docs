@@ -23,13 +23,6 @@ services:
       --sequencer.stopped=false
       --sequencer.max-safe-lag=3600
       --verifier.l1-confs=4
-      --p2p.listen.ip=0.0.0.0
-      --p2p.listen.tcp=9222
-      --p2p.listen.udp=9222
-      --p2p.advertise.ip=${P2P_ADVERTISE_IP}
-      --p2p.advertise.tcp=9222
-      --p2p.advertise.udp=9222
-      --p2p.sequencer.key=${PRIVATE_KEY}
       --p2p.disable  # For local devnet only. Remove this flag for production deployments.
       --rpc.addr=0.0.0.0
       --rpc.port=8547
@@ -39,7 +32,7 @@ services:
     depends_on:
       - op-geth
     healthcheck:
-      test: ["CMD", "wget", "--post-data={\"jsonrpc\":\"2.0\",\"method\":\"opp2p_self\",\"params\":[],\"id\":1}", "--header=Content-Type: application/json", "--quiet", "--tries=1", "--timeout=10", "--output-document=-", "http://localhost:8547"]
+      test: ["CMD", "wget", "--post-data={\"jsonrpc\":\"2.0\",\"method\":\"optimism_syncStatus\",\"params\":[],\"id\":1}", "--header=Content-Type: application/json", "--quiet", "--tries=1", "--timeout=10", "--output-document=-", "http://localhost:8547"]
       interval: 30s
       timeout: 10s
       retries: 5
