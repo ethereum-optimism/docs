@@ -176,6 +176,54 @@ make restart
 docker-compose restart op-batcher
 ```
 
+## P2P Networking Configuration
+
+By default, this devnet disables P2P networking entirely to avoid validation warnings when running locally. The `--p2p.disable` flag is set in `docker-compose.yml` (line 26).
+
+<Warning>
+**For production deployments**, you must **remove** the `--p2p.disable` flag and configure P2P networking properly. P2P is essential for:
+- Distributing newly sequenced blocks to other nodes in the network
+- Enabling peer nodes to sync and validate your chain
+- Supporting a decentralized network of nodes
+- Network resilience and redundancy
+</Warning>
+
+### When to Enable P2P
+
+| Environment | P2P Networking | Reason |
+|-------------|---------------|---------|
+| **Local devnet** | Disabled (default) | Prevents P2P warnings when testing solo without peers |
+| **Private testnet** | Disabled | No other nodes to connect with |
+| **Public testnet** | Enabled | Other nodes need to receive blocks and sync |
+| **Production mainnet** | Enabled | Required for network operation |
+
+### Enabling P2P for Production
+
+1. Open `docker-compose.yml`
+2. Remove `--p2p.disable  # For local devnet only...`
+3. Add back the P2P configuration flags:
+   ```yaml
+   --p2p.listen.ip=0.0.0.0
+   --p2p.listen.tcp=9222
+   --p2p.listen.udp=9222
+   --p2p.advertise.ip=${P2P_ADVERTISE_IP}
+   --p2p.advertise.tcp=9222
+   --p2p.advertise.udp=9222
+   --p2p.sequencer.key=${PRIVATE_KEY}
+   ```
+4. Ensure your P2P networking environment is properly configured:
+   - Set `P2P_ADVERTISE_IP` in `.env` to your public IP address (not 127.0.0.1)
+   - Ensure port 9222 (both TCP and UDP) is accessible from the internet
+   - Configure proper firewall rules to allow P2P traffic
+   - Consider setting up bootnodes for better peer discovery
+
+```bash
+# Example: Quick enable P2P for testing
+sed -i '' '/--p2p.disable/d' docker-compose.yml
+# Then add back P2P flags manually in docker-compose.yml
+docker-compose restart op-node
+```
+
 ## Troubleshooting
 
 ### Common Issues
