@@ -1,9 +1,9 @@
 ---
-title: JSON-RPC API
-description: Learn about the different OP Mainnet components with an RPC API.
+title: op-node JSON-RPC API
+description: Complete reference for op-node RPC methods including rollup-specific functionality.
 ---
 
-There are several OP Mainnet components with an RPC API, which are reviewed in this guide.
+`op-node` implements rollup-specific functionality as the Consensus Layer, similar to an L1 beacon node. It provides RPC methods for querying rollup state, managing peers, and controlling sequencer operations.
 
 <Info>
   Use [`eth_gasPrice`](https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_gasprice) instead of `rollup_gasPrices` for the L2 gas price.
@@ -11,29 +11,23 @@ There are several OP Mainnet components with an RPC API, which are reviewed in t
   If you want to estimate the cost of a transaction, you can [use the SDK](/app-developers/tutorials/transactions/sdk-estimate-costs).
 </Info>
 
-## op-node
-
-`op-node` implements most rollup-specific functionality as Consensus-Layer, similar to a L1 beacon-node. The following RPC methods are broken down by namespace.
-
+## Making RPC Requests
 
 The following examples show you how to make requests with [`curl`](https://curl.se/) and [`cast`](https://book.getfoundry.sh/cast/).
 
 <Info>
-  Protip: piping these commands in to [`jq`](https://jqlang.github.io/jq/) will give you nicely formatted JSON responses.
-  
+  Protip: piping these commands into [`jq`](https://jqlang.github.io/jq/) will give you nicely formatted JSON responses.
+
   `$ cast rpc optimism_syncStatus --rpc-url http://localhost:9545 | jq`
 </Info>
 
-### optimism
+## optimism Namespace
 
+Optimism-specific rollup methods for querying chain state and configuration.
 
-Optimism specific rollup methods.
+### optimism_outputAtBlock
 
-
-#### `optimism_outputAtBlock`
-
-Get the output root at a specific block.
-This method is documented in [the specifications](https://specs.optimism.io/protocol/rollup-node.html?utm_source=op-docs&utm_medium=docs#output-method-api).
+Get the output root at a specific block. This method is documented in [the specifications](https://specs.optimism.io/protocol/rollup-node.html?utm_source=op-docs&utm_medium=docs#output-method-api).
 
 <Tabs>
   <Tab title="curl">
@@ -50,8 +44,6 @@ This method is documented in [the specifications](https://specs.optimism.io/prot
   </Tab>
 </Tabs>
 
-
-
 Sample success output:
 
 ```json
@@ -65,9 +57,9 @@ Sample success output:
 }
 ```
 
-#### `optimism_syncStatus`
+### optimism_syncStatus
 
-Get the synchronization status.
+Get the synchronization status of the rollup node. This method provides detailed information about L1 and L2 block processing states.
 
 <Tabs>
   <Tab title="curl">
@@ -187,7 +179,7 @@ Sample success output:
 }
 ```
 
-#### `optimism_rollupConfig`
+### optimism_rollupConfig
 
 Get the rollup configuration parameters.
 
@@ -205,7 +197,6 @@ Get the rollup configuration parameters.
     ```
   </Tab>
 </Tabs>
-
 
 Sample success output:
 
@@ -243,9 +234,9 @@ Sample success output:
 }
 ```
 
-#### `optimism_version`
+### optimism_version
 
-Get the software version.
+Get the software version of the op-node.
 
 <Info>
 At the moment, building from source will not give you the correct version, but our docker images will.
@@ -266,8 +257,6 @@ At the moment, building from source will not give you the correct version, but o
   </Tab>
 </Tabs>
 
-
-
 Sample success output:
 
 ```json
@@ -278,13 +267,13 @@ Sample success output:
 }
 ```
 
-### opp2p 
+## opp2p Namespace
 
-The `opp2p` namespace handles peer interactions.
+The `opp2p` namespace handles peer-to-peer networking interactions, allowing you to manage peer connections, discovery, and network policies.
 
-#### `opp2p_self`
+### opp2p_self
 
-Returns your node's information.
+Returns your node's peer information including peer ID, addresses, and network configuration.
 
 <Tabs>
   <Tab title="curl">
@@ -347,9 +336,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_peers`
+### opp2p_peers
 
-Returns a list of your node's peers.
+Returns a list of your node's peers with detailed connection information.
 
 <Tabs>
   <Tab title="curl">
@@ -417,8 +406,8 @@ Sample success output:
             "rejectedPayloads": 0
           }
         }
-      },
-    ...
+      }
+    },
     "bannedPeers": [],
     "bannedIPS": [],
     "bannedSubnets": []
@@ -426,9 +415,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_peerStats`
+### opp2p_peerStats
 
-Returns your peer stats.
+Returns aggregate statistics about your peer connections.
 
 <Tabs>
   <Tab title="curl">
@@ -462,9 +451,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_discoveryTable`
+### opp2p_discoveryTable
 
-Returns your peer discovery table.
+Returns your peer discovery table containing node records (ENRs) of discovered peers.
 
 <Tabs>
   <Tab title="curl">
@@ -489,23 +478,20 @@ Sample success output:
   "id": 1,
   "result": [
   "enr:-J24QGC_SzoGG4EqyvO_082paQOwhvECeWGT-kaenrHdE2_iLTLeGmH-IOVpqEjC0L-yWmkI-c7598VaCjHQRNWn1CyGAYsqDgrFgmlkgnY0gmlwhNgp3WeHb3BzdGFja4OFQgCJc2VjcDI1NmsxoQPiq20PNZYzyvpEifcGVrOXHfM94JeWSgDL07I2hSl0d4N0Y3CCJAaDdWRwgiQG",
-  "enr:-J24QKvt2ThBM8-FPeHfAmpoaVLdfVD2cw1cRpNuwmvH_bQtQ1dqrrZw9FqiMbXbFRQf9IvjrlKSFLodbsRALIFATICGAYuQClJigmlkgnY0gmlwhKI3ZuaHb3BzdGFja4O6BACJc2VjcDI1NmsxoQLQRz2CH95qQd6vmF5saV-WOoTZobNfSt-FUdVa7R35nYN0Y3CCIyuDdWRwgiMr",
-  "enr:-J24QEMvLGmRBbDw48cHq9GzHSDiPlJ3eUpZiOMMXwvxN0JLQMZsS3-J6DKP2Uu--65BC5lAQF3zv7ukQDbEjuZpr5iGAYs0a4segmlkgnY0gmlwhEEVRWmHb3BzdGFja4OFQgCJc2VjcDI1NmsxoQJI0VT2eysk6v3t63pOZlGgJReDnNqh30roStkURIpGCoN0Y3CCJAaDdWRwgiQG",
-  ...
-  "enr:-J24QOdxnjbP7MkCFBuEjWe50NGdtAECj8tyrDBmXm8Y-JydVeoNF_IXNqodIUqeAfuAe3gcLceju96NVf8as78Eaq-GAYlu7qN_gmlkgnY0gmlwhAUJaBCHb3BzdGFja4OFQgCJc2VjcDI1NmsxoQKTb2oTlnUf5v-jP7YXZXI1wcfeSuPvsVd2niNV3BXHBYN0Y3CCJAaDdWRwgiQG"
+  "enr:-J24QKvt2ThBM8-FPeHfAmpoaVLdfVD2cw1cRpNuwmvH_bQtQ1dqrrZw9FqiMbXbFRQf9IvjrlKSFLodbsRALIFATICGAYuQClJigmlkgnY0gmlwhKI3ZuaHb3BzdGFja4O6BACJc2VjcDI1NmsxoQLQRz2CH95qQd6vmF5saV-WOoTZobNfSt-FUdVa7R35nYN0Y3CCIyuDdWRwgiMr"
   ]
 }
 ```
 
-#### `opp2p_blockPeer`
+### opp2p_blockPeer
 
-Blocks a peer.
+Blocks a peer by peer ID, preventing future connections.
 
 <Tabs>
   <Tab title="curl">
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"opp2p_blockPeer","params":[<peerID>],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"opp2p_blockPeer","params":["<peerID>"],"id":1}'  \
         http://localhost:9545
     ```
   </Tab>
@@ -515,8 +501,6 @@ Blocks a peer.
     ```
   </Tab>
 </Tabs>
-
-
 
 Sample success output:
 
@@ -528,15 +512,15 @@ Sample success output:
 }
 ```
 
-#### `opp2p_unblockPeer`
+### opp2p_unblockPeer
 
-Unblocks a peer.
+Unblocks a previously blocked peer.
 
 <Tabs>
   <Tab title="curl">
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"opp2p_unblockPeer","params":[<peerID>],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"opp2p_unblockPeer","params":["<peerID>"],"id":1}'  \
         http://localhost:9545
     ```
   </Tab>
@@ -557,9 +541,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_listBlockedPeers`
+### opp2p_listBlockedPeers
 
-Returns a list of your blocked peers.
+Returns a list of blocked peer IDs.
 
 <Tabs>
   <Tab title="curl">
@@ -578,7 +562,7 @@ Returns a list of your blocked peers.
 
 Sample success output:
 
-```
+```json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -588,9 +572,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_blockAddr`
+### opp2p_blockAddr
 
-Blocks ip address.
+Blocks connections from a specific IP address.
 
 <Tabs>
   <Tab title="curl">
@@ -617,9 +601,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_unblockAddr`
+### opp2p_unblockAddr
 
-Unblocks ip address.
+Unblocks a previously blocked IP address.
 
 <Tabs>
   <Tab title="curl">
@@ -646,9 +630,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_listBlockedAddrs`
+### opp2p_listBlockedAddrs
 
-Returns a list of blocked ip addresses.
+Returns a list of blocked IP addresses.
 
 <Tabs>
   <Tab title="curl">
@@ -667,7 +651,7 @@ Returns a list of blocked ip addresses.
 
 Sample success output:
 
-```
+```json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -677,9 +661,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_blockSubnet`
+### opp2p_blockSubnet
 
-Blocks subnet.
+Blocks connections from a specific subnet (CIDR notation).
 
 <Tabs>
   <Tab title="curl">
@@ -706,9 +690,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_unblockSubnet`
+### opp2p_unblockSubnet
 
-Unblocks subnet.
+Unblocks a previously blocked subnet.
 
 <Tabs>
   <Tab title="curl">
@@ -735,9 +719,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_listBlockedSubnets`
+### opp2p_listBlockedSubnets
 
-Returns list of blocked subnets.
+Returns a list of blocked subnets.
 
 <Tabs>
   <Tab title="curl">
@@ -764,9 +748,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_protectPeer`
+### opp2p_protectPeer
 
-Protect peer.
+Protects a peer from being pruned from the connection pool.
 
 <Tabs>
   <Tab title="curl">
@@ -793,9 +777,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_unprotectPeer`
+### opp2p_unprotectPeer
 
-Unprotect peer.
+Removes protection from a peer, allowing it to be pruned if necessary.
 
 <Tabs>
   <Tab title="curl">
@@ -822,15 +806,15 @@ Sample success output:
 }
 ```
 
-#### `opp2p_connectPeer`
+### opp2p_connectPeer
 
-Connect peer.
+Initiates a connection to a peer using its multiaddress.
 
 <Tabs>
   <Tab title="curl">
     ```sh
     curl -X POST -H "Content-Type: application/json" --data \
-        '{"jsonrpc":"2.0","method":"opp2p_connectPeer","params":[<peer multiaddr>],"id":1}'  \
+        '{"jsonrpc":"2.0","method":"opp2p_connectPeer","params":["<peer multiaddr>"],"id":1}'  \
         http://localhost:9545
     ```
   </Tab>
@@ -851,9 +835,9 @@ Sample success output:
 }
 ```
 
-#### `opp2p_disconnectPeer`
+### opp2p_disconnectPeer
 
-Disconnect peer.
+Disconnects from a specific peer.
 
 <Tabs>
   <Tab title="curl">
@@ -872,7 +856,7 @@ Disconnect peer.
 
 Sample success output:
 
-```json 
+```json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -880,13 +864,13 @@ Sample success output:
 }
 ```
 
-### admin
+## admin Namespace
 
-todo: add admin namespace description
+Administrative methods for controlling sequencer operations and the derivation pipeline.
 
-#### `admin_resetDerivationPipeline`
+### admin_resetDerivationPipeline
 
-Resets the derivation pipeline.
+Resets the derivation pipeline, forcing it to re-derive L2 blocks from L1 data.
 
 <Tabs>
   <Tab title="curl">
@@ -905,13 +889,17 @@ Resets the derivation pipeline.
 
 Sample success output:
 
-```
-todo: add Sample success output
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": null
+}
 ```
 
-#### `admin_startSequencer`
+### admin_startSequencer
 
-Starts the sequencer.
+Starts the sequencer if it was previously stopped. This allows the node to begin producing new blocks.
 
 <Tabs>
   <Tab title="curl">
@@ -930,13 +918,17 @@ Starts the sequencer.
 
 Sample success output:
 
-```
-todo: add Sample success output
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": null
+}
 ```
 
-#### `admin_stopSequencer`
+### admin_stopSequencer
 
-Stops sequencer.
+Stops the sequencer, preventing it from producing new blocks. The node will continue to sync from other sequencers.
 
 <Tabs>
   <Tab title="curl">
@@ -955,13 +947,17 @@ Stops sequencer.
 
 Sample success output:
 
-```
-todo: add Sample success output
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": null
+}
 ```
 
-#### `admin_sequencerActive`
+### admin_sequencerActive
 
-Returns the status of the sequencer. This endpoint provides real-time information about whether the sequencer is actively processing transactions.
+Returns whether the sequencer is currently active and producing blocks.
 
 <Tabs>
   <Tab title="curl">
@@ -973,35 +969,17 @@ Returns the status of the sequencer. This endpoint provides real-time informatio
   </Tab>
   <Tab title="cast">
     ```sh
-    cast rpc admin_sequencerActive [] --rpc-url http://localhost:9545
+    cast rpc admin_sequencerActive --rpc-url http://localhost:9545
     ```
   </Tab>
 </Tabs>
 
 Sample success output:
 
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
 ```
-todo: add Sample success output
-```
-
-## Execution clients
-
-The OP Stack supports multiple execution client implementations. Each client implements the execution layer with minimal changes for a secure Ethereum-equivalent application environment.
-
-<Tabs>
-  <Tab title="op-geth">
-    ### op-geth
-
-    `op-geth` is the original execution client for the OP Stack, based on the Go Ethereum (Geth) implementation.
-    
-    The execution engine's RPC interface is identical to [the upstream Geth RPC interface](https://geth.ethereum.org/docs/interacting-with-geth/rpc). The responses are nearly identical too, except we also include the L1 gas usage and price information.
-  </Tab>
-  <Tab title="Nethermind">
-    ### Nethermind
-
-    `Nethermind` is a high-performance execution client implementation written in C#. The `Nethermind` client has been adapted to support OP Stack chains, providing an alternative execution client option for node operators.
-    
-    The execution engine's RPC interface is identical to [the upstream `Nethermind` RPC interface](https://docs.nethermind.io/interacting/json-rpc-server/). The responses are nearly identical too, except we also include the L1 gas usage and price information.
-  </Tab>
-</Tabs>
-
