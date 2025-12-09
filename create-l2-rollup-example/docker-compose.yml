@@ -1,7 +1,7 @@
 services:
   # Sequencer (op-geth + op-node)
   op-node:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.5
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:a0c621361db5b5a6dcb60fd8943d485672a076b0
     container_name: op-node
     volumes:
       - ./sequencer:/workspace
@@ -38,14 +38,25 @@ services:
     depends_on:
       - op-geth
     healthcheck:
-      test: ["CMD", "wget", "--post-data={\"jsonrpc\":\"2.0\",\"method\":\"opp2p_self\",\"params\":[],\"id\":1}", "--header=Content-Type: application/json", "--quiet", "--tries=1", "--timeout=10", "--output-document=-", "http://localhost:8547"]
+      test:
+        [
+          "CMD",
+          "wget",
+          '--post-data={"jsonrpc":"2.0","method":"opp2p_self","params":[],"id":1}',
+          "--header=Content-Type: application/json",
+          "--quiet",
+          "--tries=1",
+          "--timeout=10",
+          "--output-document=-",
+          "http://localhost:8547",
+        ]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 10s
 
   op-geth:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101511.1
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101603.5
     container_name: op-geth
     volumes:
       - ./sequencer:/workspace
@@ -66,12 +77,11 @@ services:
           geth init --datadir=/workspace/op-geth-data --state.scheme=hash /workspace/genesis.json
         fi
         echo "Starting geth..."
-        exec geth --datadir=/workspace/op-geth-data --http --http.addr=0.0.0.0 --http.port=8545 --ws --ws.addr=0.0.0.0 --ws.port=8546 --authrpc.addr=0.0.0.0 --authrpc.port=8551 --authrpc.jwtsecret=/workspace/jwt.txt --syncmode=full --gcmode=archive --rollup.disabletxpoolgossip=true --http.vhosts=* --http.corsdomain=* --http.api=eth,net,web3,debug,txpool,admin --ws.origins=* --ws.api=eth,net,web3,debug,txpool,admin --authrpc.vhosts=*
-
+        exec geth --datadir=/workspace/op-geth-data --http --http.addr=0.0.0.0 --http.port=8545 --ws --ws.addr=0.0.0.0 --ws.port=8546 --authrpc.addr=0.0.0.0 --authrpc.port=8551 --authrpc.jwtsecret=/workspace/jwt.txt --syncmode=full --gcmode=archive --rollup.disabletxpoolgossip=true --http.vhosts=* --http.corsdomain=* --http.api=eth,net,web3,debug,txpool,admin,miner --ws.origins=* --ws.api=eth,net,web3,debug,txpool,admin,miner --authrpc.vhosts=*
 
   # Batcher
   batcher:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:v1.14.0
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:a0c621361db5b5a6dcb60fd8943d485672a076b0
     container_name: op-batcher
     volumes:
       - ./batcher:/workspace
@@ -98,7 +108,7 @@ services:
 
   # Proposer
   proposer:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-proposer:v1.10.0
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-proposer:a0c621361db5b5a6dcb60fd8943d485672a076b0
     container_name: op-proposer
     volumes:
       - ./proposer:/workspace
@@ -123,7 +133,7 @@ services:
 
   # Challenger
   challenger:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:v1.5.1
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-challenger:a0c621361db5b5a6dcb60fd8943d485672a076b0
     container_name: op-challenger
     volumes:
       - ./challenger:/workspace
@@ -151,7 +161,7 @@ services:
 
   # Dispute Monitor
   dispute-mon:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-dispute-mon:v1.4.2-rc.1
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-dispute-mon:a0c621361db5b5a6dcb60fd8943d485672a076b0
     container_name: dispute-mon
     volumes:
       - ./dispute-mon:/workspace
@@ -163,9 +173,6 @@ services:
       - .env
     environment:
       - OP_DISPUTE_MON_L1_ETH_RPC=${L1_RPC_URL}
-      - OP_DISPUTE_MON_ROLLUP_RPC=${ROLLUP_RPC}
-      - OP_DISPUTE_MON_HONEST_ACTORS=${PROPOSER_ADDRESS},${CHALLENGER_ADDRESS}
-      - OP_DISPUTE_MON_GAME_FACTORY_ADDRESS=${GAME_FACTORY_ADDRESS}
       - OP_DISPUTE_MON_MONITOR_INTERVAL=10s
       - OP_DISPUTE_MON_NETWORK=op-sepolia
       - OP_DISPUTE_MON_LOG_LEVEL=debug

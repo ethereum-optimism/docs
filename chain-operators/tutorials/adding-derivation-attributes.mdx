@@ -25,48 +25,57 @@ You're going to use a smart contract on your Rollup to store the reports that th
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
 /**
  * @title L1Burn
- * @notice L1Burn keeps track of the total amount of ETH burned on L1.
+ * @notice L1Burn keeps track of the total amount of ETH burned on L1
  */
 contract L1Burn {
     /**
-     * @notice Total amount of ETH burned on L1.
+     * @notice The system caller responsible for L1 attributes transactions
+     */
+    address internal constant DEPOSITOR_ACCOUNT = 0xDeaDDEaDDeAdDeAdDEAdDEaddeAddEAdDEAd0001;
+
+    /**
+     * @notice Total amount of ETH burned on L1
      */
     uint256 public total;
 
     /**
-     * @notice Mapping of block numbers to total burn.
+     * @notice Mapping of block numbers to total burn
      */
     mapping (uint64 => uint256) public reports;
 
     /**
-     * @notice Allows the system address to submit a report.
-     *
-     * @param _blocknum L1 block number the report corresponds to.
-     * @param _burn     Amount of ETH burned in the block.
+     * @notice Thrown when a burn report is received from the non-depositor account
      */
-    function report(uint64 _blocknum, uint64 _burn) external {
-        require(
-            msg.sender == 0xDeaDDEaDDeAdDeAdDEAdDEaddeAddEAdDEAd0001,
-            "L1Burn: reports can only be made from system address"
-        );
+    error Unauthorized();
 
-        total += _burn;
-        reports[_blocknum] = total;
+    /**
+     * @notice Allows the system address to submit a report
+     *
+     * @param _blockNumber L1 block number the report corresponds to
+     * @param _burnAmount Amount of ETH burned in the block
+     */
+    function report(uint64 _blockNumber, uint64 _burnAmount) external {
+        if (msg.sender != DEPOSITOR_ACCOUNT) {
+            revert Unauthorized();
+        }
+
+        total += _burnAmount;
+        reports[_blockNumber] = total;
     }
 
     /**
-     * @notice Tallies up the total burn since a given block number.
+     * @notice Tallies up the total burn since a given block number
      *
-     * @param _blocknum L1 block number to tally from.
+     * @param _blockNumber L1 block number to tally from
      *
-     * @return Total amount of ETH burned since the given block number;
+     * @return Total amount of ETH burned since the given block number
      */
-    function tally(uint64 _blocknum) external view returns (uint256) {
-        return total - reports[_blocknum];
+    function tally(uint64 _blockNumber) external view returns (uint256) {
+        return total - reports[_blockNumber];
     }
 }
 ```
@@ -93,36 +102,37 @@ Now you need to add logic to the `op-node` to automatically submit a burn report
   <Step title="Paste the following into `l1_burn_info.go`, and make sure to replace `YOUR_BURN_CONTRACT_HERE` with the address of the `L1Burn` contract you just deployed.">
   ```go
     package derive
-  
+
     import (
         "bytes"
         "encoding/binary"
         "fmt"
         "math/big"
-  
+
+        "github.com/ethereum-optimism/optimism/op-node/rollup"
+        "github.com/ethereum-optimism/optimism/op-service/eth"
         "github.com/ethereum/go-ethereum/common"
         "github.com/ethereum/go-ethereum/core/types"
         "github.com/ethereum/go-ethereum/crypto"
-  
-        "github.com/ethereum-optimism/optimism/op-node/eth"
+        "github.com/ethereum/go-ethereum/params"
     )
-  
+
     const (
         L1BurnFuncSignature = "report(uint64,uint64)"
         L1BurnArguments     = 2
         L1BurnLen           = 4 + 32*L1BurnArguments
     )
-  
+
     var (
         L1BurnFuncBytes4 = crypto.Keccak256([]byte(L1BurnFuncSignature))[:4]
         L1BurnAddress    = common.HexToAddress("YOUR_BURN_CONTRACT_HERE")
     )
-  
+
     type L1BurnInfo struct {
         Number uint64
         Burn   uint64
     }
-  
+
     func (info *L1BurnInfo) MarshalBinary() ([]byte, error) {
         data := make([]byte, L1BurnLen)
         offset := 0
@@ -133,9 +143,9 @@ Now you need to add logic to the `op-node` to automatically submit a burn report
         binary.BigEndian.PutUint64(data[offset+24:offset+32], info.Burn)
         return data, nil
     }
-  
+
     func (info *L1BurnInfo) UnmarshalBinary(data []byte) error {
-        if len(data) != L1InfoLen {
+        if len(data) != L1BurnLen {
             return fmt.Errorf("data is unexpected length: %d", len(data))
         }
         var padding [24]byte
@@ -151,14 +161,14 @@ Now you need to add logic to the `op-node` to automatically submit a burn report
         }
         return nil
     }
-  
+
     func L1BurnDepositTxData(data []byte) (L1BurnInfo, error) {
         var info L1BurnInfo
         err := info.UnmarshalBinary(data)
         return info, err
     }
-  
-    func L1BurnDeposit(seqNumber uint64, block eth.BlockInfo, sysCfg eth.SystemConfig) (*types.DepositTx, error) {
+
+    func L1BurnDeposit(rollupCfg *rollup.Config, l1ChainConfig *params.ChainConfig, sysCfg eth.SystemConfig, seqNumber uint64, block eth.BlockInfo, l2Timestamp uint64) (*types.DepositTx, error) {
         infoDat := L1BurnInfo{
             Number: block.NumberU64(),
             Burn:   block.BaseFee().Uint64() * block.GasUsed(),
@@ -171,20 +181,28 @@ Now you need to add logic to the `op-node` to automatically submit a burn report
             L1BlockHash: block.Hash(),
             SeqNumber:   seqNumber,
         }
-        return &types.DepositTx{
+        out := &types.DepositTx{
             SourceHash:          source.SourceHash(),
             From:                L1InfoDepositerAddress,
             To:                  &L1BurnAddress,
             Mint:                nil,
             Value:               big.NewInt(0),
-            Gas:                 150_000_000,
+            Gas:                 160_000_000,
             IsSystemTransaction: true,
             Data:                data,
-        }, nil
+        }
+
+        // With the regolith fork we disable the IsSystemTx functionality, and allocate real gas
+        if rollupCfg.IsRegolith(l2Timestamp) {
+            out.IsSystemTransaction = false
+            out.Gas = RegolithSystemTxGas
+        }
+
+        return out, nil
     }
-  
-    func L1BurnDepositBytes(seqNumber uint64, l1Info eth.BlockInfo, sysCfg eth.SystemConfig) ([]byte, error) {
-        dep, err := L1BurnDeposit(seqNumber, l1Info, sysCfg)
+
+    func L1BurnDepositBytes(rollupCfg *rollup.Config, l1ChainConfig *params.ChainConfig, sysCfg eth.SystemConfig, seqNumber uint64, l1Info eth.BlockInfo, l2Timestamp uint64) ([]byte, error) {
+        dep, err := L1BurnDeposit(rollupCfg, l1ChainConfig, sysCfg, seqNumber, l1Info, l2Timestamp)
         if err != nil {
             return nil, fmt.Errorf("failed to create L1 burn tx: %w", err)
         }
@@ -195,6 +213,7 @@ Now you need to add logic to the `op-node` to automatically submit a burn report
         }
         return opaqueL1Tx, nil
     }
+
     ```
   
     Feel free to take a look at this file if you're interested. It's relatively simple, mainly just defining a new transaction type and describing how the transaction should be encoded.
@@ -208,18 +227,18 @@ Finally, you'll need to update `~/optimism/op-node/rollup/derive/attributes.go` 
 <Steps>
   <Step title="Find these lines:">
   ```go
-    l1InfoTx, err := L1InfoDepositBytes(seqNumber, l1Info, sysConfig)
-    if err != nil {
-          return nil, NewCriticalError(fmt.Errorf("failed to create l1InfoTx: %w", err))
-    }
+    l1InfoTx, err := L1InfoDepositBytes(ba.rollupCfg, ba.l1ChainConfig, sysConfig, seqNumber, l1Info, nextL2Time)
+	if err != nil {
+		return nil, NewCriticalError(fmt.Errorf("failed to create l1InfoTx: %w", err))
+	}
     ```
   </Step>
 
   <Step title="After those lines, add this code fragment:">
   ```go
-    l1BurnTx, err := L1BurnDepositBytes(seqNumber, l1Info, sysConfig)
+    l1BurnTx, err := L1BurnDepositBytes(ba.rollupCfg, ba.l1ChainConfig, sysConfig, seqNumber, l1Info, nextL2Time)
     if err != nil {
-            return nil, NewCriticalError(fmt.Errorf("failed to create l1InfoTx: %w", err))
+        return nil, NewCriticalError(fmt.Errorf("failed to create l1BurnTx: %w", err))
     }
     ```
   </Step>

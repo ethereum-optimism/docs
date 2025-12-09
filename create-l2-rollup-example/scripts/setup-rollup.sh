@@ -366,14 +366,26 @@ generate_challenger_prestate() {
 
         # Find the latest op-program tag
         log_info "Finding latest op-program version..."
-        OP_PROGRAM_TAG=$(git tag --list "op-program/v*" | sort -V | tail -1)
-        if [ -z "$OP_PROGRAM_TAG" ]; then
-            log_error "Could not find any op-program tags"
-            return 1
-        fi
-        log_info "Using op-program version: $OP_PROGRAM_TAG"
+        OP_COMMIT=a0c621361db5b5a6dcb60fd8943d485672a076b0 # latest tested commit
+        USE_OP_PROGRAM_TAG=${USE_OP_PROGRAM_TAG:-false}
+        # If OP_COMMIT is provided, use it directly.
+        if [ "$USE_OP_PROGRAM_TAG" = true ]; then
+            log_info "USE_OP_PROGRAM_TAG=true → selecting latest op-program tag"
 
-        git checkout "$OP_PROGRAM_TAG"
+            OP_PROGRAM_TAG=$(git tag --list "op-program/v*" | sort -V | tail -1)
+            if [ -z "$OP_PROGRAM_TAG" ]; then
+                log_error "Could not find any op-program tags"
+                exit 1
+            fi
+
+            log_info "Using OP Program tag: $OP_PROGRAM_TAG"
+            git checkout "$OP_PROGRAM_TAG"
+
+        else
+            log_info "Using OP Program commit: $OP_COMMIT"
+            git checkout "$OP_COMMIT"
+        fi
+
         git submodule update --init --recursive
     else
         log_info "Optimism repository already exists, checking configuration..."
@@ -448,14 +460,13 @@ setup_dispute_monitor() {
     # Create environment file for dispute monitor
     cat > .env << EOF
 # Rollup RPC Configuration
-ROLLUP_RPC=http://op-node:8547
+OP_DISPUTE_MON_ROLLUP_RPC=http://op-node:8547
 
 # Contract Addresses
 OP_DISPUTE_MON_GAME_FACTORY_ADDRESS=$GAME_FACTORY_ADDRESS
 
 # Honest Actors
-PROPOSER_ADDRESS=$PROPOSER_ADDRESS
-CHALLENGER_ADDRESS=$CHALLENGER_ADDRESS
+OP_DISPUTE_MON_HONEST_ACTORS=$PROPOSER_ADDRESS,$CHALLENGER_ADDRESS
 
 # Network Configuration
 OP_DISPUTE_MON_NETWORK=op-sepolia
