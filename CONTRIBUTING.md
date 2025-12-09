@@ -55,7 +55,7 @@ See the [mintlify docs](https://www.mintlify.com/docs/organize/navigation).
 ### Content Guidelines
 We use [mintlify](https://www.mintlify.com/docs) to power our docs.
 
-Please refer to our comprehensive [Style Guide](/reference/contribute/style-guide) for detailed formatting instructions.
+Please refer to our comprehensive [Style Guide](STYLE_GUIDE.md) for detailed formatting instructions.
 
 ### Local Testing
 
