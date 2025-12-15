@@ -74,6 +74,7 @@ Custom Gas Token v2 was introduced in Upgrade 18 and is available in `op-contrac
 *   **Decoupled from core components**: Since native asset management is decoupled from core components, obtaining native assets might vary chain-by-chain. That means that bridging, conversions, and features utilized would be different. It's suggested to create some library or templates that cover basic uses cases (e.g., L2-native, bridging from L1) to standardize most implementations.
     * Chain Governors are encouraged to audit their implementations.
     * Developers would need to look at the chain's docs to understand how to obtain native assets.
+    * Ideally CGT Chain Operators can work together to formalize a common set of CGT patterns that don't come out of the box.
 *   **No unified API**: The flexibility of this implementation means each CGT chain may have different methods for obtaining native assets
 *   **ETH bridging**: ETH bridging routes through L1-WETH as an ERC-20 wrapper
 *   **Documentation**: Clear documentation becomes critical for users to understand how to acquire native assets
@@ -90,9 +91,9 @@ Custom Gas Token v2 was introduced in Upgrade 18 and is available in `op-contrac
 
 *   **Flag alignment**: `isCustomGasToken` must match between L1 and L2 to prevent protocol violations
 *   **Fee parameters**: `minBaseFee` and `operatorFee` must accurately account for execution and data availability costs in the native token's denomination
-*   **Decimal support**: CGT currently supports only 18-decimal tokens
+*   **Decimal support**: CGT currently supports only 18-decimal tokens. 
+ERC20s with different decimals require custom logic to handle rounding when converting between the token and the native asset.
 
 ## Next steps
 
 *   **For chain operators**: See [Deploy a Custom Gas Token chain](/chain-operators/guides/features/custom-gas-token-guide) for detailed deployment instructions
-*   **Learn more**: Read the [full design specification](https://github.com/ethereum-optimism/design-docs/blob/main/protocol/custom-gas-token.md) for technical details
