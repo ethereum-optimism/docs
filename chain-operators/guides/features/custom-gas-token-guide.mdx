@@ -31,24 +31,23 @@ Deploying a CGT chain follows the standard OP Stack deployment process with addi
 
 <Steps>
   <Step title="Initialize your intent file">
-    Create a new intent file using OP Deployer's init command:
+    Create a new intent file using OP Deployer's [init command](/chain-operators/tools/op-deployer/usage/init):
 
     ```bash
     op-deployer init \
       --l1-chain-id <chain ID of your L1> \
       --l2-chain-ids <comma separated list of chain IDs for your L2s> \
-      --outdir ./deployment \
-      --intent-type standard
+      --intent-type custom
     ```
 
-    This creates an `intent.toml` file in the `./deployment` directory.
+    This creates an `intent.toml` file.
   </Step>
 
   <Step title="Configure Custom Gas Token parameters">
     Open your `intent.toml` file and add the Custom Gas Token configuration. Below is an example with CGT-specific fields:
 
     ```toml
-    configType = "standard"
+    configType = "custom"
     l1ChainID = 11155111
     fundDevAccounts = false
     useInterop = false
@@ -56,23 +55,26 @@ Deploying a CGT chain follows the standard OP Stack deployment process with addi
     l2ContractsLocator = "tag://op-contracts/v6.0.0"
 
     [superchainRoles]
-      proxyAdminOwner = "0xYourMultisigAddress"
-      protocolVersionsOwner = "0xYourMultisigAddress"
-      guardian = "0xYourMultisigAddress"
+      SuperchainProxyAdminOwner = "0xYourMultisigAddress"
+      SuperchainGuardian = "0xYourMultisigAddress"
+      ProtocolVersionsOwner = "0xYourMultisigAddress"
+      Challenger = "0xYourMultisigAddress"
 
     [[chains]]
       id = "0x0000000000000000000000000000000000000000000000000000000000001234"
-
-      # Fee vault recipients
       baseFeeVaultRecipient = "0xYourFeeRecipientAddress"
       l1FeeVaultRecipient = "0xYourFeeRecipientAddress"
       sequencerFeeVaultRecipient = "0xYourFeeRecipientAddress"
       operatorFeeVaultRecipient = "0xYourFeeRecipientAddress"
-
-      # Standard EIP-1559 parameters
-      eip1559DenominatorCanyon = 250
-      eip1559Denominator = 50
-      eip1559Elasticity = 6
+      eip1559DenominatorCanyon = 0
+      eip1559Denominator = 0
+      eip1559Elasticity = 0
+      gasLimit = 60000000
+      operatorFeeScalar = 0
+      operatorFeeConstant = 0
+      chainFeesRecipient = "0x0000000000000000000000000000000000000000"
+      minBaseFee = 0
+      daFootprintGasScalar = 0
 
       [chains.roles]
         l1ProxyAdminOwner = "0xYourMultisigAddress"
@@ -96,7 +98,7 @@ Deploying a CGT chain follows the standard OP Stack deployment process with addi
     |-------|-------------|----------|
     | `customGasTokenName` | Name of the native asset (e.g., "My Custom Token") | Yes |
     | `customGasTokenSymbol` | Symbol for the native asset (e.g., "MCT") | Yes |
-    | `initialLiquiditySupply` | Initial supply minted to NativeAssetLiquidity at genesis | Yes |
+    | `initialLiquiditySupply` | Initial supply minted to NativeAssetLiquidity at genesis | No, default: type(uint248).max |
     | `liquidityControllerOwner` | Manages the asset supply | No, `L2ProxyAdminOwner` will be used as default |
 
     <Warning>
@@ -109,13 +111,12 @@ Deploying a CGT chain follows the standard OP Stack deployment process with addi
   </Step>
 
   <Step title="Deploy L1 contracts">
-    Deploy your L1 contracts using OP Deployer:
+    Deploy your L1 contracts using OP Deployer's [apply command](/chain-operators/tools/op-deployer/usage/apply)
 
     ```bash
     op-deployer apply \
       --l1-rpc-url <your L1 RPC URL> \
-      --private-key <your deployer private key> \
-      --workdir ./deployment
+      --private-key <your deployer private key>
     ```
 
     This deploys all necessary L1 contracts including `SystemConfig` with the `isCustomGasToken` flag enabled, which instructs L1 contracts to reject ETH-value transactions.
@@ -125,205 +126,62 @@ Deploying a CGT chain follows the standard OP Stack deployment process with addi
     </Info>
   </Step>
 
-  <Step title="Initialize genesis with CGT configuration">
-    After L1 deployment completes, initialize your L2 genesis:
-
-    ```bash
-    # TODO: Add specific genesis initialization command for CGT chains
-    # This will create genesis.json with:
-    # - NativeAssetLiquidity predeploy at 0x4200000000000000000000000000000000000024
-    # - LiquidityController predeploy at 0x4200000000000000000000000000000000000025
-    # - Initial supply minted to NativeAssetLiquidity
-    # - L1Block configured with isCustomGasToken flag
-    ```
-
-    The genesis configuration automatically:
-    *   Creates the `NativeAssetLiquidity` contract with your specified initial supply
-    *   Deploys the `LiquidityController` with configured token metadata and owner.
-    *   Sets the `isCustomGasToken` flag in `L1Block` to prevent ETH operations on L2
-    *   Configures fee parameters in `SystemConfig`
+  <Step title="(Optional) Verify L1 contracts">
+    Optionally you can use OP Deployer's [verify command](/chain-operators/tools/op-deployer/usage/verify) to verify your L1 contracts on Blockscout or Etherscan.
   </Step>
 
-  <Step title="Configure liquidity controller and authorize minters">
-    After genesis initialization, configure the liquidity controller and authorize initial minters. You'll need to:
-
-    **1. Verify deployment**
-
-    Check that the predeploys are correctly configured:
+  <Step title="Create genesis file with CGT configuration">
+    After L1 deployment completes, initialize your L2 genesis with OP Deployer's [apply command](/chain-operators/tools/op-deployer/usage/apply):
 
     ```bash
-    # TODO: Add commands to verify predeploy addresses and configuration
-    # Verify NativeAssetLiquidity has initial supply
-    # Verify LiquidityController has correct metadata
-    # Verify L1Block isCustomGasToken flag is true
+    op-deployer apply \
+      --deployment-target genesis
     ```
 
-    **2. Authorize initial minters**
-
-    Grant minting permissions to your bridge or converter contracts:
-
-    ```solidity
-    // Example: Authorize a bridge contract to mint native assets
-    // This is typically done by the ProxyAdmin owner
-
-    // TODO: Provide specific authorization commands/scripts
-    // LiquidityController.authorizeMinter(bridgeAddress)
-    ```
-
-    <Warning>
-    **Security critical**: Any address granted minting permissions can unlock native assets from the liquidity pool. Ensure all authorized minters are thoroughly audited and secured with appropriate access controls.
-    </Warning>
-
-    **3. Implement rate limiting (recommended)**
-
-    Consider implementing rate limits on authorized minters to reduce risk:
-
-    ```solidity
-    // TODO: Provide rate limiting implementation examples or references
-    ```
+    The genesis configuration is applied based on your `initent.toml`.
   </Step>
 
   <Step title="Start your chain services">
-    Start your OP Stack services with CGT-aware configuration:
+    Start your OP Stack services to start sequencing your CGT chain:
 
-    **op-geth**
-
-    ```bash
-    # TODO: Add CGT-specific op-geth configuration if needed
-    # Standard op-geth configuration should work
-    ```
-
-    **op-node**
-
-    ```bash
-    # TODO: Add CGT-specific op-node configuration
-    # Rollup config must have isCustomGasToken flag set
-    ```
-
-    **op-batcher**
-
-    ```bash
-    # TODO: Add CGT-specific batcher configuration
-    # Standard batcher configuration should work
-    ```
-
-    **op-proposer**
-
-    ```bash
-    # TODO: Add CGT-specific proposer configuration
-    # Standard proposer configuration should work
-    ```
+    * Sequencer Execution Client
+    * Sequencer Consensus Client 
+    * Batcher 
+    * Proposer 
+    * Challenger 
 
     <Info>
     Your rollup configuration file must include `"isCustomGasToken": true` to ensure all services correctly handle CGT mode.
     </Info>
   </Step>
 
-  <Step title="Deploy bridge and converter contracts">
-    Deploy your application-layer bridge or converter contracts. The specific implementation depends on your use case:
-
-    ### Option A: L1 ERC-20 bridging
-
-    If you're bridging an existing L1 ERC-20 token:
-
-    ```mermaid
-    sequenceDiagram
-        participant User
-        participant L1Bridge
-        participant L1Messenger
-        participant L2Bridge
-        participant LiquidityController
-        participant NativeAssetLiquidity
-
-        User->>L1Bridge: Deposit ERC-20
-        L1Bridge->>L1Bridge: Lock/Burn ERC-20
-        L1Bridge->>L1Messenger: Send message
-        L1Messenger->>L2Bridge: Relay message
-        L2Bridge->>LiquidityController: mint()
-        LiquidityController->>NativeAssetLiquidity: withdraw()
-        NativeAssetLiquidity->>User: Native assets
-    ```
-
-    **1. Deploy L1 bridge contract**
-
-    ```bash
-    # TODO: Provide L1 bridge deployment commands/scripts
-    # Bridge must be authorized as minter on L2
-    ```
-
-    **2. Deploy L2 bridge contract**
-
-    ```bash
-    # TODO: Provide L2 bridge deployment commands/scripts
-    # Must be authorized by LiquidityController
-    ```
-
-    **3. Authorize bridge as minter**
-
-    ```bash
-    # TODO: Provide authorization commands
-    # LiquidityController.authorizeMinter(l2BridgeAddress)
-    ```
-
-    ### Option B: L2-native token
-
-    If you're creating an L2-native asset with no L1 equivalent:
-
-    ```bash
-    # TODO: Provide configuration for L2-native tokens
-    # Define initial distribution mechanism
-    # Configure authorized minters (DEX, rewards contract, etc.)
-    ```
-
-    ### Option C: Custom converter
-
-    For advanced use cases with custom conversion logic:
-
-    ```bash
-    # TODO: Provide custom converter implementation guidance
-    # Reference template contracts (when available)
-    ```
-
-    <Info>
-    **Templates coming soon**: The OP Stack team is developing standard bridge and converter templates to simplify integration. Check back for updates.
-    </Info>
-  </Step>
-
   <Step title="Verify and test">
-    Before going live, thoroughly test your CGT chain:
+    Before going live, thoroughly test your CGT chain. The following are some key areas to check:
 
-    **1. Verify flag alignment**
+    **Verify flag alignment**
+    * Check L1 SystemConfig.isCustomGasToken() returns true
+    * Check L2 L1Block.isCustomGasToken() returns true
+    * Verify both flags match
+    
+    **Test native asset operations**
+    * Test minting native assets via authorized minter
+    * Test burning native assets
+    * Test fee payments in native token
+    * Verify fee vault accumulation
+    
 
-    ```bash
-    # Check L1 SystemConfig.isCustomGasToken() returns true
-    # Check L2 L1Block.isCustomGasToken() returns true
-    # Verify both flags match
-    ```
+    **Test ETH rejection**
+    * Attempt ETH deposit via OptimismPortal (should fail)
+    * Attempt ETH withdrawal via L2ToL1MessagePasser (should fail)
+    * Verify ETH operations are properly blocked
+    
 
-    **2. Test native asset operations**
+    **Test bridge functionality**
 
-    ```bash
-    # Test minting native assets via authorized minter
-    # Test burning native assets
-    # Test fee payments in native token
-    # Verify fee vault accumulation
-    ```
-
-    **3. Test ETH rejection**
-
-    ```bash
-    # Attempt ETH deposit via OptimismPortal (should fail)
-    # Attempt ETH withdrawal via L2ToL1MessagePasser (should fail)
-    # Verify ETH operations are properly blocked
-    ```
-
-    **4. Test bridge functionality**
-
-    ```bash
-    # Test deposits (L1 → L2 native asset minting)
-    # Test withdrawals (L2 native → L1 token)
-    # Verify proper locking/unlocking in liquidity contract
-    ```
+    * Test deposits (L1 → L2 native asset minting)
+    * Test withdrawals (L2 native → L1 token)
+    * Verify proper locking/unlocking in liquidity contract
+    
   </Step>
 </Steps>
 
