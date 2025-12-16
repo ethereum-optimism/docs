@@ -274,23 +274,23 @@ If your privileged role (such as the Guardian) is controlled by a multisig or DA
     "chainId": "<YOUR_L1_CHAIN_ID>",
     "metadata": {
       "name": "Deputy Guardian - Enable Permissionless Dispute Game",
-      "description": "This task updates the `respectedGameType` in the `OptimismPortal` to `CANNON`, enabling users to permissionlessly propose outputs as well as for anyone to participate in the dispute of these proposals. This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` that was created after this update occurs."
+      "description": "This task updates the `respectedGameType` in the `AnchorStateRegistry` to `CANNON`, enabling users to permissionlessly propose outputs as well as for anyone to participate in the dispute of these proposals. This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` that was created after this update occurs."
     },
     "transactions": [
       {
         "metadata": {
-          "name": "Update `respectedGameType` in the `OptimismPortal`",
-          "description": "Updates the `respectedGameType` to `CANNON` in the `OptimismPortal`, enabling permissionless proposals and challenging."
+          "name": "Update `respectedGameType` in the `AnchorStateRegistry`",
+          "description": "Updates the `respectedGameType` to `CANNON` in the `AnchorStateRegistry`, enabling permissionless proposals and challenging."
         },
         "to": "<SUPERCHAIN_CONFIG_MANAGER_ADDRESS>",
         "value": "0x0",
-        "data": "0xa1155ed9000000000000000000000000<OPTIMISM_PORTAL_ADDRESS>0000000000000000000000000000000000000000000000000000000000000000",
+        "data": "0xa1155ed9000000000000000000000000<ASR_ADDRESS>0000000000000000000000000000000000000000000000000000000000000000",
         "contractMethod": {
           "type": "function",
           "name": "setRespectedGameType",
           "inputs": [
             {
-              "name": "_portal",
+              "name": "_anchorStateRegistry",
               "type": "address"
             },
             {
@@ -303,7 +303,7 @@ If your privileged role (such as the Guardian) is controlled by a multisig or DA
         },
         "contractInputsValues": {
           "_gameType": "0",
-          "_portal": "<OPTIMISM_PORTAL_ADDRESS>"
+          "_anchorStateRegistry": "<ASR_ADDRESS>"
         }
       }
     ]
@@ -314,7 +314,7 @@ If your privileged role (such as the Guardian) is controlled by a multisig or DA
 
 *   **Submit this JSON payload** through your interface (e.g., Safe transaction builder).
 *   **Simulate** this transaction using Tenderly before execution to ensure the expected state changes:
-    *   The `respectedGameType` in the `OptimismPortal` should change from `1` (PERMISSIONED) to `0` (CANNON).
+    *   The `respectedGameType` in the `AnchorStateRegistry` should change from `1` (PERMISSIONED) to `0` (CANNON).
 
 ***
 
@@ -325,7 +325,7 @@ Alternatively, if you're executing directly from a single-privileged wallet or w
 1.  First, encode the transaction calldata using `cast calldata`:
 
 ```bash
-CALLDATA=$(cast calldata "setRespectedGameType(address,uint32)" <OPTIMISM_PORTAL_ADDRESS> 0)
+CALLDATA=$(cast calldata "setRespectedGameType(address,uint32)" <ASR_ADDRESS> 0)
 
 ```
 
@@ -339,8 +339,8 @@ cast send --rpc-url <YOUR_RPC_URL> --private-key <YOUR_PRIVATE_KEY> $OPCM_ADDRES
 3.  After execution, verify the storage slot change using:
 
 ```bash
-# Check storage slot 0x3b in OptimismPortal
-cast storage <OPTIMISM_PORTAL_ADDRESS> 0x3b
+# Check storage slot 0x3b in the AnchorStateRegistry
+cast storage <ASR_ADDRESS> 0x3b
 # The last byte should change from 0x01 to 0x00
 
 ```
