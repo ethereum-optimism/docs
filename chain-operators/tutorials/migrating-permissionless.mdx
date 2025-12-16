@@ -24,7 +24,7 @@ This migration involves several key components:
 Before beginning this transition, your chain should:
 
 *   Be running a standard OP Stack implementation
-*   Use contracts version [**v2.0.0**](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv2.0.0).
+*   Use contracts version minimum [**v2.0.0**](https://github.com/ethereum-optimism/optimism/releases/tag/op-contracts%2Fv2.0.0).
 *   Be operating with the required infrastructure services including [`op-challenger`](/op-stack/fault-proofs/challenger) and [`op-dispute-mon`](/operators/chain-operators/tools/chain-monitoring#dispute-mon).
 
 ## Migration steps
@@ -153,6 +153,11 @@ As a general guideline:
 *   Have access to a large pool of ETH for potential attack scenarios
 *   Implement monitoring to ensure sufficient funds are always available
 
+### Ensure there is disk space for the challenger to use
+
+`op-challenger`, particularly in permissionless mode, should have access to disk. About 50GB is enough to cover a couple of `invalid_ games`. Though the storage requirements will increase if the challenger needs to respond to more invalid dispute games.
+Nominally, the challenger does not use disk space as long as there aren’t any invalid proposals being made.
+
 ### Set up `op-dispute-mon`
 
 Ensure `op-dispute-mon` is properly configured by following the [steps](/operators/chain-operators/tools/chain-monitoring#dispute-mon) in the documentation.
@@ -172,9 +177,7 @@ For detailed information about privileged roles and their security implications,
 
 ### Adding the PermissionlessDisputeGame to a chain
 
-Not all chains support the  permissionless dispute game by default.
-
-To enable it, you must call the `addGameType()`function on the `OPChainManager` (OPCM) contract.
+To enable the permissionless dispute game, you must call the `addGameType()`function on the `OPChainManager` (OPCM) contract.
 
 This function orchestrates all the necessary steps to register the new dispute game type for your chain.
 
@@ -184,11 +187,13 @@ This method will:
 2.  Setup the `DelayedWethProxy` for the new game
 3.  Reinitialize the `AnchorStateRegistry` to add the new game type.
 
-See a high‐level implementation from this [docs](/operators/chain-operators/tutorials/dispute-games).
+See a high‐level implementation from this [docs](/operators/chain-operators/tutorials/dispute-games) or [this superchain-ops template](https://github.com/ethereum-optimism/superchain-ops/blob/main/src/template/AddGameTypeTemplate.sol).
 
 ## 3. Testing off-chain agents
 
-After you've set the permissionless `FaultDisputeContract` implementations on the `DisputeGameFactory` and before you set the respected game type to it; you can test your off-chain services in the cold path.
+After you've set the permissionless `FaultDisputeContract` implementations on the `DisputeGameFactory` and before you set the respected game type to it (game type 0), you can test `op-challenger` and `op-dispute-mon` to ensure they are working correctly with permissionless games.
+
+There are a number of useful `op-challenger` subcommands that can be used for testing, particularly `list-games`, `list-claims` and `create-game`.  See the [README](https://github.com/ethereum-optimism/optimism/tree/develop/op-challenger#subcommands) and `op-challenger --help` output for further details. The two tests below are basic sanity tests:
 
 ### Test defending valid proposals
 
@@ -201,7 +206,7 @@ Create a valid proposal using the permissionless game type `0`:
 
     ```
 
-2.  Get a valid output root:
+2.  Get a valid output root (from op-node):
 
     ```bash
     cast rpc --rpc-url <OP_NODE_ENDPOINT> optimism_outputAtBlock \
@@ -254,7 +259,7 @@ There should be 3 claims in the game after this test.
 
 ## Switch to permissionless proofs
 
-After completing all previous steps and verifying their successful operation, you need to update the `respectedGameType` in the `OptimismPortal`. This requires execution through the appropriate privileged role (typically the Guardian).
+After completing all previous steps and verifying their successful operation, you need to update the `respectedGameType` in the `AnchorStateRegistry`. This requires execution through the appropriate privileged role (typically the Guardian).
 
 You have two main options for executing this step:
 
