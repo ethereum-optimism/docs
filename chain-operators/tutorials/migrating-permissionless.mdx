@@ -158,6 +158,13 @@ As a general guideline:
 `op-challenger`, particularly in permissionless mode, should have access to disk. About 50GB is enough to cover a couple of `invalid_ games`. Though the storage requirements will increase if the challenger needs to respond to more invalid dispute games.
 Nominally, the challenger does not use disk space as long as there aren’t any invalid proposals being made.
 
+One way to gain more confidence that the op-challenger was configured correctly is to operate the op-challenger in “runner” mode. 
+Using the same op-challenger configuration, invoke the `op-challenger run-trace -run cannon` subcommand. 
+This will run op-challenger in a mode where it runs the op-program in a Cannon VM on live L2 blocks to ensure those were configured correctly. 
+This command runs forever, checking every couple of L2 blocks. But it suffices to let it run until it has completed one loop and kill it. 
+Wait you see `Successfully verified output root` in the logs before shutting it down. 
+Any errors indicate a misconfiguration.
+
 ### Set up `op-dispute-mon`
 
 Ensure `op-dispute-mon` is properly configured by following the [steps](/operators/chain-operators/tools/chain-monitoring#dispute-mon) in the documentation.
