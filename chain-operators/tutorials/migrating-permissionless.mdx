@@ -274,7 +274,7 @@ If your privileged role (such as the Guardian) is controlled by a multisig or DA
     "chainId": "<YOUR_L1_CHAIN_ID>",
     "metadata": {
       "name": "Deputy Guardian - Enable Permissionless Dispute Game",
-      "description": "This task updates the `respectedGameType` in the `AnchorStateRegistry` to `CANNON`, enabling users to permissionlessly propose outputs as well as for anyone to participate in the dispute of these proposals. This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` that was created after this update occurs."
+      "description": "This task updates the `respectedGameType` in the `AnchorStateRegistry` to `CANNON` (game type 0), enabling users to permissionlessly propose outputs as well as for anyone to participate in the dispute of these proposals. This action requires all in-progress withdrawals to be re-proven against a new `FaultDisputeGame` that was created after this update occurs."
     },
     "transactions": [
       {
@@ -282,17 +282,13 @@ If your privileged role (such as the Guardian) is controlled by a multisig or DA
           "name": "Update `respectedGameType` in the `AnchorStateRegistry`",
           "description": "Updates the `respectedGameType` to `CANNON` in the `AnchorStateRegistry`, enabling permissionless proposals and challenging."
         },
-        "to": "<SUPERCHAIN_CONFIG_MANAGER_ADDRESS>",
+        "to": "<ASR_ADDRESS>",
         "value": "0x0",
-        "data": "0xa1155ed9000000000000000000000000<ASR_ADDRESS>0000000000000000000000000000000000000000000000000000000000000000",
+        "data": "0x7fc485040000000000000000000000000000000000000000000000000000000000000000",
         "contractMethod": {
           "type": "function",
           "name": "setRespectedGameType",
           "inputs": [
-            {
-              "name": "_anchorStateRegistry",
-              "type": "address"
-            },
             {
               "name": "_gameType",
               "type": "uint32"
@@ -302,8 +298,7 @@ If your privileged role (such as the Guardian) is controlled by a multisig or DA
           "stateMutability": "nonpayable"
         },
         "contractInputsValues": {
-          "_gameType": "0",
-          "_anchorStateRegistry": "<ASR_ADDRESS>"
+          "_gameType": "0"
         }
       }
     ]
@@ -320,12 +315,12 @@ If your privileged role (such as the Guardian) is controlled by a multisig or DA
 
 ### Option 2: Direct execution via `cast` (Forge CLI)
 
-Alternatively, if you're executing directly from a single-privileged wallet or want quicker execution, use the following `cast` command template:
+Alternatively, if you're executing directly from a single-privileged wallet or want quicker execution, use the following `cast` commands:
 
 1.  First, encode the transaction calldata using `cast calldata`:
 
 ```bash
-CALLDATA=$(cast calldata "setRespectedGameType(address,uint32)" <ASR_ADDRESS> 0)
+CALLDATA=$(cast calldata "setRespectedGameType(uint32)" 0)
 
 ```
 
@@ -333,15 +328,14 @@ CALLDATA=$(cast calldata "setRespectedGameType(address,uint32)" <ASR_ADDRESS> 0)
 
 ```bash
 # Execute the transaction
-cast send --rpc-url <YOUR_RPC_URL> --private-key <YOUR_PRIVATE_KEY> $OPCM_ADDRESS $CALLDATA
+cast send --rpc-url <YOUR_RPC_URL> --private-key <YOUR_PRIVATE_KEY> <ASR_ADDRESS> "$CALLDATA"
 ```
 
-3.  After execution, verify the storage slot change using:
+3.  After execution, verify the respected game type:
 
 ```bash
-# Check storage slot 0x3b in the AnchorStateRegistry
-cast storage <ASR_ADDRESS> 0x3b
-# The last byte should change from 0x01 to 0x00
+cast call <ASR_ADDRESS> "respectedGameType()(uint32)"
+# The value should now be 0 (CANNON)
 
 ```
 
