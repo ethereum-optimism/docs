@@ -23,62 +23,125 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     Let Actions SDK know which Wallet Provider you've chosen:
 
     <Tabs>
-      <Tab title="Privy">
-        ```typescript title="actions.ts"
-        import type { WalletConfig } from "@eth-optimism/actions-sdk";
+      <Tab title="Frontend">
+        Select a wallet provider:
 
-        const walletConfig: WalletConfig = {
-          hostedWalletConfig: {
-            provider: {
-              type: "privy",
-            },
-          },
-          smartWalletConfig: {
-            provider: {
-              type: "default",
-              attributionSuffix: "actions",
-            },
-          },
-        };
-        ```
+        <Tabs>
+          <Tab title="Privy">
+            ```typescript title="actions.ts"
+            const walletConfig = {
+              hostedWalletConfig: {
+                provider: {
+                  type: "privy" as const,
+                },
+              },
+              smartWalletConfig: {
+                provider: {
+                  type: "default" as const,
+                  attributionSuffix: "actions",
+                },
+              },
+            };
+            ```
+          </Tab>
+          <Tab title="Turnkey">
+            ```typescript title="actions.ts"
+            const walletConfig = {
+              hostedWalletConfig: {
+                provider: {
+                  type: "turnkey" as const,
+                },
+              },
+              smartWalletConfig: {
+                provider: {
+                  type: "default" as const,
+                  attributionSuffix: "actions",
+                },
+              },
+            };
+            ```
+          </Tab>
+          <Tab title="Dynamic">
+            ```typescript title="actions.ts"
+            const walletConfig = {
+              hostedWalletConfig: {
+                provider: {
+                  type: "dynamic" as const,
+                },
+              },
+              smartWalletConfig: {
+                provider: {
+                  type: "default" as const,
+                  attributionSuffix: "actions",
+                },
+              },
+            };
+            ```
+          </Tab>
+        </Tabs>
       </Tab>
-      <Tab title="Turnkey">
-        ```typescript title="actions.ts"
-        import type { WalletConfig } from "@eth-optimism/actions-sdk";
 
-        const walletConfig: WalletConfig = {
-          hostedWalletConfig: {
-            provider: {
-              type: "turnkey",
-            },
-          },
-          smartWalletConfig: {
-            provider: {
-              type: "default",
-              attributionSuffix: "actions",
-            },
-          },
-        };
-        ```
-      </Tab>
-      <Tab title="Dynamic">
-        ```typescript title="actions.ts"
-        import type { WalletConfig } from "@eth-optimism/actions-sdk";
+      <Tab title="Backend">
+        Select a wallet provider:
 
-        const walletConfig: WalletConfig = {
-          hostedWalletConfig: {
-            provider: {
-              type: "dynamic",
-            },
-          },
-          smartWalletConfig: {
-            provider: {
-              type: "default",
-              attributionSuffix: "actions",
-            },
-          },
-        };
-        ```
+        <Tabs>
+          <Tab title="Privy">
+            ```typescript title="actions.ts"
+            import { PrivyClient } from '@privy-io/node'
+
+            const privyClient = new PrivyClient(
+              process.env.PRIVY_APP_ID,
+              process.env.PRIVY_APP_SECRET,
+            )
+
+            const walletConfig = {
+              hostedWalletConfig: {
+                provider: {
+                  type: "privy" as const,
+                  config: {
+                    privyClient,
+                  },
+                },
+              },
+              smartWalletConfig: {
+                provider: {
+                  type: "default" as const,
+                  attributionSuffix: "actions",
+                },
+              },
+            };
+            ```
+          </Tab>
+          <Tab title="Turnkey">
+            ```typescript title="actions.ts"
+            import { Turnkey } from '@turnkey/sdk-server'
+
+            const turnkeyClient = new Turnkey({
+              apiBaseUrl: 'https://api.turnkey.com',
+              apiPublicKey: process.env.TURNKEY_API_KEY,
+              apiPrivateKey: process.env.TURNKEY_API_SECRET,
+              defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID,
+            })
+
+            const walletConfig = {
+              hostedWalletConfig: {
+                provider: {
+                  type: "turnkey" as const,
+                  config: {
+                    client: turnkeyClient.apiClient(),
+                  },
+                },
+              },
+              smartWalletConfig: {
+                provider: {
+                  type: "default" as const,
+                  attributionSuffix: "actions",
+                },
+              },
+            };
+            ```
+          </Tab>
+        </Tabs>
       </Tab>
     </Tabs>
 

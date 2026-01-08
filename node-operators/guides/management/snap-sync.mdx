@@ -9,8 +9,8 @@ This guide shows you how to enable and configure Snap Sync for your node. For an
 
 <Info>
 For snap sync, all `op-geth` nodes should expose port `30303` TCP and `30303` UDP to easily find other op-geth nodes to sync from.
-  *   If you set the port with [`--discovery.port`](/node-operators/guides/execution-config#discoveryport), then you must open the port specified for UDP.
-  *   If you set [`--port`](/node-operators/guides/execution-config#port), then you must open the port specified for TCP.
+  *   If you set the port with [`--discovery.port`](/node-operators/reference/op-geth-config#discoveryport), then you must open the port specified for UDP.
+  *   If you set [`--port`](/node-operators/reference/op-geth-config#port), then you must open the port specified for TCP.
   *   The only exception is for sequencers and transaction ingress nodes.
 </Info>
 
@@ -18,34 +18,30 @@ Snap sync requires no datadir on OP Mainnet. With snap sync, `op-node` tells the
 
 ### Configuration for op-node
 
+The following flag is not the default setting and must be explicitly configured on `op-node`:
+
 ```shell
 --syncmode=execution-layer
 ```
 
-<Info>
-  The `--syncmode=execution-layer` flag is not the default setting and must be explicitly configured.
-</Info>
-
 ### Configuration for op-geth
+
+The following flag is the default setting for `op-geth` to enable snap sync, so you don't need to set it explicitly:
 
 ```shell
 --syncmode=snap
 ```
 
-<Info>
-  The `--syncmode=snap` flag is the default setting for `op-geth`.
-</Info>
-
 ### Configuration for Nethermind
+
+<Warning>
+  A single restart of `Nethermind` during Snap Sync may extend the sync time by up to 2 hours because `Nethermind` has to rebuild the caches by reading millions of values from the database.
+</Warning>
 
 ```shell
 --config op-mainnet
 --Sync.SnapSync=true
 ```
-
-<Warning>
-  A single restart of `Nethermind` during Snap Sync may extend the sync time by up to 2 hours because `Nethermind` has to rebuild the caches by reading millions of values from the database.
-</Warning>
 
 ## Enabling execution layer sync for alternative clients
 
@@ -54,7 +50,7 @@ In addition to `op-geth` and `Nethermind`, you can enable execution-layer syncin
 Unlike `op-geth` and `Nethermind`, `reth` and `op-erigon` are designed as archive nodes, which means they require the complete history of the chain.
 However, these clients can still retrieve block headers and data through the P2P network instead of deriving each individual block, resulting in a faster initial sync.
 
-For OP Mainnet, the [bedrock datadir](/operators/node-operators/management/snapshots) is required. For other OP Stack networks, no datadir is required.
+For OP Mainnet, the [bedrock datadir](/node-operators/guides/management/snapshots) is required. For other OP Stack networks, no datadir is required.
 
 ### Configuration for op-node with reth
 
@@ -92,6 +88,6 @@ Snap sync is the recommended sync mode for most node operators, but other sync m
 ## Next steps
 
 *   See the [Snap Sync feature page](/node-operators/reference/features/snap-sync) for an overview of how snap sync works and its benefits.
-*   See the [Node Configuration](/node-operators/guides/base-config#configuration) guide for additional explanation or customization.
-*   To enable snap sync for your chain, see [Using Snap Sync for Chain Operators](/operators/chain-operators/management/snap-sync).
+*   See the [Consensus Client Configuration](/node-operators/guides/configuration/consensus-clients) and [Execution Client Configuration](/node-operators/guides/configuration/execution-clients) guides for additional explanation or customization.
+*   To enable snap sync for your chain, see [Using Snap Sync for Chain Operators](/chain-operators/guides/features/snap-sync).
 *   If you experience difficulty at any stage of this process, please reach out to [developer support](https://github.com/ethereum-optimism/developers/discussions).
