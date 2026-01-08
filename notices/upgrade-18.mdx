@@ -1,9 +1,9 @@
 ---
-title: Upgrade 18
+title: Upgrade 18 - Cannon + Kona and CGTv2
 description: Learn how to prepare for Upgrade 18.
 ---
 
-Upgrade 18 is a proposed network upgrade for OP Stack chains, which introduces **cannon+kona fault proof support** (including an optional switch to Kona proofs as the respected game type) and introduces **Custom Gas Token v2 (CGT v2)** for chains that want to use a non-ETH native fee currency.
+Upgrade 18 is a proposed network upgrade for OP Stack chains, which introduces **Cannon + Kona fault proof support**, introduces **Custom Gas Token v2 (CGT v2)** for new OP Stack chains that want to use a non-ETH native fee currency, and a creator pattern dispute game refactor.
 
 <Info>
   Upgrade 18 is purely a smart contract upgrade. There are no hardforks activating during this upgrade.
@@ -12,10 +12,9 @@ Upgrade 18 is a proposed network upgrade for OP Stack chains, which introduces *
 ## What's included in Upgrade 18
 
 Upgrade 18 introduces the following changes:
-* **Cannon + Kona game type support:** adds a new fault dispute game type `CANNON_KONA` (8) alongside `CANNON` (0). By default, the respected game type remains `CANNON` (0).
-  * **Kona Client:** `kona-client` (`kona-node` + `op-reth`) can be used in place of `op-program` (`op-node` + `op-geth`) Both use Cannon as the FPVM and the same dispute game implementation (`FaultDisputeGame.sol`).
-  * **Challenger updates for Kona:** `op-challenger` may execute `kona-host` (alongside existing components) to respond to `CANNON_KONA` games. Operators must ensure challengers are updated prior to the on-chain upgrade.
+* **Cannon + Kona game type support:** adds a new fault dispute game type `CANNON_KONA` (8) alongside `CANNON` (0) increasing the redundancy and diversity in the fault proof layer. This is a Rust-based fault proof implementation where `kona-client` (`kona-node` + `op-reth`) can operate alongside `op-program` (`op-node` + `op-geth`). Both game types use Cannon as the FPVM and the same dispute game implementation (`FaultDisputeGame.sol`). 
 * **Custom Gas Token v2 (CGT v2):** introduces an `isCustomGasToken()` flag and two new predeploys (`NativeAssetLiquidity` and `LiquidityController`) to support non-ETH native fee currencies configured at genesis (available in `op-contracts/v6.0.0`).
+* **Creator Pattern Dispute Game Refactor:** simplifies the chain deployment by introducing clone-with-immutable-arguments (CWIA) for dispute game contracts. This change removes the need for chain-specific deployments, reducing operational overhead while preserving safety and upgradeability across chains, and reducing gas costs to ensure all operations stay below the EIP-7825 transaction gas limit cap.
 
 ## Breaking Changes
 
@@ -25,7 +24,6 @@ Upgrade 18 updates the upgrade parameters so `OpChainConfig` include:
 * `cannonKonaPrestate` (must be a valid `cannon64-kona` prestate hash) and
 * `cannonPrestate` (must be a valid `cannon64` prestate hash)
 
-
 Both prestates must be canonical hashes from the Superchain Registry `standard-prestates.toml` and must embed an up-to-date chain config for your chain.
 
 After upgrade, `DisputeGameFactory` will have implementations set for:
@@ -33,7 +31,7 @@ After upgrade, `DisputeGameFactory` will have implementations set for:
 * `CANNON` (0)
 * `CANNON_KONA` (8)
 
-Games of either type can be created after upgrade, but withdrawals continue to use the respected game type (default `CANNON`).
+Games of either type can be created after upgrade, but withdrawals continue to use the current respected game type.
 
 <Info>
   For chains running only permissioned proofs: cannon+kona will not be deployed and `cannonKonaPrestate` is ignored.
@@ -41,7 +39,7 @@ Games of either type can be created after upgrade, but withdrawals continue to u
 
 ### Custom Gas Token v2: ETH value is rejected when enabled
 
-When CGT v2 is enabled at genesis, `isCustomGasToken()` is set on L1 and L2:
+When CGTv2 is enabled at genesis, `isCustomGasToken()` is set on L1 and L2:
 
 * **On L1** (`SystemConfig`): `OptimismPortal`, `L1CrossDomainMessenger`, and `L1StandardBridge` reject transactions containing ETH value (`msg.value`).
 * **On L2** (`L1Block`): ETH-related operations are blocked in `L2ToL1MessagePasser`, `L2CrossDomainMessenger`, `L2StandardBridge`, and fee vaults.
@@ -51,7 +49,7 @@ When CGT v2 is enabled at genesis, `isCustomGasToken()` is set on L1 and L2:
 </Info>
 
 <Warning>
-  There is currently no migration path from legacy CGT to CGT v2. A migration path is planned.
+  There is currently no migration path from legacy CGT to CGT v2.
 </Warning>
 
 
@@ -62,6 +60,8 @@ Update the following components:
 | Component       | Version | Notes |
 | -------------- | ------- | ----- |
 | `op-contracts` | `op-contracts/v6.0.0` | Includes cannon+kona support and CGT v2. |
+| `op-program`| `op-program/v1.9.0-rc.1` | Absolute prestate hash: `0x033c000916b4a88cfffeceddd6cf0f4be3897a89195941e5a7c3f8209b4dbb6e` and [prestate report](https://oplabs.notion.site/U18-op-program-2d2f153ee162800fb20ff270db939712) | 
+| `kona-client` | `kona-client/v1.2.7` | Absolute prestate hash: `0x0323914d3050e80c3d09da528be54794fde60cd26849cd3410dde0da7cd7d4fa` and [prestate report](https://oplabs.notion.site/U18-Kona-2d2f153ee16280348f74ca9987737efc) |
 | `op-challenger` | latest supporting `cannon-kona` | Must be updated **prior** to the upgrade for permissionless FP chains. |
 
 
@@ -70,34 +70,12 @@ Update the following components:
 Chains running permissionless fault proofs must ensure challengers are Kona-ready and that both `CANNON` and `CANNON_KONA` are configured correctly.
 
 <Info>
-  Optimism will complete the on-chain cannon+kona deployment (including Dispute Game deployment and implementation set) for a published set of chains (to be announced with the activation schedule).
-  However, off-chain components (especially `op-challenger`) must still be configured by operators to support cannon-kona games.
+  Optimism will complete the onchain cannon+kona deployment for chains managed by the Optimism Security Council.
+  However, off-chain components must still be configured by operators to support cannon-kona games.
   If you are a permissionless FP enabled chain not included in the prepared set, you must perform all steps below yourself.
 </Info>
 
 <Steps>
-  <Step title="Verify cannon and cannon-kona prestates were set">
-    Ensure your most recent `OPCM.upgrade` used an `OpChainConfig` that set:
-
-    * `cannonPrestate` to a valid `cannon64` prestate hash
-    * `cannonKonaPrestate` to a valid `cannon64-kona` prestate hash
-
-    Verify both are present in the Superchain Registry `standard-prestates.toml` and embed an up-to-date chain config for your chain.
-  </Step>
-
-  <Step title="Verify DisputeGameFactory implementations">
-    Confirm `DisputeGameFactory` has non-zero implementations for both game types:
-
-    ```bash title="cast"
-    # CANNON (0) implementation
-    cast call <DISPUTE_GAME_FACTORY_ADDRESS> "gameImpl(uint8)" 0
-
-    # CANNON_KONA (8) implementation
-    cast call <DISPUTE_GAME_FACTORY_ADDRESS> "gameImpl(uint8)" 8
-    ```
-    Both calls should return non-zero addresses.
-  </Step>
-
   <Step title="Configure op-challenger for cannon-kona">
     Ensure `op-challenger` is updated and configured to support Kona games:
 
@@ -132,6 +110,27 @@ Chains running permissionless fault proofs must ensure challengers are Kona-read
       ```
 
     Build `kona-host` from the same release as the configured cannon-kona prestate.
+  </Step>
+  <Step title="Verify cannon and cannon-kona prestates were set">
+    Ensure your most recent `OPCM.upgrade` used an `OpChainConfig` that set:
+
+    * `cannonPrestate` to a valid `cannon64` prestate hash
+    * `cannonKonaPrestate` to a valid `cannon64-kona` prestate hash
+
+    If your chain is in the Superchain Registry, verify the versions in the component table above. If your chain is not in the registry, please refer to this [absolute prestate tutorial](/chain-operators/tutorials/absolute-prestate).
+  </Step>
+
+  <Step title="Verify DisputeGameFactory implementations">
+    Confirm `DisputeGameFactory` has non-zero implementations for both game types:
+
+    ```bash title="cast"
+    # CANNON (0) implementation
+    cast call <DISPUTE_GAME_FACTORY_ADDRESS> "gameImpl(uint8)" 0
+
+    # CANNON_KONA (8) implementation
+    cast call <DISPUTE_GAME_FACTORY_ADDRESS> "gameImpl(uint8)" 8
+    ```
+    Both calls should return non-zero addresses.
   </Step>
 </Steps>
 
