@@ -18,7 +18,7 @@ Upgrade 18 introduces the following changes:
 
 ## Breaking Changes
 
-### Fault proofs: new `OpChainConfig` parameters and additional game type
+### `OPCM`: new `OpChainConfig` parameters for the Cannon + Kona game type
 
 Upgrade 18 updates the upgrade parameters so `OpChainConfig` include:
 * `cannonKonaPrestate` (must be a valid `cannon64-kona` prestate hash) and
@@ -29,9 +29,10 @@ Both prestates must be canonical hashes from the Superchain Registry `standard-p
 After upgrade, `DisputeGameFactory` will have implementations set for:
 
 * `CANNON` (0)
+* `PERMISSIONED` (1)
 * `CANNON_KONA` (8)
 
-Games of either type can be created after upgrade, but withdrawals continue to use the current respected game type.
+Games of any type can be created after upgrade, but withdrawals continue to use the respected game type.
 
 <Info>
   For chains running only permissioned proofs: cannon+kona will not be deployed and `cannonKonaPrestate` is ignored.
@@ -59,10 +60,8 @@ Update the following components:
 
 | Component       | Version | Notes |
 | -------------- | ------- | ----- |
+| `op-challenger` | `op-challenger/v1.8.0` | Must be updated **prior** to the upgrade for permissionless FP chains. |
 | `op-contracts` | `op-contracts/v6.0.0` | Includes cannon+kona support and CGT v2. |
-| `op-program`| `op-program/v1.9.0-rc.1` | Absolute prestate hash: `0x033c000916b4a88cfffeceddd6cf0f4be3897a89195941e5a7c3f8209b4dbb6e` and [prestate report](https://oplabs.notion.site/U18-op-program-2d2f153ee162800fb20ff270db939712) | 
-| `kona-client` | `kona-client/v1.2.7` | Absolute prestate hash: `0x0323914d3050e80c3d09da528be54794fde60cd26849cd3410dde0da7cd7d4fa` and [prestate report](https://oplabs.notion.site/U18-Kona-2d2f153ee16280348f74ca9987737efc) |
-| `op-challenger` | latest supporting `cannon-kona` | Must be updated **prior** to the upgrade for permissionless FP chains. |
 
 
 ### For permissionless fault proof enabled chains
@@ -76,10 +75,60 @@ Chains running permissionless fault proofs must ensure challengers are Kona-read
 </Info>
 
 <Steps>
-  <Step title="Configure op-challenger for cannon-kona">
-    Ensure `op-challenger` is updated and configured to support Kona games:
+  <Step title="Verify the new op-program absolute prestate">
 
-    * Include `cannon-kona` in trace types:
+  The absolute prestate is generated with the [op-program/v1.9.0-rc.1](https://github.com/ethereum-optimism/optimism/tree/op-program/v1.9.0-rc.1). You can use this new absolute prestate `0x033c000916b4a88cfffeceddd6cf0f4be3897a89195941e5a7c3f8209b4dbb6e` for the following chains:
+
+  *   Mainnet and Sepolia: `OP`, `Base`, `Ink`, `Soneiuim`, and `Unichain`
+
+  You can verify this absolute prestate by running the following command in the root of the monorepo on the `op-program/v1.9.0-rc.1` tag:
+
+  ```shell
+  make reproducible-prestate
+  ```
+
+  This will output the calculated prestates, the tail end of the output should look like this:
+
+  ```shell
+  ...
+  -------------------- Production Prestates --------------------
+
+  Cannon64 Absolute prestate hash: 
+  0x033c000916b4a88cfffeceddd6cf0f4be3897a89195941e5a7c3f8209b4dbb6e
+  ...
+  ```
+
+  *   The "Cannon64" hash is the 64-bit prestate.
+
+  Verify that your target prestate was calculated as expected and matches the corresponding entry in
+  [standard-prestates.toml](https://github.com/ethereum-optimism/superchain-registry/blob/main/validation/standard/standard-prestates.toml).
+  </Step>
+
+  <Step title="Verify the new kona-client absolute prestate">
+   The absolute prestate is generated with the [kona-client/v1.2.7](https://github.com/ethereum-optimism/kona/tree/kona-client/v1.2.7). You can use this new absolute prestate `0x0323914d3050e80c3d09da528be54794fde60cd26849cd3410dde0da7cd7d4fa` for the following chains:
+
+  *   Mainnet and Sepolia: `OP`, `Base`, `Ink`, `Soneiuim`, and `Unichain`
+
+  You can verify this absolute prestate by running the following commands in the root of the kona monorepo on the `kona-client/v1.2.7` tag:
+
+  ```shell
+  cd docker/fpvm-prestates
+  just cannon kona-client kona-client/v1.2.7 $(cat ../../.config/cannon_tag)
+  jq -r .pre ../../prestate-artifacts-cannon/prestate-proof.json
+  ```
+
+  todo: finish step
+  </Step>
+
+  <Step title="Upload your new preimage file">
+    During the previous step, you also generated the preimage of the absolute prestate, which is the op-program serialized into a binary file. You'll find that new file at `optimism/op-program/bin/prestate-mt64.bin.gz`. Rename that file to have the absolute prestate hash as the filename so it looks like `PRESTATEHASH.bin.gz`.
+
+    Upload that file to where you're storing your other absolute preimage files. This should be the location where you're pointing your `--cannon-prestates-url` at. The `op-challenger` will grab this file and use it when it needs to challenge games.
+  </Step>
+
+  <Step title="Configure op-challenger for cannon-kona">
+    Ensure `op-challenger` is updated and configured to support Kona games. 
+    Include `cannon-kona` in trace types:
 
       ```bash
       OP_CHALLENGER_TRACE_TYPE="cannon,cannon-kona,permissioned"
@@ -87,8 +136,8 @@ Chains running permissionless fault proofs must ensure challengers are Kona-read
       --trace-type=cannon,cannon-kona,permissioned
       ```
 
-    * Configure prestates:
-      * If both prestates are at the same location:
+    Upload new preimage files and ensure they're available for the challenger:
+      * If both preimage files are uploaded at the same location:
 
         ```bash
         --prestates-url=<PRESTATES_URL>
