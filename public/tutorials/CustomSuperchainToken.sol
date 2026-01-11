@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.33;
 
 import {SuperchainERC20} from "./SuperchainERC20.sol";
 import {Ownable} from "@solady/auth/Ownable.sol";

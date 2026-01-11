@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.33;
 
 interface ICrossDomainMessenger {
     function xDomainMessageSender() external view returns (address);

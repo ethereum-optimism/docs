@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity ^0.8.33;
 
 // Libraries
 import { PredeployAddresses } from "interop-lib/src/libraries/PredeployAddresses.sol";
