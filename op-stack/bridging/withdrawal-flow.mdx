@@ -22,7 +22,7 @@ Withdrawals require the user to submit three transactions:
     This function accepts three parameters:
 
     *   `_target`, target address on L1.
-    *   `_message`, the L1 transaction's calldata, formatted as per the [ABI](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html) of the target address.
+    *   `_message`, the L1 transaction's calldata, formatted as per the [ABI](https://docs.soliditylang.org/en/v0.8.33/abi-spec.html) of the target address.
     *   `_minGasLimit`, The minimum amount of gas that the withdrawal finalizing transaction can provide to the withdrawal transaction. This is enforced by the `SafeCall` library, and if the minimum amount of gas cannot be met at the time of the external call from the `OptimismPortal` -> `L1CrossDomainMessenger`, the finalization transaction will revert to allow for re-attempting with a higher gas limit. In order to account for the gas consumed in the `L1CrossDomainMessenger.relayMessage` function's execution, extra gas will be added on top of the `_minGasLimit` value by the `CrossDomainMessenger.baseGas` function when `sendMessage` is called on L2.
 
 2.  `sendMessage` is a generic function that is used in both cross domain messengers. It calls [`_sendMessage`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2CrossDomainMessenger.sol#L45), which is specific to [`L2CrossDomainMessenger`](https://github.com/ethereum-optimism/optimism/blob/1a8fe18c4989bfd0852a8873f30422542ad4f44d/packages/contracts-bedrock/src/L2/L2CrossDomainMessenger.sol#L21).
