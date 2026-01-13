@@ -5,6 +5,7 @@ description: Learn how to change the gas target and limit on your OP Stack chain
 
 This guide covers how to optimize block processing performance at higher gas limits, test your infrastructure before activation, and safely change the gas target and/or limit on a live chain.
 This guide assumes your OP Stack chain has the [Holocene features](/notices/archive/holocene-changes) activated. 
+
 ## Recommended config for best performance
 
 Some known ways to improve block processing performance:
@@ -21,7 +22,7 @@ You'll want to run benchmarks and perform careful analysis of the results to ens
 
 How to change the gas target/limit on a live chain.
 
-### Relevant config params
+### Relevant configuration parameters
 
 The gas configuration on an OP Stack chain use the same EIP-1559 parameters as Ethereum. 
 Where the **gas target** = **gas limit** / **elasticity**. 
@@ -39,7 +40,7 @@ Holocene introduces the ability to change the EIP-1559 parameters `elasticity` a
 
     ```solidity
     elasticity = SystemConfig.eip1559Elasticity() // 6
-    denom = SystemConfig.eip1559Denominator() // 50
+    denominator = SystemConfig.eip1559Denominator() // 50
     limit = SystemConfig.gasLimit() // 30_000_000 gas, 30Mgas    
     ```
 
@@ -49,7 +50,7 @@ Holocene introduces the ability to change the EIP-1559 parameters `elasticity` a
   <Step title="Set new EIP-1559 params">
     Use value from previous step as input to set new params and reduce the `elasticity` from `6` to `3`:
     ```solidity
-    SystemConfig.setEIP1559Params(denom, 3)
+    SystemConfig.setEIP1559Params(denominator, 3)
     ```
     New target = `30Mgas / 3 = 10Mgas per block`
   </Step>
