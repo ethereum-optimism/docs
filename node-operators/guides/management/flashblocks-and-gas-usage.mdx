@@ -1,0 +1,139 @@
+---
+title: "Flashblocks and Gas Usage on OP Stack"
+description: "Explains how Flashblocks affect block gas usage, transaction inclusion, and how to avoid unexpected rejections for large transactions."
+---
+
+# Flashblocks and Gas Usage on OP Stack
+
+This document explains how **Flashblocks** affect block gas usage, transaction inclusion, large-transaction handling, and how to avoid unexpected transaction rejections.
+
+---
+
+## Background: Block Gas Limit vs. Transaction Gas Limit
+
+On OP Mainnet, the **theoretical block gas limit** is currently **40M gas**. In a traditional EVM mental model, a single transaction can use up to the full block gas limit, as long as it does not exceed it.
+
+With **Flashblocks enabled**, block construction is incremental, and *transaction inclusion depends on the gas already consumed within the block*, not just the theoretical maximum.
+
+---
+
+## What Are Flashblocks?
+
+Flashblocks are an incremental block-building mechanism used by the sequencer and block builder.
+
+Instead of constructing the full block at once, the block is built in **N flashblocks** (currently 8):
+
+- Each flashblock increases the *cumulative gas budget* available for inclusion
+- Earlier flashblocks can only include smaller transactions
+- Larger transactions can only be included later, *if enough gas remains*
+
+### Example
+
+Assume:
+
+- Block gas limit **B = 40M**
+- Number of flashblocks **N = 8**
+
+Then the cumulative gas limit increases as follows:
+
+| Flashblock | Max cumulative gas available |
+| ---------- | ---------------------------- |
+| 1          | 5M                           |
+| 2          | 10M                          |
+| 3          | 15M                          |
+| 4          | 20M                          |
+| 5          | 25M                          |
+| 6          | 30M                          |
+| 7          | 35M                          |
+| 8          | 40M                          |
+
+A transaction with a **20M gas limit** can only be included starting from flashblock 4, *and only if prior flashblocks have not already consumed that gas*.
+
+---
+
+## Why a Transaction Below the Block Gas Limit Can Still Be Rejected
+
+A transaction may be submitted with a gas limit lower than the total block gas limit (e.g. **38M < 40M**) and still be rejected with the error: `exceeds block gas limit`
+
+
+This happens because:
+
+- The block builder (rbuilder) compares the transaction gas limit against the **remaining gas available in the current block**, not the total theoretical block gas limit
+- If earlier flashblocks have already consumed gas, the remaining capacity may be insufficient
+
+### Real-World Example
+
+- Block gas limit: **40M**
+- Gas already used in earlier flashblocks: **13M**
+- Remaining gas: **27M**
+- Incoming transaction gas limit: **38M**
+
+**Result:** the transaction is rejected because it cannot fit into the remaining gas budget of the block.
+
+---
+
+## Client Behavior and Error Messages
+
+This behavior is influenced by the execution client used by the block builder:
+
+- **reth-based builders** reject transactions if  
+  `tx.gasLimit > remainingBlockGas`
+- The resulting error surfaced to users is:  
+  `exceeds block gas limit`
+
+This error message is **misleading** in the Flashblocks context:
+
+- It does *not* necessarily mean the transaction exceeds the *theoretical* block gas limit
+- It means the transaction exceeds the **remaining gas available in the block when it is evaluated**
+
+---
+
+## Practical Guidance
+
+### 1. Leave Headroom for Large Transactions
+
+If you submit large transactions, avoid targeting the full block gas limit.
+
+**Recommended approach:**
+
+- Leave **20–30% headroom** relative to the block gas limit
+- For a 40M block, aim for ≤ **28–32M gas**
+
+This increases the chance that the transaction fits into the remaining gas of a partially built block.
+
+---
+
+### 2. Expect Variable Gas Availability During Congestion
+
+Under high demand:
+
+- Early flashblocks are often full
+- Remaining gas later in the block may be limited
+- Very large transactions may be rejected or require retries
+
+This is expected behavior with Flashblocks and not necessarily an issue with the transaction itself.
+
+---
+
+### 3. Transaction Resubmission
+
+Because block state evolves quickly:
+
+- Retrying submission in a later block may succeed
+- Large transactions are more likely to be included when earlier flashblocks are less congested
+
+---
+
+## Key Takeaways
+
+- Flashblocks build blocks incrementally, unlocking gas capacity over time rather than all at once  
+  *(e.g. in a 40M gas block with 8 flashblocks, only 5M is available at the first flashblock, then 10M, and so on)*
+
+- A transaction must fit within the **remaining gas of the block at evaluation time**, not just the theoretical L2 block gas limit  
+  *(e.g. if 13M gas out of the 40M has already been used, a 38M gas transaction will not fit into the remaining 27M)*
+
+- As a result, large transactions may be rejected even when their gas limit is below the nominal block limit  
+  *(e.g. a 38M gas transaction can fail in a 40M gas block during periods of high activity)*
+
+- Leaving meaningful gas headroom is the most reliable way to improve inclusion success for large transactions  
+  *(e.g. targeting 28–32M gas instead of the full 40M)*
