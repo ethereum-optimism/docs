@@ -7,13 +7,17 @@ description: "Explains how Flashblocks affect block gas usage, transaction inclu
 
 This document explains how **Flashblocks** affect block gas usage, transaction inclusion, large-transaction handling, and how to avoid unexpected transaction rejections.
 
+If you are unfamiliar with Flashblocks you can read more [here](https://docs.optimism.io/op-stack/features/flashblocks#flashblocks)
+
 ---
 
 ## Background: Block Gas Limit vs. Transaction Gas Limit
 
 On OP Mainnet, the **theoretical block gas limit** is currently **40M gas**. In a traditional EVM mental model, a single transaction can use up to the full block gas limit, as long as it does not exceed it.
 
-With **Flashblocks enabled**, block construction is incremental, and *transaction inclusion depends on the gas already consumed within the block*, not just the theoretical maximum.
+With **Flashblocks** block construction is incremental and *transaction inclusion depends on the gas already consumed within the block*, not just the theoretical maximum.
+
+This behavior is not specific to Flashblocks only, but to how reth-based execution and block-building logic evaluates transactions against the remaining block gas at evaluation time. As a result, similar behavior can be observed in reth, op-reth, and Flashblocks-enabled environments.
 
 ---
 
@@ -86,9 +90,13 @@ This error message is **misleading** in the Flashblocks context:
 - It does *not* necessarily mean the transaction exceeds the *theoretical* block gas limit
 - It means the transaction exceeds the **remaining gas available in the block when it is evaluated**
 
+In practice, transactions are first accepted by an op-geth RPC node and only later evaluated by the block builder (rbuilder). Because this process is asynchronous, a transaction may initially appear accepted but later be rejected by the builder due to remaining-gas constraints or timing differences.
+
+Internal mechanisms (such as mempool rebroadcasting) mitigate this divergence automatically, so users typically do not notice retries. However, when an error is surfaced, it may originate from the ingress client’s gas checks, even though the effective constraint is enforced at block-building time.
+
 ---
 
-## Practical Guidance
+## Practical Guidance for Application Developers and End Users
 
 ### Leave Headroom for Large Transactions
 
@@ -100,6 +108,8 @@ If you submit large transactions, avoid targeting the full block gas limit.
 - For a 40M block, aim for ≤ **28–32M gas**
 
 This increases the chance that the transaction fits into the remaining gas of a partially built block.
+
+More generally, designing applications to avoid extremely large single transactions is good long-term practice. With upcoming protocol changes (e.g. Fusaka on L2), transactions will be capped at 16.7M gas, making conservative transaction sizing both safer today and more future-proof.
 
 ---
 
