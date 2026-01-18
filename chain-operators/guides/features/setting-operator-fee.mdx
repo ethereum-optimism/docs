@@ -8,7 +8,7 @@ description: Learn how to configure the operator fee on your OP Stack Chain
 | Parameter               | Default | Recommended    | Type                         |
 | :---------------------- | :-----: | :------------- | :----------------------------|
 | `operatorFeeScalar`     | 0       | Chain-specific | uint32 scalar (scaled by 1e6)|
-| `operatorFeeConstant`   | 0       | Chain-specific | uint64 scalar                |
+| `operatorFeeConstant`   | 0       | Chain-specific | uint64 scalar (wei)          |
 
 The **Operator Fee** was introduced in the **[Isthmus upgrade](https://docs.optimism.io/notices/upgrade-14#operator-fee)** and modified in the **[Jovian upgrade](https://docs.optimism.io/notices/upgrade-17#breaking-changes)**.  
 It allows OP Stack chain operators to charge an additional fee on transactions, on top of the **execution gas fee** (base fee + priority fee) and the **L1 data fee**.
@@ -55,11 +55,11 @@ operatorFee = operatorFeeConstant + (operatorFeeScalar × gasUsed × 100)
 
 ## How to Update the Operator Fee
 
-    To update the operator fee parameters, call the following method on the `SystemConfig` contract from the `SystemConfigOwner`:
+To update the operator fee parameters, call the following method on the `SystemConfig` contract from the `SystemConfigOwner`:
 
-    `setOperatorFeeScalars(uint32 _operatorFeeScalar, uint64 _operatorFeeConstant) external onlyOwner;`
+`setOperatorFeeScalars(uint32 _operatorFeeScalar, uint64 _operatorFeeConstant) external onlyOwner;`
 
-    Example using cast:
+Example using cast:
 
     ```bash title="cast"
     cast send --private-key $PRIVATE_KEY \
@@ -68,12 +68,12 @@ operatorFee = operatorFeeConstant + (operatorFeeScalar × gasUsed × 100)
       500000 1000000000000
     ```
 
-    After the transaction confirms, verify the current configuration by calling the following:
+After the transaction confirms, verify the current configuration by calling the following:
 
     `function operatorFeeScalar() view returns (uint32);`  
     `function operatorFeeConstant() view returns (uint64);`
 
-    Example using cast:
+Example using cast:
 
     ```bash title="cast"
     cast call <SYSTEM_CONFIG_PROXY_ADDRESS> "operatorFeeScalar()"
