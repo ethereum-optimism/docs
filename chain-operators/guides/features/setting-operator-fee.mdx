@@ -5,10 +5,10 @@ description: Learn how to configure the operator fee on your OP Stack Chain
 
 ## Overview
 
-| Parameter | Type | Default | Recommended | Units |
-| ---------- | ---- | -------- | ------------ | ------ |
-| `operatorFeeScalar` | Number | 0 | Chain-specific | unitless (scaled by 1e6) |
-| `operatorFeeConstant` | Number | 0 | Chain-specific | wei |
+| Parameter               | Default | Recommended    | Type                           |
+| :---------------------- | :-----: | :------------- | :----------------------------- |
+| `operatorFeeScalar`     | 0       | Chain-specific | uint32 scalar (scaled by 1e6)  |
+| `operatorFeeConstant`   | 0       | Chain-specific | uint64 scalar                  |
 
 The **Operator Fee** was introduced in the **[Isthmus upgrade](https://docs.optimism.io/notices/upgrade-14#operator-fee)** and modified in the **[Jovian upgrade](https://docs.optimism.io/notices/upgrade-17#breaking-changes)**.  
 It allows OP Stack chain operators to charge an additional fee on transactions, on top of the **execution gas fee** (base fee + priority fee) and the **L1 data fee**.
@@ -19,7 +19,7 @@ This mechanism gives operators two levers:
 - a **gas-proportional component** (`operatorFeeScalar`) that scales with gas used
 
 <Info>
-  The operator fee is only applied on chains that have enabled the Isthmus upgrade.
+  The operator fee is only applied on chains that have enabled the Isthmus upgrade and following ones.
 </Info>
 
 <Info>
@@ -29,36 +29,14 @@ This mechanism gives operators two levers:
 
 ---
 
-## How the Operator Fee Works
-
-After the Isthmus upgrade, the total cost of a transaction on an OP Stack chain includes the operator fee.
-
-**Before Isthmus:**
-
-```text
-totalFee = gasUsed * (baseFee + priorityFee) + l1Fee
-```
-
-**After Isthmus:**
-
-```text
-totalFee = operatorFee + gasUsed * (baseFee + priorityFee) + l1Fee
-```
-
-Because part of the operator fee scales with gas usage, larger or more complex transactions generate proportionally higher operator revenue, while simpler transactions remain cheaper.
-
-This design allows operators to tune fee economics based on overall gas usage rather than relying solely on flat pricing.
-
----
-
 ## Operator Fee Formula
 
 The operator fee is calculated using the following formula, depending on the active fork.
 
-**After Isthmus:**
+**On Isthmus:**
 
 ```text
-operatorFee = operatorFeeConstant + (gasUsed × operatorFeeScalar ÷ 10^6)
+operatorFee = operatorFeeConstant + (operatorFeeScalar * gasUsed / 1e6)
 ```
 
 **After Jovian:**
@@ -67,15 +45,10 @@ operatorFee = operatorFeeConstant + (gasUsed × operatorFeeScalar ÷ 10^6)
 operatorFee = operatorFeeConstant + (gasUsed × operatorFeeScalar × 100)
 ```
 
-Where:
-
-- `gasUsed` is the amount of gas the transaction used
-- `operatorFeeScalar` is a `uint32` scalar set by the chain operator (scaled by 1e6)
-- `operatorFeeConstant` is a `uint64` value specified in wei
-
 <Warning>
   Setting operator fee values too high can significantly increase transaction costs and reduce user adoption.
   The operator fee directly impacts UX and competitiveness and should be adjusted conservatively.
+  The default value for standard chains is 0, any other value is considered non-standard.
 </Warning>
 
 ---
@@ -113,7 +86,7 @@ Where:
   </Step>
 
   <Step title="Verify the new values">
-    After the transaction confirms, verify the current configuration by calling the following getter methods:
+    After the transaction confirms, verify the current configuration by calling the following:
 
     `function operatorFeeScalar() external view returns (uint32);`  
     `function operatorFeeConstant() external view returns (uint64);`
