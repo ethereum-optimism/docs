@@ -4,18 +4,16 @@ description:   Learn how to use Viem to transfer ETH between Layer 1 (Ethereum o
 ---
 
 
-This tutorial explains how you can use [Viem](https://viem.sh) to bridge ETH from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
+This tutorial explains how you can use [Viem](https://viem.sh) to bridge ETH between L1 (Ethereum or Sepolia) and L2 (OP Mainnet or OP Sepolia).
 Viem is a TypeScript interface for Ethereum that provides low-level stateless primitives for interacting with Ethereum.
 It offers an easy way to add bridging functionality to your JavaScript-based application.
 
-Behind the scenes, Viem uses the [Standard Bridge](/app-developers/guides/bridging/standard-bridge) contracts to transfer ETH and ERC-20 tokens.
-Make sure to check out the [Standard Bridge guide](/app-developers/guides/bridging/standard-bridge) if you want to learn more about how the bridge works under the hood.
 
 ## Supported networks
 
-Viem supports any of the [Superchain networks](/op-mainnet/network-information/connecting-to-op).
+Viem supports any of the [Superchain networks](https://viem.sh/op-stack/chains).
 The OP Stack networks are included in Viem by default.
-If you want to use a network that isn't included by default, you can add it to Viem's chain configurations.
+If you want to use a network that isn't included by default, you can add it to Viem's chain [configurations](https://viem.sh/op-stack/chains#configuration).
 
 ## Dependencies
 
@@ -114,7 +112,7 @@ const account = privateKeyToAccount(PRIVATE_KEY);
 ```js
 const publicClientL1 = createPublicClient({
     chain: sepolia,
-    transport: http("https://rpc.ankr.com/eth_sepolia"),
+    transport: http("https://rpc.ankr.com/eth_sepolia/{your_token}"),
 }).extend(publicActionsL1()) 
 ```
 
@@ -125,7 +123,7 @@ const publicClientL1 = createPublicClient({
 const walletClientL1 = createWalletClient({
     account,
     chain: sepolia,
-    transport: http("https://rpc.ankr.com/eth_sepolia"),
+    transport: http("https://rpc.ankr.com/eth_sepolia/{your_token}"),
 }).extend(walletActionsL1());
 ```
 
@@ -185,7 +183,7 @@ console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`);
 
           ```js
 const depositArgs = await publicClientL2.buildDepositTransaction({
-    mint: parseEther("0.0001"),
+    mint: parseEther("0.01"),
     to: account.address,
 });
 ```
@@ -249,13 +247,13 @@ const account = privateKeyToAccount(PRIVATE_KEY);
 
 const publicClientL1 = createPublicClient({
     chain: sepolia,
-    transport: http("https://rpc.ankr.com/eth_sepolia"),
+    transport: http("https://rpc.ankr.com/eth_sepolia/{your_token}"),
 }).extend(publicActionsL1()) 
 
 const walletClientL1 = createWalletClient({
     account,
     chain: sepolia,
-    transport: http("https://rpc.ankr.com/eth_sepolia"),
+    transport: http("https://rpc.ankr.com/eth_sepolia/{your_token}"),
 }).extend(walletActionsL1());
 
 const publicClientL2 = createPublicClient({
@@ -275,7 +273,7 @@ console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`);
 async function depositETH() {
 
 const depositArgs = await publicClientL2.buildDepositTransaction({
-    mint: parseEther("0.0001"),
+    mint: parseEther("0.01"),
     to: account.address,
 });
 
@@ -298,12 +296,6 @@ console.log('Deposit completed successfully!');
   </Tab>
 </Tabs>
 
-<Info>
-  Using a smart contract wallet?
-  As a safety measure, `depositETH` will fail if you try to deposit ETH from a smart contract wallet without specifying a `recipient`.
-  Add the `recipient` option to the `depositETH` call to fix this.
-</Info>
-
 ## Withdraw ETH
 
 You just bridged some ETH from L1 to L2.
@@ -320,8 +312,8 @@ Now you're going to repeat the process in reverse to bridge some ETH from L2 to 
 
           ```js
 //Add the same imports used in DepositETH function
-const withdrawalArgs = await publicClientL2.buildWithdrawalTransaction({
-value: parseEther('0.0001'),
+const withdrawalArgs = await publicClientL1.buildInitiateWithdrawal({
+value: parseEther('0.005'),
 to: account.address,
 });
 ```
@@ -353,7 +345,7 @@ console.log('L2 transaction confirmed:', withdrawalReceipt);
 
           ```js
 const { output, withdrawal } = await publicClientL1.waitToProve({
-withdrawalReceipt,
+receipt: withdrawalReceipt,
 targetChain: walletClientL2.chain
 });
 ```
@@ -416,16 +408,6 @@ hash: finalizeHash
 ```
 
       </Step>
-      <Step title="Check the withdrawal status">
-
-          ```js
-const status = await publicClientL1.getWithdrawalStatus({
-receipt,
-targetChain: walletClientL2.chain
-})
-console.log('Withdrawal completed successfully!');
-```
-      </Step>
     </Steps>
   </Tab>
 
@@ -433,8 +415,8 @@ console.log('Withdrawal completed successfully!');
 
   ```js
 //Add the same imports used in DepositETH function
-const withdrawalArgs = await publicClientL2.buildWithdrawalTransaction({
-value: parseEther('0.0001'),
+const withdrawalArgs = await publicClientL1.buildInitiateWithdrawal({
+value: parseEther('0.005'),
 to: account.address,
 });
 
@@ -445,7 +427,7 @@ const withdrawalReceipt = await publicClientL2.waitForTransactionReceipt({ hash:
 console.log('L2 transaction confirmed:', withdrawalReceipt);
 
 const { output, withdrawal } = await publicClientL1.waitToProve({
-withdrawalReceipt,
+receipt: withdrawalReceipt,
 targetChain: walletClientL2.chain
 });
 
@@ -472,14 +454,23 @@ const finalizeReceipt = await publicClientL1.waitForTransactionReceipt({
 hash: finalizeHash
 });
 
-const status = await publicClientL1.getWithdrawalStatus({
-receipt,
-targetChain: walletClientL2.chain
-})
 ```
 
 </Tab>
 </Tabs>
+
+<Info>
+Recommend checking with `[getWithdrawalStatus](https://viem.sh/op-stack/actions/getWithdrawalStatus)` before the `waitToProve` and `waitToFinalize` actions.
+
+    ```js
+    const status = await publicClientL1.getWithdrawalStatus({
+    receipt: withdrawalReceipt,
+    targetChain: walletClientL2.chain
+    })
+    console.log(`Withdrawal status: ${status}`)
+    ```
+
+</Info>
 
 ## Important Considerations
 
