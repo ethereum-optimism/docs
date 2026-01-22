@@ -78,7 +78,7 @@ This happens because:
 
 ## Client Behavior and Error Messages
 
-This behavior is caused by the **execution-layer txpool checks**:
+This behavior is caused by the **Execution Layer txpool checks**:
 
 - Execution clients (e.g. **op-geth**, **op-reth**) reject transactions if: 
   `tx.gasLimit > estimatedRemainingBlockGas`
@@ -90,7 +90,7 @@ This error message is **misleading** in the Flashblocks context:
 - It does *not* necessarily mean the transaction exceeds the *theoretical* block gas limit
 - It means the transaction exceeds the **the execution client’s estimated remaining block gas at submission time**
 
-In practice, transactions are sent to execution-layer RPC nodes (likely via proxyd) and only transactions accepted into the txpool are gossiped to the sequencer for inclusion.
+In practice, transactions are sent to Execution Layer RPC nodes (e.g. via proxyd) and only transactions accepted into the EL txpool are propagated to the sequencer for potential inclusion.
 
 Implementing mechanisms such as mempool rebroadcasting can mitigate this divergence automatically, so users do not notice retries. However, when an error is surfaced, it may originate from the ingress client’s gas checks.
 
