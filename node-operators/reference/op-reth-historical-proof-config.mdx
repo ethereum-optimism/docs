@@ -57,6 +57,21 @@ A shorter interval is preferred so that prune runs stay small and don’t stall 
   <Tab title="Default">`15s`</Tab>
 </Tabs>
 
+### proofs-history.verification-interval
+
+Verification interval: perform full block execution every N blocks for data integrity.
+
+- `0`: Disabled (Default). Always use fast path with pre-computed data.
+- `1`: Always verify. Always execute blocks.
+- `N`: Verify every Nth block (e.g., 100 = every 100 blocks).
+
+Periodic verification helps catch data corruption while maintaining good performance.
+
+<Tabs>
+  <Tab title="Syntax">`--proofs-history.verification-interval <PROOFS_HISTORY_VERIFICATION_INTERVAL>`</Tab>
+  <Tab title="Default">`0`</Tab>
+</Tabs>
+
 
 ## Management Commands
 
@@ -67,7 +82,7 @@ The `op-reth proofs` command allows you to manage the storage of historical proo
 Initialize the proofs storage with the current state of the chain.
 
 ```bash
-op-reth proofs init --datadir <DATA_DIR> --proofs-history.storage-path <PROOFS_HISTORY_STORAGE_PATH> 
+op-reth proofs init --chain <CHAIN> --datadir <DATA_DIR> --proofs-history.storage-path <PROOFS_HISTORY_STORAGE_PATH> 
 ```
 
 ### prune
@@ -75,7 +90,7 @@ op-reth proofs init --datadir <DATA_DIR> --proofs-history.storage-path <PROOFS_H
 Prune old proof history to reclaim space.
 
 ```bash
-op-reth proofs prune --datadir <DATA_DIR> --proofs-history.storage-path <PROOFS_HISTORY_STORAGE_PATH> --proofs-history.window <PROOFS_HISTORY_WINDOW>
+op-reth proofs prune --chain <CHAIN> --datadir <DATA_DIR> --proofs-history.storage-path <PROOFS_HISTORY_STORAGE_PATH> --proofs-history.window <PROOFS_HISTORY_WINDOW>
 ```
 
 ### unwind
