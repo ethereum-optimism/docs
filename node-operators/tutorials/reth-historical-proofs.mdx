@@ -96,28 +96,47 @@ Once initialized, you can start the execution client with the `--proofs-history`
 Make sure to include all other standard flags required for your network (e.g., specific bootnodes). See the configuration reference for details.
 </Info>
 
-## Running op-node
+## Running Consensus Node
 
-Start the consensus client (op-node) to drive the execution client.
+Start the consensus client to drive the execution client. You can use either `op-node` or `kona-node`.
 
-```bash
-op-node \
-  --l2=http://127.0.0.1:8551 \
-  --l2.jwt-secret="/path/to/jwt.hex" \
-  --verifier.l1-confs=1 \
-  --network="optimism" \
-  --rpc.addr=0.0.0.0 \
-  --rpc.port=8547 \
-  --l1=<L1_RPC_URL> \
-  --l1.beacon=<BEACON_RPC_URL> \
-  --p2p.advertise.ip=<YOUR_PUBLIC_IP> \
-  --p2p.advertise.tcp=9003 \
-  --p2p.advertise.udp=9003 \
-  --p2p.listen.ip=0.0.0.0 \
-  --p2p.listen.tcp=9003 \
-  --p2p.listen.udp=9003 \
-  --safedb.path="/path/to/op-node-db"
-```
+<Tabs>
+  <Tab title="op-node">
+    `op-node` is the reference implementation of the OP Stack consensus client, written in Go.
+
+    ```bash
+    op-node \
+      --l2=http://127.0.0.1:8551 \
+      --l2.jwt-secret="/path/to/jwt.hex" \
+      --verifier.l1-confs=1 \
+      --network="optimism" \
+      --rpc.addr=0.0.0.0 \
+      --rpc.port=8547 \
+      --l1=<L1_RPC_URL> \
+      --l1.beacon=<BEACON_RPC_URL> \
+      --p2p.advertise.ip=<YOUR_PUBLIC_IP> \
+      --p2p.advertise.tcp=9003 \
+      --p2p.advertise.udp=9003 \
+      --p2p.listen.ip=0.0.0.0 \
+      --p2p.listen.tcp=9003 \
+      --p2p.listen.udp=9003 \
+      --safedb.path="/path/to/op-node-db"
+    ```
+  </Tab>
+
+  <Tab title="kona-node">
+    `kona-node` is experimental Rust-based implementation of the OP Stack consensus client.
+
+    ```bash
+    kona-node \
+      --l1-eth-rpc=<L1_RPC_URL> \
+      --l1-beacon=<BEACON_RPC_URL> \
+      --l2-engine-rpc=http://localhost:8551 \
+      --l2-engine-jwt-secret=/path/to/jwt-secret.txt \
+      --chain=10
+    ```
+  </Tab>
+</Tabs>
 
 ## Verification
 
