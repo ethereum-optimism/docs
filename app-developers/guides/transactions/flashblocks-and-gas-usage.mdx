@@ -15,7 +15,7 @@ If you are unfamiliar with Flashblocks you can read more [here](https://docs.opt
 
 On OP Mainnet, the **theoretical block gas limit** is currently **40M gas**. In a traditional EVM mental model, a single transaction can use up to the full block gas limit, as long as it does not exceed it.
 
-With **Flashblocks**, block construction is incremental and *effective transaction acceptance depends on the gas already consumed within the block*, not just the theoretical maximum.
+With **Flashblocks**, block construction is incremental and *effective transaction inclusion depends on the gas already consumed within the block*, not just the theoretical maximum.
 
 ---
 
@@ -53,17 +53,17 @@ A transaction with a **20M gas limit** can only be included starting from flashb
 
 ---
 
-## Why a Transaction Below the Block Gas Limit Can Still Be Rejected
+## Why a Transaction Can Get Stuck
 
-A transaction may be submitted with a gas limit lower than the total block gas limit (e.g. **38M < 40M**) and still be rejected with the error: `exceeds block gas limit`
+A transaction may be submitted with a gas limit lower than the total block gas limit (e.g. **38M < 40M**) and still remain pending or be rejected with the error: `exceeds block gas limit`
 
+This happens because transaction acceptance and transaction inclusion are decided by different components:
 
-This happens because:
-
-- Incoming transactions are first evaluated by the **Execution Layer txpool** (e.g. **op-geth**) when they are submitted
-- The EL compares the transaction gas limit against its **current estimate of remaining block gas**
-- If earlier flashblocks are expected to consume gas, the remaining estimated capacity may be insufficient
-
+- Incoming transactions first enter the Execution Layer txpool (e.g. **op-geth**).
+- The EL checks whether `tx.gasLimit` exceeds the **full block gas limit**.
+  - If it does, it rejects with `exceeds block gas limit`.
+  - Otherwise, it keeps the transaction in the **pending/queued mempool** and **P2P-gossips** it eventually reaching **rbuilder**.
+- **rbuilder** applies the incremental **remaining block gas** check to decide whether to include the tx in a flashblock or leave it pending.
 
 ### Real-World Example
 
@@ -72,25 +72,28 @@ This happens because:
 - Remaining gas: **27M**
 - Incoming transaction gas limit: **38M**
 
-**Result:** the transaction is rejected because it cannot fit into the remaining gas budget of the block.
+The **EL** checks if the transaction exceeds **40M**. Since **38M < 40M**, the transaction is accepted into the pending/queued mempool and gossiped to **rbuilder**.
+**rbuilder** applies the incremental remaining-gas constraint. With only **27M** gas remaining and the tx requiring **38M**, the transaction cannot be included yet and stays pending.
+ 
+**Result:** the transaction is not rejected, but remains pending in the mempool until there is enough remaining gas to include it in a flashblock.
 
 ---
 
 ## Client Behavior and Error Messages
 
-This behavior is caused by the **Execution Layer txpool checks**:
+There are two distinct outcomes depending on the transaction size:
 
-- Execution clients (e.g. **op-geth**, **op-reth**) reject transactions if: 
-  `tx.gasLimit > estimatedRemainingBlockGas`
-- The resulting error surfaced to users is:  
-  `exceeds block gas limit`
+- **Rejected immediately (txpool admission failure):**  
+  The EL (e.g. **op-geth**, **op-reth**) rejects transactions only when the transaction gas limit exceeds the **full block gas limit**:
+  - Condition: `tx.gasLimit > blockGasLimit`
+  - Error returned to the user: `exceeds block gas limit`
 
-This error message is **misleading** in the Flashblocks context:
-
-- It does *not* necessarily mean the transaction exceeds the *theoretical* block gas limit
-- It means the transaction exceeds the **the execution client’s estimated remaining block gas at submission time**
-
-In practice, transactions are sent to Execution Layer RPC nodes (e.g. via proxyd), checked, and only if accepted into the EL txpool are eventually propagated to the sequencer for potential inclusion.
+- **Accepted but pending inclusion:**  
+  If the transaction gas limit is **within** the block gas limit, but still too large to fit into the **remaining block gas** at that point in rbuilder, it will not be included yet.
+  - The transaction remains in the **pending/queued mempool** or rbuilder, waiting for enough remaining gas to become available in a later flashblock.
+  - From the user’s perspective, the transaction may appear **pending** until it gets enough gas available for inclusion.
+ 
+In practice, transactions are sent to Execution Layer RPC nodes (e.g. via proxyd), checked, and only if accepted into the EL txpool are eventually propagated to the sequencer/rbuilder for potential inclusion.
 
 Implementing mechanisms such as txpool rebroadcasting can mitigate this divergence automatically, so users do not notice retries. However, when an error is surfaced, it may originate from the ingress client’s gas checks.
 
@@ -143,11 +146,11 @@ Because block state evolves quickly:
 - Flashblocks build blocks incrementally, unlocking gas capacity over time rather than all at once  
   *(e.g. in a 40M gas block with 8 flashblocks, only 5M is available at the first flashblock, then 10M, and so on)*
 
-- A transaction must fit within the execution client’s estimated remaining block gas at submission time, not just the theoretical L2 block gas limit  
-  *(e.g. if 13M gas out of the 40M has already been used, a 38M gas transaction will not fit into the remaining 27M)*
+- A transaction must be **< the full block gas limit** to be accepted into the EL txpool, but it must fit within the **remaining block gas** to be included by rbuilder in the next flashblock 
+  *(e.g. if 13M gas out of 40M has already been used, a 38M gas transaction can be accepted by EL but cannot be included until enough remaining gas is available once it reaches rbuilder)*
 
-- As a result, large transactions may be rejected even when their gas limit is below the nominal block limit  
-  *(e.g. a 38M gas transaction can fail in a 40M gas block during periods of high activity)*
+- As a result, large transactions may be **accepted but remain pending** even when their gas limit is below the nominal block limit  
+  *(e.g. a 38M gas transaction can be accepted in a 40M gas block but delayed during periods of high activity)*
 
-- Leaving meaningful gas headroom is the most reliable way to improve inclusion success for large transactions  
+- Leaving meaningful headroom is the most reliable way to improve inclusion success for large transactions  
   *(e.g. targeting 28–32M gas instead of the full 40M or proactively implementing the Fusaka limit of 16.7M gas)*
