@@ -55,11 +55,12 @@ A transaction with a **20M gas limit** can only be included starting from flashb
 
 ## Why a Transaction Can Get Stuck
 
-A transaction may be submitted with a gas limit lower than the total block gas limit (e.g. **38M < 40M**) and still remain pending or be rejected with the error: `exceeds block gas limit`
+A transaction may be submitted with a gas limit lower than the total block gas limit (e.g. **38M < 40M**) and still remain pending or, depending on the EL implementation, be rejected with the error: `exceeds block gas limit`.
 
-This happens because transaction acceptance and transaction inclusion are decided by different components:
+This happens because transaction acceptance and transaction inclusion are decided by different components.
 
-- Incoming transactions first enter the Execution Layer txpool (e.g. **op-geth**).
+Genrally:
+- Incoming transactions first enter the Execution Layer txpool.
 - The EL checks whether `tx.gasLimit` exceeds the **full block gas limit**.
   - If it does, it rejects with `exceeds block gas limit`.
   - Otherwise, it keeps the transaction in the **pending/queued mempool** and **P2P-gossips** it eventually reaching **rbuilder**.
@@ -146,7 +147,7 @@ Because block state evolves quickly:
 - Flashblocks build blocks incrementally, unlocking gas capacity over time rather than all at once  
   *(e.g. in a 40M gas block with 8 flashblocks, only 5M is available at the first flashblock, then 10M, and so on)*
 
-- A transaction must be **< the full block gas limit** to be accepted into the EL txpool, but it must fit within the **remaining block gas** to be included by rbuilder in the next flashblock 
+- A transaction must be **within the full block gas limit** to be accepted into the EL txpool, but it must fit within the **remaining block gas** to be included by rbuilder in the next flashblock 
   *(e.g. if 13M gas out of 40M has already been used, a 38M gas transaction can be accepted by EL but cannot be included until enough remaining gas is available once it reaches rbuilder)*
 
 - As a result, large transactions may be **accepted but remain pending** even when their gas limit is below the nominal block limit  
