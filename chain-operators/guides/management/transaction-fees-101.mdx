@@ -1,0 +1,293 @@
+---
+title: Transaction Fees 101
+description: overview of fee-related parameters for chain operators and when/how to adjust them.
+---
+
+**NOTE:** The below document is an overview on fee-related parameters. It applies to the Jovian and following hardforks. For full details on OP Stack transaction fees, see [here](https://docs.optimism.io/op-stack/transactions/fees#transaction-fees-on-op-mainnet).
+
+## Total Fee
+
+On an OP stack chain a transaction **Total Fee** is made of three main components:
+
+`Total Fee = L2 Fee + L1 Fee + Operator Fee`
+
+## 1. L2 Fee
+
+`L2 Fee = gasUsed * (baseFee + priorityFee)`
+
+### What it is and how it’s calculated
+
+The L2 fee is the EVM execution cost: `gasUsed` multiplied by the `baseFee` plus any `priorityFee`.
+
+- **gasUsed** is the total gas consumed during transaction execution and is measured by the EVM; the final `gasUsed` is recorded in the transaction receipt.
+- **baseFee** is computed with the EIP-1559 mechanism and is **collected in the BaseFeeVault (not burned)** on OP Stack.
+- **priorityFee** is set by the user to affect inclusion speed and is collected in the **SequencerFeeVault**.
+
+### Recipient Vaults
+
+- `baseFee → BaseFeeVault`
+- `priorityFee → SequencerFeeVault`
+
+### How to tweak it
+
+As a chain operator, you can tune L2 fee dynamics on the SystemConfig via:
+
+- `eip1559Denominator`
+- `eip1559Elasticity`
+- `gasLimit`
+- `minBaseFee`
+
+### Check current values
+
+```bash
+cast call $SYSTEM_CONFIG "eip1559Denominator()"
+cast call $SYSTEM_CONFIG "eip1559Elasticity()"
+cast call $SYSTEM_CONFIG "minBaseFee()"
+cast call $SYSTEM_CONFIG "gasLimit()"
+```
+
+### Set values
+
+```bash
+cast send --rpc-url $L1_RPC --private-key $PK \
+  $SYSTEM_CONFIG "setEIP1559Params(uint32,uint32)" <denominator> <elasticity>
+
+cast send --rpc-url $L1_RPC --private-key $PK \
+  $SYSTEM_CONFIG "setMinBaseFee(uint64)" <minBaseFeeWei>
+
+cast send --rpc-url $L1_RPC --private-key $PK \
+  $SYSTEM_CONFIG "setGasLimit(uint64)" <gasLimit>
+```
+
+## 2. L1 Fee
+
+```ts
+l1FeeScaled =
+  baseFeeScalar * 16 * l1BaseFee +
+  blobBaseFeeScalar * l1BlobBaseFee
+
+estimatedSizeScaled =
+  max(
+    minTransactionSize * 1e6,
+    intercept + fastlzCoef * fastlzSize
+  )
+
+l1Fee = estimatedSizeScaled * l1FeeScaled / 1e12
+```
+
+### What it is and how it’s calculated
+
+The L1 Fee charges for posting L2 data to L1. It multiplies a scalar‑weighted L1 price by an estimated FastLZ‑compressed transaction size. Fees are collected in the `L1FeeVault`.
+
+### Recipient Vault
+
+- `l1Fee → L1FeeVault`
+
+### How to tweak it
+
+- `basefeeScalar`
+- `blobBaseFeeScalar`
+
+### Check current values
+
+```bash
+cast call $SYSTEM_CONFIG "basefeeScalar()"
+cast call $SYSTEM_CONFIG "blobbasefeeScalar()"
+```
+
+### Set values
+
+```bash
+cast send --rpc-url $L1_RPC --private-key $PK \
+  $SYSTEM_CONFIG "setGasConfigEcotone(uint32,uint32)" <basefeeScalar> <blobBaseFeeScalar>
+```
+
+## 3. Operator Fee
+
+`Operator Fee = (gasUsed * operatorFeeScalar * 100) + operatorFeeConstant`
+
+### What it is and how it’s calculated
+
+The Operator fee is a discretionary, non‑standard fee charged per transaction. It has two components:
+
+- **operatorFeeScalar** — per‑gas fee
+- **operatorFeeConstant** — flat per‑transaction fee
+
+Fees are collected in the `OperatorFeeVault`.
+
+> **IMPORTANT:** Any non‑zero operator fee makes the chain configuration non‑standard.
+
+#### Pre‑Jovian (Isthmus) formula
+
+```text
+operatorFee = (gasUsed * operatorFeeScalar / 1e6) + operatorFeeConstant
+```
+
+### Check current values
+
+```bash
+cast call $SYSTEM_CONFIG "operatorFeeScalar()"
+cast call $SYSTEM_CONFIG "operatorFeeConstant()"
+```
+
+### Set values
+
+```bash
+cast send --rpc-url $L1_RPC --private-key $PK \
+  $SYSTEM_CONFIG "setOperatorFeeScalars(uint32,uint64)" <operatorFeeScalar> <operatorFeeConstant>
+```
+
+---
+
+## OP Mainnet Values
+
+- `eip1559Elasticity` = 2
+- `eip1559Denominator` = 250
+- `minBaseFee` = 0 wei
+- `basefeeScalar` = 5227
+- `blobBaseFeeScalar` = 1014213
+- `gasLimit` = 40,000,000
+- `operatorFeeScalar` = 0
+- `operatorFeeConstant` = 0
+- `daFootprintGasScalar` = 0* (0 is treated as 400. Set to 1 to disable it. See below)
+
+---
+
+## DA footprint parameter
+
+The `daFootprintGasScalar` is an in‑protocol limit on estimated DA usage to prevent DA spam and priority fee auctions. It converts DA footprint bytes into gas for block accounting.
+
+- Default value is **400**
+- A value of **0** is treated as **400**
+- Setting it to **1** disables DA footprint limiting
+
+For more details, see the [DA footprint documentation](https://docs.optimism.io/notices/archive/upgrade-17#block-header-changes).
+
+### Check current value
+
+```bash
+cast call $SYSTEM_CONFIG "daFootprintGasScalar()"
+```
+
+### Set value
+
+```bash
+cast send --rpc-url $L1_RPC --private-key $PK \
+  $SYSTEM_CONFIG "setDAFootprintGasScalar(uint16)" <daFootprintGasScalar>
+```
+
+---
+
+## Example Scenarios
+
+### Normal traffic / below EIP‑1559 target
+
+**What you’ll see**
+
+- `baseFee` trends toward `minBaseFee`
+- L2 execution fee dominates total cost
+- L1 fee remains low for small calldata
+
+**What to tweak**
+
+- Usually nothing
+- Increase `minBaseFee` if you need a revenue floor
+
+**Tradeoff**
+
+- **Pros:** Predictable minimum fee
+- **Cons:** Higher inclusion cost for low‑value transactions
+
+---
+
+### Busy blocks / congestion
+
+**What you’ll see**
+
+- `baseFee` rises as blocks exceed target
+- Low‑tip transactions see slower inclusion
+
+**What to tweak**
+
+- `eip1559Elasticity`
+- `eip1559Denominator`
+
+**Tradeoff**
+
+- **Pros:** Better demand capture
+- **Cons:** Higher fee volatility
+
+---
+
+### Calldata‑heavy transactions
+
+**What you’ll see**
+
+- L1 fee dominates total cost
+
+**What to tweak**
+
+- `basefeeScalar`
+- `blobBaseFeeScalar`
+
+**Tradeoff**
+
+- **Pros:** Recovers DA posting costs
+- **Cons:** Penalizes calldata‑heavy workloads
+
+---
+
+### Predictable operator revenue
+
+**What you’ll see**
+
+- Stable per‑tx operator income
+
+**What to tweak**
+
+- `operatorFeeScalar`
+- `operatorFeeConstant`
+
+**Tradeoff**
+
+- **Pros:** Predictable revenue
+- **Cons:** UX impact, non‑standard config
+
+---
+
+### DA‑heavy workloads / spam resistance
+
+**What you’ll see**
+
+- Reduced DA capacity as footprint cost increases
+
+**What to tweak**
+
+- `daFootprintGasScalar`
+
+**Tradeoff**
+
+- **Pros:** DA spam resistance
+- **Cons:** Reduced DA throughput
+
+---
+
+## Summary
+
+1. Confirm your hardfork (Jovian or later).
+2. Inspect current SystemConfig parameters.
+3. Make small changes and observe behavior.
+4. Test thoroughly on staging/testnets.
+5. Communicate changes to app and wallet teams.
+
+---
+
+## References
+
+- [Transaction fees on OP mainnet](https://docs.optimism.io/op-stack/transactions/fees#transaction-fees-on-op-mainnet)
+- [Operator fee](https://docs.optimism.io/op-stack/transactions/fees#operator-fee)
+- [L1 data fee](https://docs.optimism.io/op-stack/transactions/fees#l1-data-fee)
+- [SystemConfig interface](https://github.com/ethereum-optimism/optimism/blob/d181d5b197665df9b5efd66e4f76f09adf5c697f/packages/contracts-bedrock/interfaces/L1/ISystemConfig.sol#L8)
+- [DA footprint](https://docs.optimism.io/notices/archive/upgrade-17#block-header-changes)
+- [EIP-1559](https://docs.optimism.io/op-stack/protocol/differences#eip-1559-parameters)
+- [OP Mainnet values](https://etherscan.io/address/0x229047fed2591dbec1eF1118d64F7aF3dB9EB290#readProxyContract)
