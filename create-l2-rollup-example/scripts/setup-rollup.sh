@@ -73,7 +73,7 @@ generate_addresses() {
     log_info "Changed to directory: $(pwd)"
 
     # Generate addresses for different roles using openssl
-    for role in admin base_fee_vault_recipient l1_fee_vault_recipient sequencer_fee_vault_recipient system_config unsafe_block_signer batcher proposer challenger; do
+    for role in admin base_fee_vault_recipient l1_fee_vault_recipient sequencer_fee_vault_recipient system_config unsafe_block_signer operator_fee_vault_recipient chain_fees_fee_recipient batcher proposer challenger ; do
         # Generate a random 32-byte private key, ensuring it's not zero
         private_key=""
         while [ -z "$private_key" ] || [ "$private_key" = "0000000000000000000000000000000000000000000000000000000000000000" ]; do
