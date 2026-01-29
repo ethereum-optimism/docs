@@ -1,11 +1,11 @@
 ---
 title: Bridging ERC-20 tokens to OP Mainnet
-description: Learn how to use the @eth-optimism/viem package to transfer ERC-20 tokens between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
+description: Learn how to use @eth-optimism/viem and viem packages to transfer ERC-20 tokens between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
 ---
 
-This tutorial explains how you can use [@eth-optimism/viem](https://www.npmjs.com/package/@eth-optimism/viem) to bridge ERC-20 tokens from L1 (Ethereum or Sepolia) to L2 (OP Mainnet or OP Sepolia).
-The `@eth-optimism/viem` package is an easy way to add bridging functionality to your javascript-based application.
-It also provides some safety rails to prevent common mistakes that could cause tokens to be made inaccessible.
+This tutorial explains how you can use [@eth-optimism/viem](https://www.npmjs.com/package/@eth-optimism/viem) and [viem](https://viem.sh/op-stack) to bridge ERC-20 tokens between L1 (Ethereum or Sepolia) and L2 (OP Mainnet or OP Sepolia).
+The `@eth-optimism/viem` and `viem` packages are an easy way to add bridging functionality to your javascript-based application.
+They also provide some safety rails to prevent common mistakes that could cause tokens to be made inaccessible.
 
 Behind the scenes, `@eth-optimism/viem` package uses the [Standard Bridge](/app-developers/guides/bridging/standard-bridge) contracts to transfer tokens.
 Make sure to check out the [Standard Bridge guide](/app-developers/guides/bridging/standard-bridge) if you want to learn more about how the bridge works under the hood.
@@ -19,8 +19,8 @@ Make sure to check out the [Standard Bridge guide](/app-developers/guides/bridgi
 
 ## Supported networks
 
-The `@eth-optimism/viem` package supports any of the [Superchain networks](/op-mainnet/network-information/connecting-to-op).
-If you want to use a network that isn't included by default, you can simply [instantiate the package with the appropriate contract addresses](/app-developers/quickstarts/starter-kit).
+Viem supports any of the [Superchain networks](https://viem.sh/op-stack/chains).
+If you want to use a network that isn't included by default, you can add it to Viem's chain [configurations](https://viem.sh/op-stack/chains#configuration).
 
 ## Dependencies
 
@@ -115,7 +115,7 @@ Here's how to do it:
   ```js
 
   const viem = await import('viem');
-  const { createPublicClient, createWalletClient, http, formatEther } = viem;
+  const { createPublicClient, createWalletClient, http, formatEther, parseEther} = viem;
   const accounts = await import('viem/accounts');
   const { privateKeyToAccount } = accounts;
   const viemChains = await import('viem/chains');
@@ -140,7 +140,7 @@ Let's set those up now.
   For security reasons, we access it from an environment variable rather than hardcoding it.
 
   ```js
-  const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY || '';
+  const PRIVATE_KEY = process.env.TUTORIAL_PRIVATE_KEY;
   const account = privateKeyToAccount(PRIVATE_KEY);
 ```
 
@@ -159,7 +159,7 @@ Let's set those up now.
   Replace `<YOUR_API_KEY>` with your API key from a RPC provider.
 
   ```js
-  const L1_RPC_URL = 'https://rpc.ankr.com/eth_sepolia/<YOU_API_KEY>';
+  const L1_RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.com';
   const L2_RPC_URL = 'https://sepolia.optimism.io';
   
   const publicClientL1 = createPublicClient({
@@ -337,7 +337,7 @@ You'll then receive the same number of tokens on L2 in return.
   We'll use this value for both deposits and withdrawals
 
   ```js
-  const oneToken = 1000000000000000000n
+  const oneToken = parseEther('1')
 ```
 
   </Step>
@@ -518,7 +518,7 @@ Now you're going to repeat the process in reverse to bridge some tokens from L2 
   After the withdrawal transaction is confirmed, we check our token balance on L2 again to verify that the tokens have been deducted.
   Our L2 balance should now be lower by the amount we initiated for withdrawal.
   
-  At this point, the withdrawal process has begun, but the tokens are not yet available on L1 - they will become accessible after the 7-day challenge period and after completing the "prove" and "finalize" withdrawal steps.
+  At this point, the withdrawal process has begun, but the tokens are not yet available on L1 - please refer to [Withdraw ETH](./cross-dom-bridge-eth#withdraw-eth) to continue with the “prove” and “finalize” withdrawal steps.
 
   ```js
   const l2Balance = await publicClientL2.readContract({
