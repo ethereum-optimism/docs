@@ -130,6 +130,8 @@ update_intent() {
     BATCHER_ADDR=$(cat addresses/batcher_address.txt)
     PROPOSER_ADDR=$(cat addresses/proposer_address.txt)
     CHALLENGER_ADDR=$(cat addresses/challenger_address.txt)
+    OPERATOR_FEE_VAULT_ADDR=$(cat addresses/operator_fee_vault_recipient_address.txt)
+    CHAIN_FEES_RECIPIENT_ADDR=$(cat addresses/chain_fees_fee_recipient_address.txt)
 
     # Keep the default contract locators and opcmAddress from op-deployer init
 
@@ -145,7 +147,8 @@ update_intent() {
     sed -i.bak "s|proposer = .*|proposer = \"$PROPOSER_ADDR\"|" .deployer/intent.toml
     sed -i.bak "s|challenger = .*|challenger = \"$CHALLENGER_ADDR\"|" .deployer/intent.toml
     sed -i.bak "s|fundDevAccounts = .*|fundDevAccounts = true|" .deployer/intent.toml
-
+    sed -i.bak "s|operatorFeeVaultRecipient = .*|operatorFeeVaultRecipient = \"$OPERATOR_FEE_VAULT_ADDR\"|" .deployer/intent.toml
+    sed -i.bak "s|chainFeesRecipient = .*|chainFeesRecipient = \"$CHAIN_FEES_RECIPIENT_ADDR\"|" .deployer/intent.toml
     log_success "Intent configuration updated"
 }
 
