@@ -11,6 +11,8 @@ On an OP stack chain a transaction **Total Fee** is made of three main component
 
 `Total Fee = L2 Fee + L1 Fee + Operator Fee`
 
+Fees are gathered in dedicated contract vaults that collect the different fee components (for example `BaseFeeVault`, `SequencerFeeVault`, etc.).
+
 ## 1. L2 Fee
 
 `L2 Fee = gasUsed * (baseFee + priorityFee)`
@@ -32,9 +34,9 @@ The L2 fee is the EVM execution cost: `gasUsed` multiplied by the `baseFee` plus
 
 As a chain operator, you can tune L2 fee dynamics on the SystemConfig via:
  
-- `eip1559Denominator`: EIP-1559 max-change denominator, it’s in the denominator of the per-block base fee delta. Lower = faster response, so base fee adjust faster but results in more volatility.
-- `eip1559Elasticity`: elasticity multiplier, sets the target relative to gasLimit. As `gas_target = gasLimit / elasticity`, higher elasticity results in smaller target and base fee will increase sooner when blocks are busy.
-- `gasLimit`: max gas per block. Lower = more scarcity and therefore how easily the base fee moves.
+- `eip1559Denominator`: EIP-1559 max-change denominator, it appears in the denominator of the per-block base fee delta. Lower = faster response, so base fee adjust faster but results in more volatility. See the OP Mainnet values further down in the doc to have a reference.
+- `eip1559Elasticity`: elasticity multiplier, sets the target relative to gasLimit. As `gas_target = gasLimit / elasticity`, a **smaller gas target** (larger elasticity) means the base fee will start increasing at a lower block gas usage (i.e., base fee increases sooner under load). See OP Mainnet values below for an example (`eip1559Elasticity = 2`).
+- `gasLimit`: max gas per block. Lower `gasLimit` = less available gas per block (less supply), which makes base fees more sensitive to demand and can cause the base fee to move more easily.
 - `minBaseFee`: minimum base floor on base fee, in wei (it can be 0).
 
 ### Check current values
@@ -77,11 +79,24 @@ l1Fee = estimatedSizeScaled * l1FeeScaled / 1e12
 
 ### What it is and how it’s calculated
 
-The L1 Fee charges for posting L2 data to L1. It multiplies a scalar‑weighted L1 price by an estimated FastLZ‑compressed transaction size.
+The L1 Fee charges for posting L2 data to L1. In short: we estimate the transaction’s compressed size (FastLZ) and multiply that estimated size by a scalar-weighted L1 price to compute the L1 fee.
+
+The formula contains two parts:
+
+- A **per-byte** component derived from the L1 per-byte price (`l1BaseFee`) scaled by `baseFeeScalar`.
+- A **per-blob** component derived from the L1 blob base fee (`l1BlobBaseFee`) scaled by `blobBaseFeeScalar` (for blob-oriented data like EIP-4844 blobs).
+
+This combination lets the chain charge for both compressed calldata bytes and blob resources.
 
 ### Recipient Vault
 
 - `l1Fee → L1FeeVault`
+
+### Why tweak it
+
+- Modify margin charged on top of expected costs
+- Adjust FastLZ estimates to reflect costs
+- Differentiate charges for per-byte vs per-blob costs to reflect actual L1 pricing
 
 ### How to tweak it
 
@@ -172,6 +187,8 @@ $SYSTEM_CONFIG "setOperatorFeeScalars(uint32,uint64)" <operatorFeeScalar> <opera
 
 The `daFootprintGasScalar` is an in‑protocol limit on estimated DA usage to prevent DA spam and priority fee auctions.
 
+A DA footprint block limit is introduced after Jovian to limit the total amount of estimated compressed transaction data that can fit into a block. For each transaction, a new resource called DA footprint is tracked, next to its gas usage. It is scaled to the gas dimension so that its block total can also be limited by the block gas limit, like a block's total gas usage.
+
 - Default value is **400**
 - A value of **0** is treated as **400**
 - Setting it to **1** disables DA footprint limiting
@@ -209,7 +226,7 @@ $SYSTEM_CONFIG "setDAFootprintGasScalar(uint16)" <daFootprintGasScalar>
 
 **What to tweak**
 
-- Usually none.
+- Usually nothing.
 - If you need a revenue floor set/increase `minBaseFee`.
 
 **Tradeoff**
@@ -274,7 +291,7 @@ $SYSTEM_CONFIG "setDAFootprintGasScalar(uint16)" <daFootprintGasScalar>
 **Tradeoff**
 
 - **Pros:** Direct and predictable revenue per transaction.
-- **Cons:** UX impact, as it might hit low-value transactions. Changes transaction economics and should be used carefully. Any non-zero operator fee makes the chain configuration non-standard.
+**Cons:** May discourage low-value transactions and changes transaction economics; should be used carefully. Any non-zero operator fee makes the chain configuration non-standard.
 
 ---
 
