@@ -8,7 +8,7 @@ Upgrade 19 is a proposed network upgrade for OP Stack chains that **automates Su
 This upgrade replaces the current manual revenue distribution process with a deterministic, transparent, and configurable contract system that collects fees from L2 vaults, calculates the protocol’s revenue share, and distributes funds automatically between the chain operator and the Optimism Collective.
 
 <Info>
-  Upgrade 19 is purely a smart contract upgrade. There are no hardforks activating during this upgrade.
+  Upgrade 19 is a smart contract upgrade. There are no hardforks activating during this upgrade.
 </Info>
 
 ## What's included in Upgrade 19
@@ -32,11 +32,12 @@ Upgrade 19 introduces an automated revenue-sharing pipeline composed of new and 
 
    `SuperchainRevenueShareCalculator` computes the protocol share as:
 
+`
 max(
 2.5% of gross revenue, (sum of all four fee vault balances)
 15% of net revenue (excluding L1 fees)
 )
-
+`
 
 Gross revenue includes fees from all four vaults, including `OperatorFeeVault`.
 
@@ -106,9 +107,11 @@ No action required. For OP Mainnet, Ink, and Soneium, the upgrade will be execut
 
 Chains whose `ProxyAdminOwner` is not controlled by the Foundation must:
 
-- Perform the upgrade template themselves (see superchain-ops reference).
+- Perform the upgrade template themselves.
 - Execute the `upgradeAndSetupRevShare()` or `setupRevShare()` flow.
 - Verify L2 execution post-deposit.
+
+For more details, see the [here](https://docs.optimism.io/chain-operators/guides/management/revenue-sharing).
 
 ---
 
@@ -136,7 +139,7 @@ No downtime is expected. Execution is asynchronous and non-blocking.
 
 ## Execute the L1 Contract Upgrade
 
-The upgrade must be executed via delegatecall from the `ProxyAdminOwner` multisig to the deployed `RevShareContractsUpgrader` (see superchain-ops reference).
+The upgrade must be executed via delegatecall from the `ProxyAdminOwner` multisig to the deployed `RevShareContractsUpgrader`.
 
 Please simulate and validate the expected output prior to executing the transaction.
 
@@ -147,18 +150,15 @@ Please simulate and validate the expected output prior to executing the transact
 
 Mainnet and testnet calldata should be validated against expected contract parameters before execution.
 
+<Warning>
+Please simulate and validate all expected state changes prior to execution.
+</Warning>
+
 ---
 
 ## Technical References
 
-- Design Docs:
-- Revenue Sharing: https://github.com/ethereum-optimism/design-docs/blob/main/protocol/revenue-sharing.md
-- Fee Splitter: https://github.com/ethereum-optimism/design-docs/blob/main/protocol/fee-splitter.md
-- Specs:
-- https://github.com/ethereum-optimism/specs/tree/main/specs/protocol/revshare
-- Implementation PR:
-- https://github.com/ethereum-optimism/optimism/pull/17536
-
-<Warning>
-Please simulate and validate all expected state changes prior to execution.
-</Warning>
+- [Revenue Sharing](https://github.com/ethereum-optimism/design-docs/blob/main/protocol/revenue-sharing.md)
+- [Fee Splitter](https://github.com/ethereum-optimism/design-docs/blob/main/protocol/fee-splitter.md)
+- [Revshare Specs](https://github.com/ethereum-optimism/specs/tree/main/specs/protocol/revshare)
+- [Implementation PR #17536](https://github.com/ethereum-optimism/optimism/pull/17536)
