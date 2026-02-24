@@ -1,0 +1,75 @@
+---
+title: op-geth End-of-Support Notice
+description: op-geth will be supported through May 2026. Start migrating to op-reth now.
+lang: en-US
+content_type: notice
+topic: op-geth-deprecation
+personas:
+  - node-operator
+  - chain-operator
+categories:
+  - infrastructure
+  - protocol
+is_imported_content: 'false'
+---
+
+op-geth has served as the primary execution client for OP Stack chains since the beginning. As the ecosystem matures, we are transitioning full execution client support to **op-reth**, which will be the only supported execution client starting with the Glamsterdam hardfork.
+
+<Warning>
+  op-geth will reach end-of-support in **May 2026**. The Glamsterdam hardfork will not include op-geth support. Begin migrating to op-reth immediately.
+</Warning>
+
+## What this means
+
+- **op-geth is supported through May 2026.** Security patches and critical bug fixes will continue to be issued during this window.
+- **Glamsterdam breaks op-geth compatibility.** The upcoming Glamsterdam hardfork will only be supported on op-reth. Chains still running op-geth at activation will not be able to follow the canonical chain.
+- **op-reth is production-ready.** op-reth has been battle-tested on mainnet chains and is ready for production use today.
+- **The fault proof system is moving to Kona.** The proof program is transitioning from op-program to kona-cannon. This is already underway and will complete ahead of the Glamsterdam activation.
+
+## Action required
+
+**All node and chain operators must migrate to op-reth before the Glamsterdam hardfork activation.**
+
+The following chains are specifically called out to begin syncing op-reth nodes immediately:
+
+- OPW
+- WORLD
+- INK
+- Soneium
+- Unichain
+
+<Info>
+  Do not wait until Glamsterdam is scheduled. Start syncing op-reth nodes now to allow time for validation before the hardfork window.
+</Info>
+
+### Migration steps
+
+<Steps>
+  <Step title="Deploy an op-reth node alongside your existing op-geth node">
+    Run op-reth in sync mode without directing production traffic to it. This lets you validate correctness before cutover.
+
+    Refer to the [op-reth documentation](https://reth.rs/run/op-stack) for installation and configuration.
+  </Step>
+
+  <Step title="Validate sync and output consistency">
+    Compare block hashes, state roots, and RPC outputs between your op-geth and op-reth nodes over a meaningful window to confirm they agree.
+  </Step>
+
+  <Step title="Migrate production traffic to op-reth">
+    Once validated, switch your sequencer, batcher, and proposer to point to op-reth as the execution client.
+  </Step>
+
+  <Step title="Decommission op-geth">
+    After successful cutover and a stabilization period, decommission your op-geth nodes. No further updates will be issued for op-geth after May 2026.
+  </Step>
+</Steps>
+
+## Proof system transition
+
+In parallel with the execution client migration, the fault proof program is moving from **op-program** to **kona-cannon**. This transition is in progress and does not require separate action from most operators—Optimism will handle the onchain prestate updates for managed chains. If you operate a permissionless fault proof chain, watch for a separate notice with specific steps.
+
+## Resources
+
+- [op-reth releases](https://github.com/paradigmxyz/reth/releases)
+- [op-reth documentation](https://reth.rs/run/op-stack)
+- [kona repository](https://github.com/op-rs/kona)
