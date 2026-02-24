@@ -1,6 +1,6 @@
 ---
-title: op-geth End-of-Support Notice
-description: op-geth will be supported through May 2026. Start migrating to op-reth now.
+title: op-geth and op-program End-of-Support Notice
+description: op-geth and op-program will be supported through May 2026. Start migrating to op-reth and cannon kona now.
 lang: en-US
 content_type: notice
 topic: op-geth-deprecation
@@ -13,49 +13,40 @@ categories:
 is_imported_content: 'false'
 ---
 
-As the ecosystem matures, we are transitioning full execution client support to **op-reth**, which will be the only supported execution client starting with the Glamsterdam hardfork.
-
-<Warning>
-  op-geth will reach end-of-support in **May 2026**. The Glamsterdam hardfork will not include op-geth support. It's recommended to begin migrating to op-reth immediately.
-</Warning>
+As the ecosystem matures, we are transitioning full execution client support to **op-reth** and moving from **op-program** to **cannon kona**.
 
 ## What this means
 
-- **op-geth is supported through May 2026.** Security patches and critical bug fixes will continue to be issued during this window.
-- **Glamsterdam breaks op-geth compatibility.** The upcoming Glamsterdam hardfork will only be supported on op-reth. Chains still running op-geth at activation will not be able to follow the canonical chain.
-- **The fault proof system is moving to Kona.** The proof program is transitioning from op-program to kona-cannon. This is already underway and will complete ahead of the Glamsterdam activation.
+- **op-geth is supported through May 2026.** Security patches and critical bug fixes will continue to be issued during this window, after which support ends.
+- **op-program is also reaching end-of-support.** The fault proof program is transitioning from **op-program** to **kona-cannon**.
 
 ## Action required
 
-**All node and chain operators must migrate to op-reth before the Glamsterdam hardfork activation.**
+**The Glamsterdam hardfork will not support op-geth.** Chains still running op-geth at activation will not be able to follow the canonical chain.
+
+All node and chain operators must migrate to op-reth before Glamsterdam activates. Do not wait for the hardfork to be scheduled—**start now**.
+
+<Warning>
+  op-geth reaches end-of-support in **May 2026**. Glamsterdam will break compatibility with op-geth. Begin migrating immediately.
+</Warning>
+
+### Migration
+
+Start syncing an op-reth node alongside your existing op-geth node. Validate sync correctness over a meaningful window—compare block hashes, state roots, and RPC outputs. Once confident, migrate production traffic to op-reth.
+
+As soon as op-reth is fully synced, take a chain snapshot and store it in durable off-node storage. This is your recovery safety net for the hardfork transition. Refresh it regularly as Glamsterdam approaches.
 
 <Info>
-  Do not wait until Glamsterdam is scheduled. Start syncing op-reth nodes now to allow time for validation before the hardfork window.
+  Syncing op-reth takes time. Start early to allow adequate validation before the hardfork window.
 </Info>
-
-### Migration steps
-
-<Steps>
-  <Step title="Deploy an op-reth node alongside your existing op-geth node">
-    Run op-reth in sync mode without directing production traffic to it. This lets you validate correctness before cutover.
-  </Step>
-
-  <Step title="Validate sync and output consistency">
-    Compare block hashes, state roots, and RPC outputs between your op-geth and op-reth nodes over a meaningful window to confirm they agree.
-  </Step>
-
-  <Step title="Migrate production traffic to op-reth">
-    Once validated, switch your sequencer, batcher, and proposer to point to op-reth as the execution client.
-  </Step>
-
-  <Step title="Decommission op-geth">
-    After successful cutover and a stabilization period, decommission your op-geth nodes. No further updates will be issued for op-geth after May 2026.
-  </Step>
-</Steps>
 
 ## Proof system transition
 
-In parallel with the execution client migration, the fault proof program is moving from **op-program** to **kona-cannon**. This transition is in progress and does not require separate action from most operators—Optimism will handle the onchain prestate updates for managed chains. If you operate a permissionless fault proof chain, watch for a separate notice with specific steps.
+In parallel, the fault proof program is moving from **op-program** to **kona-cannon**. Optimism will handle the onchain prestate updates for managed chains. If you operate a permissionless fault proof chain, watch for a separate notice with specific steps.
+
+<Info>
+  **kona-node is not required for cannon-kona.** You can run kona-cannon with your existing **op-node** setup. kona-node is a separate, optional component and is not part of the fault proof program migration.
+</Info>
 
 ## Resources
 
