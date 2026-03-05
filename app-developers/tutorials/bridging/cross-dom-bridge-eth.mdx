@@ -1,12 +1,16 @@
 ---
-title: Bridging ETH to OP Mainnet with Viem
-description:   Learn how to use Viem to transfer ETH between Layer 1 (Ethereum or Sepolia) and Layer 2 (OP Mainnet or OP Sepolia).
+title: Submitting Transactions from L1
+description: Learn how to process deposit transactions and withdrawals with Viem.
 ---
 
 
-This tutorial explains how you can use [Viem](https://viem.sh) to bridge ETH between L1 (Ethereum or Sepolia) and L2 (OP Mainnet or OP Sepolia).
-Viem is a TypeScript interface for Ethereum that provides low-level stateless primitives for interacting with Ethereum.
-It offers an easy way to add bridging functionality to your JavaScript-based application.
+This tutorial explains how to use [Viem](https://viem.sh/op-stack) to process cross-domain transactions:
+- [Deposited transactions](https://specs.optimism.io/protocol/deposits.html): Also known as deposits, these are transactions initiated on L1 and executed on L2. They can be used to submit arbitrary L2 transactions from L1.
+
+- [Withdrawals](https://specs.optimism.io/protocol/withdrawals.html): These are cross-domain transactions initiated on L2 and finalized by a transaction executed on L1. They can be used to send arbitrary messages on L1 from L2 via the `OptimismPortal`.
+
+Both deposit transactions and withdrawals can transfer ETH and data.
+
 
 
 ## Supported networks
@@ -158,7 +162,10 @@ You can get some Sepolia ETH from [this faucet](https://sepoliafaucet.com).
 
 ## Deposit ETH
 
-Now that you have some ETH on L1 you can deposit that ETH into the `OptimismPortalProxy` contract. You'll then receive the same number of ETH on L2 in return.
+Now that you have some ETH on L1, in addition to using the method described in [Bridging ETH](/app-developers/guides/bridging/standard-bridge#bridging-eth), you can also deposit ETH using the approach shown in the example below. 
+
+If you are using a contract account, you should pay attention to [Address Aliasing](https://specs.optimism.io/protocol/deposits.html#address-aliasing).
+
 
 <Tabs>
   <Tab title="depositETH">
@@ -179,7 +186,10 @@ console.log(`L1 Balance: ${formatEther(l1Balance)} ETH`);
       </Step>
       <Step title="Create the deposit transaction">
 
-          Use `buildDepositTransaction` to build the deposit transaction parameters on the L2.
+          Use [buildDepositTransaction](https://viem.sh/op-stack/actions/buildDepositTransaction) to build the deposit transaction parameters on L2. 
+
+Be sure to understand the meanings of the optional parameters `mint` and `value`. You can also use someone else’s address as the `to` value if desired.
+
 
           ```js
 const depositArgs = await publicClientL2.buildDepositTransaction({
@@ -300,7 +310,10 @@ console.log('Deposit completed successfully!');
 
 You just bridged some ETH from L1 to L2.
 Nice!
-Now you're going to repeat the process in reverse to bridge some ETH from L2 to L1.
+Now you’re going to repeat the process in reverse to bridge some ETH from L2 to L1. 
+
+In addition to the method described in [Bridging ETH](/app-developers/guides/bridging/standard-bridge#bridging-eth), you can also withdraw ETH using the example approach shown below.
+
 
 <Tabs>
   <Tab title="withdrawETH">
@@ -460,7 +473,7 @@ hash: finalizeHash
 </Tabs>
 
 <Info>
-Recommend checking with `[getWithdrawalStatus](https://viem.sh/op-stack/actions/getWithdrawalStatus)` before the `waitToProve` and `waitToFinalize` actions.
+Recommend checking with [getWithdrawalStatus](https://viem.sh/op-stack/actions/getWithdrawalStatus) before the `waitToProve` and `waitToFinalize` actions.
 
     ```js
     const status = await publicClientL1.getWithdrawalStatus({
@@ -472,20 +485,52 @@ Recommend checking with `[getWithdrawalStatus](https://viem.sh/op-stack/actions/
 
 </Info>
 
+## Submitting Arbitrary L2 Transactions from L1
+
+EOAs can submit any transaction on L1 that needs to be executed on L2. This also makes it possible for users to interact with contracts on L2 even when the [Sequencer is down](/op-stack/transactions/forced-transaction).
+
+If the caller is a contract on L1, you need to pay attention to [Address Aliasing](https://specs.optimism.io/protocol/deposits.html#address-aliasing).
+
+If you have just completed the [Bridging ERC-20 tokens to OP Mainnet](/app-developers/tutorials/bridging/cross-dom-bridge-erc20) tutorial, you can try initiating an ERC-20 transfer transaction on L1 that will be executed on L2. 
+
+`encodeFunctionData` and `erc20Abi` can be imported from Viem.
+
+```js
+const oneToken = parseEther('1')
+// L2 faucet token contract
+const to = "0xD08a2917653d4E460893203471f0000826fb4034"
+
+const data = encodeFunctionData({
+  abi: erc20Abi,
+  functionName: "transfer",
+  args: [
+    "0x000000000000000000000000000000000000dEaD", // recipient
+    oneToken / 2n, 
+  ],
+});
+
+const args = await publicClientL2.buildDepositTransaction({
+  account,
+  data,
+  to,
+});
+```
+
+## Use `OptimismPortal` to Send Arbitrary Messages on L1 from L2
+
+The `L2ToL1MessagePasser` contract’s `initiateWithdrawal` function accepts a `_target` address and `_data` bytes. These are passed to a CALL opcode on L1 when `finalizeWithdrawalTransaction` is executed after the challenge period.
+
+This means that, by design, the `OptimismPortal` contract can be used to send arbitrary transactions on L1, with the `OptimismPortal` acting as the `msg.sender`.
+
+
 ## Important Considerations
 
 <Info>
-  *   Challenge period: The 7-day withdrawal challenge Period is crucial for security.
-  *   Gas costs: Withdrawals involve transactions on both L2 and L1, each incurring gas fees.
-  *   Private Key handling: Use secure key management practices in real applications.
-  *   RPC endpoint security: Keep your API key (or any RPC endpoint) secure.
+* The purpose of this tutorial is to introduce deposited transactions and withdrawals. You should first consider whether the [standard bridge](/app-developers/guides/bridging/standard-bridge) and the [messenger](/app-developers/guides/bridging/messaging) meet your use case requirements.
+* When working with deposited transactions, consider the implications of [Address Aliasing](https://specs.optimism.io/protocol/deposits.html#address-aliasing).
+* When working with withdrawals, consider that [OptimismPortal can send arbitrary messages on L1](https://specs.optimism.io/protocol/withdrawals.html#optimismportal-can-send-arbitrary-messages-on-l1).
+* Challenge period: The 7-day withdrawal challenge period is crucial for security.
+* Gas costs: Withdrawals involve transactions on both L2 and L1, each incurring gas fees.
+* Private key handling: Use secure key management practices in real applications.
+* RPC endpoint security: Keep your API key (or any RPC endpoint) secure.
 </Info>
-
-## Next Steps
-
-*   Develop a user interface for easier interaction with these bridging functions.
-*   Implement robust error handling and retry mechanisms for production use.
-
-You've just deposited and withdrawn ETH using `viem/op-stack`.
-You should now be able to write applications that use `viem/op-stack` to transfer ETH between L1 and L2.
-Although this tutorial used Sepolia and OP Sepolia, the same process works for Ethereum and OP Mainnet.
