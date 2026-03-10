@@ -1,6 +1,6 @@
 ---
-title: OP Stack testnets' blob fee bug
-description: Learn about the blob fee bug that affects OP Stack testnets and how to fix it.
+title: Superchain testnets' blob fee bug
+description: Learn about the blob fee bug that affects OP Stack testnets on the Superchain and how to fix it.
 ---
 
 At the time of writing, all OP Stack testnets are currently sequencing a "wrong" chain. The L1 Block's blob base fee is calculated with pre-Prague blob schedule parameters. This is not a critical security issue on any OP Sepolia (or Holesky) chain. However, when L1 blob base fees rise to 100 Mwei or higher on the L1 testnet, there is a temporary liveness risk, because we'd overcharge L1 fees.
@@ -35,11 +35,11 @@ This has a huge impact as fees grow:
 
 ## For chain and node operators
 
-All chain operators will need to coordinate with their node operators to schedule a hardfork activation time to utilize the correct blob base fee calculation. The following is a list of chains who have opted into the OP Stack [hardfork activation inheritance behavior](https://github.com/ethereum-optimism/superchain-registry/blob/main/docs/hardfork-activation-inheritance.md) are `OP Sepolia`, `Soneium Minato`, `Zora Sepolia`, `Unichain Sepolia`, `Base Sepolia`, `Mode Sepolia`, `Metal Sepolia`, `Creator Chain Sepolia`, `Ink Sepolia`, and `Ethernity Sepolia`.
+All chain operators will need to coordinate with their node operators to schedule a hardfork activation time to utilize the correct blob base fee calculation. The following is a list of chains who have opted into the Superchain [hardfork activation inheritance behavior](https://github.com/ethereum-optimism/superchain-registry/blob/main/docs/hardfork-activation-inheritance.md) are `OP Sepolia`, `Soneium Minato`, `Zora Sepolia`, `Unichain Sepolia`, `Base Sepolia`, `Mode Sepolia`, `Metal Sepolia`, `Creator Chain Sepolia`, `Ink Sepolia`, and `Ethernity Sepolia`.
 
 The node operators for these chains should use the network flags (`--network` and `op-geth` with the `--op-network`) to inherit the `Thu Mar 20 16:00:00 UTC 2025` (`1742486400`) hardfork activation time.
 
-The following chains are in the superchain-registry and are not opted into the hardfork activation inheritance behavior: `Arena-Z Sepolia`, `Cyber Sepolia`, `Funki Sepolia`, `Lisk Sepolia`, `Pivotal Sepolia`, `Race Sepolia`, `Shape Sepolia`, `TBN Sepolia`, and `Worldchain Sepolia`. These chains and any other OP Stack testnet that is not included in the lists above will need to manually set the hardfork activation time for their network to activate on. These following steps are necessary for every node operator:
+The following chains are in the Superchain Registry and are not opted into the hardfork activation inheritance behavior: `Arena-Z Sepolia`, `Cyber Sepolia`, `Funki Sepolia`, `Lisk Sepolia`, `Pivotal Sepolia`, `Race Sepolia`, `Shape Sepolia`, `TBN Sepolia`, and `Worldchain Sepolia`. These chains and any other OP Stack testnet that is not included in the lists above will need to manually set the hardfork activation time for their network to activate on. These following steps are necessary for every node operator:
 
 <Steps>
   <Step title="Update to the latest release">
@@ -71,8 +71,8 @@ The following chains are in the superchain-registry and are not opted into the h
     *   **Option 2:** Set the activation time via overrides (CLI) in the `op-node`. These will need to be set on `op-node` for the sequencer and all other nodes. The override flag looks like this: `--override.pectrablobschedule=1742486400`.
   </Step>
 
-  <Step title="Update the superchain-registry">
-  If your Pectra Blob Schedule fix activation time is not in the superchain-registry, decide on a hardfork activation time, and open a PR update the superchain-registry with the activation time. See this [PR](https://github.com/ethereum-optimism/superchain-registry/pull/941) as an example.
+  <Step title="Update the Superchain Registry">
+  If your Pectra Blob Schedule fix activation time is not in the Superchain Registry, decide on a hardfork activation time, and open a PR update the Superchain Registry with the activation time. See this [PR](https://github.com/ethereum-optimism/superchain-registry/pull/941) as an example.
   </Step>
 </Steps>
 
