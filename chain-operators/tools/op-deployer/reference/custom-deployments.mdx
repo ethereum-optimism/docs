@@ -15,26 +15,26 @@ code. Use at your own risk.
 
 ## Bootstrapping
 
-The first step to deploying a custom Superchain is to bootstrap it onto an L1. This process will:
+The first step to deploying a custom OP Stack is to bootstrap it onto an L1. This process will:
 
-*   Deploy Superchain-wide management contracts like `SuperchainConfig` and `SuperchainVersions`.
-*   Deploy contract implementations that will be shared among all OP Chains deployed using this Superchain.
-*   Set up ownership so that you can control the Superchain.
+*   Deploy shared management contracts like `SuperchainConfig` and `SuperchainVersions`.
+*   Deploy contract implementations that will be shared among all OP Chains in this deployment.
+*   Set up ownership so that you can control the deployment.
 
 You will use the [`bootstrap`](/chain-operators/tools/op-deployer/usage/bootstrap) family of commands on `op-deployer` to do this.
 
-### Superchain Bootstrap
+### Bootstrap Shared Contracts
 
-Every OP Chain belongs to a logical Superchain. The Superchain consists of a set of contracts that control the behavior
+Every OP Chain belongs to a logical deployment group. This group consists of a set of shared contracts that control the behavior
 of a group of OP Chains. This includes:
 
 *   Pausing bridges
 *   Signaling which protocol versions are required and recommended
 
-You can deploy a new Superchain for each OP Chain, or you can deploy it once and share it across multiple OP Chains.
-The choice is up to the deployer. Note that you **cannot** share a Superchain across multiple L1s.
+You can deploy a new set of shared contracts for each OP Chain, or you can deploy them once and share across multiple OP Chains.
+The choice is up to the deployer. Note that you **cannot** share a set of shared contracts across multiple L1s.
 
-To begin, bootstrap the Superchain onto your chosen L1 with the following command:
+To begin, bootstrap the shared contracts onto your chosen L1 with the following command:
 
 ```shell
 op-deployer bootstrap superchain \
@@ -50,11 +50,11 @@ op-deployer bootstrap superchain \
 This will output a JSON file containing the addresses of the relevant contracts. Keep track of this file, as you will
 need it in subsequent steps.
 
-We recommend the following these best practices when bootstrapping the Superchain:
+We recommend the following these best practices when bootstrapping:
 
 1.  Use Gnosis SAFEs for ownership roles like `guardian` and `superchain-proxy-admin-owner`. The owner **must** be a
     smart contract to support future upgrades, so a SAFE is a sensible default.
-2.  Use a regular EOA as the deployer. It will not have any control over the Superchain once the deployment completes.
+2.  Use a regular EOA as the deployer. It will not have any control over the deployment once the deployment completes.
 3.  Use a standard contracts tag (e.g. `tag://op-contracts/v2.0.0`). This will make upgrading easier.
 
 ### Bootstrapping Implementations
@@ -83,23 +83,23 @@ op-deployer bootstrap implementations \
   --upgrade-controller="<superchain-proxy-admin-owner used in bootstrap superchain>"
 ```
 
-Similar to the Superchain bootstrap command, this will output a JSON file containing the addresses of the relevant
+Similar to the `bootstrap superchain` command, this will output a JSON file containing the addresses of the relevant
 contracts. Again, keep track of this file.
 
 The most important address in the implementations file is the OPCM, or OP Contracts Manager. This contract is the
-factory that will deploy all the OP Chains belonging to this Superchain. It is also responsible for upgrading between
+factory that will deploy all the OP Chains belonging to this deployment group. It is also responsible for upgrading between
 different contracts versions. Please keep the following **very important** invariants in mind with the OPCM:
 
 *   There is a one-to-one mapping between each OPCM, and contracts version.
-*   Each OPCM is associated with **exactly one** Superchain. This means that you **must** deploy a new OPCM using the
-    `bootstrap implementations` command for each new Superchain you manage.
+*   Each OPCM is associated with **exactly one** deployment group. This means that you **must** deploy a new OPCM using the
+    `bootstrap implementations` command for each new deployment group you manage.
 
 ## Deploying
 
-After bootstrapping the Superchain and implementations, you can deploy your L2 chains with the `apply` command. You
+After bootstrapping the contracts and implementations, you can deploy your L2 chains with the `apply` command. You
 will need to specify a `configType` of `standard-overrides` and set the `opcmAddress` field in your intent to the
 address of the OPCM above. **Make sure you call the right OPCM.** Failing to call the right OPCM might lead to
-deploying incorrect contract versions, or associating your chain with the wrong Superchain.
+deploying incorrect contract versions, or associating your chain with the wrong deployment.
 
 <Warning>
 Make sure that you use the same `l1ContractsLocator` and `l2ContractsLocator` as the ones used in the bootstrap
