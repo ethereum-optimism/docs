@@ -71,9 +71,34 @@ Regardless of where and how transactions are signed, Actions has you covered.
     ](/app-developers/reference/actions/integrating-wallets#wallet-instance) is
     now capable of calling Actions
     [functions](/app-developers/quickstarts/actions#take-action) like Lend,
-    Borrow, Swap and Pay!
+    Swap, Borrow, and Pay!
+
+    ```typescript
+    // Lend tokens
+    const lendReceipt = await wallet.lend.openPosition({ ... });
+
+    // Swap tokens via Uniswap or Velodrome/Aerodrome
+    const swapReceipt = await wallet.swap.execute({
+      amountIn: 100,
+      assetIn: USDC,
+      assetOut: ETH,
+      chainId: base.id,
+    });
+    ```
   </Step>
 </Steps>
+
+## Wallet Namespaces
+
+Once you have an Actions wallet, it exposes DeFi operations through namespaces:
+
+| Namespace | Description | Reference |
+|-----------|-------------|-----------|
+| `wallet.lend` | Open, close, and query lending positions via Morpho, Aave, and more | [Lend Documentation](/app-developers/reference/actions/lend-documentation) |
+| `wallet.swap` | Swap tokens via Uniswap V4 and Velodrome/Aerodrome | [Swap Documentation](/app-developers/reference/actions/swap-documentation) |
+| `wallet.getBalance()` | Get wallet token balances | [Wallet Documentation](/app-developers/reference/actions/wallet-definitions) |
+| `wallet.send()` | Send tokens to an address | Coming soon |
+| `wallet.borrow` | Open and close borrow positions | Coming soon |
 
 ## Smart wallets & signers
 
