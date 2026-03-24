@@ -70,6 +70,7 @@ You need to import some dependencies into your Node REPL session.
 ```js
 const { createPublicClient, http } = require('viem');
 const { optimismSepolia, sepolia } = require('viem/chains');
+const {getL2TransactionHashes,publicActionsL1} = require("viem/op-stack")
 ```
   
 ## Set session variables
@@ -109,7 +110,7 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
   const l1Client = createPublicClient({
     chain: sepolia,
     transport: http(l1RpcUrl),
-  });
+  }).extend(publicActionsL1());
 
   const l2Client = createPublicClient({
     chain: optimismSepolia,
@@ -124,25 +125,14 @@ You'll need a few variables throughout this tutorial. Let's set those up now.
 You can use viem to trace a deposit.
 
 <Steps>
-  <Step title="Get the deposit status">
-
-  You can query for the deposit status using the transaction hash of the deposit.
-
-  ```js
-  console.log('Grabbing deposit status...')
-  const depositStatus = await l2Client.getTransactionReceipt({ hash: depositHash });
-  console.log(depositStatus);
-  ```
-
-  </Step>
   <Step title="Get the deposit transaction receipt">
 
   Retrieve the transaction receipt for the deposit using the viem client.
 
   ```js
 console.log('Grabbing deposit receipt...')
-const depositReceipt = await l2Client.getTransaction({ hash: depositHash });
-console.log(depositReceipt);
+const receipt = await l1Client.getTransactionReceipt({ hash: depositHash });
+console.log(receipt);
 ```
 
   </Step>
@@ -152,8 +142,11 @@ console.log(depositReceipt);
 
   ```js
 console.log('Grabbing deposit txn...')
-const depositTransaction = await l2Client.getTransaction({ hash: depositHash });
-console.log(depositTransaction);
+const [l2Hash] = getL2TransactionHashes(receipt)
+const l2Receipt = await l2Client.waitForTransactionReceipt({ 
+  hash: l2Hash 
+})
+console.log(l2Hash);
 ```
   </Step>
 </Steps>
@@ -163,36 +156,28 @@ console.log(depositTransaction);
 You can use viem's functions to trace a withdrawal.
 
 <Steps>
-  <Step title="Get the withdrawal status">
-
-  Like deposits, withdrawals can have multiple statuses depending on where they are in the process.
-
-  ```js
-console.log('Grabbing withdrawal status...')
-const withdrawalStatus = await l1Client.getTransactionReceipt({ hash: withdrawalHash });
-console.log(withdrawalStatus);
-```
-
-  </Step>
   <Step title="Get the withdrawal transaction receipt">
 
-  Retrieve the L1 transaction receipt for the withdrawal.
+  Get transaction receipt for the withdrawal.
 
   ```js
 console.log('Grabbing withdrawal receipt...')
-const withdrawalReceipt = await l1Client.getTransaction({ hash: withdrawalHash });
+const withdrawalReceipt = await l2Client.getTransactionReceipt({ hash: withdrawalHash });
 console.log(withdrawalReceipt);
 ```
 
   </Step>
-  <Step title="Get the withdrawal transaction">
+  <Step title="Get the withdrawal status">
 
-  Directly query for the L1 transaction that executed the withdrawal.
+  Withdrawals can have multiple statuses depending on where they are in the process.
 
   ```js
-console.log('Grabbing withdrawal txn...')
-const withdrawalTransaction = await l1Client.getTransaction({ hash: withdrawalHash });
-console.log(withdrawalTransaction);
+console.log('Grabbing withdrawal status...')
+const status = await l1Client.getWithdrawalStatus({
+receipt: withdrawalReceipt,
+targetChain: optimismSepolia
+})
+console.log(`Withdrawal status: ${status}`)
 ```
   </Step>
 </Steps>
