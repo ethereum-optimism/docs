@@ -216,6 +216,31 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     ```
 
   </Step>
+  <Step title="Configure Swap Providers">
+    Configure which swap protocols you want to support. You can enable one or multiple providers:
+
+    ```typescript title="actions.ts"
+    // Additional config from previous steps...
+
+    import type { SwapConfig } from "@eth-optimism/actions-sdk";
+
+    const swapConfig: SwapConfig = {
+      uniswap: {
+        // Uniswap V3 configuration
+        enabled: true,
+      },
+      aerodrome: {
+        // Aerodrome (Base L2 optimized)
+        enabled: true,
+      },
+      velodrome: {
+        // Velodrome (Optimism L2 optimized)
+        enabled: true,
+      },
+    };
+    ```
+
+  </Step>
   <Step title="Configure supported chains">
     Configure supported chains:
 
@@ -259,6 +284,7 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
       wallet: walletConfig,
       assets: assetsConfig,
       lend: lendConfig,
+      swap: swapConfig,
       chains,
     });
     ```
@@ -273,7 +299,8 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     // Use actions anywhere in your app
     const market = await actions.lend.getMarket({ ... });
     const wallet = await actions.wallet.createSmartWallet({ ... });
-    const receipt = await wallet.lend.openPosition({ ... });
+    const lendReceipt = await wallet.lend.openPosition({ ... });
+    const swapReceipt = await wallet.swap.execute({ ... });
     ```
 
   </Step>
