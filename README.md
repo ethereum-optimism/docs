@@ -1,10 +1,14 @@
-# Optimism Docs
+# Optimism Docs (Deprecated)
 
-This repo houses the Optimism Docs located at [docs.optimism.io](https://docs.optimism.io/). All documentation-related updates and new content will be tracked and maintained in this repo.
+> **This repository is deprecated.** The documentation has moved to the main Optimism monorepo.
+>
+> **New location:** [github.com/ethereum-optimism/optimism/tree/develop/docs/public-docs](https://github.com/ethereum-optimism/optimism/tree/develop/docs/public-docs)
+>
+> Please open all new issues and pull requests there. This repo is no longer maintained.
 
-## Local Development
+---
 
-Follow these [mintlify docs](https://www.mintlify.com/docs/installation) to preview and edit the documentation page locally.
+This repo previously housed the Optimism Docs located at [docs.optimism.io](https://docs.optimism.io/).
 
 ## License
 
