@@ -410,18 +410,35 @@ const lendPosition = await wallet.lend.getPosition(market);
 // Fetch wallet balance
 const balance = await wallet.getBalance();
 
+// Swap tokens via Uniswap (exact-in)
+const swapReceipt = await wallet.swap.execute({
+  amountIn: 1,
+  assetIn: USDC,
+  assetOut: ETH,
+  chainId: base.id,
+});
+
+// Swap tokens via Uniswap (exact-out)
+const swapExactOutReceipt = await wallet.swap.execute({
+  amountOut: 0.0003,
+  assetIn: USDC,
+  assetOut: ETH,
+  chainId: base.id,
+});
+
+// Get a price quote before swapping
+const quote = await wallet.swap.price({
+  assetIn: USDC,
+  assetOut: ETH,
+  amountIn: 100,
+  chainId: base.id,
+});
+
 // ⚠️ COMING SOON
 const borrowReceipt = await wallet.borrow.openPosition({
   amount: 1,
   asset: USDT,
   ...market,
-});
-
-// ⚠️ COMING SOON
-const swapReceipt = await wallet.swap.execute({
-  amountIn: 1,
-  assetIn: USDC,
-  assetOut: ETH,
 });
 
 // ⚠️ COMING SOON

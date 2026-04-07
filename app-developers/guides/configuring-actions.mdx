@@ -147,7 +147,7 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
 
   </Step>
   <Step title="Configure supported assets">
-    Configure which assets you want to support across all lend providers:
+    Configure which assets you want to support across all lend and swap providers:
 
     ```typescript title="actions.ts"
     // Additional config from previous steps...
@@ -216,6 +216,74 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     ```
 
   </Step>
+  <Step title="Configure Swap Providers">
+    Configure which swap protocols you want to support. Actions SDK supports [Uniswap V4](https://uniswap.org/) on Ethereum mainnet and OP Stack chains, and [Velodrome](https://velodrome.finance/) / [Aerodrome](https://aerodrome.finance/) on OP Stack chains:
+
+    <Tabs>
+      <Tab title="Uniswap">
+        ```typescript title="actions.ts"
+        // Additional config from previous steps...
+
+        import { UniswapSwapProvider } from "@eth-optimism/actions-sdk";
+        import type { SwapConfig } from "@eth-optimism/actions-sdk";
+
+        const swapConfig: SwapConfig = {
+          uniswap: {
+            // Optional: restrict to specific trading pairs
+            marketAllowlist: [
+              { assets: [USDC, ETH] },
+              { assets: [USDC, WETH], chainId: base.id },
+            ],
+            defaultSlippage: 0.005,   // 0.5% default slippage
+            maxSlippage: 0.5,         // 50% max slippage guard
+          },
+        };
+        ```
+      </Tab>
+      <Tab title="Velodrome / Aerodrome">
+        ```typescript title="actions.ts"
+        // Additional config from previous steps...
+
+        import { VelodromeSwapProvider } from "@eth-optimism/actions-sdk";
+        import type { SwapConfig } from "@eth-optimism/actions-sdk";
+
+        // Velodrome (Optimism) and Aerodrome (Base) use the same provider.
+        // Supported on Optimism, Base, and many OP Stack leaf chains.
+        const swapConfig: SwapConfig = {
+          velodrome: {
+            // Optional: restrict to specific trading pairs
+            // Set stable: true for correlated assets (e.g. USDC/USDT)
+            marketAllowlist: [
+              { assets: [USDC, ETH], stable: false },
+              { assets: [USDC, WETH], stable: false, chainId: base.id },
+            ],
+            defaultSlippage: 0.005,
+            maxSlippage: 0.5,
+          },
+        };
+        ```
+        {/* TODO: Confirm the full list of chains supported by the Velodrome leaf router and whether the `stable` flag is required or optional per market */}
+      </Tab>
+      <Tab title="Both">
+        ```typescript title="actions.ts"
+        // Configure both providers — Actions will use them independently
+        // based on the swap namespace's provider routing logic.
+        // TODO: confirm best-price routing behavior across providers
+        const swapConfig: SwapConfig = {
+          uniswap: {
+            marketAllowlist: [{ assets: [USDC, ETH] }],
+          },
+          velodrome: {
+            marketAllowlist: [
+              { assets: [USDC, ETH], stable: false },
+            ],
+          },
+        };
+        ```
+      </Tab>
+    </Tabs>
+
+  </Step>
   <Step title="Configure supported chains">
     Configure supported chains:
 
@@ -259,6 +327,7 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
       wallet: walletConfig,
       assets: assetsConfig,
       lend: lendConfig,
+      swap: swapConfig,
       chains,
     });
     ```
@@ -274,6 +343,14 @@ Actions SDK lets you choose which assets, markets, chains, protocols, and provid
     const market = await actions.lend.getMarket({ ... });
     const wallet = await actions.wallet.createSmartWallet({ ... });
     const receipt = await wallet.lend.openPosition({ ... });
+
+    // Swap tokens
+    const swapReceipt = await wallet.swap.execute({
+      amountIn: 100,
+      assetIn: USDC,
+      assetOut: ETH,
+      chainId: base.id,
+    });
     ```
 
   </Step>
