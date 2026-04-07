@@ -410,18 +410,18 @@ const lendPosition = await wallet.lend.getPosition(market);
 // Fetch wallet balance
 const balance = await wallet.getBalance();
 
+// Swap tokens using Uniswap
+const swapReceipt = await wallet.swap.execute({
+  amountIn: 1,
+  assetIn: USDC,
+  assetOut: ETH,
+});
+
 // ⚠️ COMING SOON
 const borrowReceipt = await wallet.borrow.openPosition({
   amount: 1,
   asset: USDT,
   ...market,
-});
-
-// ⚠️ COMING SOON
-const swapReceipt = await wallet.swap.execute({
-  amountIn: 1,
-  assetIn: USDC,
-  assetOut: ETH,
 });
 
 // ⚠️ COMING SOON
@@ -431,6 +431,35 @@ const sendReceipt = await wallet.send({
   to: "vitalik.eth",
 });
 ```
+
+## Swap Tokens
+
+Actions SDK supports token swaps through multiple providers:
+
+```typescript
+import { USDC, ETH } from "@eth-optimism/actions-sdk/assets";
+
+// Get swap quote
+const quote = await wallet.swap.getQuote({
+  amountIn: 100,
+  assetIn: USDC,
+  assetOut: ETH,
+});
+
+// Execute swap
+const receipt = await wallet.swap.execute({
+  amountIn: 100,
+  assetIn: USDC,
+  assetOut: ETH,
+});
+```
+
+Supported swap providers:
+- **Uniswap V3**: Available on Ethereum mainnet and most L2s
+- **Aerodrome**: Optimized for Optimism (Base)
+- **Velodrome**: Optimized for Optimism
+
+See [Swap Documentation](/app-developers/reference/actions/swap-documentation) for full API reference.
 
 ## Next Steps
 
